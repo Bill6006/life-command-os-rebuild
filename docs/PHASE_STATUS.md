@@ -34,13 +34,13 @@ job fails if the live `build-info.json` does not serve the pushed SHA.
 | Format (Prettier)                         | Pass                                         |
 | Lint (ESLint)                             | Pass, 0 warnings                             |
 | Typecheck (strict TS)                     | Pass, 0 errors                               |
-| Unit / contract / synthetic / adversarial | 181 passed / 181                             |
+| Unit / contract / synthetic / adversarial | 187 passed / 187                             |
 | Browser tests (Playwright)                | 75 passed / 75 — 25 tests × 360, 430, 1280px |
 | Production build                          | Pass                                         |
 | `npm run verify` from a clean checkout    | Pass                                         |
 | Deployed SHA matches checkpoint           | Asserted live in CI                          |
 
-### Where the 181 sit
+### Where the 187 sit
 
 | Suite                                                 | Tests |
 | ----------------------------------------------------- | ----: |
@@ -54,6 +54,7 @@ job fails if the live `build-info.json` does not serve the pushed SHA.
 | `unit/architecture-guards` — the boundaries           |     8 |
 | `contract/projections` — rebuildability, migrations   |    11 |
 | `contract/round-trip` — 19 record kinds, lossless     |     8 |
+| `contract/legacy-quarantine` — preserved and inert    |     6 |
 | `synthetic/g009` — unknown is unknown                 |    12 |
 | `synthetic/g011` — timezone and week boundary         |     9 |
 | `synthetic/g001` — no orphan pronoun                  |     8 |
