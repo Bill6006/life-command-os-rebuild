@@ -62,6 +62,13 @@ job fails if the live `build-info.json` does not serve the pushed SHA.
 | `adversarial/malformed-history`                       |     9 |
 | `adversarial/malformed-records`                       |     7 |
 
+### The gate held once, on purpose
+
+`c1a827d` was pushed after typecheck, lint and the unit suite but without
+`format:check`. Prettier failed it in CI, the deploy job never ran, and Preview
+stayed on the previous green commit. That is D-004 working as intended: a red
+build does not reach the phone. Fixed in `ba74ad5`.
+
 ## Gate checklist (section 46)
 
 | Requirement                                 | Status                                                                                                |
