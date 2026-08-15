@@ -1,7 +1,9 @@
 import { CONCEPT } from '../domain/concepts'
-import { DOMAIN } from '../domain/domains'
-import { entityRef } from '../domain/entities'
+import { DOMAIN, type LifeDomainId } from '../domain/domains'
+import { entityRef, type SemanticEntity } from '../domain/entities'
+import type { CanonicalRecord } from '../domain/records'
 import { timeZone } from '../domain/time'
+import type { SnapshotWire } from '../memory/snapshot'
 import { createKit, type Scenario } from './kit'
 
 /**
@@ -535,8 +537,377 @@ function quietFortnight(): Scenario {
   }
 }
 
+// ---------------------------------------------------------------------------
+// G-005 — severe sleep deficit against a career goal
+// ---------------------------------------------------------------------------
+
+/**
+ * The same life, twice, differing only in how much sleep is behind it.
+ *
+ * G-005 asks that career must not automatically win when rest is short. A
+ * scenario where recovery wins proves nothing on its own — "sleep always wins"
+ * would pass it just as well, and would be a hardcode in the other direction.
+ * So both nights are built from one function, and the pair is the test: three
+ * broken nights or three good ones, everything else identical, including a
+ * career goal, a topic that went badly, and a week explicitly pointed at
+ * career. Whatever changes between them is doing the work.
+ */
+function nightsOfSleep(rested: boolean): Pick<Scenario, 'zone' | 'now' | 'build'> {
+  const kit = createKit(rested ? 'GJ' : 'GK', 'America/Denver', '2026-08-01T12:00:00Z')
+  const subnetting = entityRef('learning-topic', 'subnetting')
+  const ccna = entityRef('goal', 'the CCNA')
+  const career = entityRef('life-domain', 'the CCNA push')
+  const now = kit.local('2026-09-15', '21:40')
+
+  return {
+    zone: kit.zone,
+    now,
+    build() {
+      const topic = kit.entity({
+        kind: 'learning-topic',
+        label: 'subnetting',
+        domain: DOMAIN.career,
+        privacy: 'normal',
+        links: [{ relation: 'supports-goal', target: ccna.id }],
+      })
+      const goal = kit.entity({
+        kind: 'goal',
+        label: 'the CCNA',
+        domain: DOMAIN.career,
+        privacy: 'normal',
+      })
+      const direction = kit.entity({
+        kind: 'life-domain',
+        label: 'the CCNA push',
+        domain: DOMAIN.career,
+        privacy: 'normal',
+      })
+
+      const goalRecord = kit.record(
+        'goal',
+        {
+          occurredAt: kit.local('2026-08-01', '09:00'),
+          domains: [DOMAIN.career],
+          entities: [ccna],
+        },
+        { goal: ccna, statement: 'Pass the CCNA before the winter', status: 'active' },
+      )
+
+      const studying = kit.record(
+        'observation',
+        {
+          occurredAt: kit.local('2026-09-08', '20:00'),
+          domains: [DOMAIN.career],
+          entities: [subnetting],
+        },
+        {
+          concept: CONCEPT.learningTopic,
+          value: { type: 'entity', value: subnetting },
+          method: 'self-report',
+        },
+      )
+
+      const struggle = kit.record(
+        'outcome',
+        {
+          occurredAt: kit.local('2026-09-14', '21:00'),
+          domains: [DOMAIN.career],
+          entities: [subnetting],
+        },
+        {
+          about: studying.id,
+          observation: { type: 'text', value: 'The /26 boundaries went wrong twice' },
+          sentiment: 'worse',
+        },
+      )
+
+      // The whole difference between the two scenarios.
+      const hours = rested ? [7.5, 7.75, 8] : [4.5, 4.25, 5]
+      const nights = hours.map((value, offset) =>
+        kit.record(
+          'observation',
+          { occurredAt: kit.local(`2026-09-${13 + offset}`, '07:00'), domains: [DOMAIN.sleep] },
+          {
+            concept: CONCEPT.sleepHours,
+            value: { type: 'number', value, unit: 'hours' },
+            method: 'self-report',
+          },
+        ),
+      )
+
+      const energy = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-09-15', '18:00'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.energy,
+          value: { type: 'scale', value: rested ? 4 : 2, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      const time = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-09-15', '21:30'), domains: [DOMAIN.career] },
+        {
+          concept: CONCEPT.usableTimeTonight,
+          value: { type: 'duration', minutes: 60 },
+          method: 'self-report',
+        },
+      )
+
+      const weekly = kit.record(
+        'explicit-fact',
+        {
+          occurredAt: kit.local('2026-09-14', '08:00'),
+          domains: [DOMAIN.direction],
+          entities: [career],
+        },
+        { concept: CONCEPT.weeklyFocus, value: { type: 'entity', value: career } },
+      )
+
+      return kit.document({
+        entities: [topic, goal, direction],
+        records: [goalRecord, studying, struggle, ...nights, energy, time, weekly],
+        exportedAt: now,
+      })
+    },
+  }
+}
+
+function sleepDeficitAgainstCareer(): Scenario {
+  return {
+    id: 'running-on-empty',
+    title: 'Three broken nights, and a deadline',
+    summary: 'A live career goal, a topic that went badly, and about four hours a night.',
+    proves: 'G-005 — career does not win automatically when rest is what is short.',
+    ...nightsOfSleep(false),
+  }
+}
+
+function restedAgainstCareer(): Scenario {
+  return {
+    id: 'rested-and-behind',
+    title: 'The same week, properly slept',
+    summary: 'Identical goal, identical bad session — and three good nights instead of three bad.',
+    proves: 'G-005’s other half — with rest in hand, the career move is the one that wins.',
+    ...nightsOfSleep(true),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// G-008 — a non-career weekly direction
+// ---------------------------------------------------------------------------
+
+/**
+ * One evening with something worth doing in four different life areas.
+ *
+ * G-008 asks that a non-career weekly direction is stored with a real semantic
+ * category, that arbitration uses it, and that nothing hardcodes career. The
+ * way to show that is to hold everything else still: the same history, the same
+ * evening, the same four live options, and only the direction changing. What
+ * gets chosen follows the direction, and when the direction names no life area
+ * at all the choice falls back to the same one it would make with no direction —
+ * not to career.
+ *
+ * The direction is stored as a reference to an entity, so the category is the
+ * entity's own life domain and the label is whatever the owner called their
+ * week. Both halves survive, which is what section 21 asks for.
+ */
+export const WEEK_POINTED_AT_ZONE = timeZone('America/Denver')
+
+/** The evening every direction variant is read from. */
+export const WEEK_POINTED_AT_NOW = createKit('GN', 'America/Denver', '2026-04-01T12:00:00Z').local(
+  '2026-09-15',
+  '19:30',
+)
+
+export interface WeekDirectionOptions {
+  /**
+   * How the week's direction is stored, if at all.
+   *
+   * `named` is the real shape: a reference to an entity, whose life domain is
+   * the semantic category and whose label is the owner's own wording. `text` is
+   * the loose shape a legacy import or a hand-edited file might carry.
+   */
+  readonly direction?:
+    { readonly named: LifeDomainId; readonly wording: string } | { readonly text: string }
+  /** Set in the owner-local week before this one, to test that it expires. */
+  readonly setLastWeek?: boolean
+}
+
+export function weekPointedAt(options: WeekDirectionOptions = {}): SnapshotWire {
+  const kit = createKit('GN', 'America/Denver', '2026-04-01T12:00:00Z')
+  const adaya = entityRef('person', 'Adaya')
+  const kitchen = entityRef('place', 'the kitchen')
+  const subnetting = entityRef('learning-topic', 'subnetting')
+  const ccna = entityRef('goal', 'the CCNA')
+  const now = WEEK_POINTED_AT_NOW
+
+  const child = kit.entity({
+    kind: 'person',
+    label: 'Adaya',
+    domain: DOMAIN.fatherhood,
+    privacy: 'child-family-sensitive',
+  })
+  const place = kit.entity({
+    kind: 'place',
+    label: 'the kitchen',
+    domain: DOMAIN.home,
+    privacy: 'normal',
+  })
+  const topic = kit.entity({
+    kind: 'learning-topic',
+    label: 'subnetting',
+    domain: DOMAIN.career,
+    privacy: 'normal',
+    links: [{ relation: 'supports-goal', target: ccna.id }],
+  })
+  const goal = kit.entity({
+    kind: 'goal',
+    label: 'the CCNA',
+    domain: DOMAIN.career,
+    privacy: 'normal',
+  })
+
+  const goalRecord = kit.record(
+    'goal',
+    { occurredAt: kit.local('2026-04-01', '09:00'), domains: [DOMAIN.career], entities: [ccna] },
+    { goal: ccna, statement: 'Pass the CCNA before the winter', status: 'active' },
+  )
+
+  const custody = kit.record(
+    'context',
+    {
+      occurredAt: kit.local('2026-04-01', '09:00'),
+      domains: [DOMAIN.fatherhood],
+      entities: [adaya],
+    },
+    {
+      concept: CONCEPT.childPresent,
+      value: { type: 'boolean', value: true },
+      durability: 'durable',
+      validFrom: kit.local('2026-04-01', '09:00'),
+    },
+  )
+
+  const studying = kit.record(
+    'observation',
+    {
+      occurredAt: kit.local('2026-09-08', '20:00'),
+      domains: [DOMAIN.career],
+      entities: [subnetting],
+    },
+    {
+      concept: CONCEPT.learningTopic,
+      value: { type: 'entity', value: subnetting },
+      method: 'self-report',
+    },
+  )
+
+  const friction = kit.record(
+    'observation',
+    { occurredAt: kit.local('2026-09-14', '18:00'), domains: [DOMAIN.home], entities: [kitchen] },
+    {
+      concept: CONCEPT.homeFriction,
+      value: { type: 'text', value: 'the kitchen table is buried again' },
+      method: 'self-report',
+    },
+  )
+
+  const nights = [7.5, 7.75, 8].map((value, offset) =>
+    kit.record(
+      'observation',
+      { occurredAt: kit.local(`2026-09-${13 + offset}`, '07:00'), domains: [DOMAIN.sleep] },
+      {
+        concept: CONCEPT.sleepHours,
+        value: { type: 'number', value, unit: 'hours' },
+        method: 'self-report',
+      },
+    ),
+  )
+
+  const energy = kit.record(
+    'observation',
+    { occurredAt: kit.local('2026-09-15', '17:30'), domains: [DOMAIN.health] },
+    { concept: CONCEPT.energy, value: { type: 'scale', value: 4, of: 5 }, method: 'self-report' },
+  )
+
+  const time = kit.record(
+    'observation',
+    { occurredAt: kit.local('2026-09-15', '19:00'), domains: [DOMAIN.direction] },
+    {
+      concept: CONCEPT.usableTimeTonight,
+      value: { type: 'duration', minutes: 60 },
+      method: 'self-report',
+    },
+  )
+
+  const entities: SemanticEntity[] = [child, place, topic, goal]
+  const records: CanonicalRecord[] = [
+    goalRecord,
+    custody,
+    studying,
+    friction,
+    ...nights,
+    energy,
+    time,
+  ]
+
+  // 14 September is the Monday of the same owner-local week as the evening
+  // above; 7 September is the Monday before it.
+  const setOn = options.setLastWeek ? '2026-09-07' : '2026-09-14'
+  const direction = options.direction
+
+  if (direction !== undefined) {
+    const value =
+      'named' in direction
+        ? { type: 'entity' as const, value: entityRef('life-domain', direction.wording) }
+        : { type: 'text' as const, value: direction.text }
+
+    if ('named' in direction) {
+      entities.push(
+        kit.entity({
+          kind: 'life-domain',
+          label: direction.wording,
+          domain: direction.named,
+          privacy: 'normal',
+        }),
+      )
+    }
+
+    records.push(
+      kit.record(
+        'explicit-fact',
+        {
+          occurredAt: kit.local(setOn, '08:00'),
+          domains: [DOMAIN.direction],
+          entities: value.type === 'entity' ? [value.value] : [],
+        },
+        { concept: CONCEPT.weeklyFocus, value },
+      ),
+    )
+  }
+
+  return kit.document({ entities, records, exportedAt: now })
+}
+
+function weekPointedAtHome(): Scenario {
+  return {
+    id: 'week-pointed-at-home',
+    title: 'A week pointed at the house',
+    summary: 'Four live options and a direction the owner named themselves: a calmer house.',
+    proves: 'G-008 — the stored category is home, and arbitration follows it.',
+    zone: WEEK_POINTED_AT_ZONE,
+    now: WEEK_POINTED_AT_NOW,
+    build: () => weekPointedAt({ direction: { named: DOMAIN.home, wording: 'a calmer house' } }),
+  }
+}
+
 export const SCENARIOS: readonly Scenario[] = [
   subnettingStruggle(),
+  sleepDeficitAgainstCareer(),
+  restedAgainstCareer(),
+  weekPointedAtHome(),
   durableCustody(),
   mostlyUnknown(),
   acrossTimezones(),

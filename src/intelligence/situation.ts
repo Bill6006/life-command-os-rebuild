@@ -1,0 +1,535 @@
+import { CONCEPT, coreConcepts, type ConceptRegistry } from '../domain/concepts'
+import { coreDomains, DOMAIN, type DomainRegistry, type LifeDomainId } from '../domain/domains'
+import type { EntityIndex, EntityRef } from '../domain/entities'
+import type { RecordId } from '../domain/ids'
+import {
+  basisOf,
+  confidence,
+  inferred,
+  isUsable,
+  unknown,
+  type Confidence,
+  type Knowledge,
+} from '../domain/knowledge'
+import { bearsConcept, describeFactValue, type FactValue } from '../domain/records'
+import type { PrivacyClass } from '../domain/privacy'
+import type { RecommendationSemantics } from '../domain/recommendation'
+import {
+  addLocalDays,
+  localDateTimeAt,
+  localWeekIdAt,
+  minutesIntoDay,
+  type Instant,
+  type LocalDayId,
+  type LocalWeekId,
+  type TimeZoneId,
+  type WeekStartDay,
+} from '../domain/time'
+import type { ConceptId } from '../domain/windows'
+import type { MemoryView } from '../memory/view'
+import { resolveDirection, type ActiveGoal, type DirectionState } from './direction'
+import { booleanValue, hoursValue, minutesValue, narrowKnowledge, ratioValue } from './values'
+import { decisionEntities } from './vocabulary'
+
+/**
+ * The context assembler (canonical plan section 17.1, step 2).
+ *
+ * "Builds the current situation from durable and temporary context." Everything
+ * here is derived from resolved facts plus the moment being asked about. There
+ * is no clock in this file and no storage — a situation is a pure function of a
+ * memory view and an instant, which is what lets the whole engine be tested,
+ * time-travelled and replayed.
+ *
+ * Two habits run through it.
+ *
+ * **Every read is recorded.** The reader below logs each concept it touches and
+ * what it was needed for, so the decision trace's list of considered facts is
+ * produced by the act of considering them. A trace assembled separately would
+ * eventually disagree with the reasoning it claims to describe.
+ *
+ * **Nothing manufactures a value.** Strain, usable time and capacity are all
+ * `Knowledge`. When the evidence is not there, the answer is unknown with a
+ * reason — never a zero, an average or a cautious default (G-009).
+ */
+
+export type DayBlock = 'early-morning' | 'morning' | 'afternoon' | 'evening' | 'late-night'
+
+/**
+ * How much the body is asking for, as far as the evidence shows.
+ *
+ * Deliberately three coarse steps. Section 68 asks for reversible rules and no
+ * invented precision, and a "sleep debt index" to two decimal places would be
+ * exactly the false precision the plan warns about.
+ */
+export type Strain = 'severe' | 'moderate' | 'none'
+
+/**
+ * A working baseline for a night's sleep, not a diagnosis.
+ *
+ * The adult consensus recommendation is at least seven hours; 7.5 sits inside
+ * the usual 7–9 band without pretending to know this owner's own need. Section
+ * 68 — prefer reversible rules, and do not use causal language where only an
+ * association exists. Phase 3's outcome learning is what should replace this
+ * with something earned from what actually happens to this owner.
+ */
+export const SLEEP_BASELINE_HOURS = 7.5
+
+/** How far back a running sleep shortfall is accumulated, in owner-local days. */
+export const SLEEP_DEBT_DAYS = 3
+
+export interface ConsideredFact {
+  readonly concept: ConceptId
+  readonly label: string
+  readonly domain: LifeDomainId
+  readonly privacy: PrivacyClass
+  readonly state: Knowledge<FactValue>['state']
+  /** The value, or the flavour of not knowing. Withheld by surfaces if private. */
+  readonly reading: string
+  readonly usedFor: readonly string[]
+  readonly sources: readonly RecordId[]
+}
+
+export type LimiterKind = 'recovery' | 'capacity' | 'time'
+
+export interface Limiter {
+  readonly kind: LimiterKind
+  readonly domain: LifeDomainId
+  /** One ordinary line. No clinical language, no scores. */
+  readonly summary: string
+  readonly evidence: readonly RecordId[]
+  readonly certainty: Confidence
+}
+
+export interface Capacity {
+  readonly lastNightHours: Knowledge<number>
+  readonly sleepDebtHours: Knowledge<number>
+  readonly nightsSeen: number
+  readonly energy: Knowledge<number>
+  readonly soreness: Knowledge<number>
+  readonly strain: Knowledge<Strain>
+}
+
+export interface OwnerPreference {
+  readonly about: EntityRef
+  readonly stance: 'prefers' | 'avoids' | 'forbids'
+  readonly statement: string
+  readonly source: RecordId
+}
+
+export interface ActiveConstraint {
+  readonly concept: ConceptId
+  readonly description: string
+  readonly source: RecordId
+}
+
+export interface PriorMove {
+  readonly semantics: RecommendationSemantics
+  readonly at: Instant
+  readonly source: RecordId
+  readonly state: MoveState
+}
+
+export type MoveState = 'shown' | 'started' | 'completed' | 'declined' | 'unable-now'
+
+export interface Situation {
+  readonly at: Instant
+  readonly zone: TimeZoneId
+  readonly dayId: LocalDayId
+  readonly weekId: LocalWeekId
+  readonly weekStartsOn: WeekStartDay
+  readonly block: DayBlock
+  readonly isWeekend: boolean
+  readonly capacity: Capacity
+  readonly usableMinutes: Knowledge<number>
+  readonly childPresent: Knowledge<boolean>
+  readonly socialEnergy: Knowledge<number>
+  readonly homeFriction: Knowledge<FactValue>
+  readonly learningTopic: Knowledge<FactValue>
+  readonly direction: DirectionState
+  readonly limiter: Limiter | undefined
+  readonly preferences: readonly OwnerPreference[]
+  readonly constraints: readonly ActiveConstraint[]
+  readonly recentMoves: readonly PriorMove[]
+  readonly considered: readonly ConsideredFact[]
+  readonly entities: EntityIndex
+  readonly domains: DomainRegistry
+  readonly concepts: ConceptRegistry
+  readonly view: MemoryView
+}
+
+export interface SituationMoment {
+  readonly now: Instant
+  readonly zone: TimeZoneId
+  readonly weekStartsOn: WeekStartDay
+  readonly domains?: DomainRegistry
+  readonly concepts?: ConceptRegistry
+}
+
+// ---------------------------------------------------------------------------
+// Reading facts, and remembering that we did
+// ---------------------------------------------------------------------------
+
+interface FactReader {
+  read(concept: ConceptId, usedFor: string): Knowledge<FactValue>
+  considered(): readonly ConsideredFact[]
+}
+
+function createFactReader(
+  view: MemoryView,
+  entities: EntityIndex,
+  concepts: ConceptRegistry,
+): FactReader {
+  const seen = new Map<ConceptId, { entry: ConsideredFact; usedFor: string[] }>()
+
+  return {
+    read(concept, usedFor) {
+      const knowledge = view.facts.knowledgeFor(concept)
+      const existing = seen.get(concept)
+      if (existing !== undefined) {
+        if (!existing.usedFor.includes(usedFor)) existing.usedFor.push(usedFor)
+        return knowledge
+      }
+
+      const definition = concepts.definitionFor(concept)
+      const usedForList = [usedFor]
+      seen.set(concept, {
+        usedFor: usedForList,
+        entry: {
+          concept,
+          label: definition.label,
+          domain: definition.domain,
+          privacy: definition.privacy,
+          state: knowledge.state,
+          reading:
+            knowledge.state === 'unknown'
+              ? `not known — ${knowledge.reason}`
+              : describeFactValue(knowledge.value, (ref) => entities.labelFor(ref)),
+          usedFor: usedForList,
+          sources: basisOf(knowledge),
+        },
+      })
+      return knowledge
+    },
+    considered: () => [...seen.values()].map((held) => held.entry),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The pieces
+// ---------------------------------------------------------------------------
+
+export function blockOf(at: Instant, zone: TimeZoneId): DayBlock {
+  const minutes = minutesIntoDay(localDateTimeAt(at, zone).timeOfDay)
+  if (minutes < 4 * 60) return 'late-night'
+  if (minutes < 7 * 60) return 'early-morning'
+  if (minutes < 12 * 60) return 'morning'
+  if (minutes < 18 * 60) return 'afternoon'
+  if (minutes < 22 * 60) return 'evening'
+  return 'late-night'
+}
+
+interface NightlyReading {
+  readonly hours: number
+  readonly at: Instant
+  readonly source: RecordId
+}
+
+/**
+ * Sleep readings inside the debt window.
+ *
+ * Read straight from canonical records rather than from the resolved current
+ * value, because a running shortfall is a question about several nights and the
+ * fact layer only ever answers about the latest one. Superseded and retracted
+ * rows are already gone from `effective`, so a corrected night counts once.
+ */
+function nightsWithin(view: MemoryView, from: Instant, to: Instant): readonly NightlyReading[] {
+  const nights: NightlyReading[] = []
+  for (const record of view.history.effective) {
+    if (!bearsConcept(record)) continue
+    if (record.concept !== CONCEPT.sleepHours) continue
+    if (record.occurredAt < from || record.occurredAt > to) continue
+    const hours = hoursValue(record.value)
+    if (hours === undefined) continue
+    nights.push({ hours, at: record.occurredAt, source: record.id })
+  }
+  return nights
+}
+
+function assembleCapacity(view: MemoryView, moment: SituationMoment, reader: FactReader): Capacity {
+  const lastNightHours = narrowKnowledge(
+    reader.read(CONCEPT.sleepHours, 'how much sleep last night'),
+    hoursValue,
+  )
+  const energy = narrowKnowledge(reader.read(CONCEPT.energy, 'how much is left today'), ratioValue)
+  const soreness = narrowKnowledge(
+    reader.read(CONCEPT.soreness, 'whether the body is asking for a break'),
+    ratioValue,
+  )
+
+  const from = addLocalDays(moment.now, -SLEEP_DEBT_DAYS, moment.zone)
+  const nights = nightsWithin(view, from, moment.now)
+
+  let sleepDebtHours: Knowledge<number> = unknown(
+    'never-observed',
+    'no nights recorded in the last few days',
+  )
+  if (nights.length > 0) {
+    const shortfall = nights.reduce(
+      (total, night) => total + Math.max(0, SLEEP_BASELINE_HOURS - night.hours),
+      0,
+    )
+    const latest = nights.reduce((best, night) => (night.at > best.at ? night : best))
+    sleepDebtHours = inferred(
+      Math.round(shortfall * 10) / 10,
+      latest.at,
+      // Confidence follows the number of nights actually seen, and nothing else.
+      confidence(Math.min(0.85, 0.35 + 0.2 * nights.length)),
+      nights.map((night) => night.source),
+    )
+  }
+
+  return {
+    lastNightHours,
+    sleepDebtHours,
+    nightsSeen: nights.length,
+    energy,
+    soreness,
+    strain: assessStrain(sleepDebtHours, energy, nights.length),
+  }
+}
+
+/**
+ * How strained the owner is, from whatever evidence exists.
+ *
+ * Sleep shortfall leads because it is the signal with a real evidence base
+ * behind it. A low self-reported energy reading can raise the assessment but
+ * never on its own produce "severe" — one tap on a scale is not enough to claim
+ * that much. With no usable evidence at all the answer is unknown, and a rule
+ * downstream has to cope with not knowing rather than being handed "none".
+ */
+function assessStrain(
+  debt: Knowledge<number>,
+  energy: Knowledge<number>,
+  nightsSeen: number,
+): Knowledge<Strain> {
+  const debtHours = isUsable(debt) ? debt.value : undefined
+  const energyLevel = isUsable(energy) ? energy.value : undefined
+
+  if (debtHours === undefined && energyLevel === undefined) {
+    return unknown('never-observed', 'nothing recent about sleep or energy')
+  }
+
+  const basis = [...basisOf(debt), ...basisOf(energy)]
+  const observedAt = isUsable(debt)
+    ? debt.observedAt
+    : isUsable(energy)
+      ? energy.observedAt
+      : undefined
+  if (observedAt === undefined) return unknown('never-observed')
+
+  let level: Strain = 'none'
+  if (debtHours !== undefined) {
+    if (debtHours >= 5) level = 'severe'
+    else if (debtHours >= 2.5) level = 'moderate'
+  }
+  if (energyLevel !== undefined && energyLevel <= 0.3 && level === 'none') level = 'moderate'
+
+  const signals = (debtHours === undefined ? 0 : 1) + (energyLevel === undefined ? 0 : 1)
+  const howSure = confidence(0.3 + 0.15 * signals + Math.min(0.25, 0.08 * nightsSeen))
+  return inferred(level, observedAt, howSure, basis)
+}
+
+/**
+ * What is actually in the way right now (canonical plan section 19).
+ *
+ * Order matters and is deliberate: recovery outranks a sore body, which
+ * outranks a short evening, because a recovery problem does not stop being the
+ * limiter just because the evening also happens to be short. Nothing here reads
+ * a domain preference — the limiter is a reading of the situation, not of what
+ * the owner would like to be working on. That separation is what lets scenario
+ * G-005 come out the way it does without "sleep wins" being written anywhere.
+ *
+ * Phase 4's coverage engine adds the stale-evidence limiter; Phase 3's outcome
+ * learning adds the ones that need history to see.
+ */
+function findLimiter(capacity: Capacity, usableMinutes: Knowledge<number>): Limiter | undefined {
+  const strain = capacity.strain
+  if (isUsable(strain) && strain.value !== 'none') {
+    const debt = capacity.sleepDebtHours
+    const shortfall = isUsable(debt) ? debt.value : undefined
+    return {
+      kind: 'recovery',
+      domain: DOMAIN.sleep,
+      summary:
+        shortfall === undefined
+          ? 'Running low on rest.'
+          : shortfall >= 5
+            ? `About ${describeHours(shortfall)} short of rest over the last few nights.`
+            : `Around ${describeHours(shortfall)} short of rest this week.`,
+      evidence: basisOf(strain),
+      // Strain is always worked out rather than stated, so it normally arrives
+      // with its own confidence. A directly stated one would be near-certain.
+      certainty: strain.state === 'inferred' ? strain.confidence : confidence(0.9),
+    }
+  }
+
+  const soreness = capacity.soreness
+  if (isUsable(soreness) && soreness.value >= 0.7) {
+    return {
+      kind: 'capacity',
+      domain: DOMAIN.health,
+      summary: 'The body is asking for an easier night.',
+      evidence: basisOf(soreness),
+      certainty: confidence(0.55),
+    }
+  }
+
+  if (isUsable(usableMinutes) && usableMinutes.value < 20) {
+    return {
+      kind: 'time',
+      domain: DOMAIN.direction,
+      summary: `Only about ${Math.round(usableMinutes.value)} minutes left tonight.`,
+      evidence: basisOf(usableMinutes),
+      certainty: confidence(0.7),
+    }
+  }
+
+  return undefined
+}
+
+export function describeHours(hours: number): string {
+  const rounded = Math.round(hours * 2) / 2
+  if (rounded < 1) return 'under an hour'
+  if (rounded === 1) return 'an hour'
+  if (Number.isInteger(rounded)) return `${rounded} hours`
+  return `${rounded} hours`
+}
+
+function collectPreferences(view: MemoryView): readonly OwnerPreference[] {
+  const preferences: OwnerPreference[] = []
+  for (const record of view.history.effective) {
+    if (record.kind !== 'preference') continue
+    preferences.push({
+      about: record.about,
+      stance: record.stance,
+      statement: record.statement,
+      source: record.id,
+    })
+  }
+  return preferences
+}
+
+function collectConstraints(view: MemoryView, now: Instant): readonly ActiveConstraint[] {
+  const constraints: ActiveConstraint[] = []
+  for (const record of view.history.effective) {
+    if (record.kind !== 'constraint') continue
+    if (record.until !== undefined && record.until <= now) continue
+    if (record.occurredAt > now) continue
+    constraints.push({
+      concept: record.concept,
+      description: record.description,
+      source: record.id,
+    })
+  }
+  return constraints
+}
+
+/**
+ * Moves already put in front of the owner, and what became of them.
+ *
+ * Phase 2 only reads these — the lifecycle itself is Phase 3. What they are
+ * needed for here is the duplication check in section 19: the same move
+ * offered three evenings running is a worse move on the third evening.
+ */
+function collectRecentMoves(view: MemoryView, from: Instant, to: Instant): readonly PriorMove[] {
+  const states = new Map<RecordId, MoveState>()
+  for (const record of view.history.effective) {
+    switch (record.kind) {
+      case 'action-start':
+        states.set(record.recommendation, 'started')
+        break
+      case 'action-completion':
+        states.set(record.recommendation, 'completed')
+        break
+      case 'action-decline':
+        states.set(record.recommendation, 'declined')
+        break
+      case 'action-unable-now':
+        states.set(record.recommendation, 'unable-now')
+        break
+      default:
+        break
+    }
+  }
+
+  const moves: PriorMove[] = []
+  for (const record of view.history.effective) {
+    if (record.kind !== 'action-recommendation') continue
+    if (record.occurredAt < from || record.occurredAt > to) continue
+    moves.push({
+      semantics: record.recommendation,
+      at: record.occurredAt,
+      source: record.id,
+      state: states.get(record.id) ?? 'shown',
+    })
+  }
+  return moves
+}
+
+// ---------------------------------------------------------------------------
+
+export function assembleSituation(view: MemoryView, moment: SituationMoment): Situation {
+  const domains = moment.domains ?? coreDomains
+  const concepts = moment.concepts ?? coreConcepts
+  // The owner's entities plus the engine's own small vocabulary of routines,
+  // so a suggested wind-down has a subject without inventing one about them.
+  const entities = decisionEntities(view.entities.all())
+  const reader = createFactReader(view, entities, concepts)
+
+  const capacity = assembleCapacity(view, moment, reader)
+  const usableMinutes = narrowKnowledge(
+    reader.read(CONCEPT.usableTimeTonight, 'how much time there is'),
+    minutesValue,
+  )
+  const childPresent = narrowKnowledge(
+    reader.read(CONCEPT.childPresent, 'whether she is here tonight'),
+    booleanValue,
+  )
+  const socialEnergy = narrowKnowledge(
+    reader.read(CONCEPT.socialEnergy, 'whether company sounds good'),
+    ratioValue,
+  )
+  const homeFriction = reader.read(CONCEPT.homeFriction, 'what is getting in the way at home')
+  const learningTopic = reader.read(CONCEPT.learningTopic, 'what is being studied')
+  reader.read(CONCEPT.weeklyFocus, 'what this week is pointed at')
+
+  const local = localDateTimeAt(moment.now, moment.zone)
+
+  return {
+    at: moment.now,
+    zone: moment.zone,
+    dayId: local.dayId,
+    weekId: localWeekIdAt(moment.now, moment.zone, moment.weekStartsOn),
+    weekStartsOn: moment.weekStartsOn,
+    block: blockOf(moment.now, moment.zone),
+    isWeekend: local.isoWeekday >= 6,
+    capacity,
+    usableMinutes,
+    childPresent,
+    socialEnergy,
+    homeFriction,
+    learningTopic,
+    direction: resolveDirection(view, moment, domains),
+    limiter: findLimiter(capacity, usableMinutes),
+    preferences: collectPreferences(view),
+    constraints: collectConstraints(view, moment.now),
+    recentMoves: collectRecentMoves(view, addLocalDays(moment.now, -3, moment.zone), moment.now),
+    considered: reader.considered(),
+    entities,
+    domains,
+    concepts,
+    view,
+  }
+}
+
+export type { ActiveGoal, DirectionState }

@@ -16,11 +16,35 @@ test.describe('app shell', () => {
   test('every primary destination is reachable and marked current', async ({ page }) => {
     await open(page)
 
-    for (const name of ['Life', 'Timeline', 'Insights', 'More', 'Now']) {
+    for (const name of ['Life', 'Timeline', 'Insights', 'Now']) {
       await page.getByRole('button', { name }).click()
       await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
       await expect(page.getByRole('button', { name })).toHaveAttribute('aria-current', 'page')
     }
+  })
+
+  test('the bottom bar holds the four primary destinations and nothing else', async ({ page }) => {
+    // Canonical plan section 5. More is a secondary surface; a permanent tab
+    // would make it a fifth primary destination whatever the label says.
+    await open(page)
+
+    const items = page.locator('.nav .nav__item')
+    await expect(items).toHaveCount(4)
+    await expect(items).toHaveText(['Now', 'Life', 'Timeline', 'Insights'])
+    await expect(page.locator('.nav').getByRole('button', { name: 'More' })).toHaveCount(0)
+  })
+
+  test('More is reached from the header, and marks itself current there', async ({ page }) => {
+    await open(page)
+
+    await page.locator('.topbar').getByRole('button', { name: 'More' }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'More' })).toBeVisible()
+    await expect(page.locator('.topbar__more')).toHaveAttribute('aria-current', 'page')
+
+    // And the primary four are still one tap away from it.
+    await page.getByRole('button', { name: 'Now' }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Now' })).toBeVisible()
+    await expect(page.locator('.topbar__more')).not.toHaveAttribute('aria-current', 'page')
   })
 
   test('a destination is deep-linkable and survives reload', async ({ page }) => {

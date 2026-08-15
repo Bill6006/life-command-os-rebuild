@@ -1,7 +1,8 @@
 import { expect } from 'vitest'
 import type { ActionRecommendationRecord } from '../../src/domain/records'
 import type { Instant, TimeZoneId, WeekStartDay } from '../../src/domain/time'
-import { snapshotFromWire } from '../../src/memory/snapshot'
+import { decide, type Decision, type DecideOptions } from '../../src/intelligence/engine'
+import { snapshotFromWire, type SnapshotWire } from '../../src/memory/snapshot'
 import type { StoreSnapshot } from '../../src/memory/store'
 import { buildView, type MemoryView } from '../../src/memory/view'
 import type { Scenario } from '../../src/synthetic/kit'
@@ -23,6 +24,8 @@ export interface LoadedScenario {
   viewAt(now: Instant, zone?: TimeZoneId, weekStartsOn?: WeekStartDay): MemoryView
   /** A view at the moment the scenario is written around. */
   view(): MemoryView
+  /** What the engine makes of it, at the moment the scenario is written around. */
+  decision(options?: DecideOptions): Decision
 }
 
 export function loadScenario(id: string): LoadedScenario {
@@ -44,7 +47,44 @@ export function loadScenario(id: string): LoadedScenario {
     snapshot: loaded.snapshot,
     viewAt,
     view: () => viewAt(scenario.now),
+    decision: (options) =>
+      decide(viewAt(scenario.now), { now: scenario.now, zone: scenario.zone }, options),
   }
+}
+
+/**
+ * Load a hand-built document rather than a registered scenario.
+ *
+ * The variants a golden test needs — the same evening with one fact changed —
+ * are not things the owner should find on the QA screen, so they are built by
+ * the test and loaded through the same parser as everything else.
+ */
+export function decideOn(
+  document: SnapshotWire,
+  now: Instant,
+  zone: TimeZoneId,
+  options?: DecideOptions,
+): Decision {
+  const loaded = snapshotFromWire(document)
+  expect(loaded.loaded, 'the document should load').toBe(true)
+  return decide(buildView(loaded.snapshot, { now, zone }), { now, zone }, options)
+}
+
+/** What was chosen, as an id, or a note that nothing was. */
+export function chosenId(decision: Decision): string {
+  return decision.evaluation?.candidate.id ?? `nothing:${decision.noAction?.reason ?? 'unknown'}`
+}
+
+export function chosenDomain(decision: Decision): string | undefined {
+  return decision.evaluation?.candidate.semantics.domain
+}
+
+export function sentenceOf(decision: Decision): string | undefined {
+  return decision.explanation?.rendered.sentence
+}
+
+export function reasonOf(decision: Decision): string | undefined {
+  return decision.explanation?.rendered.reason
 }
 
 export function recommendationsIn(view: MemoryView): readonly ActionRecommendationRecord[] {

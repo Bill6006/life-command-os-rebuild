@@ -41,11 +41,11 @@ test.describe('reaching the laboratory', () => {
   test('lives behind More rather than in the navigation', async ({ page }) => {
     await page.goto(APP)
 
-    // Five destinations in the bar, and QA is not one of them.
-    await expect(page.locator('.nav .nav__item')).toHaveCount(5)
+    // The bar holds the four primary destinations. Neither QA nor More is one.
+    await expect(page.locator('.nav .nav__item')).toHaveCount(4)
     await expect(page.locator('.nav').getByRole('button', { name: 'QA' })).toHaveCount(0)
 
-    await page.getByRole('button', { name: 'More' }).click()
+    await page.locator('.topbar').getByRole('button', { name: 'More' }).click()
     await page.getByRole('link', { name: 'Open the QA laboratory' }).click()
     await expect(page.getByRole('heading', { level: 1, name: 'QA' })).toBeVisible()
   })

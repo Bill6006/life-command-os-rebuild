@@ -85,8 +85,14 @@ function readCode(file: string): string {
   return codeOnly(readFileSync(file, 'utf8'))
 }
 
-const MEANING_LAYER = [...sourceFiles('src/domain'), ...sourceFiles('src/memory')]
+const MEANING_LAYER = [
+  ...sourceFiles('src/domain'),
+  ...sourceFiles('src/memory'),
+  ...sourceFiles('src/intelligence'),
+]
 const SYNTHETIC = sourceFiles('src/synthetic')
+const INTELLIGENCE = sourceFiles('src/intelligence')
+const FEATURES = sourceFiles('src/features')
 
 describe('the guards themselves', () => {
   // A guard that cannot fail is decoration. These prove each scan bites on a
@@ -190,5 +196,95 @@ describe('the meaning layer stands on its own', () => {
       if (/from '[^']*\/memory\//.test(text)) offenders.push(repoPath(file))
     }
     expect(offenders).toEqual([])
+  })
+
+  it('keeps domain and memory unaware that intelligence exists', () => {
+    const offenders: string[] = []
+    for (const file of [...sourceFiles('src/domain'), ...sourceFiles('src/memory')]) {
+      const text = readCode(file)
+      if (/from '[^']*\/intelligence\//.test(text)) offenders.push(repoPath(file))
+    }
+    expect(offenders).toEqual([])
+  })
+})
+
+describe('there is exactly one arbitration path', () => {
+  /**
+   * Canonical plan section 17.2.
+   *
+   * "No domain-specific module gets to independently present a competing final
+   * recommendation." A comment saying so would be a hope. What makes it true is
+   * that a surface cannot reach the parts it would need: generation, filtering,
+   * ranking and selection are unreachable from `src/features/`, so the only way
+   * to obtain a recommendation is to ask the engine for one.
+   */
+  const OPEN_TO_SURFACES = ['engine', 'guide', 'questions', 'trace', 'situation', 'explain']
+  const DECIDES = ['candidates', 'constraints', 'evaluate', 'arbitrate', 'advisor', 'moves']
+
+  it('lets no feature reach the parts that decide', () => {
+    const offenders: string[] = []
+    for (const file of FEATURES) {
+      const text = readCode(file)
+      for (const match of text.matchAll(/from '([^']*\/intelligence\/[^']+)'/g)) {
+        const specifier = match[1] ?? ''
+        const module = specifier.slice(specifier.lastIndexOf('/') + 1)
+        if (DECIDES.includes(module)) offenders.push(`${repoPath(file)} -> ${module}`)
+        else if (!OPEN_TO_SURFACES.includes(module)) {
+          offenders.push(`${repoPath(file)} -> ${module} (not part of the public surface)`)
+        }
+      }
+    }
+    expect(offenders, 'a surface may ask the engine, and may not do the deciding').toEqual([])
+  })
+
+  it('keeps the ranking and the choice ignorant of which life area a move is in', () => {
+    /*
+     * The guard behind G-005 and G-008.
+     *
+     * Section 32 asks for "no hardcoded career value", and the way that defect
+     * gets written is not deliberately — it is one `if` in a scoring function,
+     * added to make one scenario come out right. A move is judged on what it
+     * demands, costs and pays back; the domain it belongs to is data that flows
+     * through, never a name the scorer knows.
+     */
+    const DOMAIN_IDS =
+      'career|sleep|fatherhood|health|money|social|emotional|faith|home|private-health|direction'
+    // A whole string literal that *is* a domain id, which is what a comparison
+    // looks like. Not a domain word appearing inside a sentence: the trace says
+    // things like "nothing recent about sleep or energy", and prose in a note
+    // cannot branch on anything.
+    const asValue = new RegExp(`(['"\`])(${DOMAIN_IDS})\\1`)
+    const offenders: string[] = []
+
+    // Only the scorer and the chooser. Reading the situation and generating
+    // candidates are per-area jobs by nature — a sleep generator has to know it
+    // is about sleep. Judging and selecting must not.
+    for (const file of [
+      join(ROOT, 'src/intelligence/evaluate.ts'),
+      join(ROOT, 'src/intelligence/arbitrate.ts'),
+    ]) {
+      const code = readCode(file)
+      if (/\bDOMAIN\b/.test(code)) offenders.push(`${repoPath(file)}: names the domain registry`)
+      const literal = asValue.exec(code)
+      if (literal !== null) offenders.push(`${repoPath(file)}: compares against ${literal[0]}`)
+      if (/from '[^']*\/domains'/.test(code)) offenders.push(`${repoPath(file)}: imports domains`)
+    }
+
+    expect(offenders, 'the evaluator and the arbiter must not know a domain by name').toEqual([])
+  })
+})
+
+describe('the intelligence kernel keeps the layer below it honest', () => {
+  it('is a real folder with real files in it', () => {
+    expect(INTELLIGENCE.length).toBeGreaterThan(8)
+  })
+
+  it('takes its moment as an argument rather than reading a clock', () => {
+    // Covered by the sweeps above, which now include src/intelligence — this
+    // states the reason so the coverage is not lost in a list of folders.
+    const offenders = INTELLIGENCE.filter((file) =>
+      /\bDate\.now\s*\(|new Date\s*\(\s*\)/.test(readCode(file)),
+    ).map(repoPath)
+    expect(offenders, 'time travel has to reach the engine, not stop at the UI').toEqual([])
   })
 })

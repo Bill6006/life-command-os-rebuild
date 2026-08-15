@@ -8,17 +8,10 @@ import { isPreview, runningBuild } from '../../platform/buildInfo'
 import { useDestination, type Destination } from '../../platform/routing'
 import { useBuildFreshness, type BuildFreshness } from '../../platform/useBuildFreshness'
 import { BottomNav } from './BottomNav'
+import { DESTINATION_LABELS } from './labels'
 import { LazyScreen } from './LazyScreen'
+import { NavIcon } from './NavIcons'
 import './AppShell.css'
-
-const TITLES: Record<Destination, string> = {
-  now: 'Now',
-  life: 'Life',
-  timeline: 'Timeline',
-  insights: 'Insights',
-  more: 'More',
-  qa: 'QA',
-}
 
 /**
  * The QA laboratory is a separate chunk.
@@ -30,17 +23,45 @@ const TITLES: Record<Destination, string> = {
  */
 const QaScreen = lazy(async () => ({ default: (await import('../qa/QaScreen')).QaScreen }))
 
-function PreviewStrip() {
+/**
+ * The header, and the one way into everything that is not a primary
+ * destination.
+ *
+ * Section 5 gives the phone four primary destinations. Data, exports, privacy,
+ * settings and QA reach the owner through here instead of through a fifth tab,
+ * which is what keeps the hierarchy the plan describes from quietly flattening.
+ */
+function TopBar({
+  current,
+  onNavigate,
+}: {
+  current: Destination
+  onNavigate: (destination: Destination) => void
+}) {
+  const inSecondary = current === 'more' || current === 'qa'
+
   return (
-    <div className="preview-strip">
-      <span className="preview-strip__label">
-        <span className="preview-strip__dot" aria-hidden="true" />
-        Preview
-      </span>
-      <span className="preview-strip__sha">
-        <span className="visually-hidden">Build </span>
-        {runningBuild.commitShort}
-      </span>
+    <div className="topbar">
+      {isPreview ? (
+        <span className="preview-strip__label">
+          <span className="preview-strip__dot" aria-hidden="true" />
+          Preview
+          <span className="visually-hidden">build </span>
+          <span className="preview-strip__sha">{runningBuild.commitShort}</span>
+        </span>
+      ) : (
+        <span className="topbar__wordmark">Life Command OS</span>
+      )}
+
+      <button
+        type="button"
+        className="topbar__more"
+        aria-current={inSecondary ? 'page' : undefined}
+        onClick={() => onNavigate('more')}
+      >
+        <NavIcon destination="more" />
+        <span className="topbar__more-label">More</span>
+      </button>
     </div>
   )
 }
@@ -90,12 +111,12 @@ export function AppShell() {
   const freshness = useBuildFreshness()
 
   useEffect(() => {
-    document.title = `${TITLES[destination]} · Life Command OS`
+    document.title = `${DESTINATION_LABELS[destination]} · Life Command OS`
   }, [destination])
 
   return (
     <div className="shell">
-      {isPreview ? <PreviewStrip /> : null}
+      <TopBar current={destination} onNavigate={navigate} />
       <StaleBuildNotice freshness={freshness} />
 
       {/* Re-keying on the destination restarts the entry transition, which is

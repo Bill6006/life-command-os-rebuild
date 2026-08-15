@@ -13,6 +13,7 @@ import {
   hashForDestination,
   isDestination,
   isReachable,
+  PRIMARY_DESTINATIONS,
   QA_AVAILABLE,
   SECONDARY_DESTINATIONS,
 } from '../../src/platform/routing'
@@ -59,17 +60,28 @@ describe('isDestination', () => {
 })
 
 describe('primary navigation shape', () => {
-  it('keeps four primary destinations plus More', () => {
-    expect(DESTINATIONS).toEqual(['now', 'life', 'timeline', 'insights', 'more'])
+  it('has exactly the four primary destinations and nothing else', () => {
+    // Section 5 fixes the conceptual structure: Now, Life, Timeline, Insights.
+    // A fifth tab is a fifth primary destination whatever its label says, so
+    // this asserts the whole list rather than only that QA is absent.
+    expect(DESTINATIONS).toEqual(['now', 'life', 'timeline', 'insights'])
+    expect(PRIMARY_DESTINATIONS).toEqual(DESTINATIONS)
+    expect(DESTINATIONS).toHaveLength(4)
   })
 
-  it('keeps QA reachable without giving it a slot in the navigation', () => {
-    // Section 5 — developer surfaces do not consume one of five places on a
-    // phone's navigation bar.
-    expect(SECONDARY_DESTINATIONS).toEqual(['qa'])
-    expect(DESTINATIONS).not.toContain('qa')
-    expect(ALL_DESTINATIONS).toContain('qa')
-    expect(isDestination('qa')).toBe(true)
+  it('keeps More and QA reachable without giving either a slot in the bar', () => {
+    expect(SECONDARY_DESTINATIONS).toEqual(['more', 'qa'])
+    for (const secondary of SECONDARY_DESTINATIONS) {
+      expect(DESTINATIONS as readonly string[]).not.toContain(secondary)
+      expect(ALL_DESTINATIONS as readonly string[]).toContain(secondary)
+      expect(isDestination(secondary)).toBe(true)
+    }
+  })
+
+  it('still resolves a secondary destination from its own hash', () => {
+    for (const secondary of SECONDARY_DESTINATIONS) {
+      expect(destinationFromHash(hashForDestination(secondary))).toBe(secondary)
+    }
   })
 
   it('resolves the QA route in a non-production build', () => {

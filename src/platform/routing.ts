@@ -4,23 +4,29 @@ import { isProduction } from './buildInfo'
 /**
  * Primary navigation (canonical plan section 5).
  *
- * Four primary destinations. Data, exports, settings, privacy and QA live
- * behind `more` rather than consuming a permanent primary slot.
+ * Four primary destinations, and that is the whole bottom navigation. Data,
+ * exports, settings, privacy and QA live behind `more`, which is reached from
+ * the header rather than from a fifth tab.
+ *
+ * Phase 1 let More sit in the bar because there was nowhere else to put it.
+ * That is exactly how a secondary surface becomes permanent: it is convenient
+ * once, nobody revisits it, and the plan's four destinations quietly become
+ * five. Section 5 fixes the conceptual structure, so the bar is fixed too.
  */
 export const PRIMARY_DESTINATIONS = ['now', 'life', 'timeline', 'insights'] as const
 
-/** What the bottom navigation shows. */
-export const DESTINATIONS = [...PRIMARY_DESTINATIONS, 'more'] as const
+/** What the bottom navigation shows. Exactly the primary four. */
+export const DESTINATIONS = PRIMARY_DESTINATIONS
 
 /**
  * Reachable, but not worth a permanent slot.
  *
- * Section 5 keeps QA behind a secondary destination rather than letting
- * developer surfaces consume one of five places on a phone's navigation.
+ * More is a header entry; QA is reached from inside More. Neither takes a
+ * place on a phone's navigation bar.
  */
-export const SECONDARY_DESTINATIONS = ['qa'] as const
+export const SECONDARY_DESTINATIONS = ['more', 'qa'] as const
 
-export const ALL_DESTINATIONS = [...DESTINATIONS, ...SECONDARY_DESTINATIONS] as const
+export const ALL_DESTINATIONS = [...PRIMARY_DESTINATIONS, ...SECONDARY_DESTINATIONS] as const
 
 export type Destination = (typeof ALL_DESTINATIONS)[number]
 
