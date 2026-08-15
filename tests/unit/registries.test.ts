@@ -90,7 +90,17 @@ describe('life domains', () => {
 
 describe('concepts', () => {
   it('gives each concept its own freshness rather than one global number', () => {
-    expect(coreConcepts.definitionFor(CONCEPT.childPresent).freshness).toEqual({ unit: 'durable' })
+    // A settled arrangement does not expire…
+    expect(coreConcepts.definitionFor(CONCEPT.custodyArrangement).freshness).toEqual({
+      unit: 'durable',
+    })
+    // …but a one-off answer about tonight is only good for tonight. The
+    // standing answer comes from a context record's validity window, not from
+    // stretching a concept's clock to forever.
+    expect(coreConcepts.definitionFor(CONCEPT.childPresent).freshness).toEqual({
+      unit: 'local-days',
+      days: 1,
+    })
     expect(coreConcepts.definitionFor(CONCEPT.sleepHours).freshness).toEqual({
       unit: 'local-days',
       days: 1,

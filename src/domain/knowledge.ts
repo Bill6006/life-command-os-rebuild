@@ -15,7 +15,7 @@ import type { Instant, TimeZoneId } from './time'
  *
  * Four states, because the QA inspector has to tell them apart (section 31):
  *
- *   explicit  the owner said so
+ *   explicit  directly observed — the owner said so, or a device measured it
  *   inferred  we worked it out, with a confidence and the records behind it
  *   stale     we knew it once, and its freshness window has passed
  *   unknown   we do not know, and we say which flavour of not knowing
@@ -33,7 +33,18 @@ export function confidence(value: number): Confidence {
 }
 
 export type UnknownReason =
-  'never-observed' | 'retracted' | 'contradicted' | 'not-applicable' | 'malformed'
+  /** Nothing has ever spoken to this. */
+  | 'never-observed'
+  /** The owner withdrew what we had, and put nothing in its place. */
+  | 'retracted'
+  /** Records disagree and none of them wins. */
+  | 'contradicted'
+  /** Only a bounded context spoke to this, and its window has closed. */
+  | 'lapsed'
+  /** The concept does not apply in this situation. */
+  | 'not-applicable'
+  /** The only rows that mention it could not be read. */
+  | 'malformed'
 
 export interface Explicit<T> {
   readonly state: 'explicit'

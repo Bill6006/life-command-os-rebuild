@@ -103,11 +103,13 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     id: CONCEPT.childPresent,
     label: 'Child with the owner',
     domain: DOMAIN.fatherhood,
-    freshness: DURABLE,
+    // A one-off observation of tonight is good for tonight. The standing
+    // answer comes from a durable context record, whose currency is its own
+    // validity window rather than a clock — which is what stops the app asking
+    // about a settled arrangement every evening (G-002).
+    freshness: localDays(1),
     privacy: 'child-family-sensitive',
-    // Durable, so it is never re-asked on age alone. An exception record, not a
-    // question, is what changes it.
-    ask: { materialToDecision: true, askWhenStale: false },
+    ask: { materialToDecision: true, askWhenStale: true },
   },
   {
     id: CONCEPT.custodyArrangement,
