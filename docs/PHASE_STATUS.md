@@ -6,7 +6,7 @@ Report format: canonical plan section 58.
 
 # Phase 2 — Intelligence tournament + first real Now
 
-**Status: YELLOW — repaired three times after three phone passes, waiting on the next.**
+**Status: GREEN — owner-approved on the phone.**
 
 Section 47's gate is not automated. It ends with a person opening the app on a
 real phone and judging whether the recommendation is any good, and it fails if
@@ -14,9 +14,14 @@ the honest answer is generic, dumb, vague, too many questions, doesn't
 understand what it is talking about, looks lifeless, or technically valid but
 not useful.
 
-**Three phone passes have found eleven defects between them, and been right
-about every one.** DEF-0005 to DEF-0016 in
-[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
+**The owner approved it on `bd2b5fa`.** They returned to Preview after 18:00
+local, Now recalculated to "Saturday evening", and the recommendation and its
+explanation moved to the evening context with no stale state. That is the gate,
+and it is the only thing that could close this phase.
+
+**Four phone passes found twelve defects between them, and were right about
+every one.** DEF-0005 to DEF-0016 in [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
+The fourth pass approved it.
 
 The first pass found the sharpest, DEF-0006: a walk explained by a sleep figure
 that had contributed nothing to the decision. The owner's phrase — "rationalizing
@@ -126,7 +131,7 @@ job fails if the live `build-info.json` does not serve the pushed SHA.
 | CI green                                                   | Pass                                                                |
 | `npm run verify` from a clean checkout                     | Pass                                                                |
 | Preview deploys automatically, SHA matches                 | Pass                                                                |
-| **The owner tests the slice on a phone and accepts it**    | **Outstanding — three passes, eleven defects, ten repaired**        |
+| **The owner tests the slice on a phone and accepts it**    | **Pass — approved on `bd2b5fa` after four passes**                  |
 
 ## What changed
 
@@ -258,6 +263,13 @@ test, which is the argument for the gate being a person rather than a suite.
   forbids would be inventing a rule they did not state.
 - **`hold` is never generated.** A non-action is an arbitration outcome rather
   than a candidate, so the verb is only exercised by G-001's sweep.
+- **The clock advances on load, not continuously.** `MemoryProvider` captures
+  the moment once at mount, which is why returning to the app after 18:00
+  recalculated correctly during the owner's approval pass. A tab left open
+  across a block boundary will not notice on its own. Nothing in Phase 2 needs
+  it to — every decision is a pure function of the moment it was given — but
+  Phase 3's outcome windows are the first thing that will care, so it is written
+  down here rather than discovered there.
 
 ## Decisions made
 
