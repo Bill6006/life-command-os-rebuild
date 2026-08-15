@@ -1,0 +1,96 @@
+/* Element baseline. Layout and component styling live with their features. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  /* Text scaling and pinch zoom stay available (plan section 37). */
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background-color: var(--ground);
+
+  /*
+   * The illumination that keeps this from reading as a cave: a warm ember wash
+   * high on the screen and a cool violet counter-light low and to the side.
+   * Both are very low opacity — they are felt as depth, not seen as colour.
+   */
+  background-image:
+    radial-gradient(120% 68% at 50% -12%, rgba(255, 125, 77, 0.13), transparent 62%),
+    radial-gradient(90% 55% at 8% 108%, rgba(139, 123, 255, 0.1), transparent 60%),
+    linear-gradient(180deg, var(--ground) 0%, var(--ground-deep) 100%);
+  background-attachment: fixed;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Horizontal overflow is a mobile defect, not a scroll affordance. */
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.015em;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  /* Practical touch targets (plan section 37). */
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+}
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+/* Keyboard focus must stay visible everywhere. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: var(--accent-dim);
+  color: var(--text-primary);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

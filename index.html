@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Zoom is intentionally NOT disabled (canonical plan section 37). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#12151c" />
+    <meta name="description" content="Life Command OS — whole-life personal intelligence system." />
+    <link rel="icon" href="data:," />
+    <title>Life Command OS</title>
+    <script>
+      // Canonical plan section 33 — the owner must never wonder whether the
+      // phone is showing stale code. No service worker is registered in this
+      // phase, and any worker previously registered at this scope is removed.
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then(function (regs) {
+            regs.forEach(function (reg) {
+              reg.unregister()
+            })
+          })
+          .catch(function () {})
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

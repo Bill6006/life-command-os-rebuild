@@ -1,0 +1,18 @@
+node_modules
+dist
+dist-ssr
+coverage
+playwright-report
+test-results
+*.local
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Canonical plan section 39 — real owner data must never enter repo history.
+# Synthetic fixtures live in tests/fixtures and are committed intentionally.
+*.backup.json
+*-export-*.json
+private/
+owner-data/

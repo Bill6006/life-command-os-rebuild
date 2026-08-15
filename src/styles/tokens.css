@@ -1,0 +1,143 @@
+/*
+ * Life Command OS — initial design tokens
+ * Canonical plan section 24 (visual design contract).
+ *
+ * Direction: dark-first, modern, alive, dimensional, grounded, masculine-neutral.
+ * Explicitly avoided here: near-black everything, low-contrast text, neon
+ * borders on every card, gamer RGB, pastel wellness, sterile enterprise grey.
+ *
+ * Nothing in this file is locked. Section 69 keeps the exact palette, radii and
+ * animation system open until the interface has been judged on a real phone.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* ---- Ground and surfaces -------------------------------------------------
+   * A deep blue-charcoal, not black. Surfaces climb toward the light as they
+   * come forward, which is what produces depth without drawing neon outlines.
+   */
+  --ground: #14171f;
+  --ground-deep: #0f1218;
+  --surface-1: #1b1f29;
+  --surface-2: #232833;
+  --surface-3: #2c323f;
+  --surface-raised: #343b4a;
+
+  /* Hairlines catch light rather than glowing. */
+  --line-soft: rgba(255, 255, 255, 0.06);
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.16);
+
+  /* ---- Text (all body values clear WCAG AA on --ground) ------------------- */
+  --text-primary: #f4f6fa; /* 16.6:1 */
+  --text-secondary: #aab3c4; /* 8.5:1  */
+  --text-muted: #8d96aa; /* 6.0:1  */
+
+  /* ---- Accent -------------------------------------------------------------
+   * One selective accent: a warm ember reserved for the current decision and
+   * primary action. The violet is never a border — it exists only inside
+   * gradients and glows, to give surfaces dimension.
+   */
+  --accent: #ff7d4d; /* 7.1:1 on --ground */
+  --accent-deep: #e8622c;
+  --accent-on: #1a1207;
+  --accent-dim: rgba(255, 125, 77, 0.16);
+  --accent-edge: rgba(255, 125, 77, 0.34);
+  --violet: #8b7bff;
+  --violet-dim: rgba(139, 123, 255, 0.14);
+
+  /* ---- State --------------------------------------------------------------
+   * Distinct hues so "caution" can never be mistaken for the primary accent.
+   */
+  --positive: #46d19b;
+  --caution: #ffc75a;
+  --alert: #ff6b6b;
+  --info: #7aa2f7;
+
+  /* ---- Type ---------------------------------------------------------------
+   * System stack only. No webfont request, so the shell renders identically
+   * offline and nothing is fetched from a CDN.
+   */
+  --font-ui:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+    sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-md: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 1.875rem;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ---- Space (4px rhythm) ------------------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* ---- Radii --------------------------------------------------------------- */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.125rem;
+  --radius-xl: 1.5rem;
+  --radius-pill: 999px;
+
+  /* ---- Elevation ----------------------------------------------------------
+   * Shadow plus a top inner highlight: the surface reads as lit from above
+   * instead of outlined.
+   */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 4px 16px rgba(0, 0, 0, 0.36);
+  --shadow-3: 0 12px 32px rgba(0, 0, 0, 0.44);
+  --inner-lift: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  /* ---- Motion -------------------------------------------------------------
+   * Fast enough to never sit between the owner and the next tap.
+   */
+  --ease: cubic-bezier(0.2, 0.8, 0.3, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 130ms;
+  --dur: 190ms;
+  --dur-slow: 320ms;
+
+  /* ---- Layout -------------------------------------------------------------- */
+  --nav-height: 4rem;
+  --content-max: 34rem;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+/* Motion communicates change; it is never required to understand the screen. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur: 0ms;
+    --dur-slow: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

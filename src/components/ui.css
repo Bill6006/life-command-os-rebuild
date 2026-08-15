@@ -1,0 +1,221 @@
+/* Shared surface primitives. Kept small on purpose — component vocabulary
+ * should grow from real screens, not be invented ahead of them. */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  animation: screen-in var(--dur-slow) var(--ease-out);
+}
+
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.screen__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.screen__eyebrow {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.screen__title {
+  font-size: var(--text-2xl);
+}
+
+.screen__lede {
+  font-size: var(--text-md);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+/* ---- Panel ----------------------------------------------------------------
+ * The ordinary surface. One hairline, one shadow, one inner highlight — depth
+ * from light, not from an outline.
+ */
+.panel {
+  padding: var(--space-5);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface-1));
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2), var(--inner-lift);
+}
+
+.panel__title {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-md);
+}
+
+.panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+/* ---- Primary surface ------------------------------------------------------
+ * Reserved for the current decision. Richer light, warmer edge, more presence
+ * than anything else on the screen (plan section 24).
+ */
+.primary-surface {
+  position: relative;
+  padding: var(--space-6) var(--space-5);
+  background:
+    radial-gradient(140% 100% at 0% 0%, rgba(255, 125, 77, 0.16), transparent 58%),
+    radial-gradient(120% 120% at 100% 100%, var(--violet-dim), transparent 55%),
+    linear-gradient(165deg, var(--surface-3), var(--surface-1));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-3), var(--inner-lift);
+  overflow: hidden;
+}
+
+/* A single warm edge-light along the top, instead of a neon border. */
+.primary-surface::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: var(--space-6);
+  left: var(--space-6);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-edge), transparent);
+}
+
+.primary-surface__eyebrow {
+  display: block;
+  margin-bottom: var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.primary-surface__headline {
+  font-size: var(--text-xl);
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+}
+
+.primary-surface__body {
+  margin-top: var(--space-4);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+/* ---- Definition rows (About / QA) ------------------------------------------ */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+}
+
+.rows__row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.rows__row:last-child {
+  border-bottom: none;
+}
+
+.rows__key {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.rows__value {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  text-align: right;
+  /* Long values (a full SHA) must wrap rather than push the page sideways. */
+  overflow-wrap: anywhere;
+}
+
+.rows__value--mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+/* ---- Small parts ----------------------------------------------------------- */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.1875rem var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  background: var(--surface-3);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+}
+
+.tag--positive {
+  color: var(--positive);
+  border-color: rgba(70, 209, 155, 0.28);
+  background: rgba(70, 209, 155, 0.12);
+}
+
+.note {
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.list__item {
+  position: relative;
+  padding-left: var(--space-5);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+}
+
+.list__item::before {
+  content: '';
+  position: absolute;
+  top: 0.6875rem;
+  left: var(--space-1);
+  width: 0.3125rem;
+  height: 0.3125rem;
+  background: var(--accent);
+  border-radius: 50%;
+  opacity: 0.75;
+}

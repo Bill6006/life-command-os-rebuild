@@ -1,0 +1,67 @@
+name: Deploy production
+
+# Canonical plan section 33: promotion to production happens only through the
+# release phase. This workflow is manual-only and is never triggered by a push,
+# so production cannot move because preview changed.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type RELEASE to confirm promotion to production
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Promote to production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check the confirmation
+        run: |
+          test "${{ inputs.confirm }}" = "RELEASE" || {
+            echo "Confirmation not given — nothing was promoted." >&2
+            exit 1
+          }
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Full gate
+        run: |
+          node scripts/privacy-scan.mjs
+          npm run format:check
+          npm run lint
+          npm run typecheck
+          npm run test
+
+      - name: Build production bundle
+        run: npm run build
+        env:
+          LCOS_TARGET: production
+
+      - name: Publish to gh-pages root
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash .github/scripts/publish-pages.sh production dist
+
+      - name: Verify the deployed release
+        run: |
+          bash .github/scripts/verify-deployed-sha.sh \
+            "https://bill6006.github.io/life-command-os-rebuild/build-info.json" \
+            "${GITHUB_SHA}"

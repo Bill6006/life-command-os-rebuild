@@ -1,0 +1,15 @@
+# Normalise line endings so a Windows checkout and a Linux CI runner agree.
+* text=auto eol=lf
+
+# Shell scripts run on the CI runner — a CR would break bash outright.
+*.sh text eol=lf
+
+# Never touched by line-ending conversion.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary

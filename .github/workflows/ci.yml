@@ -1,0 +1,125 @@
+name: CI
+
+# Canonical plan section 33: an owner-visible checkpoint reaches Preview only
+# after its gate passes, and the deployed Preview SHA must equal the verified
+# checkpoint SHA. Deploying every green push to main makes that true by
+# construction rather than by inspection.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Privacy scan
+        run: node scripts/privacy-scan.mjs
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Build preview bundle
+        run: npm run build
+        env:
+          LCOS_TARGET: preview
+
+      - name: Assert the bundle carries this commit
+        run: |
+          set -euo pipefail
+          built="$(node -p "require('./dist/build-info.json').commitSha")"
+          echo "build-info.json commitSha: $built"
+          test "$built" = "${GITHUB_SHA}"
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser tests
+        run: npx playwright test
+        env:
+          LCOS_TARGET: preview
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
+      # The deploy job publishes exactly these bytes, so what reaches the phone
+      # is the artifact the gate verified.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: preview-dist
+          path: dist
+          retention-days: 7
+
+  deploy-preview:
+    name: Deploy preview
+    needs: verify
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: gh-pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: preview-dist
+          path: dist
+
+      - name: Publish to gh-pages:/preview
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash .github/scripts/publish-pages.sh preview dist
+
+      - name: Verify the phone will see this commit
+        run: |
+          bash .github/scripts/verify-deployed-sha.sh \
+            "https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json" \
+            "${GITHUB_SHA}"
+
+      - name: Summary
+        run: |
+          {
+            echo "### Preview updated"
+            echo
+            echo "| | |"
+            echo "| --- | --- |"
+            echo "| Checkpoint SHA | \`${GITHUB_SHA}\` |"
+            echo "| Deployed Preview SHA | \`${GITHUB_SHA}\` (verified live) |"
+            echo "| URL | https://bill6006.github.io/life-command-os-rebuild/preview/ |"
+          } >> "$GITHUB_STEP_SUMMARY"
