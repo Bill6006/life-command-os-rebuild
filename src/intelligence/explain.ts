@@ -13,6 +13,7 @@ import {
   addLocalDays,
   localDateTimeAt,
   localDayIdAt,
+  minutesIntoDay,
   type Instant,
   type IsoWeekday,
   type TimeZoneId,
@@ -55,6 +56,29 @@ const BLOCK_WORDS = {
   'late-night': 'late night',
 } as const
 
+/** The last hour of the afternoon, which is not what a person calls it. */
+const LATE_AFTERNOON_FROM = 17 * 60
+
+/**
+ * What to call the part of the day the owner is in.
+ *
+ * **Display only.** The evening begins at 18:00 for every purpose the engine
+ * has — which moves are eligible, which suit the hour, what protects tomorrow —
+ * and none of that moves because of this function. Telling someone at five to
+ * start winding down for the night would be worse than the thing being fixed
+ * here.
+ *
+ * What is fixed is the word. "Saturday afternoon" at a quarter to six is
+ * defensible by the clock and by the daylight, and is not what the owner read
+ * when they looked at their phone. The last hour before the boundary reads as
+ * the late afternoon it is, and nothing else changes.
+ */
+function blockWord(situation: Situation): string {
+  if (situation.block !== 'afternoon') return BLOCK_WORDS[situation.block]
+  const minutes = minutesIntoDay(localDateTimeAt(situation.at, situation.zone).timeOfDay)
+  return minutes >= LATE_AFTERNOON_FROM ? 'late afternoon' : 'afternoon'
+}
+
 function weekdayOf(at: Instant, zone: TimeZoneId): string {
   return WEEKDAYS[localDateTimeAt(at, zone).isoWeekday]
 }
@@ -81,7 +105,7 @@ function whenPhrase(at: Instant, situation: Situation): string {
 export function describePremise(situation: Situation): string {
   const clauses: string[] = []
   const local = localDateTimeAt(situation.at, situation.zone)
-  clauses.push(`${WEEKDAYS[local.isoWeekday]} ${BLOCK_WORDS[situation.block]}`)
+  clauses.push(`${WEEKDAYS[local.isoWeekday]} ${blockWord(situation)}`)
 
   const debt = situation.capacity.sleepDebtHours
   const lastNight = situation.capacity.lastNightHours
@@ -154,7 +178,7 @@ function leanedOn(evaluation: Evaluation, concept: ConceptId): boolean {
  */
 function hourThatSuits(evaluation: Evaluation, situation: Situation): string | undefined {
   const fit = evaluation.dimensions.find((dimension) => dimension.name === 'context-fit')
-  return fit !== undefined && fit.value > 0 ? BLOCK_WORDS[situation.block] : undefined
+  return fit !== undefined && fit.value > 0 ? blockWord(situation) : undefined
 }
 
 /**

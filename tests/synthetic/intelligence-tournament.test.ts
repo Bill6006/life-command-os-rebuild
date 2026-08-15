@@ -63,9 +63,13 @@ const EXPECTED: readonly Expectation[] = [
   { id: 'malformed-history', moves: false },
   { id: 'quiet-fortnight', moves: false },
   { id: 'across-timezones', moves: false },
-  // A month of history read three weeks later. Everything in it has aged out,
-  // so there is nothing to say until one question is answered.
-  { id: 'gone-quiet', moves: false },
+  /*
+   * A month of history read three weeks later. Every reading in it has aged
+   * out — and the custody arrangement has not, because durable context does not
+   * expire. So the one thing the app can still act on is the one thing that was
+   * never a reading, which is the point of the scenario.
+   */
+  { id: 'gone-quiet', domain: DOMAIN.fatherhood, names: 'Adaya', moves: true },
 ]
 
 interface Card {

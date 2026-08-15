@@ -159,9 +159,19 @@ describe('section 64 — different lives, different advice', () => {
      */
     const answers = spoken
       .filter((entry) => entry.decision.explanation !== undefined)
-      .map(
-        (entry) =>
-          `${entry.decision.explanation?.rendered.sentence}//${entry.decision.explanation?.rendered.reason}`,
+      .map((entry) =>
+        [
+          entry.decision.explanation?.rendered.sentence,
+          entry.decision.explanation?.rendered.reason,
+          // The premise counts. Two histories can differ in a great deal and
+          // agree on everything the engine can currently see — a month of
+          // expired readings on top of a settled custody arrangement leaves
+          // the same one usable fact as a history with nothing but the
+          // arrangement, and the same move for the same reason is then
+          // correct rather than generic. What still has to differ is what the
+          // owner reads, and the line above the decision is part of that.
+          entry.decision.explanation?.premise,
+        ].join('//'),
       )
     expect(new Set(answers).size).toBe(answers.length)
   })

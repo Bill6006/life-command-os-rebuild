@@ -925,6 +925,7 @@ function weekPointedAtHome(): Scenario {
 function goneQuiet(): Scenario {
   const kit = createKit('GQ', 'America/Denver', '2026-03-01T12:00:00Z')
   const adaya = entityRef('person', 'Adaya')
+  const custody = entityRef('relationship', 'Full custody')
   const subnetting = entityRef('learning-topic', 'subnetting')
   // Three weeks after the last thing anyone wrote down.
   const now = kit.local('2026-04-18', '16:30')
@@ -932,8 +933,8 @@ function goneQuiet(): Scenario {
   return {
     id: 'gone-quiet',
     title: 'A month of history, three weeks ago',
-    summary: 'Everything the app knows is weeks old — the case after a few days away.',
-    proves: 'Stale evidence is not knowledge: it says so plainly and asks, rather than guessing.',
+    summary: 'Every reading is weeks old. The custody arrangement is not, and does not expire.',
+    proves: 'Stale evidence expires; durable context does not, and is never re-asked.',
     zone: kit.zone,
     now,
     build() {
@@ -942,6 +943,13 @@ function goneQuiet(): Scenario {
         label: 'Adaya',
         domain: DOMAIN.fatherhood,
         privacy: 'child-family-sensitive',
+      })
+      const arrangement = kit.entity({
+        kind: 'relationship',
+        label: 'Full custody',
+        domain: DOMAIN.fatherhood,
+        privacy: 'child-family-sensitive',
+        links: [{ relation: 'party', target: adaya.id }],
       })
       const topic = kit.entity({
         kind: 'learning-topic',
@@ -955,6 +963,50 @@ function goneQuiet(): Scenario {
         domain: DOMAIN.home,
         privacy: 'normal',
       })
+
+      /*
+       * The arrangement, which does not go quiet with everything else.
+       *
+       * This scenario is meant to be the owner's own history after a few days
+       * away, and the first version of it left this out — so the app appeared
+       * to have forgotten a settled full-custody arrangement and asked whether
+       * his daughter was with him. It had not forgotten anything; there was
+       * nothing there to forget. A fixture that misrepresents the owner's life
+       * makes correct behaviour look broken, which is section 60's warning read
+       * from the other side.
+       *
+       * Durable context does not age (D-012), so these two stay authoritative
+       * while every point-in-time reading around them expires.
+       */
+      const standing = kit.record(
+        'context',
+        {
+          occurredAt: kit.local('2026-03-01', '09:00'),
+          domains: [DOMAIN.fatherhood],
+          entities: [adaya, custody],
+        },
+        {
+          concept: CONCEPT.custodyArrangement,
+          value: { type: 'text', value: 'full custody' },
+          durability: 'durable',
+          validFrom: kit.local('2026-03-01', '09:00'),
+        },
+      )
+
+      const present = kit.record(
+        'context',
+        {
+          occurredAt: kit.local('2026-03-01', '09:00'),
+          domains: [DOMAIN.fatherhood],
+          entities: [adaya],
+        },
+        {
+          concept: CONCEPT.childPresent,
+          value: { type: 'boolean', value: true },
+          durability: 'durable',
+          validFrom: kit.local('2026-03-01', '09:00'),
+        },
+      )
 
       const nights = Array.from({ length: 10 }, (_, offset) => {
         const day = String(18 + offset).padStart(2, '0')
@@ -1016,8 +1068,8 @@ function goneQuiet(): Scenario {
       )
 
       return kit.document({
-        entities: [child, topic, kitchen],
-        records: [...nights, ...evenings, studying, friction, direction],
+        entities: [child, arrangement, topic, kitchen],
+        records: [standing, present, ...nights, ...evenings, studying, friction, direction],
         exportedAt: now,
       })
     },

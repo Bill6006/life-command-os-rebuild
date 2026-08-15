@@ -6,7 +6,7 @@ Report format: canonical plan section 58.
 
 # Phase 2 — Intelligence tournament + first real Now
 
-**Status: YELLOW — repaired twice after two phone tests, waiting on the third.**
+**Status: YELLOW — repaired three times after three phone passes, waiting on the next.**
 
 Section 47's gate is not automated. It ends with a person opening the app on a
 real phone and judging whether the recommendation is any good, and it fails if
@@ -14,8 +14,9 @@ the honest answer is generic, dumb, vague, too many questions, doesn't
 understand what it is talking about, looks lifeless, or technically valid but
 not useful.
 
-**Two phone tests have found nine defects between them, and been right about
-every one.** DEF-0005 to DEF-0013 in [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
+**Three phone passes have found eleven defects between them, and been right
+about every one.** DEF-0005 to DEF-0016 in
+[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
 
 The first pass found the sharpest, DEF-0006: a walk explained by a sleep figure
 that had contributed nothing to the decision. The owner's phrase — "rationalizing
@@ -35,6 +36,14 @@ sweeps only inspected decisions made before any answer, and the branch they were
 meant to guard is only reachable after one. They now run a second time with each
 possible first answer given, which is what the owner was doing when they found
 it.
+
+The third pass asked two questions rather than reporting two bugs, and the
+answers went opposite ways. The guide asking "Is Adaya with you tonight?" was
+correct behaviour on a fixture that had left out the owner's custody arrangement
+— DEF-0015, a scenario defect with no engine change. "Saturday afternoon" at a
+quarter to six was a word rather than a boundary: 18:00 stays the evening for
+every decision the engine makes, and only the display moved (D-040). Inspecting
+the second of those turned up DEF-0016, which is open and deferred.
 
 Everything below has been re-run since the repairs. What is below is everything
 that _can_ be checked, and it all holds; the phone test is still the gate.
@@ -60,17 +69,17 @@ job fails if the live `build-info.json` does not serve the pushed SHA.
 | Format (Prettier)                         | Pass                                           |
 | Lint (ESLint)                             | Pass, 0 warnings                               |
 | Typecheck (strict TS)                     | Pass, 0 errors                                 |
-| Unit / contract / synthetic / adversarial | 327 passed / 327 (in plain Node, no DOM)       |
+| Unit / contract / synthetic / adversarial | 330 passed / 330 (in plain Node, no DOM)       |
 | Browser tests (Playwright)                | 120 passed / 120 — 40 tests × 360, 430, 1280px |
 | Production build                          | Pass                                           |
 | `npm run verify` from a clean checkout    | Pass                                           |
 | Deployed SHA matches checkpoint           | Asserted live in CI                            |
 
-### Where the 327 sit
+### Where the 330 sit
 
 | Suite                                                          | Tests |
 | -------------------------------------------------------------- | ----: |
-| `unit/intelligence-kernel` — readers, direction, moves, order  |    27 |
+| `unit/intelligence-kernel` — readers, direction, moves, order  |    30 |
 | `unit/time` — instants, civil dates, weeks, DST                |    20 |
 | `unit/registries` — ids, domains, concepts, privacy            |    19 |
 | `unit/knowledge` — the four states, freshness, asking          |    18 |
@@ -117,7 +126,7 @@ job fails if the live `build-info.json` does not serve the pushed SHA.
 | CI green                                                   | Pass                                                                |
 | `npm run verify` from a clean checkout                     | Pass                                                                |
 | Preview deploys automatically, SHA matches                 | Pass                                                                |
-| **The owner tests the slice on a phone and accepts it**    | **Outstanding — two tests, nine defects, all repaired**             |
+| **The owner tests the slice on a phone and accepts it**    | **Outstanding — three passes, eleven defects, ten repaired**        |
 
 ## What changed
 
@@ -187,6 +196,10 @@ then tap **Now**.
 5. **A settled arrangement, and one week away.** It should never ask whether
    Adaya is with you — and there should be no "Time" row, no "Still unknown",
    and no "Where this stands".
+   5b. **A month of history, three weeks ago.** Every reading in it has expired and
+   the custody arrangement has not, so it should act on the arrangement and
+   never ask about it. Between 17:00 and 18:00 the premise should read "late
+   afternoon" while the moves on offer stay exactly what they are at four.
 6. **Life, Timeline, Insights.** No phase numbers anywhere, and nothing claiming
    a part of the app is missing that is not.
 7. Back in QA, open **Ranking** and **What would change the answer** on any
@@ -248,7 +261,7 @@ test, which is the argument for the gate being a person rather than a suite.
 
 ## Decisions made
 
-D-021 … D-039 in [`DECISION_LOG.md`](DECISION_LOG.md).
+D-021 … D-041 in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Next
 

@@ -10,7 +10,11 @@ import { generateCandidates } from '../../src/intelligence/candidates'
 import { domainFromText } from '../../src/intelligence/direction'
 import { MOVE_PROFILES } from '../../src/intelligence/moves'
 import { QUESTIONS } from '../../src/intelligence/questions'
-import { blockOf, describeHours } from '../../src/intelligence/situation'
+import { describePremise } from '../../src/intelligence/explain'
+import { assembleSituation, blockOf, describeHours } from '../../src/intelligence/situation'
+import { snapshotFromWire } from '../../src/memory/snapshot'
+import { buildView } from '../../src/memory/view'
+import { scenarioById } from '../../src/synthetic/scenarios'
 import {
   booleanValue,
   entityValue,
@@ -123,6 +127,56 @@ describe('the owner-local part of the day', () => {
     const evening = at('2026-09-16T02:00:00Z')
     expect(blockOf(evening, DENVER)).toBe('evening')
     expect(blockOf(evening, timeZone('UTC'))).toBe('late-night')
+  })
+})
+
+describe('the word for the hour, and the boundary it does not move', () => {
+  /*
+   * These are two different jobs and they have two different right answers.
+   *
+   * The evening begins at 18:00 for every purpose the engine has, because
+   * telling someone at five to start winding down for the night is worse than
+   * saying nothing. "Saturday afternoon" at a quarter to six is defensible by
+   * the clock and is not what the owner read on their phone. So the word moves
+   * an hour earlier and the boundary does not — and this holds them apart.
+   */
+  const at = (hhmm: string) => instant(Date.parse(`2026-08-15T${hhmm}:00-06:00`))
+
+  it('keeps the decision boundary at 18:00', () => {
+    expect(blockOf(at('16:59'), DENVER)).toBe('afternoon')
+    expect(blockOf(at('17:00'), DENVER)).toBe('afternoon')
+    expect(blockOf(at('17:59'), DENVER)).toBe('afternoon')
+    expect(blockOf(at('18:00'), DENVER)).toBe('evening')
+  })
+
+  it('calls the last hour of it the late afternoon', () => {
+    const premiseAt = (hhmm: string) => {
+      const moment = { now: at(hhmm), zone: DENVER, weekStartsOn: 1 as const }
+      const loaded = snapshotFromWire(scenarioById('gone-quiet')!.build())
+      return describePremise(assembleSituation(buildView(loaded.snapshot, moment), moment))
+    }
+
+    expect(premiseAt('16:30')).toContain('Saturday afternoon')
+    expect(premiseAt('16:30')).not.toContain('late afternoon')
+    expect(premiseAt('17:00')).toContain('Saturday late afternoon')
+    expect(premiseAt('17:45')).toContain('Saturday late afternoon')
+    expect(premiseAt('18:05')).toContain('Saturday evening')
+  })
+
+  it('changes nothing about which moves are available', () => {
+    // The whole point of splitting the two: renaming the hour must not make a
+    // wind-down proposable an hour early.
+    const loaded = snapshotFromWire(scenarioById('gone-quiet')!.build())
+    const shape = (hhmm: string) => {
+      const moment = { now: at(hhmm), zone: DENVER, weekStartsOn: 1 as const }
+      const situation = assembleSituation(buildView(loaded.snapshot, moment), moment)
+      return generateCandidates(situation)
+        .map((candidate) => candidate.id)
+        .sort()
+        .join(',')
+    }
+
+    expect(shape('17:45')).toBe(shape('16:30'))
   })
 })
 

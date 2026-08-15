@@ -35,9 +35,70 @@ until its siblings in the same failure class have been checked.
 
 ## Open
 
-None.
+### DEF-0016 — a strained late afternoon has nowhere to go
+
+- Status: **Open — deferred by owner decision, not a release blocker**
+- Severity: Major
+- Found in: Phase 2 / `be032cc`
+- Found by: inspecting what changes at the evening boundary, while diagnosing an
+  unrelated wording question
+- Class: **a filter with no fallback.** `protect-sleep` and `wind-down` refuse
+  every block before 18:00, which is right — telling someone at five to start
+  winding down for the night is worse than saying nothing. But when they are the
+  only recovery moves available, refusing them leaves the owner with nothing at
+  all.
+- Reproduction: a history with severe sleep debt and no current learning topic,
+  read at 17:45. The sleep generator proposes `protect-sleep`, the filter
+  rejects it as `wrong-time-of-day`, and Now says **"Nothing fits tonight."** to
+  someone nine hours down. Fifteen minutes later the same history says "Start
+  winding down now and let tonight be a recovery night."
+- Why it is not fixed here: the fix is a new recovery move that suits the
+  afternoon — a nap, a short lie-down, easing off for the rest of the day — and
+  adding a verb means a template, a profile, a generator branch and its own
+  copy. That is a change to what the engine can suggest, which is more than the
+  wording repair it was found during, and section 47's gate is about the moves
+  the owner already sees.
+- What holds the ground meanwhile: nothing. A strained owner in the late
+  afternoon with no study topic gets a correct refusal and no alternative. The
+  case is narrow — with a topic in play, `recover` suits the afternoon and fires
+  normally — but it is real.
+- Owner decision: recorded and deferred during the second Phase 2 repair.
 
 ## Fixed
+
+### DEF-0015 — a scenario that misrepresented the owner's own life
+
+- Status: Fixed
+- Severity: Major — correct behaviour made to look broken
+- Found in: Phase 2 / `be032cc`
+- Found by: owner phone test, third pass
+- Class: **a fixture that leaves out something the owner actually has.** Section
+  60 warns that fixtures must not make hardcoded logic look correct; this is the
+  same failure read from the other side. `gone-quiet` was built to represent the
+  owner's history after a few days away and contained an Adaya entity, three
+  evenings together, and no custody context at all — so `childPresent` resolved
+  to unknown and the guide asked whether his daughter was with him. The engine
+  had not forgotten a durable arrangement. There was none there to forget.
+- Reproduction: load "A month of history, three weeks ago", answer the energy
+  question, and the next question is "Is Adaya with you tonight?" — with full
+  custody already a settled fact of the owner's real life.
+- Root cause: the scenario was written to demonstrate staleness and modelled
+  only the things that go stale.
+- Fix: the durable custody arrangement and durable presence are in it now, as
+  they are in `durable-custody`. The engine is unchanged — G-002's behaviour was
+  correct throughout, and `durable-custody` and `week-pointed-at-home` have
+  never asked.
+- Consequence, and it is the better scenario: everything in that history has
+  expired except the one thing that never does, so the app acts on the custody
+  arrangement rather than saying it has nothing. That demonstrates the
+  distinction the scenario is named for more sharply than "nothing to suggest"
+  did.
+- Regression: `tests/synthetic/adaptive-guide.test.ts` — "does not ask about
+  something a durable arrangement already answers" already covered the rule;
+  what was missing was a scenario shaped like the owner. The binary-question
+  regression that needed an unknown `childPresent` now builds its own fixture,
+  `beforeTheArrangementIsKnown`, which is never shown on a phone.
+- Fixed in: the third repair checkpoint after `be032cc`
 
 ### DEF-0013 — an empty card under the recommendation
 

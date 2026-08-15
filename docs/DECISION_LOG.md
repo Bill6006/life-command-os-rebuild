@@ -722,3 +722,50 @@ knows it, and G-001 sweeps the recommendation catalogue for exactly that failure
 — but nothing swept the questions, so "How much have you got left?" shipped
 asking about energy and saying so nowhere. The owner had to ask what it meant,
 which is the evidence.
+
+---
+
+## D-040 — The word for the hour and the boundary for the decision are separate
+
+**Phase:** 2 · **Status:** Active
+
+The evening begins at 18:00 for every purpose the engine has — which moves are
+eligible, which suit the hour, what protects tomorrow. For display only, the
+last hour before it reads as "late afternoon".
+
+**Why:** The owner looked at their phone at a quarter to six and read "Saturday
+afternoon". By the clock and by the daylight that is correct; by how it lands it
+is not. Moving the real boundary to 17:00 would fix the word and make "start
+winding down now and let tonight be a recovery night" proposable at five past
+five, which is worse than the thing being fixed.
+
+**What this is not:** a new time block. `DayBlock` is unchanged, every move
+profile is unchanged, no filter or score moves. A test holds the two apart by
+asserting the boundary is still 18:00 and that the set of candidates generated
+at 17:45 is identical to the set at 16:30.
+
+---
+
+## D-041 — A scenario the owner is shown has to be a life they recognise
+
+**Phase:** 2 · **Status:** Active
+
+`gone-quiet` carries the durable full-custody arrangement, because the owner
+does. Fixtures that need a fact deliberately missing are built inside the test
+that needs them and are never added to the scenario library.
+
+**Why:** DEF-0015. The scenario was written to demonstrate staleness and
+modelled only the things that go stale, so the app asked whether his daughter
+was with him — and looked to have forgotten a settled arrangement it had never
+been told about. Section 60 warns that fixtures must not make hardcoded logic
+look correct; the same carelessness in the other direction makes correct logic
+look broken, and costs more, because the owner has no way to tell which it is
+from the outside.
+
+**Consequence:** the binary-question regression that needs an unknown
+`childPresent` builds its own history, `beforeTheArrangementIsKnown` — a
+plausible moment, before the owner has told the app anything, that nobody is
+handed on a phone.
+
+**Not changed:** the engine's custody and presence behaviour. G-002 was correct
+throughout, and `durable-custody` and `week-pointed-at-home` have never asked.

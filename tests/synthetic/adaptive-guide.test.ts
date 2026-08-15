@@ -3,7 +3,11 @@ import { CONCEPT } from '../../src/domain/concepts'
 import { decide } from '../../src/intelligence/engine'
 import { answeredToday, nextGuideStep, QUESTIONS_PER_DAY } from '../../src/intelligence/guide'
 import { answerRecord, questionFor } from '../../src/intelligence/questions'
+import { DOMAIN } from '../../src/domain/domains'
+import { entityRef } from '../../src/domain/entities'
+import { instant, type Instant, type TimeZoneId } from '../../src/domain/time'
 import { snapshotFromWire } from '../../src/memory/snapshot'
+import { createKit } from '../../src/synthetic/kit'
 import type { StoreSnapshot } from '../../src/memory/store'
 import { buildView } from '../../src/memory/view'
 import { SCENARIOS, scenarioById } from '../../src/synthetic/scenarios'
@@ -29,8 +33,8 @@ function open(id: string) {
   return { scenario, snapshot: loaded.snapshot }
 }
 
-function moment(scenario: { now: number; zone: string }) {
-  return { now: scenario.now as never, zone: scenario.zone as never }
+function moment(scenario: { now: Instant; zone: TimeZoneId }) {
+  return { now: scenario.now, zone: scenario.zone }
 }
 
 function countGuideAnswers(snapshot: StoreSnapshot): number {
@@ -57,11 +61,8 @@ function answer(
 
   // Answers are about the same moment and written down a minute apart, which
   // is what a person tapping through actually produces.
-  const written = (at.now as number) + (countGuideAnswers(snapshot) + 1) * 60_000
-  const record = answerRecord(step.question.spec, option, {
-    ...at,
-    recordedAt: written as never,
-  })
+  const written = instant(at.now + (countGuideAnswers(snapshot) + 1) * 60_000)
+  const record = answerRecord(step.question.spec, option, { ...at, recordedAt: written })
   return {
     snapshot: { ...snapshot, records: [...snapshot.records, record] },
     asked: step.question.prompt,
@@ -346,6 +347,58 @@ describe('it stops when asking stops helping — DEF-0008', () => {
   })
 })
 
+/**
+ * A history from before the app was told the arrangement.
+ *
+ * Built here rather than added to the scenario library on purpose. The rule
+ * under test needs a history where the child question is genuinely open, and
+ * the only way to get that is to leave out the durable custody context — which
+ * is fine as a moment in time, since there is one before the owner has told the
+ * app anything, and wrong as something to hand them on a phone. `gone-quiet`
+ * was doing this job and reading, to the owner, as though the app had forgotten
+ * a settled full-custody arrangement. It has the arrangement now; this does
+ * not, and nobody is shown it.
+ */
+function beforeTheArrangementIsKnown() {
+  const kit = createKit('TB', 'America/Denver', '2026-03-01T12:00:00Z')
+  const adaya = entityRef('person', 'Adaya')
+  const now = kit.local('2026-04-18', '16:30')
+
+  const child = kit.entity({
+    kind: 'person',
+    label: 'Adaya',
+    domain: DOMAIN.fatherhood,
+    privacy: 'child-family-sensitive',
+  })
+
+  const nights = [16, 17, 18].map((day) =>
+    kit.record(
+      'observation',
+      { occurredAt: kit.local(`2026-03-${day}`, '07:00'), domains: [DOMAIN.sleep] },
+      {
+        concept: CONCEPT.sleepHours,
+        value: { type: 'number', value: 7, unit: 'hours' },
+        method: 'self-report',
+      },
+    ),
+  )
+
+  const evening = kit.record(
+    'relationship-event',
+    {
+      occurredAt: kit.local('2026-03-20', '19:30'),
+      domains: [DOMAIN.fatherhood],
+      entities: [adaya],
+    },
+    { withEntity: adaya, nature: 'Made pancakes', quality: 'positive' },
+  )
+
+  const loaded = snapshotFromWire(
+    kit.document({ entities: [child], records: [...nights, evening], exportedAt: now }),
+  )
+  return { snapshot: loaded.snapshot, at: { now, zone: kit.zone } }
+}
+
 describe('a two-option question can still be asked — DEF-0009', () => {
   /*
    * The defect the repair for DEF-0008 introduced.
@@ -358,8 +411,7 @@ describe('a two-option question can still be asked — DEF-0009', () => {
    * bar is now a share rather than a count, and half of two is one.
    */
   it('asks about the child when the answer would change the move', () => {
-    const { scenario, snapshot } = open('gone-quiet')
-    const at = moment(scenario)
+    const { snapshot, at } = beforeTheArrangementIsKnown()
 
     // One answer to get past "nothing to suggest", then the binary question.
     const withEnergy = answer(snapshot, at, (labels) => labels.length - 2).snapshot
@@ -370,8 +422,7 @@ describe('a two-option question can still be asked — DEF-0009', () => {
   })
 
   it('turns the walk into time with her when the answer is yes', () => {
-    const { scenario, snapshot } = open('gone-quiet')
-    const at = moment(scenario)
+    const { snapshot, at } = beforeTheArrangementIsKnown()
 
     const withEnergy = answer(snapshot, at, (labels) => labels.length - 2).snapshot
     const solo = decide(buildView(withEnergy, at), at)
