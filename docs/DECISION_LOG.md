@@ -168,3 +168,174 @@ is no engine, no record store and no learning yet.
 answer. Showing a plausible-looking recommendation before the engine exists
 would be exactly the "large UI in front of a weak brain" failure this rebuild
 exists to correct.
+
+---
+
+## D-011 — Fact resolution is Phase 1, not Phase 2
+
+**Phase:** 1 · **Status:** Active
+
+Working out what is currently known — which record wins, what has been
+superseded, what has gone stale, what is simply unknown — lives in
+`src/memory/facts.ts` and ships with the meaning layer.
+
+**Why:** Section 17.1 lists the fact resolver as step one of the intelligence
+pipeline, which reads as Phase 2 work. But the Phase 1 gate requires G-002 and
+G-009 to pass as automated scenarios, and neither question can be answered
+without resolving facts. The boundary that actually holds is this: Phase 1
+decides _what is known_; Phase 2 decides _what to do about it_ — candidates,
+constraints, evaluation, arbitration, explanation. None of the latter exists
+yet.
+
+---
+
+## D-012 — Narrower scope wins, and a context is current because its window says so
+
+**Phase:** 1 · **Status:** Active
+
+Among the records that apply right now, a statement about this moment beats a
+temporary arrangement, which beats a standing one. Within a tier, the latest
+wins. Separately: point-in-time evidence ages against the concept's freshness
+window, and a context record does not — a context is in force between its
+`validFrom` and `validUntil`, and that is the whole of its currency.
+
+**Why:** These two rules together are what make scenario G-002 work without a
+special case for custody. Full custody is a durable context, so it answers
+indefinitely and is never re-asked (section 8). A trip is a situational context,
+so it wins for three evenings and then stops mattering, without erasing
+anything. Tonight's explicit answer beats both, and goes stale tomorrow.
+
+**Rejected alternative:** giving the concept a `durable` freshness horizon. It
+made the durable case work and quietly broke the point-in-time case — an
+observation about one evening would never have expired.
+
+---
+
+## D-013 — Time is several distinct branded types, and the local ones are derived
+
+**Phase:** 1 · **Status:** Active
+
+`Instant`, `LocalDayId`, `LocalWeekId`, `LocalTimeOfDay` and `TimeZoneId` are
+nominal types that will not substitute for one another. Records store an instant
+and a timezone; the local day and week are computed on demand and never stored.
+Calendar arithmetic runs on civil dates, never on milliseconds.
+
+**Why:** Section 15 requires these concepts not to be interchangeable and states
+that a week identifier is not an instant. Branding makes that a compile error
+rather than a code review. Deriving the local parts means they cannot drift out
+of agreement with the instant they came from, and it lets the owner's week start
+change without rewriting history. Civil-date arithmetic is why a 23-hour local
+day is 23 hours long everywhere it matters.
+
+---
+
+## D-014 — Knowledge has four states and no way to ask for a default
+
+**Phase:** 1 · **Status:** Active
+
+`explicit | inferred | stale | unknown`. There is no `valueOr`, no `getOrElse`.
+The exits are `matchKnowledge`, which requires every case to be handled, and
+`valueIfUsable`, which returns `undefined`. Aggregating nothing returns unknown,
+never zero.
+
+**Why:** G-009. A convenience default is how "never answered" becomes "answered
+zero", and once one exists every caller reaches for it. Stale is a separate
+state rather than a flag for the same reason: a value with `fresh: false` reads
+perfectly well if you forget to check, which is how months-old assumptions get
+presented as current (section 63).
+
+---
+
+## D-015 — The store keeps wire JSON and parses on the way out; append is all-or-nothing
+
+**Phase:** 1 · **Status:** Active
+
+IndexedDB holds records in the same JSON an export produces. Reading parses
+them, so a row that has gone bad on disk returns as an inspectable malformed row
+rather than as an exception. Appending the identical record twice is a no-op;
+a different record wearing a taken id is rejected; one rejection rejects the
+batch. There is no update and no delete.
+
+**Why:** Sections 13.1, 20 and 29. Idempotent append is what lets an import be
+re-run. All-or-nothing is what stops a half-applied batch reporting a success it
+cannot deliver. Parsing on read is what makes corruption cost one entry instead
+of a lifetime.
+
+---
+
+## D-016 — One IndexedDB database per deploy target
+
+**Phase:** 1 · **Status:** Active
+
+`life-command-os:preview`, `life-command-os:production`,
+`life-command-os:development`.
+
+**Why:** IndexedDB is scoped to an origin, not to a path, and D-003 puts Preview
+and production on two paths of one `github.io` origin. Without a name per target
+they would share a database, and synthetic QA data would land in the same place
+as real history — the opposite of the separation section 33 requires.
+
+---
+
+## D-017 — Unrecognised fields survive at the top of a record and are refused inside it
+
+**Phase:** 1 · **Status:** Active
+
+A field the schema does not know, at the top level of a record, is carried
+through verbatim and written back out unchanged. The same field inside a
+provenance block, an entity reference or a fact value is a validation issue.
+
+**Why:** Section 30 requires unknown fields to survive an eventual legacy
+import, and "canonical data round-trips without loss" should be true of data
+this version has never seen. Inside a nested structure there is no such case to
+serve — an extra key there is a mistake, and silently dropping it on the next
+round-trip is worse than saying so. Legacy payloads that fit nowhere have their
+own record kind, which keeps them verbatim by design.
+
+---
+
+## D-018 — A recommendation that cannot resolve its subject renders nothing
+
+**Phase:** 1 · **Status:** Active
+
+`renderRecommendation` returns either a complete sentence or the list of
+references that failed to resolve. There is no fallback wording.
+
+**Why:** Section 13.4 and the Phase 1 special acceptance. A fallback string is
+precisely how "it" reaches a screen: the moment a renderer can degrade, the
+degraded path becomes the one nobody notices. A surface can say a recommendation
+could not be shown. It must never say something confident about an unnamed
+subject.
+
+---
+
+## D-019 — Synthetic scenarios are their own module
+
+**Phase:** 1 · **Status:** Active
+
+`src/synthetic/` holds the scenario library. It has no React and no DOM, and it
+produces JSON documents rather than in-memory object graphs.
+
+**Why:** Section 31 makes the synthetic laboratory a first-class surface, and the
+same scenarios are used by the QA screen and by the golden tests. Putting them
+under `features/qa/` would tie the test suite to a UI folder; putting them in
+`domain/` or `memory/` would put fixtures inside the layers they exercise.
+Emitting documents rather than objects means a scenario is loaded through the
+same parser a pasted file uses — section 60's warning that fixtures must not
+make hardcoded logic look correct.
+
+---
+
+## D-020 — Browser tests run at one worker, locally as well as in CI
+
+**Phase:** 1 · **Status:** Active, revisitable
+
+**Why:** A single `vite preview` process drops connections under concurrency.
+That was survivable at two workers until a route arrived in its own chunk: a
+lazily loaded screen adds a mid-test request, and under load that request is the
+one that stalls — which presents as a hung screen rather than as a busy server.
+Section 60 records that failures which merely look like product failures cost
+real time. Matching CI exactly is worth more than the seconds saved.
+
+**Revisit if:** the preview build is ever served by something sturdier than
+`vite preview`.

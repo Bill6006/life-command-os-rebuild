@@ -39,4 +39,32 @@ None.
 
 ## Fixed
 
-None yet — Phase 0 introduced no verified defects.
+### DEF-0001 — recommendation templates reached for a pronoun
+
+- Status: Fixed
+- Severity: Major — this is the defect scenario G-001 exists to prevent
+- Found in: Phase 1 / pre-`b637ab3`
+- Found by: the automated class sweep in `tests/synthetic/g001-no-orphan-pronoun.test.ts`,
+  on its first run
+- Class: **any sentence template that can render a pronoun where the subject is
+  known.** Not "three bad strings" — a catalogue that grows one verb at a time,
+  where each new entry is an opportunity to reintroduce the same failure.
+- Reproduction: render `review-weak-topic`, `recover`, or the `deficit` reason
+  for any subject. Sentences came out as "Go back over subnetting, the part
+  **that** keeps slipping", "…leave you better **this** morning", "subnetting is
+  the **thing** running short".
+- Root cause: the templates were written by hand with no rule applied to them.
+  The subject was present in every case, so the defect was invisible to a
+  spot-check of one sentence — which is exactly how it would have reached a
+  phone.
+- Regression: `tests/synthetic/g001-no-orphan-pronoun.test.ts` — "covers every
+  verb in the catalogue", "covers every reason the catalogue can give", and
+  "also renders cleanly with no duration and no goal". The sweep walks
+  `ACTION_VERBS` and `WHY_NOW_TRIGGERS` rather than a list of known-bad cases,
+  so a fourteenth verb is checked the moment it exists.
+- Siblings: checked and clean — all fourteen verbs, both the with-duration and
+  without-duration forms, all eight reasons, and every follow-up question.
+- Note on the fix: the copy changed, not the rule. Relaxing the check to allow
+  a relative pronoun would have been defensible for each individual sentence and
+  would have left a loophole the next template gets written through.
+- Fixed in: `b637ab3`
