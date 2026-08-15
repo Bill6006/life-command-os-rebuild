@@ -96,7 +96,9 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       globals: true,
       setupFiles: ['./tests/unit/setup.ts'],
-      include: ['tests/unit/**/*.test.ts', 'tests/unit/**/*.test.tsx'],
+      // Test layers from canonical plan section 41. Browser tests run under
+      // Playwright and are deliberately not in this list.
+      include: ['tests/{unit,contract,synthetic,adversarial}/**/*.test.{ts,tsx}'],
     },
   }
 })

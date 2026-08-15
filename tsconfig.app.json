@@ -25,5 +25,12 @@
 
     "types": ["vitest/globals"]
   },
-  "include": ["src", "tests/unit", "src/vite-env.d.ts"]
+  "include": [
+    "src",
+    "tests/unit",
+    "tests/contract",
+    "tests/synthetic",
+    "tests/adversarial",
+    "src/vite-env.d.ts"
+  ]
 }
