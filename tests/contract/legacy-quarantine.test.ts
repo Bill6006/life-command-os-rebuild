@@ -111,9 +111,7 @@ describe('imported legacy records are preserved and inert', () => {
       },
     )
 
-    const mixed = snapshotFromWire(
-      documentWith([recordToWire(imported), recordToWire(real)]),
-    )
+    const mixed = snapshotFromWire(documentWith([recordToWire(imported), recordToWire(real)]))
     const both = buildView(mixed.snapshot, { now: NOW, zone: ZONE })
 
     // The real one decides. The legacy nine hours is not even a rival.
