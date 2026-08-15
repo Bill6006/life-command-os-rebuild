@@ -58,7 +58,13 @@ export const QUESTIONS: readonly QuestionSpec[] = [
   },
   {
     concept: CONCEPT.energy,
-    prompt: () => 'How much have you got left?',
+    // Named, because the owner asked what it meant. The registry has always
+    // called this "Current energy"; the question was the one place that never
+    // said so, and a prompt made entirely of interrogative filler — "how much
+    // have you got left?" — could have been about time, sleep or patience.
+    // Section 3's rule about not losing the noun is not only about
+    // recommendations.
+    prompt: () => 'How much energy have you got left?',
     options: [
       { id: 'empty', label: 'Running on empty', value: scale(1) },
       { id: 'low', label: 'Low', value: scale(2) },
@@ -120,6 +126,17 @@ export function questionFor(concept: ConceptId): QuestionSpec | undefined {
 export interface AnswerMoment {
   readonly now: Instant
   readonly zone: TimeZoneId
+  /**
+   * When the answer was written down, if that differs from what it is about.
+   *
+   * The envelope has always distinguished the two, and guide answers were
+   * collapsing them: the moment being asked about is fixed for the whole
+   * session, so three taps a minute apart all claimed to have been recorded at
+   * the same instant. Canonical order then fell through to the record id, which
+   * carries no meaning by design — leaving "the answer you gave last"
+   * genuinely unanswerable, and a rule that depended on it quietly wrong.
+   */
+  readonly recordedAt?: Instant
 }
 
 /**
@@ -154,6 +171,7 @@ export function answerRecord(
     'observation',
     {
       occurredAt: moment.now,
+      ...(moment.recordedAt === undefined ? {} : { recordedAt: moment.recordedAt }),
       id,
       domains: [definition.domain],
       privacy: definition.privacy,

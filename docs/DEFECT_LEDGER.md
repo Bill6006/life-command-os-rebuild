@@ -39,6 +39,134 @@ None.
 
 ## Fixed
 
+### DEF-0013 — an empty card under the recommendation
+
+- Status: Fixed
+- Severity: Minor — a piece of furniture with nothing in it
+- Found in: Phase 2 / `9a742e4`
+- Found by: owner phone test, second pass
+- Class: **a container rendered unconditionally around conditional contents.**
+  All four rows under the decision are optional, and on an evening with no
+  limiter and a single candidate every one of them is absent — leaving a
+  bordered, padded rectangle with nothing inside it.
+- Reproduction: load "A settled arrangement, and one week away" and open Now.
+- Root cause: the panel did not ask whether it had anything to show.
+- Regression: `tests/browser/now.spec.ts` — "renders no empty card when there
+  is nothing to put in one", and "never draws a panel with nothing in it, on
+  any scenario", which walks five of them.
+- Fixed in: the second repair checkpoint after `9a742e4`
+
+### DEF-0012 — an absence asserted from ignorance
+
+- Status: Fixed
+- Severity: Major — same class as DEF-0006, and subtler
+- Found in: Phase 2 / `9a742e4`
+- Found by: owner phone test, second pass
+- Class: **stating that nothing exists when nothing was visible.** "Nothing more
+  pressing to spend it on" reads as a finding about the owner's life. It was a
+  statement about how little the engine could see: on the evening it was caught
+  there was exactly one candidate, and the topic, the house, the daughter and
+  the evening were all unknown or months stale.
+- Reproduction: any history where the movement generator is the only one that
+  fires. The reason ended "…and nothing more pressing to spend it on."
+- Root cause: the clause was written into the `good-conditions` branch as
+  atmosphere rather than derived from anything. Nothing in the ranking supports
+  it — `bottleneck-fit` scoring zero means "no limiter was detected", which is
+  not the same claim.
+- Fix: the branch now says only what the ranking can support — the reading the
+  owner gave, and the part of the day, which is checked against the actual
+  `context-fit` dimension rather than assumed.
+- Regression: `tests/synthetic/no-hidden-genericity.test.ts` — "claims nothing
+  about what it could not see". Reintroducing the clause was tried; it fails.
+- Note on the first attempt: the regression initially did **not** bite, because
+  the copy sweeps only inspected decisions made before any answer, and this
+  branch is only reachable after one. The sweeps now run over every scenario a
+  second time with each possible first answer given — which is what the owner
+  was doing when they found it.
+- Siblings: swept every line the engine can produce, in both passes. "Nothing
+  else is pressing" in the `nothing-better` branch is the same claim and is
+  covered by the same check.
+- Fixed in: the second repair checkpoint after `9a742e4`
+
+### DEF-0011 — a question that never said what it was about
+
+- Status: Fixed
+- Severity: Major — the owner could not tell what was being asked
+- Found in: Phase 2 / `9a742e4`
+- Found by: owner phone test, second pass — by having to ask
+- Class: **losing the noun in a question rather than in a recommendation.**
+  G-001 sweeps the recommendation catalogue for exactly this failure and
+  nothing swept the questions, so "How much have you got left?" shipped: a
+  sentence with every content word removed, which could have been about time,
+  sleep, patience or money. The registry has always called the concept
+  "Current energy".
+- Reproduction: load any history with no capacity reading and open Now.
+- Root cause: the prompt was written as conversational shorthand, and section
+  3's rule was being applied to one kind of owner-facing sentence and not the
+  other.
+- Regression: `tests/unit/intelligence-kernel.test.ts` — "names what it is
+  asking about", which strips the interrogative frame from every prompt in the
+  catalogue and fails if nothing is left, plus a direct check on energy.
+  Reverting the prompt was tried; both fail.
+- Siblings: checked all six. Sleep, time, the child, soreness and company all
+  name their subject already; energy was the only one that did not.
+- Fixed in: the second repair checkpoint after `9a742e4`
+
+### DEF-0010 — the guide could not tell which answer was the last one
+
+- Status: Fixed
+- Severity: Major — a rule that silently removed an arbitrary answer
+- Found in: Phase 2 / `9a742e4`
+- Found by: tracing why a repaired guide still asked three questions
+- Class: **ordering by a field that cannot separate the records in question.**
+  Every answer in a session is about the same moment, so `occurredAt` is
+  identical across them; `recordedAt` defaulted to it; and canonical order then
+  falls through to the record id, which carries no meaning by design. "The
+  answer you gave last" was whichever id happened to sort last.
+- Reproduction: answer two guide questions in one session. DEF-0008's stopping
+  rule replays the decision without the most recent answer — and was removing
+  one at random, so a run that should have stopped at two questions ran to
+  three.
+- Root cause: the envelope has always distinguished when a thing happened from
+  when it was written down, and guide answers were collapsing the two.
+- Fix: an answer now carries the moment it was written down. Under time travel
+  those genuinely differ; within one session they are what tells two answers
+  apart.
+- Regression: `tests/synthetic/adaptive-guide.test.ts` — "writes each answer
+  down at a distinct moment" and "stops after the answer that changed nothing,
+  not before it". Collapsing `recordedAt` back was tried; both fail.
+- Siblings: checked — `laterOf` in the fact resolver has the same shape and
+  already falls through to the record id deliberately, for records that are
+  genuinely simultaneous. This is the case where they were not.
+- Fixed in: the second repair checkpoint after `9a742e4`
+
+### DEF-0009 — every two-option question was unaskable
+
+- Status: Fixed
+- Severity: Blocker — the guide could not ask the question that mattered most
+- Found in: Phase 2 / `9a742e4`
+- Found by: owner phone test, second pass, and confirmed against the trace
+- Class: **a threshold expressed as a count where the quantity is a share.**
+  DEF-0008's repair required at least two of a question's answers to lead
+  somewhere other than where the engine already stood. One of a binary
+  question's two answers is almost always the situation it is already in, so a
+  binary question can only ever reach one. "Is she with you tonight?" sat at
+  0-of-2 or 1-of-2 in every scenario in the library and was never asked.
+- Reproduction: "A month of history, three weeks ago", answer the energy
+  question, and Now settles on a solo twenty-five minute walk — while the trace
+  shows that answering yes to the child question would have made it an
+  afternoon with his daughter.
+- Root cause: `overturns >= 2`.
+- Fix: `overturns * 2 >= options`. Half of two is one, and the four-option
+  questions behave exactly as before — verified across every question in every
+  scenario before the change was made.
+- Regression: `tests/synthetic/adaptive-guide.test.ts` — "asks about the child
+  when the answer would change the move", "turns the walk into time with her
+  when the answer is yes", and "still refuses a question only one answer in
+  four would move", which holds DEF-0008's ground. Restoring the count rule was
+  tried; the first two fail.
+- Fixed in: the second repair checkpoint after `9a742e4`
+
 ### DEF-0008 — the guide kept asking after asking stopped helping
 
 - Status: Fixed

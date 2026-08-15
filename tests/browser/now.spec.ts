@@ -20,7 +20,9 @@ async function loadInQa(page: Page, title: string) {
 }
 
 async function goToNow(page: Page) {
-  await page.getByRole('button', { name: 'Now' }).click()
+  // Scoped to the bar: role names match as substrings, and a scenario summary
+  // reading "everything the app knows" contains one.
+  await page.locator('.nav').getByRole('button', { name: 'Now' }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Now' })).toBeVisible()
 }
 
@@ -68,6 +70,39 @@ test.describe('one scenario, read from Now', () => {
     await expect(page.locator('.rows__row', { hasText: 'Still unknown' })).toHaveCount(0)
   })
 
+  test('renders no empty card when there is nothing to put in one', async ({ page }) => {
+    /*
+     * On an evening with no limiter and a single candidate, all four detail
+     * rows are absent — and the panel around them was still drawn, leaving an
+     * empty bordered rectangle under the recommendation for the owner to work
+     * out. A panel with nothing in it is not a quiet panel.
+     */
+    await loadInQa(page, 'A settled arrangement, and one week away')
+    await goToNow(page)
+
+    await expect(page.locator('.primary-surface__headline')).toContainText('Adaya')
+
+    // No limiter, one candidate, nothing asked — so there is nothing to put in
+    // a panel, and none is drawn.
+    await expect(page.locator('.panel')).toHaveCount(0)
+  })
+
+  test('never draws a panel with nothing in it, on any scenario', async ({ page }) => {
+    for (const title of [
+      'Three broken nights, and a deadline',
+      'A week pointed at the house',
+      'A settled arrangement, and one week away',
+      'A month of history, three weeks ago',
+      'Two ordinary weeks',
+    ]) {
+      await loadInQa(page, title)
+      await goToNow(page)
+      for (const panel of await page.locator('.panel').all()) {
+        await expect(panel, title).not.toBeEmpty()
+      }
+    }
+  })
+
   test('reads the clock the laboratory set', async ({ page }) => {
     await loadInQa(page, 'Three broken nights, and a deadline')
     await goToNow(page)
@@ -92,7 +127,7 @@ test.describe('the guide, on the Now flow', () => {
     await goToNow(page)
 
     const headline = page.locator('.primary-surface__headline')
-    await expect(page.getByTestId('now-question')).toContainText('How much have you got left')
+    await expect(page.getByTestId('now-question')).toContainText('How much energy have you got')
     await expect(headline).toHaveText('Nothing to suggest just yet.')
 
     await page.locator('.now-option').last().click()
@@ -107,8 +142,10 @@ test.describe('the guide, on the Now flow', () => {
      * actually asked rather than by whatever number was nearest.
      */
     await expect(headline).toHaveText('Move for 25 minutes: a walk.')
+    // Only what the walk actually won on: the reading just given, and the part
+    // of the day, which the ranking scored positively.
     await expect(page.getByTestId('now-reason')).toHaveText(
-      'Energy is good and nothing more pressing is in the way.',
+      'Energy is good, and the evening suits a walk.',
     )
   })
 

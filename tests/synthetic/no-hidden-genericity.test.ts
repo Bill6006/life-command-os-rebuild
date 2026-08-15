@@ -5,6 +5,8 @@ import { renderRecommendation } from '../../src/domain/recommendation'
 import { AHEAD_BECAUSE } from '../../src/intelligence/explain'
 import { profileFor } from '../../src/intelligence/moves'
 import { decide, type Decision } from '../../src/intelligence/engine'
+import { nextGuideStep } from '../../src/intelligence/guide'
+import { answerRecord } from '../../src/intelligence/questions'
 import { buildView } from '../../src/memory/view'
 import { snapshotFromWire } from '../../src/memory/snapshot'
 import { SCENARIOS } from '../../src/synthetic/scenarios'
@@ -36,35 +38,74 @@ interface Spoken {
   readonly lines: readonly { readonly what: string; readonly text: string }[]
 }
 
+function linesOf(decision: Decision): readonly { what: string; text: string }[] {
+  const lines: { what: string; text: string }[] = []
+  if (decision.explanation !== undefined) {
+    const shown = decision.explanation
+    lines.push({ what: 'sentence', text: shown.rendered.sentence })
+    lines.push({ what: 'reason', text: shown.rendered.reason })
+    lines.push({ what: 'follow-up', text: shown.rendered.followUp })
+    lines.push({ what: 'premise', text: shown.premise })
+    if (shown.limiter !== undefined) lines.push({ what: 'limiter', text: shown.limiter })
+    if (shown.instead !== undefined) lines.push({ what: 'instead', text: shown.instead })
+    if (shown.insteadBecause !== undefined) {
+      lines.push({ what: 'instead-because', text: shown.insteadBecause })
+    }
+  }
+  if (decision.noAction !== undefined) {
+    lines.push({ what: 'headline', text: decision.noAction.headline })
+    lines.push({ what: 'detail', text: decision.noAction.detail })
+  }
+  return lines
+}
+
 function speak(): readonly Spoken[] {
   return SCENARIOS.map((scenario) => {
     const loaded = snapshotFromWire(scenario.build())
-    const view = buildView(loaded.snapshot, { now: scenario.now, zone: scenario.zone })
-    const decision = decide(view, { now: scenario.now, zone: scenario.zone })
-
-    const lines: { what: string; text: string }[] = []
-    if (decision.explanation !== undefined) {
-      const shown = decision.explanation
-      lines.push({ what: 'sentence', text: shown.rendered.sentence })
-      lines.push({ what: 'reason', text: shown.rendered.reason })
-      lines.push({ what: 'follow-up', text: shown.rendered.followUp })
-      lines.push({ what: 'premise', text: shown.premise })
-      if (shown.limiter !== undefined) lines.push({ what: 'limiter', text: shown.limiter })
-      if (shown.instead !== undefined) lines.push({ what: 'instead', text: shown.instead })
-      if (shown.insteadBecause !== undefined) {
-        lines.push({ what: 'instead-because', text: shown.insteadBecause })
-      }
-    }
-    if (decision.noAction !== undefined) {
-      lines.push({ what: 'headline', text: decision.noAction.headline })
-      lines.push({ what: 'detail', text: decision.noAction.detail })
-    }
-
-    return { id: scenario.id, decision, lines }
+    const at = { now: scenario.now, zone: scenario.zone }
+    const decision = decide(buildView(loaded.snapshot, at), at)
+    return { id: scenario.id, decision, lines: linesOf(decision) }
   })
 }
 
 const spoken = speak()
+
+/**
+ * The same again, after one answer.
+ *
+ * Several of the reason generator's branches are only reachable once the owner
+ * has told the app something — the walk's explanation among them, which is how
+ * a check on "nothing more pressing to spend it on" came to pass while the
+ * clause was still there. Deciding only at the opening moment tests the half of
+ * the engine the owner sees first and none of what happens when they tap.
+ */
+function speakAfterOneAnswer(): readonly Spoken[] {
+  const out: Spoken[] = []
+
+  for (const scenario of SCENARIOS) {
+    const loaded = snapshotFromWire(scenario.build())
+    const at = { now: scenario.now, zone: scenario.zone }
+    const step = nextGuideStep(buildView(loaded.snapshot, at), at)
+    if (step.kind !== 'question' || step.question === undefined) continue
+
+    for (const option of step.question.options) {
+      const snapshot = {
+        ...loaded.snapshot,
+        records: [...loaded.snapshot.records, answerRecord(step.question.spec, option, at)],
+      }
+      const decision = decide(buildView(snapshot, at), at)
+      out.push({
+        id: `${scenario.id} after “${option.label}”`,
+        decision,
+        lines: linesOf(decision),
+      })
+    }
+  }
+
+  return out
+}
+
+const everythingSpoken = [...spoken, ...speakAfterOneAnswer()]
 
 /**
  * Lives that differ in what actually drives a decision.
@@ -167,13 +208,13 @@ const INTERNAL_VOCABULARY = [
 
 describe('section 61 — how it is allowed to talk', () => {
   it('says something for every scenario', () => {
-    for (const entry of spoken) {
+    for (const entry of everythingSpoken) {
       expect(entry.lines.length, entry.id).toBeGreaterThan(0)
     }
   })
 
   it('uses no words from inside the machine', () => {
-    for (const entry of spoken) {
+    for (const entry of everythingSpoken) {
       for (const line of entry.lines) {
         const lowered = line.text.toLowerCase()
         for (const word of INTERNAL_VOCABULARY) {
@@ -186,7 +227,7 @@ describe('section 61 — how it is allowed to talk', () => {
   it('quotes no arithmetic about how sure it is', () => {
     // Section 61: no excessive confidence math. "Moderate evidence · 7
     // comparable observations" is the anti-example the plan gives by name.
-    for (const entry of spoken) {
+    for (const entry of everythingSpoken) {
       for (const line of entry.lines) {
         expect(line.text, `${entry.id} ${line.what}`).not.toMatch(/\d\s*%/)
         expect(line.text, `${entry.id} ${line.what}`).not.toMatch(/0\.\d{2,}/)
@@ -327,6 +368,24 @@ describe('the reason only cites what the decision leaned on — DEF-0006', () =>
       const capacity = entry.decision.situation.capacity
       const known = isUsable(capacity.energy) || isUsable(capacity.soreness)
       expect(known, `${entry.id} proposed a walk on no capacity reading`).toBe(true)
+    }
+  })
+
+  it('claims nothing about what it could not see — DEF-0012', () => {
+    /*
+     * "Nothing more pressing to spend it on" was the subtler sibling of the
+     * walk's sleep figure. It reads as a finding about the owner's life; it was
+     * a statement about how little the engine could see. On the evening it was
+     * caught there was exactly one candidate and everything else was unknown or
+     * months stale, so the absence it reported was its own.
+     *
+     * The rule this leaves: an absence may not be asserted from ignorance.
+     */
+    for (const entry of everythingSpoken) {
+      for (const line of entry.lines) {
+        expect(line.text, `${entry.id} ${line.what}`).not.toMatch(/nothing more pressing/i)
+        expect(line.text, `${entry.id} ${line.what}`).not.toMatch(/nothing else is pressing/i)
+      }
     }
   })
 

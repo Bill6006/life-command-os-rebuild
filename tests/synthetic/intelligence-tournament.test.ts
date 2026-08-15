@@ -63,6 +63,9 @@ const EXPECTED: readonly Expectation[] = [
   { id: 'malformed-history', moves: false },
   { id: 'quiet-fortnight', moves: false },
   { id: 'across-timezones', moves: false },
+  // A month of history read three weeks later. Everything in it has aged out,
+  // so there is nothing to say until one question is answered.
+  { id: 'gone-quiet', moves: false },
 ]
 
 interface Card {

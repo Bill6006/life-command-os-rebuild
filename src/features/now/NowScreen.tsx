@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Panel, PrimarySurface, Row, Rows, Screen } from '../../components/ui'
-import { localDateTimeAt } from '../../domain/time'
+import { localDateTimeAt, systemClock } from '../../domain/time'
 import { decide } from '../../intelligence/engine'
 import { nextGuideStep } from '../../intelligence/guide'
+import type { Explanation } from '../../intelligence/explain'
 import { answerRecord, type QuestionOption, type QuestionSpec } from '../../intelligence/questions'
 import type { MoveState } from '../../intelligence/situation'
 import { isPreview, isProduction } from '../../platform/buildInfo'
@@ -89,8 +90,17 @@ export function NowScreen() {
 
   const answer = (spec: QuestionSpec, option: QuestionOption) => {
     setAnswering(true)
+    // The answer is about the moment being asked about, and is written down
+    // now. Under time travel those genuinely differ; within one session they
+    // are what tells two answers apart.
     void memory
-      .append([answerRecord(spec, option, { now: memory.now, zone: memory.zone })])
+      .append([
+        answerRecord(spec, option, {
+          now: memory.now,
+          zone: memory.zone,
+          recordedAt: systemClock().now(),
+        }),
+      ])
       .finally(() => setAnswering(false))
   }
 
@@ -129,7 +139,8 @@ export function NowScreen() {
           </PrimarySurface>
 
           {/*
-            Four things at most, and each of them earns its line.
+            Four things at most, and each of them earns its line — including
+            the panel itself, which does not appear when none of them do.
 
             What went: a "Time" row carrying the move's own length, which read
             as how much time the owner had and contradicted the guide asking
@@ -140,22 +151,7 @@ export function NowScreen() {
             answer is what the guide below is for. And "Where this stands: New
             tonight", which said nothing at all until a move has a history.
           */}
-          <Panel>
-            <Rows>
-              {explanation.limiter === undefined ? null : (
-                <Row label="What is in the way" value={explanation.limiter} />
-              )}
-              {explanation.instead === undefined ? null : (
-                <Row label="Chosen over" value={explanation.instead} />
-              )}
-              {explanation.insteadBecause === undefined ? null : (
-                <Row label="Why this one" value={explanation.insteadBecause} />
-              )}
-              {decision.state === undefined || decision.state === 'shown' ? null : (
-                <Row label="Where this stands" value={STATE_WORDS[decision.state]} />
-              )}
-            </Rows>
-          </Panel>
+          <DetailPanel explanation={explanation} state={decision.state} />
         </>
       )}
 
@@ -175,6 +171,49 @@ export function NowScreen() {
         </p>
       )}
     </Screen>
+  )
+}
+
+/**
+ * The rows under the decision, or nothing at all.
+ *
+ * Every row here is conditional, and on an evening with no limiter and only one
+ * candidate all four are absent — which rendered an empty bordered card with
+ * padding under the recommendation. A panel with nothing in it is not a quiet
+ * panel; it is a piece of furniture the owner has to work out.
+ */
+function DetailPanel({
+  explanation,
+  state,
+}: {
+  explanation: Explanation
+  state: MoveState | undefined
+}) {
+  const rows = [
+    explanation.limiter === undefined
+      ? undefined
+      : { label: 'What is in the way', value: explanation.limiter },
+    explanation.instead === undefined
+      ? undefined
+      : { label: 'Chosen over', value: explanation.instead },
+    explanation.insteadBecause === undefined
+      ? undefined
+      : { label: 'Why this one', value: explanation.insteadBecause },
+    state === undefined || state === 'shown'
+      ? undefined
+      : { label: 'Where this stands', value: STATE_WORDS[state] },
+  ].filter((row): row is { label: string; value: string } => row !== undefined)
+
+  if (rows.length === 0) return null
+
+  return (
+    <Panel>
+      <Rows>
+        {rows.map((row) => (
+          <Row key={row.label} label={row.label} value={row.value} />
+        ))}
+      </Rows>
+    </Panel>
   )
 }
 

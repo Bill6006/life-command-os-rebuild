@@ -903,6 +903,127 @@ function weekPointedAtHome(): Scenario {
   }
 }
 
+// ---------------------------------------------------------------------------
+// A history read long after it was written
+// ---------------------------------------------------------------------------
+
+/**
+ * Three weeks of nothing, on top of a month that had plenty in it.
+ *
+ * This is the state the owner actually met on a phone, and no fixture covered
+ * it: a history loaded in an earlier session, still sitting in the browser
+ * database, read at today's real clock. Every fact in it had aged out — sleep
+ * stale, the week's direction belonging to a week long gone, the topic and the
+ * cluttered kitchen both past their horizons — while the records themselves
+ * were all still there.
+ *
+ * It is not a contrived case. It is what happens after a few days away, and it
+ * is the one where the temptation to say something anyway is strongest: there
+ * is a great deal of history on the screen and none of it is about tonight. The
+ * right answer is to say so and ask one question, which is what the app does.
+ */
+function goneQuiet(): Scenario {
+  const kit = createKit('GQ', 'America/Denver', '2026-03-01T12:00:00Z')
+  const adaya = entityRef('person', 'Adaya')
+  const subnetting = entityRef('learning-topic', 'subnetting')
+  // Three weeks after the last thing anyone wrote down.
+  const now = kit.local('2026-04-18', '16:30')
+
+  return {
+    id: 'gone-quiet',
+    title: 'A month of history, three weeks ago',
+    summary: 'Everything the app knows is weeks old — the case after a few days away.',
+    proves: 'Stale evidence is not knowledge: it says so plainly and asks, rather than guessing.',
+    zone: kit.zone,
+    now,
+    build() {
+      const child = kit.entity({
+        kind: 'person',
+        label: 'Adaya',
+        domain: DOMAIN.fatherhood,
+        privacy: 'child-family-sensitive',
+      })
+      const topic = kit.entity({
+        kind: 'learning-topic',
+        label: 'subnetting',
+        domain: DOMAIN.career,
+        privacy: 'normal',
+      })
+      const kitchen = kit.entity({
+        kind: 'place',
+        label: 'the kitchen',
+        domain: DOMAIN.home,
+        privacy: 'normal',
+      })
+
+      const nights = Array.from({ length: 10 }, (_, offset) => {
+        const day = String(18 + offset).padStart(2, '0')
+        return kit.record(
+          'observation',
+          { occurredAt: kit.local(`2026-03-${day}`, '07:00'), domains: [DOMAIN.sleep] },
+          {
+            concept: CONCEPT.sleepHours,
+            value: { type: 'number', value: 6.5 + ((offset * 3) % 4) / 4, unit: 'hours' },
+            method: 'self-report',
+          },
+        )
+      })
+
+      const evenings = [20, 24, 27].map((day) =>
+        kit.record(
+          'relationship-event',
+          {
+            occurredAt: kit.local(`2026-03-${day}`, '19:30'),
+            domains: [DOMAIN.fatherhood],
+            entities: [adaya],
+          },
+          { withEntity: adaya, nature: 'Made pancakes', quality: 'positive' },
+        ),
+      )
+
+      const studying = kit.record(
+        'observation',
+        {
+          occurredAt: kit.local('2026-03-22', '20:00'),
+          domains: [DOMAIN.career],
+          entities: [subnetting],
+        },
+        {
+          concept: CONCEPT.learningTopic,
+          value: { type: 'entity', value: subnetting },
+          method: 'self-report',
+        },
+      )
+
+      const friction = kit.record(
+        'observation',
+        {
+          occurredAt: kit.local('2026-03-25', '18:00'),
+          domains: [DOMAIN.home],
+          entities: [entityRef('place', 'the kitchen')],
+        },
+        {
+          concept: CONCEPT.homeFriction,
+          value: { type: 'text', value: 'the kitchen table is buried again' },
+          method: 'self-report',
+        },
+      )
+
+      const direction = kit.record(
+        'explicit-fact',
+        { occurredAt: kit.local('2026-03-23', '08:00'), domains: [DOMAIN.direction] },
+        { concept: CONCEPT.weeklyFocus, value: { type: 'text', value: 'home' } },
+      )
+
+      return kit.document({
+        entities: [child, topic, kitchen],
+        records: [...nights, ...evenings, studying, friction, direction],
+        exportedAt: now,
+      })
+    },
+  }
+}
+
 export const SCENARIOS: readonly Scenario[] = [
   subnettingStruggle(),
   sleepDeficitAgainstCareer(),
@@ -914,6 +1035,7 @@ export const SCENARIOS: readonly Scenario[] = [
   correctionsAndSupersession(),
   malformedHistory(),
   quietFortnight(),
+  goneQuiet(),
 ]
 
 export function scenarioById(id: string): Scenario | undefined {

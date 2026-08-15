@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { CONCEPT } from '../../src/domain/concepts'
 import { coreDomains, DOMAIN } from '../../src/domain/domains'
 import { explicit, inferred, confidence, unknown } from '../../src/domain/knowledge'
 import type { FactValue } from '../../src/domain/records'
@@ -211,6 +212,84 @@ describe('the questions it is allowed to ask', () => {
   it('asks about each thing exactly once', () => {
     const concepts = QUESTIONS.map((question) => question.concept)
     expect(new Set(concepts).size).toBe(concepts.length)
+  })
+
+  it('names what it is asking about — DEF-0011', () => {
+    /*
+     * "How much have you got left?" was asking about energy, and said so
+     * nowhere. The owner had to ask what it meant, which is the evidence: with
+     * every content word removed the sentence could have been about time,
+     * sleep, patience or money.
+     *
+     * Section 3's rule is that the app never loses the noun when it knows it,
+     * and the registry has always called this concept "Current energy". G-001
+     * sweeps the recommendation catalogue for exactly this failure; nothing
+     * swept the questions.
+     *
+     * The check: strip the interrogative frame, and something has to be left.
+     */
+    const FRAME = new Set([
+      'how',
+      'much',
+      'many',
+      'have',
+      'has',
+      'you',
+      'your',
+      'got',
+      'left',
+      'what',
+      'is',
+      'are',
+      'was',
+      'were',
+      'do',
+      'did',
+      'does',
+      'get',
+      'anything',
+      'any',
+      'the',
+      'a',
+      'an',
+      'or',
+      'and',
+      'with',
+      'for',
+      'up',
+      'in',
+      'on',
+      'at',
+      'to',
+      'of',
+      'right',
+      'now',
+      'today',
+      'tonight',
+      'actually',
+      'still',
+      'back',
+      'there',
+      'it',
+      'this',
+      'that',
+    ])
+
+    const situation = loadScenario('durable-custody').decision().situation
+
+    for (const question of QUESTIONS) {
+      const prompt = question.prompt(situation)
+      const content = (prompt.toLowerCase().match(/[a-z']+/g) ?? []).filter(
+        (word) => !FRAME.has(word),
+      )
+      expect(content, `"${prompt}" names nothing`).not.toEqual([])
+    }
+  })
+
+  it('names energy in the question about energy', () => {
+    const situation = loadScenario('durable-custody').decision().situation
+    const energy = QUESTIONS.find((question) => question.concept === CONCEPT.energy)
+    expect(energy?.prompt(situation).toLowerCase()).toContain('energy')
   })
 })
 

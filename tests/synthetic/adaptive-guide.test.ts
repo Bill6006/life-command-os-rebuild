@@ -33,6 +33,10 @@ function moment(scenario: { now: number; zone: string }) {
   return { now: scenario.now as never, zone: scenario.zone as never }
 }
 
+function countGuideAnswers(snapshot: StoreSnapshot): number {
+  return snapshot.records.filter((record) => record.provenance.writtenBy === 'guide').length
+}
+
 function stepOn(snapshot: StoreSnapshot, at: ReturnType<typeof moment>) {
   return nextGuideStep(buildView(snapshot, at), at)
 }
@@ -51,7 +55,13 @@ function answer(
   const option = step.question.options[index]
   if (option === undefined) throw new Error('no such option')
 
-  const record = answerRecord(step.question.spec, option, at)
+  // Answers are about the same moment and written down a minute apart, which
+  // is what a person tapping through actually produces.
+  const written = (at.now as number) + (countGuideAnswers(snapshot) + 1) * 60_000
+  const record = answerRecord(step.question.spec, option, {
+    ...at,
+    recordedAt: written as never,
+  })
   return {
     snapshot: { ...snapshot, records: [...snapshot.records, record] },
     asked: step.question.prompt,
@@ -111,6 +121,31 @@ describe('the guide asks when an answer would change something', () => {
     // Never the same question twice — an answered concept is no longer worth
     // asking about, which the fact layer decides rather than the guide.
     expect(new Set(asked).size).toBe(asked.length)
+  })
+
+  it('never says nothing would change the answer while the trace says otherwise', () => {
+    /*
+     * The inspector was reporting four questions as changing the answer and,
+     * directly beneath, giving "none of them would change the answer" as the
+     * reason for stopping — both from the same run. Two different reasons for
+     * stopping had been sharing one sentence.
+     */
+    for (const scenario of SCENARIOS) {
+      const loaded = snapshotFromWire(scenario.build())
+      const at = moment(scenario)
+      const view = buildView(loaded.snapshot, at)
+      const step = nextGuideStep(view, at)
+      if (step.kind !== 'settled') continue
+
+      const movable = decide(view, at, { probe: true }).trace.wouldChange.filter(
+        (swing) => swing.changesTheAnswer,
+      ).length
+      if (movable === 0) continue
+
+      expect(step.because, `${scenario.id}: ${movable} would change it`).not.toContain(
+        'none of them would change the answer',
+      )
+    }
   })
 
   it('gives a reason for stopping that is not just “done”', () => {
@@ -308,6 +343,104 @@ describe('it stops when asking stops helping — DEF-0008', () => {
 
     expect(after.kind).not.toBe(before.kind)
     expect(stepOn(answered, at).kind).toBe('question')
+  })
+})
+
+describe('a two-option question can still be asked — DEF-0009', () => {
+  /*
+   * The defect the repair for DEF-0008 introduced.
+   *
+   * Requiring two answers to lead somewhere else made every binary question
+   * unaskable, because one of a binary question's two answers is almost always
+   * the situation the engine is already standing in. "Is she with you tonight?"
+   * sat at 1-of-2 in every scenario in the library and was never asked — while
+   * answering yes turns a solo walk into an afternoon with his daughter. The
+   * bar is now a share rather than a count, and half of two is one.
+   */
+  it('asks about the child when the answer would change the move', () => {
+    const { scenario, snapshot } = open('gone-quiet')
+    const at = moment(scenario)
+
+    // One answer to get past "nothing to suggest", then the binary question.
+    const withEnergy = answer(snapshot, at, (labels) => labels.length - 2).snapshot
+    const step = stepOn(withEnergy, at)
+
+    expect(step.kind).toBe('question')
+    expect(step.question?.prompt).toContain('Adaya')
+  })
+
+  it('turns the walk into time with her when the answer is yes', () => {
+    const { scenario, snapshot } = open('gone-quiet')
+    const at = moment(scenario)
+
+    const withEnergy = answer(snapshot, at, (labels) => labels.length - 2).snapshot
+    const solo = decide(buildView(withEnergy, at), at)
+    expect(solo.evaluation?.candidate.semantics.target.verb).toBe('move')
+
+    const withChild = answer(withEnergy, at, () => 0).snapshot
+    const together = decide(buildView(withChild, at), at)
+
+    expect(together.evaluation?.candidate.semantics.target.verb).toBe('time-with')
+    expect(together.explanation?.rendered.sentence).toContain('Adaya')
+    // And it says what it displaced.
+    expect(together.explanation?.instead).toContain('walk')
+  })
+
+  it('still refuses a question only one answer in four would move', () => {
+    // The half rule has to keep doing DEF-0008's job. Sleep in this history
+    // moves the answer on one option of four; it is not asked.
+    const { scenario, snapshot } = open('durable-custody')
+    const at = moment(scenario)
+    expect(stepOn(snapshot, at).kind).toBe('settled')
+  })
+})
+
+describe('the guide can tell which answer was the last one — DEF-0010', () => {
+  /*
+   * Every answer in a session is about the same moment, so `occurredAt` cannot
+   * separate them, and canonical order then falls through to the record id —
+   * which is opaque by design. "The answer you gave last" was therefore
+   * whichever id happened to sort last, and the rule that stops asking once an
+   * answer changes nothing was removing an arbitrary one.
+   */
+  it('writes each answer down at a distinct moment', () => {
+    const { scenario, snapshot } = open('quiet-fortnight')
+    const at = moment(scenario)
+
+    // "Enough" rather than "Running on empty": the latter settles the screen in
+    // one answer, and this needs two of them to compare.
+    const one = answer(snapshot, at, (labels) => labels.length - 2).snapshot
+    const two = answer(one, at, (labels) => labels.length - 2).snapshot
+    const written = two.records
+      .filter((record) => record.provenance.writtenBy === 'guide')
+      .map((record) => record.recordedAt)
+
+    expect(written).toHaveLength(2)
+    expect(new Set(written).size).toBe(2)
+    // …and all of them are about the moment being asked about.
+    for (const record of two.records.filter((r) => r.provenance.writtenBy === 'guide')) {
+      expect(record.occurredAt).toBe(scenario.now)
+    }
+  })
+
+  it('stops after the answer that changed nothing, not before it', () => {
+    // Two questions here: energy transforms the screen, sleep does not, and the
+    // guide stops on the second rather than carrying on to a third.
+    const { scenario, snapshot } = open('quiet-fortnight')
+    const at = moment(scenario)
+
+    let current = snapshot
+    const asked: string[] = []
+    for (let round = 0; round < 6; round += 1) {
+      const step = stepOn(current, at)
+      if (step.kind === 'settled') break
+      const result = answer(current, at, (labels) => labels.length - 2)
+      asked.push(result.asked)
+      current = result.snapshot
+    }
+
+    expect(asked).toHaveLength(2)
+    expect(stepOn(current, at).because).toContain('did not move it')
   })
 })
 

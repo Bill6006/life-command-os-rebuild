@@ -48,18 +48,25 @@ import type { Swing } from './trace'
 export const QUESTIONS_PER_DAY = 3
 
 /**
- * How many of a question's answers have to lead somewhere else before it is
- * worth asking.
+ * How much of a question has to be live before it is worth asking: half of it.
  *
- * One is not enough, and that is the whole point of this constant. A question
- * where a single corner-case answer would move the recommendation is
- * technically capable of changing it and practically a waste of a tap — and
- * because the guide re-asks after every answer, a run of them is how "too many
- * questions" happens without any single question being unjustifiable. The
- * inspector still reports those as changing the answer, because they do; the
- * guide simply does not spend the owner's attention on them.
+ * One answer out of four is not enough — a question where a single corner-case
+ * answer would move the recommendation is technically capable of changing it
+ * and practically a waste of a tap, and because the guide re-asks after every
+ * answer, a run of those is how "too many questions" happens without any single
+ * question being unjustifiable.
+ *
+ * The share matters rather than the count, and that is the correction. An
+ * earlier version required two answers outright, which quietly made every
+ * two-option question unaskable: one of the two answers is almost always the
+ * situation the engine is already standing in, so a binary question can only
+ * ever reach one. "Is she with you tonight?" sat at 1-of-2 in every scenario in
+ * the library and was never asked, while answering yes would have turned a solo
+ * walk into an afternoon with his daughter. Half of two is one.
  */
-const ANSWERS_THAT_MUST_MOVE = 2
+function worthATap(overturns: number, options: number): boolean {
+  return options > 0 && overturns * 2 >= options
+}
 
 export interface GuideQuestion {
   readonly spec: QuestionSpec
@@ -100,6 +107,7 @@ function mostValuable(swings: readonly Swing[], decision: Decision): Swing | und
   const rank = (swing: Swing) => ({
     outcomes: new Set(swing.outcomes.map((outcome) => outcome.wouldChoose)).size,
     overturns: swing.outcomes.filter((outcome) => outcome.wouldChoose !== standing).length,
+    options: questionFor(swing.concept)?.options.length ?? 0,
     position: order.indexOf(swing.concept),
   })
 
@@ -109,7 +117,7 @@ function mostValuable(swings: readonly Swing[], decision: Decision): Swing | und
   for (const swing of swings) {
     if (!swing.changesTheAnswer) continue
     const scored = rank(swing)
-    if (scored.overturns < ANSWERS_THAT_MUST_MOVE) continue
+    if (!worthATap(scored.overturns, scored.options)) continue
     if (
       bestRank === undefined ||
       scored.outcomes > bestRank.outcomes ||
@@ -149,7 +157,9 @@ function lastAnswerMovedIt(
   for (const record of view.history.effective) {
     if (record.provenance.writtenBy !== GUIDE_PROVENANCE.writtenBy) continue
     if (localDayIdAt(record.occurredAt, moment.zone) !== today) continue
-    if (latest === undefined || record.occurredAt >= latest.occurredAt) latest = record
+    // By when it was written down, not by when it is about: every answer in a
+    // session is about the same moment, so `occurredAt` cannot separate them.
+    if (latest === undefined || record.recordedAt > latest.recordedAt) latest = record
   }
   if (latest === undefined) return undefined
 
@@ -216,6 +226,17 @@ export function nextGuideStep(
   const worthAsking = mostValuable(swings, decision)
 
   if (worthAsking === undefined) {
+    /*
+     * Two different reasons for stopping, and they had been sharing a sentence.
+     *
+     * The inspector was reporting four questions as changing the answer while
+     * the line beneath it said none of them would — both taken from the same
+     * run. They are not the same claim: a question whose answers all land in
+     * the same place cannot change anything, and a question where one answer in
+     * four would is simply not worth a tap. Saying the second in the words of
+     * the first is the inspector contradicting itself.
+     */
+    const movable = swings.filter((swing) => swing.changesTheAnswer).length
     return {
       kind: 'settled',
       question: undefined,
@@ -224,7 +245,9 @@ export function nextGuideStep(
       because:
         swings.length === 0
           ? 'nothing left worth asking about'
-          : `${swings.length} question(s) could be asked and none of them would change the answer`,
+          : movable === 0
+            ? `${swings.length} question(s) could be asked and none of them would change the answer`
+            : `${movable} of ${swings.length} could change the answer, and none on enough of their answers to be worth a tap`,
     }
   }
 

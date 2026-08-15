@@ -145,6 +145,19 @@ function leanedOn(evaluation: Evaluation, concept: ConceptId): boolean {
 }
 
 /**
+ * The part of the day, when it is genuinely one of the reasons this won.
+ *
+ * Read off the ranking rather than assumed: `context-fit` is positive only when
+ * the move actually suits this block, so a lab at midnight cannot claim the
+ * hour is on its side. Same discipline as `leanedOn`, applied to a dimension
+ * instead of a fact.
+ */
+function hourThatSuits(evaluation: Evaluation, situation: Situation): string | undefined {
+  const fit = evaluation.dimensions.find((dimension) => dimension.name === 'context-fit')
+  return fit !== undefined && fit.value > 0 ? BLOCK_WORDS[situation.block] : undefined
+}
+
+/**
  * Why this, now — in the owner's own particulars.
  *
  * Each branch reaches for a real value: how many hours, which topic, what went
@@ -240,26 +253,42 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
 
     case 'good-conditions': {
       /*
-       * Reach for whichever particular this move is entitled to cite.
+       * Only what this move actually won on.
        *
-       * An earlier version fell through to the sleep shortfall here, which is
-       * how "you are an hour and a half down, which is not enough to sit still
-       * for" reached a phone. A move that wins on good conditions wins because
-       * the body has something to spend and nothing is more pressing — so those
-       * are the two things it may say, and if it knows neither it says the
-       * short true thing rather than the long plausible one.
+       * Two clauses have come out of here. The sleep shortfall went first: it
+       * produced "you are an hour and a half down, which is not enough to sit
+       * still for" on a move whose evidence is energy and soreness. "Nothing
+       * more pressing is in the way" went second, and it is the subtler of the
+       * two — it reads as a finding about the owner's life when it is a
+       * statement about how little the engine could see. On the evening it was
+       * caught there was exactly one candidate, and everything else the app
+       * might have weighed was unknown or months stale.
+       *
+       * What is left is what the ranking can support: the reading the owner
+       * gave, and the part of the day, which is a real contributor and is
+       * checked here rather than assumed.
        */
+      const hour = hourThatSuits(evaluation, situation)
       const energy = situation.capacity.energy
       if (leanedOn(evaluation, CONCEPT.energy) && isUsable(energy)) {
-        return energy.value >= 0.7
-          ? `Energy is good and nothing more pressing is in the way.`
-          : `There is enough in the tank for ${object}, and nothing more pressing to spend it on.`
+        if (energy.value >= 0.7) {
+          return hour === undefined
+            ? `Energy is good.`
+            : `Energy is good, and the ${hour} suits ${object}.`
+        }
+        return hour === undefined
+          ? `There is enough in the tank for ${object}.`
+          : `There is enough in the tank for ${object}, and the ${hour} suits it.`
       }
+
       const soreness = situation.capacity.soreness
       if (leanedOn(evaluation, CONCEPT.soreness) && isUsable(soreness) && soreness.value <= 0.3) {
-        return `Nothing is sore, and nothing more pressing is in the way.`
+        return hour === undefined
+          ? `Nothing is sore.`
+          : `Nothing is sore, and the ${hour} suits ${object}.`
       }
-      return `Nothing more pressing is in the way, and ${object} is the cheap one.`
+
+      return `Conditions suit ${object} right now.`
     }
 
     case 'stale-evidence':

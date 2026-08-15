@@ -651,3 +651,74 @@ the move.
 **Consequence:** every phrase it can use corresponds to a dimension the
 evaluator actually computes, which a test asserts. Adding a dimension without
 giving it a phrase would be caught.
+
+---
+
+## D-036 — A question is worth asking when half its answers would land elsewhere
+
+**Phase:** 2 · **Status:** Active
+
+`overturns * 2 >= options`, replacing a flat requirement of two.
+
+**Why:** DEF-0009. The count worked for the four-option questions it was written
+against and quietly disabled every binary one, because one of a binary
+question's two answers is almost always the situation the engine is already in.
+A share handles both without a special case for either, which is the reason for
+preferring it over an exception carved out for two-option questions.
+
+**What it must keep doing:** DEF-0008's job. A question that one answer in four
+would move is still not asked, and that is checked directly rather than assumed.
+
+---
+
+## D-037 — A guide answer records when it was written down
+
+**Phase:** 2 · **Status:** Active
+
+`answerRecord` accepts the moment the answer was written, distinct from the
+moment it is about. The surface supplies the real clock; the kernel stays
+clock-free.
+
+**Why:** DEF-0010. Every answer in a session is about the same moment, so
+`occurredAt` cannot separate them; `recordedAt` defaulted to it; and canonical
+order then falls through to the record id, which carries no meaning by design.
+The rule that stops asking once an answer has changed nothing was removing an
+arbitrary answer as a result.
+
+**Consequence:** under time travel the two genuinely differ — an observation
+about a travelled evening, written down today — which is the case the envelope
+was built for in the first place.
+
+---
+
+## D-038 — An absence may not be asserted from ignorance
+
+**Phase:** 2 · **Status:** Active
+
+An explanation may not say that nothing else was pressing, or that nothing was
+in the way, on the strength of having found nothing.
+
+**Why:** DEF-0012, and it extends D-031 from facts to findings. "Nothing more
+pressing to spend it on" reads as a conclusion about the owner's life and was a
+statement about how little the engine could see — one candidate, and everything
+else unknown or months stale. `bottleneck-fit` scoring zero means no limiter was
+detected, which is a different claim from there being none.
+
+**What replaced it:** the part of the day, read off the `context-fit` dimension
+rather than assumed, so a move can only claim the hour suits it when the ranking
+actually scored that.
+
+---
+
+## D-039 — A question names what it is about
+
+**Phase:** 2 · **Status:** Active
+
+Every prompt in the catalogue contains a content word, and a sweep strips the
+interrogative frame from each one and fails if nothing is left.
+
+**Why:** DEF-0011. Section 3's rule is that the app never loses the noun when it
+knows it, and G-001 sweeps the recommendation catalogue for exactly that failure
+— but nothing swept the questions, so "How much have you got left?" shipped
+asking about energy and saying so nowhere. The owner had to ask what it meant,
+which is the evidence.
