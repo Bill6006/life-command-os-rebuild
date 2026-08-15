@@ -337,9 +337,12 @@ export function QaScreen() {
             <Rows>
               <Row label="Subject" value={decision.explanation.rendered.subjectLabel} />
               <Row label="Situation" value={decision.explanation.premise} />
+              {/* From the situation rather than the explanation: Now hides the
+                  limiter when the chosen move already answers it, and the trace
+                  should show what was read either way. */}
               <Row
                 label="Limiter"
-                value={decision.explanation.limiter ?? 'nothing in particular'}
+                value={decision.situation.limiter?.summary ?? 'nothing in particular'}
               />
               <Row label="Follow-up" value={decision.explanation.rendered.followUp} />
             </Rows>

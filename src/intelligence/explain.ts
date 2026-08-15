@@ -295,13 +295,28 @@ export function explain(
     .filter((concept) => !isUsable(situation.view.facts.knowledgeFor(concept)))
     .map((concept) => situation.concepts.definitionFor(concept).label.toLowerCase())
 
+  /*
+   * What is in the way, but only when the move is not already the answer to it.
+   *
+   * When recovery is the limiter and the move is recovery, the reason has just
+   * said so in the owner's own numbers — printing "about 9 hours short of rest"
+   * underneath "you are 9 hours down over the last 3 nights" is section 61's
+   * repeated boilerplate, on the one screen with the least room for it. The
+   * limiter earns its line when the app chose something that does not address
+   * it, which is exactly when the owner would want to know.
+   *
+   * The trace keeps the limiter either way; this is a decision about Now.
+   */
+  const limiter = situation.limiter
+  const alreadySaid = limiter !== undefined && limiter.domain === semantics.domain
+
   return {
     ok: true,
     explanation: {
       semantics,
       rendered: rendered.rendered,
       premise: describePremise(situation),
-      limiter: situation.limiter?.summary,
+      limiter: alreadySaid ? undefined : limiter?.summary,
       instead,
       unknown: missing.length === 0 ? undefined : missing.join(', '),
     },
