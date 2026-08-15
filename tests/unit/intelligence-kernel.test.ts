@@ -4,6 +4,8 @@ import { explicit, inferred, confidence, unknown } from '../../src/domain/knowle
 import type { FactValue } from '../../src/domain/records'
 import { ACTION_VERBS } from '../../src/domain/recommendation'
 import { instant, timeZone } from '../../src/domain/time'
+import { arbitrate, WORTH_DOING } from '../../src/intelligence/arbitrate'
+import { generateCandidates } from '../../src/intelligence/candidates'
 import { domainFromText } from '../../src/intelligence/direction'
 import { MOVE_PROFILES } from '../../src/intelligence/moves'
 import { QUESTIONS } from '../../src/intelligence/questions'
@@ -18,7 +20,7 @@ import {
   textValue,
 } from '../../src/intelligence/values'
 import { STANDING_ENTITIES } from '../../src/intelligence/vocabulary'
-import { WORTH_DOING } from '../../src/intelligence/arbitrate'
+import { loadScenario } from '../synthetic/harness'
 
 /**
  * The kernel's own pieces, tested where they can be tested alone.
@@ -217,5 +219,58 @@ describe('the bar a move has to clear', () => {
     // Section 19 — no additional move is a valid decision. A threshold of zero
     // would mean the least bad survivor always wins.
     expect(WORTH_DOING).toBeGreaterThan(0)
+  })
+})
+
+describe('the ranking is a real order — DEF-0004', () => {
+  /*
+   * The regression for a comparator that treated near-ties as ties.
+   *
+   * The scores below sit 0.015 apart, inside the window that version used, and
+   * the highest-scoring move is deliberately not the lowest-friction one. Under
+   * the old rule the second-placed move would come first; worse, with three
+   * moves spaced this way the comparison was not transitive — the first could
+   * tie the second and the second tie the third while the first beat the third
+   * outright, which leaves the sort order up to the engine's implementation and
+   * a "reproducible" trace reproducing nothing.
+   */
+  const situation = loadScenario('week-pointed-at-home').decision().situation
+  const candidates = [...generateCandidates(situation)]
+
+  const scored = (scores: readonly number[]) =>
+    candidates.slice(0, scores.length).map((candidate, index) => ({
+      candidate,
+      dimensions: [],
+      score: scores[index] ?? 0,
+      confidence: confidence(0.5),
+      cautions: [],
+    }))
+
+  it('has enough moves in this history to be worth ordering', () => {
+    expect(candidates.length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('puts the highest score first even when something cheaper is close behind', () => {
+    const ranked = arbitrate(scored([0.3, 0.285, 0.27]), situation, 0).ranked
+    expect(ranked.map((entry) => entry.score)).toEqual([0.3, 0.285, 0.27])
+  })
+
+  it('reaches the same order however the moves arrived', () => {
+    const scores = [0.3, 0.285, 0.27]
+    const forwards = arbitrate(scored(scores), situation, 0).ranked
+    const backwards = arbitrate([...scored(scores)].reverse(), situation, 0).ranked
+
+    expect(backwards.map((entry) => entry.candidate.id)).toEqual(
+      forwards.map((entry) => entry.candidate.id),
+    )
+  })
+
+  it('still settles an exact draw the same way every time', () => {
+    const drawn = scored([0.2, 0.2, 0.2])
+    const first = arbitrate(drawn, situation, 0).ranked.map((entry) => entry.candidate.id)
+    const second = arbitrate([...drawn].reverse(), situation, 0).ranked.map(
+      (entry) => entry.candidate.id,
+    )
+    expect(second).toEqual(first)
   })
 })

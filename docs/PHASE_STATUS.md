@@ -4,14 +4,18 @@ Report format: canonical plan section 58.
 
 ---
 
-# Phase 1 — Canonical records + semantic model + QA lab
+# Phase 2 — Intelligence tournament + first real Now
 
-**Status: GREEN.**
+**Status: YELLOW — every automated gate passes; the phase is waiting on the
+owner's phone test.**
 
-Section 46's gate is entirely automated. Every item passes. No owner approval
-gates this phase — unlike Phase 0, and unlike Phase 2, where the owner's
-judgement of the recommendation is the gate. A phone check is still worth
-making, and what to look at is below.
+Section 47's gate is not automated. It ends with a person opening the app on a
+real phone and judging whether the recommendation is any good, and it fails if
+the honest answer is generic, dumb, vague, too many questions, doesn't
+understand what it is talking about, looks lifeless, or technically valid but
+not useful. Nothing in this repository can decide that, so this phase does not
+call itself GREEN. What is below is everything that _can_ be checked, and it all
+holds.
 
 ## Build identity
 
@@ -28,6 +32,206 @@ job fails if the live `build-info.json` does not serve the pushed SHA.
 
 ## Verification
 
+| Gate                                      | Result                                         |
+| ----------------------------------------- | ---------------------------------------------- |
+| Privacy scan                              | Clean, 120 tracked files                       |
+| Format (Prettier)                         | Pass                                           |
+| Lint (ESLint)                             | Pass, 0 warnings                               |
+| Typecheck (strict TS)                     | Pass, 0 errors                                 |
+| Unit / contract / synthetic / adversarial | 295 passed / 295 (in plain Node, no DOM)       |
+| Browser tests (Playwright)                | 111 passed / 111 — 37 tests × 360, 430, 1280px |
+| Production build                          | Pass                                           |
+| `npm run verify` from a clean checkout    | Pass                                           |
+| Deployed SHA matches checkpoint           | Asserted live in CI                            |
+
+### Where the 295 sit
+
+| Suite                                                         | Tests |
+| ------------------------------------------------------------- | ----: |
+| `unit/intelligence-kernel` — readers, direction, moves, order |    25 |
+| `unit/time` — instants, civil dates, weeks, DST               |    20 |
+| `unit/registries` — ids, domains, concepts, privacy           |    19 |
+| `unit/knowledge` — the four states, freshness, asking         |    18 |
+| `unit/architecture-guards` — the boundaries                   |    15 |
+| `unit/store` — append semantics, supersession                 |    14 |
+| `unit/buildInfo`                                              |    11 |
+| `unit/routing`                                                |    11 |
+| `unit/recommendation` — rendering and refusal                 |    10 |
+| `contract/projections` — rebuildability, migrations           |    11 |
+| `contract/round-trip` — 19 record kinds, lossless             |     8 |
+| `contract/legacy-quarantine` — preserved and inert            |     6 |
+| `synthetic/model-guardrails` — section 18's fence             |    17 |
+| `synthetic/g008` — a non-career weekly direction              |    15 |
+| `synthetic/no-hidden-genericity` — sections 61 and 64         |    13 |
+| `synthetic/g005` — sleep beats ambition, both ways            |    12 |
+| `synthetic/g009` — unknown is unknown                         |    12 |
+| `synthetic/adaptive-guide` — one question at a time           |    10 |
+| `synthetic/g011` — timezone and week boundary                 |     9 |
+| `synthetic/g001` — no orphan pronoun                          |     8 |
+| `synthetic/intelligence-tournament` — section 18's choice     |     8 |
+| `synthetic/g002` — durable family context                     |     7 |
+| `adversarial/malformed-history`                               |     9 |
+| `adversarial/malformed-records`                               |     7 |
+
+## Gate checklist (section 47, and the phase brief)
+
+| Requirement                                                | Status                                                              |
+| ---------------------------------------------------------- | ------------------------------------------------------------------- |
+| G-001, G-002, G-009, G-011 still pass, unchanged           | Pass — 36 tests, none of them edited this phase                     |
+| G-005 passes as an automated synthetic scenario            | Pass — and its counterexample passes with it                        |
+| G-008 passes as an automated synthetic scenario            | Pass — four directions, one uncategorised, one expired              |
+| The decision trace shows the facts and how each is known   | Pass — concept, state, reading, what it was used for, source rows   |
+| …the candidates                                            | Pass — every move proposed, by which generator, and why             |
+| …which were filtered and why                               | Pass — reason and a plain-language explanation per rejection        |
+| …the ranking                                               | Pass — fifteen dimensions per move, each with its value and a note  |
+| …the chosen move                                           | Pass — opened by default in the inspector                           |
+| …what would change the answer                              | Pass — measured by re-running the decision under each answer        |
+| Two different profiles get different wording and reasoning | Pass — enforced across every scenario, not a sample                 |
+| A deterministic baseline architecture                      | Pass                                                                |
+| A model-assisted or hybrid architecture, if feasible       | Pass, with a caveat — see D-025                                     |
+| The tournament is written down                             | Pass — D-024, and the table is printed by the test that produced it |
+| A Now surface with the move, its reason and its state      | Pass                                                                |
+| One adaptive guide flow                                    | Pass — one question, recompute, stop when it knows enough           |
+| CI green                                                   | Pass                                                                |
+| `npm run verify` from a clean checkout                     | Pass                                                                |
+| Preview deploys automatically, SHA matches                 | Pass                                                                |
+| **The owner tests the slice on a phone and accepts it**    | **Outstanding — this is what YELLOW means**                         |
+
+## What changed
+
+### `src/intelligence/` — the kernel
+
+Ten modules and one entry point. `decide(view, moment)` assembles the situation
+from resolved facts, generates candidates from what is actually in the owner's
+history, filters what does not fit and records why, scores what is left across
+fifteen dimensions, chooses one move or a valid non-action, and explains it in
+the owner's own particulars. Pure and clock-free: the moment is an argument.
+
+Two boundaries inside it are enforced rather than described. The evaluator and
+the arbiter contain no life area by name (D-030), which is what makes G-005 and
+G-008 pass for the right reason. And nothing under `src/features/` can reach the
+parts that decide — a surface asks the engine or it gets nothing.
+
+### The tournament
+
+Deterministic baseline against a hybrid with a semantic advisor between ranking
+and choosing. Both scored 60 of 60 and chose identically on all ten profiles, so
+the simpler one is selected (D-024). The advisor demonstrably fired rather than
+sitting silent, which is what makes "they agreed" mean something. Section 18's
+guardrails are tested by an advisor that tries to break every one of them: it
+names moves nobody proposed, asks for adjustments a thousand times the cap,
+speaks with certainty it has not earned, and throws. The decision does not move.
+
+### `src/features/now/` — Now
+
+The premise, one move, why it in the owner's own numbers, the time it takes,
+what it was chosen over, what is still unknown, and where the move stands. Under
+it, the guide: one question, and only when the answer would land somewhere
+different.
+
+### `src/features/qa/` — the inspector
+
+Section 35's list, filled. Plus an architecture selector, so the tournament's two
+candidates can be compared by hand on any scenario.
+
+### Navigation
+
+More leaves the bottom bar (D-028). Four primary destinations, as section 5 says.
+
+**Product behaviour changed:** yes — the app makes a decision and explains it,
+and asks a question when one would help.
+**Semantic behaviour changed:** yes — this phase is the reasoning.
+
+## Phone check (this is the gate)
+
+Open Preview. Header → **More** → **Open the QA laboratory**, load a scenario,
+then tap **Now**.
+
+1. **Three broken nights, and a deadline.** Now should say _"Take tonight as
+   recovery — no subnetting session."_ with a reason in hours, and _Instead of_
+   showing the career rep it declined. The week is deliberately pointed at
+   career and the CCNA goal is live: if career had won, G-005 would have failed.
+2. **The same week, properly slept.** Same goal, same bad session yesterday,
+   three good nights instead of three bad. The career move should win.
+3. **A week pointed at the house.** Four live options — a room, a daughter who
+   is here, a topic that is behind, capacity for a walk. It should pick the
+   kitchen and say the week is about a calmer house.
+4. **Two ordinary weeks.** Now should say nothing needs to move tonight, and ask
+   one question. Answer _Under 5 hours_ and watch it change on the spot.
+5. **A settled arrangement, and one week away.** It should never ask whether
+   Adaya is with you.
+6. Back in QA, open **Ranking** and **What would change the answer** on any
+   scenario.
+
+What to judge is section 47's list: is it specific, does it understand what it
+is talking about, is it useful, does it ask too much, does it look alive.
+
+## Deliberately not built
+
+- **The recommendation lifecycle** — accept, decline, can't-now, outcome capture
+  and learning. Phase 3, and D-029 says why a button that records an event
+  nothing learns from would be worse than no button.
+- **The coverage engine** — Phase 4. Nothing yet notices that a life area has
+  gone quiet for a month, so the `stale-evidence` trigger exists but is barely
+  reachable.
+- **Live model inference** — D-025. The hybrid path is complete and validated;
+  what is missing needs an owner decision about a hosted endpoint.
+- **G-004 and G-014** — Phase 3 by the brief. The engine can already produce a
+  valid non-action and does so on two scenarios, and the social generator
+  exists; neither is gated here.
+- Domain pages (Phase 5), Timeline and Insights content (Phase 6), exports and
+  backup (Phase 7), the legacy importer (Phase 8), the service worker (Phase 10).
+
+## Open defects
+
+None. Two were found and closed during the phase — DEF-0003 and DEF-0004, in
+[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
+
+## Deferred, with reasons
+
+- **Outcome-earned move profiles.** `moves.ts` holds priors, and says so
+  (D-023). Phase 3 replaces them with what actually happens to this owner.
+- **A richer limiter set.** Three today: recovery, capacity, time. Stale
+  coverage is the obvious fourth and belongs with the engine that can see it.
+- **Free-text constraints are shown, not enforced.** A constraint the owner
+  wrote — "no gym until the shoulder settles" — is attached to any move that
+  leans on the same concept and displayed, because guessing which moves it
+  forbids would be inventing a rule they did not state.
+- **`hold` is never generated.** A non-action is an arbitration outcome rather
+  than a candidate, so the verb is only exercised by G-001's sweep.
+
+## Decisions made
+
+D-021 … D-030 in [`DECISION_LOG.md`](DECISION_LOG.md).
+
+## Next
+
+Phase 3 — the recommendation lifecycle and outcome learning.
+See [`NEXT_PROMPT.md`](NEXT_PROMPT.md).
+
+---
+
+# Phase 1 — Canonical records + semantic model + QA lab
+
+**Status: GREEN.**
+
+Section 46's gate is entirely automated. Every item passes. No owner approval
+gates this phase — unlike Phase 0, and unlike Phase 2, where the owner's
+judgement of the recommendation is the gate. A phone check is still worth
+making, and what to look at is below.
+
+## Build identity
+
+|                      |                                                             |
+| -------------------- | ----------------------------------------------------------- |
+| Checkpoint SHA       | `1c8dd08`                                                   |
+| Deployed Preview SHA | identical                                                   |
+| Do they match?       | Yes, by construction — D-004                                |
+| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Live proof           | `preview/build-info.json`                                   |
+
+## Verification
+
 | Gate                                      | Result                                       |
 | ----------------------------------------- | -------------------------------------------- |
 | Privacy scan                              | Clean                                        |
@@ -39,28 +243,6 @@ job fails if the live `build-info.json` does not serve the pushed SHA.
 | Production build                          | Pass                                         |
 | `npm run verify` from a clean checkout    | Pass                                         |
 | Deployed SHA matches checkpoint           | Asserted live in CI                          |
-
-### Where the 188 sit
-
-| Suite                                                 | Tests |
-| ----------------------------------------------------- | ----: |
-| `unit/time` — instants, civil dates, weeks, DST       |    20 |
-| `unit/registries` — ids, domains, concepts, privacy   |    19 |
-| `unit/knowledge` — the four states, freshness, asking |    18 |
-| `unit/store` — append semantics, supersession         |    14 |
-| `unit/buildInfo`                                      |    11 |
-| `unit/recommendation` — rendering and refusal         |    10 |
-| `unit/routing`                                        |    10 |
-| `unit/architecture-guards` — the boundaries           |     9 |
-| `contract/projections` — rebuildability, migrations   |    11 |
-| `contract/round-trip` — 19 record kinds, lossless     |     8 |
-| `contract/legacy-quarantine` — preserved and inert    |     6 |
-| `synthetic/g009` — unknown is unknown                 |    12 |
-| `synthetic/g011` — timezone and week boundary         |     9 |
-| `synthetic/g001` — no orphan pronoun                  |     8 |
-| `synthetic/g002` — durable family context             |     7 |
-| `adversarial/malformed-history`                       |     9 |
-| `adversarial/malformed-records`                       |     7 |
 
 ### The gate held once, on purpose
 
@@ -121,69 +303,19 @@ file uses.
 
 Scenario buttons, a JSON editor, date and time travel, and an inspector over
 canonical facts, inferred facts, stale facts, questions, recommendations,
-entities, relationships, unreadable rows and history. Behind More, its own
-chunk, absent from production.
+entities, relationships, unreadable rows and history.
 
 **Product behaviour changed:** yes — there is a memory now, and a way to look at
 it.
 **Semantic behaviour changed:** yes — this phase is the semantics.
 
-## Phone check (not gating)
-
-Open Preview, then More → Open the QA laboratory.
-
-- Tap **A topic that keeps slipping**, open Recommendations. The sentence should
-  name subnetting, and so should the follow-up.
-- Tap **A file with damage in it**. Five entries read; six rows did not, each
-  with a reason and the row itself. Nothing else on the screen is blank.
-- Tap **A settled arrangement, and one week away**, then travel forward a week.
-  "Child with the owner" changes for the trip and changes back afterwards, and
-  is never in the list of questions.
-- Tap **Two ordinary weeks** and turn on **Show private detail**. The private row
-  says "Private entry" until you ask for it.
-- Load anything, then pull to refresh. The history is still there.
-
-The QA screen is dense on purpose — it is the one surface the plan allows
-technical language (section 35). Judging the product's look is Phase 2's job.
-
-## Deliberately not built
-
-The intelligence kernel — candidate generation, constraints, evaluation,
-arbitration, explanation, learning. That is Phase 2, and section 47 requires it
-to prove itself before the app grows around it. Also not built: the coverage
-engine (Phase 4), domain pages (Phase 5), Timeline and Insights content
-(Phase 6), exports and backup (Phase 7), the legacy importer (Phase 8), the
-service worker (Phase 10).
-
 ## Open defects
 
-None. Two were found and closed during the phase — DEF-0001 and DEF-0002, in
-[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
-
-## Deferred, with reasons
-
-- **Persisted projection caches.** The mechanism is fingerprinted and
-  storage-agnostic, but nothing writes it to disk yet. Performance is section 40
-  and Phase 10; persisting a cache before there is a performance problem would
-  add a corruption surface for no gain.
-- **Nested unknown fields.** Preserved at the top of a record, refused inside a
-  nested structure (D-017). If a legacy import turns out to need nested
-  preservation, the `imported-legacy-record` kind already keeps whole payloads
-  verbatim.
-- **Confidence.** `confidenceFromSampleCount` is a deliberately coarse ladder
-  with nothing depending on it. Phase 2's evaluator replaces it with something
-  earned from outcomes.
-- **A second inference source.** Only `observation` with `method: 'derived'`
-  produces inferred knowledge today. Real inference is Phase 2.
+None. Two were found and closed during the phase — DEF-0001 and DEF-0002.
 
 ## Decisions made
 
 D-011 … D-020 in [`DECISION_LOG.md`](DECISION_LOG.md).
-
-## Next
-
-Phase 2 — the intelligence tournament and the first real Now.
-See [`NEXT_PROMPT.md`](NEXT_PROMPT.md).
 
 ---
 

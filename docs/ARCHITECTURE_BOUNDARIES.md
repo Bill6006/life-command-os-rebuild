@@ -35,12 +35,27 @@ and the migration runner._
 
 ## `src/intelligence/` — the one brain
 
-Fact resolution, context assembly, coverage, candidate generation, evaluation,
-arbitration, learning, explanation.
+Context assembly, direction, candidate generation, constraints, evaluation,
+arbitration, explanation, the decision trace and the adaptive guide. Fact
+resolution lives one layer down, in `src/memory/` (D-011).
 
-There is exactly one arbitration path (section 17.2). Domain modules contribute
-facts, interpretation, constraints and candidates; no domain module may present
-a competing final recommendation.
+Pure and clock-free, like the layers below it: the moment is an argument, so
+time travel reaches the engine rather than stopping at the screen that offers
+it. The same guards that hold `domain/` and `memory/` to no wall clock, no
+`localStorage` and no React now cover this folder too.
+
+There is exactly one arbitration path (section 17.2), and it is structural
+rather than promised. `arbitrate.ts` is the only place a move is chosen, and
+`tests/unit/architecture-guards.test.ts` fails the build if anything under
+`src/features/` imports the generator, the filter, the evaluator, the arbiter or
+the advisor. A surface can ask the engine; it cannot do the deciding.
+
+Two further boundaries hold inside the folder:
+
+- the evaluator and the arbiter know no life area by name (D-030) — they judge
+  what a move demands, costs and pays back, and the domain flows through as
+  data;
+- the engine may name its own routines and never the owner's life (D-021).
 
 _Created in Phase 2._
 
@@ -52,9 +67,18 @@ Features read from intelligence and memory. They never own decision logic, and a
 recommendation's subject arrives as a structured reference — never as free text
 the UI has to guess a subject from (section 13.4).
 
+The canonical store and the moment being asked about live in one provider above
+the shell (D-027), so every surface reads one history at one moment.
+
+Only `src/features/qa/` may import `src/synthetic/`. The QA screen is a separate
+chunk a production build never downloads, and one import from elsewhere would
+put ten invented lives into the main bundle with no symptom but a larger file —
+so a guard fails the build on it.
+
 _Now, Life, Timeline, Insights and More exist as shells from Phase 0. The QA
 laboratory arrived in Phase 1: it lives behind More, loads as its own chunk, and
-resolves to Now in a production build._
+resolves to Now in a production build. Phase 2 gave Now a real engine and the
+adaptive guide, and took More out of the bottom bar (D-028)._
 
 ## `src/synthetic/` — invented histories
 

@@ -5,24 +5,42 @@ owner can switch Claude Code before pasting.
 
 ---
 
+## BEFORE ANY OF THIS — the phone test
+
+Phase 2 is YELLOW, not GREEN. Section 47's gate is the owner opening Preview on
+a real phone and judging the recommendation, and it fails if the honest answer
+is generic, dumb, vague, too many questions, doesn't understand what it is
+talking about, looks lifeless, or technically valid but not useful.
+
+What to try is in [`PHASE_STATUS.md`](PHASE_STATUS.md) under **Phone check**.
+
+- **If it is accepted** → the prompt below starts Phase 3.
+- **If it is not** → do not start Phase 3. Say what was wrong in the owner's own
+  words and continue in the **current** conversation at **Max**: the context
+  that built the engine is the context that should fix it, and section 47 says
+  the app does not expand until this gate is passed.
+
+---
+
 ## NEXT CLAUDE ACTION
 
 - **Intelligence level:** `Max`
 - **Conversation:** `NEW`
-- **Why this level:** Phase 2 has to choose between competing intelligence
-  architectures on evidence rather than on which sounds better, and section 47
-  fails the phase on the owner's judgement of one sentence — that is design
-  reasoning, not typing.
-- **Why this conversation:** Phase 1 is closed and its context is spent; Phase 2
-  is a different concern that deserves a full fresh window, and the repository
-  carries everything it needs.
+- **Why this level:** Phase 3 is where learning starts changing later decisions,
+  and the failures it has to avoid — a decline read as "ineffective", one event
+  becoming proof, a subject lost through a follow-up — are judgement calls about
+  meaning, not typing.
+- **Why this conversation:** Phase 2 is closed and its context is spent. Phase 3
+  builds on the kernel through the same documents, and a fresh window that has
+  to read the engine before changing it is likelier to notice what the engine
+  actually does than one that remembers writing it.
 - **Attach/reference:** Nothing. The prompt points at the files to read. Do not
   attach or request any old Life Command OS document.
 
 ## COPY/PASTE PROMPT
 
 ```text
-You are continuing the Life Command OS rebuild. Phase 1 is complete and GREEN. Begin Phase 2.
+You are continuing the Life Command OS rebuild. Phase 2 is complete and the owner has accepted the slice on a phone. Begin Phase 3.
 
 Work in this repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
@@ -31,12 +49,12 @@ Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
 
 Read these first, in this order:
 1. docs/CANONICAL_REBUILD_PLAN.md — the sole governing authority, read it completely
-2. docs/PHASE_STATUS.md — what Phase 1 delivered, and what it deliberately did not
-3. docs/DECISION_LOG.md — decisions D-001 to D-020 and their reasons
+2. docs/PHASE_STATUS.md — what Phase 2 delivered, and what it deliberately did not
+3. docs/DECISION_LOG.md — decisions D-001 to D-030 and their reasons
 4. docs/ARCHITECTURE_BOUNDARIES.md — module ownership
-5. docs/DEFECT_LEDGER.md — DEF-0001 and the discipline that closed it
+5. docs/DEFECT_LEDGER.md — DEF-0001 to DEF-0004, and the discipline that closed them
 
-Then read the meaning layer you are building on, at least: src/domain/knowledge.ts, src/domain/recommendation.ts, src/domain/concepts.ts, src/memory/facts.ts, src/memory/view.ts, src/synthetic/scenarios.ts.
+Then read the engine you are building on, all of it: src/intelligence/. Start with engine.ts, then situation.ts, candidates.ts, constraints.ts, evaluate.ts, arbitrate.ts, explain.ts, guide.ts, moves.ts. Also src/memory/facts.ts and src/memory/view.ts.
 
 HARD RULES
 
@@ -45,69 +63,81 @@ HARD RULES
 - Bill6006/life-command-os is legacy/reference only. Never clone, inspect, modify, repoint or mine it. It is not a requirements source. It also holds 32 commits that exist only on this machine, so never run git push, reset or clean against it.
 - No real owner data enters this repository. Fixtures are synthetic only. scripts/privacy-scan.mjs runs in CI and must stay clean.
 - No legacy feature returns merely because it existed before.
-- Do not weaken a Phase 1 guarantee to make Phase 2 easier. In particular: unknown stays unknown, a recommendation that cannot resolve its subject renders nothing, canonical records are append-first, and nothing below the UI reads the wall clock. tests/unit/architecture-guards.test.ts and the four golden scenarios must stay green.
+- Do not weaken a Phase 1 or Phase 2 guarantee to make Phase 3 easier. In particular: unknown stays unknown; a recommendation that cannot resolve its subject renders nothing; canonical records are append-first; nothing below the UI reads the wall clock; there is exactly one arbitration path and no surface may reach the parts that decide; the evaluator and the arbiter know no life area by name. tests/unit/architecture-guards.test.ts and the six golden scenarios must stay green.
+- Run npm run verify before every push. Not a subset of it. Browser tests (npm run test:browser) before closing the phase.
 - If something conflicts with the plan or is genuinely ambiguous, stop and ask the owner rather than guessing.
 
-WHAT PHASE 1 ALREADY GIVES YOU
+WHAT PHASE 2 ALREADY GIVES YOU
 
-- Canonical records, semantic entities, owner-local time, privacy classes, and a four-state Knowledge type with no default escape hatch.
-- A transactional IndexedDB store, supersession and retraction, and fact resolution (the pipeline's step 1 from plan section 17.1 is done — see D-011).
-- A projection mechanism: pure folds over canonical records, fingerprinted, read-through cache. Add your intelligence outputs as projections and they are rebuildable and inspectable for free.
-- buildView(snapshot, { now, zone }) in src/memory/view.ts — synchronous and pure, so the whole engine can be tested with no browser and no app shell. Keep it that way.
-- A QA laboratory at #/qa with seven synthetic scenarios, date and time travel, and an inspector. Extend it; do not build a second one.
+- A working intelligence kernel in src/intelligence/, pure and clock-free, with one entry point: decide(view, moment, options).
+- Context assembly, a weekly/long-range direction resolver, candidate generation from the owner's own entities, a constraint filter that records why, a fifteen-dimension evaluator, one arbitration path that can return a valid non-action, and an explanation generator that composes the reason from real facts.
+- A full decision trace, exposed in the QA inspector: facts considered and how each was known, every candidate, every rejection with a reason, the ranking with per-dimension notes, the chosen move, and — measured rather than asserted — what would change the answer.
+- An adaptive guide that asks one question at a time, only when the answer would land somewhere different, and stops when it would not.
+- A validated model-assisted seat (src/intelligence/advisor.ts) with section 18's guardrails proven by an adversarial advisor. The deterministic baseline is the selected architecture — see D-024 and D-025.
+- Ten synthetic scenarios, a Now surface, and a shared store and clock so time travel reaches the engine.
 
-PHASE 2 GOAL (plan section 47)
+PHASE 3 GOAL (plan section 48)
 
-Prove the brain can produce an excellent recommendation before building the full app.
+Complete the loop: a recommendation the owner acts on, an outcome that gets observed, and learning that changes what happens next.
 
-BUILD (src/intelligence/, plus a Now surface)
+BUILD
 
-- context assembler — the current situation from durable and temporary context
-- candidate generator — realistic possible actions, carrying the structured RecommendationSemantics that already exists
-- constraint filter — remove what does not fit current reality, and record why
-- candidate evaluator — the dimensions in plan section 19
-- global arbitration — one primary move, or a valid non-action (section 17.2: exactly one arbitration path)
-- explanation generator — structured decision to concise human language, obeying plan section 61's copy rules
-- decision trace — every fact considered, every candidate, every rejection and its reason, exposed in the QA inspector per section 35
-- a deterministic baseline architecture
-- at least one model-assisted or hybrid candidate architecture if feasible, under plan section 18's guardrails
-- a simple Now surface showing the chosen move, its reason, and the state it is in
-- one adaptive guide flow that asks one question at a time, recomputes after each, and stops when it knows enough (section 12)
+- the recommendation lifecycle: start, complete, decline, can't now, try another, pause/continue if useful
+- outcome windows — when a result is due, which differs by kind of move (a sleep action is judged next morning, section 20)
+- outcome capture, asked at the right moment and not before
+- context-specific learning: what worked in situations like this one, not what worked on average
+- recomputation after every lifecycle event
+- duplicate protection, including double taps
+- owner correction of a learned belief (section 62)
 
-INTELLIGENCE TOURNAMENT (plan section 18)
+WHAT MUST BE TRUE OF THE LEARNING
 
-Compare the candidate architectures on the golden synthetic profiles. Choose the simplest architecture that clearly produces better decisions. Do not select one because it sounds more advanced. Write down what was compared, on what, and what the result was.
+Section 20 is the specification and every line of it is a defect waiting to be written:
+- a rejection is not evidence the move is ineffective
+- can't-now is evidence about the situation, not about the move
+- one success is not proof
+- context similarity matters more than date proximity
+- same-block effects and next-day effects can differ
+- a learned effect must be reversible when later evidence contradicts it
 
-If a model-assisted path is adopted: no permanent API secrets in the browser, no storing the owner's life history on a server merely because inference needs a network request, strict structured-output validation, and a model may never silently write canonical facts, override explicit owner facts, or turn low confidence into confident language.
+D-023 records that src/intelligence/moves.ts currently holds priors rather than
+learned effects. Replacing them is this phase's job. Do it in a way that keeps
+the trace honest: the inspector should be able to show which learning influenced
+a decision, and how much of it there was.
 
 SCENARIOS TO ADD
 
-At least G-005 (severe sleep deficit against a career goal — career must not automatically win) and G-008 (a non-career weekly direction, with the stored semantic category matching and no hardcoded career value). Both belong to arbitration, which is what this phase builds. G-004 and G-014 are Phase 3.
+At least G-004 (social opportunity — good energy, an appropriate setting, an active social goal and no stronger bottleneck; a specific natural move may win; no quota or gamification; the outcome records comfort and result) and G-014 (no-action is valid — a stable state where no move has positive net value).
 
-Add matching scenarios to src/synthetic/scenarios.ts so the owner can tap through them on the phone, and to tests/synthetic so the gate runs them.
+The engine can already produce a valid non-action, and a social generator already exists. Neither is gated yet. Add matching scenarios to src/synthetic/scenarios.ts so the owner can tap through them, and to tests/synthetic so the gate runs them.
 
-GATE — Phase 2 is not GREEN until all of these hold
+GATE — Phase 3 is not GREEN until all of these hold
 
-- the four existing golden scenarios still pass, unchanged
-- G-005 and G-008 pass as automated synthetic scenarios
-- the decision trace shows, for any recommendation: the facts considered and whether each was explicit, inferred, stale or unknown; the candidates; which were filtered and why; the ranking; the chosen move; and what would change the answer
-- two substantially different synthetic profiles do not receive the same recommendation wording and reasoning (plan section 64)
+- the six existing golden scenarios still pass, unchanged
+- G-004 and G-014 pass as automated synthetic scenarios
+- a completed action demonstrably changes later reasoning
+- a decline is not mislabelled ineffective
+- can't-now changes the situation appropriately
+- one event does not become proof
+- the semantic subject survives through the follow-up question
+- a double tap creates no duplicate episode
+- the phone flow feels fast
 - CI is green: privacy scan, format, lint, typecheck, unit, browser, build
 - npm run verify passes from a clean checkout
 - preview deploys automatically and the deployed Preview SHA equals the checkpoint SHA
-- THE OWNER TESTS THE SLICE ON A PHONE AND ACCEPTS IT
-
-Section 47 is explicit that the phase fails if the owner reasonably says: generic, dumb, vague, too many questions, doesn't understand what it is talking about, looks lifeless, or technically valid but not useful. Do not declare GREEN before that check. Do not expand to the rest of the app until this gate is passed.
+- the owner tests the loop on a phone
 
 WORKING RULES
 
 - Make reasonably small checkpoint commits. Every push to main that passes the gate redeploys Preview automatically, so tell the owner when a new phone-testable checkpoint is available.
-- Put the kernel in src/intelligence/. Keep it pure and clock-free, like the layers below it.
+- Keep the kernel pure and clock-free. Lifecycle events are canonical records like everything else.
 - Write tests that verify semantic behaviour, not implementation paths.
-- Follow plan section 42 for any defect: reproduce, identify the whole defect class, write a focused regression, prove it fails when reintroduced, fix the root cause, rerun the gate. DEF-0001 in docs/DEFECT_LEDGER.md is the worked example.
+- Follow plan section 42 for any defect: reproduce, identify the whole defect class, write a focused regression, prove it fails when reintroduced, fix the root cause, rerun the gate. DEF-0001 to DEF-0004 are the worked examples.
 - Keep docs/DECISION_LOG.md, docs/PHASE_STATUS.md, docs/DEFECT_LEDGER.md and docs/NEXT_PROMPT.md current.
 
 CLOSING THE PHASE
 
 End with the section 58 acceptance report: phase status, checkpoint SHA, deployed Preview SHA and whether they match, Preview URL, files changed, exact test counts, whether an owner phone test is required, product and semantic behaviour changes, open defects, deferred items, decisions made, next phase and role, the recommended Claude Code intelligence level, the CURRENT or NEW conversation instruction, one short reason for each, required references, and the complete next copy/paste prompt — all in the same response that closes the phase. Do not make the owner ask for the prompt.
+
+One open owner decision is recorded as D-025: whether to stand up a small inference endpoint so the hybrid architecture can use a real model. Nothing in Phase 3 depends on it. Raise it only if the owner asks.
 ```

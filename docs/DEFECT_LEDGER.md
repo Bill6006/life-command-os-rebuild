@@ -39,6 +39,72 @@ None.
 
 ## Fixed
 
+### DEF-0004 — the ranking was not a real order
+
+- Status: Fixed
+- Severity: Major — a reproducible decision trace cannot be built on a
+  comparator whose result depends on the sort implementation
+- Found in: Phase 2 / pre-`5447900`
+- Found by: reading the first ranking the engine produced, and noticing that a
+  lower score sat above a higher one
+- Class: **an ordering rule with an equality window.** The comparator treated
+  any two scores within 0.02 as tied and settled them on friction. That is not
+  transitive: with three moves spaced 0.015 apart, the first ties the second and
+  the second ties the third while the first beats the third outright, so what
+  `Array.prototype.sort` returns is up to the engine. It is the whole family —
+  any "close enough to be equal" comparison has it, and the symptom is not a
+  wrong answer but an answer that stops being reproducible.
+- Reproduction: rank three moves scoring 0.300, 0.285 and 0.270 where the
+  highest is not the cheapest to start. The ranking came back
+  `[0.300, 0.270, 0.285]`.
+- Root cause: friction was being counted twice. It is already one of the
+  fifteen dimensions inside the score; using it again as a tiebreak was an
+  attempt to be clever that bought nothing and cost the ordering guarantee.
+- Regression: `tests/unit/intelligence-kernel.test.ts` — "the ranking is a real
+  order — DEF-0004": highest score first, same order whichever way the moves
+  arrive, and an exact draw settled identically every time. Reintroducing the
+  window was tried, and the first of those fails with exactly the
+  `[0.300, 0.270, 0.285]` above.
+- Siblings: checked — `compareRecordOrder` and the fact resolver's `laterOf`
+  both compare exact values with explicit tiebreaks and have no window. The
+  `WORTH_DOING` threshold is a cutoff rather than a comparison, so it does not
+  belong to this class.
+- Fixed in: `5447900`
+
+### DEF-0003 — a reason that never said what it was about
+
+- Status: Fixed
+- Severity: Major — this is G-001's failure, reaching an owner surface through
+  composed prose instead of through a template
+- Found in: Phase 2 / pre-`5447900`
+- Found by: `tests/synthetic/no-hidden-genericity.test.ts`, on its first run
+- Class: **owner-facing text assembled outside the renderer.** DEF-0001 was
+  fixed inside `renderRecommendation`, where the templates live and where G-001
+  sweeps. The explanation generator composes sentences too, and nothing was
+  holding it to the same rule — so the noun could be lost again in a file the
+  original regression does not look at.
+- Reproduction: any history with a bad outcome recorded against a topic. The
+  reason came out as "Yesterday: the /26 boundaries went wrong twice." — good
+  English, entirely specific, and it never says the word subnetting. Two
+  materially different profiles received it word for word, which is what the
+  section 64 check caught.
+- Root cause: the reason was built from the outcome's own note and the date it
+  happened. Both are particulars; neither is the subject.
+- Regression: `tests/synthetic/no-hidden-genericity.test.ts` — "never loses the
+  noun", which holds every line the engine can put on screen to the rule that it
+  either contains no standalone pronoun or names its subject, and runs over
+  every scenario rather than a sample.
+- Note on the rule: the move sentence keeps the strict form — names the thing,
+  no pronoun at all. A reason may run to two sentences and may say "it" once the
+  subject has been named. DEF-0001's note warns against relaxing the check, and
+  this is not that: the requirement in section 3 is that the noun is not lost,
+  not that a pronoun never appears, and a blanket word ban would have forced
+  "The kitchen table is buried again — and the kitchen table costs you the start
+  of every evening."
+- Siblings: checked — the premise, the limiter summary, the no-action copy and
+  the follow-up all pass the same sweep.
+- Fixed in: `5447900`
+
 ### DEF-0002 — a DST warning outlived the time it was about
 
 - Status: Fixed
