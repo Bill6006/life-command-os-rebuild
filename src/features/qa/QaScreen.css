@@ -284,3 +284,51 @@
   color: var(--text-primary);
   resize: vertical;
 }
+
+/* ---- The ranking ----------------------------------------------------------
+ * One row per move that survived the filter, opening onto every dimension that
+ * produced its score. The chosen one opens by default, because that is the row
+ * anyone arriving here is looking for (plan section 35).
+ */
+.qa-rank {
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.qa-rank:last-of-type {
+  border-bottom: none;
+}
+
+.qa-rank__summary {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  list-style: none;
+}
+
+.qa-rank__summary::-webkit-details-marker {
+  display: none;
+}
+
+.qa-rank__score {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.qa-rank[data-chosen] .qa-rank__summary {
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.qa-rank[data-chosen] .qa-rank__score {
+  color: var(--accent);
+}
+
+.qa-group[data-changes='true'] .qa-group__title {
+  color: var(--accent);
+}

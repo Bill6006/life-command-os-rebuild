@@ -1,13 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { CanonicalRecord } from '../../domain/records'
 import {
   instant,
@@ -32,8 +23,9 @@ import {
   type StoreBackend,
   type StoreSnapshot,
 } from '../../memory/store'
-import { buildView, type MemoryView } from '../../memory/view'
+import { buildView } from '../../memory/view'
 import { runningBuild } from '../../platform/buildInfo'
+import { MemoryContext, type MemoryContextValue, type StorageCheck } from './memoryContext'
 
 /**
  * One store and one clock, for every surface (canonical plan sections 14 and 31).
@@ -54,45 +46,9 @@ import { runningBuild } from '../../platform/buildInfo'
  * pasted file would be — so a production build never downloads a fixture.
  */
 
-export interface StorageCheck {
-  readonly ok: boolean
-  readonly detail: string
-}
-
-export interface MemoryContextValue {
-  readonly ready: boolean
-  readonly busy: boolean
-  readonly backend: StoreBackend | 'opening'
-  readonly durable: boolean
-  readonly snapshot: StoreSnapshot
-  readonly view: MemoryView
-  readonly issues: readonly ValidationIssue[]
-  readonly loadedLabel: string | undefined
-  readonly error: string | undefined
-  readonly storageCheck: StorageCheck | undefined
-
-  loadDocument(json: string, label?: string): Promise<void>
-  append(records: readonly CanonicalRecord[]): Promise<void>
-  clear(): Promise<void>
-  verifyStorage(): Promise<void>
-  documentJson(): string
-
-  readonly now: Instant
-  readonly zone: TimeZoneId
-  readonly weekStartsOn: WeekStartDay
-  /** Whether the clock has been moved off the real one. */
-  readonly travelled: boolean
-  travelTo(at: Instant): void
-  setZone(zone: TimeZoneId): void
-  setWeekStartsOn(day: WeekStartDay): void
-  returnToNow(): void
-}
-
 const EMPTY: StoreSnapshot = { schemaVersion: 1, records: [], entities: [], malformed: [] }
 
 const DB_NAME = `life-command-os:${runningBuild.target}`
-
-const MemoryContext = createContext<MemoryContextValue | undefined>(undefined)
 
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
@@ -301,10 +257,4 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
   }
 
   return <MemoryContext.Provider value={value}>{children}</MemoryContext.Provider>
-}
-
-export function useMemory(): MemoryContextValue {
-  const value = useContext(MemoryContext)
-  if (value === undefined) throw new Error('useMemory must be used inside a MemoryProvider')
-  return value
 }

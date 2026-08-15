@@ -22,24 +22,30 @@ import {
   parseLocalDayId,
   parseTimeZone,
   resolveLocal,
-  systemClock,
   type Instant,
   type TimeZoneId,
   type WeekStartDay,
 } from '../../domain/time'
-import { buildView } from '../../memory/view'
+import { ARCHITECTURES, decide, type ArchitectureId } from '../../intelligence/engine'
+import { nextGuideStep } from '../../intelligence/guide'
 import { SCENARIOS } from '../../synthetic/scenarios'
-import { useMemoryLab } from './useMemoryLab'
+import { useMemory } from '../memory/memoryContext'
 import './QaScreen.css'
 
 /**
- * The QA laboratory (canonical plan section 31).
+ * The QA laboratory (canonical plan sections 31 and 35).
  *
  * "QA is a first-class product-development surface. It is not a hidden
  * emergency hack." Everything on this screen reads the real canonical store
- * through the real projections, so what it shows is what the engine will see —
- * and the whole point of building it before Phase 2 is that the reasoning has
- * somewhere to be inspected the moment it exists.
+ * through the real projections and the real engine, so what it shows is what
+ * the owner is being told — and section 35's list is the contract it fills:
+ * facts considered and how each was known, the active context, the candidates,
+ * what was filtered and why, the ranking with its dimensions, the chosen move,
+ * its uncertainty, its semantic subject, and what would change the answer.
+ *
+ * The clock and the store live above this screen now, so travelling in time
+ * here moves Now too. That is the point: a scenario is worth loading because
+ * you can then go and look at what the engine makes of it.
  *
  * This screen never appears in a production build; it lives behind More, is
  * loaded on demand, and its route resolves to Now when the target is
@@ -118,33 +124,35 @@ function Collapsible({
 }
 
 export function QaScreen() {
-  const lab = useMemoryLab()
-  const clock = useMemo(() => systemClock(), [])
-
-  const [zone, setZone] = useState<TimeZoneId>(clock.zone())
-  const [now, setNow] = useState<Instant>(() => clock.now())
-  const [weekStartsOn, setWeekStartsOn] = useState<WeekStartDay>(1)
+  const memory = useMemory()
   const [revealPrivate, setRevealPrivate] = useState(false)
   const [draft, setDraft] = useState('')
   const [resolution, setResolution] = useState<'exact' | 'gap' | 'ambiguous'>('exact')
+  const [architecture, setArchitecture] = useState<ArchitectureId>('deterministic')
 
   const policy: DisplayPolicy = { surface: 'inspection', revealPrivate }
+  const { now, zone, weekStartsOn, view } = memory
 
-  const view = useMemo(
-    () => buildView(lab.snapshot, { now, zone, weekStartsOn }),
-    [lab.snapshot, now, zone, weekStartsOn],
+  const moment = useMemo(() => ({ now, zone, weekStartsOn }), [now, zone, weekStartsOn])
+
+  // Probing runs the whole decision again under each possible answer, which is
+  // why it is asked for here and nowhere else.
+  const decision = useMemo(
+    () => decide(view, moment, { architecture, probe: true }),
+    [view, moment, architecture],
+  )
+  const guide = useMemo(
+    () => nextGuideStep(view, moment, { architecture }),
+    [view, moment, architecture],
   )
 
   const local = localDateTimeAt(now, zone)
   const weekId = localWeekIdAt(now, zone, weekStartsOn)
 
-  const zones = useMemo(() => {
-    const all = new Set<string>([clock.zone(), ...ZONE_CHOICES])
-    return [...all].sort()
-  }, [clock])
+  const zones = useMemo(() => [...new Set<string>([zone, ...ZONE_CHOICES])].sort(), [zone])
 
   const travelTo = (target: Instant) => {
-    setNow(target)
+    memory.travelTo(target)
     // The DST note belongs to the wall-clock time that was typed, not to the
     // clock in general. Leaving it up after moving away would claim a time
     // does not exist when it plainly does.
@@ -168,18 +176,18 @@ export function QaScreen() {
       },
       zone,
     )
-    setNow(resolved.at)
+    memory.travelTo(resolved.at)
     setResolution(resolved.resolution)
   }
 
   const facts = view.facts
-  const byState = (state: KnowledgeState) => facts.inState(state)
+  const trace = decision.trace
 
   return (
     <Screen
-      eyebrow="Phase 1"
+      eyebrow="Phase 2"
       title="QA"
-      lede="Synthetic histories, a clock you can move, and everything the system currently believes."
+      lede="Synthetic histories, a clock you can move, and the whole of how a decision was reached."
     >
       <Panel title="Synthetic scenarios">
         <div className="qa-scenarios">
@@ -188,17 +196,18 @@ export function QaScreen() {
               key={scenario.id}
               type="button"
               className={
-                lab.loadedScenarioId === scenario.id
+                memory.loadedLabel === scenario.id
                   ? 'qa-scenario qa-scenario--active'
                   : 'qa-scenario'
               }
-              disabled={lab.busy}
+              disabled={memory.busy}
               onClick={() => {
-                setZone(scenario.zone)
+                const document = scenario.build()
+                memory.setZone(scenario.zone)
+                memory.setWeekStartsOn(scenario.weekStartsOn ?? 1)
                 travelTo(scenario.now)
-                setWeekStartsOn(scenario.weekStartsOn ?? 1)
-                setDraft(`${JSON.stringify(scenario.build(), null, 2)}\n`)
-                void lab.loadScenario(scenario.id)
+                setDraft(`${JSON.stringify(document, null, 2)}\n`)
+                void memory.loadDocument(JSON.stringify(document), scenario.id)
               }}
             >
               <span className="qa-scenario__title">{scenario.title}</span>
@@ -208,7 +217,7 @@ export function QaScreen() {
           ))}
         </div>
         <div className="qa-actions">
-          <button type="button" onClick={() => void lab.clear()} disabled={lab.busy}>
+          <button type="button" onClick={() => void memory.clear()} disabled={memory.busy}>
             Clear everything
           </button>
         </div>
@@ -252,7 +261,7 @@ export function QaScreen() {
         </label>
 
         {resolution === 'exact' ? null : (
-          <p className="qa-warning">
+          <p className="qa-warning" data-testid="dst-note">
             {resolution === 'gap'
               ? 'That wall-clock time does not exist here — the clocks jump over it. Moved to just after the gap.'
               : 'That wall-clock time happens twice here. Using the first one.'}
@@ -265,7 +274,7 @@ export function QaScreen() {
             value={zone}
             onChange={(event) => {
               const next = parseTimeZone(event.target.value)
-              if (next !== undefined) setZone(next)
+              if (next !== undefined) memory.setZone(next)
             }}
           >
             {zones.map((choice) => (
@@ -280,7 +289,7 @@ export function QaScreen() {
           <span>Week starts</span>
           <select
             value={weekStartsOn}
-            onChange={(event) => setWeekStartsOn(Number(event.target.value) as WeekStartDay)}
+            onChange={(event) => memory.setWeekStartsOn(Number(event.target.value) as WeekStartDay)}
           >
             {WEEK_STARTS.map((choice) => (
               <option key={choice.value} value={choice.value}>
@@ -300,31 +309,183 @@ export function QaScreen() {
         </label>
       </Panel>
 
+      <Panel title="The decision">
+        <label className="qa-field">
+          <span>Architecture</span>
+          <select
+            value={architecture}
+            onChange={(event) => setArchitecture(event.target.value as ArchitectureId)}
+          >
+            {ARCHITECTURES.map((choice) => (
+              <option key={choice} value={choice}>
+                {choice}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {decision.explanation === undefined ? (
+          <p className="qa-warning" data-testid="qa-no-action">
+            {decision.noAction?.headline} — {decision.noAction?.reason}
+          </p>
+        ) : (
+          <div className="qa-recommendation">
+            <p className="qa-recommendation__sentence" data-testid="qa-decision-sentence">
+              {decision.explanation.rendered.sentence}
+            </p>
+            <p className="note">{decision.explanation.rendered.reason}</p>
+            <Rows>
+              <Row label="Subject" value={decision.explanation.rendered.subjectLabel} />
+              <Row label="Situation" value={decision.explanation.premise} />
+              <Row
+                label="Limiter"
+                value={decision.explanation.limiter ?? 'nothing in particular'}
+              />
+              <Row label="Follow-up" value={decision.explanation.rendered.followUp} />
+            </Rows>
+          </div>
+        )}
+
+        <Rows>
+          <Row label="Part of day" value={trace.block} />
+          <Row label="Weekly direction" value={describeDirection(trace)} />
+          <Row label="Guide" value={guide.because} />
+        </Rows>
+      </Panel>
+
+      <Collapsible title="Facts considered" count={trace.facts.length} open>
+        <Rows>
+          {trace.facts.map((fact) => (
+            <Row
+              key={fact.concept}
+              label={`${fact.label} · ${STATE_LABELS[fact.state].toLowerCase()}`}
+              value={
+                mayShowDetail(fact.privacy, policy)
+                  ? `${fact.reading} — for ${fact.usedFor.join(', ')}`
+                  : `${discreetPlaceholder(fact.privacy)} — for ${fact.usedFor.join(', ')}`
+              }
+            />
+          ))}
+        </Rows>
+      </Collapsible>
+
+      <Collapsible title="Moves considered" count={trace.proposed.length}>
+        {trace.proposed.length === 0 ? (
+          <p className="note">Nothing in this history suggested a move.</p>
+        ) : (
+          <Rows>
+            {trace.proposed.map((move) => (
+              <Row key={move.id} label={move.id} value={`${move.subject} — ${move.because}`} />
+            ))}
+          </Rows>
+        )}
+      </Collapsible>
+
+      <Collapsible title="Ruled out" count={trace.rejected.length}>
+        {trace.rejected.length === 0 ? (
+          <p className="note">Everything proposed fitted.</p>
+        ) : (
+          <Rows>
+            {trace.rejected.map((rejection) => (
+              <Row
+                key={`${rejection.candidate}-${rejection.reason}`}
+                label={rejection.candidate}
+                value={`${rejection.reason} — ${rejection.explanation}`}
+              />
+            ))}
+          </Rows>
+        )}
+      </Collapsible>
+
+      <Collapsible title="Ranking" count={trace.ranking.length}>
+        {trace.ranking.length === 0 ? (
+          <p className="note">Nothing survived to be ranked.</p>
+        ) : (
+          trace.ranking.map((row) => (
+            <details
+              key={row.id}
+              className="qa-rank"
+              open={row.id === trace.chosen}
+              data-chosen={row.id === trace.chosen ? 'yes' : undefined}
+            >
+              <summary className="qa-rank__summary">
+                <span className="qa-rank__score">{row.score.toFixed(3)}</span>
+                <span>{row.sentence}</span>
+              </summary>
+              <Rows>
+                {row.dimensions.map((dimension) => (
+                  <Row
+                    key={dimension.name}
+                    label={`${dimension.name} ×${dimension.weight}`}
+                    value={`${dimension.value >= 0 ? '+' : ''}${dimension.value.toFixed(2)} — ${dimension.note}`}
+                  />
+                ))}
+              </Rows>
+              {row.cautions.length === 0 ? null : (
+                <p className="qa-warning">{row.cautions.join(' · ')}</p>
+              )}
+            </details>
+          ))
+        )}
+        {trace.notes.length === 0 ? null : (
+          <ul className="qa-malformed__issues" data-testid="qa-notes">
+            {trace.notes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        )}
+      </Collapsible>
+
+      <Collapsible title="What would change the answer" count={trace.wouldChange.length}>
+        {trace.wouldChange.length === 0 ? (
+          <p className="note">Nothing left that could move it.</p>
+        ) : (
+          trace.wouldChange.map((swing) => (
+            <div key={swing.concept} className="qa-group" data-changes={swing.changesTheAnswer}>
+              <h3 className="qa-group__title">
+                {swing.label}
+                <span className="qa-block__count">
+                  {swing.changesTheAnswer ? 'changes it' : 'no'}
+                </span>
+              </h3>
+              <Rows>
+                {swing.outcomes.map((outcome) => (
+                  <Row key={outcome.answer} label={outcome.answer} value={outcome.wouldChoose} />
+                ))}
+              </Rows>
+            </div>
+          ))
+        )}
+      </Collapsible>
+
       <Panel title="Storage">
         <Rows>
-          <Row label="Backend" value={lab.backend} />
-          <Row label="Durable" value={lab.durable ? 'Yes' : 'No — nothing is being kept'} />
-          <Row label="Records" value={String(lab.snapshot.records.length)} />
-          <Row label="Entities" value={String(lab.snapshot.entities.length)} />
-          <Row label="Unreadable rows" value={String(lab.snapshot.malformed.length)} />
+          <Row label="Backend" value={memory.backend} />
+          <Row label="Durable" value={memory.durable ? 'Yes' : 'No — nothing is being kept'} />
+          <Row label="Records" value={String(memory.snapshot.records.length)} />
+          <Row label="Entities" value={String(memory.snapshot.entities.length)} />
+          <Row label="Unreadable rows" value={String(memory.snapshot.malformed.length)} />
         </Rows>
         <div className="qa-actions">
-          <button type="button" onClick={() => void lab.verifyStorage()} disabled={lab.busy}>
+          <button type="button" onClick={() => void memory.verifyStorage()} disabled={memory.busy}>
             Reopen and verify
           </button>
         </div>
-        {lab.storageCheck === undefined ? null : (
-          <p className={lab.storageCheck.ok ? 'qa-ok' : 'qa-warning'} data-testid="storage-check">
-            {lab.storageCheck.ok ? 'Came back intact: ' : 'Did not come back intact: '}
-            {lab.storageCheck.detail}
+        {memory.storageCheck === undefined ? null : (
+          <p
+            className={memory.storageCheck.ok ? 'qa-ok' : 'qa-warning'}
+            data-testid="storage-check"
+          >
+            {memory.storageCheck.ok ? 'Came back intact: ' : 'Did not come back intact: '}
+            {memory.storageCheck.detail}
           </p>
         )}
-        {lab.error === undefined ? null : <p className="qa-warning">{lab.error}</p>}
+        {memory.error === undefined ? null : <p className="qa-warning">{memory.error}</p>}
       </Panel>
 
-      <Collapsible title="What the system believes" count={facts.entries.length} open>
+      <Collapsible title="What the system believes" count={facts.entries.length}>
         {(['explicit', 'inferred', 'stale', 'unknown'] as const).map((state) => {
-          const entries = byState(state)
+          const entries = facts.inState(state)
           if (entries.length === 0) return null
           return (
             <div key={state} className="qa-group" data-state={state}>
@@ -366,7 +527,7 @@ export function QaScreen() {
         )}
       </Collapsible>
 
-      <Collapsible title="Recommendations" count={recommendationsOf(view).length}>
+      <Collapsible title="Recommendations in history" count={recommendationsOf(view).length}>
         {recommendationsOf(view).length === 0 ? (
           <p className="note">No recommendation in this history.</p>
         ) : (
@@ -436,12 +597,12 @@ export function QaScreen() {
         )}
       </Collapsible>
 
-      <Collapsible title="Unreadable rows" count={lab.snapshot.malformed.length}>
-        {lab.snapshot.malformed.length === 0 ? (
+      <Collapsible title="Unreadable rows" count={memory.snapshot.malformed.length}>
+        {memory.snapshot.malformed.length === 0 ? (
           <p className="note">Every row parsed.</p>
         ) : (
           <ul className="qa-malformed" data-testid="malformed-rows">
-            {lab.snapshot.malformed.map((row) => (
+            {memory.snapshot.malformed.map((row) => (
               <li key={`${row.index}-${row.id ?? 'anonymous'}`} className="qa-malformed__row">
                 <div className="qa-malformed__head">
                   row {row.index}
@@ -480,7 +641,7 @@ export function QaScreen() {
         )}
       </Collapsible>
 
-      <Collapsible title="The document" count={lab.snapshot.records.length}>
+      <Collapsible title="The document" count={memory.snapshot.records.length}>
         <p className="note">
           Paste any synthetic history here and load it. A row that cannot be read is reported above
           rather than losing the rows around it.
@@ -493,16 +654,20 @@ export function QaScreen() {
           onChange={(event) => setDraft(event.target.value)}
         />
         <div className="qa-actions">
-          <button type="button" disabled={lab.busy} onClick={() => void lab.loadJson(draft)}>
+          <button
+            type="button"
+            disabled={memory.busy}
+            onClick={() => void memory.loadDocument(draft)}
+          >
             Load this
           </button>
-          <button type="button" onClick={() => setDraft(lab.documentJson(now))}>
+          <button type="button" onClick={() => setDraft(memory.documentJson())}>
             Fill from current
           </button>
         </div>
-        {lab.issues.length === 0 ? null : (
+        {memory.issues.length === 0 ? null : (
           <ul className="qa-malformed__issues" data-testid="document-issues">
-            {lab.issues.map((issue) => (
+            {memory.issues.map((issue) => (
               <li key={`${issue.path}-${issue.problem}`}>
                 {issue.path}: {issue.problem}
               </li>
@@ -514,6 +679,16 @@ export function QaScreen() {
   )
 }
 
-function recommendationsOf(view: ReturnType<typeof buildView>) {
+function describeDirection(trace: { direction: { weekly: { state: string } } }): string {
+  const weekly = trace.direction.weekly as {
+    state: string
+    wording?: string
+    weekId?: string
+  }
+  if (weekly.state === 'none') return 'none set'
+  return `${weekly.state} · “${weekly.wording ?? ''}” (${weekly.weekId ?? ''})`
+}
+
+function recommendationsOf(view: ReturnType<typeof useMemory>['view']) {
   return view.history.effective.filter((record) => record.kind === 'action-recommendation')
 }

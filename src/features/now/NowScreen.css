@@ -1,0 +1,90 @@
+/* Now (canonical plan sections 6 and 24).
+ *
+ * The decision gets the light; everything else on the screen gets out of its
+ * way. The premise sits above the move in quiet type, so the owner reads where
+ * they are before what to do — and the answer buttons are the only other thing
+ * with any weight, because tapping one is the only thing this screen asks of
+ * them.
+ */
+
+.now-premise {
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.now-travelled {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-md);
+}
+
+.now-linkish {
+  font: inherit;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.now-question {
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+  text-wrap: balance;
+}
+
+.now-options {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.now-option {
+  /* Section 37 — a target a thumb can hit without aiming. */
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  cursor: pointer;
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  transition:
+    transform var(--dur-fast) var(--ease),
+    border-color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.now-option:hover:not(:disabled) {
+  border-color: var(--accent-edge);
+  background: var(--accent-dim);
+}
+
+.now-option:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.now-option:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .now-option {
+    transition: none;
+  }
+
+  .now-option:active:not(:disabled) {
+    transform: none;
+  }
+}

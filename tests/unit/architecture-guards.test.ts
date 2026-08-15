@@ -274,6 +274,28 @@ describe('there is exactly one arbitration path', () => {
   })
 })
 
+describe('invented histories stay in the laboratory', () => {
+  it('is imported by no surface except QA', () => {
+    /*
+     * Section 31: "no test bridge in production bundle", "test-only actions
+     * unavailable in production".
+     *
+     * The QA screen is a separate chunk that a production build never
+     * downloads, which is what keeps ten invented lives out of the app the
+     * owner ships. One import of `src/synthetic` from a surface that is not QA
+     * would put all of them in the main bundle, silently, and the only symptom
+     * would be a slightly larger file.
+     */
+    const offenders = FEATURES.filter((file) => {
+      const path = repoPath(file)
+      if (path.startsWith('src/features/qa/')) return false
+      return /from '[^']*\/synthetic\//.test(readCode(file))
+    }).map(repoPath)
+
+    expect(offenders, 'only the QA laboratory may import the scenario library').toEqual([])
+  })
+})
+
 describe('the intelligence kernel keeps the layer below it honest', () => {
   it('is a real folder with real files in it', () => {
     expect(INTELLIGENCE.length).toBeGreaterThan(8)

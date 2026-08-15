@@ -22,13 +22,15 @@ async function loadScenario(page: Page, title: string) {
 }
 
 function block(page: Page, title: string) {
-  return page.locator('details.qa-block', { has: page.locator('summary', { hasText: title }) })
+  return page.locator('details.qa-block', { has: page.locator('> summary', { hasText: title }) })
 }
 
 /** Some blocks open by default, so clicking blindly would close them. */
 async function openBlock(page: Page, title: string) {
   const target = block(page, title)
-  if ((await target.getAttribute('open')) === null) await target.locator('summary').click()
+  // `> summary` on purpose: the ranking block contains a <details> per move,
+  // so a descendant match would resolve to several summaries.
+  if ((await target.getAttribute('open')) === null) await target.locator('> summary').click()
   await expect(target).toHaveAttribute('open', '')
   return target
 }
@@ -119,21 +121,38 @@ test.describe('the subject survives to the screen', () => {
   test('renders a recommendation that names subnetting', async ({ page }) => {
     await openQa(page)
     await loadScenario(page, 'A topic that keeps slipping')
-    await openBlock(page, 'Recommendations')
+    const recorded = await openBlock(page, 'Recommendations in history')
 
     const sentence = page.getByTestId('recommendation-sentence')
     await expect(sentence).toHaveText(
       'Spend 10 minutes recalling subnetting before you reopen your notes.',
     )
-    await expect(rowValue(page, 'Subject')).toHaveText('subnetting')
-    await expect(rowValue(page, 'Follow-up')).toHaveText('How did the subnetting recall go?')
+    // Scoped to this block: the engine's own decision has a Subject and a
+    // Follow-up too, and they are about the move it chose rather than the one
+    // stored in the history.
+    await expect(recorded.locator('.rows__row', { hasText: 'Subject' }).locator('dd')).toHaveText(
+      'subnetting',
+    )
+    await expect(recorded.locator('.rows__row', { hasText: 'Follow-up' }).locator('dd')).toHaveText(
+      'How did the subnetting recall go?',
+    )
   })
 
   test('shows an entity fact as the thing it names, not as an identifier', async ({ page }) => {
     await openQa(page)
     await loadScenario(page, 'A topic that keeps slipping')
 
-    await expect(rowValue(page, 'Current learning topic')).toHaveText('subnetting')
+    // Both places the fact appears — what is believed, and what the decision
+    // actually read. An id leaking onto either would be the same defect.
+    const believes = await openBlock(page, 'What the system believes')
+    await expect(
+      believes.locator('.rows__row', { hasText: 'Current learning topic' }).locator('dd'),
+    ).toHaveText('subnetting')
+
+    const considered = await openBlock(page, 'Facts considered')
+    await expect(
+      considered.locator('.rows__row', { hasText: 'Current learning topic' }).locator('dd'),
+    ).toContainText('subnetting')
   })
 })
 
@@ -152,7 +171,7 @@ test.describe('a file with damage in it', () => {
     await expect(rows.locator('.qa-malformed__issues li').first()).not.toBeEmpty()
 
     // The surface that matters is still populated, not blanked.
-    const believes = block(page, 'What the system believes')
+    const believes = await openBlock(page, 'What the system believes')
     await expect(believes.locator('.qa-group[data-state="explicit"]')).toBeVisible()
   })
 })
@@ -184,11 +203,11 @@ test.describe('time travel', () => {
     // 02:30 on the morning New York springs forward. That wall-clock time does
     // not exist, and the screen should say so.
     await page.getByLabel('Travel to').fill('2026-03-08T02:30')
-    await expect(page.locator('.qa-warning')).toContainText('does not exist')
+    await expect(page.getByTestId('dst-note')).toContainText('does not exist')
 
     // …and should stop saying so about 04:30, which plainly does exist.
     await page.getByRole('button', { name: '+1 hour' }).click()
-    await expect(page.locator('.qa-warning')).toHaveCount(0)
+    await expect(page.getByTestId('dst-note')).toHaveCount(0)
   })
 
   test('relabels the same history when the timezone changes', async ({ page }) => {
@@ -208,6 +227,7 @@ test.describe('privacy', () => {
   test('withholds private detail until it is asked for', async ({ page }) => {
     await openQa(page)
     await loadScenario(page, 'Two ordinary weeks')
+    await openBlock(page, 'What the system believes')
 
     const privateRow = page
       .locator('.rows__row', { hasText: 'Recent private pattern' })
@@ -224,7 +244,7 @@ test.describe('mobile layout', () => {
     await openQa(page)
     await loadScenario(page, 'A file with damage in it')
 
-    for (const title of ['What the system believes', 'Unreadable rows', 'The document']) {
+    for (const title of ['What the system believes', 'Ranking', 'The document']) {
       await openBlock(page, title)
     }
 
