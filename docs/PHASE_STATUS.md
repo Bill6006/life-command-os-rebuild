@@ -34,13 +34,13 @@ job fails if the live `build-info.json` does not serve the pushed SHA.
 | Format (Prettier)                         | Pass                                         |
 | Lint (ESLint)                             | Pass, 0 warnings                             |
 | Typecheck (strict TS)                     | Pass, 0 errors                               |
-| Unit / contract / synthetic / adversarial | 187 passed / 187                             |
+| Unit / contract / synthetic / adversarial | 188 passed / 188 (in plain Node, no DOM)     |
 | Browser tests (Playwright)                | 75 passed / 75 — 25 tests × 360, 430, 1280px |
 | Production build                          | Pass                                         |
 | `npm run verify` from a clean checkout    | Pass                                         |
 | Deployed SHA matches checkpoint           | Asserted live in CI                          |
 
-### Where the 187 sit
+### Where the 188 sit
 
 | Suite                                                 | Tests |
 | ----------------------------------------------------- | ----: |
@@ -51,7 +51,7 @@ job fails if the live `build-info.json` does not serve the pushed SHA.
 | `unit/buildInfo`                                      |    11 |
 | `unit/recommendation` — rendering and refusal         |    10 |
 | `unit/routing`                                        |    10 |
-| `unit/architecture-guards` — the boundaries           |     8 |
+| `unit/architecture-guards` — the boundaries           |     9 |
 | `contract/projections` — rebuildability, migrations   |    11 |
 | `contract/round-trip` — 19 record kinds, lossless     |     8 |
 | `contract/legacy-quarantine` — preserved and inert    |     6 |
@@ -71,17 +71,17 @@ build does not reach the phone. Fixed in `ba74ad5`.
 
 ## Gate checklist (section 46)
 
-| Requirement                                 | Status                                                                                                |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| G-001 no orphan pronoun                     | Pass — the case, and a sweep of every verb and reason                                                 |
-| G-002 durable family context                | Pass — four moments, exception overrides, nothing rewritten                                           |
-| G-009 unknown is unknown                    | Pass — no false zero, average or default; questions only when material                                |
-| G-011 timezone and week boundary            | Pass — five zones, both clock changes, 23- and 25-hour days                                           |
-| Malformed synthetic inputs are inspectable  | Pass — reason, path and raw payload kept for every bad row                                            |
-| One malformed record cannot blank a surface | Pass — in the parser, in the store, and on the QA screen                                              |
-| Canonical data round-trips without loss     | Pass — 19 kinds, plus fields this version has never seen                                              |
-| No full UI dependency                       | Pass — the whole meaning layer is tested with no browser, and a guard fails the build if that changes |
-| Preview deploys automatically               | Pass — D-004                                                                                          |
+| Requirement                                 | Status                                                                                          |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| G-001 no orphan pronoun                     | Pass — the case, and a sweep of every verb and reason                                           |
+| G-002 durable family context                | Pass — four moments, exception overrides, nothing rewritten                                     |
+| G-009 unknown is unknown                    | Pass — no false zero, average or default; questions only when material                          |
+| G-011 timezone and week boundary            | Pass — five zones, both clock changes, 23- and 25-hour days                                     |
+| Malformed synthetic inputs are inspectable  | Pass — reason, path and raw payload kept for every bad row                                      |
+| One malformed record cannot blank a surface | Pass — in the parser, in the store, and on the QA screen                                        |
+| Canonical data round-trips without loss     | Pass — 19 kinds, plus fields this version has never seen                                        |
+| No full UI dependency                       | Pass — every suite below the UI runs in plain Node with no DOM in scope, and a guard asserts it |
+| Preview deploys automatically               | Pass — D-004                                                                                    |
 
 ## What changed
 

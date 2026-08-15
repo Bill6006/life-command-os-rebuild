@@ -1,3 +1,9 @@
+/**
+ * @vitest-environment jsdom
+ *
+ * This suite is about browser behaviour — a hash, a location, a fetch — so it
+ * asks for a DOM. Everything below the UI runs in plain Node.
+ */
 import { describe, expect, it } from 'vitest'
 import {
   ALL_DESTINATIONS,

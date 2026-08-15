@@ -156,6 +156,14 @@ describe('localStorage is not the history store', () => {
 })
 
 describe('the meaning layer stands on its own', () => {
+  it('is running with no DOM at all', () => {
+    // Not a promise not to touch the DOM — there is no DOM here to touch.
+    // Section 46 asks for the meaning layer to be testable without the app
+    // shell, and this is what makes that claim checkable rather than stated.
+    expect(typeof document).toBe('undefined')
+    expect(typeof window).toBe('undefined')
+  })
+
   it('imports no React and no app shell', () => {
     const offenders: string[] = []
     for (const file of MEANING_LAYER) {

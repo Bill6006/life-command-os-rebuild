@@ -93,7 +93,17 @@ export default defineConfig(({ mode }) => {
       sourcemap: true,
     },
     test: {
-      environment: 'jsdom',
+      /*
+       * Node, not jsdom.
+       *
+       * The Phase 1 gate asks for the meaning layer to be testable without the
+       * app shell. Running it in an environment that has no DOM at all is a
+       * stronger way to hold that than promising not to reach for one — a
+       * `document` reference below the UI fails here rather than passing
+       * quietly. The two suites that genuinely exercise browser APIs opt into
+       * jsdom with a `@vitest-environment` docblock.
+       */
+      environment: 'node',
       globals: true,
       setupFiles: ['./tests/unit/setup.ts'],
       // Test layers from canonical plan section 41. Browser tests run under
