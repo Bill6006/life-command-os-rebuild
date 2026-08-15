@@ -219,3 +219,19 @@
   border-radius: 50%;
   opacity: 0.75;
 }
+
+/* A text link that reads as an action without becoming a button. */
+.qa-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent-edge);
+}
+
+.qa-link:hover {
+  border-bottom-color: var(--accent);
+}

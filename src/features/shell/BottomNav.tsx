@@ -7,6 +7,7 @@ const labels: Record<Destination, string> = {
   timeline: 'Timeline',
   insights: 'Insights',
   more: 'More',
+  qa: 'QA',
 }
 
 interface BottomNavProps {

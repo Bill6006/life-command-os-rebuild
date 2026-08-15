@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
+  ALL_DESTINATIONS,
   DEFAULT_DESTINATION,
   DESTINATIONS,
   destinationFromHash,
   hashForDestination,
   isDestination,
+  isReachable,
+  QA_AVAILABLE,
+  SECONDARY_DESTINATIONS,
 } from '../../src/platform/routing'
 
 describe('destinationFromHash', () => {
@@ -51,5 +55,21 @@ describe('isDestination', () => {
 describe('primary navigation shape', () => {
   it('keeps four primary destinations plus More', () => {
     expect(DESTINATIONS).toEqual(['now', 'life', 'timeline', 'insights', 'more'])
+  })
+
+  it('keeps QA reachable without giving it a slot in the navigation', () => {
+    // Section 5 — developer surfaces do not consume one of five places on a
+    // phone's navigation bar.
+    expect(SECONDARY_DESTINATIONS).toEqual(['qa'])
+    expect(DESTINATIONS).not.toContain('qa')
+    expect(ALL_DESTINATIONS).toContain('qa')
+    expect(isDestination('qa')).toBe(true)
+  })
+
+  it('resolves the QA route in a non-production build', () => {
+    // Tests run against the development target, where the laboratory exists.
+    expect(QA_AVAILABLE).toBe(true)
+    expect(destinationFromHash('#/qa')).toBe('qa')
+    expect(isReachable('qa')).toBe(true)
   })
 })

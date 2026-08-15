@@ -1,5 +1,6 @@
 import { Panel, Row, Rows, Screen } from '../../components/ui'
 import { formatBuildTime, runningBuild } from '../../platform/buildInfo'
+import { hashForDestination, QA_AVAILABLE } from '../../platform/routing'
 import type { BuildFreshness } from '../../platform/useBuildFreshness'
 
 const TARGET_LABEL: Record<typeof runningBuild.target, string> = {
@@ -18,10 +19,27 @@ function freshnessSummary(freshness: BuildFreshness): string {
 export function MoreScreen({ freshness }: { freshness: BuildFreshness }) {
   return (
     <Screen
-      eyebrow="Phase 0"
+      eyebrow="Phase 1"
       title="More"
       lede="Data, exports, privacy, settings and QA live here rather than taking a primary slot."
     >
+      {QA_AVAILABLE ? (
+        <Panel title="QA laboratory">
+          <p>
+            Synthetic histories, a clock you can move, and everything the system currently believes
+            — including the rows it could not read.
+          </p>
+          <p className="note">
+            Synthetic data only. This surface is not built into a production release.
+          </p>
+          <p>
+            <a className="qa-link" href={hashForDestination('qa')}>
+              Open the QA laboratory
+            </a>
+          </p>
+        </Panel>
+      ) : null}
+
       <Panel title="This build">
         <Rows>
           <Row label="Environment" value={TARGET_LABEL[runningBuild.target]} />
@@ -39,24 +57,24 @@ export function MoreScreen({ freshness }: { freshness: BuildFreshness }) {
 
       <Panel title="Your data">
         <Rows>
-          <Row label="Owner data stored" value="None" />
+          <Row label="Stored where" value="This device, in a browser database" />
           <Row label="Preview data" value="Synthetic only" />
           <Row label="Leaves your device" value="Nothing" />
         </Rows>
         <p className="note">
-          There is no storage layer yet. When there is, real data stays on your device and never
-          enters the repository.
+          Preview and production keep separate databases, so nothing loaded here can reach a real
+          history. Exports, backup and restore arrive in Phase 7.
         </p>
       </Panel>
 
       <Panel title="Where the rebuild is">
         <Rows>
-          <Row label="Phase" value="0 — foundation and phone preview" />
-          <Row label="Next" value="1 — canonical records and QA lab" />
+          <Row label="Phase" value="1 — canonical records and the QA lab" />
+          <Row label="Next" value="2 — the intelligence kernel and a real Now" />
         </Rows>
         <p className="note">
-          Exports, backup and restore are Phase 7. The QA inspector arrives with the record store in
-          Phase 1.
+          There is a memory now, and a way to inspect it. There is still no engine choosing
+          anything: that has to prove itself in Phase 2 before the app grows around it.
         </p>
       </Panel>
     </Screen>

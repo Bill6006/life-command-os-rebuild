@@ -163,3 +163,25 @@
 .nav__label {
   line-height: 1;
 }
+
+/* A screen that is still arriving, or did not arrive at all.
+ * Never a bare spinner — section 36 wants an error to be visible. */
+.lazy-screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-6) 0;
+}
+
+.lazy-screen button {
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-5);
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+}

@@ -327,7 +327,18 @@ export function sortRecords(records: readonly CanonicalRecord[]): readonly Canon
   return [...records].sort(compareRecordOrder)
 }
 
-export function describeFactValue(value: FactValue): string {
+/**
+ * A fact value as text.
+ *
+ * Pass `labelFor` and an entity value reads as the thing it names rather than
+ * as an identifier. Without a resolver — or when the reference is broken — the
+ * id is shown and said to be missing, because an inspector that hides a
+ * dangling reference behind a tidy blank is worse than one that shows the id.
+ */
+export function describeFactValue(
+  value: FactValue,
+  labelFor?: (ref: EntityRef) => string | undefined,
+): string {
   switch (value.type) {
     case 'number':
       return value.unit === undefined ? String(value.value) : `${value.value} ${value.unit}`
@@ -339,8 +350,10 @@ export function describeFactValue(value: FactValue): string {
       return `${value.value} of ${value.of}`
     case 'duration':
       return `${value.minutes} min`
-    case 'entity':
-      return value.value.id
+    case 'entity': {
+      if (labelFor === undefined) return value.value.id
+      return labelFor(value.value) ?? `${value.value.id} (missing)`
+    }
   }
 }
 

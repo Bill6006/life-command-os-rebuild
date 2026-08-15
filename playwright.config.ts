@@ -12,11 +12,16 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   /*
    * One `vite preview` process serves every worker, and it starts dropping
-   * connections above a handful of concurrent Chromium instances — the default
-   * (half the CPU count) produced navigation timeouts that looked like product
-   * failures. Two workers runs the whole suite in ~10s with no flake.
+   * connections above a handful of concurrent Chromium instances. Two workers
+   * was fine until a screen arrived in its own chunk: a lazily loaded route
+   * adds a mid-test request, and under concurrency that request is the one
+   * that stalls — which reads as a hung screen rather than as a busy server.
+   *
+   * One worker everywhere. Slower, and the same locally as in CI, which is
+   * worth more than the seconds: section 60 records that failures which merely
+   * look like product failures cost real time.
    */
-  workers: process.env.CI ? 1 : 2,
+  workers: 1,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     // 127.0.0.1 rather than localhost: on Windows, localhost resolves to both

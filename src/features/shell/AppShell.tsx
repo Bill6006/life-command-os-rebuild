@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { lazy, useEffect } from 'react'
 import { InsightsScreen } from '../insights/InsightsScreen'
 import { LifeScreen } from '../life/LifeScreen'
 import { MoreScreen } from '../more/MoreScreen'
@@ -8,6 +8,7 @@ import { isPreview, runningBuild } from '../../platform/buildInfo'
 import { useDestination, type Destination } from '../../platform/routing'
 import { useBuildFreshness, type BuildFreshness } from '../../platform/useBuildFreshness'
 import { BottomNav } from './BottomNav'
+import { LazyScreen } from './LazyScreen'
 import './AppShell.css'
 
 const TITLES: Record<Destination, string> = {
@@ -16,7 +17,18 @@ const TITLES: Record<Destination, string> = {
   timeline: 'Timeline',
   insights: 'Insights',
   more: 'More',
+  qa: 'QA',
 }
+
+/**
+ * The QA laboratory is a separate chunk.
+ *
+ * It carries the synthetic scenarios and the whole inspector, none of which a
+ * production build should download — section 31 asks for test-only surfaces to
+ * be unavailable there, and the cheapest way to be sure is for the bytes not
+ * to ship.
+ */
+const QaScreen = lazy(async () => ({ default: (await import('../qa/QaScreen')).QaScreen }))
 
 function PreviewStrip() {
   return (
@@ -64,6 +76,12 @@ function screenFor(destination: Destination, freshness: BuildFreshness) {
       return <InsightsScreen />
     case 'more':
       return <MoreScreen freshness={freshness} />
+    case 'qa':
+      return (
+        <LazyScreen label="the QA laboratory">
+          <QaScreen />
+        </LazyScreen>
+      )
   }
 }
 
