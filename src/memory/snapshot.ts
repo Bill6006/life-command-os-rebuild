@@ -1,4 +1,4 @@
-import { CANONICAL_SCHEMA_VERSION } from '../domain/records'
+import { CANONICAL_SCHEMA_VERSION, sortRecords } from '../domain/records'
 import { instantToIso, type Instant } from '../domain/time'
 import { isPlainObject, type MalformedRow, type ValidationIssue } from '../domain/validation'
 import { entityToWire, parseEntities, parseRecords, recordToWire } from '../domain/wire'
@@ -184,7 +184,9 @@ export function snapshotFromWire(
   return {
     snapshot: {
       schemaVersion: version,
-      records: parsedRecords.records,
+      // Canonical order, not the order the document happened to list them in,
+      // so a snapshot compares equal to itself however it was written out.
+      records: sortRecords(parsedRecords.records),
       entities: parsedEntities.entities,
       // Rows that failed on the way in join the rows that were already known
       // to be bad. Both are inspectable; neither is silently discarded.

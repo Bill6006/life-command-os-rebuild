@@ -421,7 +421,7 @@ function malformedHistory(): Scenario {
     zone: kit.zone,
     now,
     build() {
-      const good = [1, 2, 3].map((day) =>
+      const good = [1, 2, 3, 4].map((day) =>
         kit.record(
           'observation',
           { occurredAt: kit.local(`2026-04-0${day + 4}`, '07:00'), domains: [DOMAIN.sleep] },

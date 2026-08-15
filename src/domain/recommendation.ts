@@ -120,7 +120,7 @@ const TEMPLATES: Record<ActionVerb, VerbTemplate> = {
   'review-weak-topic': {
     label: 'Weak-topic review',
     needsPerson: false,
-    action: ({ object }) => `Go back over ${object}, the part that keeps slipping.`,
+    action: ({ object }) => `Go back over ${object} — the part you keep missing.`,
     followUp: ({ object }) => `How did the ${object} review go?`,
   },
   'hands-on-lab': {
@@ -145,7 +145,7 @@ const TEMPLATES: Record<ActionVerb, VerbTemplate> = {
     label: 'Recover',
     needsPerson: false,
     action: ({ object }) => `Take tonight as recovery — no ${object} session.`,
-    followUp: ({ object }) => `Did skipping ${object} leave you better this morning?`,
+    followUp: ({ object }) => `Did skipping ${object} leave you better rested?`,
   },
   'time-with': {
     label: 'Time with someone',
@@ -212,7 +212,7 @@ const TRIGGER_REASONS: Record<WhyNowTrigger, (parts: TemplateParts) => string> =
   'goal-behind': ({ subject, goal }) => `${goal ?? subject} is behind where you wanted.`,
   'good-conditions': ({ subject }) => `Conditions suit ${subject} right now.`,
   'constraint-active': ({ subject }) => `The evening is limited, and ${subject} still fits.`,
-  deficit: ({ subject }) => `${subject} is the thing running short.`,
+  deficit: ({ subject }) => `${subject} is what is running short.`,
   'opportunity-window': ({ subject }) => `There is a natural opening for ${subject}.`,
   'nothing-better': ({ subject }) => `Nothing else is pressing, and ${subject} moves you forward.`,
 }
