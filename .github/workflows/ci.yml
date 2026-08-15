@@ -24,9 +24,9 @@ jobs:
     name: Verify
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -68,7 +68,7 @@ jobs:
         env:
           LCOS_TARGET: preview
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
@@ -77,7 +77,7 @@ jobs:
 
       # The deploy job publishes exactly these bytes, so what reaches the phone
       # is the artifact the gate verified.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: preview-dist
           path: dist
@@ -96,7 +96,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: preview-dist
           path: dist
