@@ -6,7 +6,9 @@ import {
   type RecommendationSemantics,
   type RenderedRecommendation,
 } from '../domain/recommendation'
+import { CONCEPT } from '../domain/concepts'
 import { DOMAIN } from '../domain/domains'
+import type { ConceptId } from '../domain/windows'
 import {
   addLocalDays,
   localDateTimeAt,
@@ -15,7 +17,7 @@ import {
   type IsoWeekday,
   type TimeZoneId,
 } from '../domain/time'
-import type { Evaluation } from './evaluate'
+import type { DimensionName, Evaluation } from './evaluate'
 import { describeHours, type Situation } from './situation'
 
 /**
@@ -119,11 +121,35 @@ function lastRoughOutcome(
 }
 
 /**
+ * Whether the reason is allowed to cite a fact at all.
+ *
+ * **The reason may only cite evidence the decision actually leaned on.**
+ *
+ * Without this rule the explanation reaches for whichever particular is nearest
+ * and produces something that sounds like reasoning and is not. The case that
+ * proved it: a walk winning on an ordinary morning, explained as "you are an
+ * hour and a half down, which is not enough to sit still for" — a sleep figure,
+ * on a move whose evidence is energy and soreness, where the shortfall
+ * contributed nothing to it winning and would if anything argue the other way.
+ * That is rationalising the winner after the fact, and it is worse than saying
+ * less, because it invites the owner to trust a chain of reasoning that was
+ * never used.
+ *
+ * The premise is deliberately not held to this. "Monday morning, an hour short
+ * on sleep" is a true statement about the situation rather than a claim about
+ * why this move won, and describing where the owner is does not require having
+ * decided from it.
+ */
+function leanedOn(evaluation: Evaluation, concept: ConceptId): boolean {
+  return evaluation.candidate.leansOn.includes(concept)
+}
+
+/**
  * Why this, now — in the owner's own particulars.
  *
  * Each branch reaches for a real value: how many hours, which topic, what went
- * wrong and when. A branch that cannot find its particulars falls back to the
- * next most specific thing it has rather than to a pleasant generality.
+ * wrong and when. A branch that cannot find a particular it is entitled to cite
+ * says less rather than borrowing one from somewhere else.
  */
 export function composeReason(
   evaluation: Evaluation,
@@ -159,7 +185,7 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
     case 'deficit': {
       const debt = situation.capacity.sleepDebtHours
       const nights = situation.capacity.nightsSeen
-      if (isUsable(debt) && debt.value >= 1) {
+      if (leanedOn(evaluation, CONCEPT.sleepHours) && isUsable(debt) && debt.value >= 1) {
         const span = nights <= 1 ? 'last night' : `the last ${nights} nights`
         return semantics.target.verb === 'recover'
           ? `You are ${describeHours(debt.value)} down over ${span}. ${capitalise(object)} will still be there tomorrow.`
@@ -213,20 +239,25 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
     }
 
     case 'good-conditions': {
-      // Reach for whichever particular is actually known. A line that reads the
-      // same for everyone is the failure section 64 names, and "conditions are
-      // decent" reads the same for everyone.
+      /*
+       * Reach for whichever particular this move is entitled to cite.
+       *
+       * An earlier version fell through to the sleep shortfall here, which is
+       * how "you are an hour and a half down, which is not enough to sit still
+       * for" reached a phone. A move that wins on good conditions wins because
+       * the body has something to spend and nothing is more pressing — so those
+       * are the two things it may say, and if it knows neither it says the
+       * short true thing rather than the long plausible one.
+       */
       const energy = situation.capacity.energy
-      if (isUsable(energy) && energy.value >= 0.7) {
-        return `Energy is good and nothing more pressing is in the way.`
+      if (leanedOn(evaluation, CONCEPT.energy) && isUsable(energy)) {
+        return energy.value >= 0.7
+          ? `Energy is good and nothing more pressing is in the way.`
+          : `There is enough in the tank for ${object}, and nothing more pressing to spend it on.`
       }
-      const debt = situation.capacity.sleepDebtHours
-      if (isUsable(debt) && debt.value >= 1) {
-        return `You are ${describeHours(debt.value)} down, which is not enough to sit still for.`
-      }
-      const lastNight = situation.capacity.lastNightHours
-      if (isUsable(lastNight)) {
-        return `${capitalise(describeHours(lastNight.value))} behind you and nothing more pressing.`
+      const soreness = situation.capacity.soreness
+      if (leanedOn(evaluation, CONCEPT.soreness) && isUsable(soreness) && soreness.value <= 0.3) {
+        return `Nothing is sore, and nothing more pressing is in the way.`
       }
       return `Nothing more pressing is in the way, and ${object} is the cheap one.`
     }
@@ -247,6 +278,38 @@ function lowerFirst(text: string): string {
   return text.length === 0 ? text : `${text.charAt(0).toLowerCase()}${text.slice(1)}`
 }
 
+/**
+ * The one thing that separated the winner from the next best move.
+ *
+ * Section 6 asks Now to be able to show the relevant tradeoff, and the owner's
+ * version of the same request is sharper: if walking beats studying, resting or
+ * doing nothing, the reason should make that understandable. So this is taken
+ * from the arbitration rather than written to fit it — the dimension where the
+ * winner most out-scored the runner-up, in a short phrase.
+ *
+ * These read as statements about the winning move on purpose. None of them
+ * contains a pronoun: the row sits beside the move it beat, and "it" there is
+ * genuinely ambiguous about which of the two is meant.
+ */
+export const AHEAD_BECAUSE: Record<DimensionName, string> = {
+  'bottleneck-fit': 'Answers what is actually in the way.',
+  'direction-fit': 'Closer to what the week is about.',
+  'goal-fit': 'Serves the goal you set.',
+  urgency: 'The more pressing of the two.',
+  'immediate-benefit': 'Worth more tonight.',
+  'next-day-effect': 'Pays back more tomorrow.',
+  'opportunity-cost': 'Costs less of the evening.',
+  friction: 'Easier to start.',
+  'time-fit': 'Fits the time you have.',
+  'capacity-fit': 'Fits what the body has tonight.',
+  'context-fit': 'Better suited to the hour.',
+  'recent-duplication': 'The other one came up recently.',
+  'owner-preference': 'Closer to what you have said you want.',
+  uncertainty: 'Better supported by what is known.',
+  protection: 'The other one would borrow against tomorrow.',
+  advisor: 'What you wrote about the last attempt points here.',
+}
+
 export interface Explanation {
   /** The semantics with the composed reason written into them. */
   readonly semantics: RecommendationSemantics
@@ -256,8 +319,36 @@ export interface Explanation {
   readonly limiter: string | undefined
   /** The move this was chosen over, when there was a real contest. */
   readonly instead: string | undefined
-  /** Named only when not knowing it could change the answer. */
-  readonly unknown: string | undefined
+  /** Why it beat that one — the dimension that most separated them. */
+  readonly insteadBecause: string | undefined
+}
+
+/** The dimension the winner most out-scored the runner-up on, as a phrase. */
+function aheadBecause(chosen: Evaluation, runnerUp: Evaluation): string | undefined {
+  const theirs = new Map(runnerUp.dimensions.map((entry) => [entry.name, entry]))
+  let best: { name: DimensionName; gap: number; value: number } | undefined
+
+  for (const mine of chosen.dimensions) {
+    const other = theirs.get(mine.name)
+    if (other === undefined) continue
+    const gap = mine.value * mine.weight - other.value * other.weight
+    if (gap <= 0) continue
+    if (best === undefined || gap > best.gap) {
+      best = { name: mine.name, gap, value: mine.value }
+    }
+  }
+
+  if (best === undefined) return undefined
+
+  // Winning on the bottleneck happens two ways, and they are not the same
+  // claim. A restorative move addresses what is short; a light one wins by
+  // asking less of it. Saying the second "answers what is in the way" would be
+  // the explanation flattering the decision.
+  if (best.name === 'bottleneck-fit' && best.value <= 0) {
+    return 'Asks less of what is short right now.'
+  }
+
+  return AHEAD_BECAUSE[best.name]
 }
 
 export type ExplanationResult =
@@ -281,19 +372,22 @@ export function explain(
     return { ok: false, problems: rendered.issues.map((issue) => issue.problem) }
   }
 
+  /*
+   * What it was chosen over, and why.
+   *
+   * Any real runner-up now, not only one in a different life area — the second
+   * subnetting move is as much a tradeoff as a walk would be, and an earlier
+   * version silently dropped it for sharing a domain with the winner.
+   */
   let instead: string | undefined
-  if (runnerUp !== undefined && runnerUp.candidate.semantics.domain !== semantics.domain) {
+  let insteadBecause: string | undefined
+  if (runnerUp !== undefined) {
     const other = renderRecommendation(runnerUp.candidate.semantics, entities)
-    if (other.ok) instead = other.rendered.sentence
+    if (other.ok) {
+      instead = other.rendered.sentence
+      insteadBecause = aheadBecause(chosen, runnerUp)
+    }
   }
-
-  // Named only when the gap could actually change the answer — section 12 asks
-  // for missing information to be surfaced when it is material, and not
-  // otherwise. A home screen listing everything the app does not know is a home
-  // screen about the app.
-  const missing = chosen.candidate.leansOn
-    .filter((concept) => !isUsable(situation.view.facts.knowledgeFor(concept)))
-    .map((concept) => situation.concepts.definitionFor(concept).label.toLowerCase())
 
   /*
    * What is in the way, but only when the move is not already the answer to it.
@@ -318,7 +412,7 @@ export function explain(
       premise: describePremise(situation),
       limiter: alreadySaid ? undefined : limiter?.summary,
       instead,
-      unknown: missing.length === 0 ? undefined : missing.join(', '),
+      insteadBecause,
     },
   }
 }

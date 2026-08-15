@@ -50,8 +50,22 @@ test.describe('one scenario, read from Now', () => {
     await expect(page.getByTestId('now-reason')).toContainText('down over the last 3 nights')
     await expect(page.getByTestId('now-premise')).toContainText('short on sleep')
 
-    const instead = page.locator('.rows__row', { hasText: 'Instead of' }).locator('dd')
-    await expect(instead).toContainText('subnetting')
+    const over = page.locator('.rows__row', { hasText: 'Chosen over' }).locator('dd')
+    await expect(over).toContainText('subnetting')
+    const why = page.locator('.rows__row', { hasText: 'Why this one' }).locator('dd')
+    await expect(why).toHaveText('Answers what is actually in the way.')
+  })
+
+  test('states no duration it is about to ask for, and no engine bookkeeping', async ({ page }) => {
+    // DEF-0005 and the copy sweep: a "Time" row carrying the move's own length
+    // read as the owner's free time and contradicted the guide beneath it, and
+    // "Where this stands: New tonight" said nothing at all.
+    await loadInQa(page, 'A settled arrangement, and one week away')
+    await goToNow(page)
+
+    await expect(page.locator('.rows__row', { hasText: 'Time' })).toHaveCount(0)
+    await expect(page.locator('.rows__row', { hasText: 'Where this stands' })).toHaveCount(0)
+    await expect(page.locator('.rows__row', { hasText: 'Still unknown' })).toHaveCount(0)
   })
 
   test('reads the clock the laboratory set', async ({ page }) => {
@@ -78,24 +92,24 @@ test.describe('the guide, on the Now flow', () => {
     await goToNow(page)
 
     const headline = page.locator('.primary-surface__headline')
-    await expect(page.getByTestId('now-question')).toContainText('How much sleep')
-    await expect(headline).toHaveText('Nothing needs to move tonight.')
+    await expect(page.getByTestId('now-question')).toContainText('How much have you got left')
+    await expect(headline).toHaveText('Nothing to suggest just yet.')
 
-    await page.locator('.now-option').first().click()
+    await page.locator('.now-option').last().click()
 
     /*
      * Section 12: record the answer, recompute immediately.
      *
-     * This history has a fortnight of ordinary sleep and nothing pressing, so
-     * the honest answer is that nothing needs to move. One tap saying last
-     * night was under five hours changes that, on the spot — and the reason
-     * shown is the arithmetic, not a restatement of the tap.
+     * A fortnight of sleep readings and nothing about how the owner feels, so
+     * the honest answer is that there is nothing to suggest — and the app says
+     * so without pretending the history is thin. One tap saying there is plenty
+     * in the tank turns it into a walk, explained by the thing that was
+     * actually asked rather than by whatever number was nearest.
      */
-    await expect(headline).toHaveText('Start winding down now and let tonight be a recovery night.')
-    await expect(page.getByTestId('now-reason')).toContainText('down over the last')
-
-    // And having asked, it stops asking.
-    await expect(page.getByTestId('now-settled')).toBeVisible()
+    await expect(headline).toHaveText('Move for 25 minutes: a walk.')
+    await expect(page.getByTestId('now-reason')).toHaveText(
+      'Energy is good and nothing more pressing is in the way.',
+    )
   })
 
   test('does not ask anything when it already knows enough', async ({ page }) => {

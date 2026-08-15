@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import { CONCEPT } from '../../src/domain/concepts'
+import { isUsable } from '../../src/domain/knowledge'
 import { renderRecommendation } from '../../src/domain/recommendation'
+import { AHEAD_BECAUSE } from '../../src/intelligence/explain'
+import { profileFor } from '../../src/intelligence/moves'
 import { decide, type Decision } from '../../src/intelligence/engine'
 import { buildView } from '../../src/memory/view'
 import { snapshotFromWire } from '../../src/memory/snapshot'
@@ -47,6 +51,9 @@ function speak(): readonly Spoken[] {
       lines.push({ what: 'premise', text: shown.premise })
       if (shown.limiter !== undefined) lines.push({ what: 'limiter', text: shown.limiter })
       if (shown.instead !== undefined) lines.push({ what: 'instead', text: shown.instead })
+      if (shown.insteadBecause !== undefined) {
+        lines.push({ what: 'instead-because', text: shown.insteadBecause })
+      }
     }
     if (decision.noAction !== undefined) {
       lines.push({ what: 'headline', text: decision.noAction.headline })
@@ -260,6 +267,96 @@ describe('section 61 — how it is allowed to talk', () => {
         )
         expect(wasRuledOutForWords, `${entry.id} ${candidateId}`).toBe(false)
       }
+    }
+  })
+})
+
+describe('the reason only cites what the decision leaned on — DEF-0006', () => {
+  /*
+   * The class the owner's phone test found, and the sharpest thing they said
+   * about it: "whether the explanation is faithfully derived from the
+   * arbitration rather than rationalizing the winner afterward."
+   *
+   * It was not. A walk was winning on an ordinary morning and being explained
+   * as "you are an hour and a half down, which is not enough to sit still for"
+   * — a sleep figure, on a move whose evidence is energy and soreness, where
+   * the shortfall contributed nothing and would if anything argue against
+   * going out. The sentence sounded like reasoning, and reading it as reasoning
+   * would have been a mistake.
+   *
+   * The rule now: a reason may only cite evidence the winning move actually
+   * leaned on. The premise is deliberately exempt — "Monday morning, an hour
+   * short on sleep" is a true statement about the situation rather than a claim
+   * about why anything won.
+   */
+  it('cites a sleep figure only when the move rests on sleep', () => {
+    for (const entry of spoken) {
+      if (entry.decision.explanation === undefined) continue
+      const reason = entry.decision.explanation.rendered.reason
+      const mentionsSleep = /\bhours? down\b|\bshort on sleep\b|\bbehind you\b/i.test(reason)
+      if (!mentionsSleep) continue
+
+      const leansOn = entry.decision.evaluation?.candidate.leansOn ?? []
+      expect(leansOn as readonly string[], `${entry.id}: ${reason}`).toContain(CONCEPT.sleepHours)
+    }
+  })
+
+  it('never argues from a shortfall for a move that spends energy', () => {
+    // The exact sentence, and the shape of it: a restorative move may cite the
+    // deficit, because relieving it is the point. An effortful one may not,
+    // because the deficit is an argument against it.
+    for (const entry of spoken) {
+      const evaluation = entry.decision.evaluation
+      if (evaluation === undefined || entry.decision.explanation === undefined) continue
+      if (profileFor(evaluation.candidate.semantics.target.verb).demand !== 'effortful') continue
+
+      const reason = entry.decision.explanation.rendered.reason
+      expect(reason, `${entry.id}: ${reason}`).not.toMatch(/not enough to sit still for/i)
+      expect(reason, `${entry.id}: ${reason}`).not.toMatch(/\bhours? down\b/i)
+    }
+  })
+
+  it('proposes no movement at all without a reading of how the body is', () => {
+    // The root cause rather than the sentence: strain can be worked out from
+    // sleep alone, which was enough to fire the movement generator on a history
+    // that knew nothing about energy or soreness.
+    for (const entry of spoken) {
+      const walk = entry.decision.trace.proposed.find((row) => row.verb === 'move')
+      if (walk === undefined) continue
+
+      const capacity = entry.decision.situation.capacity
+      const known = isUsable(capacity.energy) || isUsable(capacity.soreness)
+      expect(known, `${entry.id} proposed a walk on no capacity reading`).toBe(true)
+    }
+  })
+
+  it('says what it was chosen over, and why, whenever there was a contest', () => {
+    // Section 6's relevant tradeoff, and the owner's version of it: if walking
+    // beats studying, the reason should make that understandable.
+    for (const entry of spoken) {
+      const explanation = entry.decision.explanation
+      if (explanation === undefined) continue
+      const hadRival = entry.decision.trace.ranking.length > 1
+      if (!hadRival) continue
+
+      expect(
+        explanation.instead,
+        `${entry.id} had a runner-up and said nothing about it`,
+      ).toBeDefined()
+      expect(explanation.insteadBecause, `${entry.id} said what, and not why`).toBeDefined()
+    }
+  })
+
+  it('takes that why from the arbitration rather than from the winner', () => {
+    // Every phrase it can use corresponds to a dimension the ranking actually
+    // computed, so the explanation cannot invent a reason the engine never had.
+    const phrases = new Set(Object.values(AHEAD_BECAUSE))
+    phrases.add('Asks less of what is short right now.')
+
+    for (const entry of spoken) {
+      const because = entry.decision.explanation?.insteadBecause
+      if (because === undefined) continue
+      expect(phrases.has(because), `${entry.id}: ${because}`).toBe(true)
     }
   })
 })

@@ -1,5 +1,5 @@
 import { Panel, Row, Rows, Screen } from '../../components/ui'
-import { formatBuildTime, runningBuild } from '../../platform/buildInfo'
+import { formatBuildTime, REBUILD_PHASE, runningBuild } from '../../platform/buildInfo'
 import { hashForDestination, QA_AVAILABLE } from '../../platform/routing'
 import type { BuildFreshness } from '../../platform/useBuildFreshness'
 
@@ -19,7 +19,6 @@ function freshnessSummary(freshness: BuildFreshness): string {
 export function MoreScreen({ freshness }: { freshness: BuildFreshness }) {
   return (
     <Screen
-      eyebrow="Phase 1"
       title="More"
       lede="Data, exports, privacy, settings and QA live here rather than taking a primary slot."
     >
@@ -63,18 +62,18 @@ export function MoreScreen({ freshness }: { freshness: BuildFreshness }) {
         </Rows>
         <p className="note">
           Preview and production keep separate databases, so nothing loaded here can reach a real
-          history. Exports, backup and restore arrive in Phase 7.
+          history. Exports, backup and restore are not built yet.
         </p>
       </Panel>
 
       <Panel title="Where the rebuild is">
         <Rows>
-          <Row label="Phase" value="1 — canonical records and the QA lab" />
-          <Row label="Next" value="2 — the intelligence kernel and a real Now" />
+          <Row label="Phase" value={`${REBUILD_PHASE.number} — ${REBUILD_PHASE.title}`} />
+          <Row label="Next" value={REBUILD_PHASE.next} />
         </Rows>
         <p className="note">
-          There is a memory now, and a way to inspect it. There is still no engine choosing
-          anything: that has to prove itself in Phase 2 before the app grows around it.
+          The app decides and explains itself now. What it does not yet do is watch what happens
+          afterwards, so nothing it suggests has been checked against a real outcome.
         </p>
       </Panel>
     </Screen>

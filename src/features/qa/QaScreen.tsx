@@ -27,6 +27,7 @@ import {
   type WeekStartDay,
 } from '../../domain/time'
 import { ARCHITECTURES, decide, type ArchitectureId } from '../../intelligence/engine'
+import { REBUILD_PHASE } from '../../platform/buildInfo'
 import { nextGuideStep } from '../../intelligence/guide'
 import { SCENARIOS } from '../../synthetic/scenarios'
 import { useMemory } from '../memory/memoryContext'
@@ -185,7 +186,7 @@ export function QaScreen() {
 
   return (
     <Screen
-      eyebrow="Phase 2"
+      eyebrow={`Phase ${REBUILD_PHASE.number}`}
       title="QA"
       lede="Synthetic histories, a clock you can move, and the whole of how a decision was reached."
     >

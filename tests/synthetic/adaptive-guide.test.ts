@@ -6,7 +6,7 @@ import { answerRecord, questionFor } from '../../src/intelligence/questions'
 import { snapshotFromWire } from '../../src/memory/snapshot'
 import type { StoreSnapshot } from '../../src/memory/store'
 import { buildView } from '../../src/memory/view'
-import { scenarioById } from '../../src/synthetic/scenarios'
+import { SCENARIOS, scenarioById } from '../../src/synthetic/scenarios'
 
 /**
  * The adaptive guide (canonical plan section 12).
@@ -187,6 +187,127 @@ describe('the guide has a floor under the owner’s patience', () => {
     const at = moment(scenario)
     // A fortnight of self-reported sleep, none of it from the guide.
     expect(answeredToday(buildView(snapshot, at), at)).toBe(0)
+  })
+})
+
+describe('it never asks for something it already knows — DEF-0005', () => {
+  /*
+   * The class the owner's phone test found.
+   *
+   * What they saw was Now stating a number of minutes while the guide asked how
+   * much time they had. The number turned out to be the move's own length under
+   * a row labelled "Time", so the app was not in fact asking twice — but from
+   * the outside there is no difference between a screen that contradicts itself
+   * and one that has forgotten what it was told, and the owner is right that
+   * neither should be possible.
+   *
+   * So this holds the whole class rather than the row: whatever the guide is
+   * asking about must be genuinely unknown, and nothing visible on Now may
+   * answer the question being asked underneath it.
+   */
+  for (const scenario of SCENARIOS) {
+    it(`never asks about something already known — ${scenario.id}`, () => {
+      const loaded = snapshotFromWire(scenario.build())
+      const at = moment(scenario)
+      let current: StoreSnapshot = loaded.snapshot
+
+      for (let round = 0; round < 6; round += 1) {
+        const view = buildView(current, at)
+        const step = nextGuideStep(view, at)
+        if (step.kind === 'settled' || step.question === undefined) break
+
+        const asked = step.question.spec.concept
+        const known = view.facts.knowledgeFor(asked)
+        expect(known.state, `${scenario.id} asked about ${asked}`).not.toBe('explicit')
+        expect(known.state, `${scenario.id} asked about ${asked}`).not.toBe('inferred')
+
+        current = answer(current, at).snapshot
+      }
+    })
+  }
+
+  it('shows no length of time on Now while asking how much time there is', () => {
+    // The specific shape of it: a "Time" row carrying the move's own duration,
+    // which reads as the answer to the question below it. The duration is in
+    // the sentence where it belongs, so the row is gone.
+    for (const scenario of SCENARIOS) {
+      const loaded = snapshotFromWire(scenario.build())
+      const at = moment(scenario)
+      const view = buildView(loaded.snapshot, at)
+      const step = nextGuideStep(view, at)
+      if (step.kind !== 'question' || step.question === undefined) continue
+      if (step.question.spec.concept !== CONCEPT.usableTimeTonight) continue
+
+      const decision = decide(view, at)
+      const shown = [
+        decision.explanation?.premise,
+        decision.explanation?.limiter,
+        decision.explanation?.insteadBecause,
+      ]
+        .filter((line): line is string => line !== undefined)
+        .join(' ')
+
+      expect(shown, `${scenario.id} states a duration while asking for one`).not.toMatch(
+        /\d+\s*minutes/,
+      )
+    }
+  })
+})
+
+describe('it stops when asking stops helping — DEF-0008', () => {
+  it('asks at most two questions on any scenario in the library', () => {
+    // Section 47 fails the phase on "too many questions", and a run of
+    // individually justified ones is still a run of questions.
+    for (const scenario of SCENARIOS) {
+      const loaded = snapshotFromWire(scenario.build())
+      const at = moment(scenario)
+      let current: StoreSnapshot = loaded.snapshot
+      let asked = 0
+
+      for (let round = 0; round < 8; round += 1) {
+        const step = stepOn(current, at)
+        if (step.kind === 'settled') break
+        current = answer(current, at).snapshot
+        asked += 1
+      }
+
+      expect(asked, `${scenario.id} asked ${asked} questions`).toBeLessThanOrEqual(2)
+    }
+  })
+
+  it('stops once an answer changes nothing', () => {
+    /*
+     * The guide asks its best question first, so an answer that moves nothing
+     * is evidence about the questions behind it too — they were ranked lower.
+     * Carrying on regardless is exactly how the owner ended up being asked four
+     * times while the recommendation sat still.
+     */
+    const { scenario, snapshot } = open('subnetting-struggle')
+    const at = moment(scenario)
+
+    // "The evening is clear" — an answer that leaves the move exactly where it
+    // was. A shorter evening would genuinely change it, which is why the
+    // question was worth asking in the first place.
+    const before = decide(buildView(snapshot, at), at)
+    const answered = answer(snapshot, at, (labels) => labels.length - 1).snapshot
+    const after = decide(buildView(answered, at), at)
+
+    expect(after.evaluation?.candidate.id).toBe(before.evaluation?.candidate.id)
+    const next = stepOn(answered, at)
+    expect(next.kind).toBe('settled')
+    expect(next.because).toContain('did not move it')
+  })
+
+  it('keeps going while the answers are still moving it', () => {
+    const { scenario, snapshot } = open('quiet-fortnight')
+    const at = moment(scenario)
+
+    const before = decide(buildView(snapshot, at), at)
+    const answered = answer(snapshot, at, (labels) => labels.length - 1).snapshot
+    const after = decide(buildView(answered, at), at)
+
+    expect(after.kind).not.toBe(before.kind)
+    expect(stepOn(answered, at).kind).toBe('question')
   })
 })
 

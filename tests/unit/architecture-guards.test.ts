@@ -274,6 +274,70 @@ describe('there is exactly one arbitration path', () => {
   })
 })
 
+describe('development scaffolding does not become the product — DEF-0007', () => {
+  /*
+   * Found on a phone: Life, Timeline and Insights each carried a hand-written
+   * "PHASE 0" above the title, two phases after Phase 0 ended — and Timeline
+   * still told the owner that the canonical record store "does not exist until
+   * Phase 1", which by then was simply false.
+   *
+   * The class is not three stale strings. It is that a phase number written
+   * into a screen has no reason to ever be revisited: it looks deliberate, it
+   * survives every later phase, and the only person who finds it is the owner,
+   * on a real phone, wondering why the product is talking about its own
+   * construction. So the phase now lives in one constant, and only the two
+   * surfaces that legitimately report on the build may mention it.
+   */
+  const MAY_MENTION_PHASES = ['src/features/more/', 'src/features/qa/']
+
+  it('mentions a phase on no primary destination', () => {
+    const offenders: string[] = []
+    for (const file of FEATURES) {
+      const path = repoPath(file)
+      if (MAY_MENTION_PHASES.some((allowed) => path.startsWith(allowed))) continue
+      // Comments explaining why something is deferred are fine; text the owner
+      // can read is not.
+      if (/Phase \d/.test(readCode(file))) offenders.push(path)
+    }
+    expect(offenders, 'a phase number on Now, Life, Timeline or Insights').toEqual([])
+  })
+
+  it('keeps the phase itself in one place', () => {
+    // Two screens report it and neither of them writes it down.
+    const source = readFileSync(join(ROOT, 'src/platform/buildInfo.ts'), 'utf8')
+    expect(source).toContain('REBUILD_PHASE')
+
+    for (const allowed of MAY_MENTION_PHASES) {
+      const files = FEATURES.filter((file) => repoPath(file).startsWith(allowed))
+      for (const file of files) {
+        const code = readCode(file)
+        if (!/Phase \d/.test(code)) continue
+        expect(code, `${repoPath(file)} hardcodes a phase number`).toContain('REBUILD_PHASE')
+      }
+    }
+  })
+
+  it('claims nothing about the app that has stopped being true', () => {
+    // The specific false sentence, and the shape of the ones like it: a screen
+    // describing a part of the system as absent when it has since been built.
+    const built = [
+      /does not exist until/i,
+      /there is no record store/i,
+      /no engine (?:yet|choosing)/i,
+      /nothing is stored/i,
+    ]
+
+    const offenders: string[] = []
+    for (const file of FEATURES) {
+      const code = readCode(file)
+      for (const claim of built) {
+        if (claim.test(code)) offenders.push(`${repoPath(file)} — ${claim.source}`)
+      }
+    }
+    expect(offenders, 'a screen describing something that now exists as missing').toEqual([])
+  })
+})
+
 describe('invented histories stay in the laboratory', () => {
   it('is imported by no surface except QA', () => {
     /*

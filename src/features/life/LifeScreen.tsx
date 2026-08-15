@@ -2,7 +2,7 @@ import { List, Panel, Screen } from '../../components/ui'
 
 /**
  * Canonical plan sections 4.1 and 7. The domains are listed to confirm the
- * scope of the model — the inspection pages themselves are Phase 5 work.
+ * scope of the model — the inspection pages themselves are not built yet.
  */
 const CORE_DOMAINS = [
   'Health & Physical Capacity',
@@ -21,7 +21,6 @@ const CORE_DOMAINS = [
 export function LifeScreen() {
   return (
     <Screen
-      eyebrow="Phase 0"
       title="Life"
       lede="Where you come to inspect what the app believes — never to keep it running."
     >
@@ -35,9 +34,9 @@ export function LifeScreen() {
 
       <Panel title="Not built yet">
         <p>
-          Domain pages, corrections and coverage status arrive in Phase 5, after the decision engine
-          has proven itself. Building them earlier would just be a large UI in front of a weak brain
-          — the exact failure this rebuild exists to avoid.
+          Domain pages, corrections and coverage status come after the decision engine has proven
+          itself. Building them earlier would just be a large screen in front of a weak brain — the
+          exact failure this rebuild exists to avoid.
         </p>
       </Panel>
     </Screen>

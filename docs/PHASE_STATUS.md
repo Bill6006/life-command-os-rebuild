@@ -6,16 +6,24 @@ Report format: canonical plan section 58.
 
 # Phase 2 — Intelligence tournament + first real Now
 
-**Status: YELLOW — every automated gate passes; the phase is waiting on the
-owner's phone test.**
+**Status: YELLOW — repaired after the first phone test, waiting on the second.**
 
 Section 47's gate is not automated. It ends with a person opening the app on a
 real phone and judging whether the recommendation is any good, and it fails if
 the honest answer is generic, dumb, vague, too many questions, doesn't
 understand what it is talking about, looks lifeless, or technically valid but
-not useful. Nothing in this repository can decide that, so this phase does not
-call itself GREEN. What is below is everything that _can_ be checked, and it all
-holds.
+not useful.
+
+**The first phone test found four defects, and was right about all of them.**
+They are DEF-0005 to DEF-0008 in [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md) and the
+sharpest was DEF-0006: the app was recommending a walk and explaining it with a
+sleep figure that had contributed nothing to the decision. The owner's phrase
+for it — "rationalizing the winner afterward" — was exactly right, and no
+automated check in this repository would have caught it, because every sentence
+involved was individually true.
+
+Everything below has been re-run since the repairs. What is below is everything
+that _can_ be checked, and it all holds; the phone test is still the gate.
 
 ## Build identity
 
@@ -38,40 +46,40 @@ job fails if the live `build-info.json` does not serve the pushed SHA.
 | Format (Prettier)                         | Pass                                           |
 | Lint (ESLint)                             | Pass, 0 warnings                               |
 | Typecheck (strict TS)                     | Pass, 0 errors                                 |
-| Unit / contract / synthetic / adversarial | 295 passed / 295 (in plain Node, no DOM)       |
-| Browser tests (Playwright)                | 111 passed / 111 — 37 tests × 360, 430, 1280px |
+| Unit / contract / synthetic / adversarial | 317 passed / 317 (in plain Node, no DOM)       |
+| Browser tests (Playwright)                | 114 passed / 114 — 38 tests × 360, 430, 1280px |
 | Production build                          | Pass                                           |
 | `npm run verify` from a clean checkout    | Pass                                           |
 | Deployed SHA matches checkpoint           | Asserted live in CI                            |
 
-### Where the 295 sit
+### Where the 317 sit
 
-| Suite                                                         | Tests |
-| ------------------------------------------------------------- | ----: |
-| `unit/intelligence-kernel` — readers, direction, moves, order |    25 |
-| `unit/time` — instants, civil dates, weeks, DST               |    20 |
-| `unit/registries` — ids, domains, concepts, privacy           |    19 |
-| `unit/knowledge` — the four states, freshness, asking         |    18 |
-| `unit/architecture-guards` — the boundaries                   |    15 |
-| `unit/store` — append semantics, supersession                 |    14 |
-| `unit/buildInfo`                                              |    11 |
-| `unit/routing`                                                |    11 |
-| `unit/recommendation` — rendering and refusal                 |    10 |
-| `contract/projections` — rebuildability, migrations           |    11 |
-| `contract/round-trip` — 19 record kinds, lossless             |     8 |
-| `contract/legacy-quarantine` — preserved and inert            |     6 |
-| `synthetic/model-guardrails` — section 18's fence             |    17 |
-| `synthetic/g008` — a non-career weekly direction              |    15 |
-| `synthetic/no-hidden-genericity` — sections 61 and 64         |    13 |
-| `synthetic/g005` — sleep beats ambition, both ways            |    12 |
-| `synthetic/g009` — unknown is unknown                         |    12 |
-| `synthetic/adaptive-guide` — one question at a time           |    10 |
-| `synthetic/g011` — timezone and week boundary                 |     9 |
-| `synthetic/g001` — no orphan pronoun                          |     8 |
-| `synthetic/intelligence-tournament` — section 18's choice     |     8 |
-| `synthetic/g002` — durable family context                     |     7 |
-| `adversarial/malformed-history`                               |     9 |
-| `adversarial/malformed-records`                               |     7 |
+| Suite                                                          | Tests |
+| -------------------------------------------------------------- | ----: |
+| `unit/intelligence-kernel` — readers, direction, moves, order  |    25 |
+| `unit/time` — instants, civil dates, weeks, DST                |    20 |
+| `unit/registries` — ids, domains, concepts, privacy            |    19 |
+| `unit/knowledge` — the four states, freshness, asking          |    18 |
+| `unit/architecture-guards` — the boundaries and the copy sweep |    18 |
+| `unit/store` — append semantics, supersession                  |    14 |
+| `unit/buildInfo`                                               |    11 |
+| `unit/routing`                                                 |    11 |
+| `unit/recommendation` — rendering and refusal                  |    10 |
+| `contract/projections` — rebuildability, migrations            |    11 |
+| `contract/round-trip` — 19 record kinds, lossless              |     8 |
+| `contract/legacy-quarantine` — preserved and inert             |     6 |
+| `synthetic/model-guardrails` — section 18's fence              |    17 |
+| `synthetic/g008` — a non-career weekly direction               |    15 |
+| `synthetic/no-hidden-genericity` — sections 61 and 64          |    18 |
+| `synthetic/g005` — sleep beats ambition, both ways             |    12 |
+| `synthetic/g009` — unknown is unknown                          |    12 |
+| `synthetic/adaptive-guide` — one question at a time            |    24 |
+| `synthetic/g011` — timezone and week boundary                  |     9 |
+| `synthetic/g001` — no orphan pronoun                           |     8 |
+| `synthetic/intelligence-tournament` — section 18's choice      |     8 |
+| `synthetic/g002` — durable family context                      |     7 |
+| `adversarial/malformed-history`                                |     9 |
+| `adversarial/malformed-records`                                |     7 |
 
 ## Gate checklist (section 47, and the phase brief)
 
@@ -95,7 +103,7 @@ job fails if the live `build-info.json` does not serve the pushed SHA.
 | CI green                                                   | Pass                                                                |
 | `npm run verify` from a clean checkout                     | Pass                                                                |
 | Preview deploys automatically, SHA matches                 | Pass                                                                |
-| **The owner tests the slice on a phone and accepts it**    | **Outstanding — this is what YELLOW means**                         |
+| **The owner tests the slice on a phone and accepts it**    | **Outstanding — first test found four defects, all repaired**       |
 
 ## What changed
 
@@ -148,19 +156,26 @@ Open Preview. Header → **More** → **Open the QA laboratory**, load a scenari
 then tap **Now**.
 
 1. **Three broken nights, and a deadline.** Now should say _"Take tonight as
-   recovery — no subnetting session."_ with a reason in hours, and _Instead of_
-   showing the career rep it declined. The week is deliberately pointed at
-   career and the CCNA goal is live: if career had won, G-005 would have failed.
+   recovery — no subnetting session."_ with a reason in hours, _Chosen over_ the
+   career rep it declined, and _Why this one_ — "Answers what is actually in the
+   way." The week is deliberately pointed at career and the CCNA goal is live:
+   if career had won, G-005 would have failed.
 2. **The same week, properly slept.** Same goal, same bad session yesterday,
    three good nights instead of three bad. The career move should win.
 3. **A week pointed at the house.** Four live options — a room, a daughter who
    is here, a topic that is behind, capacity for a walk. It should pick the
    kitchen and say the week is about a calmer house.
-4. **Two ordinary weeks.** Now should say nothing needs to move tonight, and ask
-   one question. Answer _Under 5 hours_ and watch it change on the spot.
+4. **Two ordinary weeks.** A fortnight of sleep and nothing about how you feel,
+   so Now should say there is nothing to suggest _yet_ — and say plainly that
+   the history is not the problem. Answer _Plenty_ and it becomes a walk,
+   explained by the thing it just asked rather than by whatever number was
+   nearest. That is DEF-0006 fixed, end to end.
 5. **A settled arrangement, and one week away.** It should never ask whether
-   Adaya is with you.
-6. Back in QA, open **Ranking** and **What would change the answer** on any
+   Adaya is with you — and there should be no "Time" row, no "Still unknown",
+   and no "Where this stands".
+6. **Life, Timeline, Insights.** No phase numbers anywhere, and nothing claiming
+   a part of the app is missing that is not.
+7. Back in QA, open **Ranking** and **What would change the answer** on any
    scenario.
 
 What to judge is section 47's list: is it specific, does it understand what it
@@ -182,10 +197,27 @@ is talking about, is it useful, does it ask too much, does it look alive.
 - Domain pages (Phase 5), Timeline and Insights content (Phase 6), exports and
   backup (Phase 7), the legacy importer (Phase 8), the service worker (Phase 10).
 
+## What the phone test changed
+
+| The owner said                                    | What it turned out to be                                                                                              |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Do not ask for what the app already knows         | DEF-0005 — a row labelled "Time" carrying the move's own length, beside a guide asking for the owner's                |
+| The walk's reasoning is not credible              | DEF-0006 — the explanation could cite any fact, and the walk should not have been proposed without a capacity reading |
+| Tell me why this beats the realistic alternatives | Now shows what it was chosen over and the dimension that decided it, taken from the ranking (D-035)                   |
+| Stale placeholder copy on owner surfaces          | DEF-0007 — five phase strings across four screens, one of them false                                                  |
+| Do phase numbers belong on owner screens at all   | No. One constant, two surfaces, a guard (D-034)                                                                       |
+| Ask only what could actually change the answer    | DEF-0008 — the guide asked in list order and kept going after answers stopped moving anything                         |
+| "Where this stands: New tonight" and similar      | Removed, along with "Still unknown" — both were the app talking about itself                                          |
+
+Nothing in the "do not weaken" list moved: four primary tabs, More secondary, QA
+reachable, unknown still unknown, one question at a time, the semantic subject
+intact, and every Phase 1 guarantee still asserted.
+
 ## Open defects
 
-None. Two were found and closed during the phase — DEF-0003 and DEF-0004, in
-[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
+None. Six were found and closed during the phase — DEF-0003 to DEF-0008, in
+[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md). Four of the six came from the phone
+test, which is the argument for the gate being a person rather than a suite.
 
 ## Deferred, with reasons
 
@@ -202,7 +234,7 @@ None. Two were found and closed during the phase — DEF-0003 and DEF-0004, in
 
 ## Decisions made
 
-D-021 … D-030 in [`DECISION_LOG.md`](DECISION_LOG.md).
+D-021 … D-035 in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Next
 

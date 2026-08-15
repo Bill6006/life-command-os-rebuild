@@ -48,9 +48,19 @@ const EXPECTED: readonly Expectation[] = [
   { id: 'week-pointed-at-home', domain: DOMAIN.home, names: 'kitchen', moves: true },
   { id: 'subnetting-struggle', domain: DOMAIN.career, names: 'subnetting', moves: true },
   { id: 'durable-custody', domain: DOMAIN.fatherhood, names: 'Adaya', moves: true },
-  { id: 'mostly-unknown', moves: true },
-  { id: 'corrections', moves: true },
-  { id: 'malformed-history', moves: true },
+  /*
+   * These four carry sleep readings and nothing about how the owner feels.
+   *
+   * They expected a move until the owner's phone test asked what evidence the
+   * walk was winning on. The answer was none worth having: strain can be worked
+   * out from sleep alone, which was enough to fire the movement generator on a
+   * history that knew nothing about energy or soreness. Saying nothing and
+   * asking one question is the honest answer, and one tap turns each of them
+   * into a walk with a reason that is actually about the walk.
+   */
+  { id: 'mostly-unknown', moves: false },
+  { id: 'corrections', moves: false },
+  { id: 'malformed-history', moves: false },
   { id: 'quiet-fortnight', moves: false },
   { id: 'across-timezones', moves: false },
 ]

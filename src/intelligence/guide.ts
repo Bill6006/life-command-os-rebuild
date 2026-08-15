@@ -1,5 +1,6 @@
+import type { CanonicalRecord } from '../domain/records'
 import { localDayIdAt } from '../domain/time'
-import type { MemoryView } from '../memory/view'
+import { buildView, type MemoryView } from '../memory/view'
 import {
   decide,
   probeSwings,
@@ -7,7 +8,14 @@ import {
   type DecideOptions,
   type DecisionMoment,
 } from './engine'
-import { GUIDE_PROVENANCE, questionFor, type QuestionOption, type QuestionSpec } from './questions'
+import {
+  GUIDE_PROVENANCE,
+  QUESTIONS,
+  questionFor,
+  type QuestionOption,
+  type QuestionSpec,
+} from './questions'
+import type { Swing } from './trace'
 
 /**
  * The adaptive guide (canonical plan section 12).
@@ -37,7 +45,21 @@ import { GUIDE_PROVENANCE, questionFor, type QuestionOption, type QuestionSpec }
  * many questions", and a run of individually-justified questions is still a
  * run of questions.
  */
-export const QUESTIONS_PER_DAY = 4
+export const QUESTIONS_PER_DAY = 3
+
+/**
+ * How many of a question's answers have to lead somewhere else before it is
+ * worth asking.
+ *
+ * One is not enough, and that is the whole point of this constant. A question
+ * where a single corner-case answer would move the recommendation is
+ * technically capable of changing it and practically a waste of a tap — and
+ * because the guide re-asks after every answer, a run of them is how "too many
+ * questions" happens without any single question being unjustifiable. The
+ * inspector still reports those as changing the answer, because they do; the
+ * guide simply does not spend the owner's attention on them.
+ */
+const ANSWERS_THAT_MUST_MOVE = 2
 
 export interface GuideQuestion {
   readonly spec: QuestionSpec
@@ -54,6 +76,101 @@ export interface GuideStep {
   readonly askedToday: number
   /** Why the guide is asking, or why it stopped. QA copy. */
   readonly because: string
+}
+
+/**
+ * Of the questions that would change the answer, the one that changes it most.
+ *
+ * An earlier version took the first question in the catalogue's order, which
+ * meant the guide could ask about last night's sleep while the recommendation
+ * actually turned on how much of the evening was left. Order is a reasonable
+ * last resort and a poor first one.
+ *
+ * Two measures, both taken from the probe rather than assumed. How many
+ * different places the answers lead — a question with three outcomes is
+ * genuinely more open than one with two. Then how many of the answers lead
+ * somewhere other than where the engine currently stands, because a decision
+ * most answers would overturn is a decision resting on very little.
+ */
+function mostValuable(swings: readonly Swing[], decision: Decision): Swing | undefined {
+  const standing =
+    decision.evaluation?.candidate.id ?? `nothing (${decision.noAction?.reason ?? 'unknown'})`
+  const order = QUESTIONS.map((question) => question.concept)
+
+  const rank = (swing: Swing) => ({
+    outcomes: new Set(swing.outcomes.map((outcome) => outcome.wouldChoose)).size,
+    overturns: swing.outcomes.filter((outcome) => outcome.wouldChoose !== standing).length,
+    position: order.indexOf(swing.concept),
+  })
+
+  let best: Swing | undefined
+  let bestRank: ReturnType<typeof rank> | undefined
+
+  for (const swing of swings) {
+    if (!swing.changesTheAnswer) continue
+    const scored = rank(swing)
+    if (scored.overturns < ANSWERS_THAT_MUST_MOVE) continue
+    if (
+      bestRank === undefined ||
+      scored.outcomes > bestRank.outcomes ||
+      (scored.outcomes === bestRank.outcomes && scored.overturns > bestRank.overturns) ||
+      (scored.outcomes === bestRank.outcomes &&
+        scored.overturns === bestRank.overturns &&
+        scored.position < bestRank.position)
+    ) {
+      best = swing
+      bestRank = scored
+    }
+  }
+
+  return best
+}
+
+/**
+ * Whether the last thing the owner told the guide actually moved anything.
+ *
+ * The guide asks its best question first, so if that one changed nothing, the
+ * ones behind it are by construction worth less — and carrying on is how a
+ * sequence of individually reasonable questions becomes the "too many
+ * questions" the phase fails on. The decision is replayed without the most
+ * recent answer and compared, which costs one extra pass and is the only
+ * honest way to know.
+ *
+ * Returns undefined when the guide has not asked anything yet today.
+ */
+function lastAnswerMovedIt(
+  view: MemoryView,
+  moment: DecisionMoment,
+  options: DecideOptions,
+  standing: Decision,
+): boolean | undefined {
+  const today = localDayIdAt(moment.now, moment.zone)
+  let latest: CanonicalRecord | undefined
+  for (const record of view.history.effective) {
+    if (record.provenance.writtenBy !== GUIDE_PROVENANCE.writtenBy) continue
+    if (localDayIdAt(record.occurredAt, moment.zone) !== today) continue
+    if (latest === undefined || record.occurredAt >= latest.occurredAt) latest = record
+  }
+  if (latest === undefined) return undefined
+
+  const without = buildView(
+    {
+      ...view.snapshot,
+      records: view.snapshot.records.filter((record) => record.id !== latest.id),
+    },
+    {
+      now: moment.now,
+      zone: moment.zone,
+      ...(moment.weekStartsOn === undefined ? {} : { weekStartsOn: moment.weekStartsOn }),
+    },
+  )
+
+  const before = decide(without, moment, { ...options, probe: false })
+  return choiceOf(before) !== choiceOf(standing)
+}
+
+function choiceOf(decision: Decision): string {
+  return decision.evaluation?.candidate.id ?? `nothing (${decision.noAction?.reason ?? 'unknown'})`
 }
 
 export function answeredToday(view: MemoryView, moment: DecisionMoment): number {
@@ -85,8 +202,18 @@ export function nextGuideStep(
     }
   }
 
+  if (lastAnswerMovedIt(view, moment, options, decision) === false) {
+    return {
+      kind: 'settled',
+      question: undefined,
+      decision,
+      askedToday,
+      because: 'the last answer did not move it, and the best question was the one already asked',
+    }
+  }
+
   const swings = probeSwings(view, moment, options, decision)
-  const worthAsking = swings.find((swing) => swing.changesTheAnswer)
+  const worthAsking = mostValuable(swings, decision)
 
   if (worthAsking === undefined) {
     return {

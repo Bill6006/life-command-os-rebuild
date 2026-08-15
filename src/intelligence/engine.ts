@@ -284,23 +284,44 @@ function stateOfChosen(evaluation: Evaluation, situation: Situation): MoveState 
   return latest?.state ?? 'shown'
 }
 
-const NO_ACTION_COPY: Record<NoActionReason, { headline: string; detail: string }> = {
-  // Three genuinely different states. Section 36 — a degraded state must not
-  // read like a confident answer, and a real rest night must not read like one
-  // either.
-  'nothing-worth-doing': {
-    headline: 'Nothing needs to move tonight.',
-    detail: 'Nothing on the list is worth the evening it would cost. That is a real answer.',
-  },
-  'everything-ruled-out': {
-    headline: 'Nothing fits tonight.',
-    detail: 'There were things worth doing and none of them suit where you actually are.',
-  },
-  'nothing-proposed': {
-    headline: 'Not enough to go on yet.',
-    detail:
-      'There is too little here to suggest anything honestly. A couple of answers would fix that.',
-  },
+/**
+ * Saying nothing, in the four ways it can be true.
+ *
+ * Section 36 — a degraded state must not read like a confident answer, and a
+ * real rest night must not read like a broken one. `nothing-proposed` splits
+ * because the two cases underneath it are nothing alike: a store with no
+ * history in it, and a store with a fortnight of it that cannot suggest
+ * anything without knowing how the owner is right now. Telling someone with two
+ * weeks of records that there is "too little here" is simply false, and it is
+ * the kind of false that makes an app look like it has lost the data.
+ */
+function noActionCopy(
+  reason: NoActionReason,
+  situation: Situation,
+): { readonly headline: string; readonly detail: string } {
+  switch (reason) {
+    case 'nothing-worth-doing':
+      return {
+        headline: 'Nothing needs to move tonight.',
+        detail: 'Nothing on the list is worth the evening it would cost. That is a real answer.',
+      }
+    case 'everything-ruled-out':
+      return {
+        headline: 'Nothing fits tonight.',
+        detail: 'There were things worth doing and none of them suit where you actually are.',
+      }
+    case 'nothing-proposed':
+      return situation.view.history.all.length === 0
+        ? {
+            headline: 'Not enough to go on yet.',
+            detail: 'There is no history here at all, so anything said now would be invented.',
+          }
+        : {
+            headline: 'Nothing to suggest just yet.',
+            detail:
+              'There is plenty of history here, and none of it says how tonight is going. One answer below is usually enough.',
+          }
+  }
 }
 
 export function decide(
@@ -332,7 +353,7 @@ export function decide(
 
   if (selection.chosen === undefined) {
     const reason = selection.noAction ?? 'nothing-worth-doing'
-    noAction = { reason, ...NO_ACTION_COPY[reason] }
+    noAction = { reason, ...noActionCopy(reason, situation) }
   } else {
     const result = explain(selection.chosen, selection.ranked[1], situation)
     if (result.ok) {
@@ -344,7 +365,7 @@ export function decide(
       // — D-018 exists precisely so this cannot become a vague sentence.
       noAction = {
         reason: 'everything-ruled-out',
-        ...NO_ACTION_COPY['everything-ruled-out'],
+        ...noActionCopy('everything-ruled-out', situation),
       }
       notes.push(`the chosen move could not be put into words — ${result.problems.join(', ')}`)
     }

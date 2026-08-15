@@ -39,6 +39,140 @@ None.
 
 ## Fixed
 
+### DEF-0008 — the guide kept asking after asking stopped helping
+
+- Status: Fixed
+- Severity: Major — section 47 fails the phase outright on "too many questions"
+- Found in: Phase 2 / `0757e58`
+- Found by: owner phone test
+- Class: **a per-question justification with no view of the sequence.** Each
+  question passed its own test — some answer to it would change the
+  recommendation — and nothing anywhere asked whether the run of them was worth
+  the owner's attention. Two separate holes made it: a question qualified if a
+  single corner-case answer would move the outcome, and the catalogue's order
+  decided which one was asked rather than which was worth most.
+- Reproduction: load "A topic that keeps slipping", open Now, answer every
+  question the guide offers. Four questions, and the recommendation is identical
+  after all four.
+- Root cause: `changesTheAnswer` is the right test for the inspector and too
+  loose for the guide, and `swings.find(...)` took the first in list order.
+- Fix, in three parts: the guide asks the question whose answers diverge most,
+  requires at least two of its answers to lead away from where the engine
+  currently stands, and stops once an answer has moved nothing — because the
+  best question was asked first, so the ones behind it are worth less by
+  construction.
+- Regression: `tests/synthetic/adaptive-guide.test.ts` — "asks at most two
+  questions on any scenario in the library", "stops once an answer changes
+  nothing", "keeps going while the answers are still moving it". Reintroducing
+  the list-order pick and dropping the two rules was tried; the second fails.
+- Siblings: checked — the per-day floor still exists underneath all of this, and
+  the inspector deliberately keeps the looser definition, because "these answers
+  would land elsewhere" is true and worth showing even when it is not worth a
+  tap.
+- Fixed in: the repair checkpoint after `0757e58`
+
+### DEF-0007 — development scaffolding became the product
+
+- Status: Fixed
+- Severity: Major — owner-facing surfaces stating things about the app that were
+  no longer true
+- Found in: Phase 2 / `0757e58`
+- Found by: owner phone test
+- Class: **a phase number written into a screen.** It looks deliberate, it
+  survives every later phase, and nothing ever revisits it — the only person who
+  finds it is the owner, on a real phone, wondering why the product is talking
+  about its own construction. The same applies to any sentence describing part
+  of the system as absent: it stops being true the moment that part is built and
+  gives no signal when it does.
+- Reproduction: open Life, Timeline or Insights. Each carried "PHASE 0" above
+  the title, two phases after Phase 0 ended. Timeline additionally said the
+  canonical record store "does not exist until Phase 1", which by then was
+  false in a way that would make an owner wonder where their history had gone.
+- Root cause: five hand-written phase strings across four screens, and no reason
+  for anyone to look at them again.
+- Fix: one `REBUILD_PHASE` constant in `src/platform/buildInfo.ts`; phase
+  language confined to the build panel behind More and to the QA laboratory,
+  both of which read it from there; the false claims rewritten to describe what
+  is actually true now.
+- Regression: `tests/unit/architecture-guards.test.ts` — "mentions a phase on no
+  primary destination", "keeps the phase itself in one place", "claims nothing
+  about the app that has stopped being true". Putting the eyebrow and the
+  sentence back on Timeline was tried, and two of the three fail.
+- Siblings: swept every file under `src/features/` rather than the three screens
+  reported. More's "Exports, backup and restore arrive in Phase 7" and its
+  "there is still no engine choosing anything" were both stale and both fixed.
+- Fixed in: the repair checkpoint after `0757e58`
+
+### DEF-0006 — the explanation rationalised the winner
+
+- Status: Fixed
+- Severity: Blocker — the app presenting reasoning it did not use
+- Found in: Phase 2 / `0757e58`
+- Found by: owner phone test
+- Class: **an explanation that may cite any fact rather than only the evidence
+  the decision leaned on.** Each branch of the reason generator reached for
+  whichever particular was nearest and, failing that, the next nearest — which
+  produces something that reads exactly like reasoning and is not. This is worse
+  than saying less: it invites the owner to trust a chain of inference that was
+  never drawn.
+- Reproduction: load "One answer, and a lot of silence" and open Now. The app
+  recommended a twenty-five minute walk and explained it as "You are an hour
+  down, which is not enough to sit still for." The move's evidence is energy and
+  soreness, both unknown; the sleep shortfall contributed nothing to it winning
+  and, if anything, argues the other way.
+- Root cause, in two layers. The reason generator had no notion of which facts
+  the winning move rested on. Underneath that, the move should not have won at
+  all: `strain` can be worked out from sleep alone, which was enough to fire the
+  movement generator on a history that knew nothing about how the owner felt.
+  "There is capacity for it" is a claim about the body, and three good nights is
+  not evidence of it.
+- Fix: the reason may only cite a concept in the winning candidate's `leansOn`,
+  and the movement generator now requires a real energy or soreness reading. The
+  premise is deliberately exempt — "Monday morning, an hour short on sleep" is a
+  true statement about the situation, not a claim about why anything won.
+- Consequence, and it is the right one: four scenarios that used to produce a
+  walk now say there is nothing to suggest and ask one question. One tap turns
+  each into a walk explained by the thing that was actually asked.
+- Regression: `tests/synthetic/no-hidden-genericity.test.ts` — "cites a sleep
+  figure only when the move rests on sleep", "never argues from a shortfall for
+  a move that spends energy", "proposes no movement at all without a reading of
+  how the body is". Both layers were reintroduced separately, and each fails the
+  matching test with the owner's own sentence quoted back.
+- Siblings: checked every branch of the reason generator against the `leansOn`
+  of the moves that can reach it. `good-conditions` was the only one citing
+  evidence it had no claim on; the others were already citing their own.
+- Fixed in: the repair checkpoint after `0757e58`
+
+### DEF-0005 — the app stated a number and asked for it in the same breath
+
+- Status: Fixed
+- Severity: Major — the owner cannot tell a contradictory screen from one that
+  has forgotten what it was told
+- Found in: Phase 2 / `0757e58`
+- Found by: owner phone test
+- Class: **a row labelled as something other than what it carries.** Now showed
+  "Time: about 30 minutes", which was the suggested move's own length, while the
+  guide underneath asked "How much time have you got?" and a third row said the
+  usable time was still unknown. Every one of those was individually true and
+  the screen as a whole was incoherent.
+- Reproduction: load "A settled arrangement, and one week away" and open Now.
+  The move is thirty minutes with Adaya; the row reads as thirty minutes free.
+- Root cause: the duration belongs to the move, and where it matters the
+  sentence already carries it — "spend 15 minutes clearing the kitchen". The row
+  was both ambiguous and a repeat.
+- Fix: the row is gone. So are "Still unknown", which is the app talking about
+  itself when the guide below already surfaces anything material, and "Where
+  this stands: New tonight", which says nothing until a move has a history.
+- Regression: `tests/synthetic/adaptive-guide.test.ts` — "never asks about
+  something already known" over every scenario and every step of the guide, and
+  "shows no length of time on Now while asking how much time there is".
+  `tests/browser/now.spec.ts` — "states no duration it is about to ask for, and
+  no engine bookkeeping".
+- Siblings: the underlying invariant — the guide never asks about a concept that
+  is already usable — was already true and is now asserted across every scenario
+  and every guide step rather than assumed.
+- Fixed in: the repair checkpoint after `0757e58`
+
 ### DEF-0004 — the ranking was not a real order
 
 - Status: Fixed

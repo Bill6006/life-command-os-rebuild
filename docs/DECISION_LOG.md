@@ -554,3 +554,100 @@ candidates are exempt — a sleep generator has to know it is about sleep.
 get written deliberately. It gets written as one condition in a scoring function,
 added to make one scenario come out right, six months after anybody read section 32. Judging a move on what it demands, costs and pays back is what makes G-005
 and G-008 pass for the right reason rather than by coincidence.
+
+---
+
+## D-031 — An explanation may only cite evidence the decision leaned on
+
+**Phase:** 2 · **Status:** Active
+
+The reason generator can reach a fact only if the winning candidate lists its
+concept in `leansOn`. The premise is exempt.
+
+**Why:** DEF-0006. Left free to reach for whichever particular was nearest, the
+generator produced sentences that read exactly like reasoning and were not — a
+walk explained by a sleep shortfall that contributed nothing to it winning and
+argued the other way. Saying less is better than that, because a plausible false
+chain invites the owner to trust reasoning nobody did.
+
+**Why the premise is exempt:** "Monday morning, an hour short on sleep" is a
+true statement about where the owner is. Describing the situation does not
+require having decided from it, and holding the premise to the same rule would
+leave the app unable to say what it can plainly see.
+
+---
+
+## D-032 — A move that claims capacity needs evidence of capacity
+
+**Phase:** 2 · **Status:** Active
+
+The movement generator requires a usable energy or soreness reading. Strain
+inferred from sleep alone is not enough.
+
+**Why:** DEF-0006's root cause. "There is capacity for it" is a claim about how
+the owner feels, and three good nights is not evidence of it. The generator was
+firing on histories that knew nothing about the body, which is how an effortful
+twenty-five minutes came to be recommended on no grounds at all.
+
+**Consequence, and it is the point:** four scenarios that used to produce a walk
+now say there is nothing to suggest and ask one question. That is the honest
+answer, and one tap turns each of them into a walk with a reason that is
+actually about the walk.
+
+---
+
+## D-033 — The guide asks the question that moves things most, and stops when one does not
+
+**Phase:** 2 · **Status:** Active
+
+Three rules, replacing "the first question in the catalogue that could change
+the answer": ask the one whose answers diverge most; require at least two of its
+answers to lead away from where the engine stands; stop once an answer has moved
+nothing.
+
+**Why:** DEF-0008. Every question was individually justifiable and the sequence
+was not — four in a row while the recommendation sat still. The third rule
+follows from the first: if the best question changed nothing, the ones ranked
+below it are worth less by construction.
+
+**What is deliberately not changed:** the inspector keeps the looser definition
+of what would change the answer. "These answers would land elsewhere" is true
+and worth showing even when it is not worth a tap.
+
+---
+
+## D-034 — Phase language lives in one constant, and only on two surfaces
+
+**Phase:** 2 · **Status:** Active
+
+`REBUILD_PHASE` in `src/platform/buildInfo.ts`. The build panel behind More and
+the QA laboratory read it. No primary destination mentions a phase, and a guard
+fails the build if one starts to.
+
+**Why:** DEF-0007. Life, Timeline and Insights each carried a hand-written
+"PHASE 0" two phases after Phase 0 ended, and Timeline still told the owner the
+canonical record store "does not exist until Phase 1". A phase number written
+into a screen looks deliberate, survives every later phase, and gives nobody a
+reason to look at it again — so the only person who finds it is the owner, on a
+phone, reading the product talk about its own construction.
+
+---
+
+## D-035 — What a move was chosen over, and why, comes from the arbitration
+
+**Phase:** 2 · **Status:** Active
+
+Now shows the runner-up's sentence and one short phrase naming the dimension on
+which the winner most out-scored it. Any runner-up, not only one from a
+different life area.
+
+**Why:** Section 6 asks Now to show the relevant tradeoff, and the owner asked
+for it more precisely: if walking beats studying, resting or doing nothing, the
+reason should make that understandable. Taking the phrase from the widest
+dimension gap means the explanation cannot offer a reason the ranking did not
+have — the same discipline as D-031, applied to the comparison rather than to
+the move.
+
+**Consequence:** every phrase it can use corresponds to a dimension the
+evaluator actually computes, which a test asserts. Adding a dimension without
+giving it a phrase would be caught.

@@ -128,24 +128,32 @@ export function NowScreen() {
             <p data-testid="now-reason">{explanation.rendered.reason}</p>
           </PrimarySurface>
 
+          {/*
+            Four things at most, and each of them earns its line.
+
+            What went: a "Time" row carrying the move's own length, which read
+            as how much time the owner had and contradicted the guide asking
+            for exactly that. Where a duration matters it is already in the
+            sentence — "spend 15 minutes clearing the kitchen" — so the row was
+            both ambiguous and a repeat. A "Still unknown" list, which is the
+            app talking about itself; anything unknown that could change the
+            answer is what the guide below is for. And "Where this stands: New
+            tonight", which said nothing at all until a move has a history.
+          */}
           <Panel>
             <Rows>
               {explanation.limiter === undefined ? null : (
                 <Row label="What is in the way" value={explanation.limiter} />
               )}
-              {decision.evaluation?.candidate.semantics.target.minutes === undefined ? null : (
-                <Row
-                  label="Time"
-                  value={`about ${decision.evaluation.candidate.semantics.target.minutes} minutes`}
-                />
-              )}
               {explanation.instead === undefined ? null : (
-                <Row label="Instead of" value={explanation.instead} />
+                <Row label="Chosen over" value={explanation.instead} />
               )}
-              {explanation.unknown === undefined ? null : (
-                <Row label="Still unknown" value={explanation.unknown} />
+              {explanation.insteadBecause === undefined ? null : (
+                <Row label="Why this one" value={explanation.insteadBecause} />
               )}
-              <Row label="Where this stands" value={STATE_WORDS[decision.state ?? 'shown']} />
+              {decision.state === undefined || decision.state === 'shown' ? null : (
+                <Row label="Where this stands" value={STATE_WORDS[decision.state]} />
+              )}
             </Rows>
           </Panel>
         </>

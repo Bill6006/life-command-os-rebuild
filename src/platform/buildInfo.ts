@@ -30,6 +30,26 @@ export const runningBuild: BuildInfo = {
 export const isPreview = runningBuild.target === 'preview'
 export const isProduction = runningBuild.target === 'production'
 
+/**
+ * How far through the rebuild this build is — build diagnostics, not product.
+ *
+ * There is one of these because there was previously one per screen. Life,
+ * Timeline and Insights each carried a hand-written "Phase 0" above their
+ * titles, and Timeline still told the owner that the canonical record store
+ * "does not exist until Phase 1" two phases after it did. Development
+ * scaffolding does not announce that it has gone stale; it just sits there
+ * looking like the product.
+ *
+ * So phase language now appears in exactly two places — the build panel behind
+ * More, and the QA laboratory — and both read it from here.
+ * `tests/unit/architecture-guards.test.ts` fails the build if a third appears.
+ */
+export const REBUILD_PHASE = {
+  number: 2,
+  title: 'the intelligence kernel and a real Now',
+  next: 'the recommendation lifecycle and outcome learning',
+} as const
+
 function isDeployTarget(value: unknown): value is DeployTarget {
   return value === 'preview' || value === 'production' || value === 'development'
 }

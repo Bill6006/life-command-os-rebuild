@@ -410,10 +410,20 @@ const socialCandidates: Generator = (situation) => {
   return out
 }
 
-/** Movement. Only when the body has something to spend. */
+/**
+ * Movement. Only when the body has something to spend.
+ *
+ * "There is capacity for it" is a claim about how the owner feels, and three
+ * good nights of sleep is not evidence of it. Strain can be worked out from
+ * sleep alone, which was enough to make this generator fire on a history that
+ * knew nothing about energy or soreness — and an effortful twenty-five minutes
+ * proposed on that basis is a guess wearing a recommendation's clothes.
+ * So it now needs a real capacity reading, and stays quiet without one.
+ */
 const healthCandidates: Generator = (situation) => {
   const strain = situation.capacity.strain
   if (!isUsable(strain) || strain.value !== 'none') return []
+  if (!isUsable(situation.capacity.energy) && !isUsable(situation.capacity.soreness)) return []
 
   return [
     candidate(
