@@ -35,7 +35,7 @@ job fails if the live `build-info.json` does not serve the pushed SHA.
 | Lint (ESLint)                             | Pass, 0 warnings                             |
 | Typecheck (strict TS)                     | Pass, 0 errors                               |
 | Unit / contract / synthetic / adversarial | 188 passed / 188 (in plain Node, no DOM)     |
-| Browser tests (Playwright)                | 75 passed / 75 — 25 tests × 360, 430, 1280px |
+| Browser tests (Playwright)                | 78 passed / 78 — 26 tests × 360, 430, 1280px |
 | Production build                          | Pass                                         |
 | `npm run verify` from a clean checkout    | Pass                                         |
 | Deployed SHA matches checkpoint           | Asserted live in CI                          |
@@ -157,7 +157,7 @@ service worker (Phase 10).
 
 ## Open defects
 
-None. One was found and closed during the phase — DEF-0001, in
+None. Two were found and closed during the phase — DEF-0001 and DEF-0002, in
 [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
 
 ## Deferred, with reasons

@@ -39,6 +39,30 @@ None.
 
 ## Fixed
 
+### DEF-0002 — a DST warning outlived the time it was about
+
+- Status: Fixed
+- Severity: Minor — wrong information on a QA surface, not on an owner surface
+- Found in: Phase 1 / `c655b9c`
+- Found by: re-reading the QA screen while the final gate ran
+- Class: **state that describes one input, left standing after the input
+  changes.** The note belonged to a typed wall-clock time; every other control
+  on the panel moved the clock without clearing it.
+- Reproduction: open the QA lab, set the timezone to America/New_York, travel to
+  2026-03-08 02:30 — a wall-clock time the clocks jump over, correctly reported.
+  Then press +1 hour. The screen still said 04:30 does not exist.
+- Root cause: `travelTo` set the instant and nothing else. The resolution was
+  only ever written by the date input, so it could only ever be cleared there.
+- Regression: `tests/browser/qa-lab.spec.ts` — "does not leave a DST warning up
+  after moving away from the gap". Reintroducing the defect was tried, and the
+  test fails.
+- Siblings: checked — loading a scenario also moves the clock, and now goes
+  through the same `travelTo`. The timezone selector does not move the clock, so
+  a note about the previous zone's gap could in principle survive a zone change;
+  the resolution is recomputed on the next travel and the case needs a real
+  fixture to be worth a test, so it is noted rather than guessed at.
+- Fixed in: the checkpoint that closes Phase 1
+
 ### DEF-0001 — recommendation templates reached for a pronoun
 
 - Status: Fixed

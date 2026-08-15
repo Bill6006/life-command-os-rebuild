@@ -176,6 +176,21 @@ test.describe('time travel', () => {
     await expect(rowValue(page, 'Records')).toHaveText('19')
   })
 
+  test('does not leave a DST warning up after moving away from the gap', async ({ page }) => {
+    await openQa(page)
+    await loadScenario(page, 'The same evenings, read from four places')
+    await page.getByLabel('Timezone').selectOption('America/New_York')
+
+    // 02:30 on the morning New York springs forward. That wall-clock time does
+    // not exist, and the screen should say so.
+    await page.getByLabel('Travel to').fill('2026-03-08T02:30')
+    await expect(page.locator('.qa-warning')).toContainText('does not exist')
+
+    // …and should stop saying so about 04:30, which plainly does exist.
+    await page.getByRole('button', { name: '+1 hour' }).click()
+    await expect(page.locator('.qa-warning')).toHaveCount(0)
+  })
+
   test('relabels the same history when the timezone changes', async ({ page }) => {
     await openQa(page)
     await loadScenario(page, 'The same evenings, read from four places')

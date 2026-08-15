@@ -143,7 +143,13 @@ export function QaScreen() {
     return [...all].sort()
   }, [clock])
 
-  const travelTo = (target: Instant) => setNow(target)
+  const travelTo = (target: Instant) => {
+    setNow(target)
+    // The DST note belongs to the wall-clock time that was typed, not to the
+    // clock in general. Leaving it up after moving away would claim a time
+    // does not exist when it plainly does.
+    setResolution('exact')
+  }
 
   const setExactLocal = (input: string) => {
     // `datetime-local` gives a wall-clock time with no zone. Placing it on the
@@ -189,7 +195,7 @@ export function QaScreen() {
               disabled={lab.busy}
               onClick={() => {
                 setZone(scenario.zone)
-                setNow(scenario.now)
+                travelTo(scenario.now)
                 setWeekStartsOn(scenario.weekStartsOn ?? 1)
                 setDraft(`${JSON.stringify(scenario.build(), null, 2)}\n`)
                 void lab.loadScenario(scenario.id)
