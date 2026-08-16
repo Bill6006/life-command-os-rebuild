@@ -26,9 +26,9 @@ is no reason to expect fewer here.
 
 |                      |                                                             |
 | -------------------- | ----------------------------------------------------------- |
-| Checkpoint SHA       | `b0e23ed`                                                   |
-| Deployed Preview SHA | `b0e23ed`                                                   |
-| Do they match?       | Yes — verified live, not assumed                            |
+| Checkpoint SHA       | current `main` HEAD                                         |
+| Deployed Preview SHA | identical to `main` HEAD                                    |
+| Do they match?       | Yes, by construction — D-004, and verified live by hand     |
 | Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/ |
 | Live proof           | `preview/build-info.json`                                   |
 

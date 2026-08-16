@@ -20,6 +20,10 @@ owner can switch Claude Code before pasting.
   than one that remembers writing it.
 - **Attach/reference:** Nothing. The prompt points at the files to read. Do not
   attach or request any old Life Command OS document.
+- **The checkpoint SHA below is provisional.** Phase 3 is YELLOW until the owner
+  tests the loop on a phone. If that pass produces repairs — Phase 2's produced
+  twelve defects across four passes — the closing checkpoint is the repair
+  commit, and this line should be the SHA the owner actually approved.
 
 ## COPY/PASTE PROMPT
 
@@ -30,7 +34,7 @@ Work in this repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 GitHub: Bill6006/life-command-os-rebuild (public, default branch main)
 Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
-Phase 3 closed at checkpoint <SHA>.
+Phase 3 closed at checkpoint 3a1b145bf1a5710e1d9fef24069466a9c8094c54.
 
 Read these first, in this order:
 1. docs/CANONICAL_REBUILD_PLAN.md — the sole governing authority, read it completely
