@@ -34,14 +34,14 @@ Work in this repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 GitHub: Bill6006/life-command-os-rebuild (public, default branch main)
 Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
-Phase 3 closed at checkpoint 3a1b145bf1a5710e1d9fef24069466a9c8094c54.
+Phase 3 closed at checkpoint 7cb7ef8.
 
 Read these first, in this order:
 1. docs/CANONICAL_REBUILD_PLAN.md — the sole governing authority, read it completely
 2. docs/PHASE_STATUS.md — what Phase 3 delivered, and what it deliberately did not
 3. docs/DECISION_LOG.md — decisions D-001 to D-052 and their reasons
 4. docs/ARCHITECTURE_BOUNDARIES.md — module ownership, and the line between deciding and recording
-5. docs/DEFECT_LEDGER.md — DEF-0001 to DEF-0018 and the discipline that closed all eighteen
+5. docs/DEFECT_LEDGER.md — DEF-0001 to DEF-0019 and the discipline that closed all nineteen
 
 Then read the engine you are building on, all of it: src/intelligence/. Start with engine.ts, then situation.ts, candidates.ts, constraints.ts, evaluate.ts, arbitrate.ts, explain.ts, guide.ts, moves.ts, questions.ts, lifecycle.ts, outcomes.ts, learning.ts, corrections.ts. Also src/memory/facts.ts, src/domain/concepts.ts, src/domain/windows.ts and src/domain/knowledge.ts.
 
@@ -121,7 +121,7 @@ WORKING RULES
 - Make reasonably small checkpoint commits. Every push to main that passes the gate redeploys Preview automatically, so tell the owner when a new phone-testable checkpoint is available.
 - Keep the kernel pure and clock-free.
 - Write tests that verify semantic behaviour, not implementation paths.
-- Follow plan section 42 for any defect: reproduce, identify the whole defect class, write a focused regression, prove it fails when reintroduced, fix the root cause, rerun the gate. DEF-0001 to DEF-0018 are the worked examples.
+- Follow plan section 42 for any defect: reproduce, identify the whole defect class, write a focused regression, prove it fails when reintroduced, fix the root cause, rerun the gate. DEF-0001 to DEF-0019 are the worked examples.
 - Keep docs/DECISION_LOG.md, docs/PHASE_STATUS.md, docs/DEFECT_LEDGER.md and docs/NEXT_PROMPT.md current.
 
 CLOSING THE PHASE
