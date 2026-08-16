@@ -1186,3 +1186,51 @@ saves a tap on the evening they least want to be asked twice.
 **Why an ordering rule rather than a filter in learning:** filtering afterwards
 would still have asked, and the tap is the cost worth removing. Suppressing the
 question means there is nothing to filter.
+
+---
+
+## D-059 — How much a piece of evidence is worth depends on the source _and_ the concept
+
+**Phase:** 3 · **Status:** Active — **owner decision, governs Phase 4**
+
+There is no standing hierarchy in which an explicit owner report always outweighs
+a derived, device or model one. What a piece of evidence is worth is a property
+of the **pair**: this source, measuring this concept.
+
+- A watch measuring hours slept may be better than the owner's recollection of
+  hours slept.
+- A financial record of a balance may be better than the owner's estimate of it.
+- A model's inference about how the owner _feels_ should generally be weaker
+  than the owner saying how he feels.
+
+**Why:** the alternative — ranking by source alone — is the same mistake section
+8 already forbids one layer down. "Freshness is concept-specific, not one
+universal number of days" is the identical argument about a different property,
+and a flat source ranking would make the app trust a guess about someone's mood
+exactly as much as a measurement of their sleep.
+
+**The codebase already half-agrees, which is the evidence this is right.**
+`knowledgeFromRecord` in `src/memory/facts.ts` treats a `device` observation as
+`explicit` — the same standing as a self-report, not below it. What it also does
+is give every `derived` observation a flat confidence of 0.6 regardless of what
+is being measured, and that flat number is the thing this decision replaces.
+
+**What does not vary, and is not a matter of reliability at all:**
+
+- Derived, inferred or model evidence must **never silently masquerade as
+  explicit fact**. A high-reliability inference is still an inference, and the
+  four knowledge states exist so it cannot be read as anything else (D-014).
+- **Provenance stays visible** wherever the evidence surfaces — the record, the
+  fact layer, the learning trace, the inspector.
+
+Those two are absolute. Reliability decides how much a reading _moves_ a belief;
+it never decides whether the reading can pass itself off as something it is not.
+
+**Where it belongs:** `ConceptDefinition` already carries `freshness`, `privacy`
+and an ask policy per concept. A per-concept source-reliability entry is the same
+shape of thing and belongs beside them, with a conservative default per source
+that a concept may override where there is a reason to.
+
+**Consequence for Phase 4:** the sleep-outcome matcher cannot be written against
+"derived is worth less". It has to say what a watch or a morning self-report is
+worth _for sleep hours_, and defend that number.
