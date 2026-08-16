@@ -35,9 +35,45 @@ until its siblings in the same failure class have been checked.
 
 ## Open
 
-### DEF-0016 — a strained late afternoon has nowhere to go
+None.
 
-- Status: **Open — deferred by owner decision, not a release blocker**
+## Fixed
+
+### DEF-0017 — the app called its own history silent
+
+- Status: Fixed
+- Severity: Major — the same family as DEF-0012, found the same way
+- Found in: Phase 3 / `79d033b`
+- Found by: sweeping DEF-0016's siblings across every hour rather than only the
+  one that was reported
+- Class: **a sentence about the engine's own blindness, written as a finding
+  about the owner's life.** `nothing-proposed` had two branches — no history at
+  all, and history that does not say how today is going — and no branch for the
+  case where the history says exactly how today is going and the catalogue is
+  what is empty.
+- Reproduction: the nine-hours-down history at 09:00. Now printed the shortfall
+  in the line above the decision — "About 9 hours short of rest over the last
+  few nights." — and directly underneath it, "There is plenty of history here,
+  and none of it says how tonight is going." Both halves came from the same run.
+  The screen contradicted itself, which is DEF-0005's shape as well as
+  DEF-0012's.
+- Root cause: every recovery move belongs to an hour that had not arrived yet,
+  so nothing was proposed — and the copy for "nothing was proposed" assumed the
+  only reason could be that nothing was known.
+- Fix: when the engine can name what is in the way, it may not claim the history
+  is silent. A third branch says only the part the limiter line does not — that
+  nothing on offer would move it — with wording per limiter kind.
+- Regression: `tests/synthetic/recovery-has-somewhere-to-go.test.ts` — "says
+  nothing about the history being silent when it can name the limiter", and
+  "holds for every scenario and every hour, not only the morning". Removing the
+  branch was tried; both fail.
+- Siblings: the branch that was right stays right, and is asserted directly —
+  "still says the history is thin when the history really is thin".
+- Fixed in: the first Phase 3 checkpoint
+
+### DEF-0016 — a strained late afternoon had nowhere to go
+
+- Status: Fixed
 - Severity: Major
 - Found in: Phase 2 / `be032cc`
 - Found by: inspecting what changes at the evening boundary, while diagnosing an
@@ -52,19 +88,29 @@ until its siblings in the same failure class have been checked.
   rejects it as `wrong-time-of-day`, and Now says **"Nothing fits tonight."** to
   someone nine hours down. Fifteen minutes later the same history says "Start
   winding down now and let tonight be a recovery night."
-- Why it is not fixed here: the fix is a new recovery move that suits the
-  afternoon — a nap, a short lie-down, easing off for the rest of the day — and
-  adding a verb means a template, a profile, a generator branch and its own
-  copy. That is a change to what the engine can suggest, which is more than the
-  wording repair it was found during, and section 47's gate is about the moves
-  the owner already sees.
-- What holds the ground meanwhile: nothing. A strained owner in the late
-  afternoon with no study topic gets a correct refusal and no alternative. The
-  case is narrow — with a topic in play, `recover` suits the afternoon and fires
-  normally — but it is real.
-- Owner decision: recorded and deferred during the second Phase 2 repair.
-
-## Fixed
+- Owner decision: recorded and deferred during the second Phase 2 repair,
+  because adding a verb is a change to what the engine can suggest and section
+  47's gate was about the moves the owner already saw. Phase 3 is where a new
+  move belongs.
+- Fix: a fourth recovery verb, `ease-off`, with its own routine in the engine's
+  vocabulary — "Start easing off now — the rest of today can be a light one."
+  It suits the afternoon and refuses every other block, so it does not compete
+  with `protect-sleep` for an evening. The sleep generator picks the verb the
+  hour can actually use rather than proposing a certain refusal.
+- Regression: `tests/synthetic/recovery-has-somewhere-to-go.test.ts` — "offers
+  something at a quarter to six rather than nothing", "never leaves a strained
+  afternoon or evening with nothing" (every half hour from noon to midnight),
+  and "reports no wrong-time-of-day refusal on the way there". Reverting the
+  generator branch was tried; three of the four fail.
+- Siblings: swept every generator at every block across the whole scenario
+  library. Two turned up — the fatherhood generator offering only `time-with` at
+  23:00, and the home generator offering only `reset-space` — and neither is
+  this defect: nothing is pressing at eleven at night in those histories, and
+  "Nothing fits tonight" is an honest answer to a quiet evening. The class that
+  is real is narrower and is asserted directly: when the engine can name what is
+  in the way and proposes something because of it, the hour may not remove all
+  of it. Finding DEF-0017 is what the sweep was actually worth.
+- Fixed in: the first Phase 3 checkpoint
 
 ### DEF-0015 — a scenario that misrepresented the owner's own life
 

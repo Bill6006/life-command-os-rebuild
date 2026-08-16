@@ -16,9 +16,10 @@ import type { PrivacyClass } from '../domain/privacy'
 import type { RecommendationSemantics } from '../domain/recommendation'
 import {
   addLocalDays,
+  blockOf,
   localDateTimeAt,
   localWeekIdAt,
-  minutesIntoDay,
+  type DayBlock,
   type Instant,
   type LocalDayId,
   type LocalWeekId,
@@ -52,7 +53,7 @@ import { decisionEntities } from './vocabulary'
  * reason — never a zero, an average or a cautious default (G-009).
  */
 
-export type DayBlock = 'early-morning' | 'morning' | 'afternoon' | 'evening' | 'late-night'
+export type { DayBlock }
 
 /**
  * How much the body is asking for, as far as the evidence shows.
@@ -218,15 +219,7 @@ function createFactReader(
 // The pieces
 // ---------------------------------------------------------------------------
 
-export function blockOf(at: Instant, zone: TimeZoneId): DayBlock {
-  const minutes = minutesIntoDay(localDateTimeAt(at, zone).timeOfDay)
-  if (minutes < 4 * 60) return 'late-night'
-  if (minutes < 7 * 60) return 'early-morning'
-  if (minutes < 12 * 60) return 'morning'
-  if (minutes < 18 * 60) return 'afternoon'
-  if (minutes < 22 * 60) return 'evening'
-  return 'late-night'
-}
+export { blockOf }
 
 interface NightlyReading {
   readonly hours: number

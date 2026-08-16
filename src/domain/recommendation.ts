@@ -24,6 +24,7 @@ export const ACTION_VERBS = [
   'protect-sleep',
   'wind-down',
   'recover',
+  'ease-off',
   'time-with',
   'growth-opportunity',
   'reach-out',
@@ -146,6 +147,25 @@ const TEMPLATES: Record<ActionVerb, VerbTemplate> = {
     needsPerson: false,
     action: ({ object }) => `Take tonight as recovery — no ${object} session.`,
     followUp: ({ object }) => `Did skipping ${object} leave you better rested?`,
+  },
+  /*
+   * The afternoon's recovery move — DEF-0016.
+   *
+   * `protect-sleep` and `wind-down` both refuse every block before six, and
+   * they are right to: telling someone at a quarter to six to start winding
+   * down for the night is worse than saying nothing. But when they were the
+   * only recovery moves in the catalogue, being right left a man nine hours
+   * short of sleep with "Nothing fits tonight" and no alternative.
+   *
+   * This is the alternative, and it is a different suggestion rather than the
+   * same one with the hour filed off: not bed, but a lower bar for the rest of
+   * today.
+   */
+  'ease-off': {
+    label: 'Ease off',
+    needsPerson: false,
+    action: ({ object }) => `Start ${object} now — the rest of today can be a light one.`,
+    followUp: ({ object }) => `Did the rest of the day stay easy after ${object}?`,
   },
   'time-with': {
     label: 'Time with someone',

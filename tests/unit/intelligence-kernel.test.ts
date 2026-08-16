@@ -228,12 +228,17 @@ describe('the engine’s own vocabulary', () => {
      *
      * If the engine could invent subjects, it could always produce a
      * well-formed, entirely generic sentence about a life it knows nothing
-     * about. These three are its own routines and the idea of sleep. Everything
-     * else a recommendation can be about has to come from the owner's history.
+     * about. These are its own routines and the idea of sleep. Everything else
+     * a recommendation can be about has to come from the owner's history.
+     *
+     * The list is meant to be short and to be argued over when it grows.
+     * `easing off` arrived with DEF-0016's repair: the afternoon had no
+     * recovery move at all, and a move needs a subject to be a sentence.
      */
     expect(STANDING_ENTITIES.map((entity) => entity.id).sort()).toEqual([
       'life-domain:sleep',
       'routine:a-walk',
+      'routine:easing-off',
       'routine:winding-down',
     ])
   })

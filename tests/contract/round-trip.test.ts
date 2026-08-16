@@ -137,6 +137,11 @@ const minimal: Record<RecordKind, CanonicalRecord> = {
     { occurredAt: T },
     { corrects: recommendationId, reason: 'Logged against the wrong evening' },
   ),
+  'belief-correction': record(
+    'belief-correction',
+    { occurredAt: T },
+    { belief: 'effect:reset-space', stance: 'reject', reason: 'That is not what happened' },
+  ),
   'relationship-event': record(
     'relationship-event',
     { occurredAt: T },
@@ -253,6 +258,15 @@ const full: Record<RecordKind, CanonicalRecord> = {
         whyNow: { trigger: 'opportunity-window', summary: '', evidence: [recommendationId] },
         evidence: [recommendationId],
       },
+      // What the app could see when it made the suggestion, so a later decision
+      // can ask whether tonight resembles it without re-deriving the past.
+      context: {
+        block: 'evening',
+        weekend: false,
+        strain: 'moderate',
+        childPresent: true,
+        usableMinutes: 45,
+      },
     },
   ),
   'action-start': record(
@@ -290,6 +304,11 @@ const full: Record<RecordKind, CanonicalRecord> = {
     { occurredAt: T },
     { corrects: recommendationId, reason: 'Wrong evening', replacedBy: recommendationId },
   ),
+  'belief-correction': record(
+    'belief-correction',
+    { occurredAt: T, domains: [DOMAIN.home], entities: [kitchen] },
+    { belief: 'effect:reset-space', stance: 'restore', reason: 'On reflection it does help' },
+  ),
   'relationship-event': record(
     'relationship-event',
     { occurredAt: T, domains: [DOMAIN.social] },
@@ -320,7 +339,7 @@ function throughJson(value: unknown): unknown {
 
 describe('canonical records round-trip without loss', () => {
   it('covers every record kind the plan lists', () => {
-    expect(RECORD_KINDS).toHaveLength(19)
+    expect(RECORD_KINDS).toHaveLength(20)
     expect(Object.keys(minimal).sort()).toEqual([...RECORD_KINDS].sort())
     expect(Object.keys(full).sort()).toEqual([...RECORD_KINDS].sort())
   })

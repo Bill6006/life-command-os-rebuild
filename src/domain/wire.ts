@@ -20,11 +20,12 @@ import {
   PROVENANCE_SOURCES,
   RECORD_KINDS,
   type CanonicalRecord,
+  type DecisionContext,
   type FactValue,
   type Provenance,
   type RecordKind,
 } from './records'
-import { instantToIso, parseTimeZone, type Instant, type TimeZoneId } from './time'
+import { DAY_BLOCKS, instantToIso, parseTimeZone, type Instant, type TimeZoneId } from './time'
 import {
   absorb,
   createReader,
@@ -37,6 +38,7 @@ import {
   readNumber,
   readObject,
   readOptionalArray,
+  readOptionalBoolean,
   readOptionalEnum,
   readOptionalInstant,
   readOptionalNumber,
@@ -282,6 +284,46 @@ function readRecommendation(reader: Reader, key: string): RecommendationSemantic
   }
 }
 
+/**
+ * The context a recommendation was made in.
+ *
+ * Optional, because history written before this existed is still history. An
+ * episode with no context recorded can still be counted; what it cannot do is
+ * claim to resemble tonight, which is the honest consequence rather than a
+ * limitation to work around.
+ */
+function readDecisionContext(reader: Reader, key: string): DecisionContext | undefined {
+  const nested = readOptionalObject(reader, key)
+  if (nested === undefined) return undefined
+
+  const block = readEnum(nested, 'block', DAY_BLOCKS)
+  const weekend = readBoolean(nested, 'weekend')
+  const strain = readEnum(nested, 'strain', ['severe', 'moderate', 'none', 'unknown'] as const)
+  const childPresent = readOptionalBoolean(nested, 'childPresent')
+  const usableMinutes = readOptionalNumber(nested, 'usableMinutes')
+  rejectExtras(nested, 'a decision context')
+  absorb(reader, nested)
+
+  if (block === undefined || weekend === undefined || strain === undefined) return undefined
+  return {
+    block,
+    weekend,
+    strain,
+    ...(childPresent === undefined ? {} : { childPresent }),
+    ...(usableMinutes === undefined ? {} : { usableMinutes }),
+  }
+}
+
+function decisionContextOut(context: DecisionContext): Record<string, unknown> {
+  return {
+    block: context.block,
+    weekend: context.weekend,
+    strain: context.strain,
+    ...(context.childPresent === undefined ? {} : { childPresent: context.childPresent }),
+    ...(context.usableMinutes === undefined ? {} : { usableMinutes: context.usableMinutes }),
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Payloads
 // ---------------------------------------------------------------------------
@@ -347,7 +389,10 @@ function readPayload(reader: Reader, kind: RecordKind): Record<string, unknown> 
         rejected: readStringArray(reader, 'rejected') ?? [],
       }
     case 'action-recommendation':
-      return { recommendation: readRecommendation(reader, 'recommendation') }
+      return {
+        recommendation: readRecommendation(reader, 'recommendation'),
+        context: readDecisionContext(reader, 'context'),
+      }
     case 'action-start':
       return { recommendation: readRecordId(reader, 'recommendation') }
     case 'action-completion':
@@ -377,6 +422,12 @@ function readPayload(reader: Reader, kind: RecordKind): Record<string, unknown> 
         corrects: readRecordId(reader, 'corrects'),
         reason: readString(reader, 'reason'),
         replacedBy: readOptionalRecordId(reader, 'replacedBy'),
+      }
+    case 'belief-correction':
+      return {
+        belief: readString(reader, 'belief'),
+        stance: readEnum(reader, 'stance', ['reject', 'restore'] as const),
+        reason: readString(reader, 'reason'),
       }
     case 'relationship-event':
       return {
@@ -737,7 +788,10 @@ function payloadOut(record: CanonicalRecord): Record<string, unknown> {
     case 'decision':
       return { statement: record.statement, chosen: record.chosen, rejected: [...record.rejected] }
     case 'action-recommendation':
-      return { recommendation: recommendationOut(record.recommendation) }
+      return {
+        recommendation: recommendationOut(record.recommendation),
+        ...(record.context === undefined ? {} : { context: decisionContextOut(record.context) }),
+      }
     case 'action-start':
       return { recommendation: record.recommendation }
     case 'action-completion':
@@ -768,6 +822,8 @@ function payloadOut(record: CanonicalRecord): Record<string, unknown> {
         reason: record.reason,
         ...(record.replacedBy === undefined ? {} : { replacedBy: record.replacedBy }),
       }
+    case 'belief-correction':
+      return { belief: record.belief, stance: record.stance, reason: record.reason }
     case 'relationship-event':
       return {
         withEntity: refOut(record.withEntity),

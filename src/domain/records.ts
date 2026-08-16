@@ -3,7 +3,7 @@ import type { EntityRef } from './entities'
 import type { RecordId } from './ids'
 import type { PrivacyClass } from './privacy'
 import type { RecommendationSemantics } from './recommendation'
-import type { Instant, TimeZoneId } from './time'
+import type { DayBlock, Instant, TimeZoneId } from './time'
 import type { ConceptId, DueWindow, ObservationWindow } from './windows'
 
 /**
@@ -38,6 +38,7 @@ export const RECORD_KINDS = [
   'action-unable-now',
   'outcome',
   'correction',
+  'belief-correction',
   'relationship-event',
   'domain-update',
   'coverage-update',
@@ -196,9 +197,35 @@ export type DecisionRecord = Record_<
   { readonly statement: string; readonly chosen: string; readonly rejected: readonly string[] }
 >
 
+/**
+ * What the system could see when it made a recommendation.
+ *
+ * Section 16 asks that historical comparison consider relevant context rather
+ * than only date proximity, and that is impossible to do honestly after the
+ * fact. Re-deriving "what was tonight like?" from today's history would answer
+ * with everything written since, including the outcome itself — so the context
+ * is written down at the moment the decision is acted on, and never revised.
+ *
+ * Coarse on purpose. Section 22 forbids inventing precision, and a fingerprint
+ * fine enough to be unique is a fingerprint that matches nothing.
+ */
+export interface DecisionContext {
+  readonly block: DayBlock
+  readonly weekend: boolean
+  /** How much the body was asking for. `unknown` is a real answer (G-009). */
+  readonly strain: 'severe' | 'moderate' | 'none' | 'unknown'
+  /** Undefined means nobody knew, which is not the same as "no". */
+  readonly childPresent?: boolean
+  readonly usableMinutes?: number
+}
+
 export type ActionRecommendationRecord = Record_<
   'action-recommendation',
-  { readonly recommendation: RecommendationSemantics }
+  {
+    readonly recommendation: RecommendationSemantics
+    /** Absent on recommendations written before the context was recorded. */
+    readonly context?: DecisionContext
+  }
 >
 
 export type ActionStartRecord = Record_<'action-start', { readonly recommendation: RecordId }>
@@ -240,6 +267,35 @@ export type OutcomeRecord = Record_<
 export type CorrectionRecord = Record_<
   'correction',
   { readonly corrects: RecordId; readonly reason: string; readonly replacedBy?: RecordId }
+>
+
+/**
+ * The owner disagreeing with something the system worked out.
+ *
+ * Section 62 requires that a learned pattern, a learned preference or an
+ * inferred belief can be corrected, and that the app then "stops reasserting
+ * the old belief unless new evidence genuinely supports revisiting it".
+ *
+ * A correction is not a fact about a record, which is why this is not a
+ * `correction`: there is no single row to retract. A learned belief rests on
+ * several outcomes at once, and retracting them one at a time would also throw
+ * away what the owner actually observed. So the correction names the belief and
+ * acts as a watershed — everything recorded up to that moment stops counting
+ * toward it, and what happens afterwards counts normally. That is what "unless
+ * new evidence genuinely supports revisiting it" means in practice, without
+ * inventing a threshold nobody chose.
+ *
+ * `restore` exists because the owner may change their mind, and because
+ * append-first history has no other way to undo.
+ */
+export type BeliefCorrectionRecord = Record_<
+  'belief-correction',
+  {
+    /** Which belief. Opaque here: the intelligence layer composes and reads it. */
+    readonly belief: string
+    readonly stance: 'reject' | 'restore'
+    readonly reason: string
+  }
 >
 
 export type RelationshipEventRecord = Record_<
@@ -295,6 +351,7 @@ export type CanonicalRecord =
   | ActionUnableNowRecord
   | OutcomeRecord
   | CorrectionRecord
+  | BeliefCorrectionRecord
   | RelationshipEventRecord
   | DomainUpdateRecord
   | CoverageUpdateRecord

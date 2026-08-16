@@ -285,15 +285,44 @@ function stateOfChosen(evaluation: Evaluation, situation: Situation): MoveState 
 }
 
 /**
- * Saying nothing, in the four ways it can be true.
+ * What is left to say when a limiter is visible and nothing was proposed.
+ *
+ * Nine hours short of rest at nine in the morning used to read: the shortfall
+ * named in the line above the decision, and underneath it "there is plenty of
+ * history here, and none of it says how tonight is going". Both halves came
+ * from the same run. The history was saying exactly how the day was going —
+ * what was empty was the catalogue, because every recovery move belongs to an
+ * hour that had not arrived yet.
+ *
+ * So when the engine can name what is in the way, it does not get to claim the
+ * history is silent. The limiter is already on screen above this, so these say
+ * only the part it does not: that nothing on offer would move it.
+ */
+function nothingForThisLimiter(situation: Situation): string | undefined {
+  switch (situation.limiter?.kind) {
+    case 'recovery':
+      return 'Nothing here would help much before tonight.'
+    case 'capacity':
+      return 'Nothing here is worth asking of a sore body.'
+    case 'time':
+      return 'Nothing here would fit the time left.'
+    default:
+      return undefined
+  }
+}
+
+/**
+ * Saying nothing, in the ways it can be true.
  *
  * Section 36 — a degraded state must not read like a confident answer, and a
  * real rest night must not read like a broken one. `nothing-proposed` splits
- * because the two cases underneath it are nothing alike: a store with no
- * history in it, and a store with a fortnight of it that cannot suggest
- * anything without knowing how the owner is right now. Telling someone with two
- * weeks of records that there is "too little here" is simply false, and it is
- * the kind of false that makes an app look like it has lost the data.
+ * three ways because the cases underneath it are nothing alike: a store with no
+ * history in it, a store with a fortnight of it that cannot suggest anything
+ * without knowing how the owner is right now, and one that can see perfectly
+ * well what is wrong and has nothing suited to the hour. Telling someone with
+ * two weeks of records that there is "too little here" is simply false, and so
+ * is telling someone whose sleep debt is printed above the sentence that
+ * nothing here says how the day is going.
  */
 function noActionCopy(
   reason: NoActionReason,
@@ -310,17 +339,23 @@ function noActionCopy(
         headline: 'Nothing fits tonight.',
         detail: 'There were things worth doing and none of them suit where you actually are.',
       }
-    case 'nothing-proposed':
-      return situation.view.history.all.length === 0
-        ? {
-            headline: 'Not enough to go on yet.',
-            detail: 'There is no history here at all, so anything said now would be invented.',
-          }
-        : {
-            headline: 'Nothing to suggest just yet.',
-            detail:
-              'There is plenty of history here, and none of it says how tonight is going. One answer below is usually enough.',
-          }
+    case 'nothing-proposed': {
+      if (situation.view.history.all.length === 0) {
+        return {
+          headline: 'Not enough to go on yet.',
+          detail: 'There is no history here at all, so anything said now would be invented.',
+        }
+      }
+      const limited = nothingForThisLimiter(situation)
+      if (limited !== undefined) {
+        return { headline: 'Nothing worth starting right now.', detail: limited }
+      }
+      return {
+        headline: 'Nothing to suggest just yet.',
+        detail:
+          'There is plenty of history here, and none of it says how tonight is going. One answer below is usually enough.',
+      }
+    }
   }
 }
 

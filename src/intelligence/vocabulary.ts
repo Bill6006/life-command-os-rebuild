@@ -52,6 +52,16 @@ export const STANDING_ENTITIES: readonly SemanticEntity[] = [
     privacy: 'normal',
     createdAt: ALWAYS,
   }),
+  // The afternoon's version of winding down, and deliberately its own routine
+  // rather than a re-worded one: easing off is lowering the bar for the rest of
+  // today, and winding down is going to bed.
+  createEntity({
+    kind: 'routine',
+    label: 'easing off',
+    domain: DOMAIN.sleep,
+    privacy: 'normal',
+    createdAt: ALWAYS,
+  }),
 ]
 
 /**

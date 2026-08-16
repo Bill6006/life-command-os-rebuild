@@ -105,6 +105,13 @@ export function readBoolean(reader: Reader, key: string): boolean | undefined {
   return value
 }
 
+export function readOptionalBoolean(reader: Reader, key: string): boolean | undefined {
+  const value = raw(reader, key)
+  if (value === undefined) return undefined
+  if (typeof value !== 'boolean') return missing(reader, key, 'a boolean')
+  return value
+}
+
 export function readInstant(reader: Reader, key: string): Instant | undefined {
   const value = raw(reader, key)
   const parsed = parseInstant(value)

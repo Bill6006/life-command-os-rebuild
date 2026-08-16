@@ -401,6 +401,52 @@ export function localDaysBetween(a: LocalDayId, b: LocalDayId): number {
 }
 
 // ---------------------------------------------------------------------------
+// Parts of the day
+// ---------------------------------------------------------------------------
+
+/**
+ * Which part of the owner's day an instant falls in.
+ *
+ * This lives with the other owner-local time semantics rather than in the
+ * engine, because two layers now need the same answer to mean the same thing: a
+ * decision is made in a block, and the record of that decision remembers which
+ * block it was made in so a later one can ask whether tonight is like it. Two
+ * definitions of "evening" would make that comparison quietly wrong.
+ *
+ * The boundaries are decision boundaries, not vocabulary. The evening begins at
+ * 18:00 for every purpose the engine has — which moves are eligible, which suit
+ * the hour, what protects tomorrow — and what the last hour before it is
+ * *called* is a separate question, answered where the words are written.
+ */
+export const DAY_BLOCKS = [
+  'early-morning',
+  'morning',
+  'afternoon',
+  'evening',
+  'late-night',
+] as const
+
+export type DayBlock = (typeof DAY_BLOCKS)[number]
+
+export function isDayBlock(value: unknown): value is DayBlock {
+  return typeof value === 'string' && (DAY_BLOCKS as readonly string[]).includes(value)
+}
+
+export function blockOfLocalTime(time: LocalTimeOfDay): DayBlock {
+  const minutes = minutesIntoDay(time)
+  if (minutes < 4 * 60) return 'late-night'
+  if (minutes < 7 * 60) return 'early-morning'
+  if (minutes < 12 * 60) return 'morning'
+  if (minutes < 18 * 60) return 'afternoon'
+  if (minutes < 22 * 60) return 'evening'
+  return 'late-night'
+}
+
+export function blockOf(at: Instant, zone: TimeZoneId): DayBlock {
+  return blockOfLocalTime(localDateTimeAt(at, zone).timeOfDay)
+}
+
+// ---------------------------------------------------------------------------
 // Local weeks
 // ---------------------------------------------------------------------------
 

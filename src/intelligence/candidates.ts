@@ -50,6 +50,7 @@ export interface Candidate {
 export const SLEEP_SUBJECT: EntityRef = entityRef('life-domain', 'sleep')
 export const WINDING_DOWN: EntityRef = entityRef('routine', 'winding down')
 export const A_WALK: EntityRef = entityRef('routine', 'a walk')
+export const EASING_OFF: EntityRef = entityRef('routine', 'easing off')
 
 function target(verb: ActionVerb, object: EntityRef, minutes: number | undefined): ActionTarget {
   return minutes === undefined ? { verb, object } : { verb, object, minutes }
@@ -188,14 +189,34 @@ const sleepCandidates: Generator = (situation) => {
     ]
   }
 
+  /*
+   * The right recovery move for the hour — DEF-0016.
+   *
+   * The afternoon used to get `protect-sleep`, which the filter then refused as
+   * a wrong-time-of-day move, so a man nine hours short of sleep at a quarter
+   * to six was told "Nothing fits tonight" and offered nothing. The defect was
+   * not the refusal — the refusal is correct — it was proposing something that
+   * could only ever be refused, and having nothing else to put in its place.
+   *
+   * The general rule this leaves, and the one the regression checks: a
+   * generator does not offer a move the hour rules out. If it has nothing
+   * suitable it stays quiet, and the arbiter reports that honestly.
+   */
+  const verb =
+    situation.block === 'late-night'
+      ? 'wind-down'
+      : situation.block === 'afternoon'
+        ? 'ease-off'
+        : 'protect-sleep'
+
   return [
     candidate(
       {
         generator: 'sleep',
         subject: SLEEP_SUBJECT,
         domain: DOMAIN.sleep,
-        verb: situation.block === 'late-night' ? 'wind-down' : 'protect-sleep',
-        object: WINDING_DOWN,
+        verb,
+        object: verb === 'ease-off' ? EASING_OFF : WINDING_DOWN,
         trigger: 'deficit',
         evidence,
         leansOn,
