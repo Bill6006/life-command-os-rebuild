@@ -4,6 +4,275 @@ Report format: canonical plan section 58.
 
 ---
 
+# Phase 3 — Recommendation lifecycle + outcome learning
+
+**Status: YELLOW — everything that can be checked passes. The owner has not
+tested the loop on a phone yet, and that is the gate.**
+
+Section 48's goal is one sentence: complete the loop. A recommendation the owner
+acts on, an outcome that gets observed, and learning that changes what happens
+next. All three exist and are wired to each other through canonical records —
+there is no side channel anywhere in it.
+
+Six of the gate's items are automated and pass. Three are judgements a suite
+cannot make: whether the phone flow feels fast, whether the buttons are the
+right buttons, and whether the app saying "clearing the kitchen has worked a few
+times in situations like tonight" reads as intelligence or as a machine
+flattering itself. Phase 2's gate was failed four times by the owner on a phone
+and eleven of that phase's fifteen fixed defects came out of those passes. There
+is no reason to expect fewer here.
+
+## Build identity
+
+|                      |                                                             |
+| -------------------- | ----------------------------------------------------------- |
+| Checkpoint SHA       | `b0e23ed`                                                   |
+| Deployed Preview SHA | `b0e23ed`                                                   |
+| Do they match?       | Yes — verified live, not assumed                            |
+| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Live proof           | `preview/build-info.json`                                   |
+
+## Verification
+
+| Gate                                      | Result                                         |
+| ----------------------------------------- | ---------------------------------------------- |
+| Privacy scan                              | Clean, 126 tracked files                       |
+| Format (Prettier)                         | Pass                                           |
+| Lint (ESLint)                             | Pass, 0 warnings                               |
+| Typecheck (strict TS)                     | Pass, 0 errors                                 |
+| Unit / contract / synthetic / adversarial | 419 passed / 419 (in plain Node, no DOM)       |
+| Browser tests (Playwright)                | 138 passed / 138 — 46 tests × 360, 430, 1280px |
+| Production build                          | Pass                                           |
+| `npm run verify` from a clean checkout    | Pass                                           |
+| Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand     |
+
+### Where the 419 sit
+
+Phase 2 ended at 330. The 89 new ones are almost all about the loop.
+
+| Suite                                                            | Tests |
+| ---------------------------------------------------------------- | ----: |
+| `synthetic/outcome-learning` — section 20, rule by rule          |    35 |
+| `synthetic/adaptive-guide` — one question at a time              |    34 |
+| `unit/intelligence-kernel` — readers, direction, moves, order    |    30 |
+| `synthetic/lifecycle` — episodes, double taps, outcome windows   |    24 |
+| `unit/time` — instants, civil dates, weeks, DST, day blocks      |    20 |
+| `unit/registries` — ids, domains, concepts, privacy              |    19 |
+| `synthetic/no-hidden-genericity` — sections 61 and 64            |    19 |
+| `unit/knowledge` — the four states, freshness, asking            |    18 |
+| `unit/architecture-guards` — the boundaries and the copy sweep   |    18 |
+| `synthetic/model-guardrails` — section 18's fence                |    17 |
+| `synthetic/g008` — a non-career weekly direction                 |    15 |
+| `unit/store` — append semantics, supersession                    |    14 |
+| `synthetic/g005` — sleep beats ambition, both ways               |    12 |
+| `synthetic/g009` — unknown is unknown                            |    12 |
+| `unit/buildInfo`                                                 |    11 |
+| `unit/routing`                                                   |    11 |
+| `contract/projections` — rebuildability, migrations              |    11 |
+| `synthetic/g004` — a social opportunity                          |    10 |
+| `unit/recommendation` — rendering and refusal                    |    10 |
+| `synthetic/recovery-has-somewhere-to-go` — DEF-0016 and DEF-0017 |    10 |
+| `synthetic/g011` — timezone and week boundary                    |     9 |
+| `adversarial/malformed-history`                                  |     9 |
+| `synthetic/g001` — no orphan pronoun                             |     8 |
+| `synthetic/intelligence-tournament` — section 18's choice        |     8 |
+| `contract/round-trip` — 20 record kinds, lossless                |     8 |
+| `synthetic/g002` — durable family context                        |     7 |
+| `synthetic/g014` — no action is a real answer                    |     7 |
+| `adversarial/malformed-records`                                  |     7 |
+| `contract/legacy-quarantine` — preserved and inert               |     6 |
+
+## Gate checklist (section 48, and the phase brief)
+
+| Requirement                                              | Status                                                              |
+| -------------------------------------------------------- | ------------------------------------------------------------------- |
+| G-001, G-002, G-005, G-008, G-009, G-011 pass, unchanged | Pass — 63 tests, and the six files are byte-identical to `79d033b`  |
+| G-004 passes as an automated synthetic scenario          | Pass — 10 tests, including the no-quota sweep                       |
+| G-014 passes as an automated synthetic scenario          | Pass — 7 tests, including the counterexample                        |
+| A completed action demonstrably changes later reasoning  | Pass — same evening, same options, different winner                 |
+| A decline is not mislabelled ineffective                 | Pass — and structurally, not by convention (D-045)                  |
+| Can't-now changes the situation appropriately            | Pass — reaches follow-through and neither of the other two          |
+| One event does not become proof                          | Pass — one comparable evening moves the belief a quarter of the way |
+| The semantic subject survives through the follow-up      | Pass — the question is the renderer's own follow-up                 |
+| A double tap creates no duplicate episode                | Pass — three separate guards, each tested (D-042, D-052)            |
+| The phone flow feels fast                                | **Owner judgement — not yet made**                                  |
+| CI green                                                 | Pass                                                                |
+| `npm run verify` from a clean checkout                   | Pass                                                                |
+| Preview deploys automatically, SHA matches               | Pass — `b0e23ed` live                                               |
+| **The owner tests the loop on a phone and accepts it**   | **Not yet — this is the gate**                                      |
+
+## What changed
+
+### `src/intelligence/lifecycle.ts` — episodes
+
+An episode is one suggestion, on one day, and everything that became of it. It
+is identified by what it is about rather than by the record that created it,
+which is what makes a duplicate episode unrepresentable rather than prevented
+(D-042). Five states, and only `completed` is terminal: saying "not tonight" and
+doing it anyway is an ordinary evening, and an app that refused to record the
+second half would be wrong about the owner's life in order to be tidy about its
+own state machine.
+
+Nothing is written until the owner acts (D-043).
+
+### `src/intelligence/outcomes.ts` — windows
+
+A result is asked for when there is one to give. A recovery night judged at
+23:05 would collect an answer about intent, and an answer about intent recorded
+as an outcome is worse than none: it looks exactly like evidence. So a
+`protect-sleep` is judged the next morning and a kitchen reset twenty minutes
+later, and the difference comes from the move rather than from a rule.
+
+Windows close, because asking on Thursday about Tuesday is asking someone to
+invent something. Section 20's "outcome unknown" is a real and acceptable state.
+
+### `src/intelligence/learning.ts` — what actually happened
+
+D-023 discharged. The priors in `moves.ts` are pulled toward this owner's own
+outcomes by `n / (n + 3)`, weighted by how much an evening resembles tonight and
+gently by how long ago it was — similarity dominating recency, which is section
+20's "context similarity matters" read literally.
+
+Three learned quantities, and the separation is the point. Outcomes reach
+`effect`. Inabilities reach `follow-through`. Declines reach `appetite` and
+`owner-preference`, and can reach nothing else. Section 20's first two rules are
+held by the code paths not meeting.
+
+### `src/intelligence/corrections.ts` — section 62
+
+A `belief-correction` is a watershed: everything the owner has already seen and
+disagreed with stops counting, and what happens afterwards counts normally. It
+is offered beside the decision it moved, because a belief the owner cannot see
+is a belief they cannot correct.
+
+### Now
+
+Start, done, not tonight, can't right now, something else. A started move stays
+in front of the owner until they settle it (D-049). A result that is due comes
+above everything, because it expires and answering it is what makes the next
+decision better. And one line saying what the decision rests on, with a way to
+disagree with it.
+
+### The clock
+
+`MemoryProvider` refreshes the moment when the tab becomes visible, and sets one
+timer for the instant the engine says the next window opens (D-050). No polling,
+and no clock below the UI — `nextOutcomeDueAt` computes an instant and compares
+it to nothing.
+
+### `src/features/qa/` — the inspector
+
+Two new panels. **What it has learned** shows, per surviving move, where the
+belief started, where it landed, how many comparable results there were and how
+far they pulled it — with follow-through and appetite listed separately, so it
+is visible on screen that a decline never became a claim about whether the move
+works. **Episodes** lists every suggestion in the history, how it ended, whether
+a result is due, and how much tonight resembles it.
+
+**Product behaviour changed:** yes — the app can be acted on, and it remembers.
+**Semantic behaviour changed:** yes — decisions now move on what happened.
+
+## Phone check (this is the gate)
+
+Open Preview. Header → **More** → **Open the QA laboratory**, load a scenario,
+then tap **Now**.
+
+1. **A month of what actually worked.** The headline should be the kitchen, and
+   under it a line reading _"Reset a space has worked several times in
+   situations like tonight."_ Tap **Not how it went** and the line goes, along
+   with the belief behind it — the recommendation may change on the spot. That
+   is section 62, end to end.
+2. **The same scenario, in QA.** Open **What it has learned**. Clearing the
+   kitchen should show four comparable results; the walk two, having moved its
+   number the other way; the lab none at all, with its two interruptions under
+   _Could it happen_ instead. That is section 20's separation, visible.
+3. **A week pointed at the house.** Tap **Start it**. The kitchen should stay on
+   screen with _Under way_ under it, rather than the app moving on to something
+   else while you are at the sink. **Start it** greys out and does not move.
+4. **The same, then Done.** Nothing is asked immediately. Go back to QA, press
+   **+1 hour**, return to Now: _"Did the kitchen get cleared?"_ Answer it, and it
+   goes.
+5. **A Saturday with people in it.** _"Start one real conversation while you are
+   at the climbing gym."_ No counter, no streak, nothing scored.
+6. **A Thursday with nothing needing doing.** _"Nothing needs to move tonight."_
+   — reached with sleep, energy, soreness and the evening's length all known.
+   Judge whether it reads as an answer or as a shrug.
+7. **Three broken nights, and a deadline**, at a quarter to six. Set the clock
+   in QA to 17:45. It should say _"Start easing off now — the rest of today can
+   be a light one."_ rather than "Nothing fits tonight." That is DEF-0016.
+8. **Something else**, on any scenario, should produce a different suggestion
+   rather than the same one again.
+
+What to judge is section 47's list applied to the loop: are these the right
+buttons, is it fast, does the learning line read as something the app actually
+knows, and does answering a follow-up feel worth the tap.
+
+## Deliberately not built
+
+- **The coverage engine** — Phase 4. Nothing yet notices that a life area has
+  gone quiet for a month, so `stale-evidence` remains barely reachable and the
+  limiter set is still three.
+- **Pause and continue.** Section 48 lists them "if needed". They are not: a
+  started move already stays in front of the owner until it is settled, which is
+  what pause would have been for, and a control that records an event nothing
+  reads is D-029's mistake with a different label.
+- **A started move that is never settled.** It stays `started` and no result is
+  ever asked for. Asking "did that happen?" in a second shape when the buttons
+  are already on screen would be nagging; letting it lapse silently loses the
+  evidence. It needs a decision about how long is too long, which wants real use
+  to answer.
+- **Correcting anything but a learned effect.** Section 62 lists eight kinds of
+  correction. Facts, goals, direction and domain status all belong to surfaces
+  that do not exist yet (Phases 4 and 5), and inventing a screen for them here
+  would be building the Life page badly and early.
+- **Live model inference** — D-025, unchanged. Owner decision.
+- Domain pages (Phase 5), Timeline and Insights content (Phase 6), exports and
+  backup (Phase 7), the legacy importer (Phase 8), the service worker (Phase 10).
+
+## Open defects
+
+None. Three were found and closed during the phase.
+
+- **DEF-0016** — the strained late afternoon, deferred by the owner at the end
+  of Phase 2 and the natural first thing to build here.
+- **DEF-0017** — found by sweeping DEF-0016's siblings across every hour rather
+  than the one that was reported. Worse than the defect that found it: nine
+  hours of sleep debt printed above the decision, and "none of it says how
+  tonight is going" printed underneath.
+- **DEF-0018** — found because a browser test hung rather than failed. Tapping
+  **Start it** slid **Done** into the space under the finger.
+
+Each regression was proved to fail with its defect reintroduced. So were all six
+of section 20's rules, individually: a decline counted as ineffectiveness, an
+inability counted as ineffectiveness, `PATIENCE` set to zero, the similarity
+floor removed, the correction watershed disabled, and the same-block and
+next-day effects collapsed into one. All six were caught.
+
+## Deferred, with reasons
+
+- **The older dimensions still cost weight when they know nothing.** D-048
+  applies the rule to `follow-through` only. Fixing the rest means re-cutting
+  the weights, which means re-running section 18's tournament.
+- **`hold` is still never generated.** A non-action is an arbitration outcome
+  rather than a candidate. Unchanged from Phase 2.
+- **Free-text constraints are still shown, not enforced.** Unchanged from
+  Phase 2.
+- **Comfort is recorded and not yet used.** G-004 asks for it to be captured and
+  it is, as an outcome with no sentiment. Nothing reads it yet — section 10's
+  "which contexts make connection easier" is an Insights question, and inventing
+  a use for it now would be inventing a finding.
+
+## Decisions made
+
+D-042 … D-052 in [`DECISION_LOG.md`](DECISION_LOG.md).
+
+## Next
+
+Phase 4 — the coverage engine and adaptive guides.
+See [`NEXT_PROMPT.md`](NEXT_PROMPT.md).
+
+---
+
 # Phase 2 — Intelligence tournament + first real Now
 
 **Status: GREEN — owner-approved on the phone.**

@@ -769,3 +769,252 @@ handed on a phone.
 
 **Not changed:** the engine's custody and presence behaviour. G-002 was correct
 throughout, and `durable-custody` and `week-pointed-at-home` have never asked.
+
+---
+
+## D-042 — An episode is what it is about, not the record that created it
+
+**Phase:** 3 · **Status:** Active
+
+The unit of the lifecycle is an **episode**: one suggestion, on one day, and
+everything that happened to it. It is keyed by the verb, the object and the
+owner-local day. Two records about the same move on the same day fold into one
+episode.
+
+**Why:** Section 60 lists "double taps must not create duplicate episodes" among
+the failures to carry forward, and the tempting fix is a guard in the surface —
+remember not to write twice. A surface that has not re-rendered cannot remember
+anything, which is exactly the case a double tap is. Keying the episode by its
+meaning makes a duplicate **unrepresentable** rather than prevented: two records
+produce one episode because there is nowhere for a second one to live.
+
+**Consequence, and it is load-bearing:** the recommendation record carries a
+`derivedRecordId` built from the same key, so a second tap writes a
+byte-identical row and the store's existing idempotency (D-015) skips it. That
+mechanism was built so an import could be re-run; a double tap is the same
+problem arriving from the other direction.
+
+---
+
+## D-043 — Nothing is written until the owner acts
+
+**Phase:** 3 · **Status:** Active
+
+Now does not record a recommendation because it displayed one. The
+`action-recommendation` record is written on the first tap, together with the
+event that prompted it.
+
+**Why:** A history that grew a row every time a screen rendered would be
+unreadable within a week, and every one of those rows would be an episode
+nothing ever happened to — noise in the Timeline, noise in the duplication
+check, and noise in the evidence learning reads. Section 20 lists "shown" as a
+lifecycle state, and it is one: it is the state of the decision currently on
+screen, which needs no record because it is recomputed from the situation every
+time.
+
+**Consequence:** the first tap writes two records rather than one, and the
+context is captured at the moment the owner acted rather than the moment the
+app rendered. The second is the better moment anyway.
+
+---
+
+## D-044 — A recommendation records the context it was made in, and never revises it
+
+**Phase:** 3 · **Status:** Active
+
+`ActionRecommendationRecord` gains an optional `DecisionContext`: the part of
+the day, weekday or weekend, how strained, whether she was there, how much time
+there was. Five coarse features, written once.
+
+**Why:** Section 16 requires historical comparison to weigh context rather than
+date proximity, and that is impossible to do honestly after the fact.
+Re-deriving "what was that evening like?" from today's history would answer with
+everything written since — the outcome included — so a move would appear to have
+been recommended in the conditions it produced.
+
+**Why so coarse:** section 22 forbids inventing precision, and a fingerprint
+fine enough to be unique matches nothing. A similarity of 0.6 here means "quite
+like it", not a measurement.
+
+**Consequence:** an episode with no context recorded cannot claim to resemble
+tonight and contributes nothing to learning. It is still history; it is not
+evidence about a situation.
+
+---
+
+## D-045 — Declines, inabilities and outcomes reach three different places
+
+**Phase:** 3 · **Status:** Active
+
+A completed move with an answered result reaches `effect`. An unable-now reaches
+`follow-through`. A decline reaches `appetite`, which feeds `owner-preference`
+and nothing else.
+
+**Why:** Section 20's first two rules — "rejection is not ineffective",
+"unable-now is context evidence" — are the kind of thing an app gets wrong by
+being reasonable. The owner keeps saying no, so the app concludes the move does
+not work and stops offering it, having learned nothing except that it was
+ignored. Writing the rule as a comment would not survive the first edit made in
+a hurry.
+
+**What makes it hold:** the code paths do not meet. `effectFor` filters to
+completed episodes with a sentiment-bearing outcome before it does anything
+else, so there is no branch a decline could travel down. A history of nothing
+but refusals moves the effect by zero, and that is asserted directly rather than
+assumed.
+
+---
+
+## D-046 — The priors are pulled toward outcomes by `n / (n + 3)`
+
+**Phase:** 3 · **Status:** Active, revisitable
+
+`moves.ts` still states what each kind of move is expected to be worth.
+`learning.ts` pulls those numbers toward what actually happened in comparable
+situations, weighted by similarity and gently by recency, by the effective
+sample count over itself plus `PATIENCE`.
+
+**Why:** This is D-023 discharged. Section 20 says the app learns from observed
+outcomes, and also that one success is not proof — which is a statement about
+_how much_ an outcome should move a belief, not merely that it should. One
+perfectly comparable evening moves the starting belief a quarter of the way. Six
+move it two-thirds. Nothing ever reaches the observation outright, which is what
+leaves the prior able to pull it back when later evidence disagrees.
+
+**Why a prior remains:** the engine has to decide the first evening too, and
+section 22 forbids inventing precision — including the false precision of
+treating one data point as a measurement. The prior is what the coarse table was
+always for; what has changed is that it is no longer the last word.
+
+**Revisit if:** the tournament is re-run with enough outcome history to compare
+`PATIENCE` values against something other than judgement.
+
+---
+
+## D-047 — A belief correction is a watershed, not a retraction
+
+**Phase:** 3 · **Status:** Active
+
+`belief-correction` is a new record kind. Rejecting a belief stops every episode
+recorded up to that moment from counting toward it; what happens afterwards
+counts normally. `restore` removes the watershed.
+
+**Why:** Section 62 requires a learned pattern to be correctable and the app to
+"stop reasserting the old belief unless new evidence genuinely supports
+revisiting it". A learned belief is not one row, so a `correction` has nothing
+to point at — and retracting the outcomes underneath it would throw away what
+the owner actually observed, which is worse than the belief. A watershed says
+exactly what section 62 says, and needs no threshold nobody chose: new evidence
+is evidence the owner has not already seen and disagreed with.
+
+**Where it is offered:** beside the decision it moved. A belief the owner cannot
+see is a belief they cannot correct, and Now is the only place this phase states
+one in words.
+
+---
+
+## D-048 — A dimension with no evidence carries no weight
+
+**Phase:** 3 · **Status:** Active
+
+`follow-through` returns weight 0 when nothing has ever been blocked, rather
+than a value of 0 at full weight.
+
+**Why:** The score is a weighted mean, so a dimension contributing zero at full
+weight drags every move toward the middle. Adding `follow-through` did exactly
+that — it moved the `WORTH_DOING` bar by widening the denominator, and turned a
+walk that had been worth doing for two phases into no action at all, on a
+history where nothing had been learned about anything. A dimension with nothing
+to say must cost nothing to have.
+
+**Not applied retroactively:** the older dimensions still score zero at full
+weight in their unknown cases. That is a wart rather than a principle — the
+weights were tuned with them present, and re-cutting the instrument means
+re-running section 18's tournament, which belongs to a phase that can.
+
+---
+
+## D-049 — A started move stays in front of the owner
+
+**Phase:** 3 · **Status:** Active
+
+After arbitration, a move that is started, unsettled, from today and still among
+the surviving candidates is chosen regardless of the ranking. The trace says so.
+
+**Why:** Every lifecycle event recomputes the decision, which is the point — and
+it means tapping **Start it** immediately makes that move a recently-offered one
+and can hand the top spot to something else. The owner looks up from the sink
+and the app is suggesting a walk. Section 19 lists "continue" as a valid
+decision and section 6 asks Now to show an active recommendation state; both
+point here.
+
+**Why it is not a score:** a bonus large enough to always win would be a number
+chosen to force an outcome, and it would still lose on some evening nobody
+tested. Saying it outright, in one place, keeps the ranking underneath honest
+about what would otherwise have been picked.
+
+**Limit:** it only overrides a candidate still on offer. A walk started at seven
+and remembered at midnight is not something to still be recommending.
+
+---
+
+## D-050 — The clock advances when the app is looked at, and once for a due result
+
+**Phase:** 3 · **Status:** Active
+
+`MemoryProvider` refreshes the moment when the tab becomes visible, and sets one
+timer for the instant `nextOutcomeDueAt` reports. No polling.
+
+**Why:** Phase 2 captured the moment at mount and never moved it, and nothing
+needed more — every decision is a pure function of the moment it is given, so a
+tab left open was simply answering the question it had been asked. Outcome
+windows are the first thing that cares: a result due at ten past eight never
+becomes due on a screen frozen at half past seven.
+
+**Why not a heartbeat:** the engine can say _when_, so there is nothing to poll
+for. One timer for a known instant is cheaper and cannot drift.
+
+**Where the clock is:** in the surface, and only there. `nextOutcomeDueAt`
+computes an instant and compares it to nothing, so the kernel stays clock-free
+and the guard in `tests/unit/architecture-guards.test.ts` still holds.
+
+---
+
+## D-051 — `ease-off`, the afternoon's recovery move
+
+**Phase:** 3 · **Status:** Active
+
+A fourth restorative verb with its own routine in the engine's vocabulary —
+D-021's list grows from three to four. It suits the afternoon and refuses every
+other block.
+
+**Why:** DEF-0016, deferred by the owner at the end of Phase 2. `protect-sleep`
+and `wind-down` are right to refuse the afternoon, and being right left a man
+nine hours short of rest at a quarter to six with "Nothing fits tonight" and no
+alternative. The fix is not a looser filter; it is having something to say.
+
+**Why it refuses the evening:** `protect-sleep` is the better sentence after
+six, and two recovery moves competing for one evening is one wording too many —
+the same argument that keeps the sleep generator from proposing both a wind-down
+and a named alternative on the same night.
+
+---
+
+## D-052 — Every lifecycle button is always drawn
+
+**Phase:** 3 · **Status:** Active
+
+The action row renders all five actions and disables the ones the state machine
+does not allow, rather than rendering only the allowed ones.
+
+**Why:** DEF-0018. Removing a button re-flows the row: tapping **Start it** slid
+**Done** into the space under a finger that had not lifted, so the second half
+of a fast double tap recorded "I have done this". It is a legal transition from
+`started`, a plausible thing to have meant, and indistinguishable downstream
+from the truth — which is what makes it worse than a crash.
+
+**Why the latch is not enough on its own:** the synchronous ref in `NowScreen`
+swallows a second tap on the same button before React re-renders. It does
+nothing about a second tap on a _different_ button, because that is not a
+duplicate — it is a different event, and the guards that make duplicates
+harmless have no opinion about it.

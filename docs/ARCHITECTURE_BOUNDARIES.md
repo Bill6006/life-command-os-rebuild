@@ -36,8 +36,9 @@ and the migration runner._
 ## `src/intelligence/` — the one brain
 
 Context assembly, direction, candidate generation, constraints, evaluation,
-arbitration, explanation, the decision trace and the adaptive guide. Fact
-resolution lives one layer down, in `src/memory/` (D-011).
+arbitration, explanation, the decision trace, the adaptive guide, and — from
+Phase 3 — the recommendation lifecycle, outcome windows and outcome learning.
+Fact resolution lives one layer down, in `src/memory/` (D-011).
 
 Pure and clock-free, like the layers below it: the moment is an argument, so
 time travel reaches the engine rather than stopping at the screen that offers
@@ -47,17 +48,30 @@ it. The same guards that hold `domain/` and `memory/` to no wall clock, no
 There is exactly one arbitration path (section 17.2), and it is structural
 rather than promised. `arbitrate.ts` is the only place a move is chosen, and
 `tests/unit/architecture-guards.test.ts` fails the build if anything under
-`src/features/` imports the generator, the filter, the evaluator, the arbiter or
-the advisor. A surface can ask the engine; it cannot do the deciding.
+`src/features/` imports the generator, the filter, the evaluator, the arbiter,
+the advisor or the learner. A surface can ask the engine; it cannot do the
+deciding.
 
-Two further boundaries hold inside the folder:
+**The line inside the folder is between deciding and recording.** Phase 3 opened
+three modules to surfaces — `lifecycle`, `outcomes` and `corrections` — because
+none of them chooses anything. They turn a tap into canonical records and work
+out when a result is due, which is the surface's own job: a button has to be
+able to write down what the owner did. `learning` stays closed even though it
+also chooses nothing, because it is part of how a move is ranked, and a surface
+reading it directly could put a number on screen that the arbitration never saw.
+
+Three further boundaries hold inside the folder:
 
 - the evaluator and the arbiter know no life area by name (D-030) — they judge
   what a move demands, costs and pays back, and the domain flows through as
   data;
-- the engine may name its own routines and never the owner's life (D-021).
+- the engine may name its own routines and never the owner's life (D-021);
+- declines, inabilities and outcomes reach three different learned quantities
+  and cannot reach each other's (D-045). Section 20's first two rules are held
+  by the code paths not meeting rather than by anyone remembering them.
 
-_Created in Phase 2._
+_Created in Phase 2. Phase 3 added `lifecycle.ts`, `outcomes.ts`,
+`learning.ts` and `corrections.ts`._
 
 ## `src/features/` — owner surfaces
 
@@ -89,6 +103,13 @@ correct.
 
 Shared by the QA laboratory and by `tests/synthetic/`, which is why it is not
 inside either.
+
+It imports `src/intelligence/lifecycle.ts`, and only for the shape of a written
+episode — the derived recommendation id and the decline reason the app itself
+writes. That dependency looks backwards and is deliberate: a fixture the engine
+learns from must be one the running app could actually have produced, and
+duplicating the id rule here is precisely the failure section 60 warns about.
+Nothing in this folder asks the engine anything.
 
 Everything here is invented. Real owner data never enters this repository
 (section 39).
