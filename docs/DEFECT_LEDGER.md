@@ -39,6 +39,59 @@ None.
 
 ## Fixed
 
+### DEF-0021 — the app asked for a verdict when it could have asked for the fact
+
+- Status: Fixed
+- Severity: Major — the exact complaint that started the derived-evidence work,
+  surviving inside the repair for it
+- Found in: Phase 4 / `ecb18eb`
+- Found by: **a browser test written to demonstrate the fix, which could not be
+  made to pass.** The assertion was that the guide asks how much sleep he got;
+  what the app actually put on screen was an outcome card asking him to grade
+  the early night.
+- Class: **two questions about one fact, where the worse one wins because it is
+  drawn first.** Now shows a due result above the guide, deliberately — a result
+  expires and answering it improves the next decision (Phase 3). So on the
+  morning after an early night the outcome card takes the slot, and the guide's
+  question about last night's sleep is never asked. The derived matcher, which
+  exists precisely to turn that reading into the outcome, then has no reading to
+  read.
+- Reproduction: load "Three broken nights, and a deadline", tap **Done**, travel
+  forward one day. The card read _"How much did skipping subnetting do for your
+  rest?"_ — a verdict, on a morning when the app could simply have asked how
+  long he slept.
+- Root cause: the derivation was built to avoid asking twice and nothing was
+  built to make the better question happen. Section 8's preference order was
+  implemented for the case where the reading arrives on its own and not for the
+  case where the app has to go and get it.
+- Fix, in two halves that read the same function. `readingAwaitedBy` in
+  `outcomes.ts` says whether a due effect could be settled by a reading the
+  guide is entitled to ask for; the outcome card holds its own question back
+  while that is true, and the guide asks for the reading. One card swapped for a
+  better one, so the number of things asked does not move — which is the only
+  shape section 12 leaves room for (D-069).
+- Regression: `tests/synthetic/guide-resume.test.ts` — "never puts a guide
+  question and an outcome question about the same fact on screen together",
+  "never asks for a reading a result is waiting on more than once", "keeps the
+  awaited reading under the day's floor like everything else", and
+  `tests/browser/now.spec.ts` — "does not ask what an early night did once it
+  knows how the night went". All four were proved to fail with the hold-back
+  removed.
+- Siblings: swept the other two-aspect moves. `reset-space`, `reach-out` and
+  `start-conversation` all produce a result and something else, and none of
+  their aspects is a reading the guide collects — nothing in the question
+  catalogue measures whether a kitchen is clear. The class is narrow and is
+  asserted where it is real: the pairing comes from `MoveProfile.measures`
+  matching a concept the guide can ask about, so a future move that measures
+  energy would be covered by the same code.
+- Consequence, and it is the better behaviour: the fallback matters as much as
+  the swap. A reading recorded _outside_ the window leaves the concept known, so
+  the guide will not ask for it — and holding the effect question back on top of
+  that would mean no reading, no question, and a window closing with nothing
+  collected. The hold-back is conditional on the better question actually being
+  asked, and that condition has its own regression.
+- Fixed in: the fifth Phase 4 checkpoint
+
 ### DEF-0020 — a question its own answers could not answer
 
 - Status: Fixed

@@ -271,10 +271,13 @@ export function nextGuideStep(
    */
   const waiting = awaitedReadings(view, { now: moment.now, zone: moment.zone })
   for (const concept of waiting) {
+    // `awaitedReadings` has already established that this is worth asking —
+    // the check lives there because `outcomes.ts` has to make the identical
+    // judgement to decide whether to hold its own question back, and two
+    // copies of one rule is how the two ends of a swap stop agreeing.
     const entry = view.facts.get(concept)
-    if (entry === undefined || !entry.worthAsking) continue
     const spec = questionFor(concept)
-    if (spec === undefined) continue
+    if (entry === undefined || spec === undefined) continue
     return {
       kind: 'question',
       question: {

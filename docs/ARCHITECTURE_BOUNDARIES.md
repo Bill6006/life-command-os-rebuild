@@ -60,6 +60,19 @@ able to write down what the owner did. `learning` stays closed even though it
 also chooses nothing, because it is part of how a move is ranked, and a surface
 reading it directly could put a number on screen that the arbitration never saw.
 
+Phase 4 added two on the same side of that line. `derived` turns history the app
+already holds into outcome records; `growth` turns the owner's answer to a
+suggestion into one. Note which half of `growth` a surface actually touches —
+the suggestion arrives on the `Decision`, through the engine like everything
+else, and what Now imports is the function that writes the answer down.
+
+`coverage` is deliberately **not** open, and it is the more interesting case
+because a surface genuinely needs it: the Life overview is a report on it. It is
+reached through `situation`, which every surface already has, so the status Life
+shows is the object the decision on Now was made from rather than a second
+computation over the same history. Two of those would eventually disagree, and
+the owner would have no way to tell which screen was lying.
+
 Three further boundaries hold inside the folder:
 
 - the evaluator and the arbiter know no life area by name (D-030) — they judge
@@ -70,8 +83,9 @@ Three further boundaries hold inside the folder:
   and cannot reach each other's (D-045). Section 20's first two rules are held
   by the code paths not meeting rather than by anyone remembering them.
 
-_Created in Phase 2. Phase 3 added `lifecycle.ts`, `outcomes.ts`,
-`learning.ts` and `corrections.ts`._
+_Created in Phase 2. Phase 3 added `lifecycle.ts`, `outcomes.ts`, `learning.ts`
+and `corrections.ts`. Phase 4 added `coverage.ts`, `derived.ts` and
+`growth.ts`._
 
 ## `src/features/` — owner surfaces
 

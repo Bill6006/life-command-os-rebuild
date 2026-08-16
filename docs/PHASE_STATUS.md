@@ -4,6 +4,310 @@ Report format: canonical plan section 58.
 
 ---
 
+# Phase 4 — Coverage Engine + adaptive guides
+
+**Status: YELLOW — everything automatable passes; the owner's phone test is the
+remaining gate item.**
+
+Section 49's goal is one sentence: make the system trustworthy without manual
+tab maintenance. The failure it exists to prevent is section 63's, and section
+63 states it as a rule rather than a feature — a domain may be quiet, stable or
+low priority, and must not silently remain based on months-old assumptions while
+the interface implies the app is current.
+
+Two things had to become true. The app has to **notice**, which meant building
+the coverage engine and making the `stale-evidence` trigger reachable after two
+phases of being written down as barely reachable. And it has to notice **without
+turning the guide into a questionnaire**, which is the risk the brief names
+directly: DEF-0008 is the worked example, and section 47 fails a phase outright
+on "too many questions".
+
+The number of questions the guide asks did not go up. On the library it is still
+at most two on any history, and on the evening built around a seven-week silence
+it is zero.
+
+## Build identity
+
+|                      |                                                             |
+| -------------------- | ----------------------------------------------------------- |
+| Checkpoint SHA       | current `main` HEAD                                         |
+| Deployed Preview SHA | identical to `main` HEAD                                    |
+| Do they match?       | Yes, by construction — D-004, and asserted live in CI       |
+| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Live proof           | `preview/build-info.json`                                   |
+
+## Verification
+
+| Gate                                      | Result                                         |
+| ----------------------------------------- | ---------------------------------------------- |
+| Privacy scan                              | Clean                                          |
+| Format (Prettier)                         | Pass                                           |
+| Lint (ESLint)                             | Pass, 0 warnings                               |
+| Typecheck (strict TS)                     | Pass, 0 errors                                 |
+| Unit / contract / synthetic / adversarial | 554 passed / 554 (in plain Node, no DOM)       |
+| Browser tests (Playwright)                | 171 passed / 171 — 57 tests × 360, 430, 1280px |
+| Production build                          | Pass                                           |
+| `npm run verify` from a clean checkout    | Pass                                           |
+| Deployed SHA matches checkpoint           | Asserted live in CI                            |
+
+### Where the 554 sit
+
+Phase 3 ended at 448. The 106 new ones are the coverage engine, the two golden
+scenarios, and the owner's four conditions on inferred evidence.
+
+| Suite                                                            | Tests |
+| ---------------------------------------------------------------- | ----: |
+| `synthetic/outcome-learning` — section 20, rule by rule          |    44 |
+| `synthetic/inferred-evidence` — the four owner conditions        |    41 |
+| `synthetic/adaptive-guide` — one question at a time              |    36 |
+| `unit/intelligence-kernel` — readers, direction, moves, order    |    30 |
+| `synthetic/g007-coverage-freshness` — a quiet domain, noticed    |    27 |
+| `synthetic/lifecycle` — episodes, double taps, outcome windows   |    26 |
+| `synthetic/g003-growth-evidence` — three occasions, not one      |    23 |
+| `unit/time` — instants, civil dates, weeks, DST, day blocks      |    20 |
+| `synthetic/no-hidden-genericity` — sections 61 and 64            |    19 |
+| `unit/registries` — ids, domains, concepts, privacy              |    19 |
+| `unit/architecture-guards` — the boundaries and the copy sweep   |    18 |
+| `unit/knowledge` — the four states, freshness, asking            |    18 |
+| `synthetic/model-guardrails` — section 18's fence                |    17 |
+| `synthetic/outcome-questions` — DEF-0020, every verb × aspect    |    17 |
+| `synthetic/g008` — a non-career weekly direction                 |    15 |
+| `unit/store` — append semantics, supersession                    |    14 |
+| `synthetic/guide-resume` — interruption, and asking nothing      |    13 |
+| `synthetic/g005` — sleep beats ambition, both ways               |    12 |
+| `synthetic/g009` — unknown is unknown                            |    12 |
+| `contract/projections` — rebuildability, migrations              |    11 |
+| `unit/buildInfo`                                                 |    11 |
+| `unit/routing`                                                   |    11 |
+| `synthetic/g004` — a social opportunity                          |    10 |
+| `synthetic/recovery-has-somewhere-to-go` — DEF-0016 and DEF-0017 |    10 |
+| `unit/recommendation` — rendering and refusal                    |    10 |
+| `adversarial/malformed-history`                                  |     9 |
+| `synthetic/g011` — timezone and week boundary                    |     9 |
+| `contract/round-trip` — 20 record kinds, lossless                |     8 |
+| `synthetic/g001` — no orphan pronoun                             |     8 |
+| `synthetic/g014` — no action is a real answer                    |     8 |
+| `synthetic/intelligence-tournament` — section 18's choice        |     8 |
+| `adversarial/malformed-records`                                  |     7 |
+| `synthetic/g002` — durable family context                        |     7 |
+| `contract/legacy-quarantine` — preserved and inert               |     6 |
+
+## Gate checklist (section 49, and the phase brief)
+
+| Requirement                                                              | Status                                                                         |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| G-003 passes as an automated synthetic scenario                          | Pass — 23 tests, including one and two occasions producing nothing             |
+| G-007 passes as an automated synthetic scenario                          | Pass — 27 tests, including the whole library swept for hidden staleness        |
+| The eight existing golden scenarios still pass, unchanged                | Pass — G-001, G-002, G-004, G-005, G-008, G-009, G-011, G-014, files untouched |
+| The owner can ignore Life for a realistic period without a silent freeze | Pass — the same history read at 14, 30, 60 and 90 days                         |
+| Stale important areas eventually surface naturally                       | Pass — as a candidate, as the alternative, and as the limiter line             |
+| No fixed "ask every domain" questionnaire                                | Pass — asserted structurally and behaviourally                                 |
+| The guide can still ask nothing                                          | Pass — on two scenarios, one of them the quiet-domain one                      |
+| Reliability is read per concept rather than per source                   | Pass — two concepts, the same two sources, opposite winners                    |
+| Inferred evidence cannot be read as explicit                             | Pass — `inferred` at a reliability of one                                      |
+| The completion gate holds — inference never opens a loop                 | Pass — started, shown, declined and unable-now all produce nothing             |
+| The outcome architecture stays source-agnostic                           | Pass — a history whose only evidence is derived still learns                   |
+| Learning traces expose evidence provenance                               | Pass — per reference, and summarised on the QA screen                          |
+| G-005, G-008 and G-014 re-checked after the new limiter                  | Pass — and G-008 caught the first version of it                                |
+| D-048's rule holds for the new dimension work                            | Pass — the coverage limiter scores zero at the same weight as no limiter       |
+| CI green                                                                 | Pass                                                                           |
+| `npm run verify` from a clean checkout                                   | Pass                                                                           |
+| Preview deploys automatically, SHA matches                               | Pass                                                                           |
+| **The owner tests it on a phone and accepts it**                         | **Outstanding — this is the phase**                                            |
+
+## What changed
+
+### `src/intelligence/coverage.ts` — noticing
+
+Per domain and per sub-area: the last meaningful evidence, how it was known, how
+far past its own mark it is, whether the current beliefs are still supported,
+and which of section 8's five routes would bring it back.
+
+Three things it adds over per-concept freshness, which is the question the brief
+asks directly. **How far past**, derived from the concept's own horizon rather
+than a number in the file — twenty-one days for home friction, ninety for a cash
+buffer. **The area rather than the reading**, because clearing the kitchen is
+evidence about the house and no concept records it. And **whether anything is
+being done about it**, which is the difference between a signal and a chore.
+
+Two rules keep it honest. It never contradicts the fact layer: a concept that
+resolves to a usable value is covered whatever the age of the record behind it.
+And importance is read off the owner's own commitments rather than a ranking
+written here — an area he has never mentioned reads "nothing here yet" and is
+left alone.
+
+### `src/intelligence/derived.ts` — the morning reading
+
+The clearest case section 8 defers to this phase. The morning after an early
+night, the sleep reading the guide already collects _is_ the answer to "how much
+did that do for your sleep?", so it becomes the outcome instead of being asked
+for a second time.
+
+The owner set four conditions before any of it shipped and each has a
+regression that was proved to fail when the rule was removed. It closes a loop
+and never opens one. It never reads as something he said. It is worth what a
+derived reading of _sleep hours_ is worth, which is 0.8 against his own 1.0 —
+the reading is excellent and the attribution is the assumption. And it writes
+the ordinary outcome record, so learning reads it through the path that never
+asks where a record came from.
+
+It also may never conclude harm. Four hours after a wind-down is a short night,
+not evidence that winding down backfired.
+
+### `src/domain/concepts.ts` — D-059 in code
+
+`reliability` sits beside `freshness` and answers the same shape of question
+about a different property. A watch outranks the owner on hours slept and is
+outranked by him on how the night felt — same device, same domain. A financial
+record outranks his estimate of a balance. A model's guess at how he feels sits
+below him saying so, everywhere.
+
+`standing` sits beside them and says whether a gap in this concept is a gap in
+understanding. Eight concepts set it; "how much time have you got tonight" does
+not, and that is what stops every domain reading permanently red.
+
+### `src/intelligence/growth.ts` — section 9's last step
+
+Three completed occasions at one skill, each answered "all the way", produce a
+question beside the decision rather than a change to the model. Both answers are
+records and both are read: agreeing writes what changed, "not yet" writes that
+the person who would know has looked.
+
+### The guide
+
+Coverage reaches question selection as a tiebreak below the two measurements
+that already decide whether to ask, and above catalogue order, which carried no
+information at all. It can never make a question askable.
+
+And DEF-0021's repair: when a due result could be settled by a reading the guide
+is entitled to ask for, the effect question is held back and the guide asks for
+the reading. One card swapped for a better one.
+
+### Life
+
+Eleven areas, one ordinary word each, one line of plain English. No record
+counts, no confidence, no "stale", no phase — swept for by a browser test. The
+private area reports how it stands and never what it is about. Most of it should
+read dull.
+
+**Product behaviour changed:** yes — the app notices a quiet area, says so, and
+writes down a result the owner never typed.
+**Semantic behaviour changed:** yes — a fourth limiter, a third term in the
+learning weight, and evidence that knows where it came from.
+
+## What the sweeps changed
+
+Three separate reintroduction passes, twenty-one defects reintroduced one at a
+time. **The first pass of each caught most and missed the ones that mattered.**
+
+| Sweep               | First pass | After  |
+| ------------------- | ---------- | ------ |
+| Inferred evidence   | 8 of 8     | 8 of 8 |
+| Coverage and growth | 6 of 9     | 9 of 9 |
+| The guide           | 2 of 4     | 4 of 4 |
+
+The five escapes were all the same shape, and it is DEF-0020's shape: a claim
+asserted somewhere that could not reach it.
+
+- "Coverage never contradicts the fact layer" was proved on `durable-custody`,
+  which is protected three ways over — so it proved the behaviour and not the
+  rule. It now has a history where the two can actually disagree.
+- "An area he never mentioned is left alone" was asserted against a filtered
+  list rather than against a status, so removing the guard changed nothing the
+  test looked at.
+- "A coverage move may not claim to answer what is in the way" was riding on the
+  tournament, which stopped catching it once the coverage engine changed which
+  area was quiet.
+- Two guide rules — the daily floor and the fallback when the better question
+  will not be asked — had no history that reached them at all.
+
+## Phone check (what to look at)
+
+Open Preview. Header → **More** → **Open the QA laboratory**, load a scenario,
+then tap **Now** or **Life**.
+
+1. **Everything current except the studying.** Now should pick the walk and,
+   above it, say _"Nothing has come in about career & learning for 7 weeks."_ —
+   with _Chosen over_ naming the subnetting recall and _Why this one_ reading
+   "Better supported by what is known." Judge whether that reads as the app
+   being honest about a blind spot or as it nagging.
+2. **The same scenario, on Life.** Eleven areas, one word each. Career should
+   read _Going quiet_; sleep and health _Fresh_; most of the rest _Nothing here
+   yet_. The question is whether this is a report you would glance at or a list
+   of chores.
+3. **Three times running, and the app noticed.** Under the move: _"Adaya has
+   managed ordering her own food on her own 3 times running. Worth calling that
+   settled?"_ Answer either way and it goes. Judge the sentence — this is the
+   app making a claim about your daughter.
+4. **Three broken nights, and a deadline.** Tap **Done**, then in QA press
+   **+1 day** and come back. It should ask _"How much sleep did you actually
+   get?"_ and, once answered, ask nothing else — no second card asking what the
+   early night was worth. That is the whole of the inferred-evidence work.
+5. **The same, in QA afterwards.** Open **Episodes**: the recovery episode
+   should read _1 answer(s) given_ against a question you were never asked.
+6. **A month of what actually worked**, in QA → **What it has learned**. A row
+   reading _Who said so_ should separate what you answered from what was worked
+   out.
+7. **A Thursday with nothing needing doing**, and **A settled arrangement, and
+   one week away.** Both should be exactly as they were — no new lines, no new
+   questions. This phase is judged as much on what it left alone.
+
+What to judge is section 47's list applied to coverage: is the quiet-area signal
+useful or is it nagging, does Life read as a report or as homework, and does the
+app ask you less than it did.
+
+## Deliberately not built
+
+- **Domain pages.** Phase 5. The Life overview is the coverage status section 49
+  asks for; the pages behind it are section 50's.
+- **Correcting a coverage interpretation or a domain status.** Section 62 lists
+  both, and both belong on a domain page that does not exist yet. What is
+  correctable now is a learned belief (Phase 3) and a growth suggestion.
+- **Inferring anything but a sleep effect.** The machinery is per-concept and
+  the profile table drives it, so a second matcher is a table entry and a number
+  somebody has to defend. Nothing else has a reading the app already collects.
+- **A model-assisted coverage read.** D-025 unchanged; still an owner decision.
+- **Comfort is still recorded and not yet read for patterns.** Unchanged from
+  Phase 3 — an Insights question.
+- Timeline and Insights content (Phase 6), exports and backup (Phase 7), the
+  legacy importer (Phase 8), the service worker (Phase 10).
+
+## Open defects
+
+None. One was found and closed during the phase.
+
+- **DEF-0021** — the app asking for a verdict when it could ask for the fact.
+  Found by a browser test written to demonstrate the derived-evidence fix, which
+  could not be made to pass: the outcome card takes the slot above the guide, so
+  the question that would have produced the reading was never asked, and the
+  matcher had nothing to read. The complaint that started the whole line of work
+  had survived inside the repair for it.
+
+## Deferred, with reasons
+
+- **The older dimensions still cost weight when they know nothing.** Unchanged
+  from Phase 3. D-048 applies to `follow-through`, `direct-result` and now the
+  coverage branch of `bottleneck-fit`; the rest still score zero at full weight.
+  Re-cutting them means re-running section 18's tournament.
+- **`hold` is still never generated.** Unchanged from Phase 2.
+- **Free-text constraints are still shown, not enforced.** Unchanged.
+- **Emotional Health has no standing concept**, so it can only go stale through
+  the domain-level backstop. Nothing in the registry yet tracks a standing
+  understanding of it, and inventing one to fill the gap would be collecting
+  data because a field exists.
+- **A started move that is never settled.** Unchanged from Phase 3.
+
+## Decisions made
+
+D-060 … D-071 in [`DECISION_LOG.md`](DECISION_LOG.md).
+
+## Next
+
+Phase 5 — the Life domain experience.
+See [`NEXT_PROMPT.md`](NEXT_PROMPT.md).
+
+---
+
 # Phase 3 — Recommendation lifecycle + outcome learning
 
 **Status: GREEN — owner-approved on the phone.**

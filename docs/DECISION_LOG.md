@@ -1234,3 +1234,292 @@ that a concept may override where there is a reason to.
 **Consequence for Phase 4:** the sleep-outcome matcher cannot be written against
 "derived is worth less". It has to say what a watch or a morning self-report is
 worth _for sleep hours_, and defend that number.
+
+---
+
+## D-060 — Reliability is a table read in two places, and it never decides the state
+
+**Phase:** 4 · **Status:** Active
+
+`ConceptDefinition.reliability` is a partial map from `ProvenanceSource` to a
+number in 0–1, with `DEFAULT_SOURCE_RELIABILITY` behind it. Two consumers spend
+it: `knowledgeFromRecord` as the confidence of an inference, and `learning.ts`
+as a third term in the weight beside similarity and recency.
+
+**Why one table for both:** they are the same question — how far should a
+reading from here move what we believe about this — and two tables would drift.
+
+**What it never touches.** Which of the four knowledge states a record resolves
+to depends only on whether a person observed the thing or something concluded
+it. A derived, model or legacy-import reading is `inferred` at any reliability,
+including one. That is D-014 held against the pressure D-059 creates: a
+high-reliability inference is still an inference.
+
+**Where it earns its keep at the fact layer:** two readings of the same concept
+at the same instant with different values used to resolve to `contradicted` for
+every pair. Now the more reliable source for that concept wins, and only a
+genuine draw goes unresolved. The rule is deliberately narrow — it settles a
+draw and nothing else. Two records at _different_ moments are still ordered by
+D-012, because a later statement about the same night is a correction rather
+than a rival.
+
+**`MoveProfile.measures`** supplies the second half of the pair in learning: an
+outcome about `protect-sleep` is a reading about sleep, so a derived answer to
+it is worth what a derived reading of sleep is worth. Undefined where no
+registry concept honestly fits, which falls back to the defaults.
+
+---
+
+## D-061 — A concept is standing or momentary, and only standing ones are coverage
+
+**Phase:** 4 · **Status:** Active
+
+`ConceptDefinition.standing` defaults to false. Eight concepts set it: hours
+slept, the custody arrangement, the learning topic, the cash buffer, home
+friction, the private pattern, the weekly direction and recent faith practice.
+
+**Why:** section 8 asks coverage to track "meaningful sub-areas", and most of
+what the guide asks about is not one. "How much time have you got tonight?" goes
+stale every four hours by design and says nothing whatever about the owner's
+career; counting it would put every domain permanently in the red and teach him
+to ignore the one signal section 63 exists to give him.
+
+**What coverage adds over per-concept freshness**, which is the question the
+phase brief asks directly: freshness answers yes/no about one reading. Coverage
+adds _how far past_ — three of the concept's own windows, floored at a week, so
+the threshold stays concept-specific for the same reason freshness is — the
+_area_ rather than the reading, since acting in a domain is evidence about it
+and no concept records that, and _whether anything is being done about it_.
+
+**And it never contradicts the fact layer.** A concept that resolves to a usable
+value is covered whatever the age of the record behind it. Without that rule a
+learning topic stated as standing context reads as neglect four months later,
+which is DEF-0015's failure arriving from a new direction.
+
+---
+
+## D-062 — Which areas matter is read off the owner's history, never ranked here
+
+**Phase:** 4 · **Status:** Active
+
+A domain matters if the owner has named an entity in it, set a goal or
+commitment there, stated a preference, or acted in it. Coverage reports on every
+domain; only one that matters can become neglected or reach the limiter.
+
+**Why:** section 8 says "every important domain", and the tempting
+implementation is a ranking of the eleven written by the developer — this file
+deciding that faith matters less than career in somebody else's life. Reading it
+off his own commitments makes the answer his.
+
+**Consequence, and it is section 4.4:** an area he has never mentioned reads
+"nothing here yet" and is left alone. Missing data is not failure, and an app
+that asked about faith on the strength of a registry entry would be collecting
+data because a field exists.
+
+**Read from `view.entities`, not the decision entities.** The engine's own four
+routines carry life domains (D-021), so reading importance off the folded list
+would make sleep and health matter in every history ever loaded, including an
+empty one.
+
+---
+
+## D-063 — Stale coverage is the fourth limiter and scores nothing
+
+**Phase:** 4 · **Status:** Active
+
+`LimiterKind` gains `coverage`, ordered last: recovery, then capacity, then
+time, then coverage. `bottleneckFit` returns zero for every candidate under it,
+which is identical to an evening with no limiter at all.
+
+**Why it is a limiter:** section 63 requires the owner to be told, and the
+limiter line is where Now says what is in the way. It also makes the
+`stale-evidence` trigger reachable, which Phase 2 and Phase 3 both recorded as
+existing and barely reachable.
+
+**Why it scores nothing.** The first version gave a move in the quiet area +0.6
+on `bottleneck-fit`, and on the scenario built to demonstrate exactly this it
+produced "spend 15 minutes clearing the kitchen" on a Saturday evening with the
+owner's daughter in the house — beating time with her, on the strength of the
+app not knowing what the kitchen looked like, with an explanation that would
+have read "answers what is actually in the way". A quiet area is the app's own
+blind spot. It is not in the way of anything.
+
+**How a stale area surfaces instead:** it earns a candidate that would not
+otherwise exist, carrying `stale-evidence`'s low urgency. So it wins on an
+evening with nothing better and loses to anything real, and the owner is told
+either way — the limiter line names it whenever the chosen move is not about it.
+
+---
+
+## D-064 — The morning reading is the outcome, under four conditions
+
+**Phase:** 4 · **Status:** Active — **owner conditions, do not relax**
+
+`derived.ts` writes an `outcome` record with `aspect: 'effect'` for a completed
+`protect-sleep`, `wind-down` or `recover` episode, read off the `sleepHours`
+observation belonging to the morning that judges it.
+
+**Why:** section 8 puts evidence normal life already produces first and asking
+fourth. The morning after an early night the guide collects hours slept and a
+separate card asks how much the early night did for his sleep — the same
+question twice, and the second time worse.
+
+The four conditions, each with a regression proved to fail when removed:
+
+1. **It closes a loop and never opens one.** `outcomeWindowFor` is read rather
+   than reimplemented, so nothing is derived unless the owner said he did it. A
+   wind-down started and never finished, followed by eight hours of sleep,
+   produces nothing at all.
+2. **It never reads as something he said.** Provenance is `derived`, and
+   `evidenceSourceOf` reports it as such wherever it surfaces.
+3. **It is worth what a derived reading of sleep hours is worth** — 0.8 against
+   his own 1.0. The reading is excellent; the _attribution_ is the assumption,
+   and the discount is for that. The number is about sleep hours: the same
+   machinery pointed at how he feels would be worth 0.4.
+4. **It writes the ordinary outcome record.** No second outcome path and no
+   second learner.
+
+**Which verbs are eligible is read off the profile** — `measures`,
+`outcome.when` and `aspects` — rather than from a list in the matcher, so a
+sixteenth restorative verb is covered by writing one.
+
+---
+
+## D-065 — A derived record is stamped with the morning it is about
+
+**Phase:** 4 · **Status:** Active
+
+`occurredAt` is the reading's instant, and `recordedAt` defaults to it.
+
+**Why:** it is the honest reading of `occurredAt` — the effect happened
+overnight — and it is what makes the record a pure function of the history.
+Stamping the moment of derivation would produce a _different_ record wearing the
+same derived id an hour later, and the store would rightly refuse it (D-015). As
+it stands, deriving twice produces the identical row and the second append is a
+no-op, on whichever day it happens.
+
+**Consequence:** section 14's "derived state must be rebuildable" holds for this
+too. Rebuild from the same records and get the same derived record.
+
+---
+
+## D-066 — Inference may never conclude harm
+
+**Phase:** 4 · **Status:** Active
+
+The effect scale has four levels and the sleep matcher can produce three. Four
+hours after a wind-down reads as "not much", never as "backfired", at any number
+of hours.
+
+**Why:** harm is a claim about causation. A short night after a wind-down is a
+short night; concluding that the wind-down made it worse is an assertion from
+what the app can see alone, which is D-038's rule. Only the owner can say a move
+backfired, and leaving that to him is what keeps `sentiment: 'worse'` meaning
+something when it does appear.
+
+---
+
+## D-067 — Evidence carries its provenance into the trace
+
+**Phase:** 4 · **Status:** Active
+
+`LearningTrace.evidence` and every learned quantity carry `EvidenceRef` —
+record, source, whether the owner said it, and the reliability applied — rather
+than a bare `RecordId[]`. The QA inspector shows the mix in a line.
+
+**Why:** "3 comparable results" could be three things he said, three things the
+app worked out, or a mix, and he cannot judge whether to correct a belief
+without knowing which. That gap was tolerable while every outcome was a tap. It
+stops being tolerable the moment the app can write one he never typed, so it was
+closed **before** the first derived outcome rather than after.
+
+**`fromOwner` is a separate field from `reliability` on purpose.** How far a
+reading moved a belief and whether a person said it are different questions, and
+D-059 turns on not letting the first answer the second.
+
+---
+
+## D-068 — Coverage orders questions and never authorises one
+
+**Phase:** 4 · **Status:** Active
+
+In `mostValuable`, staleness sits below the two measurements that decide whether
+a question is worth a tap and above the catalogue's order, which it replaces.
+
+**Why:** section 12 requires the guide to be able to ask nothing, DEF-0008 is the
+worked example of a run of justified questions becoming too many, and section 47
+fails a phase outright on the owner's verdict of it. A coverage engine that can
+create questions is the most likely thing yet built to break that. Catalogue
+order was a reasonable last resort carrying no information at all; between two
+questions already judged equally worth asking, the one about the thing nobody
+has mentioned for longest is the better use of the tap.
+
+---
+
+## D-069 — Ask for the reading, not for the verdict
+
+**Phase:** 4 · **Status:** Active
+
+When a due result could be settled by a reading the guide is entitled to ask
+for, the effect question is held back and the guide asks for the reading
+instead. `readingAwaitedBy` decides, and both ends read the same function.
+
+**Why:** DEF-0021. On the morning after an early night the app was putting "how
+much did skipping subnetting do for your rest?" on screen — asking him to grade
+something when it could ask how long he slept and work the grade out. The second
+question is concrete, is the one he expects, feeds the recovery model, and makes
+the first unnecessary.
+
+**Why this does not break section 12:** it is a swap. One card is replaced by a
+better one and the count of things asked does not move. The daily floor still
+applies above it, and if he answers nothing the window closes with the result
+unknown — which section 20 lists as a real and acceptable state.
+
+**Why the swap is conditional on the question actually being asked:** a reading
+from outside the window can leave the concept currently known, in which case the
+guide will not ask for it, and holding the effect question back on top of that
+would mean no reading, no question, and nothing collected.
+
+---
+
+## D-070 — A growth-stage change is proposed after three occasions, and never applied
+
+**Phase:** 4 · **Status:** Active
+
+Three completed `growth-opportunity` episodes about one skill, each answered
+"all the way", produce a suggestion beside the decision. The owner agrees or
+says not yet. Nothing is written until he answers.
+
+**Why three:** section 9's own rule — "meaningful growth-stage changes should not
+be silently invented from one event" — and `PATIENCE` is 3 in `learning.ts` for
+the same reason. A child who orders her own food once has had a good day.
+
+**Why both answers are records.** Agreeing writes a `domain-update` saying what
+changed; "not yet" writes a `coverage-update` saying the area was reviewed by
+the person who would know. Both are read by the coverage engine as evidence
+about that area, and both stop the suggestion returning on the same three
+occasions. A button that records something nothing reads is D-029's mistake.
+
+**Why it is a watershed and not a mute button** (D-047's shape): what suppresses
+it is an answer given _after_ the evidence that raised it, so a fourth good
+occasion is genuinely new.
+
+---
+
+## D-071 — Coverage is reached through the situation; `derived` and `growth` are open
+
+**Phase:** 4 · **Status:** Active
+
+`derived` and `growth` join the modules a surface may import. `coverage` does
+not — surfaces reach it through `situation`, which they already have.
+
+**Why the first two are open:** neither chooses anything. They turn history into
+canonical records, which is the surface's own job, and it is the same line
+Phase 3 drew for `lifecycle`, `outcomes` and `corrections`. Note which half of
+`growth` a surface touches: the suggestion arrives on the `Decision`, and what
+Now imports is the function that writes down the answer.
+
+**Why coverage is not:** the Life overview must show the coverage the decision
+was made from, not a second computation over the same history. Two of those
+would eventually disagree and the owner would have no way to tell which screen
+was lying.

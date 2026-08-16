@@ -555,7 +555,21 @@ export function readingAwaitedBy(
     // The reading is in, so nothing is being waited for.
     return undefined
   }
-  return measures
+
+  /*
+   * And nothing is waited for that will not be asked.
+   *
+   * A reading from *outside* the window can still leave the concept currently
+   * known — an answer given at half past four is about the night before last,
+   * and is fresh until tomorrow. In that case the guide will not ask (it does
+   * not ask for what it already has, which is DEF-0005), so holding this
+   * question back would hold it back forever: no reading, no question, and a
+   * window that closes with nothing collected.
+   *
+   * The rule this file is enforcing is a swap, not a suppression. If the better
+   * question is not going to be asked, the ordinary one stands.
+   */
+  return view.facts.get(measures)?.worthAsking === true ? measures : undefined
 }
 
 function unansweredQuestions(
