@@ -6,21 +6,37 @@ Report format: canonical plan section 58.
 
 # Phase 3 — Recommendation lifecycle + outcome learning
 
-**Status: YELLOW — everything that can be checked passes. The owner has not
-tested the loop on a phone yet, and that is the gate.**
+**Status: GREEN — owner-approved on the phone.**
 
 Section 48's goal is one sentence: complete the loop. A recommendation the owner
 acts on, an outcome that gets observed, and learning that changes what happens
 next. All three exist and are wired to each other through canonical records —
 there is no side channel anywhere in it.
 
-Six of the gate's items are automated and pass. Three are judgements a suite
-cannot make: whether the phone flow feels fast, whether the buttons are the
-right buttons, and whether the app saying "clearing the kitchen has worked a few
-times in situations like tonight" reads as intelligence or as a machine
-flattering itself. Phase 2's gate was failed four times by the owner on a phone
-and eleven of that phase's fifteen fixed defects came out of those passes. There
-is no reason to expect fewer here.
+**The owner approved it on `0e416d4`**, after one phone pass that found
+DEF-0020 and a repair that took four exchanges to get right.
+
+**That pass is the phase.** The card said "Did the kitchen get cleared?" and
+offered _Better than usual · About the same · Worse_ — a question its own
+answers could not answer. No automated check here would have caught it: every
+sweep the suite had was about pronouns, internal vocabulary and finished
+sentences, and that sentence passes all three. It took a person reading a screen.
+
+**And the first diagnosis of it was wrong.** It said the question was redundant
+because tapping Done already records that the kitchen was cleared. The owner
+said no: Done is the attempt, and fifteen minutes clearing a kitchen can be done
+in full and leave it half clear. He was right, `action-completion` had no
+definition anywhere in the codebase to settle it, and that correction is what
+turned a copy fix into the semantic repair the phase actually needed —
+completion, direct result, downstream effect and comfort separated into four
+kinds of evidence that had been sharing one answer.
+
+Two further rounds pushed back on the repair itself: whether direct result could
+be folded into follow-through without losing a distinction (it could not), and
+whether a delta-based effect scale behaved sensibly under repeated observations
+(it did not — a move that consistently does nothing would keep its prior
+forever). Both were caught by asking for the arithmetic rather than accepting
+the shape.
 
 ## Build identity
 
@@ -90,6 +106,7 @@ learns from.
 | -------------------------------------------------------- | ------------------------------------------------------------------- |
 | G-001, G-002, G-005, G-008, G-009, G-011 pass, unchanged | Pass — 63 tests, and the six files are byte-identical to `79d033b`  |
 | G-004 passes as an automated synthetic scenario          | Pass — 10 tests, including the no-quota sweep                       |
+| Outcome questions are answerable by their own answers    | Pass — 17 class-wide checks, every verb × every aspect (DEF-0020)   |
 | G-014 passes as an automated synthetic scenario          | Pass — 8 tests, including the counterexample                        |
 | A completed action demonstrably changes later reasoning  | Pass — same evening, same options, different winner                 |
 | A decline is not mislabelled ineffective                 | Pass — and structurally, not by convention (D-045)                  |
@@ -97,11 +114,11 @@ learns from.
 | One event does not become proof                          | Pass — one comparable evening moves the belief a quarter of the way |
 | The semantic subject survives through the follow-up      | Pass — the question is the renderer's own follow-up                 |
 | A double tap creates no duplicate episode                | Pass — three separate guards, each tested (D-042, D-052)            |
-| The phone flow feels fast                                | **Owner judgement — not yet made**                                  |
+| The phone flow feels fast                                | Pass — owner-approved                                               |
 | CI green                                                 | Pass                                                                |
 | `npm run verify` from a clean checkout                   | Pass                                                                |
 | Preview deploys automatically, SHA matches               | Pass — verified live against `main` HEAD                            |
-| **The owner tests the loop on a phone and accepts it**   | **Not yet — this is the gate**                                      |
+| **The owner tests the loop on a phone and accepts it**   | **Pass — approved on `0e416d4`**                                    |
 
 ## What changed
 
@@ -174,7 +191,18 @@ a result is due, and how much tonight resembles it.
 **Product behaviour changed:** yes — the app can be acted on, and it remembers.
 **Semantic behaviour changed:** yes — decisions now move on what happened.
 
-## Phone check (this is the gate)
+## What the phone test changed
+
+| The owner said                                         | What it turned out to be                                                                                                  |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| The answers do not answer the question                 | DEF-0020 — and eight of fifteen follow-ups were unanswerable, not one                                                     |
+| Done is the attempt, not the result                    | Correct. `action-completion` had no definition at all, and the first diagnosis was wrong because of it (D-053)            |
+| Do not fold direct result into follow-through          | Correct — perfect follow-through with a poor result is an ordinary evening, and folding them makes the app misdescribe it |
+| Show me the delta arithmetic before I approve it       | It fails: a move that consistently does nothing keeps its prior forever. Withdrawn (D-056)                                |
+| Comfort should matter if you are going to ask about it | Wired to learned friction (D-057)                                                                                         |
+| Harm is not the same evidence as no help               | A fourth effect level, and the record keeps them apart even though ranking floors both                                    |
+
+## Phone check (this is what was tested)
 
 Open Preview. Header → **More** → **Open the QA laboratory**, load a scenario,
 then tap **Now**.
@@ -463,7 +491,18 @@ More leaves the bottom bar (D-028). Four primary destinations, as section 5 says
 and asks a question when one would help.
 **Semantic behaviour changed:** yes — this phase is the reasoning.
 
-## Phone check (this is the gate)
+## What the phone test changed
+
+| The owner said                                         | What it turned out to be                                                                                                  |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| The answers do not answer the question                 | DEF-0020 — and eight of fifteen follow-ups were unanswerable, not one                                                     |
+| Done is the attempt, not the result                    | Correct. `action-completion` had no definition at all, and the first diagnosis was wrong because of it (D-053)            |
+| Do not fold direct result into follow-through          | Correct — perfect follow-through with a poor result is an ordinary evening, and folding them makes the app misdescribe it |
+| Show me the delta arithmetic before I approve it       | It fails: a move that consistently does nothing keeps its prior forever. Withdrawn (D-056)                                |
+| Comfort should matter if you are going to ask about it | Wired to learned friction (D-057)                                                                                         |
+| Harm is not the same evidence as no help               | A fourth effect level, and the record keeps them apart even though ranking floors both                                    |
+
+## Phone check (this is what was tested)
 
 Open Preview. Header → **More** → **Open the QA laboratory**, load a scenario,
 then tap **Now**.
