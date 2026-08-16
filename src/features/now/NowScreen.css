@@ -34,6 +34,66 @@
   text-underline-offset: 0.2em;
 }
 
+/* The lifecycle row.
+ *
+ * Directly under the decision and above everything else, because it is the one
+ * thing on this screen the owner came to do. Two weights: acting on the move,
+ * and the several ways of not acting on it — which sit together so neither is
+ * an easy accident under a thumb.
+ */
+.now-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: calc(var(--space-3) * -1);
+}
+
+.now-act {
+  /* Section 37 — a target a thumb can hit without aiming. */
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  transition:
+    transform var(--dur-fast) var(--ease),
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.now-act--go {
+  color: var(--text-primary);
+  background: var(--accent-dim);
+  border-color: var(--accent-edge);
+}
+
+.now-act:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--accent-edge);
+}
+
+.now-act:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.now-act:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.now-rests {
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
 .now-question {
   font-size: var(--text-lg);
   line-height: var(--leading-tight);
@@ -80,11 +140,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .now-option {
+  .now-option,
+  .now-act {
     transition: none;
   }
 
-  .now-option:active:not(:disabled) {
+  .now-option:active:not(:disabled),
+  .now-act:active:not(:disabled) {
     transform: none;
   }
 }

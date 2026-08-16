@@ -1,10 +1,11 @@
 import { CONCEPT } from '../domain/concepts'
 import { DOMAIN, type LifeDomainId } from '../domain/domains'
 import { entityRef, type SemanticEntity } from '../domain/entities'
+import { sequentialRecordIds } from '../domain/ids'
 import type { CanonicalRecord } from '../domain/records'
 import { timeZone } from '../domain/time'
 import type { SnapshotWire } from '../memory/snapshot'
-import { createKit, type Scenario } from './kit'
+import { createKit, pastEpisodeRecords, type Scenario } from './kit'
 
 /**
  * The starting synthetic histories (canonical plan sections 31, 32 and 67).
@@ -1076,11 +1077,438 @@ function goneQuiet(): Scenario {
   }
 }
 
+// ---------------------------------------------------------------------------
+// G-004 — a social opportunity
+// ---------------------------------------------------------------------------
+
+/**
+ * Good energy, somewhere to be, and a reason to want it.
+ *
+ * G-004 asks for a specific natural social move to be able to win — a
+ * conversation started, a genuine compliment — with no quota and no
+ * gamification, and for the outcome to record comfort as well as result.
+ *
+ * The last part is why this scenario is worth having rather than just testing:
+ * section 10 is the domain most easily got wrong. "Approach 3/3 today" is what
+ * an app produces when it counts social contact instead of understanding it,
+ * and there is nothing in the engine that counts — the move is here because a
+ * stated goal, a place the owner goes and a reading of how sociable they feel
+ * all point the same way this afternoon.
+ */
+function socialOpportunity(): Scenario {
+  const kit = createKit('GS', 'America/Denver', '2026-06-01T12:00:00Z')
+  const easier = entityRef('goal', 'talking to people I do not know')
+  const now = kit.local('2026-07-11', '15:30')
+
+  return {
+    id: 'social-opening',
+    title: 'A Saturday with people in it',
+    summary: 'Rested, sociable, a place he actually goes, and a goal he set himself.',
+    proves: 'G-004 — a specific social move can win, with no quota anywhere near it.',
+    zone: kit.zone,
+    now,
+    build() {
+      const place = kit.entity({
+        kind: 'place',
+        label: 'the climbing gym',
+        domain: DOMAIN.social,
+        privacy: 'normal',
+      })
+      const goal = kit.entity({
+        kind: 'goal',
+        label: 'talking to people I do not know',
+        domain: DOMAIN.social,
+        privacy: 'normal',
+      })
+
+      const goalRecord = kit.record(
+        'goal',
+        {
+          occurredAt: kit.local('2026-06-01', '09:00'),
+          domains: [DOMAIN.social],
+          entities: [easier],
+        },
+        {
+          goal: easier,
+          statement: 'Get easier with people I do not know',
+          status: 'active',
+        },
+      )
+
+      const nights = [7.5, 8, 7.75].map((value, offset) =>
+        kit.record(
+          'observation',
+          {
+            occurredAt: kit.local(`2026-07-${String(9 + offset).padStart(2, '0')}`, '07:00'),
+            domains: [DOMAIN.sleep],
+          },
+          {
+            concept: CONCEPT.sleepHours,
+            value: { type: 'number', value, unit: 'hours' },
+            method: 'self-report',
+          },
+        ),
+      )
+
+      const energy = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-07-11', '14:00'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.energy,
+          value: { type: 'scale', value: 4, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      const sociable = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-07-11', '14:00'), domains: [DOMAIN.social] },
+        {
+          concept: CONCEPT.socialEnergy,
+          value: { type: 'scale', value: 4, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      const time = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-07-11', '15:00'), domains: [DOMAIN.direction] },
+        {
+          concept: CONCEPT.usableTimeTonight,
+          value: { type: 'duration', minutes: 120 },
+          method: 'self-report',
+        },
+      )
+
+      const weekly = kit.record(
+        'explicit-fact',
+        {
+          occurredAt: kit.local('2026-07-06', '08:00'),
+          domains: [DOMAIN.direction],
+          entities: [entityRef('life-domain', 'getting out more')],
+        },
+        {
+          concept: CONCEPT.weeklyFocus,
+          value: { type: 'entity', value: entityRef('life-domain', 'getting out more') },
+        },
+      )
+
+      const direction = kit.entity({
+        kind: 'life-domain',
+        label: 'getting out more',
+        domain: DOMAIN.social,
+        privacy: 'normal',
+      })
+
+      return kit.document({
+        entities: [place, goal, direction],
+        records: [goalRecord, ...nights, energy, sociable, time, weekly],
+        exportedAt: now,
+      })
+    },
+  }
+}
+
+// ---------------------------------------------------------------------------
+// G-014 — no action is a real answer
+// ---------------------------------------------------------------------------
+
+/**
+ * A Thursday where the honest answer is that nothing needs to happen.
+ *
+ * G-014 asks for a stable state in which no move has positive net value, and
+ * the trap is producing one by starving the engine — a history with nothing in
+ * it says nothing for a much less interesting reason. So this one knows plenty:
+ * three good nights, energy, a body that is a little stiff, and exactly how
+ * much of the evening is left. It has walked twice already this week and
+ * neither walk did much. There are fifteen minutes.
+ *
+ * Everything the app can see says the same thing, which is that the owner is
+ * fine and a fifteen-minute version of something already tried twice is not
+ * worth the asking. Section 19: a valid decision may be wait, rest, continue,
+ * stop, or no additional move.
+ */
+function settledEvening(): Scenario {
+  const kit = createKit('GV', 'America/Denver', '2026-03-01T12:00:00Z')
+  const nextId = sequentialRecordIds('GVE')
+  const walk = entityRef('routine', 'a walk')
+  const now = kit.local('2026-03-19', '20:30')
+
+  return {
+    id: 'settled-evening',
+    title: 'A Thursday with nothing needing doing',
+    summary:
+      'Slept well, a bit stiff, a quarter of an hour free, and two walks this week that did nothing.',
+    proves:
+      'G-014 — no action is a real answer, reached from a full picture rather than an empty one.',
+    zone: kit.zone,
+    now,
+    build() {
+      const nights = [7.75, 8, 7.5].map((value, offset) =>
+        kit.record(
+          'observation',
+          { occurredAt: kit.local(`2026-03-${17 + offset}`, '07:00'), domains: [DOMAIN.sleep] },
+          {
+            concept: CONCEPT.sleepHours,
+            value: { type: 'number', value, unit: 'hours' },
+            method: 'self-report',
+          },
+        ),
+      )
+
+      const energy = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-03-19', '19:00'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.energy,
+          value: { type: 'scale', value: 3, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      // Stiff rather than sore: not enough to be what is in the way — the
+      // fifteen minutes are that — and enough that a third walk this week is
+      // not the thing to spend them on.
+      const soreness = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-03-19', '19:00'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.soreness,
+          value: { type: 'scale', value: 3, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      const time = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-03-19', '20:15'), domains: [DOMAIN.direction] },
+        {
+          concept: CONCEPT.usableTimeTonight,
+          value: { type: 'duration', minutes: 15 },
+          method: 'self-report',
+        },
+      )
+
+      // Two walks earlier in the week, both of which changed nothing. Old
+      // enough that the same-day guard does not catch them, recent enough that
+      // offering a third is repetition rather than a fresh idea.
+      const walks = pastEpisodeRecords(
+        kit,
+        [17, 18].map((day) => ({
+          verb: 'move' as const,
+          object: walk,
+          domain: DOMAIN.health,
+          on: `2026-03-${day}`,
+          at: '19:00',
+          context: {
+            block: 'evening' as const,
+            weekend: false,
+            strain: 'none' as const,
+            usableMinutes: 45,
+          },
+          ending: 'completed' as const,
+          result: 'same' as const,
+        })),
+        nextId,
+      )
+
+      return kit.document({
+        entities: [],
+        records: [...nights, energy, soreness, time, ...walks],
+        exportedAt: now,
+      })
+    },
+  }
+}
+
+// ---------------------------------------------------------------------------
+// What a month of outcomes changes
+// ---------------------------------------------------------------------------
+
+/**
+ * The same evening the engine has always been able to reason about, with a
+ * month behind it of what actually happened.
+ *
+ * This is the phase, on one screen. Clearing the kitchen has helped four times
+ * in evenings like this one and the app says so out loud, in a line the owner
+ * can disagree with. Walking has been tried twice and did nothing much.
+ * Studying keeps getting started and interrupted — which is a fact about his
+ * evenings, not about studying, and lands where facts about evenings land.
+ *
+ * Nothing in it is a special case. Take the outcomes away and the same history
+ * produces a different answer, which is the whole point.
+ */
+function whatWorked(): Scenario {
+  const kit = createKit('GW', 'America/Denver', '2026-01-05T12:00:00Z')
+  const nextId = sequentialRecordIds('GWE')
+  const kitchen = entityRef('place', 'the kitchen')
+  const walk = entityRef('routine', 'a walk')
+  const subnetting = entityRef('learning-topic', 'subnetting')
+  const ccna = entityRef('goal', 'the CCNA')
+  const now = kit.local('2026-02-19', '19:30')
+
+  const anEvening = {
+    block: 'evening' as const,
+    weekend: false,
+    strain: 'none' as const,
+    usableMinutes: 60,
+  }
+
+  return {
+    id: 'what-worked',
+    title: 'A month of what actually worked',
+    summary:
+      'Four evenings clearing the kitchen that helped, two walks that did not, and a lab that keeps getting interrupted.',
+    proves:
+      'Outcomes change the answer, the app says what it is resting on, and the owner can disagree.',
+    zone: kit.zone,
+    now,
+    build() {
+      const place = kit.entity({
+        kind: 'place',
+        label: 'the kitchen',
+        domain: DOMAIN.home,
+        privacy: 'normal',
+      })
+      const topic = kit.entity({
+        kind: 'learning-topic',
+        label: 'subnetting',
+        domain: DOMAIN.career,
+        privacy: 'normal',
+        links: [{ relation: 'supports-goal', target: ccna.id }],
+      })
+      const goal = kit.entity({
+        kind: 'goal',
+        label: 'the CCNA',
+        domain: DOMAIN.career,
+        privacy: 'normal',
+      })
+
+      const goalRecord = kit.record(
+        'goal',
+        {
+          occurredAt: kit.local('2026-01-05', '09:00'),
+          domains: [DOMAIN.career],
+          entities: [ccna],
+        },
+        { goal: ccna, statement: 'Pass the CCNA before the summer', status: 'active' },
+      )
+
+      const studying = kit.record(
+        'observation',
+        {
+          occurredAt: kit.local('2026-02-09', '20:00'),
+          domains: [DOMAIN.career],
+          entities: [subnetting],
+        },
+        {
+          concept: CONCEPT.learningTopic,
+          value: { type: 'entity', value: subnetting },
+          method: 'self-report',
+        },
+      )
+
+      const friction = kit.record(
+        'observation',
+        {
+          occurredAt: kit.local('2026-02-18', '18:00'),
+          domains: [DOMAIN.home],
+          entities: [kitchen],
+        },
+        {
+          concept: CONCEPT.homeFriction,
+          value: { type: 'text', value: 'the kitchen table is buried again' },
+          method: 'self-report',
+        },
+      )
+
+      const nights = [7.5, 7.75, 8].map((value, offset) =>
+        kit.record(
+          'observation',
+          { occurredAt: kit.local(`2026-02-${17 + offset}`, '07:00'), domains: [DOMAIN.sleep] },
+          {
+            concept: CONCEPT.sleepHours,
+            value: { type: 'number', value, unit: 'hours' },
+            method: 'self-report',
+          },
+        ),
+      )
+
+      const energy = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-02-19', '18:30'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.energy,
+          value: { type: 'scale', value: 3, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      const time = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-02-19', '19:00'), domains: [DOMAIN.direction] },
+        {
+          concept: CONCEPT.usableTimeTonight,
+          value: { type: 'duration', minutes: 60 },
+          method: 'self-report',
+        },
+      )
+
+      const past = pastEpisodeRecords(
+        kit,
+        [
+          // Four evenings clearing the kitchen, all of which helped.
+          ...[2, 6, 10, 14].map((day) => ({
+            verb: 'reset-space' as const,
+            object: kitchen,
+            domain: DOMAIN.home,
+            on: `2026-02-${String(day).padStart(2, '0')}`,
+            context: anEvening,
+            ending: 'completed' as const,
+            result: 'better' as const,
+          })),
+          // Two walks that did nothing much.
+          ...[4, 11].map((day) => ({
+            verb: 'move' as const,
+            object: walk,
+            domain: DOMAIN.health,
+            on: `2026-02-${String(day).padStart(2, '0')}`,
+            context: anEvening,
+            ending: 'completed' as const,
+            result: 'same' as const,
+          })),
+          // A lab twice interrupted. Evidence about his evenings rather than
+          // about labs, and it lands there.
+          ...[5, 12].map((day) => ({
+            verb: 'hands-on-lab' as const,
+            object: subnetting,
+            domain: DOMAIN.career,
+            on: `2026-02-${String(day).padStart(2, '0')}`,
+            at: '17:00',
+            context: { ...anEvening, block: 'afternoon' as const },
+            ending: 'unable-now' as const,
+          })),
+        ],
+        nextId,
+      )
+
+      return kit.document({
+        entities: [place, topic, goal],
+        records: [goalRecord, studying, friction, ...nights, energy, time, ...past],
+        exportedAt: now,
+      })
+    },
+  }
+}
+
 export const SCENARIOS: readonly Scenario[] = [
   subnettingStruggle(),
   sleepDeficitAgainstCareer(),
   restedAgainstCareer(),
   weekPointedAtHome(),
+  whatWorked(),
+  socialOpportunity(),
+  settledEvening(),
   durableCustody(),
   mostlyUnknown(),
   acrossTimezones(),

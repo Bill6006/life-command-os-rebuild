@@ -218,8 +218,37 @@ describe('there is exactly one arbitration path', () => {
    * ranking and selection are unreachable from `src/features/`, so the only way
    * to obtain a recommendation is to ask the engine for one.
    */
-  const OPEN_TO_SURFACES = ['engine', 'guide', 'questions', 'trace', 'situation', 'explain']
-  const DECIDES = ['candidates', 'constraints', 'evaluate', 'arbitrate', 'advisor', 'moves']
+  /*
+   * The line is between deciding and recording.
+   *
+   * `lifecycle`, `outcomes` and `corrections` joined the open list in Phase 3,
+   * and they belong there for a reason worth stating: none of them chooses
+   * anything. They turn a tap into canonical records and work out when a result
+   * is due, which is the surface's own job — a button has to be able to write
+   * down what the owner did. `learning` stays closed even though it also
+   * chooses nothing, because it is part of how a move is ranked, and a surface
+   * reading it directly could put a number on screen the arbitration never saw.
+   */
+  const OPEN_TO_SURFACES = [
+    'engine',
+    'guide',
+    'questions',
+    'trace',
+    'situation',
+    'explain',
+    'lifecycle',
+    'outcomes',
+    'corrections',
+  ]
+  const DECIDES = [
+    'candidates',
+    'constraints',
+    'evaluate',
+    'arbitrate',
+    'advisor',
+    'moves',
+    'learning',
+  ]
 
   it('lets no feature reach the parts that decide', () => {
     const offenders: string[] = []

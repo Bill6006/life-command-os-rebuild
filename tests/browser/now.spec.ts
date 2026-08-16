@@ -26,6 +26,18 @@ async function goToNow(page: Page) {
   await expect(page.getByRole('heading', { level: 1, name: 'Now' })).toBeVisible()
 }
 
+/**
+ * Back to the laboratory without reloading.
+ *
+ * `page.goto` would remount the app, and the clock is captured at mount — so a
+ * scenario set on a September evening would come back on today's. The in-app
+ * link is a hash change, which is what the owner would use anyway.
+ */
+async function backToQa(page: Page) {
+  await page.getByRole('link', { name: 'The QA laboratory' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'QA' })).toBeVisible()
+}
+
 test.describe('with nothing to go on', () => {
   test('says so rather than offering something plausible', async ({ page }) => {
     await page.goto(APP)
@@ -165,6 +177,151 @@ test.describe('the guide, on the Now flow', () => {
 
     const question = page.getByTestId('now-question')
     if ((await question.count()) > 0) await expect(question).not.toContainText('Adaya')
+  })
+})
+
+test.describe('the loop, on a phone', () => {
+  /*
+   * Section 66's slice, walked the way the owner walks it. The unit suites
+   * prove the engine reaches the right decision and the right records; these
+   * prove the buttons are there, that tapping one changes the screen, and that
+   * two taps in the same second do not become two of anything.
+   */
+  test('offers something to do about the move, and remembers it', async ({ page }) => {
+    await loadInQa(page, 'A week pointed at the house')
+    await goToNow(page)
+
+    await expect(page.locator('.primary-surface__headline')).toContainText('kitchen')
+
+    const actions = page.getByTestId('now-actions')
+    await expect(actions.getByRole('button', { name: 'Start it' })).toBeVisible()
+    await expect(actions.getByRole('button', { name: 'Done' })).toBeVisible()
+    await expect(actions.getByRole('button', { name: "Can't right now" })).toBeVisible()
+
+    await actions.getByRole('button', { name: 'Start it' }).click()
+
+    // Started moves stay in front of the owner. Every event recomputes, so
+    // without that rule the top spot could go elsewhere while they were at the
+    // sink.
+    await expect(page.locator('.primary-surface__headline')).toContainText('kitchen')
+    const stands = page.locator('.rows__row', { hasText: 'Where this stands' }).locator('dd')
+    await expect(stands).toHaveText('Under way')
+    // Still drawn, so nothing under the finger moves — and no longer live,
+    // because starting something twice is not a transition.
+    await expect(actions.getByRole('button', { name: 'Start it' })).toBeDisabled()
+  })
+
+  test('moves on when the owner asks for something else', async ({ page }) => {
+    await loadInQa(page, 'A week pointed at the house')
+    await goToNow(page)
+
+    const headline = page.locator('.primary-surface__headline')
+    await expect(headline).toContainText('kitchen')
+
+    await page.getByTestId('now-actions').getByRole('button', { name: 'Something else' }).click()
+    await expect(headline).not.toContainText('kitchen')
+  })
+
+  test('keeps the buttons where they were after one is pressed', async ({ page }) => {
+    /*
+     * The hazard a shifting row creates: tap **Start it**, and **Done** slides
+     * into the space the finger has not left yet. The second half of a double
+     * tap then records "I have done this" — a legal transition, a plausible
+     * thing to have meant, and indistinguishable downstream from the truth.
+     */
+    await loadInQa(page, 'A week pointed at the house')
+    await goToNow(page)
+
+    const actions = page.getByTestId('now-actions')
+
+    // Measured inside the row rather than against the viewport: the page grows
+    // by a line when the move gains a state, and a few pixels of scroll is not
+    // what this is about.
+    const placeOfDone = async () =>
+      page.evaluate(() => {
+        const row = document.querySelector('[data-testid="now-actions"]')
+        const done = [...(row?.querySelectorAll('.now-act') ?? [])].find(
+          (element) => element.textContent === 'Done',
+        )
+        if (row === null || done === undefined) return undefined
+        const outer = row.getBoundingClientRect()
+        const inner = done.getBoundingClientRect()
+        return { x: inner.x - outer.x, y: inner.y - outer.y }
+      })
+
+    const before = await placeOfDone()
+    await actions.getByRole('button', { name: 'Start it' }).click()
+    await expect(actions.getByRole('button', { name: 'Start it' })).toBeDisabled()
+
+    expect(before).toBeDefined()
+    expect(await placeOfDone()).toEqual(before)
+  })
+
+  test('creates one episode from a double tap', async ({ page }) => {
+    await loadInQa(page, 'A week pointed at the house')
+    await goToNow(page)
+
+    /*
+     * Both clicks in one task, which is what a double tap actually is.
+     *
+     * Two Playwright clicks cannot express this: the second waits for the page
+     * to settle first, so it is a slow tap rather than a fast one. Dispatching
+     * them together lands both before React has re-rendered, which is the
+     * moment the latch in `NowScreen` exists for.
+     */
+    await page.evaluate(() => {
+      const button = [...document.querySelectorAll('.now-act')].find(
+        (element) => element.textContent === 'Start it',
+      )
+      button?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      button?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+
+    await expect(
+      page.locator('.rows__row', { hasText: 'Where this stands' }).locator('dd'),
+    ).toHaveText('Under way')
+
+    // Counted in the inspector rather than inferred from the screen. Reached by
+    // the in-app link so the laboratory's clock survives the trip — a reload
+    // would put the app back on the real evening.
+    await backToQa(page)
+    await expect(
+      page.locator('.qa-block__summary', { hasText: 'Episodes' }).locator('.qa-block__count'),
+    ).toHaveText('1')
+  })
+
+  test('says what a decision rests on, and lets the owner disagree', async ({ page }) => {
+    await loadInQa(page, 'A month of what actually worked')
+    await goToNow(page)
+
+    await expect(page.locator('.primary-surface__headline')).toContainText('kitchen')
+    const rests = page.getByTestId('now-rests-on')
+    await expect(rests).toContainText('has worked')
+    await expect(rests).toContainText('situations like tonight')
+
+    // Section 62 — a belief the owner cannot see is one they cannot correct.
+    await rests.getByRole('button', { name: /Not how it went/ }).click()
+    await expect(page.getByTestId('now-rests-on')).toHaveCount(0)
+  })
+
+  test('asks for a result once there is one to give', async ({ page }) => {
+    await loadInQa(page, 'A week pointed at the house')
+    await goToNow(page)
+
+    await page.getByTestId('now-actions').getByRole('button', { name: 'Done' }).click()
+    // Not yet: asking the moment a thing is finished collects an answer about
+    // intent, which looks exactly like evidence and is not.
+    await expect(page.getByTestId('now-outcome')).toHaveCount(0)
+
+    // The window opens twenty minutes after the move is finished, and the
+    // laboratory's clock is the way to be there for it.
+    await backToQa(page)
+    await page.getByRole('button', { name: '+1 hour' }).click()
+    await goToNow(page)
+
+    await expect(page.getByTestId('now-outcome')).toHaveText('Did the kitchen get cleared?')
+    await page.locator('.now-option').first().click()
+    await expect(page.getByTestId('now-outcome')).toHaveCount(0)
   })
 })
 

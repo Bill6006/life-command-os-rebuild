@@ -440,6 +440,86 @@ export function QaScreen() {
         )}
       </Collapsible>
 
+      {/*
+        What this owner's own outcomes did to each move, and how much of it
+        there was (sections 35 and 48).
+
+        The three aspects are shown apart because they are kept apart in the
+        reasoning: a run of refusals appears under "passed on" and nowhere else,
+        so it is visible here that a decline never became a claim about whether
+        the move works. `pull` is the number worth reading — with one comparable
+        evening it is a quarter, which is section 20's "one success is not
+        proof" as something checkable rather than promised.
+      */}
+      <Collapsible title="What it has learned" count={trace.learning.length}>
+        {trace.learning.length === 0 ? (
+          <p className="note">Nothing survived to learn about.</p>
+        ) : (
+          trace.learning.map((row) => (
+            <details
+              key={row.candidate}
+              className="qa-rank"
+              open={row.candidate === trace.chosen}
+              data-chosen={row.candidate === trace.chosen ? 'yes' : undefined}
+            >
+              <summary className="qa-rank__summary">
+                <span className="qa-rank__score">{row.samples}</span>
+                <span>{row.summary ?? `${row.verb} — nothing earned yet`}</span>
+              </summary>
+              <Rows>
+                <Row
+                  label="Worth tonight"
+                  value={`${row.startedAt.now.toFixed(2)} → ${row.landedAt.now.toFixed(2)}${
+                    row.moved === 'now' ? '' : ' (unchanged — judged the next morning)'
+                  }`}
+                />
+                <Row
+                  label="Worth tomorrow"
+                  value={`${row.startedAt.tomorrow.toFixed(2)} → ${row.landedAt.tomorrow.toFixed(2)}${
+                    row.moved === 'tomorrow' ? '' : ' (unchanged — judged the same evening)'
+                  }`}
+                />
+                <Row
+                  label="Comparable results"
+                  value={
+                    row.samples === 0
+                      ? 'none'
+                      : `${row.samples}, pulling the starting belief ${Math.round(row.pull * 100)} percent of the way`
+                  }
+                />
+                <Row
+                  label="Could it happen"
+                  value={`${row.followThrough.samples === 0 ? 'never tested' : `${Math.round(row.followThrough.rate * 100)} percent`} — ${row.followThrough.note}`}
+                />
+                <Row label="Passed on" value={row.appetite.note} />
+                {row.corrected ? (
+                  <Row label="Corrected" value="the owner has ruled this belief out" />
+                ) : null}
+              </Rows>
+              {row.evidence.length === 0 ? null : (
+                <p className="note">Evidence: {row.evidence.join(', ')}</p>
+              )}
+            </details>
+          ))
+        )}
+      </Collapsible>
+
+      <Collapsible title="Episodes" count={trace.episodes.length}>
+        {trace.episodes.length === 0 ? (
+          <p className="note">Nothing has been acted on yet.</p>
+        ) : (
+          <Rows>
+            {trace.episodes.map((episode) => (
+              <Row
+                key={episode.recommendation}
+                label={`${episode.dayId} · ${episode.state}`}
+                value={`${episode.sentence} — ${episode.outcome}; ${episode.context}; resembles tonight ${Math.round(episode.resembles * 100)} percent`}
+              />
+            ))}
+          </Rows>
+        )}
+      </Collapsible>
+
       <Collapsible title="What would change the answer" count={trace.wouldChange.length}>
         {trace.wouldChange.length === 0 ? (
           <p className="note">Nothing left that could move it.</p>

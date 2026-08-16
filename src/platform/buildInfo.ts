@@ -45,9 +45,9 @@ export const isProduction = runningBuild.target === 'production'
  * `tests/unit/architecture-guards.test.ts` fails the build if a third appears.
  */
 export const REBUILD_PHASE = {
-  number: 2,
-  title: 'the intelligence kernel and a real Now',
-  next: 'the recommendation lifecycle and outcome learning',
+  number: 3,
+  title: 'the recommendation lifecycle and outcome learning',
+  next: 'the coverage engine and adaptive guides',
 } as const
 
 function isDeployTarget(value: unknown): value is DeployTarget {

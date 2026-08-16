@@ -9,6 +9,7 @@ import {
   type WeekStartDay,
 } from '../../domain/time'
 import type { ValidationIssue } from '../../domain/validation'
+import { nextOutcomeDueAt } from '../../intelligence/outcomes'
 import { indexedDbAvailable, openIndexedDbStore } from '../../memory/indexedDbStore'
 import { createMemoryStore } from '../../memory/memoryStore'
 import {
@@ -229,6 +230,51 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     () => buildView(snapshot, { now, zone, weekStartsOn }),
     [snapshot, now, zone, weekStartsOn],
   )
+
+  /*
+   * The clock advances when the app is looked at, and once more when something
+   * is waiting for it.
+   *
+   * Phase 2 captured the moment at mount and never moved it, and nothing needed
+   * more: every decision is a pure function of the moment it is given, so a tab
+   * left open across the evening boundary was simply answering the question it
+   * had been asked. Outcome windows are the first thing that cares — a result
+   * due at ten past eight would never become due on a screen frozen at half
+   * past seven.
+   *
+   * Two triggers, and deliberately no polling. Coming back to the tab is when a
+   * phone is actually read, and the engine can say when the next window opens,
+   * so a single timer is set for exactly that instant rather than a heartbeat
+   * asking whether anything has happened yet.
+   *
+   * Note where the clock is: here, in the surface. `nextOutcomeDueAt` computes
+   * an instant and compares it to nothing — the kernel stays clock-free, and
+   * the guard in `tests/unit/architecture-guards.test.ts` still holds.
+   */
+  useEffect(() => {
+    if (travelled) return
+
+    const catchUp = () => {
+      if (document.visibilityState === 'visible') setNow(clock.now())
+    }
+    document.addEventListener('visibilitychange', catchUp)
+    return () => document.removeEventListener('visibilitychange', catchUp)
+  }, [clock, travelled])
+
+  useEffect(() => {
+    if (travelled) return
+    const dueAt = nextOutcomeDueAt(view, { now, zone }, view.entities)
+    if (dueAt === undefined) return
+
+    const wait = dueAt - clock.now()
+    // A window already open needs no timer; the current render has it.
+    if (wait <= 0) return
+    // setTimeout saturates past a 32-bit millisecond count and fires at once.
+    if (wait > 2_147_483_000) return
+
+    const timer = setTimeout(() => setNow(clock.now()), wait + 1_000)
+    return () => clearTimeout(timer)
+  }, [view, now, zone, clock, travelled])
 
   const value: MemoryContextValue = {
     ready,

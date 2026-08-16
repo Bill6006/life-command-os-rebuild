@@ -39,6 +39,44 @@ None.
 
 ## Fixed
 
+### DEF-0018 — the second half of a double tap landed on a different button
+
+- Status: Fixed
+- Severity: Major — a record of something the owner did not do
+- Found in: Phase 3 / `dc58ca7`
+- Found by: a browser test that hung at desktop width, and reading why
+- Class: **a target that moves out from under a finger that has not lifted.**
+  The lifecycle row drew only the transitions available from the current state,
+  so tapping **Start it** removed it and slid **Done** into the space it had
+  occupied. The second half of a fast double tap then landed on "I have done
+  this" — which is a legal transition from `started`, a plausible thing to have
+  meant, and indistinguishable downstream from the truth.
+- Reproduction: at desktop width, tap **Start it** and tap again immediately.
+  The engine's own guards make a duplicate _episode_ impossible, which is why
+  every unit test passed: the two taps were never duplicates. They were two
+  different events, and the second one was wrong.
+- Root cause: the row rendered `ACTION_ORDER.filter(available)`. Every state
+  change re-flowed it.
+- Fix: every button is always drawn and the unavailable ones are disabled. The
+  positions do not move, and starting something twice is not offered because it
+  is not a transition. The synchronous latch in `NowScreen` still swallows a
+  second tap on the _same_ button before React re-renders; this is the other
+  half, for a second tap that would have hit a different one.
+- Regression: `tests/browser/now.spec.ts` — "keeps the buttons where they were
+  after one is pressed", which measures the position of **Done** inside the row
+  before and after, and "creates one episode from a double tap", which
+  dispatches both clicks in one task rather than as two Playwright clicks.
+- Note on the first attempt: the original test used two `click()` calls in a
+  `Promise.all`. That is a slow tap, not a fast one — the second waits for the
+  page to settle — and at desktop width it waited forever for a button that had
+  just been removed. The test hung rather than failing, which is how the defect
+  was found at all.
+- Siblings: checked the other tap targets on Now. The guide's answers and the
+  outcome's answers both re-render as a set when the question changes, and in
+  both cases the panel is replaced rather than re-flowed, so there is no
+  half-changed row to mis-hit.
+- Fixed in: the third Phase 3 checkpoint
+
 ### DEF-0017 — the app called its own history silent
 
 - Status: Fixed

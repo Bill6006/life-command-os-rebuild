@@ -1,11 +1,19 @@
 import { createRecordFactory, SYNTHETIC_PROVENANCE, type RecordFactory } from '../domain/build'
-import { createEntity, type CreateEntityInput, type SemanticEntity } from '../domain/entities'
-import { sequentialRecordIds } from '../domain/ids'
-import type { CanonicalRecord } from '../domain/records'
+import type { LifeDomainId } from '../domain/domains'
+import {
+  createEntity,
+  type CreateEntityInput,
+  type EntityRef,
+  type SemanticEntity,
+} from '../domain/entities'
+import { sequentialRecordIds, type RecordId } from '../domain/ids'
+import type { ActionVerb, RecommendationSemantics } from '../domain/recommendation'
+import type { CanonicalRecord, DecisionContext, Provenance } from '../domain/records'
 import {
   civilDateFromDayId,
   instantAtLocal,
   instantToIso,
+  localDayIdAt,
   parseInstant,
   parseLocalDayId,
   parseLocalTimeOfDay,
@@ -14,6 +22,7 @@ import {
   type TimeZoneId,
   type WeekStartDay,
 } from '../domain/time'
+import { recommendationIdFor, WANTED_SOMETHING_ELSE } from '../intelligence/lifecycle'
 import { entityToWire, recordToWire } from '../domain/wire'
 import { SNAPSHOT_FORMAT, type SnapshotWire } from '../memory/snapshot'
 
@@ -94,6 +103,136 @@ export function createKit(idPrefix: string, zoneId: string, createdAt: string): 
       malformed: [],
     }),
   }
+}
+
+// ---------------------------------------------------------------------------
+// Histories with a past in them
+// ---------------------------------------------------------------------------
+
+/**
+ * One suggestion that already happened.
+ *
+ * Written the way the running app writes it — the same record shapes, the same
+ * derived recommendation id, the same decision context — so a history the
+ * engine learns from cannot be one it could never have produced. Section 60's
+ * warning about fixtures making hardcoded logic look correct applies with
+ * particular force to learning, where the fixture *is* the evidence.
+ */
+export interface PastEpisode {
+  readonly verb: ActionVerb
+  readonly object: EntityRef
+  readonly subject?: EntityRef
+  readonly domain: LifeDomainId
+  /** Owner-local day, `YYYY-MM-DD`. */
+  readonly on: string
+  readonly at?: string
+  readonly context: DecisionContext
+  readonly ending: 'shown' | 'started' | 'completed' | 'declined' | 'unable-now' | 'try-another'
+  /** Only meaningful on a completed episode. */
+  readonly result?: 'better' | 'same' | 'worse'
+  readonly comfort?: 'easy' | 'awkward' | 'hard'
+}
+
+const RESULT_SCALE = { better: 4, same: 2, worse: 0 } as const
+const COMFORT_SCALE = { easy: 4, awkward: 2, hard: 0 } as const
+
+const LIFECYCLE_PROVENANCE: Provenance = { source: 'owner', writtenBy: 'now' }
+
+export function pastEpisodeRecords(
+  kit: ScenarioKit,
+  seeds: readonly PastEpisode[],
+  nextId: () => RecordId,
+): readonly CanonicalRecord[] {
+  const records: CanonicalRecord[] = []
+  const build = createRecordFactory({
+    zone: kit.zone,
+    provenance: LIFECYCLE_PROVENANCE,
+    nextId,
+  })
+
+  for (const seed of seeds) {
+    const when = kit.local(seed.on, seed.at ?? '19:30')
+    const subject = seed.subject ?? seed.object
+    const semantics: RecommendationSemantics = {
+      subject,
+      domain: seed.domain,
+      target: { verb: seed.verb, object: seed.object },
+      whyNow: { trigger: 'good-conditions', summary: '', evidence: [] },
+      evidence: [],
+    }
+
+    const recommendation = recommendationIdFor(semantics.target, localDayIdAt(when, kit.zone))
+    const envelope = {
+      occurredAt: when,
+      domains: [seed.domain],
+      entities: [subject, seed.object],
+    }
+
+    records.push(
+      build(
+        'action-recommendation',
+        { ...envelope, id: recommendation },
+        { recommendation: semantics, context: seed.context },
+      ),
+    )
+
+    const settled = { ...envelope, recordedAt: (when + 60_000) as Instant, id: nextId() }
+    switch (seed.ending) {
+      case 'shown':
+        break
+      case 'started':
+        records.push(build('action-start', settled, { recommendation }))
+        break
+      case 'completed':
+        records.push(build('action-completion', settled, { recommendation }))
+        break
+      case 'declined':
+        records.push(build('action-decline', settled, { recommendation }))
+        break
+      case 'try-another':
+        records.push(
+          build('action-decline', settled, {
+            recommendation,
+            reason: WANTED_SOMETHING_ELSE,
+          }),
+        )
+        break
+      case 'unable-now':
+        records.push(build('action-unable-now', settled, { recommendation }))
+        break
+    }
+
+    if (seed.result !== undefined && seed.ending === 'completed') {
+      records.push(
+        build(
+          'outcome',
+          { ...envelope, occurredAt: (when + 90 * 60_000) as Instant, id: nextId() },
+          {
+            about: recommendation,
+            observation: { type: 'scale', value: RESULT_SCALE[seed.result], of: 5 },
+            sentiment: seed.result,
+          },
+        ),
+      )
+    }
+
+    if (seed.comfort !== undefined) {
+      // No sentiment: how something felt is worth knowing and is not evidence
+      // about whether it worked, and the absence is what keeps them apart.
+      records.push(
+        build(
+          'outcome',
+          { ...envelope, occurredAt: (when + 95 * 60_000) as Instant, id: nextId() },
+          {
+            about: recommendation,
+            observation: { type: 'scale', value: COMFORT_SCALE[seed.comfort], of: 5 },
+          },
+        ),
+      )
+    }
+  }
+
+  return records
 }
 
 export interface Scenario {

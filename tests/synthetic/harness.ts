@@ -1,31 +1,11 @@
 import { expect } from 'vitest'
-import { createRecordFactory } from '../../src/domain/build'
-import type { LifeDomainId } from '../../src/domain/domains'
-import type { EntityRef } from '../../src/domain/entities'
-import type { RecordId } from '../../src/domain/ids'
-import type { ActionVerb, RecommendationSemantics } from '../../src/domain/recommendation'
-import type {
-  ActionRecommendationRecord,
-  CanonicalRecord,
-  DecisionContext,
-} from '../../src/domain/records'
-import {
-  localDayIdAt,
-  type Instant,
-  type TimeZoneId,
-  type WeekStartDay,
-} from '../../src/domain/time'
+import type { ActionRecommendationRecord, DecisionContext } from '../../src/domain/records'
+import type { Instant, TimeZoneId, WeekStartDay } from '../../src/domain/time'
 import { decide, type Decision, type DecideOptions } from '../../src/intelligence/engine'
-import {
-  LIFECYCLE_PROVENANCE,
-  recommendationIdFor,
-  WANTED_SOMETHING_ELSE,
-  type LifecycleAction,
-} from '../../src/intelligence/lifecycle'
 import { snapshotFromWire, type SnapshotWire } from '../../src/memory/snapshot'
 import type { StoreSnapshot } from '../../src/memory/store'
 import { buildView, type MemoryView } from '../../src/memory/view'
-import type { Scenario, ScenarioKit } from '../../src/synthetic/kit'
+import type { Scenario } from '../../src/synthetic/kit'
 import { scenarioById } from '../../src/synthetic/scenarios'
 
 /**
@@ -144,152 +124,14 @@ export function orphanPronounsIn(sentence: string): readonly string[] {
 // ---------------------------------------------------------------------------
 
 /**
- * One suggestion that already happened, written the way the app writes it.
+ * Re-exported rather than redefined.
  *
- * Learning is only worth testing against history the running app could actually
- * have produced, so these go through `planLifecycle` and `outcomeRecord` rather
- * than being hand-assembled — the same functions Now calls when the owner taps.
- * A fixture that built the records directly could pass while the path the owner
- * takes was broken, which is section 60's warning about fixtures making
- * hardcoded logic look correct.
+ * The scenario library needs to build past episodes too, so the builder lives
+ * beside the kit and there is exactly one definition of what a written-down
+ * episode looks like. Two would eventually disagree, and the one the tests used
+ * would be the one that was wrong.
  */
-export interface PastEpisode {
-  readonly verb: ActionVerb
-  readonly object: EntityRef
-  readonly subject?: EntityRef
-  readonly domain: LifeDomainId
-  /** Owner-local day, `YYYY-MM-DD`. */
-  readonly on: string
-  readonly at?: string
-  readonly context: DecisionContext
-  readonly ending: 'shown' | 'started' | 'completed' | 'declined' | 'unable-now' | 'try-another'
-  /** Only meaningful on a completed episode. */
-  readonly result?: 'better' | 'same' | 'worse'
-  readonly comfort?: 'easy' | 'awkward' | 'hard'
-}
-
-const ENDING_ACTIONS: Record<PastEpisode['ending'], LifecycleAction | undefined> = {
-  shown: undefined,
-  started: 'start',
-  completed: 'complete',
-  declined: 'decline',
-  'unable-now': 'unable-now',
-  'try-another': 'try-another',
-}
-
-export function pastEpisodeRecords(
-  kit: ScenarioKit,
-  seeds: readonly PastEpisode[],
-  nextId: () => RecordId,
-): readonly CanonicalRecord[] {
-  const records: CanonicalRecord[] = []
-
-  for (const seed of seeds) {
-    const when = kit.local(seed.on, seed.at ?? '19:30')
-    const subject = seed.subject ?? seed.object
-    const semantics: RecommendationSemantics = {
-      subject,
-      domain: seed.domain,
-      target: { verb: seed.verb, object: seed.object },
-      whyNow: { trigger: 'good-conditions', summary: '', evidence: [] },
-      evidence: [],
-    }
-
-    const dayId = localDayIdAt(when, kit.zone)
-    const recommendation = recommendationIdFor(semantics.target, dayId)
-    const build = createRecordFactory({
-      zone: kit.zone,
-      provenance: LIFECYCLE_PROVENANCE,
-      nextId,
-    })
-
-    records.push(
-      build(
-        'action-recommendation',
-        {
-          occurredAt: when,
-          id: recommendation,
-          domains: [seed.domain],
-          entities: [subject, seed.object],
-        },
-        { recommendation: semantics, context: seed.context },
-      ),
-    )
-
-    const action = ENDING_ACTIONS[seed.ending]
-    if (action === undefined) continue
-
-    const envelope = {
-      occurredAt: when,
-      recordedAt: (when + 60_000) as Instant,
-      id: nextId(),
-      domains: [seed.domain],
-      entities: [subject, seed.object],
-    }
-
-    switch (action) {
-      case 'start':
-        records.push(build('action-start', envelope, { recommendation }))
-        break
-      case 'complete':
-        records.push(build('action-completion', envelope, { recommendation }))
-        break
-      case 'decline':
-        records.push(build('action-decline', envelope, { recommendation }))
-        break
-      case 'try-another':
-        records.push(
-          build('action-decline', envelope, { recommendation, reason: WANTED_SOMETHING_ELSE }),
-        )
-        break
-      case 'unable-now':
-        records.push(build('action-unable-now', envelope, { recommendation }))
-        break
-    }
-
-    if (seed.result !== undefined && seed.ending === 'completed') {
-      records.push(
-        build(
-          'outcome',
-          {
-            occurredAt: (when + 90 * 60_000) as Instant,
-            id: nextId(),
-            domains: [seed.domain],
-            entities: [subject, seed.object],
-          },
-          {
-            about: recommendation,
-            observation: { type: 'scale', value: RESULT_SCALE[seed.result], of: 5 },
-            sentiment: seed.result,
-          },
-        ),
-      )
-    }
-
-    if (seed.comfort !== undefined) {
-      records.push(
-        build(
-          'outcome',
-          {
-            occurredAt: (when + 95 * 60_000) as Instant,
-            id: nextId(),
-            domains: [seed.domain],
-            entities: [subject, seed.object],
-          },
-          {
-            about: recommendation,
-            observation: { type: 'scale', value: COMFORT_SCALE[seed.comfort], of: 5 },
-          },
-        ),
-      )
-    }
-  }
-
-  return records
-}
-
-const RESULT_SCALE = { better: 4, same: 2, worse: 0 } as const
-const COMFORT_SCALE = { easy: 4, awkward: 2, hard: 0 } as const
+export { pastEpisodeRecords, type PastEpisode } from '../../src/synthetic/kit'
 
 /** An evening, described the way a recommendation record describes one. */
 export function evening(overrides: Partial<DecisionContext> = {}): DecisionContext {
