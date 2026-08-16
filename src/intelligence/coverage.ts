@@ -258,11 +258,11 @@ function evidenceByDomain(view: MemoryView, moment: CoverageMoment): DomainEvide
     const held = heard.get(domain)
     if (held === undefined || at > held) heard.set(domain, at)
   }
-  const add = (domain: LifeDomainId, record: CanonicalRecord): void => {
-    addHeard(domain, record.occurredAt)
+  const add = (domain: LifeDomainId, record: CanonicalRecord, at = record.occurredAt): void => {
+    addHeard(domain, at)
     const held = out.get(domain)
     const entry: Evidence = {
-      at: record.occurredAt,
+      at,
       record: record.id,
       source: evidenceSourceOf(record),
     }
@@ -278,8 +278,29 @@ function evidenceByDomain(view: MemoryView, moment: CoverageMoment): DomainEvide
 
     if (bearsConcept(record)) {
       const definition = moment.concepts.definitionFor(record.concept)
-      if (definition.standing === true) add(definition.domain, record)
-      else addHeard(definition.domain, record.occurredAt)
+      /*
+       * A context in force is current, whatever its date — D-012.
+       *
+       * "A context is in force between its `validFrom` and `validUntil`, and
+       * that is the whole of its currency." Reading a durable arrangement's age
+       * as silence puts two sentences on one screen that contradict each other:
+       * the premise says his daughter is here tonight and the line above it
+       * says nothing has come in about her for six months. Both came from the
+       * same run. That is DEF-0017's class, and the app was on the wrong side
+       * of it about the one fact section 8 uses as its example of something
+       * that does not need re-asking.
+       *
+       * Whether he has *done* anything in an area lately is a different
+       * question from whether what the app understands about it has aged, and
+       * conflating them is how a settled fact starts reading as neglect.
+       */
+      const inForce =
+        record.kind === 'context' &&
+        record.validFrom <= moment.now &&
+        (record.validUntil === undefined || moment.now < record.validUntil)
+      const at = inForce ? moment.now : record.occurredAt
+      if (definition.standing === true) add(definition.domain, record, at)
+      else addHeard(definition.domain, at)
       continue
     }
 

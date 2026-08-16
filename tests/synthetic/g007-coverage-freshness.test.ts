@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { CONCEPT } from '../../src/domain/concepts'
 import { DOMAIN } from '../../src/domain/domains'
 import { entityRef } from '../../src/domain/entities'
+import { isUsable } from '../../src/domain/knowledge'
 import { addLocalDays, timeZone, type Instant } from '../../src/domain/time'
 import { decide, type Decision } from '../../src/intelligence/engine'
 import { assembleSituation, type Situation } from '../../src/intelligence/situation'
@@ -335,16 +336,23 @@ describe('G-007 — every scenario in the library is honest about what it knows'
     expect(topic?.neglected).toBe(false)
 
     /*
-     * The area is still reported quiet, and that is a different claim.
+     * And the area reads current, which is the same rule one level up.
      *
-     * Four months without a single study session is a coverage gap however
-     * firmly the app knows which topic he named — the domain-level backstop is
-     * about the area going silent rather than about any concept expiring. What
-     * the rule forbids is the app contradicting itself: saying it knows what he
-     * is studying and, in the next breath, that it does not.
+     * A context in force is current by D-012 — "a context is in force between
+     * its `validFrom` and `validUntil`, and that is the whole of its currency"
+     * — so the app knowing what he is studying is not a months-old assumption,
+     * it is a standing statement with an open window. Reporting the area quiet
+     * on the strength of that record's *date* is what put "nothing has come in
+     * about fatherhood for 6 months" on a screen whose premise said his
+     * daughter was in the house (DEF-0022).
+     *
+     * The signal this gives up is narrower than it looks. A topic recorded as
+     * an ordinary observation still ages out — that is what `career-gone-quiet`
+     * demonstrates at seven weeks — and only a deliberate standing statement is
+     * treated as standing.
      */
-    expect(career?.status).toBe('stale')
-    expect(career?.weakest, 'no sub-area is overdue — the silence is').toBeUndefined()
+    expect(career?.status).toBe('current')
+    expect(career?.weakest, 'no sub-area is overdue').toBeUndefined()
   })
 
   /**
@@ -360,6 +368,55 @@ describe('G-007 — every scenario in the library is honest about what it knows'
     expect(faith?.matters).toBe(false)
     expect(faith?.status).toBe('quiet')
     expect(state.neglected.map((entry) => entry.domain)).not.toContain(DOMAIN.faith)
+  })
+
+  /**
+   * DEF-0022 — the screen contradicting itself, which is DEF-0017's class.
+   *
+   * "A week pointed at the house" put two sentences on one screen from the same
+   * run: the premise said _Adaya is here_, and the line above the decision said
+   * _nothing has come in about fatherhood / family for 6 months_. Both were
+   * produced by the app; only one of them was true in the sense the owner
+   * cares about.
+   *
+   * The root of it is D-012, and it is the one fact section 8 uses as its own
+   * example of something that never needs re-asking: a context is in force
+   * between its `validFrom` and `validUntil`, and that is the whole of its
+   * currency. Measuring the age of the record instead reads a settled custody
+   * arrangement as six months of neglect.
+   */
+  it('never calls an area silent while a context about it is in force', () => {
+    for (const entry of SCENARIOS) {
+      const loaded = loadScenario(entry.id)
+      const situation = assembleSituation(loaded.view(), {
+        now: entry.now,
+        zone: entry.zone,
+        weekStartsOn: 1,
+      })
+
+      if (!isUsable(situation.childPresent)) continue
+      const fatherhood = situation.coverage.get(DOMAIN.fatherhood)
+      expect(fatherhood?.status, `${entry.id}: she is here and the area reads stale`).not.toBe(
+        'stale',
+      )
+    }
+  })
+
+  it('puts no line on Now that the premise directly contradicts', () => {
+    // The class, checked where the owner would meet it: whatever the limiter
+    // says, the premise above it must not have just named the thing the limiter
+    // claims nothing has come in about.
+    for (const entry of SCENARIOS) {
+      const loaded = loadScenario(entry.id)
+      const made = loaded.decision()
+      const limiter = made.explanation?.limiter
+      if (limiter === undefined) continue
+      if (!isUsable(made.situation.childPresent) || !made.situation.childPresent.value) continue
+      expect(
+        limiter.toLowerCase(),
+        `${entry.id}: "${made.explanation?.premise}" / "${limiter}"`,
+      ).not.toContain('fatherhood')
+    }
   })
 
   it('is on the QA screen for the owner to open', () => {

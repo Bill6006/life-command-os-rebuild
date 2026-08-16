@@ -44,7 +44,7 @@ it is zero.
 | Format (Prettier)                         | Pass                                           |
 | Lint (ESLint)                             | Pass, 0 warnings                               |
 | Typecheck (strict TS)                     | Pass, 0 errors                                 |
-| Unit / contract / synthetic / adversarial | 554 passed / 554 (in plain Node, no DOM)       |
+| Unit / contract / synthetic / adversarial | 556 passed / 556 (in plain Node, no DOM)       |
 | Browser tests (Playwright)                | 171 passed / 171 — 57 tests × 360, 430, 1280px |
 | Production build                          | Pass                                           |
 | `npm run verify` from a clean checkout    | Pass                                           |
@@ -52,7 +52,7 @@ it is zero.
 
 ### Where the 554 sit
 
-Phase 3 ended at 448. The 106 new ones are the coverage engine, the two golden
+Phase 3 ended at 448. The 108 new ones are the coverage engine, the two golden
 scenarios, and the owner's four conditions on inferred evidence.
 
 | Suite                                                            | Tests |
@@ -61,7 +61,7 @@ scenarios, and the owner's four conditions on inferred evidence.
 | `synthetic/inferred-evidence` — the four owner conditions        |    41 |
 | `synthetic/adaptive-guide` — one question at a time              |    36 |
 | `unit/intelligence-kernel` — readers, direction, moves, order    |    30 |
-| `synthetic/g007-coverage-freshness` — a quiet domain, noticed    |    27 |
+| `synthetic/g007-coverage-freshness` — a quiet domain, noticed    |    29 |
 | `synthetic/lifecycle` — episodes, double taps, outcome windows   |    26 |
 | `synthetic/g003-growth-evidence` — three occasions, not one      |    23 |
 | `unit/time` — instants, civil dates, weeks, DST, day blocks      |    20 |
@@ -274,7 +274,8 @@ app ask you less than it did.
 
 ## Open defects
 
-None. One was found and closed during the phase.
+None. Two were found and closed during the phase, and neither came from a
+failing assertion.
 
 - **DEF-0021** — the app asking for a verdict when it could ask for the fact.
   Found by a browser test written to demonstrate the derived-evidence fix, which
@@ -282,6 +283,15 @@ None. One was found and closed during the phase.
   the question that would have produced the reading was never asked, and the
   matcher had nothing to read. The complaint that started the whole line of work
   had survived inside the repair for it.
+- **DEF-0022** — found by **printing every line the owner would read, on every
+  scenario, after the suite was green and the checkpoint was already pushed.**
+  "A week pointed at the house" said _Adaya is here_ in the premise and
+  _nothing has come in about fatherhood / family for 6 months_ directly above
+  the decision. Both from the same run. Coverage was measuring the age of the
+  record carrying a durable context instead of asking whether the context was in
+  force — which D-012 already settles, and which section 8 uses as its own
+  example of something that never needs re-asking. DEF-0017's class, on the one
+  fact the plan singles out.
 
 ## Deferred, with reasons
 

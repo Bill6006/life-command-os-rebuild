@@ -39,6 +39,58 @@ None.
 
 ## Fixed
 
+### DEF-0022 — the premise said she was here and the line above it said nothing had
+
+- Status: Fixed
+- Severity: Major — a screen contradicting itself, about the one fact the plan
+  uses as its example of something that never needs re-asking
+- Found in: Phase 4 / `10a0be9`
+- Found by: **printing every line the owner would read on every scenario**, after
+  the whole suite was green and the checkpoint was pushed. Exactly how DEF-0019
+  was found, and the reason that step is worth doing when everything already
+  passes.
+- Class: **the same class as DEF-0017 — a sentence about the app's own blindness
+  written as a finding, on a screen that already says otherwise.** Two lines from
+  one run of "A week pointed at the house":
+
+  > Tuesday evening, 8 hours of sleep, about 60 minutes free, **Adaya is here**.
+  > _Nothing has come in about fatherhood / family for 6 months._
+
+- Reproduction: load "A week pointed at the house" and open Now.
+- Root cause: coverage measured the **age of the record** carrying a durable
+  context rather than asking whether the context was in force. The custody
+  arrangement in that history is dated six months back and has no end, so the
+  fatherhood domain looked six months silent while `childPresent` resolved
+  `explicit` from the very same record.
+
+  D-012 already settles this and coverage was on the wrong side of it: "a
+  context is in force between its `validFrom` and `validUntil`, and that is the
+  whole of its currency." Section 8 uses this exact case as its own example — a
+  durable custody arrangement does not need re-asking every day — so the engine
+  was contradicting the paragraph that asked for it.
+
+- Fix: a context currently in force counts as heard **now**. One line, and it
+  applies to every concept and every domain rather than to custody.
+- Regression: `tests/synthetic/g007-coverage-freshness.test.ts` — "never calls an
+  area silent while a context about it is in force" and "puts no line on Now
+  that the premise directly contradicts", both sweeping the whole scenario
+  library rather than the one that reported it. Reverting the fix was tried;
+  three tests fail.
+- Siblings: swept every scenario for the general shape — a domain reported stale
+  while a concept in it resolves usable. The two rules now asserted are the
+  concept-level one ("never calls a concept neglected while the fact layer still
+  answers it") and this domain-level one, and the second was missing precisely
+  because the first was proved on `durable-custody`, which is protected three
+  ways over and so proved the behaviour rather than the rule.
+- Consequence, and it is a real narrowing: a learning topic stated as _standing
+  context_ now reads as current however old the statement is, where before four
+  months of silence would have flagged it. That is the correct reading of D-012
+  — a standing statement with an open window is not an ageing assumption — and
+  the signal survives where it matters, because a topic recorded as an ordinary
+  observation still expires on its own horizon. `career-gone-quiet` demonstrates
+  that at seven weeks.
+- Fixed in: the sixth Phase 4 checkpoint
+
 ### DEF-0021 — the app asked for a verdict when it could have asked for the fact
 
 - Status: Fixed
