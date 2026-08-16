@@ -12,6 +12,7 @@ import {
 } from '../domain/knowledge'
 import {
   bearsConcept,
+  evidenceSourceOf,
   factValuesEqual,
   type CanonicalRecord,
   type ConceptBearingRecord,
@@ -99,12 +100,41 @@ function sameMoment(a: ConceptBearingRecord, b: ConceptBearingRecord): boolean {
   return a.occurredAt === b.occurredAt && a.recordedAt === b.recordedAt
 }
 
-function knowledgeFromRecord(record: ConceptBearingRecord): Knowledge<FactValue> {
-  // A derived observation is something we worked out; a self-report or a
-  // device reading is something we observed. Neither is a guess, and the
-  // difference is exactly what the inspector has to be able to show.
-  if (record.kind === 'observation' && record.method === 'derived') {
-    return inferred(record.value, record.occurredAt, confidence(0.6), [record.id])
+/**
+ * Sources whose readings are conclusions rather than observations.
+ *
+ * A device reading is deliberately not here, and never was: a watch measuring
+ * hours slept observed something, and treating it as second-hand would be the
+ * source hierarchy D-059 rejects. What separates these three is not how much
+ * they can be trusted — that is `reliability`, below, and a derived reading of
+ * sleep hours outranks a device reading of soreness — but that **something
+ * worked them out**, which the four knowledge states exist to keep visible.
+ */
+const CONCLUDED: readonly string[] = ['derived', 'model', 'legacy-import']
+
+/**
+ * What one record says, and in which of the four states (D-014, D-059).
+ *
+ * Two independent questions, and keeping them apart is the whole of this
+ * function. **Which state** depends only on whether a person observed the thing
+ * or something concluded it — a derived reading is `inferred` however good it
+ * is, so no amount of reliability lets an inference be read as a stated fact.
+ * **How much confidence** the inference carries is a property of the pair: this
+ * source, measuring this concept.
+ *
+ * The flat 0.6 that used to sit here was the thing D-059 replaces. It said a
+ * derived reading of a night's sleep and a model's guess at the owner's mood
+ * were worth the same, which is the mistake section 8 already forbids one layer
+ * down.
+ */
+function knowledgeFromRecord(
+  record: ConceptBearingRecord,
+  concepts: ConceptRegistry,
+): Knowledge<FactValue> {
+  const source = evidenceSourceOf(record)
+  if (CONCLUDED.includes(source)) {
+    const howSure = concepts.reliabilityFor(record.concept, source)
+    return inferred(record.value, record.occurredAt, confidence(howSure), [record.id])
   }
   return explicit(record.value, record.occurredAt, record.id)
 }
@@ -159,7 +189,7 @@ export function resolveFacts(input: FactResolutionInput): FactState {
     }
 
     const window = concepts.freshnessFor(record.concept)
-    const aged = applyFreshness(knowledgeFromRecord(record), now, window, zone)
+    const aged = applyFreshness(knowledgeFromRecord(record, concepts), now, window, zone)
     if (aged.state === 'stale') bucket.staleOnes.push(record)
     else bucket.applicable.push(record)
   }
@@ -247,7 +277,12 @@ function resolveOne(
       // We knew this once. Say so, rather than pretending we never did.
       const latest = bucket.staleOnes.reduce(laterOf)
       const window = context.concepts.freshnessFor(context.concept)
-      return applyFreshness(knowledgeFromRecord(latest), context.now, window, context.zone)
+      return applyFreshness(
+        knowledgeFromRecord(latest, context.concepts),
+        context.now,
+        window,
+        context.zone,
+      )
     }
     if (context.retracted) return unknown('retracted')
     if (bucket.lapsedContexts.length > 0) return unknown('lapsed')
@@ -257,21 +292,50 @@ function resolveOne(
     return unknown('never-observed')
   }
 
-  const winner = pool.reduce(laterOf)
+  const latest = pool.reduce(laterOf)
   const rivals = pool.filter(
     (record) =>
-      record !== winner &&
-      sameMoment(record, winner) &&
-      !factValuesEqual(record.value, winner.value),
+      record !== latest &&
+      sameMoment(record, latest) &&
+      !factValuesEqual(record.value, latest.value),
   )
+
+  /*
+   * Two readings of the same thing at the same instant — D-059.
+   *
+   * The old answer was `contradicted` for every such pair, which is honest and
+   * throws away a real distinction: a watch and a morning recollection
+   * disagreeing about last night are not two equally good guesses, and neither
+   * are a bank feed and an estimate of a balance. So the more reliable source
+   * **for this concept** wins, and the pair only goes unresolved when nothing
+   * separates them.
+   *
+   * Note how narrow this is. It settles a genuine draw and nothing else: two
+   * records at different moments are still ordered by D-012's rule, because a
+   * later statement about the same night is a correction rather than a rival,
+   * and reliability has no business overruling one.
+   */
+  let winner = latest
   if (rivals.length > 0) {
-    return unknown('contradicted', `${rivals.length + 1} records disagree at the same moment`)
+    const ranked = [latest, ...rivals]
+      .map((record) => ({ record, worth: reliabilityOfRecord(record, context.concepts) }))
+      .sort((a, b) => b.worth - a.worth)
+    const best = ranked[0]
+    const runnerUp = ranked[1]
+    if (best === undefined || runnerUp === undefined || best.worth <= runnerUp.worth) {
+      return unknown('contradicted', `${rivals.length + 1} records disagree at the same moment`)
+    }
+    winner = best.record
   }
 
   // Contexts are current because their window says so, not because a clock
   // has not run out yet.
   if (isContext(winner)) return explicit(winner.value, winner.occurredAt, winner.id)
-  return knowledgeFromRecord(winner)
+  return knowledgeFromRecord(winner, context.concepts)
+}
+
+function reliabilityOfRecord(record: ConceptBearingRecord, concepts: ConceptRegistry): number {
+  return concepts.reliabilityFor(record.concept, evidenceSourceOf(record))
 }
 
 function highestTier(records: readonly ConceptBearingRecord[]): readonly ConceptBearingRecord[] {

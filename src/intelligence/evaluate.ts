@@ -131,7 +131,12 @@ function scaled(value: number): number {
 // The dimensions
 // ---------------------------------------------------------------------------
 
-function bottleneckFit(situation: Situation, profile: MoveProfile, friction: number): Dimension {
+function bottleneckFit(
+  candidate: Candidate,
+  situation: Situation,
+  profile: MoveProfile,
+  friction: number,
+): Dimension {
   const limiter = situation.limiter
   if (limiter === undefined) {
     return {
@@ -139,6 +144,38 @@ function bottleneckFit(situation: Situation, profile: MoveProfile, friction: num
       value: 0,
       weight: WEIGHTS['bottleneck-fit'],
       note: 'nothing in particular is in the way',
+    }
+  }
+
+  /*
+   * A life area that has gone quiet — section 63, reaching the ranking.
+   *
+   * Deliberately one-sided, and the shape matters more than the number. A move
+   * that would produce evidence about the quiet area scores for it; **every
+   * other move scores exactly what it scored before this limiter existed**,
+   * which is zero at full weight, the same as an evening with no limiter at
+   * all. Penalising the rest would let a quiet fortnight in one corner of the
+   * owner's life reshuffle every decision he gets, and there is no argument for
+   * that: stale coverage is not an obstacle to doing something else, it is a
+   * reason to do one particular thing.
+   *
+   * So the worst this can do on any evening is bring a move forward. It cannot
+   * push one back, and it cannot on its own turn a quiet evening into a busy
+   * one — a move still has to clear `WORTH_DOING` on its own merits.
+   *
+   * The comparison is on data flowing through, not on a name: which area is
+   * quiet comes from the situation, and D-030 still holds — there is no life
+   * area written down anywhere in this file.
+   */
+  if (limiter.kind === 'coverage') {
+    const addresses = candidate.semantics.domain === limiter.domain
+    return {
+      name: 'bottleneck-fit',
+      value: addresses ? 0.6 : 0,
+      weight: WEIGHTS['bottleneck-fit'],
+      note: addresses
+        ? `would bring something back about the one area that has gone quiet`
+        : 'nothing in particular is in the way',
     }
   }
 
@@ -608,6 +645,7 @@ export function evaluateCandidate(candidate: Candidate, situation: Situation): E
 
   const dimensions: readonly Dimension[] = [
     bottleneckFit(
+      candidate,
       situation,
       profile,
       situation.learning.frictionFor(candidate.semantics.target.verb, situation.context).friction,

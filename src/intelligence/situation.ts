@@ -33,6 +33,7 @@ import {
 } from '../domain/time'
 import type { ConceptId } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
+import { assembleCoverage, type CoverageState } from './coverage'
 import { resolveDirection, type ActiveGoal, type DirectionState } from './direction'
 import { buildLearning, type LearningIndex } from './learning'
 import { collectEpisodes, type Episode, type MoveState } from './lifecycle'
@@ -97,7 +98,16 @@ export interface ConsideredFact {
   readonly sources: readonly RecordId[]
 }
 
-export type LimiterKind = 'recovery' | 'capacity' | 'time'
+/**
+ * What is actually in the way, in the order the situation is read.
+ *
+ * `coverage` is Phase 4's addition and it sits last on purpose. A man nine
+ * hours short of rest has a recovery problem whatever the app has not heard
+ * about lately, and a twenty-minute evening is a harder constraint than a quiet
+ * fortnight. Stale coverage is a real limiter and the weakest of the four:
+ * it is the app's own blind spot rather than a fact about the owner's night.
+ */
+export type LimiterKind = 'recovery' | 'capacity' | 'time' | 'coverage'
 
 export interface Limiter {
   readonly kind: LimiterKind
@@ -156,6 +166,8 @@ export interface Situation {
   readonly homeFriction: Knowledge<FactValue>
   readonly learningTopic: Knowledge<FactValue>
   readonly direction: DirectionState
+  /** How well each life area is currently understood (section 8). */
+  readonly coverage: CoverageState
   readonly limiter: Limiter | undefined
   readonly preferences: readonly OwnerPreference[]
   readonly constraints: readonly ActiveConstraint[]
@@ -353,10 +365,16 @@ function assessStrain(
  * the owner would like to be working on. That separation is what lets scenario
  * G-005 come out the way it does without "sleep wins" being written anywhere.
  *
- * Phase 4's coverage engine adds the stale-evidence limiter; Phase 3's outcome
- * learning adds the ones that need history to see.
+ * Coverage is the fourth and the weakest, and it is last for the same reason
+ * the other three are in the order they are: a life area nobody has mentioned
+ * for six weeks is worth doing something about, and it is not worth doing
+ * something about *instead* of sleeping when the owner is nine hours down.
  */
-function findLimiter(capacity: Capacity, usableMinutes: Knowledge<number>): Limiter | undefined {
+function findLimiter(
+  capacity: Capacity,
+  usableMinutes: Knowledge<number>,
+  coverage: CoverageState,
+): Limiter | undefined {
   const strain = capacity.strain
   if (isUsable(strain) && strain.value !== 'none') {
     const debt = capacity.sleepDebtHours
@@ -395,6 +413,31 @@ function findLimiter(capacity: Capacity, usableMinutes: Knowledge<number>): Limi
       summary: `Only about ${Math.round(usableMinutes.value)} minutes left tonight.`,
       evidence: basisOf(usableMinutes),
       certainty: confidence(0.7),
+    }
+  }
+
+  /*
+   * Section 63, as a limiter.
+   *
+   * The engine has always had a `stale-evidence` trigger and nothing that could
+   * reach it, because nothing noticed that a life area had gone quiet. This is
+   * what notices. It fires only on an area the owner's own history shows
+   * matters to him, only once the silence is long by that area's own standard,
+   * and never on the private domain (section 11).
+   *
+   * The certainty is deliberately modest. "Nothing has come in about the house
+   * for three weeks" is a claim about what the app has been told, which it can
+   * be sure of; whether that matters tonight is a judgement, and the number
+   * says which of the two this is.
+   */
+  const quiet = coverage.mostNeglected
+  if (quiet !== undefined) {
+    return {
+      kind: 'coverage',
+      domain: quiet.domain,
+      summary: quiet.summary,
+      evidence: quiet.weakest?.evidence ?? [],
+      certainty: confidence(0.5),
     }
   }
 
@@ -529,6 +572,13 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
   const block = blockOf(moment.now, moment.zone)
   const isWeekend = local.isoWeekday >= 6
 
+  const coverage = assembleCoverage(view, entities, {
+    now: moment.now,
+    zone: moment.zone,
+    domains,
+    concepts,
+  })
+
   return {
     at: moment.now,
     zone: moment.zone,
@@ -545,7 +595,8 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     homeFriction,
     learningTopic,
     direction: resolveDirection(view, moment, domains),
-    limiter: findLimiter(capacity, usableMinutes),
+    coverage,
+    limiter: findLimiter(capacity, usableMinutes, coverage),
     preferences: collectPreferences(view),
     constraints: collectConstraints(view, moment.now),
     recentMoves: collectRecentMoves(
@@ -553,7 +604,11 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
       addLocalDays(moment.now, -3, moment.zone),
       moment.now,
     ),
-    learning: buildLearning(episodes, view, { now: moment.now, zone: moment.zone }),
+    learning: buildLearning(episodes, view, {
+      now: moment.now,
+      zone: moment.zone,
+      concepts,
+    }),
     considered: reader.considered(),
     entities,
     domains,
@@ -563,3 +618,4 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
 }
 
 export type { ActiveGoal, DirectionState }
+export type { CoverageState, DomainCoverage, ConceptCoverage, RefreshRoute } from './coverage'

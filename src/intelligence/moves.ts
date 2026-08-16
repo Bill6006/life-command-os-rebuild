@@ -1,6 +1,8 @@
+import { CONCEPT } from '../domain/concepts'
 import type { ActionVerb } from '../domain/recommendation'
 import type { OutcomeAspect } from '../domain/records'
 import type { DayBlock } from '../domain/time'
+import type { ConceptId } from '../domain/windows'
 
 /**
  * What each kind of move is expected to cost and buy
@@ -94,6 +96,22 @@ export interface MoveProfile {
   readonly outcome: OutcomeTiming
   /** Which kinds of evidence it can produce, in the order they are asked. */
   readonly aspects: MoveAspects
+  /**
+   * What an outcome about this move is a reading *of* (D-059).
+   *
+   * Reliability is a property of a source and a concept together, so learning
+   * cannot weight an outcome without knowing which concept it speaks to. "How
+   * much did winding down do for your sleep?" is a reading about sleep, and a
+   * derived answer to it is worth what the registry says a derived reading of
+   * sleep is worth — which is a great deal more than a derived reading of how
+   * somebody feels.
+   *
+   * Undefined where the honest answer is that the outcome is about the move
+   * itself rather than about anything in the concept registry. Those fall back
+   * to the default table, which is the same as the behaviour before this
+   * existed.
+   */
+  readonly measures?: ConceptId
 }
 
 const ALL_DAY: readonly DayBlock[] = ['morning', 'afternoon', 'evening']
@@ -109,6 +127,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     refuses: [],
     outcome: SOON,
     aspects: ['effect'],
+    measures: CONCEPT.learningTopic,
   },
   'review-weak-topic': {
     demand: 'effortful',
@@ -120,6 +139,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     refuses: ['late-night'],
     outcome: SOON,
     aspects: ['effect'],
+    measures: CONCEPT.learningTopic,
   },
   'hands-on-lab': {
     demand: 'effortful',
@@ -131,6 +151,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     refuses: ['late-night', 'early-morning'],
     outcome: SOON,
     aspects: ['result'],
+    measures: CONCEPT.learningTopic,
   },
   'protect-sleep': {
     demand: 'restorative',
@@ -143,6 +164,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     // Whether an early night worked is a question with no answer until morning.
     outcome: IN_THE_MORNING,
     aspects: ['effect'],
+    measures: CONCEPT.sleepHours,
   },
   'wind-down': {
     demand: 'restorative',
@@ -154,6 +176,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     refuses: ['morning', 'afternoon', 'early-morning'],
     outcome: IN_THE_MORNING,
     aspects: ['effect'],
+    measures: CONCEPT.sleepHours,
   },
   recover: {
     demand: 'restorative',
@@ -165,6 +188,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     refuses: ['morning', 'early-morning'],
     outcome: IN_THE_MORNING,
     aspects: ['effect'],
+    measures: CONCEPT.sleepHours,
   },
   'ease-off': {
     demand: 'restorative',
@@ -178,6 +202,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     refuses: ['early-morning', 'morning', 'evening', 'late-night'],
     outcome: SOON,
     aspects: ['effect'],
+    measures: CONCEPT.energy,
   },
   'time-with': {
     demand: 'light',
@@ -212,6 +237,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     // A message sent is not a conversation had. Give the other person an hour.
     outcome: { when: 'same-block', after: 60 },
     aspects: ['result', 'comfort'],
+    measures: CONCEPT.socialEnergy,
   },
   'start-conversation': {
     demand: 'effortful',
@@ -223,6 +249,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     refuses: ['late-night', 'early-morning'],
     outcome: SOON,
     aspects: ['result', 'comfort'],
+    measures: CONCEPT.socialEnergy,
   },
   'reset-space': {
     demand: 'light',
@@ -234,6 +261,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     refuses: ['late-night'],
     outcome: SOON,
     aspects: ['result', 'effect'],
+    measures: CONCEPT.homeFriction,
   },
   'handle-money-item': {
     demand: 'effortful',
@@ -245,6 +273,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     refuses: ['late-night', 'early-morning'],
     outcome: SOON,
     aspects: ['result'],
+    measures: CONCEPT.cashBuffer,
   },
   move: {
     demand: 'effortful',
@@ -256,6 +285,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     refuses: ['late-night'],
     outcome: SOON,
     aspects: ['effect'],
+    measures: CONCEPT.energy,
   },
   hold: {
     demand: 'restorative',

@@ -66,6 +66,40 @@ export function isProvenanceSource(value: unknown): value is ProvenanceSource {
   return typeof value === 'string' && (PROVENANCE_SOURCES as readonly string[]).includes(value)
 }
 
+/**
+ * Where a reading actually came from, as one answer (D-059).
+ *
+ * Two fields carry part of this and neither carries all of it. `provenance`
+ * says who wrote the row down — which for a scenario is the fixture and for a
+ * guide answer is the owner. An observation's `method` says how the reading was
+ * obtained. Reliability is a question about the second, so a synthetic fixture
+ * standing in for a watch reading has to read as a watch reading rather than as
+ * "synthetic", or every scenario in the laboratory would be judged on how it
+ * was typed instead of on what it represents.
+ *
+ * `provenance` still wins when it names an origin the owner did not: derived,
+ * device, model and legacy-import are all claims that something other than a
+ * person produced the row, and a record may not talk its way out of one.
+ */
+export function evidenceSourceOf(record: CanonicalRecord): ProvenanceSource {
+  const written = record.provenance.source
+  if (written !== 'owner' && written !== 'synthetic') return written
+  if (record.kind !== 'observation') return 'owner'
+  switch (record.method) {
+    case 'device':
+      return 'device'
+    case 'derived':
+      return 'derived'
+    case 'self-report':
+      return 'owner'
+  }
+}
+
+/** True when the owner said it, rather than something concluding it for them. */
+export function isOwnerStated(record: CanonicalRecord): boolean {
+  return evidenceSourceOf(record) === 'owner'
+}
+
 export interface Provenance {
   readonly source: ProvenanceSource
   /** What actually wrote it: a fixture name, a QA action, an app version. */

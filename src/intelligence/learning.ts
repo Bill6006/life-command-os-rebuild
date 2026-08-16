@@ -1,6 +1,13 @@
+import type { ConceptRegistry } from '../domain/concepts'
 import type { RecordId } from '../domain/ids'
 import { verbLabel, type ActionVerb } from '../domain/recommendation'
-import type { DecisionContext, FactValue } from '../domain/records'
+import {
+  evidenceSourceOf,
+  type DecisionContext,
+  type FactValue,
+  type OutcomeRecord,
+  type ProvenanceSource,
+} from '../domain/records'
 import {
   localDaysBetween,
   localDayIdAt,
@@ -8,6 +15,7 @@ import {
   type Instant,
   type TimeZoneId,
 } from '../domain/time'
+import type { ConceptId } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
 import { WANTED_SOMETHING_ELSE, type Episode } from './lifecycle'
 import { profileFor } from './moves'
@@ -180,6 +188,69 @@ export interface WeightedEpisode {
   readonly weight: number
 }
 
+/**
+ * One piece of evidence, and where it came from — the owner's requirement 2.
+ *
+ * This used to be a bare `RecordId`, which meant "3 comparable results" could
+ * be three things the owner said, three things the app worked out, or a mix,
+ * and nothing on any screen could tell him which. Once the app can write
+ * outcomes he never typed, that is not a reporting gap — it is the difference
+ * between a belief he can sensibly correct and one he cannot.
+ *
+ * So provenance travels with the evidence rather than being recoverable from
+ * it. `fromOwner` is the question a reader actually has, and it is a separate
+ * field from `reliability` on purpose: how far a reading moved a belief and
+ * whether a person said it are different questions, and D-059 turns on not
+ * letting the first answer the second (D-014).
+ */
+export interface EvidenceRef {
+  readonly record: RecordId
+  readonly source: ProvenanceSource
+  /** True when the owner said it; false when something concluded it for him. */
+  readonly fromOwner: boolean
+  /** What this source was worth for the concept this outcome speaks to. */
+  readonly reliability: number
+}
+
+/**
+ * A lifecycle event is something the owner did.
+ *
+ * Follow-through and appetite are learned from starts, inabilities and
+ * declines, and nothing in the system may write one on the owner's behalf —
+ * inference can close a loop the owner opened and may never open one
+ * (requirement 4). `tests/synthetic/inferred-evidence.test.ts` asserts it
+ * rather than leaving it to this comment.
+ */
+function ownerEvidence(record: RecordId): EvidenceRef {
+  return { record, source: 'owner', fromOwner: true, reliability: 1 }
+}
+
+/** How many of these the owner said, and how many something worked out. */
+export function evidenceMix(evidence: readonly EvidenceRef[]): {
+  readonly stated: number
+  readonly concluded: number
+} {
+  let stated = 0
+  for (const ref of evidence) if (ref.fromOwner) stated += 1
+  return { stated, concluded: evidence.length - stated }
+}
+
+/**
+ * The mix in one ordinary line, for a surface that has room for one.
+ *
+ * Never says "3 comparable results" without saying what they were, because
+ * that is the sentence requirement 2 exists to prevent.
+ */
+export function describeEvidenceMix(evidence: readonly EvidenceRef[]): string | undefined {
+  const { stated, concluded } = evidenceMix(evidence)
+  if (stated + concluded === 0) return undefined
+  const answered = stated === 1 ? '1 you answered' : `${stated} you answered`
+  const worked = concluded === 1 ? '1 worked out' : `${concluded} worked out`
+  if (concluded === 0) return answered
+  if (stated === 0) return `${worked} from your own readings`
+  return `${answered}, ${worked} from your own readings`
+}
+
 export interface LearnedEffect {
   /** The prior, pulled toward what was observed. */
   readonly now: number
@@ -190,7 +261,7 @@ export interface LearnedEffect {
   readonly samples: number
   /** How far the observation pulled the prior, 0–1. */
   readonly pull: number
-  readonly evidence: readonly RecordId[]
+  readonly evidence: readonly EvidenceRef[]
   /** Owner-facing, when there is enough to say anything. */
   readonly summary: string | undefined
   readonly corrected: boolean
@@ -217,7 +288,7 @@ export interface LearnedResult {
   readonly reached: number
   readonly samples: number
   readonly pull: number
-  readonly evidence: readonly RecordId[]
+  readonly evidence: readonly EvidenceRef[]
   readonly note: string
   readonly corrected: boolean
 }
@@ -236,7 +307,7 @@ export interface LearnedFriction {
   readonly friction: number
   readonly samples: number
   readonly pull: number
-  readonly evidence: readonly RecordId[]
+  readonly evidence: readonly EvidenceRef[]
   readonly note: string
   readonly corrected: boolean
 }
@@ -246,7 +317,7 @@ export interface LearnedFollowThrough {
   readonly rate: number
   readonly samples: number
   readonly pull: number
-  readonly evidence: readonly RecordId[]
+  readonly evidence: readonly EvidenceRef[]
   readonly note: string
   readonly corrected: boolean
 }
@@ -256,7 +327,7 @@ export interface LearnedAppetite {
   readonly turnedDown: number
   readonly samples: number
   readonly pull: number
-  readonly evidence: readonly RecordId[]
+  readonly evidence: readonly EvidenceRef[]
   readonly note: string
   readonly corrected: boolean
 }
@@ -275,6 +346,8 @@ export interface LearningIndex {
 interface Moment {
   readonly now: Instant
   readonly zone: TimeZoneId
+  /** Needed to read reliability per concept rather than per source (D-059). */
+  readonly concepts: ConceptRegistry
 }
 
 /**
@@ -351,20 +424,52 @@ function shrink(prior: number, observed: number, n: number): { value: number; pu
  * Keyed on the aspect rather than on whether a sentiment happens to be present.
  * The old test — "it has a sentiment, so it is a result" — is what let four
  * kinds of evidence become one belief (DEF-0020).
+ *
+ * **It asks nothing about where the record came from.** Four questions decide
+ * whether an outcome is legible here — it is an outcome, it is about this
+ * episode, the aspect matches, the observation reads as a number — and
+ * provenance is not one of them. That is the owner's requirement 3: an outcome
+ * the app derived travels the same path as one the owner tapped, so there is no
+ * second outcome path to keep in step with this one. What provenance decides is
+ * how much the answer is *worth*, below, and never whether it is heard.
  */
 function answerOf(
   episode: Episode,
   aspect: 'result' | 'effect' | 'comfort',
   read: (value: FactValue) => number | undefined,
-): { value: number; source: RecordId } | undefined {
+): { value: number; record: OutcomeRecord } | undefined {
   for (const outcome of episode.outcomes) {
     if (outcome.aspect !== aspect) continue
     const value = read(outcome.observation)
     if (value === undefined) continue
-    return { value, source: outcome.id }
+    return { value, record: outcome }
   }
   return undefined
 }
+
+/**
+ * What this outcome is worth, given where it came from and what it measures.
+ *
+ * D-059: reliability is a property of the pair. A derived reading of a night's
+ * sleep and a model's guess at how somebody feels are not the same evidence,
+ * and a table keyed on the source alone cannot tell them apart. `measures` on
+ * the move profile is what supplies the second half of the pair.
+ */
+function evidenceFor(
+  record: OutcomeRecord,
+  measures: ConceptId | undefined,
+  concepts: ConceptRegistry,
+): EvidenceRef {
+  const source = evidenceSourceOf(record)
+  const reliability =
+    measures === undefined
+      ? concepts.reliabilityFor(UNREGISTERED, source)
+      : concepts.reliabilityFor(measures, source)
+  return { record: record.id, source, fromOwner: source === 'owner', reliability }
+}
+
+/** A concept nobody registered, so the lookup lands on the default table. */
+const UNREGISTERED = 'reliability.default' as ConceptId
 
 function whenPhrase(block: DayBlock): string {
   return block === 'evening' || block === 'late-night' ? 'tonight' : 'today'
@@ -430,6 +535,37 @@ export function buildLearning(
       context.usableMinutes ?? '?',
     ].join('|')
 
+  /**
+   * Answered aspects of comparable episodes, weighted.
+   *
+   * The weight is `similarity × recency × reliability`. Similarity dominates
+   * because section 20 says context similarity matters more than date
+   * proximity; recency is a gentle multiplier on it; and reliability is the
+   * third term D-059 adds — how far a reading from *this* source, about *this*
+   * concept, is entitled to move a belief. Adding it here rather than building
+   * a parallel learner is the owner's requirement 1: one weight, one path,
+   * three reasons an evening might count for less.
+   */
+  const gather = (
+    verb: ActionVerb,
+    context: DecisionContext,
+    aspect: 'result' | 'effect' | 'comfort',
+    read: (value: FactValue) => number | undefined,
+    after: Instant | undefined,
+    onlyCompleted: boolean,
+  ): { weight: number; value: number; evidence: EvidenceRef }[] => {
+    const measures = profileFor(verb).measures
+    const out: { weight: number; value: number; evidence: EvidenceRef }[] = []
+    for (const found of comparable(episodes, verb, context, moment, after)) {
+      if (onlyCompleted && found.episode.state !== 'completed') continue
+      const answer = answerOf(found.episode, aspect, read)
+      if (answer === undefined) continue
+      const evidence = evidenceFor(answer.record, measures, moment.concepts)
+      out.push({ weight: found.weight * evidence.reliability, value: answer.value, evidence })
+    }
+    return out
+  }
+
   const effectFor = (verb: ActionVerb, context: DecisionContext): LearnedEffect =>
     memo(cacheKey('effect', verb, context), () => {
       const profile = profileFor(verb)
@@ -445,13 +581,7 @@ export function buildLearning(
        * for evidence that the move does not work, because neither is in the
        * set being looked at.
        */
-      const contributing: { weight: number; value: number; source: RecordId }[] = []
-      for (const found of comparable(episodes, verb, context, moment, after)) {
-        if (found.episode.state !== 'completed') continue
-        const answer = answerOf(found.episode, 'effect', effectValueOf)
-        if (answer === undefined) continue
-        contributing.push({ weight: found.weight, value: answer.value, source: answer.source })
-      }
+      const contributing = gather(verb, context, 'effect', effectValueOf, after, true)
 
       const n = contributing.reduce((sum, entry) => sum + entry.weight, 0)
       if (n === 0) {
@@ -482,7 +612,7 @@ export function buildLearning(
         moved: speaksTo,
         samples: contributing.length,
         pull: moved.pull,
-        evidence: contributing.map((entry) => entry.source),
+        evidence: contributing.map((entry) => entry.evidence),
         summary:
           moved.pull < 0.2
             ? undefined
@@ -496,13 +626,7 @@ export function buildLearning(
       const after = rejected.get(beliefKey('result', verb))
       const corrected = after !== undefined
 
-      const contributing: { weight: number; value: number; source: RecordId }[] = []
-      for (const found of comparable(episodes, verb, context, moment, after)) {
-        if (found.episode.state !== 'completed') continue
-        const answer = answerOf(found.episode, 'result', resultValueOf)
-        if (answer === undefined) continue
-        contributing.push({ weight: found.weight, value: answer.value, source: answer.source })
-      }
+      const contributing = gather(verb, context, 'result', resultValueOf, after, true)
 
       const n = contributing.reduce((sum, entry) => sum + entry.weight, 0)
       if (n === 0) {
@@ -526,7 +650,7 @@ export function buildLearning(
         reached: moved.value,
         samples: contributing.length,
         pull: moved.pull,
-        evidence: contributing.map((entry) => entry.source),
+        evidence: contributing.map((entry) => entry.evidence),
         note:
           moved.value >= 1
             ? 'no reason yet to think this falls short'
@@ -543,12 +667,7 @@ export function buildLearning(
       const after = rejected.get(beliefKey('friction', verb))
       const corrected = after !== undefined
 
-      const contributing: { weight: number; value: number; source: RecordId }[] = []
-      for (const found of comparable(episodes, verb, context, moment, after)) {
-        const answer = answerOf(found.episode, 'comfort', comfortFrictionOf)
-        if (answer === undefined) continue
-        contributing.push({ weight: found.weight, value: answer.value, source: answer.source })
-      }
+      const contributing = gather(verb, context, 'comfort', comfortFrictionOf, after, false)
 
       const n = contributing.reduce((sum, entry) => sum + entry.weight, 0)
       if (n === 0) {
@@ -569,7 +688,7 @@ export function buildLearning(
         friction: moved.value,
         samples: contributing.length,
         pull: moved.pull,
-        evidence: contributing.map((entry) => entry.source),
+        evidence: contributing.map((entry) => entry.evidence),
         note:
           moved.value > prior + 0.05
             ? 'harder for you than it looks'
@@ -587,16 +706,16 @@ export function buildLearning(
 
       let managed = 0
       let blocked = 0
-      const evidence: RecordId[] = []
+      const evidence: EvidenceRef[] = []
 
       for (const found of comparable(episodes, verb, context, moment, after)) {
         const state = found.episode.state
         if (state === 'started' || state === 'completed') {
           managed += found.weight
-          evidence.push(found.episode.recommendation)
+          evidence.push(ownerEvidence(found.episode.recommendation))
         } else if (state === 'unable-now') {
           blocked += found.weight
-          evidence.push(found.episode.recommendation)
+          evidence.push(ownerEvidence(found.episode.recommendation))
         }
       }
 
@@ -639,7 +758,7 @@ export function buildLearning(
 
       let refused = 0
       let offered = 0
-      const evidence: RecordId[] = []
+      const evidence: EvidenceRef[] = []
 
       for (const found of comparable(episodes, verb, context, moment, after)) {
         offered += found.weight
@@ -649,7 +768,7 @@ export function buildLearning(
         // into a standing objection.
         const strength = found.episode.wantedAnother ? WANTED_ANOTHER_WEIGHT : 1
         refused += found.weight * strength
-        evidence.push(found.episode.recommendation)
+        evidence.push(ownerEvidence(found.episode.recommendation))
       }
 
       if (offered === 0) {

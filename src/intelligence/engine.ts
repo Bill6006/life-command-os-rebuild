@@ -23,7 +23,7 @@ import { generateCandidates, type Candidate } from './candidates'
 import { applyConstraints } from './constraints'
 import { evaluateAll, withDimension, type Evaluation } from './evaluate'
 import { explain, type Explanation } from './explain'
-import { similarity } from './learning'
+import { describeEvidenceMix, similarity } from './learning'
 import type { MoveState } from './lifecycle'
 import { profileFor } from './moves'
 import { outcomeWindowFor } from './outcomes'
@@ -361,24 +361,33 @@ function learningRows(selection: Selection, situation: Situation): readonly Lear
       samples: effect.samples,
       pull: effect.pull,
       evidence: effect.evidence,
+      evidenceMix: describeEvidenceMix(effect.evidence),
       summary: effect.summary,
       corrected: effect.corrected,
       followThrough: {
         rate: followThrough.rate,
         samples: followThrough.samples,
         note: followThrough.note,
+        evidence: followThrough.evidence,
       },
       appetite: {
         turnedDown: appetite.turnedDown,
         samples: appetite.samples,
         note: appetite.note,
+        evidence: appetite.evidence,
       },
-      result: { reached: result.reached, samples: result.samples, note: result.note },
+      result: {
+        reached: result.reached,
+        samples: result.samples,
+        note: result.note,
+        evidence: result.evidence,
+      },
       friction: {
         started: prior.friction,
         landed: friction.friction,
         samples: friction.samples,
         note: friction.note,
+        evidence: friction.evidence,
       },
     }
   })
@@ -458,6 +467,12 @@ function nothingForThisLimiter(situation: Situation): string | undefined {
       return 'Nothing here is worth asking of a sore body.'
     case 'time':
       return 'Nothing here would fit the time left.'
+    case 'coverage':
+      // The limiter line above already says which area has gone quiet and for
+      // how long. This says the only part it does not: that the app has nothing
+      // to suggest which would bring anything back, which is the honest answer
+      // and is different from the area not mattering.
+      return 'Nothing here would bring anything back about it tonight.'
     default:
       return undefined
   }

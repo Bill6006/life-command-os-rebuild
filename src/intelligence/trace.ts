@@ -1,6 +1,7 @@
 import type { LifeDomainId } from '../domain/domains'
 import type { RecordId } from '../domain/ids'
 import type { Confidence } from '../domain/knowledge'
+import type { EvidenceRef } from './learning'
 import type { ActionVerb } from '../domain/recommendation'
 import type { DayBlock, Instant, LocalDayId, LocalWeekId, TimeZoneId } from '../domain/time'
 import type { ConceptId } from '../domain/windows'
@@ -78,6 +79,14 @@ export interface Swing {
  * the reasoning. A run of refusals shows up under `appetite` and nowhere else,
  * so an inspector can see directly that a decline never became a claim about
  * whether the move works.
+ *
+ * **Every piece of evidence says where it came from** (owner requirement 2).
+ * `evidence` was a bare list of record ids, which meant "3 comparable results"
+ * could be three things the owner said, three things the app worked out, or a
+ * mix — and nothing anywhere could tell him which before he decided whether to
+ * correct the belief. That gap was tolerable while every outcome was a tap. It
+ * stops being tolerable the moment the app can write an outcome he never typed,
+ * so it is closed before the first one is written rather than after.
  */
 export interface LearningTrace {
   readonly candidate: string
@@ -88,24 +97,38 @@ export interface LearningTrace {
   readonly landedAt: { readonly now: number; readonly tomorrow: number }
   readonly samples: number
   readonly pull: number
-  readonly evidence: readonly RecordId[]
+  readonly evidence: readonly EvidenceRef[]
+  /** How many of those the owner said, in a line. Absent when there are none. */
+  readonly evidenceMix: string | undefined
   readonly summary: string | undefined
   /** True when the owner has told the app to stop holding this belief. */
   readonly corrected: boolean
-  readonly followThrough: { readonly rate: number; readonly samples: number; readonly note: string }
+  readonly followThrough: {
+    readonly rate: number
+    readonly samples: number
+    readonly note: string
+    readonly evidence: readonly EvidenceRef[]
+  }
   /** How far the intended end state gets. Distinct from follow-through. */
-  readonly result: { readonly reached: number; readonly samples: number; readonly note: string }
+  readonly result: {
+    readonly reached: number
+    readonly samples: number
+    readonly note: string
+    readonly evidence: readonly EvidenceRef[]
+  }
   /** How hard it has actually proved, against the table's guess. */
   readonly friction: {
     readonly started: number
     readonly landed: number
     readonly samples: number
     readonly note: string
+    readonly evidence: readonly EvidenceRef[]
   }
   readonly appetite: {
     readonly turnedDown: number
     readonly samples: number
     readonly note: string
+    readonly evidence: readonly EvidenceRef[]
   }
 }
 
