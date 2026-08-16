@@ -1344,7 +1344,6 @@ function whatWorked(): Scenario {
   const kitchen = entityRef('place', 'the kitchen')
   const walk = entityRef('routine', 'a walk')
   const subnetting = entityRef('learning-topic', 'subnetting')
-  const ccna = entityRef('goal', 'the CCNA')
   const now = kit.local('2026-02-19', '19:30')
 
   const anEvening = {
@@ -1370,29 +1369,20 @@ function whatWorked(): Scenario {
         domain: DOMAIN.home,
         privacy: 'normal',
       })
+      /*
+       * A topic, deliberately with no goal behind it.
+       *
+       * A live CCNA goal would put a thumb on the scale for studying, and this
+       * scenario is about what a month of outcomes does rather than about a
+       * goal outrunning them. The two career histories carry that contest
+       * already.
+       */
       const topic = kit.entity({
         kind: 'learning-topic',
         label: 'subnetting',
         domain: DOMAIN.career,
         privacy: 'normal',
-        links: [{ relation: 'supports-goal', target: ccna.id }],
       })
-      const goal = kit.entity({
-        kind: 'goal',
-        label: 'the CCNA',
-        domain: DOMAIN.career,
-        privacy: 'normal',
-      })
-
-      const goalRecord = kit.record(
-        'goal',
-        {
-          occurredAt: kit.local('2026-01-05', '09:00'),
-          domains: [DOMAIN.career],
-          entities: [ccna],
-        },
-        { goal: ccna, statement: 'Pass the CCNA before the summer', status: 'active' },
-      )
 
       const studying = kit.record(
         'observation',
@@ -1493,8 +1483,8 @@ function whatWorked(): Scenario {
       )
 
       return kit.document({
-        entities: [place, topic, goal],
-        records: [goalRecord, studying, friction, ...nights, energy, time, ...past],
+        entities: [place, topic],
+        records: [studying, friction, ...nights, energy, time, ...past],
         exportedAt: now,
       })
     },

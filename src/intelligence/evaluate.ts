@@ -289,12 +289,22 @@ function describeLearned(value: number, from: LearnedEffect | undefined, when: s
  * the move — a lab that keeps getting interrupted on evenings like this is
  * still a good lab.
  *
- * **It abstains rather than scoring zero when it knows nothing**, and the
- * difference is not cosmetic. The score is a weighted mean, so a dimension that
- * contributes zero at full weight drags every move toward the middle — which
- * moved the `WORTH_DOING` bar the moment this dimension was added and turned a
- * walk that had been worth doing for two phases into no action at all. A
- * dimension with nothing to say must cost nothing to have.
+ * **It only ever speaks against a move, and only when something has actually
+ * got in the way.** The prior is that anything can be done, so a move that has
+ * been managed every time sits *at* the prior — which is the absence of
+ * evidence against it, not evidence for it. Scoring that positively let a move
+ * with four completions beat one with no history at all on the strength of
+ * "more likely to actually happen", which compares something known against
+ * something unknown and calls the difference a finding. That is D-038's rule:
+ * an absence may not be asserted from ignorance.
+ *
+ * So it abstains at zero weight unless a shortfall has been observed, and the
+ * difference between abstaining and scoring zero is not cosmetic. The score is
+ * a weighted mean, so a dimension contributing zero at full weight drags every
+ * move toward the middle — which moved the `WORTH_DOING` bar the moment this
+ * dimension was added and turned a walk that had been worth doing for two
+ * phases into no action at all. A dimension with nothing to say must cost
+ * nothing to have.
  *
  * The older dimensions predate this and still score zero at full weight for
  * their unknown cases. That is a wart rather than a principle: the weights were
@@ -306,12 +316,12 @@ function followThrough(candidate: Candidate, situation: Situation): Dimension {
     candidate.semantics.target.verb,
     situation.context,
   )
-  if (learned.samples === 0) {
+  if (learned.samples === 0 || learned.rate >= 1) {
     return { name: 'follow-through', value: 0, weight: 0, note: learned.note }
   }
   return {
     name: 'follow-through',
-    value: scaled((learned.rate - 0.8) * 5),
+    value: scaled((learned.rate - 1) * 4),
     weight: WEIGHTS['follow-through'],
     note: learned.note,
   }

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { isUsable } from '../../src/domain/knowledge'
-import type { Instant, TimeZoneId } from '../../src/domain/time'
 import { WORTH_DOING } from '../../src/intelligence/arbitrate'
 import type { SnapshotWire } from '../../src/memory/snapshot'
 import { decideOn, loadScenario, orphanPronounsIn } from './harness'
@@ -72,35 +71,67 @@ describe('G-014 — the system can say nothing is needed', () => {
   })
 })
 
-describe('G-014 — and it is the situation saying it, not the engine', () => {
+describe('G-014 — and it is the past saying it, not the engine', () => {
   /*
    * The counterexample, and it is the same discipline G-005's pair uses: a
    * scenario where nothing is worth doing proves nothing on its own, because
    * "never suggest anything" would pass it too.
    *
-   * Everything is held still except the evening's length. Fifteen minutes and
-   * two walks that did nothing is a stable state; an hour changes the
-   * arithmetic, and the same history has something to say again.
+   * Three things are taken away: the week behind it, the stiff back, and the
+   * quarter of an hour. The three good nights and the Thursday stay. With those
+   * gone the same history has something to say.
+   *
+   * All three, and that is the finding rather than an inconvenience. No single
+   * one of them flips it — each is asserted below — which is what "the current
+   * state is stable" actually means. A test that pinned the answer on one fact
+   * would be describing a tidier scenario than the one that exists, and the
+   * tidier one would be the easier thing to break by accident later.
    */
-  it('finds something to do when the evening is longer', () => {
-    const loaded = loadScenario('settled-evening')
-    const document = loaded.scenario.build()
+  function without(what: 'the-week' | 'the-stiffness' | 'the-clock' | 'all-three'): SnapshotWire {
+    const document = loadScenario('settled-evening').scenario.build()
+    const dropWeek = what === 'the-week' || what === 'all-three'
+    const dropStiffness = what === 'the-stiffness' || what === 'all-three'
+    const longer = what === 'the-clock' || what === 'all-three'
 
-    const stretched = {
-      ...document,
-      records: document.records.map((row) => {
+    const episodes = new Set(
+      document.records
+        .filter((row) => (row as Record<string, unknown>)['kind'] === 'action-recommendation')
+        .map((row) => (row as Record<string, unknown>)['id']),
+    )
+
+    const records = document.records
+      .filter((row) => {
+        const record = row as Record<string, unknown>
+        const kind = record['kind']
+        if (dropWeek && typeof kind === 'string' && kind.startsWith('action-')) return false
+        if (dropWeek && kind === 'outcome' && episodes.has(record['about'])) return false
+        if (dropStiffness && record['concept'] === 'health.soreness') return false
+        return true
+      })
+      .map((row) => {
+        if (!longer) return row
         const record = row as Record<string, unknown>
         const value = record['value'] as Record<string, unknown> | undefined
         if (value?.['type'] !== 'duration') return row
-        return { ...record, value: { type: 'duration', minutes: 90 } }
-      }),
-    }
+        return { ...record, value: { type: 'duration', minutes: 60 } }
+      })
 
-    const withRoom = loadScenarioFrom(stretched, loaded.scenario.now, loaded.scenario.zone)
-    expect(withRoom.kind).toBe('move')
+    return { ...document, records }
+  }
+
+  const at = loadScenario('settled-evening').scenario
+
+  it('finds something to do once none of the three is true', () => {
+    const fresh = decideOn(without('all-three'), at.now, at.zone)
+    expect(fresh.kind).toBe('move')
+    expect(fresh.evaluation?.candidate.semantics.target.verb).toBe('move')
+  })
+
+  it('is not resting on any one of them on its own', () => {
+    // Each removed alone leaves it stable, which is what "the current state is
+    // stable" means: it is the situation, not one fact in it.
+    expect(decideOn(without('the-week'), at.now, at.zone).kind).toBe('no-action')
+    expect(decideOn(without('the-stiffness'), at.now, at.zone).kind).toBe('no-action')
+    expect(decideOn(without('the-clock'), at.now, at.zone).kind).toBe('no-action')
   })
 })
-
-function loadScenarioFrom(document: SnapshotWire, now: Instant, zone: TimeZoneId) {
-  return decideOn(document, now, zone)
-}

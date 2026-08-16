@@ -40,15 +40,15 @@ is no reason to expect fewer here.
 | Format (Prettier)                         | Pass                                           |
 | Lint (ESLint)                             | Pass, 0 warnings                               |
 | Typecheck (strict TS)                     | Pass, 0 errors                                 |
-| Unit / contract / synthetic / adversarial | 419 passed / 419 (in plain Node, no DOM)       |
+| Unit / contract / synthetic / adversarial | 420 passed / 420 (in plain Node, no DOM)       |
 | Browser tests (Playwright)                | 138 passed / 138 — 46 tests × 360, 430, 1280px |
 | Production build                          | Pass                                           |
 | `npm run verify` from a clean checkout    | Pass                                           |
 | Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand     |
 
-### Where the 419 sit
+### Where the 420 sit
 
-Phase 2 ended at 330. The 89 new ones are almost all about the loop.
+Phase 2 ended at 330. The 90 new ones are almost all about the loop.
 
 | Suite                                                            | Tests |
 | ---------------------------------------------------------------- | ----: |
@@ -78,7 +78,7 @@ Phase 2 ended at 330. The 89 new ones are almost all about the loop.
 | `synthetic/intelligence-tournament` — section 18's choice        |     8 |
 | `contract/round-trip` — 20 record kinds, lossless                |     8 |
 | `synthetic/g002` — durable family context                        |     7 |
-| `synthetic/g014` — no action is a real answer                    |     7 |
+| `synthetic/g014` — no action is a real answer                    |     8 |
 | `adversarial/malformed-records`                                  |     7 |
 | `contract/legacy-quarantine` — preserved and inert               |     6 |
 
@@ -88,7 +88,7 @@ Phase 2 ended at 330. The 89 new ones are almost all about the loop.
 | -------------------------------------------------------- | ------------------------------------------------------------------- |
 | G-001, G-002, G-005, G-008, G-009, G-011 pass, unchanged | Pass — 63 tests, and the six files are byte-identical to `79d033b`  |
 | G-004 passes as an automated synthetic scenario          | Pass — 10 tests, including the no-quota sweep                       |
-| G-014 passes as an automated synthetic scenario          | Pass — 7 tests, including the counterexample                        |
+| G-014 passes as an automated synthetic scenario          | Pass — 8 tests, including the counterexample                        |
 | A completed action demonstrably changes later reasoning  | Pass — same evening, same options, different winner                 |
 | A decline is not mislabelled ineffective                 | Pass — and structurally, not by convention (D-045)                  |
 | Can't-now changes the situation appropriately            | Pass — reaches follow-through and neither of the other two          |
@@ -98,7 +98,7 @@ Phase 2 ended at 330. The 89 new ones are almost all about the loop.
 | The phone flow feels fast                                | **Owner judgement — not yet made**                                  |
 | CI green                                                 | Pass                                                                |
 | `npm run verify` from a clean checkout                   | Pass                                                                |
-| Preview deploys automatically, SHA matches               | Pass — `b0e23ed` live                                               |
+| Preview deploys automatically, SHA matches               | Pass — verified live against `main` HEAD                            |
 | **The owner tests the loop on a phone and accepts it**   | **Not yet — this is the gate**                                      |
 
 ## What changed
@@ -231,7 +231,7 @@ knows, and does answering a follow-up feel worth the tap.
 
 ## Open defects
 
-None. Three were found and closed during the phase.
+None. Four were found and closed during the phase.
 
 - **DEF-0016** — the strained late afternoon, deferred by the owner at the end
   of Phase 2 and the natural first thing to build here.
@@ -241,6 +241,12 @@ None. Three were found and closed during the phase.
   tonight is going" printed underneath.
 - **DEF-0018** — found because a browser test hung rather than failed. Tapping
   **Start it** slid **Done** into the space under the finger.
+- **DEF-0019** — found by printing the copy the owner would actually read rather
+  than only asserting on parts of it. A move with four completions was beating
+  one with no history at all, and the app was calling the difference "more
+  likely to actually happen". Fixing it showed that two of this phase's own
+  demonstrations had been riding on the same bonus; both fixtures now carry
+  real evidence on both sides and are more honest for it.
 
 Each regression was proved to fail with its defect reintroduced. So were all six
 of section 20's rules, individually: a decline counted as ineffectiveness, an

@@ -185,22 +185,31 @@ describe('a completed action changes later reasoning', () => {
     /*
      * The gate item: a completed action demonstrably changes later reasoning.
      *
-     * On this evening the kitchen wins on the priors alone. Three evenings on
-     * which a walk actually left the owner better is enough to change the
-     * answer — and nothing else about the two histories differs, so that is the
-     * outcomes doing it rather than the fixture.
+     * On this evening the kitchen wins on the priors alone. A fortnight in
+     * which walking left the owner better four times and clearing the kitchen
+     * did nothing for them three times changes the answer — and nothing else
+     * about the two histories differs, so that is the outcomes doing it rather
+     * than the fixture.
+     *
+     * It takes a fortnight rather than an evening on purpose. `PATIENCE` is 3,
+     * so a single comparable result moves a belief a quarter of the way and no
+     * further (D-046). A demonstration that flipped on one outcome would be
+     * demonstrating a bug.
      */
     const walked = history({
       prefix: 'OW',
-      past: [5, 8, 12].map((day) => ({
-        verb: 'move' as const,
-        object: A_WALK,
-        domain: DOMAIN.health,
-        on: `2026-05-${String(day).padStart(2, '0')}`,
-        context: evening(),
-        ending: 'completed' as const,
-        result: 'better' as const,
-      })),
+      past: [
+        ...[2, 5, 8, 12].map((day) => ({
+          verb: 'move' as const,
+          object: A_WALK,
+          domain: DOMAIN.health,
+          on: `2026-05-${String(day).padStart(2, '0')}`,
+          context: evening(),
+          ending: 'completed' as const,
+          result: 'better' as const,
+        })),
+        ...clearedTheKitchen([3, 7, 11], 'completed', 'worse'),
+      ],
     })
 
     expect(cold.evaluation?.candidate.id).toBe(CLEAR_THE_KITCHEN)

@@ -39,6 +39,48 @@ None.
 
 ## Fixed
 
+### DEF-0019 — a move was praised for having a record, against one with none
+
+- Status: Fixed
+- Severity: Major — the app stating a finding it had not made
+- Found in: Phase 3 / `b0e23ed`
+- Found by: printing the copy the owner would actually read on the new
+  scenarios, rather than only asserting on parts of it
+- Class: **D-038's rule reaching a dimension instead of a sentence.** An
+  absence may not be asserted from ignorance, and `follow-through` was doing
+  exactly that: its prior is "anything can be done", so a move managed every
+  time sits _at_ the prior — which is the absence of evidence against it, not
+  evidence for it. Scoring that at +1 let a move with four completions beat one
+  with no history at all, and the explanation then said so out loud.
+- Reproduction: load "A month of what actually worked". _Why this one_ read
+  **"More likely to actually happen."** — comparing clearing the kitchen, which
+  had four completions, against a subnetting recall the app had never once
+  watched the owner attempt. It is not more likely to happen. It is the one we
+  know about.
+- Root cause: `value: scaled((rate - 0.8) * 5)`, which is positive whenever the
+  rate is above 0.8 — including when nothing has been learned at all.
+- Fix: the dimension only ever speaks against a move, and only when a shortfall
+  has actually been observed. `scaled((rate - 1) * 4)`, abstaining at zero
+  weight when the rate is at the prior. D-048's rule extended: a dimension with
+  nothing to say must cost nothing to have, and sitting at the prior is nothing
+  to say.
+- Consequence, and it is the point: two demonstrations turned out to have been
+  riding on the bogus bonus. "A completed action changes which move wins" needed
+  a fortnight of real evidence on both sides rather than three evenings on one,
+  and G-014's counterexample needed to name all three things holding that
+  evening still rather than one. Both fixtures are more honest for it, and both
+  were quietly weaker than they read before.
+- Regression: `tests/synthetic/outcome-learning.test.ts` — "costs nothing at all
+  when nothing has ever been blocked" already asserted the zero-sample case;
+  what was missing was the at-the-prior case, now covered by the same check
+  plus G-014's "is not resting on any one of them on its own". Restoring the old
+  formula was tried; the winner flips back and the counterexample fails.
+- Siblings: checked the other two learned quantities. `effect` is symmetric
+  around its prior by construction and cannot reward an absence. `appetite`
+  starts at zero and only ever goes negative, so it has the same shape as the
+  fix rather than the defect.
+- Fixed in: the fourth Phase 3 checkpoint
+
 ### DEF-0018 — the second half of a double tap landed on a different button
 
 - Status: Fixed

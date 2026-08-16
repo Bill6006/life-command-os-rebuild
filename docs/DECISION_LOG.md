@@ -913,12 +913,22 @@ one in words.
 
 ---
 
-## D-048 — A dimension with no evidence carries no weight
+## D-048 — A dimension with nothing to say carries no weight
 
 **Phase:** 3 · **Status:** Active
 
 `follow-through` returns weight 0 when nothing has ever been blocked, rather
 than a value of 0 at full weight.
+
+**Amended before the phase closed, and the amendment is the more important
+half.** The first version abstained only when there were _no_ comparable
+episodes. That still rewarded a move for having a record that agreed with the
+prior — four completions and no interruptions scored +1, which let it beat a
+move the app had never watched the owner attempt, and the explanation said
+"more likely to actually happen" about the difference. That is DEF-0019, and it
+is D-038's rule arriving in a dimension instead of a sentence. So the rule is
+not "no evidence" but "nothing to say": the dimension abstains whenever the rate
+sits at its prior, and only ever speaks against a move.
 
 **Why:** The score is a weighted mean, so a dimension contributing zero at full
 weight drags every move toward the middle. Adding `follow-through` did exactly
