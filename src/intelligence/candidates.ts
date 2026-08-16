@@ -11,6 +11,7 @@ import type {
   WhyNowTrigger,
 } from '../domain/recommendation'
 import type { ConceptId } from '../domain/windows'
+import { practiceEvidenceHasAged } from './growth'
 import { profileFor } from './moves'
 import type { Situation } from './situation'
 import { entityValue } from './values'
@@ -336,6 +337,17 @@ const fatherhoodCandidates: Generator = (situation) => {
   for (const skill of situation.entities.byKind('development-skill')) {
     if (situation.entities.linked(skill.id, 'about-person')?.id !== child.id) continue
     const skillRef: EntityRef = { id: skill.id, kind: skill.kind }
+    /*
+     * Why this is being suggested, and it is two different reasons.
+     *
+     * Section 8: "a child's developmental skill may need periodic evidence."
+     * When the last occasion was a fortnight ago the honest answer is that the
+     * app's picture of where she is has aged, and `stale-evidence` says so —
+     * which is also what makes that trigger reachable for something other than
+     * a cash buffer. When she practised it on Tuesday, this is simply a chance
+     * that is open now, which is a different sentence and a different urgency.
+     */
+    const aged = practiceEvidenceHasAged(situation, skillRef)
     out.push(
       candidate(
         {
@@ -344,10 +356,12 @@ const fatherhoodCandidates: Generator = (situation) => {
           domain: DOMAIN.fatherhood,
           verb: 'growth-opportunity',
           object: skillRef,
-          trigger: 'opportunity-window',
+          trigger: aged ? 'stale-evidence' : 'opportunity-window',
           evidence,
           leansOn: [CONCEPT.childPresent],
-          proposedBecause: 'there is a growth area with a natural chance to practise it',
+          proposedBecause: aged
+            ? 'nothing has come in about this growth area for a while'
+            : 'there is a growth area with a natural chance to practise it',
         },
         situation,
       ),

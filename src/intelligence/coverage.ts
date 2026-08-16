@@ -124,8 +124,22 @@ export interface DomainCoverage {
   readonly strength: EvidenceStrength
   /** True when the owner's own history shows this area matters to him. */
   readonly matters: boolean
+  /** The last thing that spoke to this area's standing understanding. */
   readonly lastEvidenceAt: Instant | undefined
   readonly daysSinceEvidence: number | undefined
+  /**
+   * When anything at all was last heard about this area, momentary readings
+   * included.
+   *
+   * Separate from `daysSinceEvidence` because they answer different questions
+   * and the difference shows on screen. Health has no standing concept in the
+   * registry — energy and soreness are both readings of a moment — so its
+   * meaningful evidence is whatever he has *done*, and on a history where he
+   * has done nothing that would be nothing at all. Reporting Health as an area
+   * the app has never heard of, on an evening he answered both questions an
+   * hour ago, is the app forgetting what it was just told.
+   */
+  readonly daysSinceHeard: number | undefined
   /** Where the most recent evidence came from, whatever kind it was. */
   readonly source: ProvenanceSource | undefined
   readonly concepts: readonly ConceptCoverage[]
@@ -450,6 +464,12 @@ export function assembleCoverage(
         ? undefined
         : Math.max(0, localDaysBetween(localDayIdAt(newest.at, moment.zone), today))
 
+    const heard = heardAt.get(domain.id)
+    const daysSinceHeard =
+      heard === undefined
+        ? undefined
+        : Math.max(0, localDaysBetween(localDayIdAt(heard, moment.zone), today))
+
     const conceptRows: ConceptCoverage[] = []
     for (const definition of conceptsByDomain.get(domain.id) ?? []) {
       const entry = view.facts.get(definition.id)
@@ -524,19 +544,14 @@ export function assembleCoverage(
      * shown matters to him is section 63 whatever the registry does or does not
      * track about it.
      */
-    const heard = heardAt.get(domain.id)
-    const daysSinceHeard =
-      heard === undefined
-        ? undefined
-        : Math.max(0, localDaysBetween(localDayIdAt(heard, moment.zone), today))
     const goneQuiet = matters && daysSinceHeard !== undefined && daysSinceHeard >= DOMAIN_QUIET_DAYS
 
     const status: CoverageStatus =
-      newest === undefined
+      heard === undefined
         ? 'unheard'
         : anyNeglected || goneQuiet
           ? 'stale'
-          : anyHeld || (daysSinceEvidence !== undefined && daysSinceEvidence < NEGLECT_FLOOR_DAYS)
+          : anyHeld || daysSinceHeard === undefined || daysSinceHeard < NEGLECT_FLOOR_DAYS
             ? 'current'
             : 'quiet'
 
@@ -552,15 +567,16 @@ export function assembleCoverage(
       domain: domain.id,
       label: domain.label,
       status,
-      strength: strengthFor(conceptRows, daysSinceEvidence),
+      strength: strengthFor(standing, daysSinceEvidence),
       matters,
       lastEvidenceAt: newest?.at,
       daysSinceEvidence,
+      daysSinceHeard,
       source: newest?.source,
       concepts: conceptRows,
       weakest,
       refresh: routeFor(status, standing, coming.has(domain.id), subjects.has(domain.id)),
-      summary: describe(domain.label, status, staleFor),
+      summary: describe(domain.label, status, staleFor ?? daysSinceHeard),
     })
   }
 

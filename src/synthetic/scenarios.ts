@@ -1493,6 +1493,291 @@ function whatWorked(): Scenario {
   }
 }
 
+// ---------------------------------------------------------------------------
+// G-003 — a growth area, and evidence that it has moved on
+// ---------------------------------------------------------------------------
+
+/**
+ * Ordering her own food, three times running.
+ *
+ * G-003 asks for four things: a natural practice opportunity can be suggested,
+ * the outcome updates the evidence, repeated evidence can produce a suggested
+ * growth-status update, and no stage jump comes from one event. The history is
+ * built so all four are visible on one screen — three occasions spread over
+ * three weeks in June, each finished and each answered "all the way", nothing
+ * since, and then a Saturday in July with her in the house.
+ *
+ * The gap is G-003's stated input: "a child growth skill has stale/limited
+ * evidence". Section 8 gives the same example in its own words — a child's
+ * developmental skill may need periodic evidence — so three weeks of silence is
+ * why this is being suggested at all, and the trigger says so.
+ *
+ * The spacing is not decoration. Three evenings in a row would be caught by the
+ * duplication dimension and would also be a worse claim: section 9's rule is
+ * that a growth-stage change is not invented from one event, and evidence
+ * gathered across three weeks of ordinary life is what makes the suggestion
+ * worth putting in front of him.
+ */
+function growthEvidence(): Scenario {
+  const kit = createKit('GG', 'America/Denver', '2026-06-01T12:00:00Z')
+  const nextId = sequentialRecordIds('GGX')
+  const adaya = entityRef('person', 'Adaya')
+  const custody = entityRef('relationship', 'Full custody')
+  const ordering = entityRef('development-skill', 'ordering her own food')
+  const now = kit.local('2026-07-11', '17:00')
+
+  return {
+    id: 'growth-evidence',
+    title: 'Three times running, and the app noticed',
+    summary: 'Three good occasions in June, nothing since, and a change worth asking about.',
+    proves: 'G-003 — repeated evidence proposes a growth update, and one event never could.',
+    zone: kit.zone,
+    now,
+    build() {
+      const child = kit.entity({
+        kind: 'person',
+        label: 'Adaya',
+        domain: DOMAIN.fatherhood,
+        privacy: 'child-family-sensitive',
+      })
+      const arrangement = kit.entity({
+        kind: 'relationship',
+        label: 'Full custody',
+        domain: DOMAIN.fatherhood,
+        privacy: 'child-family-sensitive',
+        links: [{ relation: 'party', target: adaya.id }],
+      })
+      // The link is what makes the skill hers rather than a floating noun. The
+      // renderer walks it, and so does the suggestion below — "she" has to be
+      // somebody.
+      const skill = kit.entity({
+        kind: 'development-skill',
+        label: 'ordering her own food',
+        domain: DOMAIN.fatherhood,
+        privacy: 'child-family-sensitive',
+        links: [{ relation: 'about-person', target: adaya.id }],
+      })
+
+      const standing = kit.record(
+        'context',
+        {
+          occurredAt: kit.local('2026-01-01', '09:00'),
+          domains: [DOMAIN.fatherhood],
+          entities: [adaya, custody],
+        },
+        {
+          concept: CONCEPT.custodyArrangement,
+          value: { type: 'text', value: 'full custody' },
+          durability: 'durable',
+          validFrom: kit.local('2026-01-01', '09:00'),
+        },
+      )
+
+      const present = kit.record(
+        'context',
+        {
+          occurredAt: kit.local('2026-01-01', '09:00'),
+          domains: [DOMAIN.fatherhood],
+          entities: [adaya],
+        },
+        {
+          concept: CONCEPT.childPresent,
+          value: { type: 'boolean', value: true },
+          durability: 'durable',
+          validFrom: kit.local('2026-01-01', '09:00'),
+        },
+      )
+
+      const nights = ['09', '10', '11'].map((day) =>
+        kit.record(
+          'observation',
+          { occurredAt: kit.local(`2026-07-${day}`, '07:00'), domains: [DOMAIN.sleep] },
+          {
+            concept: CONCEPT.sleepHours,
+            value: { type: 'number', value: 7.75, unit: 'hours' },
+            method: 'self-report',
+          },
+        ),
+      )
+
+      const energy = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-07-11', '15:00'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.energy,
+          value: { type: 'scale', value: 3, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      const time = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-07-11', '16:00'), domains: [DOMAIN.direction] },
+        {
+          concept: CONCEPT.usableTimeTonight,
+          value: { type: 'duration', minutes: 120 },
+          method: 'self-report',
+        },
+      )
+
+      const anAfternoon = {
+        block: 'afternoon' as const,
+        weekend: true,
+        strain: 'none' as const,
+        childPresent: true,
+        usableMinutes: 120,
+      }
+
+      const past = pastEpisodeRecords(
+        kit,
+        ['2026-06-06', '2026-06-13', '2026-06-20'].map((on) => ({
+          verb: 'growth-opportunity' as const,
+          object: ordering,
+          subject: ordering,
+          domain: DOMAIN.fatherhood,
+          on,
+          at: '12:30',
+          context: anAfternoon,
+          ending: 'completed' as const,
+          result: 'all' as const,
+        })),
+        nextId,
+      )
+
+      return kit.document({
+        entities: [child, arrangement, skill],
+        records: [standing, present, ...nights, energy, time, ...past],
+        exportedAt: now,
+      })
+    },
+  }
+}
+
+// ---------------------------------------------------------------------------
+// G-007 — coverage freshness
+// ---------------------------------------------------------------------------
+
+/**
+ * Seven weeks since anything about the studying.
+ *
+ * G-007's input is "the owner has not manually opened a domain for weeks", and
+ * the expectation is that the app works out whether what it knows is still
+ * enough, creates a natural refresh path if it is not, and does not leave the
+ * domain silently frozen.
+ *
+ * The shape of this history is what makes it a test rather than a demo:
+ * **everything else is current.** Sleep is answered, energy is answered, the
+ * evening is known. Only career has gone quiet, and it is a domain the owner
+ * has plainly not abandoned — the CCNA goal is live and the exam is still
+ * coming. An app that says nothing here is doing exactly what section 63
+ * forbids: carrying on as though a seven-week-old picture were today's.
+ */
+function careerGoneQuiet(): Scenario {
+  const kit = createKit('GQ', 'America/Denver', '2026-05-01T12:00:00Z')
+  const subnetting = entityRef('learning-topic', 'subnetting')
+  const ccna = entityRef('goal', 'pass the CCNA')
+  const now = kit.local('2026-07-14', '19:30')
+
+  return {
+    id: 'career-gone-quiet',
+    title: 'Everything current except the studying',
+    summary: 'Sleep and energy are answered today. Nothing about the CCNA since late May.',
+    proves: 'G-007 — a quiet domain is noticed, and given a way back rather than left frozen.',
+    zone: kit.zone,
+    now,
+    build() {
+      const topic = kit.entity({
+        kind: 'learning-topic',
+        label: 'subnetting',
+        domain: DOMAIN.career,
+        privacy: 'normal',
+      })
+      const goal = kit.entity({
+        kind: 'goal',
+        label: 'pass the CCNA',
+        domain: DOMAIN.career,
+        privacy: 'normal',
+      })
+
+      // The goal is live and says so. This is what makes the silence matter:
+      // coverage reads importance off the owner's own commitments, so a domain
+      // he has walked away from stays quiet and one he is still aiming at does
+      // not.
+      const goalRecord = kit.record(
+        'goal',
+        {
+          occurredAt: kit.local('2026-05-02', '09:00'),
+          domains: [DOMAIN.career],
+          entities: [ccna],
+        },
+        { goal: ccna, statement: 'Pass the CCNA', status: 'active' },
+      )
+
+      const lastMention = kit.record(
+        'observation',
+        {
+          occurredAt: kit.local('2026-05-26', '20:00'),
+          domains: [DOMAIN.career],
+          entities: [subnetting],
+        },
+        {
+          concept: CONCEPT.learningTopic,
+          value: { type: 'entity', value: subnetting },
+          method: 'self-report',
+        },
+      )
+
+      const nights = ['11', '12', '13', '14'].map((day) =>
+        kit.record(
+          'observation',
+          { occurredAt: kit.local(`2026-07-${day}`, '07:00'), domains: [DOMAIN.sleep] },
+          {
+            concept: CONCEPT.sleepHours,
+            value: { type: 'number', value: 7.5, unit: 'hours' },
+            method: 'self-report',
+          },
+        ),
+      )
+
+      const energy = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-07-14', '18:00'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.energy,
+          value: { type: 'scale', value: 3, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      const soreness = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-07-14', '18:00'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.soreness,
+          value: { type: 'scale', value: 1, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      const time = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-07-14', '19:00'), domains: [DOMAIN.direction] },
+        {
+          concept: CONCEPT.usableTimeTonight,
+          value: { type: 'duration', minutes: 60 },
+          method: 'self-report',
+        },
+      )
+
+      return kit.document({
+        entities: [topic, goal],
+        records: [goalRecord, lastMention, ...nights, energy, soreness, time],
+        exportedAt: now,
+      })
+    },
+  }
+}
+
 export const SCENARIOS: readonly Scenario[] = [
   subnettingStruggle(),
   sleepDeficitAgainstCareer(),
@@ -1508,6 +1793,8 @@ export const SCENARIOS: readonly Scenario[] = [
   malformedHistory(),
   quietFortnight(),
   goneQuiet(),
+  growthEvidence(),
+  careerGoneQuiet(),
 ]
 
 export function scenarioById(id: string): Scenario | undefined {

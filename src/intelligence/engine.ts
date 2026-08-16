@@ -20,6 +20,7 @@ import {
 } from './advisor'
 import { arbitrate, type NoActionReason, type Selection } from './arbitrate'
 import { generateCandidates, type Candidate } from './candidates'
+import { growthSuggestions, type GrowthSuggestion } from './growth'
 import { applyConstraints } from './constraints'
 import { evaluateAll, withDimension, type Evaluation } from './evaluate'
 import { explain, type Explanation } from './explain'
@@ -92,6 +93,15 @@ export interface Decision {
   /** Where the chosen move stands, if it has been in front of the owner before. */
   readonly state: MoveState | undefined
   readonly noAction: NoAction | undefined
+  /**
+   * Growth areas the evidence says have moved on, as questions (section 9).
+   *
+   * Not part of the decision and deliberately alongside it. Section 9 asks the
+   * app to be able to say "she seems more comfortable doing this on her own —
+   * update this growth area?" after enough evidence, and the only place it can
+   * say anything to the owner is beside the move he is already reading.
+   */
+  readonly growth: readonly GrowthSuggestion[]
   readonly trace: DecisionTrace
 }
 
@@ -581,6 +591,7 @@ export function decide(
     evaluation: noAction === undefined ? selection.chosen : undefined,
     state,
     noAction,
+    growth: growthSuggestions(situation),
     trace: {
       architecture,
       at: situation.at,
