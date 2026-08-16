@@ -11,7 +11,12 @@ import {
   type Confidence,
   type Knowledge,
 } from '../domain/knowledge'
-import { bearsConcept, describeFactValue, type FactValue } from '../domain/records'
+import {
+  bearsConcept,
+  describeFactValue,
+  type DecisionContext,
+  type FactValue,
+} from '../domain/records'
 import type { PrivacyClass } from '../domain/privacy'
 import type { RecommendationSemantics } from '../domain/recommendation'
 import {
@@ -29,6 +34,8 @@ import {
 import type { ConceptId } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
 import { resolveDirection, type ActiveGoal, type DirectionState } from './direction'
+import { buildLearning, type LearningIndex } from './learning'
+import { collectEpisodes, type Episode, type MoveState } from './lifecycle'
 import { booleanValue, hoursValue, minutesValue, narrowKnowledge, ratioValue } from './values'
 import { decisionEntities } from './vocabulary'
 
@@ -130,7 +137,7 @@ export interface PriorMove {
   readonly state: MoveState
 }
 
-export type MoveState = 'shown' | 'started' | 'completed' | 'declined' | 'unable-now'
+export type { MoveState }
 
 export interface Situation {
   readonly at: Instant
@@ -140,6 +147,8 @@ export interface Situation {
   readonly weekStartsOn: WeekStartDay
   readonly block: DayBlock
   readonly isWeekend: boolean
+  /** The comparable shape of this moment, for learning and for the record. */
+  readonly context: DecisionContext
   readonly capacity: Capacity
   readonly usableMinutes: Knowledge<number>
   readonly childPresent: Knowledge<boolean>
@@ -151,6 +160,8 @@ export interface Situation {
   readonly preferences: readonly OwnerPreference[]
   readonly constraints: readonly ActiveConstraint[]
   readonly recentMoves: readonly PriorMove[]
+  /** What this owner's own outcomes have taught the engine (section 20). */
+  readonly learning: LearningIndex
   readonly considered: readonly ConsideredFact[]
   readonly entities: EntityIndex
   readonly domains: DomainRegistry
@@ -390,6 +401,34 @@ function findLimiter(capacity: Capacity, usableMinutes: Knowledge<number>): Limi
   return undefined
 }
 
+/**
+ * The situation, reduced to the few things worth comparing evenings on.
+ *
+ * Written onto a recommendation when the owner acts on it, and never revised —
+ * so "was that evening like tonight?" is answered from what the app could see
+ * at the time rather than from everything written since. Section 16 asks for
+ * historical comparison to weigh context rather than date proximity, and this
+ * is the context it weighs.
+ */
+function contextFor(
+  block: DayBlock,
+  isWeekend: boolean,
+  strain: Knowledge<Strain>,
+  childPresent: Knowledge<boolean>,
+  usableMinutes: Knowledge<number>,
+): DecisionContext {
+  return {
+    block,
+    weekend: isWeekend,
+    // Stale counts as unknown here on purpose: a reading that has expired is not
+    // a description of this evening, and letting it stand in for one is how a
+    // month-old number quietly becomes today's context.
+    strain: isUsable(strain) ? strain.value : 'unknown',
+    ...(isUsable(childPresent) ? { childPresent: childPresent.value } : {}),
+    ...(isUsable(usableMinutes) ? { usableMinutes: Math.round(usableMinutes.value) } : {}),
+  }
+}
+
 export function describeHours(hours: number): string {
   const rounded = Math.round(hours * 2) / 2
   if (rounded < 1) return 'under an hour'
@@ -428,42 +467,28 @@ function collectConstraints(view: MemoryView, now: Instant): readonly ActiveCons
 }
 
 /**
- * Moves already put in front of the owner, and what became of them.
+ * Moves already put in front of the owner recently, and what became of them.
  *
- * Phase 2 only reads these — the lifecycle itself is Phase 3. What they are
- * needed for here is the duplication check in section 19: the same move
- * offered three evenings running is a worse move on the third evening.
+ * A thin projection of the episodes in `lifecycle.ts`, narrowed to the window
+ * the duplication check in section 19 cares about: the same move offered three
+ * evenings running is a worse move on the third evening. Everything the
+ * lifecycle knows lives in one place and this reads it, rather than folding the
+ * same records a second way and eventually disagreeing about what "declined"
+ * means.
  */
-function collectRecentMoves(view: MemoryView, from: Instant, to: Instant): readonly PriorMove[] {
-  const states = new Map<RecordId, MoveState>()
-  for (const record of view.history.effective) {
-    switch (record.kind) {
-      case 'action-start':
-        states.set(record.recommendation, 'started')
-        break
-      case 'action-completion':
-        states.set(record.recommendation, 'completed')
-        break
-      case 'action-decline':
-        states.set(record.recommendation, 'declined')
-        break
-      case 'action-unable-now':
-        states.set(record.recommendation, 'unable-now')
-        break
-      default:
-        break
-    }
-  }
-
+function collectRecentMoves(
+  episodes: readonly Episode[],
+  from: Instant,
+  to: Instant,
+): readonly PriorMove[] {
   const moves: PriorMove[] = []
-  for (const record of view.history.effective) {
-    if (record.kind !== 'action-recommendation') continue
-    if (record.occurredAt < from || record.occurredAt > to) continue
+  for (const episode of episodes) {
+    if (episode.shownAt < from || episode.shownAt > to) continue
     moves.push({
-      semantics: record.recommendation,
-      at: record.occurredAt,
-      source: record.id,
-      state: states.get(record.id) ?? 'shown',
+      semantics: episode.semantics,
+      at: episode.shownAt,
+      source: episode.recommendation,
+      state: episode.state,
     })
   }
   return moves
@@ -498,14 +523,21 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
 
   const local = localDateTimeAt(moment.now, moment.zone)
 
+  // One pass over history for both: the duplication check reads the recent end
+  // of it, and learning reads all of it against the situation being decided.
+  const episodes = collectEpisodes(view, moment.zone)
+  const block = blockOf(moment.now, moment.zone)
+  const isWeekend = local.isoWeekday >= 6
+
   return {
     at: moment.now,
     zone: moment.zone,
     dayId: local.dayId,
     weekId: localWeekIdAt(moment.now, moment.zone, moment.weekStartsOn),
     weekStartsOn: moment.weekStartsOn,
-    block: blockOf(moment.now, moment.zone),
-    isWeekend: local.isoWeekday >= 6,
+    block,
+    isWeekend,
+    context: contextFor(block, isWeekend, capacity.strain, childPresent, usableMinutes),
     capacity,
     usableMinutes,
     childPresent,
@@ -516,7 +548,12 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     limiter: findLimiter(capacity, usableMinutes),
     preferences: collectPreferences(view),
     constraints: collectConstraints(view, moment.now),
-    recentMoves: collectRecentMoves(view, addLocalDays(moment.now, -3, moment.zone), moment.now),
+    recentMoves: collectRecentMoves(
+      episodes,
+      addLocalDays(moment.now, -3, moment.zone),
+      moment.now,
+    ),
+    learning: buildLearning(episodes, view, { now: moment.now, zone: moment.zone }),
     considered: reader.considered(),
     entities,
     domains,

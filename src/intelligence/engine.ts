@@ -3,10 +3,12 @@ import type { DomainRegistry } from '../domain/domains'
 import { renderRecommendation } from '../domain/recommendation'
 import {
   DEFAULT_WEEK_START,
+  localDayIdAt,
   type Instant,
   type TimeZoneId,
   type WeekStartDay,
 } from '../domain/time'
+import type { DecisionContext } from '../domain/records'
 import type { StoreSnapshot } from '../memory/store'
 import { buildView, type MemoryView } from '../memory/view'
 import {
@@ -21,14 +23,20 @@ import { generateCandidates, type Candidate } from './candidates'
 import { applyConstraints } from './constraints'
 import { evaluateAll, withDimension, type Evaluation } from './evaluate'
 import { explain, type Explanation } from './explain'
+import { similarity } from './learning'
+import type { MoveState } from './lifecycle'
+import { profileFor } from './moves'
+import { outcomeWindowFor } from './outcomes'
 import { answerRecord, QUESTIONS } from './questions'
-import {
-  assembleSituation,
-  type MoveState,
-  type Situation,
-  type SituationMoment,
-} from './situation'
-import type { DecisionTrace, ProposedMove, RankedMove, Swing } from './trace'
+import { assembleSituation, type Situation, type SituationMoment } from './situation'
+import type {
+  DecisionTrace,
+  EpisodeTrace,
+  LearningTrace,
+  ProposedMove,
+  RankedMove,
+  Swing,
+} from './trace'
 
 /**
  * The engine (canonical plan sections 17.1 and 17.2).
@@ -273,6 +281,141 @@ function rankingRows(selection: Selection, situation: Situation): readonly Ranke
   })
 }
 
+/**
+ * A move the owner has started stays on screen until they settle it.
+ *
+ * Section 19 lists "continue" as a valid decision and section 6 asks Now to be
+ * able to show an active recommendation state. Both point at the same thing,
+ * and it is a real problem rather than a nicety: every lifecycle event
+ * recomputes the decision, so tapping **Start** on clearing the kitchen
+ * immediately makes clearing the kitchen a recently-offered move and can hand
+ * the top spot to something else — the owner looks up from the sink and the app
+ * is suggesting a walk.
+ *
+ * This is deliberately not a score. Giving the in-flight move a bonus large
+ * enough to win would be a number chosen to force an outcome, and it would
+ * still lose on some evening nobody tested. Saying it outright, in one place,
+ * with a note in the trace, is the honest version — and it keeps the ranking
+ * underneath it truthful about what the engine would otherwise have picked.
+ *
+ * It only overrides a candidate that is still on offer. A walk started at seven
+ * and remembered at midnight is not something to still be recommending.
+ */
+function continuing(selection: Selection, situation: Situation): Selection {
+  const started = situation.recentMoves.filter(
+    (prior) => prior.state === 'started' && localDayIdOf(prior.at, situation) === situation.dayId,
+  )
+  if (started.length === 0) return selection
+
+  for (const prior of started) {
+    const found = selection.ranked.find(
+      (evaluation) =>
+        evaluation.candidate.semantics.target.verb === prior.semantics.target.verb &&
+        evaluation.candidate.semantics.target.object.id === prior.semantics.target.object.id,
+    )
+    if (found === undefined) continue
+    if (found === selection.chosen) return selection
+
+    return {
+      ...selection,
+      chosen: found,
+      noAction: undefined,
+      ranked: [found, ...selection.ranked.filter((evaluation) => evaluation !== found)],
+      notes: [
+        ...selection.notes,
+        `${found.candidate.id} is already under way, so it stays in front of what would otherwise have been chosen`,
+      ],
+    }
+  }
+
+  return selection
+}
+
+function localDayIdOf(at: Instant, situation: Situation): string {
+  return localDayIdAt(at, situation.zone)
+}
+
+/**
+ * What the owner's own outcomes did to each surviving candidate.
+ *
+ * Built from the same index the evaluator read, rather than recomputed — a
+ * trace assembled by a second pass over the same inputs is a plausible story
+ * about a decision rather than the decision's own working.
+ */
+function learningRows(selection: Selection, situation: Situation): readonly LearningTrace[] {
+  return selection.ranked.map((evaluation) => {
+    const verb = evaluation.candidate.semantics.target.verb
+    const prior = profileFor(verb)
+    const effect = situation.learning.effectFor(verb, situation.context)
+    const followThrough = situation.learning.followThroughFor(verb, situation.context)
+    const appetite = situation.learning.appetiteFor(verb, situation.context)
+
+    return {
+      candidate: evaluation.candidate.id,
+      verb,
+      moved: effect.moved,
+      startedAt: { now: prior.now, tomorrow: prior.tomorrow },
+      landedAt: { now: effect.now, tomorrow: effect.tomorrow },
+      samples: effect.samples,
+      pull: effect.pull,
+      evidence: effect.evidence,
+      summary: effect.summary,
+      corrected: effect.corrected,
+      followThrough: {
+        rate: followThrough.rate,
+        samples: followThrough.samples,
+        note: followThrough.note,
+      },
+      appetite: {
+        turnedDown: appetite.turnedDown,
+        samples: appetite.samples,
+        note: appetite.note,
+      },
+    }
+  })
+}
+
+/** Every episode in the history, and how much this evening resembles it. */
+function episodeRows(situation: Situation): readonly EpisodeTrace[] {
+  return situation.learning.episodes.map((episode) => {
+    const rendered = renderRecommendation(episode.semantics, situation.entities)
+    const window = outcomeWindowFor(episode, situation.zone)
+    const given = episode.outcomes.length
+
+    return {
+      recommendation: episode.recommendation,
+      sentence: rendered.ok ? rendered.rendered.sentence : 'could not be put into words',
+      dayId: episode.dayId,
+      state: episode.state,
+      outcome:
+        given > 0
+          ? `${given} answer(s) given`
+          : window === undefined
+            ? 'no result to ask about'
+            : situation.at < window.earliest
+              ? 'not due yet'
+              : situation.at > window.latest
+                ? 'the window closed unanswered'
+                : 'due now',
+      context:
+        episode.context === undefined ? 'nothing recorded' : describeContext(episode.context),
+      resembles: episode.context === undefined ? 0 : similarity(episode.context, situation.context),
+    }
+  })
+}
+
+function describeContext(context: DecisionContext): string {
+  const parts = [
+    context.block.replace('-', ' '),
+    context.weekend ? 'weekend' : 'weekday',
+    `strain ${context.strain}`,
+  ]
+  if (context.childPresent !== undefined)
+    parts.push(context.childPresent ? 'she was here' : 'alone')
+  if (context.usableMinutes !== undefined) parts.push(`${context.usableMinutes} minutes`)
+  return parts.join(', ')
+}
+
 function stateOfChosen(evaluation: Evaluation, situation: Situation): MoveState {
   const target = evaluation.candidate.semantics.target
   let latest: { at: Instant; state: MoveState } | undefined
@@ -379,7 +522,7 @@ export function decide(
     notes.push(...advised.notes)
   }
 
-  const selection = arbitrate(evaluations, situation, rejected.length)
+  const selection = continuing(arbitrate(evaluations, situation, rejected.length), situation)
   notes.push(...selection.notes)
 
   let explanation: Explanation | undefined
@@ -437,6 +580,8 @@ export function decide(
       proposed: proposedRows(proposed, situation),
       rejected,
       ranking: rankingRows(selection, situation),
+      learning: learningRows(selection, situation),
+      episodes: episodeRows(situation),
       chosen: noAction === undefined ? selection.chosen?.candidate.id : undefined,
       noAction: noAction?.reason,
       notes,

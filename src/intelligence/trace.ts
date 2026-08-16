@@ -1,12 +1,14 @@
 import type { LifeDomainId } from '../domain/domains'
+import type { RecordId } from '../domain/ids'
 import type { Confidence } from '../domain/knowledge'
 import type { ActionVerb } from '../domain/recommendation'
-import type { Instant, LocalDayId, LocalWeekId, TimeZoneId } from '../domain/time'
+import type { DayBlock, Instant, LocalDayId, LocalWeekId, TimeZoneId } from '../domain/time'
 import type { ConceptId } from '../domain/windows'
 import type { Rejection } from './constraints'
 import type { Dimension } from './evaluate'
 import type { NoActionReason } from './arbitrate'
-import type { ConsideredFact, DayBlock, Limiter } from './situation'
+import type { MoveState } from './lifecycle'
+import type { ConsideredFact, Limiter } from './situation'
 import type { WeeklyDirection } from './direction'
 
 /**
@@ -62,6 +64,55 @@ export interface Swing {
   }[]
 }
 
+/**
+ * What this owner's own outcomes did to one candidate (section 35, and 48).
+ *
+ * The phase brief asks that the inspector be able to show "which learning
+ * influenced a decision and how much of it there was", and both halves are
+ * here on purpose. `samples` is how much there was. `pull` is how far it moved
+ * the starting belief — with one comparable evening that is a quarter, which is
+ * section 20's "one success is not proof" expressed as a number somebody can
+ * read off the screen and check.
+ *
+ * The three aspects are kept apart in the trace because they are kept apart in
+ * the reasoning. A run of refusals shows up under `appetite` and nowhere else,
+ * so an inspector can see directly that a decline never became a claim about
+ * whether the move works.
+ */
+export interface LearningTrace {
+  readonly candidate: string
+  readonly verb: ActionVerb
+  /** Which of tonight and tomorrow the evidence actually speaks to. */
+  readonly moved: 'now' | 'tomorrow' | 'neither'
+  readonly startedAt: { readonly now: number; readonly tomorrow: number }
+  readonly landedAt: { readonly now: number; readonly tomorrow: number }
+  readonly samples: number
+  readonly pull: number
+  readonly evidence: readonly RecordId[]
+  readonly summary: string | undefined
+  /** True when the owner has told the app to stop holding this belief. */
+  readonly corrected: boolean
+  readonly followThrough: { readonly rate: number; readonly samples: number; readonly note: string }
+  readonly appetite: {
+    readonly turnedDown: number
+    readonly samples: number
+    readonly note: string
+  }
+}
+
+/** One suggestion, and everything that became of it. */
+export interface EpisodeTrace {
+  readonly recommendation: RecordId
+  readonly sentence: string
+  readonly dayId: LocalDayId
+  readonly state: MoveState
+  /** Whether a result was ever given, and when one is next due. */
+  readonly outcome: string
+  readonly context: string
+  /** How much this evening resembles that one, 0–1. */
+  readonly resembles: number
+}
+
 export interface DirectionTrace {
   readonly weekly: WeeklyDirection
   /** The semantic category actually stored, or nothing. Never a default. */
@@ -82,6 +133,10 @@ export interface DecisionTrace {
   readonly proposed: readonly ProposedMove[]
   readonly rejected: readonly Rejection[]
   readonly ranking: readonly RankedMove[]
+  /** One row per surviving candidate — what the owner's outcomes did to it. */
+  readonly learning: readonly LearningTrace[]
+  /** Every episode the history holds, however it ended. */
+  readonly episodes: readonly EpisodeTrace[]
   readonly chosen: string | undefined
   readonly noAction: NoActionReason | undefined
   readonly notes: readonly string[]

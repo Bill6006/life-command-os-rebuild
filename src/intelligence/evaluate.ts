@@ -1,6 +1,7 @@
 import { confidence, isUsable, type Confidence } from '../domain/knowledge'
 import { addLocalDays } from '../domain/time'
 import type { Candidate } from './candidates'
+import type { LearnedEffect } from './learning'
 import { profileFor, type MoveProfile } from './moves'
 import type { Situation } from './situation'
 
@@ -41,6 +42,8 @@ export type DimensionName =
   | 'context-fit'
   | 'recent-duplication'
   | 'owner-preference'
+  /** Whether this can actually be done in situations like this one (section 20). */
+  | 'follow-through'
   | 'uncertainty'
   | 'protection'
   /** Only present under the hybrid architecture. Bounded by `MAX_NUDGE`. */
@@ -81,6 +84,7 @@ const WEIGHTS: Record<DimensionName, number> = {
   'context-fit': 0.8,
   'recent-duplication': 0.8,
   'owner-preference': 1,
+  'follow-through': 0.9,
   uncertainty: 0.6,
   protection: 0.9,
   advisor: 0.5,
@@ -229,22 +233,87 @@ function urgency(candidate: Candidate): Dimension {
   }
 }
 
-function immediateBenefit(profile: MoveProfile): Dimension {
+/**
+ * What this move is worth in the block it happens in.
+ *
+ * The number no longer comes from the profile table. It comes from
+ * `learning.ts`, which starts at the profile's prior and pulls it toward what
+ * actually happened to this owner in situations resembling this one — by
+ * `n / (n + PATIENCE)`, so one good evening moves it a quarter of the way and
+ * no single evening can convert it (section 20).
+ *
+ * Only outcomes reach here. A move the owner declined contributes nothing, and
+ * a move they could not do contributes nothing, because those are answers to
+ * different questions and `learning.ts` keeps them apart.
+ */
+function immediateBenefit(candidate: Candidate, situation: Situation): Dimension {
+  const learned = learnedFor(candidate, situation)
   return {
     name: 'immediate-benefit',
-    // Priors, not measured effects. Phase 3 replaces these with outcomes.
-    value: profile.now * 2 - 1,
+    value: learned.now * 2 - 1,
     weight: WEIGHTS['immediate-benefit'],
-    note: `worth something tonight (${describeLevel(profile.now)})`,
+    note: describeLearned(learned.now, learned.moved === 'now' ? learned : undefined, 'tonight'),
   }
 }
 
-function nextDayEffect(profile: MoveProfile): Dimension {
+function nextDayEffect(candidate: Candidate, situation: Situation): Dimension {
+  const learned = learnedFor(candidate, situation)
   return {
     name: 'next-day-effect',
-    value: profile.tomorrow * 2 - 1,
+    value: learned.tomorrow * 2 - 1,
     weight: WEIGHTS['next-day-effect'],
-    note: `worth something tomorrow (${describeLevel(profile.tomorrow)})`,
+    note: describeLearned(
+      learned.tomorrow,
+      learned.moved === 'tomorrow' ? learned : undefined,
+      'tomorrow',
+    ),
+  }
+}
+
+function learnedFor(candidate: Candidate, situation: Situation): LearnedEffect {
+  return situation.learning.effectFor(candidate.semantics.target.verb, situation.context)
+}
+
+function describeLearned(value: number, from: LearnedEffect | undefined, when: string): string {
+  const base = `worth something ${when} (${describeLevel(value)})`
+  if (from === undefined || from.samples === 0) return `${base}, going on nothing but the usual`
+  const times = from.samples === 1 ? 'once' : `${from.samples} times`
+  return `${base}, after ${times} in situations like this one`
+}
+
+/**
+ * Whether this can actually be done in situations like this one.
+ *
+ * Section 20: "unable-now is context evidence." This is the only dimension it
+ * reaches, and what it says is a claim about the situation rather than about
+ * the move — a lab that keeps getting interrupted on evenings like this is
+ * still a good lab.
+ *
+ * **It abstains rather than scoring zero when it knows nothing**, and the
+ * difference is not cosmetic. The score is a weighted mean, so a dimension that
+ * contributes zero at full weight drags every move toward the middle — which
+ * moved the `WORTH_DOING` bar the moment this dimension was added and turned a
+ * walk that had been worth doing for two phases into no action at all. A
+ * dimension with nothing to say must cost nothing to have.
+ *
+ * The older dimensions predate this and still score zero at full weight for
+ * their unknown cases. That is a wart rather than a principle: the weights were
+ * tuned with them present, and re-cutting the whole instrument to fix it
+ * belongs to a phase that can re-run the tournament afterwards.
+ */
+function followThrough(candidate: Candidate, situation: Situation): Dimension {
+  const learned = situation.learning.followThroughFor(
+    candidate.semantics.target.verb,
+    situation.context,
+  )
+  if (learned.samples === 0) {
+    return { name: 'follow-through', value: 0, weight: 0, note: learned.note }
+  }
+  return {
+    name: 'follow-through',
+    value: scaled((learned.rate - 0.8) * 5),
+    weight: WEIGHTS['follow-through'],
+    note: learned.note,
   }
 }
 
@@ -376,6 +445,19 @@ function recentDuplication(candidate: Candidate, situation: Situation): Dimensio
   }
 }
 
+/**
+ * What the owner wants, said outright or shown by repeatedly saying no.
+ *
+ * **This is the only dimension a decline can reach**, and that is section 20's
+ * first rule made structural rather than promised: "a rejection is not
+ * 'ineffective'". A refusal is the owner exercising the sovereignty section 4.3
+ * gives them. It belongs beside their stated preferences, and it must not be
+ * able to travel to `immediate-benefit`, where it would become a claim that the
+ * move does not work.
+ *
+ * A stated preference still wins outright. Something the owner wrote down beats
+ * something inferred from a run of taps.
+ */
 function ownerPreference(candidate: Candidate, situation: Situation): Dimension {
   const weight = WEIGHTS['owner-preference']
   const refs = [candidate.semantics.subject.id, candidate.semantics.target.object.id]
@@ -389,6 +471,20 @@ function ownerPreference(candidate: Candidate, situation: Situation): Dimension 
       return { name: 'owner-preference', value: 0.6, weight, note: preference.statement }
     }
   }
+
+  const appetite = situation.learning.appetiteFor(
+    candidate.semantics.target.verb,
+    situation.context,
+  )
+  if (appetite.samples > 0) {
+    return {
+      name: 'owner-preference',
+      value: scaled(-appetite.turnedDown),
+      weight,
+      note: appetite.note,
+    }
+  }
+
   return { name: 'owner-preference', value: 0, weight, note: 'no stated preference either way' }
 }
 
@@ -456,8 +552,8 @@ export function evaluateCandidate(candidate: Candidate, situation: Situation): E
     directionFit(candidate, situation),
     goalFit(candidate, situation),
     urgency(candidate),
-    immediateBenefit(profile),
-    nextDayEffect(profile),
+    immediateBenefit(candidate, situation),
+    nextDayEffect(candidate, situation),
     opportunityCost(candidate, situation),
     friction(profile),
     timeFit(candidate, situation),
@@ -465,6 +561,7 @@ export function evaluateCandidate(candidate: Candidate, situation: Situation): E
     contextFit(situation, profile),
     recentDuplication(candidate, situation),
     ownerPreference(candidate, situation),
+    followThrough(candidate, situation),
     uncertainty(candidate, situation),
     protection(situation, profile),
   ]

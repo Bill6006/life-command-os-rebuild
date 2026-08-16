@@ -19,6 +19,7 @@ import {
   type TimeZoneId,
 } from '../domain/time'
 import type { DimensionName, Evaluation } from './evaluate'
+import { beliefKey } from './learning'
 import { describeHours, type Situation } from './situation'
 
 /**
@@ -358,6 +359,7 @@ export const AHEAD_BECAUSE: Record<DimensionName, string> = {
   'context-fit': 'Better suited to the hour.',
   'recent-duplication': 'The other one came up recently.',
   'owner-preference': 'Closer to what you have said you want.',
+  'follow-through': 'More likely to actually happen.',
   uncertainty: 'Better supported by what is known.',
   protection: 'The other one would borrow against tomorrow.',
   advisor: 'What you wrote about the last attempt points here.',
@@ -374,6 +376,13 @@ export interface Explanation {
   readonly instead: string | undefined
   /** Why it beat that one — the dimension that most separated them. */
   readonly insteadBecause: string | undefined
+  /**
+   * What the owner's own outcomes contributed, when they contributed enough to
+   * be worth saying. Absent on a move nothing has been learned about yet.
+   */
+  readonly restsOn: string | undefined
+  /** The belief `restsOn` states, so the owner has something to disagree with. */
+  readonly restsOnBelief: string | undefined
 }
 
 /** The dimension the winner most out-scored the runner-up on, as a phrase. */
@@ -457,6 +466,20 @@ export function explain(
   const limiter = situation.limiter
   const alreadySaid = limiter !== undefined && limiter.domain === semantics.domain
 
+  /*
+   * What the owner's own outcomes contributed, shown where they were used.
+   *
+   * Section 62 requires a learned pattern to be correctable, and a belief the
+   * owner cannot see is a belief they cannot correct. Putting it beside the
+   * decision it moved — rather than on a screen of its own that nobody visits —
+   * is what makes the correction reachable at the moment it occurs to them.
+   *
+   * It appears only when the learning actually moved something. A line saying
+   * "this rests on nothing yet" would be the app talking about itself, which is
+   * what DEF-0005 removed from this screen once already.
+   */
+  const learned = situation.learning.effectFor(semantics.target.verb, situation.context)
+
   return {
     ok: true,
     explanation: {
@@ -466,6 +489,9 @@ export function explain(
       limiter: alreadySaid ? undefined : limiter?.summary,
       instead,
       insteadBecause,
+      restsOn: learned.summary,
+      restsOnBelief:
+        learned.summary === undefined ? undefined : beliefKey('effect', semantics.target.verb),
     },
   }
 }
