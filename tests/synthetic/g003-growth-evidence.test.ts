@@ -163,7 +163,6 @@ describe('G-003 — the owner has the last word, and it is recorded', () => {
     expect(suggestion).toBeDefined()
     const answer = growthAnswerRecord(
       suggestion!,
-      DOMAIN.fatherhood,
       true,
       { now: scenario.scenario.now, zone: ZONE },
       sequentialRecordIds('ANS')(),
@@ -179,7 +178,6 @@ describe('G-003 — the owner has the last word, and it is recorded', () => {
     const suggestion = decision.growth[0]
     const answer = growthAnswerRecord(
       suggestion!,
-      DOMAIN.fatherhood,
       false,
       { now: scenario.scenario.now, zone: ZONE },
       sequentialRecordIds('ANS')(),
@@ -195,7 +193,6 @@ describe('G-003 — the owner has the last word, and it is recorded', () => {
   it('writes what changed rather than a flag, when he agrees', () => {
     const answer = growthAnswerRecord(
       decision.growth[0]!,
-      DOMAIN.fatherhood,
       true,
       { now: scenario.scenario.now, zone: ZONE },
       sequentialRecordIds('ANS')(),
@@ -207,7 +204,6 @@ describe('G-003 — the owner has the last word, and it is recorded', () => {
   it('counts either answer as evidence about that area', () => {
     const answer = growthAnswerRecord(
       decision.growth[0]!,
-      DOMAIN.fatherhood,
       false,
       { now: scenario.scenario.now, zone: ZONE },
       sequentialRecordIds('ANS')(),

@@ -6,6 +6,7 @@ import { beliefCorrectionRecord, describeBelief } from '../../intelligence/corre
 import { decide } from '../../intelligence/engine'
 import type { Explanation } from '../../intelligence/explain'
 import { nextGuideStep } from '../../intelligence/guide'
+import { growthAnswerRecords, type GrowthSuggestion } from '../../intelligence/growth'
 import {
   availableActions,
   planLifecycle,
@@ -216,6 +217,20 @@ export function NowScreen() {
     ])
   }
 
+  const answerGrowth = (suggestion: GrowthSuggestion, agreed: boolean) => {
+    // Both answers are recorded, and both are read. Agreeing writes what
+    // changed; "not yet" writes that the area was looked at by the person who
+    // would know, which the coverage engine counts as coverage. A button that
+    // records nothing anybody reads is D-029's mistake with a nicer label.
+    append(() =>
+      growthAnswerRecords(suggestion, agreed, {
+        now: memory.now,
+        zone: memory.zone,
+        recordedAt: systemClock().now(),
+      }),
+    )
+  }
+
   const local = localDateTimeAt(memory.now, memory.zone)
   const explanation = decision.explanation
 
@@ -275,6 +290,23 @@ export function NowScreen() {
             onCorrect={correct}
           />
         </>
+      )}
+
+      {/*
+        Something the evidence says has changed — section 9.
+
+        Below the move and above the question, because it is neither. It is not
+        what to do tonight and it is not something the engine needs an answer to
+        in order to decide; it is a finding about his daughter that he is the
+        only person who can confirm. Only ever one at a time, for the same
+        reason the guide asks one question at a time.
+      */}
+      {decision.growth[0] === undefined ? null : (
+        <GrowthPanel
+          suggestion={decision.growth[0]}
+          disabled={busy}
+          onAnswer={(agreed) => answerGrowth(decision.growth[0]!, agreed)}
+        />
       )}
 
       <GuidePanel
@@ -457,6 +489,56 @@ function DetailPanel({
           </button>
         </p>
       )}
+    </Panel>
+  )
+}
+
+/**
+ * Something the app thinks has changed about her, offered as a question.
+ *
+ * Section 9's own flow, at its last step: "She seems more comfortable doing
+ * this on her own. Update this growth area?" — and the owner confirms, rejects
+ * or corrects. It is deliberately not phrased as a finding the app has already
+ * acted on, because it has not: nothing is written until he answers, and what
+ * gets written is whichever answer he gives.
+ *
+ * "Not yet" is not a dismissal, and it is not free. It records that the person
+ * who would know has looked, which is real evidence about that area — so
+ * saying no keeps the app from raising it again on the same three occasions,
+ * without the app pretending anything changed.
+ */
+function GrowthPanel({
+  suggestion,
+  disabled,
+  onAnswer,
+}: {
+  suggestion: GrowthSuggestion
+  disabled: boolean
+  onAnswer: (agreed: boolean) => void
+}) {
+  return (
+    <Panel title="Something that may have changed">
+      <p className="now-question" data-testid="now-growth">
+        {suggestion.headline} Worth calling that settled?
+      </p>
+      <div className="now-options">
+        <button
+          type="button"
+          className="now-option"
+          disabled={disabled}
+          onClick={() => onAnswer(true)}
+        >
+          Yes, she has got this
+        </button>
+        <button
+          type="button"
+          className="now-option"
+          disabled={disabled}
+          onClick={() => onAnswer(false)}
+        >
+          Not yet
+        </button>
+      </div>
     </Panel>
   )
 }

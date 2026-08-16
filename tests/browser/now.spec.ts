@@ -381,3 +381,87 @@ test.describe('mobile layout', () => {
     expect(option!.y + option!.height).toBeLessThanOrEqual(nav!.y + 1)
   })
 })
+
+/**
+ * Phase 4 — coverage, growth, and evidence the owner never typed.
+ */
+test.describe('the morning reading answers the question', () => {
+  /**
+   * Section 8's first preference, end to end and only reachable here.
+   *
+   * The derivation is a pure function that returns records; the one place with
+   * a store to put them in is `MemoryProvider`, so this flow is the only test
+   * that exercises the whole path — finish an early night, wake up, tell the
+   * app how you slept, and never be asked what that did for your sleep.
+   */
+  test('does not ask what an early night did once it knows how the night went', async ({
+    page,
+  }) => {
+    await loadInQa(page, 'Three broken nights, and a deadline')
+    await goToNow(page)
+    await expect(page.locator('.primary-surface__headline')).toContainText('recovery')
+
+    await page.getByTestId('now-actions').getByRole('button', { name: 'Done' }).click()
+
+    // The next morning, which is when a night's sleep can honestly be judged.
+    await backToQa(page)
+    await page.getByRole('button', { name: '+1 day' }).click()
+    await goToNow(page)
+
+    // He is asked how he slept, once, by the guide — the question he would be
+    // asked anyway.
+    await expect(page.getByTestId('now-question')).toHaveText(
+      'How much sleep did you actually get?',
+    )
+    await page.getByRole('button', { name: 'A full night' }).click()
+
+    // And never asked the second time in the other shape. The reading he just
+    // gave is the answer to "how much did that do for your sleep?", and asking
+    // is asking twice.
+    await expect(page.getByTestId('now-outcome')).toHaveCount(0)
+  })
+
+  test('writes the result down without ever asking for it', async ({ page }) => {
+    await loadInQa(page, 'Three broken nights, and a deadline')
+    await goToNow(page)
+    await page.getByTestId('now-actions').getByRole('button', { name: 'Done' }).click()
+
+    await backToQa(page)
+    await page.getByRole('button', { name: '+1 day' }).click()
+    await goToNow(page)
+    await page.getByRole('button', { name: 'A full night' }).click()
+
+    // The episode ends with an answer against it, and no outcome question was
+    // ever put on screen. That is section 8's first preference, from the only
+    // angle the owner could check it from.
+    await backToQa(page)
+    await page.locator('summary', { hasText: 'Episodes' }).click()
+    await expect(page.locator('.rows__row', { hasText: 'recovery' }).first()).toContainText(
+      'answer(s) given',
+    )
+  })
+})
+
+test.describe('a growth area that has moved on', () => {
+  test('asks whether to call it settled, and stops once answered', async ({ page }) => {
+    await loadInQa(page, 'Three times running, and the app noticed')
+    await goToNow(page)
+
+    // Section 9's own sentence, in this app's words. It sits below the move
+    // rather than replacing it — the evening still gets a recommendation.
+    await expect(page.getByTestId('now-growth')).toContainText('Adaya')
+    await expect(page.getByTestId('now-growth')).toContainText('ordering her own food')
+    await expect(page.locator('.primary-surface__headline')).not.toHaveText('')
+
+    await page.getByRole('button', { name: 'Yes, she has got this' }).click()
+    await expect(page.getByTestId('now-growth')).toHaveCount(0)
+  })
+
+  test('takes not-yet as an answer rather than as a snooze', async ({ page }) => {
+    await loadInQa(page, 'Three times running, and the app noticed')
+    await goToNow(page)
+
+    await page.getByRole('button', { name: 'Not yet' }).click()
+    await expect(page.getByTestId('now-growth')).toHaveCount(0)
+  })
+})

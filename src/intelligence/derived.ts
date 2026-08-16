@@ -3,10 +3,11 @@ import { CONCEPT } from '../domain/concepts'
 import { derivedRecordId, type RecordId } from '../domain/ids'
 import { bearsConcept, type OutcomeRecord, type Provenance } from '../domain/records'
 import type { Instant, TimeZoneId } from '../domain/time'
+import type { ConceptId } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
 import { collectEpisodes, type Episode } from './lifecycle'
 import { profileFor } from './moves'
-import { answeredAspects, outcomeWindowFor, EFFECT_STEPS } from './outcomes'
+import { answeredAspects, outcomeWindowFor, readingAwaitedBy, EFFECT_STEPS } from './outcomes'
 import { SLEEP_BASELINE_HOURS } from './situation'
 import { hoursValue } from './values'
 
@@ -219,4 +220,32 @@ export function derivedOutcomeRecords(
   moment: DeriveMoment,
 ): readonly OutcomeRecord[] {
   return deriveOutcomes(view, moment).map((derived) => derived.record)
+}
+
+/**
+ * Readings a due result is currently waiting on.
+ *
+ * The guide reads this and asks for the reading rather than for a verdict; the
+ * outcome card holds its own question back for the same episodes. Between them
+ * that is one question in place of another rather than one more, which is the
+ * only shape section 12 leaves room for.
+ *
+ * Ordered by when the window opened, so a backlog is worked through oldest
+ * first — the same order the owner remembers it in.
+ */
+export function awaitedReadings(view: MemoryView, moment: DeriveMoment): readonly ConceptId[] {
+  const found: { readonly concept: ConceptId; readonly at: Instant }[] = []
+
+  for (const episode of collectEpisodes(view, moment.zone)) {
+    const window = outcomeWindowFor(episode, moment.zone)
+    if (window === undefined) continue
+    if (moment.now < window.earliest || moment.now > window.latest) continue
+    if (answeredAspects(episode).has('effect')) continue
+    const concept = readingAwaitedBy(episode, view, moment.zone)
+    if (concept === undefined) continue
+    found.push({ concept, at: window.earliest })
+  }
+
+  found.sort((a, b) => a.at - b.at)
+  return [...new Set(found.map((entry) => entry.concept))]
 }

@@ -254,3 +254,18 @@ test.describe('mobile layout', () => {
     expect(overflow).toBeLessThanOrEqual(0)
   })
 })
+
+test.describe('the inspector says where a belief came from', () => {
+  test('separates what the owner answered from what was worked out', async ({ page }) => {
+    // Owner requirement 2. "3 comparable results" could be three things he
+    // said, three things the app concluded, or a mix, and he cannot judge
+    // whether to correct a belief without knowing which.
+    await page.goto(`${APP}#/qa`)
+    await page.getByRole('button', { name: /A month of what actually worked/ }).click()
+    await expect(page.locator('.qa-scenario--active')).toContainText('what actually worked')
+
+    await page.locator('summary', { hasText: 'What it has learned' }).click()
+    const said = page.locator('.rows__row', { hasText: 'Who said so' }).first()
+    await expect(said).toContainText('you answered')
+  })
+})

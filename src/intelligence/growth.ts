@@ -55,6 +55,8 @@ export const GROWTH_PROVENANCE: Provenance = { source: 'owner', writtenBy: 'now'
 
 export interface GrowthSuggestion {
   readonly skill: EntityRef
+  /** The life area the update belongs to, taken from the skill itself. */
+  readonly domain: LifeDomainId
   readonly person: EntityRef | undefined
   /** What the app noticed, in ordinary words, naming her and the skill. */
   readonly headline: string
@@ -155,6 +157,7 @@ export function growthSuggestions(situation: Situation): readonly GrowthSuggesti
     const who = person?.label ?? 'she'
     out.push({
       skill: ref,
+      domain: skill.domain,
       person: person === undefined ? undefined : { id: person.id, kind: person.kind },
       headline: `${who} has managed ${skill.label} on her own ${cleared.length} times running.`,
       statement: `${who} does ${skill.label} independently now.`,
@@ -185,12 +188,12 @@ export interface GrowthAnswerMoment {
  */
 export function growthAnswerRecord(
   suggestion: GrowthSuggestion,
-  domain: LifeDomainId,
   agreed: boolean,
   moment: GrowthAnswerMoment,
   id: RecordId = newRecordId(),
 ): DomainUpdateRecord | CoverageUpdateRecord {
   const build = createRecordFactory({ zone: moment.zone, provenance: GROWTH_PROVENANCE })
+  const domain = suggestion.domain
   const entities = [
     suggestion.skill,
     ...(suggestion.person === undefined ? [] : [suggestion.person]),
@@ -215,9 +218,8 @@ export function growthAnswerRecord(
 /** Just the record, for a surface that only wants to append it. */
 export function growthAnswerRecords(
   suggestion: GrowthSuggestion,
-  domain: LifeDomainId,
   agreed: boolean,
   moment: GrowthAnswerMoment,
 ): readonly CanonicalRecord[] {
-  return [growthAnswerRecord(suggestion, domain, agreed, moment)]
+  return [growthAnswerRecord(suggestion, agreed, moment)]
 }

@@ -1,6 +1,7 @@
 import type { CanonicalRecord } from '../domain/records'
 import { localDayIdAt } from '../domain/time'
 import { buildView, type MemoryView } from '../memory/view'
+import { awaitedReadings } from './derived'
 import {
   decide,
   probeSwings,
@@ -247,6 +248,44 @@ export function nextGuideStep(
       decision,
       askedToday,
       because: 'the last answer did not move it, and the best question was the one already asked',
+    }
+  }
+
+  /*
+   * A reading a result is waiting on — section 8's first preference, as a
+   * question rather than as an inference.
+   *
+   * The morning after an early night, the app would otherwise put "how much did
+   * winding down do for your sleep?" on screen. There is a better question
+   * available for the same fact: how much sleep did you actually get. It is
+   * concrete, it is the one he would expect, it feeds the recovery model, and
+   * the grade falls out of it — `derived.ts` writes the outcome from the
+   * answer, so the second question never has to be asked at all.
+   *
+   * **This does not raise the number of things asked for**, which is the rule
+   * DEF-0008 exists to protect and section 47 fails a phase on. `outcomes.ts`
+   * holds the effect question back for exactly the episodes this fires on, so
+   * one card is swapped for a better one. The daily floor above still applies,
+   * and if he answers nothing the window closes and the result is unknown —
+   * which section 20 lists as a real and acceptable state.
+   */
+  const waiting = awaitedReadings(view, { now: moment.now, zone: moment.zone })
+  for (const concept of waiting) {
+    const entry = view.facts.get(concept)
+    if (entry === undefined || !entry.worthAsking) continue
+    const spec = questionFor(concept)
+    if (spec === undefined) continue
+    return {
+      kind: 'question',
+      question: {
+        spec,
+        prompt: spec.prompt(decision.situation),
+        options: spec.options,
+        outcomes: [],
+      },
+      decision,
+      askedToday,
+      because: `a result is waiting on “${entry.definition.label.toLowerCase()}”, and asking for the reading beats asking for a verdict`,
     }
   }
 

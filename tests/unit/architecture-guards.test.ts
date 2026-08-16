@@ -230,12 +230,18 @@ describe('there is exactly one arbitration path', () => {
    * reading it directly could put a number on screen the arbitration never saw.
    */
   /*
-   * `derived` joined in Phase 4, and it belongs on the recording side of the
-   * line for the same reason `outcomes` does: it turns history into canonical
-   * records and chooses nothing. `coverage` is deliberately **not** here — it
-   * is reached through `situation`, which every surface already has, so the
-   * status a Life page shows is the object the decision itself was made from
-   * rather than a second computation that could drift away from it.
+   * `derived` and `growth` joined in Phase 4, and both belong on the recording
+   * side of the line for the same reason `outcomes` and `corrections` do: they
+   * turn history into canonical records and choose nothing. Note which half of
+   * `growth` a surface actually touches — the suggestion arrives on the
+   * `Decision`, through the engine like everything else, and what Now imports
+   * is the function that writes down his answer.
+   *
+   * `coverage` is deliberately **not** here. It is reached through `situation`,
+   * which every surface already has, so the status a Life page shows is the
+   * object the decision itself was made from rather than a second computation
+   * over the same history — and two of those would eventually disagree, with
+   * the owner having no way to tell which screen was lying.
    */
   const OPEN_TO_SURFACES = [
     'engine',
@@ -248,6 +254,7 @@ describe('there is exactly one arbitration path', () => {
     'outcomes',
     'corrections',
     'derived',
+    'growth',
   ]
   const DECIDES = [
     'candidates',

@@ -140,3 +140,61 @@ test.describe('preview build identity', () => {
     await expect(page.locator('.build-notice')).toHaveCount(0)
   })
 })
+
+/**
+ * Life — the coverage overview (canonical plan sections 7 and 63).
+ */
+test.describe('Life reports how well each area is understood', () => {
+  const APP_LIFE = '/life-command-os-rebuild/preview/'
+
+  async function loadAndOpenLife(page: import('@playwright/test').Page, title: string) {
+    await page.goto(`${APP_LIFE}#/qa`)
+    await page.getByRole('button', { name: new RegExp(title) }).click()
+    await expect(page.locator('.qa-scenario--active')).toContainText(title)
+    await page.locator('.nav').getByRole('button', { name: 'Life' }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Life' })).toBeVisible()
+  }
+
+  test('gives every area a word, and names the one that has gone quiet', async ({ page }) => {
+    await loadAndOpenLife(page, 'Everything current except the studying')
+
+    const rows = page.locator('.rows__row')
+    await expect(rows).toHaveCount(11)
+
+    await expect(rows.filter({ hasText: 'Career & Learning' })).toContainText('Going quiet')
+    await expect(rows.filter({ hasText: 'Career & Learning' })).toContainText('7 weeks')
+    await expect(rows.filter({ hasText: 'Sleep & Recovery' })).toContainText('Fresh')
+  })
+
+  test('uses no evidence terminology and no phase language', async ({ page }) => {
+    // Section 7 asks for this by name, and DEF-0007 is what happens when a
+    // screen starts talking about its own construction.
+    await loadAndOpenLife(page, 'Everything current except the studying')
+    const text = (await page.locator('.screen').innerText()).toLowerCase()
+
+    for (const banned of ['phase', 'stale', 'confidence', 'record', 'concept', 'coverage engine']) {
+      expect(text, `Life should not say "${banned}"`).not.toContain(banned)
+    }
+  })
+
+  test('says nothing about what the private area contains', async ({ page }) => {
+    // Section 11 — display discretion. The status is fine; the subject is not.
+    await loadAndOpenLife(page, 'Two ordinary weeks')
+    const row = page.locator('.rows__row', { hasText: 'Private / Sexual Health' })
+    await expect(row).toContainText('You keep this one yourself')
+  })
+
+  test('reports nothing at all rather than guessing, with no history loaded', async ({ page }) => {
+    await page.goto(`${APP_LIFE}#/life`)
+    await expect(page.getByRole('heading', { level: 1, name: 'Life' })).toBeVisible()
+    await expect(page.locator('.panel__title').first()).toContainText('none of them optional')
+  })
+
+  test('does not overflow sideways with eleven areas on screen', async ({ page }) => {
+    await loadAndOpenLife(page, 'Everything current except the studying')
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    )
+    expect(overflow).toBeLessThanOrEqual(0)
+  })
+})

@@ -2,7 +2,13 @@ import { createRecordFactory } from '../domain/build'
 import type { EntityIndex } from '../domain/entities'
 import { newRecordId, type RecordId } from '../domain/ids'
 import { renderRecommendation, type ActionVerb } from '../domain/recommendation'
-import type { FactValue, OutcomeAspect, OutcomeRecord, Provenance } from '../domain/records'
+import {
+  bearsConcept,
+  type FactValue,
+  type OutcomeAspect,
+  type OutcomeRecord,
+  type Provenance,
+} from '../domain/records'
 import {
   addLocalDaysToDayId,
   civilDateFromDayId,
@@ -12,7 +18,7 @@ import {
   type Instant,
   type TimeZoneId,
 } from '../domain/time'
-import type { DueWindow } from '../domain/windows'
+import type { ConceptId, DueWindow } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
 import { collectEpisodes, type Episode } from './lifecycle'
 import { profileFor } from './moves'
@@ -146,7 +152,11 @@ export function dueOutcomes(
     if (window === undefined) continue
     if (moment.now < window.earliest || moment.now > window.latest) continue
 
-    const questions = unansweredQuestions(episode, entities)
+    const questions = unansweredQuestions(
+      episode,
+      entities,
+      readingAwaitedBy(episode, view, moment.zone) !== undefined,
+    )
     if (questions.length === 0) continue
     out.push({ episode, window, questions })
   }
@@ -181,7 +191,15 @@ export function nextOutcomeDueAt(
     if (window === undefined) continue
     if (window.earliest <= moment.now) continue
     if (moment.now > window.latest) continue
-    if (unansweredQuestions(episode, entities).length === 0) continue
+    if (
+      unansweredQuestions(
+        episode,
+        entities,
+        readingAwaitedBy(episode, view, moment.zone) !== undefined,
+      ).length === 0
+    ) {
+      continue
+    }
     if (soonest === undefined || window.earliest < soonest) soonest = window.earliest
   }
 
@@ -499,7 +517,52 @@ export function resultReached(episode: Episode): number | undefined {
   return undefined
 }
 
-function unansweredQuestions(episode: Episode, entities: EntityIndex): readonly OutcomeQuestion[] {
+/**
+ * Whether this episode's effect is one the app would rather work out.
+ *
+ * Section 8 puts evidence normal life produces above asking, and the morning
+ * after an early night there is a better question available than the one this
+ * file would otherwise put on screen. "How much did winding down do for your
+ * sleep?" asks the owner to grade something; "how much sleep did you actually
+ * get?" asks him a fact, and the grade falls out of the answer.
+ *
+ * So when a reading would settle this and the reading is not in yet, the
+ * effect question is held back — and `guide.ts` asks for the reading instead.
+ * This does not raise the number of things asked for: it swaps one for a
+ * better one, which is what "adaptive question selection" is supposed to mean.
+ *
+ * The reading having *arrived* is a different case and is handled elsewhere:
+ * `derived.ts` writes the answer, and there is nothing left to ask.
+ */
+export function readingAwaitedBy(
+  episode: Episode,
+  view: MemoryView,
+  zone: TimeZoneId,
+): ConceptId | undefined {
+  const profile = profileFor(episode.semantics.target.verb)
+  const measures = profile.measures
+  if (measures === undefined) return undefined
+  if (profile.outcome.when !== 'next-morning') return undefined
+  if (!profile.aspects.includes('effect')) return undefined
+
+  const window = outcomeWindowFor(episode, zone)
+  if (window === undefined) return undefined
+
+  for (const record of view.history.effective) {
+    if (!bearsConcept(record)) continue
+    if (record.concept !== measures) continue
+    if (record.occurredAt < window.earliest || record.occurredAt > window.latest) continue
+    // The reading is in, so nothing is being waited for.
+    return undefined
+  }
+  return measures
+}
+
+function unansweredQuestions(
+  episode: Episode,
+  entities: EntityIndex,
+  awaiting: boolean,
+): readonly OutcomeQuestion[] {
   const answered = answeredAspects(episode)
   /*
    * A result of "not at all" ends the sequence.
@@ -515,6 +578,8 @@ function unansweredQuestions(episode: Episode, entities: EntityIndex): readonly 
   return outcomeQuestionsFor(episode, entities).filter((question) => {
     if (answered.has(question.aspect)) return false
     if (stopped && question.aspect === 'effect') return false
+    // Held back while a better question is available for the same fact.
+    if (awaiting && question.aspect === 'effect') return false
     return true
   })
 }
