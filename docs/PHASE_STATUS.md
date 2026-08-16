@@ -6,14 +6,27 @@ Report format: canonical plan section 58.
 
 # Phase 4 — Coverage Engine + adaptive guides
 
-**Status: YELLOW — repaired after an Android phone gate; awaiting the owner's
-acceptance.**
+**Status: GREEN — owner-approved on `1d52de4`.**
 
-The owner ran the phone gate on a Galaxy S24 context and it failed. Three
-blocking defects and two polish findings, none of which any automated check had
-caught, and one of them found only by reading every line on every screen after
-the suite was green and the checkpoint was already pushed. All five are fixed
-and each has a regression proved to fail when its defect is reintroduced.
+Section 49's gate ends, like every gate since Phase 2, with a person judging the
+product rather than a suite judging itself. **The owner approved it on
+`1d52de4`**, accepting the Galaxy S24 gate run against the deployed Preview as
+his phone acceptance (D-076).
+
+**The first gate failed, and that pass is the phase.** Everything automatable
+was green, the checkpoint was pushed, and an Android context at 360×780 found
+five defects in an afternoon. Three were blocking. Not one came from a failing
+assertion.
+
+The sharpest was DEF-0023, and it is the kind of thing only a person reading a
+whole screen finds: the coverage generator proposed a move _because_ an area had
+gone quiet, and `uncertainty` marked that same move down _because_ the area had
+gone quiet. Both halves were individually correct, every test passed, and the
+penalty came to twice the margin that decided the evening. What reached the
+phone was circular — _nothing has come in about your studying, so here is a
+walk, because it is better supported by what is known._ Section 8's third
+refresh route was reliably cancelling itself, and the phase's headline feature
+was quietly undoing its own work.
 
 Section 49's goal is one sentence: make the system trustworthy without manual
 tab maintenance. The failure it exists to prevent is section 63's, and section
@@ -36,9 +49,11 @@ it is zero.
 
 |                      |                                                             |
 | -------------------- | ----------------------------------------------------------- |
+| Approved checkpoint  | `1d52de4` — the build the owner accepted                    |
 | Checkpoint SHA       | current `main` HEAD                                         |
 | Deployed Preview SHA | identical to `main` HEAD                                    |
 | Do they match?       | Yes, by construction — D-004, and asserted live in CI       |
+| Since the approval   | documentation only; no product code changed after `1d52de4` |
 | Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/ |
 | Live proof           | `preview/build-info.json`                                   |
 
@@ -56,7 +71,7 @@ it is zero.
 | `npm run verify` from a clean checkout    | Pass                                           |
 | Deployed SHA matches checkpoint           | Asserted live in CI                            |
 
-### Where the 554 sit
+### Where the 574 sit
 
 Phase 3 ended at 448. The 108 new ones are the coverage engine, the two golden
 scenarios, and the owner's four conditions on inferred evidence.
@@ -119,7 +134,8 @@ scenarios, and the owner's four conditions on inferred evidence.
 | CI green                                                                 | Pass                                                                           |
 | `npm run verify` from a clean checkout                                   | Pass                                                                           |
 | Preview deploys automatically, SHA matches                               | Pass                                                                           |
-| **The owner tests it on a phone and accepts it**                         | **Outstanding — this is the phase**                                            |
+| A repaired Android gate re-run against the deployed Preview              | Pass — six confirmation points, all six met                                    |
+| **The owner tests it on a phone and accepts it**                         | **Pass — approved on `1d52de4`**                                               |
 
 ## What changed
 
@@ -321,6 +337,23 @@ copy after everything was green, and four from the owner on a phone.
 
 ## Deferred, with reasons
 
+Three of these the owner deferred explicitly at the closeout and named as not to
+be fixed in Phase 4. They are written down here so the next phase inherits them
+as decisions rather than as oversights.
+
+- **P4-6 — the no-action eyebrow.** On an evening with nothing worth doing, the
+  limiter summary fills a slot styled for a short label, so it reads as
+  `ONLY ABOUT 15 MINUTES LEFT TONIGHT.` — uppercase, letter-spaced, with a
+  trailing full stop, where `MOVE` or `RECOVER` normally sit. Owner-deferred.
+- **P4-7 — the More button is 81×36.** Below the 44px minimum, and the only
+  target on any surface that is. It predates Phase 4 and is not a coverage
+  concern. Owner-deferred.
+- **A started move that is never settled.** Unchanged from Phase 3, and the
+  Android gate confirmed it bites in practice: a move started yesterday still
+  reads _Under way_ the next evening with **Start it** disabled. It needs a
+  decision about how long is too long, which wants real use to answer.
+  Owner-deferred.
+
 - **The older dimensions still cost weight when they know nothing.** Unchanged
   from Phase 3. D-048 applies to `follow-through`, `direct-result` and now the
   coverage branch of `bottleneck-fit`; the rest still score zero at full weight.
@@ -331,11 +364,10 @@ copy after everything was green, and four from the owner on a phone.
   the domain-level backstop. Nothing in the registry yet tracks a standing
   understanding of it, and inventing one to fill the gap would be collecting
   data because a field exists.
-- **A started move that is never settled.** Unchanged from Phase 3.
 
 ## Decisions made
 
-D-060 … D-075 in [`DECISION_LOG.md`](DECISION_LOG.md).
+D-060 … D-076 in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Next
 

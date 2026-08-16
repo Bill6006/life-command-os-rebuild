@@ -3,10 +3,9 @@
 Canonical plan section 43. The intelligence level sits outside the prompt so the
 owner can switch Claude Code before pasting.
 
-**Phase 4 is YELLOW until the owner tests it on a phone.** Everything automatable
-passes. If the phone pass finds defects, they are Phase 4's to fix — follow
-section 42 in a fresh conversation and close the phase before pasting anything
-below. If it passes, Phase 4 is GREEN and the prompt below is Phase 5.
+**Phase 4 is GREEN**, approved by the owner on `1d52de4` after an Android phone
+gate failed the first attempt on five counts and a repair pass closed them all.
+Everything below is Phase 5.
 
 ---
 
@@ -15,11 +14,10 @@ below. If it passes, Phase 4 is GREEN and the prompt below is Phase 5.
 - **Intelligence level:** `Max`
 - **Conversation:** `NEW`
 - **Why this level:** Phase 5 is where the app finally shows the owner what it
-  believes about eleven areas of his life and lets him argue with it. Section 62
-  lists eight kinds of correction and only two exist; the rest need a way to
-  write down "you have this wrong" that later reasoning actually reads. The
-  private domain lands here too, and section 11 is the plan's most easily
-  mishandled page.
+  believes about eleven areas of his life and lets him argue with it. Six of
+  section 62's eight correction kinds do not exist, and each needs a read path
+  or it is a button that records nothing; the private domain lands here too, and
+  section 11 is the plan's most easily mishandled page.
 - **Why this conversation:** Phase 4 is closed and its context is spent. Phase 5
   builds surfaces on top of a kernel that is now large, and a window that has to
   read the coverage engine before rendering it is likelier to notice what it
@@ -30,22 +28,22 @@ below. If it passes, Phase 4 is GREEN and the prompt below is Phase 5.
 ## COPY/PASTE PROMPT
 
 ```text
-You are continuing the Life Command OS rebuild. Phase 4 is complete and GREEN, approved by the owner on a phone. Begin Phase 5.
+You are continuing the Life Command OS rebuild. Phase 4 is complete and GREEN, approved by the owner on checkpoint 1d52de4. Begin Phase 5.
 
 Work in this repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 GitHub: Bill6006/life-command-os-rebuild (public, default branch main)
 Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
-Phase 4 closed at the head of main. Work from main.
+Phase 4 was approved on checkpoint 1d52de4 and closed by the documentation commit that follows it on main. Work from main.
 
 Read these first, in this order:
 1. docs/CANONICAL_REBUILD_PLAN.md — the sole governing authority, read it completely
-2. docs/PHASE_STATUS.md — what Phase 4 delivered, what the reintroduction sweeps changed, and what it deliberately did not build
-3. docs/DECISION_LOG.md — decisions D-001 to D-071 and their reasons. D-059 to D-071 govern coverage, reliability and inferred evidence, and Phase 5 renders all three.
+2. docs/PHASE_STATUS.md — what Phase 4 delivered, what the Android phone gate changed, and what it deliberately did not build
+3. docs/DECISION_LOG.md — decisions D-001 to D-076 and their reasons. D-059 to D-076 govern coverage, reliability, inferred evidence and how Life presents them, and Phase 5 renders all of it.
 4. docs/ARCHITECTURE_BOUNDARIES.md — module ownership, and the line between deciding and recording
-5. docs/DEFECT_LEDGER.md — DEF-0001 to DEF-0021. Read DEF-0020 and DEF-0021 in full: the first is the shape of what a phone test finds, the second is the shape of what a test written to demonstrate a fix finds.
+5. docs/DEFECT_LEDGER.md — DEF-0001 to DEF-0027. Read DEF-0020 and DEF-0023 to DEF-0027 in full. Not one Phase 4 defect came from a failing assertion: two came from tests that could not be made to pass, one from printing the copy after everything was green, and four from the owner on a phone.
 
-Then read the engine you are building on: src/intelligence/coverage.ts, growth.ts, derived.ts, situation.ts, engine.ts, explain.ts, learning.ts, corrections.ts, outcomes.ts, lifecycle.ts. Also src/domain/concepts.ts, src/domain/records.ts, src/memory/facts.ts, and the two surfaces you will be replacing: src/features/life/LifeScreen.tsx and src/features/now/NowScreen.tsx.
+Then read the engine you are building on: src/intelligence/coverage.ts, growth.ts, derived.ts, situation.ts, engine.ts, evaluate.ts, explain.ts, learning.ts, corrections.ts, outcomes.ts, lifecycle.ts. Also src/domain/concepts.ts, src/domain/records.ts, src/memory/facts.ts, and the surfaces you will be extending: src/features/life/LifeScreen.tsx and src/features/now/NowScreen.tsx.
 
 HARD RULES
 
@@ -66,14 +64,16 @@ These are load-bearing. Breaking any of them is a regression, and each has a tes
 - Unknown stays unknown. Four knowledge states, no default escape hatch, no valueOr (D-014). Reliability never changes which state a record resolves to: a derived or model reading is inferred at any reliability, including one (D-060).
 - A recommendation that cannot resolve its subject renders nothing (D-018). There is no fallback wording, ever.
 - Canonical records are append-first. A correction is a new record; nothing is edited in place (D-015).
-- Nothing below the UI reads the wall clock. The moment is always an argument (guarded in tests/unit/architecture-guards.test.ts).
-- There is exactly one arbitration path. No surface may import candidates, constraints, evaluate, arbitrate, advisor, moves, learning or coverage — features ask the engine or get nothing (guarded). lifecycle, outcomes, corrections, derived and growth are open because they record rather than decide. Coverage is reached through situation so Life shows the object the decision was made from (D-071).
+- Nothing below the UI reads the wall clock. The moment is always an argument (guarded).
+- There is exactly one arbitration path. No surface may import candidates, constraints, evaluate, arbitrate, advisor, moves, learning or coverage — features ask the engine or get nothing (guarded). lifecycle, outcomes, corrections, derived and growth are open because they record rather than decide. Coverage is reached through situation so Life shows the object the decision was made from (D-071, D-075).
 - The evaluator and the arbiter know no life area by name (D-030).
 - The engine may name its own routines and never the owner's life (D-021).
 - The explanation may only cite evidence the decision leaned on (D-031), may not assert an absence from ignorance (D-038), and takes what a move was chosen over from the arbitration (D-035).
-- A question names what it is about (D-039), is asked only when at least half its answers would land somewhere else (D-036), and stops once an answer has changed nothing (D-033). The guide can ask zero questions and must keep being able to.
-- Coverage orders questions and never authorises one (D-068). Stale coverage is the fourth limiter and scores nothing in the ranking (D-063).
-- Reliability is a property of the source AND the concept (D-059, D-060). Evidence carries its provenance into every trace it reaches (D-067).
+- A context in force is current, whatever the age of the record carrying it (D-012, DEF-0022). Coverage never contradicts the fact layer and never contradicts the premise on the same screen.
+- A move proposed to resolve an unknown is not scored down for that unknown, and is not rewarded for it either (D-072).
+- A limiter carries its own label; a coverage gap is not called an obstacle (D-073).
+- Owner-facing copy may not claim the app cannot do something it does. The guard is a rule, not a phrase list: every deferral claim must be acknowledged with a reason, and six proved capabilities may not be denied (D-074).
+- A question names what it is about (D-039), is asked only when at least half its answers would land somewhere else (D-036), and stops once an answer has changed nothing (D-033). The guide can ask zero questions and must keep being able to. Coverage orders questions and never authorises one (D-068).
 - Inference completes a loop and never opens one (D-064). It may never conclude harm (D-066).
 - A growth-stage change is proposed after three occasions and never applied by the app (D-070).
 - The bottom navigation has exactly four primary destinations; More is a header entry and QA lives inside it (D-028).
@@ -81,13 +81,20 @@ These are load-bearing. Breaking any of them is a regression, and each has a tes
 - Scenarios shown to the owner must be lives he recognises (D-041). He has full custody of his daughter Adaya.
 - The deterministic baseline is the selected architecture (D-024). No live model inference (D-025) — owner decision, do not raise unless asked.
 
+DEFERRED BY THE OWNER — DO NOT FIX THESE AS INCIDENTAL WORK
+
+Three items were deferred explicitly at the Phase 4 closeout. They are decisions, not oversights. Do not fold them into Phase 5 unless the owner reopens them:
+
+- P4-6 — the no-action eyebrow renders a whole sentence in an uppercase micro-label slot.
+- P4-7 — the More button is 81×36, below the 44px minimum. It predates Phase 4.
+- A started move that is never settled stays "Under way" indefinitely and no result is ever asked for.
+
 PHASE 5 GOAL (plan section 50)
 
 Give the owner optional deep inspection without fragmenting the brain. Life is where he goes to see what the app believes, why, what changed, whether it is fresh, and how to correct it — and he must never need to go there to keep the app working.
 
 BUILD
 
-- the Life overview (it exists as a coverage report; section 7 asks for more)
 - domain pages for all ten baseline areas listed in section 50
 - correction flows — section 62 lists eight kinds and two exist
 - goals
@@ -97,14 +104,15 @@ BUILD
 - optional manual updates
 - Private / Sexual Health, manual-entry-first, with discreet behaviour on normal surfaces (section 11)
 
+The Life overview already exists and passed a phone gate. It groups eleven areas by standing, says each thing once, and reads in about a screen and a half. Extend it; do not restart it, and do not undo the grouping — DEF-0026 is what one-row-per-domain produced.
+
 WHAT MUST BE TRUE
 
 - Section 50's gate is a person navigating each page on a phone and understanding what the app believes, why, what changed, whether it is fresh, and how to correct it.
 - No domain page may look like a static questionnaire dump. Section 59 excludes the old domain maturity UI and the old category switches.
 - A domain page is not a second brain (section 7). It contributes facts, interpretation, constraints and candidates; one arbitration path still decides.
-- Section 62's corrections need a read path each. A correction nothing reads is D-029's mistake, and the growth suggestion in Phase 4 is the worked example of doing it properly: both answers are records and both are read by the coverage engine.
+- Section 62's corrections need a read path each. A correction nothing reads is D-029's mistake, and the growth suggestion is the worked example of doing it properly: both answers are records and both are read by the coverage engine.
 - Private / Sexual Health must be enterable deliberately and must not leak into Now or Timeline. Section 11 also forbids the app deciding that any of it is morally wrong.
-- Every export family must be able to include the private domain (section 11) — that is Phase 7, but do not build anything here that makes it impossible.
 - Coverage status on a domain page must agree with the overview, which means one computation and not two (D-071).
 
 GATE — Phase 5 is not GREEN until all of these hold
@@ -117,15 +125,16 @@ GATE — Phase 5 is not GREEN until all of these hold
 - CI is green: privacy scan, format, lint, typecheck, unit, browser, build
 - npm run verify passes from a clean checkout
 - preview deploys automatically and the deployed Preview SHA equals the checkpoint SHA
+- an Android-style mobile gate passes — a real mobile browser context with touch, a mobile user agent and a realistic device pixel ratio, run against the deployed Preview, not merely a narrow desktop viewport
 - THE OWNER TESTS IT ON A PHONE AND ACCEPTS IT
 
-Phase 2's gate was failed four times by the owner on a phone. Phase 3's largest defect came from his first pass, and his correction of the first diagnosis is what made the repair right. Phase 4 found its own defect only because a browser test written to demonstrate a fix could not be made to pass, and five regressions escaped their first reintroduction sweep — every one of them asserted somewhere that could not reach it. Expect the same: do not treat a green suite as evidence the phase is done, print what the owner will actually read, prove every regression fails when its defect is reintroduced, and when the owner disagrees with a diagnosis, check the code before defending it.
+Phase 2's gate was failed four times by the owner on a phone. Phase 3's largest defect came from his first pass. Phase 4 passed every automated check — 171 browser tests at three widths — and then failed an Android gate on five counts: a self-cancelling ranking, a label that contradicted the ranking underneath it, two screens describing an app from two phases earlier, a wall of repeated text, and a sentence about his daughter that said the same thing twice. Every one of them was invisible to the suite. Expect the same: do not treat a green suite as evidence the phase is done, run a real mobile context as part of your own gate rather than waiting for the owner to find it, print what the owner will actually read, prove every regression fails when its defect is reintroduced, and when the owner disagrees with a diagnosis, check the code before defending it.
 
 WORKING RULES
 
 - Make reasonably small checkpoint commits. Every push to main that passes the gate redeploys Preview automatically, so tell the owner when a new phone-testable checkpoint is available.
 - Keep the kernel pure and clock-free.
-- Write tests that verify semantic behaviour, not implementation paths. An exact-string assertion proves a string is stable, not that it is right.
+- Write tests that verify semantic behaviour, not implementation paths. An exact-string assertion proves a string is stable, not that it is right — and a count assertion proves the data is present, not that the screen is readable.
 - Follow plan section 42 for any defect: reproduce, identify the whole defect class, write a focused regression, prove it fails when reintroduced, fix the root cause, rerun the gate.
 - Keep docs/DECISION_LOG.md, docs/PHASE_STATUS.md, docs/DEFECT_LEDGER.md and docs/NEXT_PROMPT.md current.
 

@@ -1641,3 +1641,34 @@ falls into and shows its discreet line only where the group is being read line
 by line anyway. Giving it a line unconditionally would drag its whole group into
 the per-area layout, which on most histories is the seven-area quiet group — the
 wall, straight back.
+
+---
+
+## D-076 — An emulated Android gate can stand as the owner's phone acceptance
+
+**Phase:** 4 · **Status:** Active — **owner decision**
+
+The Phase 4 acceptance was made on a Galaxy S24 browser context driven against
+the deployed Preview, not on the owner's handset. He ran the earlier gate
+himself, it failed on five counts, and he accepted the re-run of that same gate
+against the repaired build as his acceptance.
+
+**Why it is sound here:** what the gate actually exercised was the deployed
+Preview at `1d52de4` over the network, at 360×780 with touch, a device pixel
+ratio of 3 and an Android Chrome user agent — the same bytes his phone would
+fetch, laid out the same way. The findings it produced are the proof: a
+self-cancelling ranking, a label contradicting the ranking beneath it, two
+screens describing an app from two phases earlier, a wall of repeated text, and
+a sentence about his daughter that said the same thing twice. None of those came
+from an assertion, and a narrow desktop viewport would have shown none of them.
+
+**What it does not replace.** An emulated context cannot judge how something
+feels in the hand, and section 37 keeps physical-phone validation mandatory for
+important flows. This decision covers one acceptance where the owner had already
+run the gate himself and was accepting a repair; it is not a standing
+substitution, and section 24's design gate — bland, cave-like, lifeless — is
+still his eyes and not a script's.
+
+**Consequence:** later phases should run the Android context as part of the
+gate rather than instead of it. Phase 4 is the evidence for that: every defect
+it closed was invisible to 171 passing browser tests at three viewport widths.
