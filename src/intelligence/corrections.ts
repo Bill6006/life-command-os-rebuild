@@ -73,9 +73,13 @@ export function describeBelief(key: string): string {
   switch (parsed.aspect) {
     case 'effect':
       return `what ${move} does for you`
+    case 'result':
+      return `how far ${move} usually gets`
     case 'follow-through':
       return `whether ${move} tends to happen`
     case 'appetite':
       return `whether you want ${move}`
+    case 'friction':
+      return `how hard ${move} is for you`
   }
 }

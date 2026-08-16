@@ -1,6 +1,6 @@
 import type { RecordId } from '../domain/ids'
 import { verbLabel, type ActionVerb } from '../domain/recommendation'
-import type { DecisionContext } from '../domain/records'
+import type { DecisionContext, FactValue } from '../domain/records'
 import {
   localDaysBetween,
   localDayIdAt,
@@ -11,6 +11,7 @@ import {
 import type { MemoryView } from '../memory/view'
 import { WANTED_SOMETHING_ELSE, type Episode } from './lifecycle'
 import { profileFor } from './moves'
+import { comfortFrictionOf, effectValueOf, resultValueOf } from './outcomes'
 
 /**
  * Learning from what actually happened (canonical plan section 20).
@@ -50,17 +51,18 @@ export const PATIENCE = 3
 /** Below this, an episode is not a situation like this one. */
 export const RECOGNISABLE = 0.4
 
-/** What an answered result is worth, on the same 0–1 scale as a move profile. */
-const OBSERVED_VALUE: Record<'better' | 'same' | 'worse', number> = {
-  better: 0.85,
-  same: 0.4,
-  worse: 0.1,
-}
-
 /** A refusal counts fully; asking for something else counts for less. */
 const WANTED_ANOTHER_WEIGHT = 0.5
 
-export type BeliefAspect = 'effect' | 'follow-through' | 'appetite'
+export type BeliefAspect = 'effect' | 'result' | 'follow-through' | 'appetite' | 'friction'
+
+const BELIEF_ASPECTS: readonly BeliefAspect[] = [
+  'effect',
+  'result',
+  'follow-through',
+  'appetite',
+  'friction',
+]
 
 /**
  * What the owner is disputing when they say a belief is wrong.
@@ -78,8 +80,8 @@ export function parseBeliefKey(
 ): { readonly aspect: BeliefAspect; readonly verb: string } | undefined {
   const split = key.indexOf(':')
   if (split <= 0) return undefined
-  const aspect = key.slice(0, split)
-  if (aspect !== 'effect' && aspect !== 'follow-through' && aspect !== 'appetite') return undefined
+  const aspect = key.slice(0, split) as BeliefAspect
+  if (!BELIEF_ASPECTS.includes(aspect)) return undefined
   return { aspect, verb: key.slice(split + 1) }
 }
 
@@ -194,6 +196,51 @@ export interface LearnedEffect {
   readonly corrected: boolean
 }
 
+/**
+ * How far this move's intended end state actually gets, in situations like this.
+ *
+ * **Distinct from follow-through, and the distinction is the point of
+ * DEF-0020.** Follow-through asks whether the move can be done at all here —
+ * evidence about the *situation*, from unable-now. This asks whether doing it
+ * reaches what it was for. Clearing the kitchen every time it is suggested and
+ * only ever half-clearing it is perfect follow-through and a poor result, and
+ * folding the two would have the app say "something usually gets in the way" of
+ * an evening where nothing did.
+ *
+ * The prior is 1 — a move achieves its aim. So *achieved* sits at the prior and
+ * says nothing, and only *partly* and *not at all* speak. That is what stops a
+ * move with two measurable aspects collecting two positive rewards where a move
+ * with one collects a single one: **the result can only ever count against.**
+ */
+export interface LearnedResult {
+  /** 0–1: how far the intended end state gets, in situations like this. */
+  readonly reached: number
+  readonly samples: number
+  readonly pull: number
+  readonly evidence: readonly RecordId[]
+  readonly note: string
+  readonly corrected: boolean
+}
+
+/**
+ * How hard this move actually feels to this owner, in situations like this.
+ *
+ * Section 10 asks the app to learn "how comfortable it felt" and "whether an
+ * approach style was easier". Unlike result and follow-through, this is
+ * **signed both ways**, and for a principled reason: their priors are ceilings,
+ * so only failure is informative. Friction's prior is a middling estimate per
+ * move, so "easier than we assumed" is real news about this owner.
+ */
+export interface LearnedFriction {
+  /** 0–1, higher is harder. The move profile's friction, moved by experience. */
+  readonly friction: number
+  readonly samples: number
+  readonly pull: number
+  readonly evidence: readonly RecordId[]
+  readonly note: string
+  readonly corrected: boolean
+}
+
 export interface LearnedFollowThrough {
   /** 0–1: how often this could actually be done in situations like this. */
   readonly rate: number
@@ -217,8 +264,10 @@ export interface LearnedAppetite {
 export interface LearningIndex {
   readonly episodes: readonly Episode[]
   effectFor(verb: ActionVerb, context: DecisionContext): LearnedEffect
+  resultFor(verb: ActionVerb, context: DecisionContext): LearnedResult
   followThroughFor(verb: ActionVerb, context: DecisionContext): LearnedFollowThrough
   appetiteFor(verb: ActionVerb, context: DecisionContext): LearnedAppetite
+  frictionFor(verb: ActionVerb, context: DecisionContext): LearnedFriction
   /** Beliefs the owner has ruled out, and when. */
   readonly rejected: ReadonlyMap<string, Instant>
 }
@@ -296,11 +345,23 @@ function shrink(prior: number, observed: number, n: number): { value: number; pu
   return { value: prior + (observed - prior) * pull, pull }
 }
 
-/** The result answer, if this episode has one. Comfort readings carry none. */
-function resultOf(episode: Episode): { value: number; source: RecordId } | undefined {
+/**
+ * One answered aspect of an episode, read as a number.
+ *
+ * Keyed on the aspect rather than on whether a sentiment happens to be present.
+ * The old test — "it has a sentiment, so it is a result" — is what let four
+ * kinds of evidence become one belief (DEF-0020).
+ */
+function answerOf(
+  episode: Episode,
+  aspect: 'result' | 'effect' | 'comfort',
+  read: (value: FactValue) => number | undefined,
+): { value: number; source: RecordId } | undefined {
   for (const outcome of episode.outcomes) {
-    if (outcome.sentiment === undefined) continue
-    return { value: OBSERVED_VALUE[outcome.sentiment], source: outcome.id }
+    if (outcome.aspect !== aspect) continue
+    const value = read(outcome.observation)
+    if (value === undefined) continue
+    return { value, source: outcome.id }
   }
   return undefined
 }
@@ -387,9 +448,9 @@ export function buildLearning(
       const contributing: { weight: number; value: number; source: RecordId }[] = []
       for (const found of comparable(episodes, verb, context, moment, after)) {
         if (found.episode.state !== 'completed') continue
-        const result = resultOf(found.episode)
-        if (result === undefined) continue
-        contributing.push({ weight: found.weight, value: result.value, source: result.source })
+        const answer = answerOf(found.episode, 'effect', effectValueOf)
+        if (answer === undefined) continue
+        contributing.push({ weight: found.weight, value: answer.value, source: answer.source })
       }
 
       const n = contributing.reduce((sum, entry) => sum + entry.weight, 0)
@@ -426,6 +487,95 @@ export function buildLearning(
           moved.pull < 0.2
             ? undefined
             : summarise(verb, observed, contributing.length, context.block),
+        corrected,
+      }
+    })
+
+  const resultFor = (verb: ActionVerb, context: DecisionContext): LearnedResult =>
+    memo(cacheKey('result', verb, context), () => {
+      const after = rejected.get(beliefKey('result', verb))
+      const corrected = after !== undefined
+
+      const contributing: { weight: number; value: number; source: RecordId }[] = []
+      for (const found of comparable(episodes, verb, context, moment, after)) {
+        if (found.episode.state !== 'completed') continue
+        const answer = answerOf(found.episode, 'result', resultValueOf)
+        if (answer === undefined) continue
+        contributing.push({ weight: found.weight, value: answer.value, source: answer.source })
+      }
+
+      const n = contributing.reduce((sum, entry) => sum + entry.weight, 0)
+      if (n === 0) {
+        return {
+          reached: 1,
+          samples: 0,
+          pull: 0,
+          evidence: [],
+          note: 'no reason yet to think this falls short',
+          corrected,
+        }
+      }
+
+      const observed = contributing.reduce((sum, entry) => sum + entry.value * entry.weight, 0) / n
+      // The prior is 1: a move achieves what it is for until something says
+      // otherwise. Achieving it therefore moves nothing, which is what keeps a
+      // two-aspect move from being rewarded twice for one good evening.
+      const moved = shrink(1, observed, n)
+
+      return {
+        reached: moved.value,
+        samples: contributing.length,
+        pull: moved.pull,
+        evidence: contributing.map((entry) => entry.source),
+        note:
+          moved.value >= 1
+            ? 'no reason yet to think this falls short'
+            : moved.value < 0.6
+              ? 'this rarely gets all the way there'
+              : 'this does not always get all the way there',
+        corrected,
+      }
+    })
+
+  const frictionFor = (verb: ActionVerb, context: DecisionContext): LearnedFriction =>
+    memo(cacheKey('friction', verb, context), () => {
+      const prior = profileFor(verb).friction
+      const after = rejected.get(beliefKey('friction', verb))
+      const corrected = after !== undefined
+
+      const contributing: { weight: number; value: number; source: RecordId }[] = []
+      for (const found of comparable(episodes, verb, context, moment, after)) {
+        const answer = answerOf(found.episode, 'comfort', comfortFrictionOf)
+        if (answer === undefined) continue
+        contributing.push({ weight: found.weight, value: answer.value, source: answer.source })
+      }
+
+      const n = contributing.reduce((sum, entry) => sum + entry.weight, 0)
+      if (n === 0) {
+        return {
+          friction: prior,
+          samples: 0,
+          pull: 0,
+          evidence: [],
+          note: 'nothing said about how hard this is',
+          corrected,
+        }
+      }
+
+      const observed = contributing.reduce((sum, entry) => sum + entry.value * entry.weight, 0) / n
+      const moved = shrink(prior, observed, n)
+
+      return {
+        friction: moved.value,
+        samples: contributing.length,
+        pull: moved.pull,
+        evidence: contributing.map((entry) => entry.source),
+        note:
+          moved.value > prior + 0.05
+            ? 'harder for you than it looks'
+            : moved.value < prior - 0.05
+              ? 'easier for you than it looks'
+              : 'about as hard as it looks',
         corrected,
       }
     })
@@ -537,7 +687,7 @@ export function buildLearning(
       }
     })
 
-  return { episodes, effectFor, followThroughFor, appetiteFor, rejected }
+  return { episodes, effectFor, resultFor, followThroughFor, appetiteFor, frictionFor, rejected }
 }
 
 /** An empty index, for a history with nothing in it. */

@@ -524,7 +524,11 @@ describe('the semantic subject survives through the follow-up', () => {
 
     const pending = nextDueOutcome(view, { now: later, zone: ZONE }, view.entities)
     expect(pending).toBeDefined()
-    expect(pending?.questions[0]?.prompt).toBe('Did the kitchen get cleared?')
+    // The direct result, asked as a graded question because it has graded
+    // answers. "Did the kitchen get cleared?" against four levels of difference
+    // was DEF-0020.
+    expect(pending?.questions[0]?.aspect).toBe('result')
+    expect(pending?.questions[0]?.prompt).toBe('How much of the kitchen got cleared?')
   })
 
   it('records the answer against the move it was about', () => {
@@ -534,8 +538,11 @@ describe('the semantic subject survives through the follow-up', () => {
     let view = buildView(done.snapshot, { now: later, zone: ZONE })
 
     const pending = nextDueOutcome(view, { now: later, zone: ZONE }, view.entities)!
-    const answer = pending.questions[0]!.answers[0]!
-    const record = outcomeRecord(pending.episode, answer, { now: later, zone: ZONE })
+    const question = pending.questions[0]!
+    const record = outcomeRecord(pending.episode, question.aspect, question.answers[0]!, {
+      now: later,
+      zone: ZONE,
+    })
 
     const after = withRecords(done.snapshot, [record])
     view = buildView(after, { now: later, zone: ZONE })
@@ -543,11 +550,56 @@ describe('the semantic subject survives through the follow-up', () => {
 
     expect(episode.outcomes).toHaveLength(1)
     expect(episode.outcomes[0]?.about).toBe(episode.recommendation)
-    expect(episode.outcomes[0]?.sentiment).toBe('better')
+    expect(episode.outcomes[0]?.aspect).toBe('result')
+    // A result carries no sentiment. Only an effect answer does.
+    expect(episode.outcomes[0]?.sentiment).toBeUndefined()
     expect(answeredAspects(episode).has('result')).toBe(true)
 
-    // And it stops being asked.
+    // Answering "Completely" leaves the effect question, which is the second
+    // thing this move has to say and a different fact from the first.
+    const left = dueOutcomes(view, { now: later, zone: ZONE }, view.entities)
+    expect(left[0]?.questions.map((question) => question.aspect)).toEqual(['effect'])
+  })
+
+  it('asks the effect once the result says the move landed', () => {
+    const { snapshot, now } = tonight()
+    const done = session(snapshot, now).tap('complete')
+    const later = instant(now + 3 * 3_600_000)
+    const view = buildView(done.snapshot, { now: later, zone: ZONE })
+
+    const pending = nextDueOutcome(view, { now: later, zone: ZONE }, view.entities)!
+    expect(pending.questions.map((question) => question.aspect)).toEqual(['result', 'effect'])
+  })
+
+  it('asks no effect question when the result says it never landed', () => {
+    /*
+     * The short-circuit, and it is not a nicety. "How much did clearing the
+     * kitchen do for the evening?" on an evening when the kitchen was never
+     * cleared has no honest answer, and whichever one the owner picked would be
+     * recorded as evidence about clearing kitchens. It also saves a tap on the
+     * evening they least want to be asked twice.
+     */
+    const { snapshot, now } = tonight()
+    const done = session(snapshot, now).tap('complete')
+    const later = instant(now + 3 * 3_600_000)
+    let view = buildView(done.snapshot, { now: later, zone: ZONE })
+
+    const pending = nextDueOutcome(view, { now: later, zone: ZONE }, view.entities)!
+    const result = pending.questions[0]!
+    const notAtAll = result.answers[result.answers.length - 1]!
+    expect(notAtAll.label).toBe('Not at all')
+
+    const after = withRecords(done.snapshot, [
+      outcomeRecord(pending.episode, result.aspect, notAtAll, { now: later, zone: ZONE }),
+    ])
+    view = buildView(after, { now: later, zone: ZONE })
+
     expect(dueOutcomes(view, { now: later, zone: ZONE }, view.entities)).toEqual([])
+
+    // And the effect belief learned nothing from an evening that never happened.
+    const decision = decide(view, { now: later, zone: ZONE })
+    const learned = decision.trace.learning.find((row) => row.verb === 'reset-space')
+    expect(learned?.samples ?? 0).toBe(0)
   })
 
   it('asks how it felt as well, but only where feeling is the point', () => {
@@ -596,10 +648,16 @@ describe('the semantic subject survives through the follow-up', () => {
 
     const questions = outcomeQuestionsFor(episode, entities)
     expect(questions.map((question) => question.aspect)).toEqual(['result', 'comfort'])
+    expect(questions[0]?.prompt).toBe('How much of a conversation happened at the gym?')
     expect(questions[1]?.prompt).toBe('How did starting a conversation at the gym feel?')
-    // The comfort answer carries no sentiment: how something felt is worth
-    // knowing and is not evidence about whether it worked.
-    expect(questions[1]?.answers.every((answer) => answer.sentiment === undefined)).toBe(true)
-    expect(questions[0]?.answers.every((answer) => answer.sentiment !== undefined)).toBe(true)
+    /*
+     * Neither carries a sentiment. Only an effect answer does, and this move
+     * has no effect aspect — whether the evening lifted afterwards is a third
+     * question nobody is being asked, because two taps is the most a follow-up
+     * may cost (section 4.5).
+     */
+    for (const question of questions) {
+      expect(question.answers.every((answer) => answer.sentiment === undefined)).toBe(true)
+    }
   })
 })

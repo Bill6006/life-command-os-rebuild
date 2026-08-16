@@ -230,6 +230,20 @@ export type ActionRecommendationRecord = Record_<
 
 export type ActionStartRecord = Record_<'action-start', { readonly recommendation: RecordId }>
 
+/**
+ * **The attempt was carried out. Not that it worked.**
+ *
+ * This is the definition the whole learning layer rests on, and its absence was
+ * DEF-0020. "Done" means the owner did the thing the sentence asked for; it
+ * says nothing about whether the intended end state was reached. Fifteen
+ * minutes clearing the kitchen can be done in full and leave the kitchen half
+ * clear; a recall session can be completed and recall little; winding down can
+ * happen and sleep still be bad.
+ *
+ * Whether the intended result occurred is a separate observation with its own
+ * window — an `outcome` carrying `aspect: 'result'`. Section 20 lists
+ * `completed` and `outcome observed` as different states, and they are.
+ */
 export type ActionCompletionRecord = Record_<
   'action-completion',
   { readonly recommendation: RecordId; readonly note?: string }
@@ -247,11 +261,43 @@ export type ActionUnableNowRecord = Record_<
   { readonly recommendation: RecordId; readonly blocker?: string }
 >
 
+/**
+ * What an outcome is an observation *of* (DEF-0020).
+ *
+ * Three, and they answer different questions about the same episode:
+ *
+ * - `result` — did the intended end state occur? Distinct from completion,
+ *   which only says the attempt was made.
+ * - `effect` — what was it worth? The downstream change, if any.
+ * - `comfort` — how did it feel? Only where the subjective experience is
+ *   itself the fact worth having (section 10).
+ *
+ * Phase 3 collapsed all three into one better/same/worse judgement, which asked
+ * questions its own answers could not answer and taught one belief from four
+ * kinds of evidence. Whose result it is needs no fourth aspect: the subject
+ * carries that, so "how did Adaya do" is a `result` about a development skill
+ * that links to her.
+ */
+export const OUTCOME_ASPECTS = ['result', 'effect', 'comfort'] as const
+
+export type OutcomeAspect = (typeof OUTCOME_ASPECTS)[number]
+
+export function isOutcomeAspect(value: unknown): value is OutcomeAspect {
+  return typeof value === 'string' && (OUTCOME_ASPECTS as readonly string[]).includes(value)
+}
+
 export type OutcomeRecord = Record_<
   'outcome',
   {
     readonly about: RecordId
+    readonly aspect: OutcomeAspect
     readonly observation: FactValue
+    /**
+     * Only an `effect` observation carries one, and the restriction matters:
+     * `roughOutcomesFor` reads `sentiment === 'worse'` to decide that a topic
+     * went badly, so a result of "none of it" wearing that flag would fire the
+     * weak-topic generator on an evening that says nothing about the topic.
+     */
     readonly sentiment?: 'better' | 'same' | 'worse'
     readonly window?: ObservationWindow
   }

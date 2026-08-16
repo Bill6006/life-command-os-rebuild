@@ -491,6 +491,14 @@ export function QaScreen() {
                   label="Could it happen"
                   value={`${row.followThrough.samples === 0 ? 'never tested' : `${Math.round(row.followThrough.rate * 100)} percent`} — ${row.followThrough.note}`}
                 />
+                <Row
+                  label="Does it land"
+                  value={`${row.result.samples === 0 ? 'never asked' : `${Math.round(row.result.reached * 100)} percent, over ${row.result.samples}`} — ${row.result.note}`}
+                />
+                <Row
+                  label="How hard it is"
+                  value={`${row.friction.started.toFixed(2)} → ${row.friction.landed.toFixed(2)}${row.friction.samples === 0 ? '' : `, over ${row.friction.samples}`} — ${row.friction.note}`}
+                />
                 <Row label="Passed on" value={row.appetite.note} />
                 {row.corrected ? (
                   <Row label="Corrected" value="the owner has ruled this belief out" />

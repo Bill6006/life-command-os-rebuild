@@ -192,9 +192,13 @@ export function NowScreen() {
     }
   }
 
-  const answerOutcome = (pending: PendingOutcome, answer: OutcomeAnswer) => {
+  const answerOutcome = (
+    pending: PendingOutcome,
+    question: OutcomeQuestion,
+    answer: OutcomeAnswer,
+  ) => {
     append(() => [
-      outcomeRecord(pending.episode, answer, {
+      outcomeRecord(pending.episode, question.aspect, answer, {
         now: memory.now,
         zone: memory.zone,
         recordedAt: systemClock().now(),
@@ -352,7 +356,7 @@ function OutcomePanel({
 }: {
   pending: PendingOutcome
   disabled: boolean
-  onAnswer: (pending: PendingOutcome, answer: OutcomeAnswer) => void
+  onAnswer: (pending: PendingOutcome, question: OutcomeQuestion, answer: OutcomeAnswer) => void
 }) {
   const question: OutcomeQuestion | undefined = pending.questions[0]
   if (question === undefined) return null
@@ -369,7 +373,7 @@ function OutcomePanel({
             type="button"
             className="now-option"
             disabled={disabled}
-            onClick={() => onAnswer(pending, answer)}
+            onClick={() => onAnswer(pending, question, answer)}
           >
             {answer.label}
           </button>

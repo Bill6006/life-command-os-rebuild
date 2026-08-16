@@ -1,9 +1,8 @@
 import { createRecordFactory } from '../domain/build'
 import type { EntityIndex } from '../domain/entities'
 import { newRecordId, type RecordId } from '../domain/ids'
-import type { ActionVerb } from '../domain/recommendation'
-import { renderRecommendation } from '../domain/recommendation'
-import type { FactValue, OutcomeRecord, Provenance } from '../domain/records'
+import { renderRecommendation, type ActionVerb } from '../domain/recommendation'
+import type { FactValue, OutcomeAspect, OutcomeRecord, Provenance } from '../domain/records'
 import {
   addLocalDaysToDayId,
   civilDateFromDayId,
@@ -23,31 +22,48 @@ import { profileFor } from './moves'
  *
  * > Sleep/recovery actions may need next-morning evaluation.
  *
- * That one line is the whole reason this file exists. Asking at 23:05 whether
+ * That one line is the whole reason the windows exist. Asking at 23:05 whether
  * an early night worked would collect an answer about intent, and an answer
  * about intent recorded as an outcome is worse than no answer at all — it looks
- * exactly like evidence and is not. So each kind of move says when its result
- * can honestly be judged, and the question is not asked before then.
+ * exactly like evidence and is not.
+ *
+ * ## Three kinds of evidence, and one question at a time — DEF-0020
+ *
+ * The first version of this file asked one question per episode and offered one
+ * answer set: better, same or worse. It produced "Did the kitchen get cleared?"
+ * answered with "About the same", because the prompt came from the renderer's
+ * conversational follow-up while the answers came from the learning model, and
+ * nothing required the two to be about the same thing.
+ *
+ * Underneath the mismatched copy was a collapse. **Completion, direct result,
+ * downstream effect and comfort are four different facts**, and the app can
+ * only learn what it asks about:
+ *
+ * - **completion** is the lifecycle event — the attempt was carried out;
+ * - **result** is whether the intended end state occurred, which fifteen
+ *   minutes of clearing may not reach;
+ * - **effect** is what it was worth afterwards;
+ * - **comfort** is how it felt, where the experience is itself the fact.
+ *
+ * Which of these a move can produce is declared beside its profile, by one
+ * test: does the sentence name an end state, or only an activity? They are
+ * asked in that order, one at a time, and **a result of "not at all" ends the
+ * sequence** — asking how the evening went after clearing the kitchen, on an
+ * evening when the kitchen was never cleared, would teach the app something
+ * false about clearing kitchens.
  *
  * ## Nothing here reads a clock
  *
  * "A result is now due" is a comparison, not an event. `dueOutcomes(view,
- * moment)` is a pure function of the moment it is given, exactly like every
- * other question the engine answers, and the surface is the only thing that
- * knows what time it really is. `nextOutcomeDueAt` exists so the surface can
- * set one timer for the next opening rather than polling: the kernel works out
- * *when*, and the UI is what waits.
- *
- * That is deliberate. The alternative — a clock inside the engine that notices
- * things — would make time travel lie and would make every test that replays a
- * decision depend on when it was run.
+ * moment)` is a pure function of the moment it is given, and `nextOutcomeDueAt`
+ * exists so the surface can set one timer rather than polling: the kernel works
+ * out *when*, and the UI is the only thing that knows what time it really is.
  *
  * ## An expiry, because a stale question collects a made-up answer
  *
  * Every window closes. Asking on Thursday how Tuesday's walk went is asking
  * someone to invent something, and section 20's "outcome unknown" is a real and
- * acceptable state. A window that has closed leaves the episode completed with
- * nothing learned from it, which is the truth.
+ * acceptable state.
  */
 
 export const OUTCOME_PROVENANCE: Provenance = { source: 'owner', writtenBy: 'now' }
@@ -68,10 +84,10 @@ function atLocalHour(at: Instant, zone: TimeZoneId, addDays: number, hour: numbe
  * When this episode's result can be asked about, and until when.
  *
  * Undefined when there is nothing to ask about yet: an episode is only worth a
- * question once the owner says it happened. A move that was declined has no
- * result, and one that was started and never finished is still a lifecycle
- * question rather than an outcome question — Now already has the buttons for
- * that, so asking a second time in a different shape would be nagging.
+ * question once the owner says the attempt happened. A move that was declined
+ * has no result, and one that was started and never finished is still a
+ * lifecycle question — Now already has the buttons for it, so asking a second
+ * time in a different shape would be nagging.
  */
 export function outcomeWindowFor(episode: Episode, zone: TimeZoneId): DueWindow | undefined {
   if (episode.state !== 'completed') return undefined
@@ -173,19 +189,80 @@ export function nextOutcomeDueAt(
 }
 
 // ---------------------------------------------------------------------------
-// The questions
+// What an answer is worth
 // ---------------------------------------------------------------------------
 
-export type OutcomeAspect = 'result' | 'comfort'
+/**
+ * Answers are stored as the step the owner picked, not as the number it is
+ * currently worth.
+ *
+ * The record says which of four things they said; the tables below say what
+ * that is worth today. Storing the worth instead would freeze this phase's
+ * calibration into history, so re-tuning the scale would silently mean
+ * something different for old evenings than for new ones.
+ */
+export const RESULT_STEPS = 2
+export const EFFECT_STEPS = 3
+export const COMFORT_STEPS = 2
+
+/** How far the intended end state got. Prior is 1 — a move achieves its aim. */
+export const RESULT_VALUE: readonly number[] = [0, 0.5, 1]
+
+/**
+ * What an effect answer is worth, on the same 0–1 scale as a move profile.
+ *
+ * **Absolute worth, not a comparison.** The first version used "Better than
+ * usual / About the same / Worse" against absolute values, so one tap meaning
+ * "it made no difference" pulled a move with a 0.8 prior down, left one at 0.4
+ * exactly where it was, and pushed one at 0.05 up. A relative judgement written
+ * into an absolute scale moves different moves in different directions.
+ *
+ * Four steps rather than three because harm is not the same evidence as no
+ * help: a walk that aggravated soreness and a walk that did nothing much should
+ * not teach the same thing. The scale has no room below zero, so the ranking
+ * treats harm as worthless — but the record keeps them apart, which is what
+ * lets the owner see the difference and correct it.
+ */
+export const EFFECT_VALUE: readonly number[] = [0, 0.15, 0.5, 0.85]
+
+/** How hard it felt, as friction: higher is harder, same scale as the profile. */
+export const COMFORT_FRICTION: readonly number[] = [0.85, 0.45, 0.1]
+
+function stepOf(value: FactValue, of: number): number | undefined {
+  if (value.type !== 'scale' || value.of !== of) return undefined
+  if (!Number.isInteger(value.value) || value.value < 0 || value.value > of) return undefined
+  return value.value
+}
+
+export function resultValueOf(observation: FactValue): number | undefined {
+  const step = stepOf(observation, RESULT_STEPS)
+  return step === undefined ? undefined : RESULT_VALUE[step]
+}
+
+export function effectValueOf(observation: FactValue): number | undefined {
+  const step = stepOf(observation, EFFECT_STEPS)
+  return step === undefined ? undefined : EFFECT_VALUE[step]
+}
+
+export function comfortFrictionOf(observation: FactValue): number | undefined {
+  const step = stepOf(observation, COMFORT_STEPS)
+  return step === undefined ? undefined : COMFORT_FRICTION[step]
+}
+
+// ---------------------------------------------------------------------------
+// The questions
+// ---------------------------------------------------------------------------
 
 export interface OutcomeAnswer {
   readonly id: string
   readonly label: string
   readonly observation: FactValue
   /**
-   * Present on a result and absent on a comfort reading, and the difference is
-   * load-bearing: only an answer carrying a sentiment is evidence about whether
-   * the move worked. How something felt is worth knowing and is not that.
+   * Present on an effect answer and absent on the other two, and the
+   * restriction is load-bearing rather than tidy: `roughOutcomesFor` treats a
+   * `worse` sentiment as "this topic went badly", so a *result* of "not at all"
+   * wearing that flag would fire the weak-topic generator on an evening that
+   * says nothing whatever about the topic.
    */
   readonly sentiment?: 'better' | 'same' | 'worse'
 }
@@ -196,91 +273,250 @@ export interface OutcomeQuestion {
   readonly answers: readonly OutcomeAnswer[]
 }
 
-const RESULT_ANSWERS: readonly OutcomeAnswer[] = [
+function scale(step: number, of: number): FactValue {
+  return { type: 'scale', value: step, of }
+}
+
+/**
+ * The four levels an effect can land on.
+ *
+ * `sentiment` summarises the direction for readers that only need three: it
+ * helped, it did nothing, it hurt. "Not much" is `same` because that is exactly
+ * what it means — no change — and calling it `worse` would make every flat
+ * evening look like a bad one.
+ */
+const EFFECT_ANSWERS: readonly OutcomeAnswer[] = [
   {
-    id: 'better',
-    label: 'Better than usual',
-    observation: { type: 'scale', value: 4, of: 5 },
+    id: 'real',
+    label: 'A real difference',
+    observation: scale(3, EFFECT_STEPS),
     sentiment: 'better',
   },
   {
-    id: 'same',
-    label: 'About the same',
-    observation: { type: 'scale', value: 2, of: 5 },
-    sentiment: 'same',
+    id: 'some',
+    label: 'Some difference',
+    observation: scale(2, EFFECT_STEPS),
+    sentiment: 'better',
   },
-  {
-    id: 'worse',
-    label: 'Worse',
-    observation: { type: 'scale', value: 0, of: 5 },
-    sentiment: 'worse',
-  },
+  { id: 'little', label: 'Not much', observation: scale(1, EFFECT_STEPS), sentiment: 'same' },
+  { id: 'harm', label: 'Backfired', observation: scale(0, EFFECT_STEPS), sentiment: 'worse' },
 ]
 
 const COMFORT_ANSWERS: readonly OutcomeAnswer[] = [
-  { id: 'easy', label: 'Easy', observation: { type: 'scale', value: 4, of: 5 } },
-  { id: 'awkward', label: 'A bit awkward', observation: { type: 'scale', value: 2, of: 5 } },
-  { id: 'hard', label: 'Hard work', observation: { type: 'scale', value: 0, of: 5 } },
+  { id: 'easy', label: 'Easy', observation: scale(2, COMFORT_STEPS) },
+  { id: 'awkward', label: 'A bit awkward', observation: scale(1, COMFORT_STEPS) },
+  { id: 'hard', label: 'Hard work', observation: scale(0, COMFORT_STEPS) },
 ]
 
+function resultAnswers(all: string, part: string, none: string): readonly OutcomeAnswer[] {
+  return [
+    { id: 'all', label: all, observation: scale(2, RESULT_STEPS) },
+    { id: 'part', label: part, observation: scale(1, RESULT_STEPS) },
+    { id: 'none', label: none, observation: scale(0, RESULT_STEPS) },
+  ]
+}
+
+const HOW_FAR = resultAnswers('Completely', 'Partly', 'Not at all')
+
+interface Parts {
+  readonly subject: string
+  readonly object: string
+  readonly person: string | undefined
+}
+
+interface AspectQuestion {
+  prompt(parts: Parts): string
+  readonly answers: readonly OutcomeAnswer[]
+}
+
 /**
- * Which moves are worth a second question about how they felt.
+ * What to ask about each move, per aspect.
  *
- * Section 10: the app can learn "how comfortable it felt" and "whether an
- * approach style was easier". G-004 asks for comfort and result both. Nothing
- * else gets a second question — section 4.5, the app should not collect data
- * merely because a field exists, and two taps is already the most a follow-up
- * should ever cost.
+ * Two rules hold across the whole table, and both are swept rather than
+ * remembered. **Every prompt names its subject** — D-039's rule, which G-001
+ * applies to recommendations and nothing applied to questions until now. And
+ * **no prompt is a yes/no question**, because every answer set here is graded:
+ * "Did the kitchen get cleared?" offered against four levels of difference is
+ * the defect this table exists to remove.
+ *
+ * The prompts are written per verb rather than composed from a pattern. A
+ * pattern general enough to cover a lab, a daughter and a night's sleep would
+ * produce a sentence nobody would say out loud, which is section 4.6's whole
+ * point: a specific ordinary sentence beats an elegant generic one.
  */
-const COMFORT_PROMPTS: Partial<Record<ActionVerb, (object: string) => string>> = {
-  'start-conversation': (object) => `How did starting a conversation at ${object} feel?`,
-  'reach-out': (object) => `How did reaching out to ${object} feel?`,
-  'growth-opportunity': (object) => `How did ${object} seem to go for her?`,
+const OUTCOME_QUESTIONS: Record<ActionVerb, Partial<Record<OutcomeAspect, AspectQuestion>>> = {
+  'recall-practice': {
+    effect: {
+      prompt: ({ object }) => `How much did the session do for ${object}?`,
+      answers: EFFECT_ANSWERS,
+    },
+  },
+  'review-weak-topic': {
+    effect: {
+      prompt: ({ object }) => `How much did going back over ${object} help?`,
+      answers: EFFECT_ANSWERS,
+    },
+  },
+  'hands-on-lab': {
+    result: {
+      prompt: ({ object }) => `How much of the ${object} lab came together?`,
+      answers: HOW_FAR,
+    },
+  },
+  'protect-sleep': {
+    effect: {
+      prompt: ({ object }) => `How much did ${object} do for your sleep?`,
+      answers: EFFECT_ANSWERS,
+    },
+  },
+  'wind-down': {
+    effect: {
+      prompt: ({ object }) => `How much did ${object} do for your sleep?`,
+      answers: EFFECT_ANSWERS,
+    },
+  },
+  recover: {
+    effect: {
+      prompt: ({ object }) => `How much did skipping ${object} do for your rest?`,
+      answers: EFFECT_ANSWERS,
+    },
+  },
+  'ease-off': {
+    effect: {
+      prompt: ({ object }) => `How much did ${object} do for the rest of the day?`,
+      answers: EFFECT_ANSWERS,
+    },
+  },
+  'time-with': {
+    effect: {
+      prompt: ({ object }) => `How much did the time with ${object} do for you both?`,
+      answers: EFFECT_ANSWERS,
+    },
+  },
+  'growth-opportunity': {
+    result: {
+      prompt: ({ object, person }) => `How far did ${person ?? ''} get with ${object}?`,
+      // "Not today" rather than "Did not manage": section 4.4 — the app does
+      // not grade a five-year-old, and the owner should not have to either.
+      answers: resultAnswers('All the way', 'Part of the way', 'Not today'),
+    },
+  },
+  'reach-out': {
+    result: {
+      prompt: ({ object }) => `What came back from ${object}?`,
+      answers: resultAnswers('A proper reply', 'A brief one', 'Nothing back'),
+    },
+    comfort: {
+      prompt: ({ object }) => `How did reaching out to ${object} feel?`,
+      answers: COMFORT_ANSWERS,
+    },
+  },
+  'start-conversation': {
+    result: {
+      prompt: ({ object }) => `How much of a conversation happened at ${object}?`,
+      answers: resultAnswers('A real one', 'A few words', 'None at all'),
+    },
+    comfort: {
+      prompt: ({ object }) => `How did starting a conversation at ${object} feel?`,
+      answers: COMFORT_ANSWERS,
+    },
+  },
+  'reset-space': {
+    result: {
+      prompt: ({ object }) => `How much of ${object} got cleared?`,
+      answers: HOW_FAR,
+    },
+    effect: {
+      prompt: ({ object }) => `How much did clearing ${object} do for the evening?`,
+      answers: EFFECT_ANSWERS,
+    },
+  },
+  'handle-money-item': {
+    result: {
+      prompt: ({ object }) => `How much of ${object} got dealt with?`,
+      answers: HOW_FAR,
+    },
+  },
+  move: {
+    effect: {
+      prompt: ({ object }) => `How much did ${object} do for you?`,
+      answers: EFFECT_ANSWERS,
+    },
+  },
+  hold: {},
 }
 
 /**
  * What to ask about an episode, in order, skipping anything already answered.
  *
- * The result question is the renderer's own follow-up, which is what keeps the
- * subject attached all the way through: "How did the subnetting recall go?"
- * comes from the same template that produced "Spend 10 minutes recalling
- * subnetting". A recommendation whose subject no longer resolves produces no
- * question at all, for the same reason it produces no sentence (D-018).
+ * A recommendation whose subject no longer resolves produces no question at
+ * all, for the same reason it produces no sentence (D-018).
  */
 export function outcomeQuestionsFor(
   episode: Episode,
   entities: EntityIndex,
 ): readonly OutcomeQuestion[] {
-  const rendered = renderRecommendation(episode.semantics, entities)
+  const semantics = episode.semantics
+  const rendered = renderRecommendation(semantics, entities)
   if (!rendered.ok) return []
 
-  const questions: OutcomeQuestion[] = [
-    { aspect: 'result', prompt: rendered.rendered.followUp, answers: RESULT_ANSWERS },
-  ]
+  const subject = entities.labelFor(semantics.subject)
+  const object = entities.labelFor(semantics.target.object)
+  if (subject === undefined || object === undefined) return []
 
-  const comfort = COMFORT_PROMPTS[episode.semantics.target.verb]
-  if (comfort !== undefined) {
-    const object = entities.labelFor(episode.semantics.target.object)
-    if (object !== undefined) {
-      questions.push({ aspect: 'comfort', prompt: comfort(object), answers: COMFORT_ANSWERS })
-    }
+  const parts: Parts = {
+    subject,
+    object,
+    person: entities.linked(semantics.subject.id, 'about-person')?.label,
   }
 
-  return questions
+  const table = OUTCOME_QUESTIONS[semantics.target.verb]
+  const out: OutcomeQuestion[] = []
+  for (const aspect of profileFor(semantics.target.verb).aspects) {
+    const question = table[aspect]
+    if (question === undefined) continue
+    out.push({ aspect, prompt: question.prompt(parts), answers: question.answers })
+  }
+  return out
 }
 
-/** A result is answered when an outcome carries a sentiment; comfort when one does not. */
+/** Which aspects this episode has an answer for. */
 export function answeredAspects(episode: Episode): ReadonlySet<OutcomeAspect> {
-  const answered = new Set<OutcomeAspect>()
+  return new Set(episode.outcomes.map((outcome) => outcome.aspect))
+}
+
+/**
+ * Whether the intended end state was reached, if the owner has said.
+ *
+ * Undefined means unanswered, which is different from `0` — nobody has said the
+ * kitchen is still buried, they have said nothing.
+ */
+export function resultReached(episode: Episode): number | undefined {
   for (const outcome of episode.outcomes) {
-    answered.add(outcome.sentiment === undefined ? 'comfort' : 'result')
+    if (outcome.aspect !== 'result') continue
+    return resultValueOf(outcome.observation)
   }
-  return answered
+  return undefined
 }
 
 function unansweredQuestions(episode: Episode, entities: EntityIndex): readonly OutcomeQuestion[] {
   const answered = answeredAspects(episode)
-  return outcomeQuestionsFor(episode, entities).filter((question) => !answered.has(question.aspect))
+  /*
+   * A result of "not at all" ends the sequence.
+   *
+   * "How much did clearing the kitchen do for the evening?" on an evening when
+   * the kitchen was never cleared has no honest answer, and whichever one the
+   * owner picked would be recorded as evidence about clearing kitchens. It also
+   * saves a tap on the evening they least want to be asked twice.
+   */
+  const reached = resultReached(episode)
+  const stopped = reached === 0
+
+  return outcomeQuestionsFor(episode, entities).filter((question) => {
+    if (answered.has(question.aspect)) return false
+    if (stopped && question.aspect === 'effect') return false
+    return true
+  })
 }
 
 export interface OutcomeMoment {
@@ -299,6 +535,7 @@ export interface OutcomeMoment {
  */
 export function outcomeRecord(
   episode: Episode,
+  aspect: OutcomeAspect,
   answer: OutcomeAnswer,
   moment: OutcomeMoment,
   id: RecordId = newRecordId(),
@@ -316,8 +553,28 @@ export function outcomeRecord(
     },
     {
       about: episode.recommendation,
+      aspect,
       observation: answer.observation,
       ...(answer.sentiment === undefined ? {} : { sentiment: answer.sentiment }),
     },
   )
+}
+
+/** Every question the catalogue can produce, for the class-wide sweeps. */
+export function everyOutcomeQuestion(): readonly {
+  readonly verb: ActionVerb
+  readonly aspect: OutcomeAspect
+  readonly question: AspectQuestion
+}[] {
+  const out: { verb: ActionVerb; aspect: OutcomeAspect; question: AspectQuestion }[] = []
+  for (const [verb, table] of Object.entries(OUTCOME_QUESTIONS)) {
+    for (const [aspect, question] of Object.entries(table)) {
+      out.push({
+        verb: verb as ActionVerb,
+        aspect: aspect as OutcomeAspect,
+        question: question as AspectQuestion,
+      })
+    }
+  }
+  return out
 }

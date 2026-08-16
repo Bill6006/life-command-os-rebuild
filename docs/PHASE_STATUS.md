@@ -40,22 +40,24 @@ is no reason to expect fewer here.
 | Format (Prettier)                         | Pass                                           |
 | Lint (ESLint)                             | Pass, 0 warnings                               |
 | Typecheck (strict TS)                     | Pass, 0 errors                                 |
-| Unit / contract / synthetic / adversarial | 420 passed / 420 (in plain Node, no DOM)       |
-| Browser tests (Playwright)                | 138 passed / 138 — 46 tests × 360, 430, 1280px |
+| Unit / contract / synthetic / adversarial | 448 passed / 448 (in plain Node, no DOM)       |
+| Browser tests (Playwright)                | 141 passed / 141 — 47 tests × 360, 430, 1280px |
 | Production build                          | Pass                                           |
 | `npm run verify` from a clean checkout    | Pass                                           |
 | Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand     |
 
-### Where the 420 sit
+### Where the 448 sit
 
-Phase 2 ended at 330. The 90 new ones are almost all about the loop.
+Phase 2 ended at 330. The 118 new ones are almost all about the loop and what it
+learns from.
 
 | Suite                                                            | Tests |
 | ---------------------------------------------------------------- | ----: |
-| `synthetic/outcome-learning` — section 20, rule by rule          |    35 |
+| `synthetic/outcome-learning` — section 20, rule by rule          |    50 |
 | `synthetic/adaptive-guide` — one question at a time              |    34 |
 | `unit/intelligence-kernel` — readers, direction, moves, order    |    30 |
-| `synthetic/lifecycle` — episodes, double taps, outcome windows   |    24 |
+| `synthetic/lifecycle` — episodes, double taps, outcome windows   |    26 |
+| `synthetic/outcome-questions` — DEF-0020, every verb × aspect    |    17 |
 | `unit/time` — instants, civil dates, weeks, DST, day blocks      |    20 |
 | `unit/registries` — ids, domains, concepts, privacy              |    19 |
 | `synthetic/no-hidden-genericity` — sections 61 and 64            |    19 |
@@ -231,7 +233,8 @@ knows, and does answering a follow-up feel worth the tap.
 
 ## Open defects
 
-None. Four were found and closed during the phase.
+None. Five were found and closed during the phase, and the fifth came from the
+owner.
 
 - **DEF-0016** — the strained late afternoon, deferred by the owner at the end
   of Phase 2 and the natural first thing to build here.
@@ -241,6 +244,13 @@ None. Four were found and closed during the phase.
   tonight is going" printed underneath.
 - **DEF-0018** — found because a browser test hung rather than failed. Tapping
   **Start it** slid **Done** into the space under the finger.
+- **DEF-0020** — **the owner's first phone pass.** "Did the kitchen get cleared?"
+  offered against _Better than usual · About the same · Worse_. The visible edge
+  of a semantic collapse: completion, direct result, downstream effect and
+  comfort are four facts and one judgement was standing in for all of them. The
+  first diagnosis was wrong about the central point — it said Done already
+  records the result — and the owner corrected it, which is what turned a copy
+  fix into a semantic one.
 - **DEF-0019** — found by printing the copy the owner would actually read rather
   than only asserting on parts of it. A move with four completions was beating
   one with no history at all, and the app was calling the difference "more
@@ -270,7 +280,7 @@ next-day effects collapsed into one. All six were caught.
 
 ## Decisions made
 
-D-042 … D-052 in [`DECISION_LOG.md`](DECISION_LOG.md).
+D-042 … D-058 in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Next
 

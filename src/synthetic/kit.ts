@@ -128,13 +128,27 @@ export interface PastEpisode {
   readonly at?: string
   readonly context: DecisionContext
   readonly ending: 'shown' | 'started' | 'completed' | 'declined' | 'unable-now' | 'try-another'
-  /** Only meaningful on a completed episode. */
-  readonly result?: 'better' | 'same' | 'worse'
+  /**
+   * What became of it, per aspect. Only meaningful on a completed episode.
+   *
+   * Three separate facts, because they are three separate facts (DEF-0020):
+   * how far the intended end state got, what it was worth afterwards, and how
+   * it felt.
+   */
+  readonly result?: 'all' | 'part' | 'none'
+  readonly effect?: 'real' | 'some' | 'little' | 'harm'
   readonly comfort?: 'easy' | 'awkward' | 'hard'
 }
 
-const RESULT_SCALE = { better: 4, same: 2, worse: 0 } as const
-const COMFORT_SCALE = { easy: 4, awkward: 2, hard: 0 } as const
+const RESULT_STEP = { all: 2, part: 1, none: 0 } as const
+const EFFECT_STEP = { real: 3, some: 2, little: 1, harm: 0 } as const
+const EFFECT_SENTIMENT = {
+  real: 'better',
+  some: 'better',
+  little: 'same',
+  harm: 'worse',
+} as const
+const COMFORT_STEP = { easy: 2, awkward: 1, hard: 0 } as const
 
 const LIFECYCLE_PROVENANCE: Provenance = { source: 'owner', writtenBy: 'now' }
 
@@ -203,29 +217,46 @@ export function pastEpisodeRecords(
     }
 
     if (seed.result !== undefined && seed.ending === 'completed') {
+      // No sentiment. A result of "none" is not a bad outcome about the topic,
+      // and flagging it as one would fire the weak-topic generator on an
+      // evening that says nothing about the topic.
+      records.push(
+        build(
+          'outcome',
+          { ...envelope, occurredAt: (when + 85 * 60_000) as Instant, id: nextId() },
+          {
+            about: recommendation,
+            aspect: 'result',
+            observation: { type: 'scale', value: RESULT_STEP[seed.result], of: 2 },
+          },
+        ),
+      )
+    }
+
+    if (seed.effect !== undefined && seed.ending === 'completed') {
       records.push(
         build(
           'outcome',
           { ...envelope, occurredAt: (when + 90 * 60_000) as Instant, id: nextId() },
           {
             about: recommendation,
-            observation: { type: 'scale', value: RESULT_SCALE[seed.result], of: 5 },
-            sentiment: seed.result,
+            aspect: 'effect',
+            observation: { type: 'scale', value: EFFECT_STEP[seed.effect], of: 3 },
+            sentiment: EFFECT_SENTIMENT[seed.effect],
           },
         ),
       )
     }
 
     if (seed.comfort !== undefined) {
-      // No sentiment: how something felt is worth knowing and is not evidence
-      // about whether it worked, and the absence is what keeps them apart.
       records.push(
         build(
           'outcome',
           { ...envelope, occurredAt: (when + 95 * 60_000) as Instant, id: nextId() },
           {
             about: recommendation,
-            observation: { type: 'scale', value: COMFORT_SCALE[seed.comfort], of: 5 },
+            aspect: 'comfort',
+            observation: { type: 'scale', value: COMFORT_STEP[seed.comfort], of: 2 },
           },
         ),
       )

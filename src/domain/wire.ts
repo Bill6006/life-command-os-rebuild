@@ -17,6 +17,7 @@ import {
   type WhyNowContext,
 } from './recommendation'
 import {
+  OUTCOME_ASPECTS,
   PROVENANCE_SOURCES,
   RECORD_KINDS,
   type CanonicalRecord,
@@ -413,6 +414,7 @@ function readPayload(reader: Reader, kind: RecordKind): Record<string, unknown> 
     case 'outcome':
       return {
         about: readRecordId(reader, 'about'),
+        aspect: readEnum(reader, 'aspect', OUTCOME_ASPECTS),
         observation: readFactValue(reader, 'observation'),
         sentiment: readOptionalEnum(reader, 'sentiment', ['better', 'same', 'worse'] as const),
         window: readObservationWindow(reader, 'window'),
@@ -812,6 +814,7 @@ function payloadOut(record: CanonicalRecord): Record<string, unknown> {
     case 'outcome':
       return {
         about: record.about,
+        aspect: record.aspect,
         observation: factValueOut(record.observation),
         ...(record.sentiment === undefined ? {} : { sentiment: record.sentiment }),
         ...(record.window === undefined ? {} : { window: observationWindowOut(record.window) }),

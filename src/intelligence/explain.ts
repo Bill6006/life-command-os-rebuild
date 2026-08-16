@@ -360,6 +360,7 @@ export const AHEAD_BECAUSE: Record<DimensionName, string> = {
   'recent-duplication': 'The other one came up recently.',
   'owner-preference': 'Closer to what you have said you want.',
   'follow-through': 'More likely to actually happen.',
+  'direct-result': 'More likely to get all the way there.',
   uncertainty: 'Better supported by what is known.',
   protection: 'The other one would borrow against tomorrow.',
   advisor: 'What you wrote about the last attempt points here.',

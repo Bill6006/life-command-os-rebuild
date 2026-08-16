@@ -130,7 +130,7 @@ const minimal: Record<RecordKind, CanonicalRecord> = {
   outcome: record(
     'outcome',
     { occurredAt: T },
-    { about: recommendationId, observation: { type: 'scale', value: 4, of: 5 } },
+    { about: recommendationId, aspect: 'result', observation: { type: 'scale', value: 2, of: 2 } },
   ),
   correction: record(
     'correction',
@@ -294,6 +294,7 @@ const full: Record<RecordKind, CanonicalRecord> = {
     { occurredAt: T },
     {
       about: recommendationId,
+      aspect: 'effect',
       observation: { type: 'duration', minutes: 12 },
       sentiment: 'better',
       window: { kind: 'observation', from: T, to: LATER },

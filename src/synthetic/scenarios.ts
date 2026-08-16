@@ -81,6 +81,7 @@ function subnettingStruggle(): Scenario {
         },
         {
           about: topicRecord.id,
+          aspect: 'effect',
           observation: { type: 'text', value: 'The /26 boundaries went wrong twice' },
           sentiment: 'worse',
         },
@@ -617,6 +618,7 @@ function nightsOfSleep(rested: boolean): Pick<Scenario, 'zone' | 'now' | 'build'
         },
         {
           about: studying.id,
+          aspect: 'effect',
           observation: { type: 'text', value: 'The /26 boundaries went wrong twice' },
           sentiment: 'worse',
         },
@@ -1307,7 +1309,7 @@ function settledEvening(): Scenario {
             usableMinutes: 45,
           },
           ending: 'completed' as const,
-          result: 'same' as const,
+          effect: 'little' as const,
         })),
         nextId,
       )
@@ -1455,7 +1457,7 @@ function whatWorked(): Scenario {
             on: `2026-02-${String(day).padStart(2, '0')}`,
             context: anEvening,
             ending: 'completed' as const,
-            result: 'better' as const,
+            effect: 'real' as const,
           })),
           // Two walks that did nothing much.
           ...[4, 11].map((day) => ({
@@ -1465,7 +1467,7 @@ function whatWorked(): Scenario {
             on: `2026-02-${String(day).padStart(2, '0')}`,
             context: anEvening,
             ending: 'completed' as const,
-            result: 'same' as const,
+            effect: 'little' as const,
           })),
           // A lab twice interrupted. Evidence about his evenings rather than
           // about labs, and it lands there.

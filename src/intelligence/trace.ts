@@ -93,6 +93,15 @@ export interface LearningTrace {
   /** True when the owner has told the app to stop holding this belief. */
   readonly corrected: boolean
   readonly followThrough: { readonly rate: number; readonly samples: number; readonly note: string }
+  /** How far the intended end state gets. Distinct from follow-through. */
+  readonly result: { readonly reached: number; readonly samples: number; readonly note: string }
+  /** How hard it has actually proved, against the table's guess. */
+  readonly friction: {
+    readonly started: number
+    readonly landed: number
+    readonly samples: number
+    readonly note: string
+  }
   readonly appetite: {
     readonly turnedDown: number
     readonly samples: number

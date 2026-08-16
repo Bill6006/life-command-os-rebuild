@@ -1028,3 +1028,161 @@ swallows a second tap on the same button before React re-renders. It does
 nothing about a second tap on a _different_ button, because that is not a
 duplicate — it is a different event, and the guards that make duplicates
 harmless have no opinion about it.
+
+---
+
+## D-053 — Completion is the attempt, not the achievement
+
+**Phase:** 3 · **Status:** Active
+
+`action-completion` means the owner carried out the action the sentence asked
+for. It says nothing about whether the intended end state was reached.
+
+**Why:** DEF-0020, and it was found by the owner disagreeing with a diagnosis.
+The record had no definition anywhere — unlike `action-decline` and
+`action-unable-now`, which both carry one — so "Done" was ambiguous between
+attempt and achievement, and the whole learning layer rested on which it was.
+Fifteen minutes clearing the kitchen can be done in full and leave the kitchen
+half clear. Section 20 already lists `completed` and `outcome observed` as
+different states; this says which is which.
+
+**Consequence:** "How much of the kitchen got cleared?" is a legitimate question
+_after_ Done rather than a redundant one, which is the opposite of what the
+first diagnosis concluded.
+
+---
+
+## D-054 — An outcome says which of three things it is an observation of
+
+**Phase:** 3 · **Status:** Active
+
+`OutcomeRecord.aspect` is `result | effect | comfort`. Only an effect answer
+carries a `sentiment`.
+
+**Why:** One better/same/worse judgement was standing in for four different
+facts — completion, direct result, downstream effect, comfort — so the app was
+collecting evidence about one thing and learning another from it. The plan never
+asked for one shape: section 10 lists five things to learn from a social move,
+"whether the owner acted" among them; section 9's growth evidence is a fact
+about a child; section 19 lists completion probability and prior outcomes as
+separate dimensions. The single judgement was a Phase 3 implementation choice.
+
+**Why three suffice, and not four:** whose result it is comes from the subject,
+not from the aspect. "How did Adaya do?" is a `result` about a development skill
+that links to her, structurally identical to "How much of the kitchen got
+cleared?".
+
+**Why only effect carries a sentiment:** `roughOutcomesFor` reads `worse` as
+"this topic went badly" and fires the weak-topic generator from it. A _result_
+of "not at all" wearing that flag would produce a study recommendation off an
+evening that says nothing about studying.
+
+---
+
+## D-055 — Direct result is its own learned quantity, and can only count against
+
+**Phase:** 3 · **Status:** Active
+
+`resultFor` is separate from `followThroughFor`. Its prior is 1 — a move
+achieves what it is for — so _achieved_ sits at the prior and abstains, and only
+_partly_ and _not at all_ speak.
+
+**Why separate:** follow-through asks whether the move can happen here at all,
+from unable-now — evidence about the _situation_. This asks whether it lands
+when it does. Clearing the kitchen every time it is suggested and only ever
+half-clearing it is perfect follow-through and a poor result, and folding them
+would have the app say "something usually gets in the way" of an evening where
+nothing did.
+
+**Why penalty-only:** `reset-space` is the only move that produces both a result
+and an effect, so one good evening produces two answers. If both fed positive
+dimensions, a move with a decomposable outcome would out-rank an identical move
+with a simple one — an advantage earned from the taxonomy rather than from the
+world. Making the result non-positive dissolves it: the second aspect can only
+ever cost. Same rule as `follow-through` after DEF-0019.
+
+**Rejected alternative:** multiplying the effect by the achievement rate, which
+is the semantically neat version of "expected value". It asserts that partial
+achievement produces proportionally partial benefit, and we have no evidence for
+that shape (section 22).
+
+---
+
+## D-056 — An effect answer is absolute worth, in four levels including harm
+
+**Phase:** 3 · **Status:** Active
+
+`A real difference · Some difference · Not much · Backfired` → 0.85 · 0.50 ·
+0.15 · 0.00. `shrink()` is unchanged.
+
+**Why absolute:** the labels were comparative and the values absolute, so one
+tap meaning "it made no difference" pulled a move with a 0.8 prior down, left
+`reset-space` at 0.4 exactly where it was, and would have pushed a 0.05 prior
+up. A relative judgement written into an absolute scale moves different moves in
+different directions.
+
+**Why four:** harm is not the same evidence as no help. A walk that aggravated
+soreness and a walk that did nothing should not teach the same thing, and
+`sentiment: 'worse'` had existed since Phase 1 — collapsing to three would have
+discarded a distinction the domain already carried. The scale has no room below
+zero, so ranking treats harm as worthless; the record keeps them apart, which is
+what lets the owner see the difference and correct it.
+
+**Rejected alternative — a delta model** (`observed = prior + Δ`), which was
+proposed and then withdrawn after working the arithmetic. It passes most checks
+and fails the one that matters: with Δ = 0 for "no change", **a move that
+consistently does nothing keeps its prior forever**. "Spending time with Adaya
+never changes the evening", told fifty times, would leave `time-with` at 0.80.
+It also saturates at the clamp after three good answers on a 0.9 prior.
+
+**Checked before adoption**, across the real prior range 0.40–0.90: one
+observation moves a quarter of the gap; repeated evidence increasingly outweighs
+the prior; contradictory evidence reverses it below the prior; the largest
+single move is 0.225 and leaves the belief at 0.675; nothing clips, because
+learned is always bounded by `[min(prior, 0), max(prior, 0.85)]`.
+
+**Known and accepted:** `protect-sleep`, `recover` (0.90) and `wind-down` (0.85)
+sit at or above the top answer, so the best possible answer cannot raise them —
+it converges them on 0.85. Those priors were never earned, and raising the top
+value would make "a real difference" a near-certainty claim from one tap.
+
+---
+
+## D-057 — Comfort is learned as friction
+
+**Phase:** 3 · **Status:** Active
+
+A comfort answer moves `MoveProfile.friction` by the same `shrink()`, and the
+`friction` dimension and `bottleneckFit`'s short-evening branch read the learned
+value. The arbitration tiebreak keeps the immutable prior.
+
+**Why:** asking whether something felt easy, awkward or hard work and then doing
+nothing with the answer is D-029's own complaint — a question that changes
+nothing is the same mistake as a button that records nothing. Friction is what
+the answer is _about_.
+
+**Why signed both ways**, unlike result and follow-through: their priors are
+ceilings, so only failure is informative. Friction's prior is a middling guess
+per move, so "easier for you than it looks" is real news about this owner.
+
+**Why the tiebreak keeps the prior:** it exists only to settle an exact draw
+deterministically, and a tiebreak that depended on history would make an
+identical draw resolve differently on two devices with different pasts.
+
+---
+
+## D-058 — A result of "not at all" ends the sequence
+
+**Phase:** 3 · **Status:** Active
+
+Aspects are asked in the order the move declares them, one at a time, and a
+direct result of "not at all" suppresses the effect question for that episode.
+
+**Why:** "How much did clearing the kitchen do for the evening?" has no honest
+answer on an evening when the kitchen was never cleared, and whichever one the
+owner picked would be recorded as evidence about clearing kitchens. It also
+saves a tap on the evening they least want to be asked twice.
+
+**Why an ordering rule rather than a filter in learning:** filtering afterwards
+would still have asked, and the tap is the cost worth removing. Suppressing the
+question means there is nothing to filter.

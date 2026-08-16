@@ -41,7 +41,7 @@ Read these first, in this order:
 2. docs/PHASE_STATUS.md — what Phase 3 delivered, and what it deliberately did not
 3. docs/DECISION_LOG.md — decisions D-001 to D-052 and their reasons
 4. docs/ARCHITECTURE_BOUNDARIES.md — module ownership, and the line between deciding and recording
-5. docs/DEFECT_LEDGER.md — DEF-0001 to DEF-0019 and the discipline that closed all nineteen
+5. docs/DEFECT_LEDGER.md — DEF-0001 to DEF-0020 and the discipline that closed all twenty
 
 Then read the engine you are building on, all of it: src/intelligence/. Start with engine.ts, then situation.ts, candidates.ts, constraints.ts, evaluate.ts, arbitrate.ts, explain.ts, guide.ts, moves.ts, questions.ts, lifecycle.ts, outcomes.ts, learning.ts, corrections.ts. Also src/memory/facts.ts, src/domain/concepts.ts, src/domain/windows.ts and src/domain/knowledge.ts.
 
@@ -57,7 +57,7 @@ HARD RULES
 
 WHAT PHASES 1 TO 3 BUILT, AND WHAT YOU MUST NOT WEAKEN
 
-A working intelligence kernel in src/intelligence/, pure and clock-free, with one entry point: decide(view, moment, options). It assembles the situation from resolved facts, generates candidates from the owner's own entities, filters what does not fit and records why, scores across sixteen dimensions, chooses one move or a valid non-action, explains it in the owner's particulars, records what the owner does about it, asks for the result when there is one to give, and learns from it. There is a full decision trace in the QA inspector including what was learned and how much of it there was.
+A working intelligence kernel in src/intelligence/, pure and clock-free, with one entry point: decide(view, moment, options). It assembles the situation from resolved facts, generates candidates from the owner's own entities, filters what does not fit and records why, scores across seventeen dimensions, chooses one move or a valid non-action, explains it in the owner's particulars, records what the owner does about it, asks for the result when there is one to give, and learns from it. There is a full decision trace in the QA inspector including what was learned and how much of it there was.
 
 These are load-bearing. Breaking any of them is a regression, and each has a test that will fail:
 
@@ -121,7 +121,7 @@ WORKING RULES
 - Make reasonably small checkpoint commits. Every push to main that passes the gate redeploys Preview automatically, so tell the owner when a new phone-testable checkpoint is available.
 - Keep the kernel pure and clock-free.
 - Write tests that verify semantic behaviour, not implementation paths.
-- Follow plan section 42 for any defect: reproduce, identify the whole defect class, write a focused regression, prove it fails when reintroduced, fix the root cause, rerun the gate. DEF-0001 to DEF-0019 are the worked examples.
+- Follow plan section 42 for any defect: reproduce, identify the whole defect class, write a focused regression, prove it fails when reintroduced, fix the root cause, rerun the gate. DEF-0001 to DEF-0020 are the worked examples.
 - Keep docs/DECISION_LOG.md, docs/PHASE_STATUS.md, docs/DEFECT_LEDGER.md and docs/NEXT_PROMPT.md current.
 
 CLOSING THE PHASE

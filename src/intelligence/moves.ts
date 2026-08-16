@@ -1,4 +1,5 @@
 import type { ActionVerb } from '../domain/recommendation'
+import type { OutcomeAspect } from '../domain/records'
 import type { DayBlock } from '../domain/time'
 
 /**
@@ -48,6 +49,26 @@ export interface OutcomeTiming {
 const SOON: OutcomeTiming = { when: 'same-block', after: 20 }
 const IN_THE_MORNING: OutcomeTiming = { when: 'next-morning', after: 0 }
 
+/**
+ * Which kinds of evidence this move can actually produce, in the order asked.
+ *
+ * DEF-0020. A single better/same/worse judgement stood in for four different
+ * facts, so a question about whether the kitchen got cleared was answered with
+ * "About the same". What decides the list here is one test:
+ *
+ * > **Does the sentence name an end state, or only an activity?**
+ *
+ * "Clearing the kitchen" names an end state that fifteen minutes may not reach,
+ * so the result is a separate fact from the attempt. "Recalling subnetting"
+ * names an activity — Done is the whole of it, and what is left to learn is
+ * what the session was worth, which is `effect`.
+ *
+ * Most moves produce one kind of evidence. Three produce two. Section 4.5 — do
+ * not collect data merely because a field exists, and two taps is the most a
+ * follow-up may cost.
+ */
+export type MoveAspects = readonly OutcomeAspect[]
+
 export interface MoveProfile {
   readonly demand: Demand
   /** Expected value in the block it happens in, 0–1. Learning moves this. */
@@ -71,6 +92,8 @@ export interface MoveProfile {
   readonly refuses: readonly DayBlock[]
   /** When its result can honestly be asked about. */
   readonly outcome: OutcomeTiming
+  /** Which kinds of evidence it can produce, in the order they are asked. */
+  readonly aspects: MoveAspects
 }
 
 const ALL_DAY: readonly DayBlock[] = ['morning', 'afternoon', 'evening']
@@ -85,6 +108,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     suits: ALL_DAY,
     refuses: [],
     outcome: SOON,
+    aspects: ['effect'],
   },
   'review-weak-topic': {
     demand: 'effortful',
@@ -95,6 +119,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     suits: ['morning', 'afternoon', 'evening'],
     refuses: ['late-night'],
     outcome: SOON,
+    aspects: ['effect'],
   },
   'hands-on-lab': {
     demand: 'effortful',
@@ -105,6 +130,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     suits: ['morning', 'afternoon'],
     refuses: ['late-night', 'early-morning'],
     outcome: SOON,
+    aspects: ['result'],
   },
   'protect-sleep': {
     demand: 'restorative',
@@ -116,6 +142,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     refuses: ['morning', 'afternoon', 'early-morning'],
     // Whether an early night worked is a question with no answer until morning.
     outcome: IN_THE_MORNING,
+    aspects: ['effect'],
   },
   'wind-down': {
     demand: 'restorative',
@@ -126,6 +153,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     suits: ['evening', 'late-night'],
     refuses: ['morning', 'afternoon', 'early-morning'],
     outcome: IN_THE_MORNING,
+    aspects: ['effect'],
   },
   recover: {
     demand: 'restorative',
@@ -136,6 +164,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     suits: ['evening', 'late-night', 'afternoon'],
     refuses: ['morning', 'early-morning'],
     outcome: IN_THE_MORNING,
+    aspects: ['effect'],
   },
   'ease-off': {
     demand: 'restorative',
@@ -148,6 +177,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     // two recovery moves competing for one evening is one wording too many.
     refuses: ['early-morning', 'morning', 'evening', 'late-night'],
     outcome: SOON,
+    aspects: ['effect'],
   },
   'time-with': {
     demand: 'light',
@@ -158,6 +188,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     suits: ['morning', 'afternoon', 'evening'],
     refuses: ['late-night'],
     outcome: SOON,
+    aspects: ['effect'],
   },
   'growth-opportunity': {
     demand: 'light',
@@ -168,6 +199,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     suits: ['morning', 'afternoon', 'evening'],
     refuses: ['late-night', 'early-morning'],
     outcome: SOON,
+    aspects: ['result'],
   },
   'reach-out': {
     demand: 'light',
@@ -179,6 +211,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     refuses: ['late-night'],
     // A message sent is not a conversation had. Give the other person an hour.
     outcome: { when: 'same-block', after: 60 },
+    aspects: ['result', 'comfort'],
   },
   'start-conversation': {
     demand: 'effortful',
@@ -189,6 +222,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     suits: ['afternoon', 'evening'],
     refuses: ['late-night', 'early-morning'],
     outcome: SOON,
+    aspects: ['result', 'comfort'],
   },
   'reset-space': {
     demand: 'light',
@@ -199,6 +233,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     suits: ['morning', 'afternoon', 'evening'],
     refuses: ['late-night'],
     outcome: SOON,
+    aspects: ['result', 'effect'],
   },
   'handle-money-item': {
     demand: 'effortful',
@@ -209,6 +244,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     suits: ['morning', 'afternoon'],
     refuses: ['late-night', 'early-morning'],
     outcome: SOON,
+    aspects: ['result'],
   },
   move: {
     demand: 'effortful',
@@ -219,6 +255,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     suits: ['morning', 'afternoon', 'evening'],
     refuses: ['late-night'],
     outcome: SOON,
+    aspects: ['effect'],
   },
   hold: {
     demand: 'restorative',
@@ -229,6 +266,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     suits: ['morning', 'afternoon', 'evening', 'late-night', 'early-morning'],
     refuses: [],
     outcome: IN_THE_MORNING,
+    aspects: [],
   },
 }
 

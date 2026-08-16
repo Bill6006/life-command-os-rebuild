@@ -319,8 +319,41 @@ test.describe('the loop, on a phone', () => {
     await page.getByRole('button', { name: '+1 hour' }).click()
     await goToNow(page)
 
-    await expect(page.getByTestId('now-outcome')).toHaveText('Did the kitchen get cleared?')
-    await page.locator('.now-option').first().click()
+    /*
+     * Two questions, because they are two facts — DEF-0020.
+     *
+     * Whether the kitchen got cleared is not what Done recorded: Done is the
+     * attempt, and fifteen minutes may not reach the end state. Whether the
+     * evening went better afterwards is a third thing again. Both are asked as
+     * graded questions because both have graded answers, which is precisely
+     * what "Did the kitchen get cleared?" against *About the same* was not.
+     */
+    await expect(page.getByTestId('now-outcome')).toHaveText('How much of the kitchen got cleared?')
+    await page.getByRole('button', { name: 'Completely' }).click()
+
+    await expect(page.getByTestId('now-outcome')).toHaveText(
+      'How much did clearing the kitchen do for the evening?',
+    )
+    await page.getByRole('button', { name: 'A real difference' }).click()
+
+    await expect(page.getByTestId('now-outcome')).toHaveCount(0)
+  })
+
+  test('stops asking about the evening when the kitchen never got cleared', async ({ page }) => {
+    // The short-circuit: there is no honest answer to how the evening went
+    // after clearing a kitchen that was never cleared, and whichever one was
+    // picked would be recorded as evidence about clearing kitchens.
+    await loadInQa(page, 'A week pointed at the house')
+    await goToNow(page)
+
+    await page.getByTestId('now-actions').getByRole('button', { name: 'Done' }).click()
+    await backToQa(page)
+    await page.getByRole('button', { name: '+1 hour' }).click()
+    await goToNow(page)
+
+    await expect(page.getByTestId('now-outcome')).toHaveText('How much of the kitchen got cleared?')
+    await page.getByRole('button', { name: 'Not at all' }).click()
+
     await expect(page.getByTestId('now-outcome')).toHaveCount(0)
   })
 })

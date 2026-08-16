@@ -39,6 +39,138 @@ None.
 
 ## Fixed
 
+### DEF-0020 — a question its own answers could not answer
+
+- Status: Fixed
+- Severity: Blocker — the app collecting evidence about one thing and learning
+  another from it
+- Found in: Phase 3 / `9a2b729`
+- Found by: **owner phone test, first pass**
+- Class: **four different facts collapsed into one judgement, and a prompt that
+  came from somewhere other than its answers.** The renderer's conversational
+  `followUp` was reused verbatim as the outcome prompt, while the answers came
+  from the learning model, and nothing anywhere required the two to be about the
+  same thing.
+- Reproduction: kitchen recommendation → **Start it** → **Done** → advance the
+  clock. The card asked _"Did the kitchen get cleared?"_ and offered **Better
+  than usual · About the same · Worse**.
+- What the owner saw, and what was underneath it: eight of fifteen follow-ups
+  were unanswerable by the offered options — six asked whether something
+  happened, two were effect questions in yes/no clothing — and the six that
+  parsed did so loosely, importing a comparison the question had not asked for.
+  Not one of the fifteen was clean.
+
+#### The wrong diagnosis, and the owner's correction
+
+The first diagnosis said the question was redundant because Done already
+records that it happened. **That was wrong, and the owner said so.**
+`action-completion` had no definition anywhere in the codebase — unlike
+`action-decline` ("Disagreement") and `action-unable-now` ("Inability") — and
+the only reading the code supported was the lifecycle terminal state. Fifteen
+minutes clearing the kitchen can be done in full and leave the kitchen half
+clear. **Done is the attempt; whether the intended end state occurred is a
+separate fact**, and asking about it is legitimate.
+
+That correction is what turned a copy fix into a semantic one.
+
+#### Root cause
+
+Four facts had one carrier:
+
+- **completion** — the attempt was made (lifecycle);
+- **direct result** — the intended end state occurred;
+- **downstream effect** — what it was worth afterwards;
+- **comfort** — how it felt.
+
+Section 20 lists `completed` and `outcome observed` as separate states; section
+10 lists five distinct things to learn from a social move, "whether the owner
+acted" among them; section 19 lists `completion probability` and `prior outcomes
+in comparable contexts` as separate dimensions. **A single effect judgement was
+an implementation choice made in Phase 3, not a requirement of the plan.**
+
+Two arithmetic faults sat under it:
+
+- `OBSERVED_VALUE` mapped a **relative** answer ("About the same") onto an
+  **absolute** scale, so one tap meaning "it made no difference" pulled a move
+  with a 0.8 prior down, left `reset-space` at 0.4 exactly where it was, and
+  would have pushed a 0.05 prior up. On the card in the screenshot, two of the
+  three answers moved the belief by nothing while still counting as a sample.
+- Three levels could not tell **harm** from **no help**. A walk that aggravated
+  soreness and a walk that did nothing are not the same evidence.
+
+#### Fix
+
+- `action-completion` is **defined as the attempt**, in a doc comment beside the
+  two that already had one.
+- `OutcomeRecord` carries an explicit **`aspect: result | effect | comfort`**.
+  Whose result it is needs no fourth aspect — the subject carries that, so "how
+  did Adaya do" is a `result` about a development skill that links to her.
+- **Only an effect answer carries a `sentiment`.** Load-bearing:
+  `roughOutcomesFor` reads `worse` as "this topic went badly", so a _result_ of
+  "not at all" wearing that flag would fire the weak-topic generator off an
+  evening that says nothing about a topic.
+- **A per-verb aspect table** beside the move profile, decided by one test: does
+  the sentence name an end state, or only an activity? Eleven verbs produce one
+  kind of evidence; three produce two; `hold` produces none.
+- **`resultFor`** — a new learned quantity, prior 1.0, feeding a new
+  **`direct-result`** dimension that abstains at the prior and is **non-positive
+  below it**. That is what stops a two-aspect move collecting two positive
+  rewards for one good evening: its second aspect can only ever cost it. Same
+  shape as `follow-through` after DEF-0019.
+- **Effect answers are four absolute levels** — 0.85 / 0.50 / 0.15 / 0.00,
+  approved after a sensitivity check across the real prior range. `shrink()` is
+  unchanged.
+- **Comfort is learned as friction**, signed both ways, because its prior is a
+  middling guess rather than a ceiling.
+- **A "not at all" result ends the sequence.** No honest answer exists to how the
+  evening went after clearing a kitchen that was never cleared, and whichever
+  one was picked would be recorded as evidence about clearing kitchens.
+
+#### Regression
+
+`tests/synthetic/outcome-questions.test.ts` — seventeen class-wide checks that
+walk every verb and every aspect, so a sixteenth verb is covered the moment it
+exists. Plus behavioural coverage in `outcome-learning.test.ts` (double reward,
+comfort-as-friction) and `lifecycle.test.ts` (the short-circuit), and the two
+browser flows.
+
+**Eight defects were reintroduced one at a time and all eight were caught:** the
+reported yes/no-against-graded-answers, an outcome question losing its subject,
+a result answer wearing an effect sentiment, harm collapsed back into no-help,
+an effect label taking a word the engine already uses, a move declaring an
+aspect nothing asks about, `direct-result` rewarding a move for landing, and the
+short-circuit removed.
+
+The first run caught six of eight. The two that escaped were the two most
+important claims in the design — that a two-aspect move is not rewarded twice,
+and that a failed result stops the effect question — and neither had a test
+exercising a history with result evidence in it. Both now do.
+
+#### Siblings
+
+- The sensitivity check found a second collision before it shipped: the answer
+  labelled "A little" (0.50) would have been reported back by `describeLevel` as
+  "a fair amount". The words on the button and the words in the trace have to
+  mean the same thing, and a sweep now says so.
+- `growth-opportunity` was in the comfort table — "How did ordering food
+  independently seem to go for her?" answered _Easy / A bit awkward / Hard work_
+  and filed as the owner's feelings. It is section 9's growth evidence, and it is
+  now a `result` about her.
+- The two tests that asserted the exact broken strings —
+  `lifecycle.test.ts` and `now.spec.ts` — are why nothing caught this. An
+  exact-string assertion proves a string is stable, not that it is right. Both
+  are now class checks plus one representative example.
+
+#### Deferred
+
+- **Repeated harm** ranks a move at the floor and does nothing more. Pattern
+  recognition and a proposed recommendation-family veto (§4.3) belong with
+  Insights, **Phase 6**.
+- **Deriving sleep outcomes from the next morning's `sleepHours` reading**, which
+  §8 prefers to asking, needs observation-to-episode matching and belongs with
+  the coverage engine, **Phase 4**.
+- Fixed in: the fifth Phase 3 checkpoint
+
 ### DEF-0019 — a move was praised for having a record, against one with none
 
 - Status: Fixed

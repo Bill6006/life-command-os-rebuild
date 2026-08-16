@@ -141,8 +141,9 @@ const GO_FOR_A_WALK = 'health/move/routine:a-walk'
 function clearedTheKitchen(
   days: readonly number[],
   ending: PastEpisode['ending'],
-  result?: PastEpisode['result'],
+  effect?: PastEpisode['effect'],
   context: DecisionContext = evening(),
+  result?: PastEpisode['result'],
 ): readonly PastEpisode[] {
   return days.map((day) => ({
     verb: 'reset-space' as const,
@@ -151,15 +152,30 @@ function clearedTheKitchen(
     on: `2026-05-${String(day).padStart(2, '0')}`,
     context,
     ending,
+    ...(effect === undefined ? {} : { effect }),
     ...(result === undefined ? {} : { result }),
   }))
+}
+
+function dimensionWeight(decision: Decision, candidate: string, name: string): number {
+  const row = decision.trace.ranking.find((entry) => entry.id === candidate)
+  const found = row?.dimensions.find((entry) => entry.name === name)
+  expect(found, `${candidate} has no ${name}`).toBeDefined()
+  return found?.weight ?? -1
+}
+
+function positiveDimensions(decision: Decision, candidate: string): readonly string[] {
+  const row = decision.trace.ranking.find((entry) => entry.id === candidate)
+  return (row?.dimensions ?? [])
+    .filter((entry) => entry.weight > 0 && entry.value > 0)
+    .map((entry) => entry.name)
 }
 
 // ---------------------------------------------------------------------------
 
 describe('a completed action changes later reasoning', () => {
   const cold = history()
-  const warm = history({ past: clearedTheKitchen([5, 8, 12], 'completed', 'better') })
+  const warm = history({ past: clearedTheKitchen([5, 8, 12], 'completed', 'real') })
 
   it('proposes the same things either way', () => {
     // The history differs in what happened, not in what is available. Anything
@@ -206,9 +222,9 @@ describe('a completed action changes later reasoning', () => {
           on: `2026-05-${String(day).padStart(2, '0')}`,
           context: evening(),
           ending: 'completed' as const,
-          result: 'better' as const,
+          effect: 'real' as const,
         })),
-        ...clearedTheKitchen([3, 7, 11], 'completed', 'worse'),
+        ...clearedTheKitchen([3, 7, 11], 'completed', 'harm'),
       ],
     })
 
@@ -231,6 +247,131 @@ describe('a completed action changes later reasoning', () => {
     expect(row?.evidence).toHaveLength(3)
     expect(row?.startedAt.now).toBe(profileFor('reset-space').now)
     expect(row?.landedAt.now).toBeGreaterThan(profileFor('reset-space').now)
+  })
+})
+
+describe('a move with two aspects is not rewarded twice — DEF-0020', () => {
+  /*
+   * `reset-space` is the only move that produces both a direct result and a
+   * downstream effect, which makes it the one place double counting could
+   * happen. One good evening produces two answers — the kitchen got cleared,
+   * and the evening went better — and if both fed positive dimensions, a move
+   * with a decomposable outcome would out-rank an identical move with a simple
+   * one. That advantage would come from the taxonomy, not from the world.
+   *
+   * What stops it: the prior for a direct result is that a move achieves what
+   * it is for, so **achieving it sits at the prior and says nothing**. The
+   * result can only ever count against. Same rule as `follow-through` after
+   * DEF-0019, and the same reason — an absence may not be asserted from
+   * ignorance.
+   */
+  const landed = history({
+    prefix: 'OD',
+    past: clearedTheKitchen([5, 8, 12], 'completed', 'real', evening(), 'all'),
+  })
+
+  it('reads both answers', () => {
+    const row = learningOf(landed, CLEAR_THE_KITCHEN)
+    expect(row?.samples).toBe(3)
+    expect(row?.result.samples).toBe(3)
+    expect(row?.result.reached).toBe(1)
+  })
+
+  it('takes no credit at all for having landed', () => {
+    // The whole of the double-counting guard, in one assertion: a dimension
+    // that abstains contributes nothing to a weighted mean, including to its
+    // denominator.
+    expect(dimensionWeight(landed, CLEAR_THE_KITCHEN, 'direct-result')).toBe(0)
+  })
+
+  it('counts one good evening once', () => {
+    const positives = positiveDimensions(landed, CLEAR_THE_KITCHEN)
+    expect(positives).toContain('immediate-benefit')
+    expect(positives).not.toContain('direct-result')
+  })
+
+  it('scores exactly as it would if the result had never been asked', () => {
+    // Held still except for the result answers. If landing were rewarded, the
+    // two would differ — which is what the mutation test reintroduces.
+    const effectOnly = history({
+      prefix: 'OD',
+      past: clearedTheKitchen([5, 8, 12], 'completed', 'real'),
+    })
+    const withResult = landed.trace.ranking.find((row) => row.id === CLEAR_THE_KITCHEN)
+    const without = effectOnly.trace.ranking.find((row) => row.id === CLEAR_THE_KITCHEN)
+    expect(withResult?.score).toBe(without?.score)
+  })
+
+  it('counts against the move when it only half lands', () => {
+    // The other direction, so the dimension is not merely inert.
+    const halfLanded = history({
+      prefix: 'OH',
+      past: clearedTheKitchen([5, 8, 12], 'completed', 'real', evening(), 'part'),
+    })
+    expect(dimensionOf(halfLanded, CLEAR_THE_KITCHEN, 'direct-result')).toBeLessThan(0)
+    expect(dimensionWeight(halfLanded, CLEAR_THE_KITCHEN, 'direct-result')).toBeGreaterThan(0)
+    expect(learningOf(halfLanded, CLEAR_THE_KITCHEN)?.result.reached).toBeLessThan(1)
+
+    // And it is a claim about landing, not about being blocked. Nothing ever
+    // got in the way on these evenings.
+    expect(learningOf(halfLanded, CLEAR_THE_KITCHEN)?.followThrough.rate).toBe(1)
+  })
+})
+
+describe('comfort is learned as friction, and only as friction', () => {
+  /*
+   * Section 10 asks the app to learn how comfortable something felt. Unlike
+   * result and follow-through this is signed both ways, and for a principled
+   * reason: their priors are ceilings, so only failure is informative.
+   * Friction's prior is a middling guess per move, so "easier for you than it
+   * looks" is real news.
+   */
+  const reached = (comfort: 'easy' | 'awkward' | 'hard') =>
+    history({
+      prefix: comfort === 'easy' ? 'CE' : 'CH',
+      past: [5, 8, 12].map((day) => ({
+        verb: 'reset-space' as const,
+        object: KITCHEN,
+        domain: DOMAIN.home,
+        on: `2026-05-${String(day).padStart(2, '0')}`,
+        context: evening(),
+        ending: 'completed' as const,
+        comfort,
+      })),
+    })
+
+  it('makes a move that felt easy cheaper to start', () => {
+    const easy = reached('easy')
+    expect(dimensionOf(easy, CLEAR_THE_KITCHEN, 'friction')).toBeGreaterThan(
+      dimensionOf(history(), CLEAR_THE_KITCHEN, 'friction'),
+    )
+    expect(learningOf(easy, CLEAR_THE_KITCHEN)?.friction.landed).toBeLessThan(
+      profileFor('reset-space').friction,
+    )
+  })
+
+  it('makes a move that felt like hard work dearer', () => {
+    const hard = reached('hard')
+    expect(learningOf(hard, CLEAR_THE_KITCHEN)?.friction.landed).toBeGreaterThan(
+      profileFor('reset-space').friction,
+    )
+  })
+
+  it('says nothing about whether the move works', () => {
+    // The separation, asserted rather than assumed: comfort is not an effect.
+    const hard = reached('hard')
+    expect(learningOf(hard, CLEAR_THE_KITCHEN)?.samples).toBe(0)
+    expect(dimensionOf(hard, CLEAR_THE_KITCHEN, 'immediate-benefit')).toBe(
+      dimensionOf(history(), CLEAR_THE_KITCHEN, 'immediate-benefit'),
+    )
+  })
+
+  it('leaves the immutable prior where it was', () => {
+    const hard = reached('hard')
+    expect(learningOf(hard, CLEAR_THE_KITCHEN)?.friction.started).toBe(
+      profileFor('reset-space').friction,
+    )
+    expect(profileFor('reset-space').friction).toBe(0.35)
   })
 })
 
@@ -326,8 +467,8 @@ describe('one success is not proof', () => {
    * read off the trace.
    */
   const prior = profileFor('reset-space').now
-  const once = history({ past: clearedTheKitchen([8], 'completed', 'better') })
-  const often = history({ past: clearedTheKitchen([5, 6, 8, 9, 12, 13], 'completed', 'better') })
+  const once = history({ past: clearedTheKitchen([8], 'completed', 'real') })
+  const often = history({ past: clearedTheKitchen([5, 6, 8, 9, 12, 13], 'completed', 'real') })
 
   it('moves the belief a little, not all the way', () => {
     const row = learningOf(once, CLEAR_THE_KITCHEN)
@@ -401,7 +542,7 @@ describe('context similarity matters more than date proximity', () => {
       past: clearedTheKitchen(
         [5, 8, 12],
         'completed',
-        'better',
+        'real',
         evening({ block: 'morning', strain: 'severe', usableMinutes: 15 }),
       ),
     })
@@ -453,7 +594,8 @@ describe('context similarity matters more than date proximity', () => {
             { occurredAt: (when + 3_600_000) as Instant, domains: [DOMAIN.home] },
             {
               about: recommendation.id,
-              observation: { type: 'scale', value: 4, of: 5 },
+              aspect: 'effect',
+              observation: { type: 'scale', value: 3, of: 3 },
               sentiment: 'better',
             },
           ),
@@ -474,7 +616,7 @@ describe('same-block and next-day effects can differ', () => {
    * allowed to move the other's number.
    */
   it('moves only the number the question was about', () => {
-    const warm = history({ past: clearedTheKitchen([5, 8, 12], 'completed', 'better') })
+    const warm = history({ past: clearedTheKitchen([5, 8, 12], 'completed', 'real') })
     const row = learningOf(warm, CLEAR_THE_KITCHEN)
     const prior = profileFor('reset-space')
 
@@ -501,11 +643,11 @@ describe('a learned effect is reversible', () => {
    * conclusion to go stale, which is the only way "reversible" is ever true in
    * practice.
    */
-  const helped = history({ past: clearedTheKitchen([5, 6, 8], 'completed', 'better') })
+  const helped = history({ past: clearedTheKitchen([5, 6, 8], 'completed', 'real') })
   const thenDidNot = history({
     past: [
-      ...clearedTheKitchen([5, 6, 8], 'completed', 'better'),
-      ...clearedTheKitchen([12, 13, 14], 'completed', 'worse'),
+      ...clearedTheKitchen([5, 6, 8], 'completed', 'real'),
+      ...clearedTheKitchen([12, 13, 14], 'completed', 'harm'),
     ],
   })
 
@@ -523,7 +665,7 @@ describe('a learned effect is reversible', () => {
 
   it('goes below the starting belief when the evidence keeps going', () => {
     const alwaysWorse = history({
-      past: clearedTheKitchen([5, 6, 8, 12, 13, 14], 'completed', 'worse'),
+      past: clearedTheKitchen([5, 6, 8, 12, 13, 14], 'completed', 'harm'),
     })
     expect(learningOf(alwaysWorse, CLEAR_THE_KITCHEN)?.landedAt.now).toBeLessThan(
       profileFor('reset-space').now,
@@ -547,7 +689,7 @@ describe('the owner can correct a learned belief', () => {
    * counting, and what happens afterwards counts normally. That is what "new
    * evidence" means here, and it needs no threshold nobody chose.
    */
-  const learned = clearedTheKitchen([5, 6, 8], 'completed', 'better')
+  const learned = clearedTheKitchen([5, 6, 8], 'completed', 'real')
 
   function correctedOn(day: string, stance: 'reject' | 'restore') {
     return (kit: ReturnType<typeof createKit>): readonly CanonicalRecord[] => {
@@ -587,7 +729,7 @@ describe('the owner can correct a learned belief', () => {
 
   it('still counts what happens after the correction', () => {
     const andThen = history({
-      past: [...learned, ...clearedTheKitchen([16, 17], 'completed', 'better')],
+      past: [...learned, ...clearedTheKitchen([16, 17], 'completed', 'real')],
       extra: correctedOn('2026-05-15', 'reject'),
     })
     // The two evenings after the correction, and neither of the three before it.
@@ -622,7 +764,7 @@ describe('the owner can correct a learned belief', () => {
           on: '2026-05-09',
           context: evening(),
           ending: 'completed',
-          result: 'better',
+          effect: 'real',
         },
       ],
       extra: correctedOn('2026-05-15', 'reject'),

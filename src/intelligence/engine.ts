@@ -349,6 +349,8 @@ function learningRows(selection: Selection, situation: Situation): readonly Lear
     const effect = situation.learning.effectFor(verb, situation.context)
     const followThrough = situation.learning.followThroughFor(verb, situation.context)
     const appetite = situation.learning.appetiteFor(verb, situation.context)
+    const result = situation.learning.resultFor(verb, situation.context)
+    const friction = situation.learning.frictionFor(verb, situation.context)
 
     return {
       candidate: evaluation.candidate.id,
@@ -370,6 +372,13 @@ function learningRows(selection: Selection, situation: Situation): readonly Lear
         turnedDown: appetite.turnedDown,
         samples: appetite.samples,
         note: appetite.note,
+      },
+      result: { reached: result.reached, samples: result.samples, note: result.note },
+      friction: {
+        started: prior.friction,
+        landed: friction.friction,
+        samples: friction.samples,
+        note: friction.note,
       },
     }
   })

@@ -44,6 +44,8 @@ export type DimensionName =
   | 'owner-preference'
   /** Whether this can actually be done in situations like this one (section 20). */
   | 'follow-through'
+  /** Whether doing it reaches what it was for (DEF-0020). Penalty-only. */
+  | 'direct-result'
   | 'uncertainty'
   | 'protection'
   /** Only present under the hybrid architecture. Bounded by `MAX_NUDGE`. */
@@ -85,6 +87,7 @@ const WEIGHTS: Record<DimensionName, number> = {
   'recent-duplication': 0.8,
   'owner-preference': 1,
   'follow-through': 0.9,
+  'direct-result': 0.9,
   uncertainty: 0.6,
   protection: 0.9,
   advisor: 0.5,
@@ -128,7 +131,7 @@ function scaled(value: number): number {
 // The dimensions
 // ---------------------------------------------------------------------------
 
-function bottleneckFit(situation: Situation, profile: MoveProfile): Dimension {
+function bottleneckFit(situation: Situation, profile: MoveProfile, friction: number): Dimension {
   const limiter = situation.limiter
   if (limiter === undefined) {
     return {
@@ -164,10 +167,11 @@ function bottleneckFit(situation: Situation, profile: MoveProfile): Dimension {
     }
   }
 
-  // A short evening: the cheapest useful thing wins.
+  // A short evening: the cheapest useful thing wins — measured by how hard the
+  // move has actually proved for this owner, not only by the table's guess.
   return {
     name: 'bottleneck-fit',
-    value: scaled(0.6 - profile.friction * 1.4),
+    value: scaled(0.6 - friction * 1.4),
     weight: WEIGHTS['bottleneck-fit'],
     note: limiter.summary.toLowerCase(),
   }
@@ -348,12 +352,57 @@ function opportunityCost(candidate: Candidate, situation: Situation): Dimension 
   }
 }
 
-function friction(profile: MoveProfile): Dimension {
+/**
+ * How hard this is to get started, as far as this owner has shown.
+ *
+ * The profile's number is where it begins; comfort answers move it. Unlike
+ * result and follow-through this is **signed both ways**, and for a reason
+ * rather than an oversight: their priors are ceilings, so only failure tells us
+ * anything. Friction's prior is a middling guess per move, so "easier for you
+ * than it looks" is real news about this owner and is allowed to count.
+ */
+function friction(candidate: Candidate, situation: Situation): Dimension {
+  const learned = situation.learning.frictionFor(candidate.semantics.target.verb, situation.context)
   return {
     name: 'friction',
-    value: scaled(1 - profile.friction * 2),
+    value: scaled(1 - learned.friction * 2),
     weight: WEIGHTS.friction,
-    note: profile.friction > 0.5 ? 'hard to start' : 'easy to start',
+    note:
+      learned.samples === 0
+        ? learned.friction > 0.5
+          ? 'hard to start'
+          : 'easy to start'
+        : learned.note,
+  }
+}
+
+/**
+ * Whether doing this actually reaches what it was for.
+ *
+ * **Distinct from follow-through**, and DEF-0020 turns on the distinction:
+ * follow-through asks whether the move can happen here at all, from unable-now.
+ * This asks whether it lands when it does. Clearing the kitchen every single
+ * time and only ever half-clearing it is perfect follow-through and a poor
+ * result, and folding them would have the app say "something usually gets in
+ * the way" of an evening where nothing did.
+ *
+ * **Penalty-only, and that is what stops double counting.** The prior is that a
+ * move achieves its aim, so *achieved* sits at the prior and abstains — a move
+ * with both a result and an effect cannot collect two positive rewards for one
+ * good evening, because its second aspect can only ever cost it. Same shape as
+ * `follow-through` after DEF-0019, and the same reason: an absence may not be
+ * asserted from ignorance.
+ */
+function directResult(candidate: Candidate, situation: Situation): Dimension {
+  const learned = situation.learning.resultFor(candidate.semantics.target.verb, situation.context)
+  if (learned.samples === 0 || learned.reached >= 1) {
+    return { name: 'direct-result', value: 0, weight: 0, note: learned.note }
+  }
+  return {
+    name: 'direct-result',
+    value: scaled((learned.reached - 1) * 4),
+    weight: WEIGHTS['direct-result'],
+    note: learned.note,
   }
 }
 
@@ -558,20 +607,25 @@ export function evaluateCandidate(candidate: Candidate, situation: Situation): E
   const profile = profileFor(candidate.semantics.target.verb)
 
   const dimensions: readonly Dimension[] = [
-    bottleneckFit(situation, profile),
+    bottleneckFit(
+      situation,
+      profile,
+      situation.learning.frictionFor(candidate.semantics.target.verb, situation.context).friction,
+    ),
     directionFit(candidate, situation),
     goalFit(candidate, situation),
     urgency(candidate),
     immediateBenefit(candidate, situation),
     nextDayEffect(candidate, situation),
     opportunityCost(candidate, situation),
-    friction(profile),
+    friction(candidate, situation),
     timeFit(candidate, situation),
     capacityFit(situation, profile),
     contextFit(situation, profile),
     recentDuplication(candidate, situation),
     ownerPreference(candidate, situation),
     followThrough(candidate, situation),
+    directResult(candidate, situation),
     uncertainty(candidate, situation),
     protection(situation, profile),
   ]

@@ -122,8 +122,11 @@ describe('G-004 — the outcome records comfort and result', () => {
     }
 
     const questions = outcomeQuestionsFor(episode, decision.situation.entities)
+    // Whether a conversation happened is a different fact from how it felt,
+    // and the order matters: the result comes first because the comfort answer
+    // is about the same attempt either way (DEF-0020).
     expect(questions.map((question) => question.aspect)).toEqual(['result', 'comfort'])
-    expect(questions[0]?.prompt).toBe('How did the conversation at the climbing gym go?')
+    expect(questions[0]?.prompt).toBe('How much of a conversation happened at the climbing gym?')
     expect(questions[1]?.prompt).toBe('How did starting a conversation at the climbing gym feel?')
   })
 
@@ -143,9 +146,19 @@ describe('G-004 — the outcome records comfort and result', () => {
       wantedAnother: false,
     }
 
+    /*
+     * Only an effect answer carries a sentiment, and the restriction is
+     * load-bearing rather than tidy: `roughOutcomesFor` reads `worse` as "this
+     * went badly", so a *result* of "none at all" wearing that flag would fire
+     * the weak-topic generator on an evening that says nothing about a topic.
+     */
     const [result, comfort] = outcomeQuestionsFor(episode, decision.situation.entities)
-    expect(result?.answers.every((answer) => answer.sentiment !== undefined)).toBe(true)
+    expect(result?.answers.every((answer) => answer.sentiment === undefined)).toBe(true)
     expect(comfort?.answers.every((answer) => answer.sentiment === undefined)).toBe(true)
+
+    // And neither is an effect question, so neither can move what the move is
+    // believed to be worth.
+    expect([result?.aspect, comfort?.aspect]).not.toContain('effect')
   })
 
   it('names the place in both questions', () => {
