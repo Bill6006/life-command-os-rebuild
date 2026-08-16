@@ -72,8 +72,9 @@ export function MoreScreen({ freshness }: { freshness: BuildFreshness }) {
           <Row label="Next" value={REBUILD_PHASE.next} />
         </Rows>
         <p className="note">
-          The app decides and explains itself now. What it does not yet do is watch what happens
-          afterwards, so nothing it suggests has been checked against a real outcome.
+          The app decides, explains itself, watches what happens afterwards and learns from it — and
+          now notices when a life area has gone quiet, rather than carrying on as though a
+          months-old picture were today&rsquo;s. The domain pages behind Life are next.
         </p>
       </Panel>
     </Screen>

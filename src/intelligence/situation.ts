@@ -112,10 +112,37 @@ export type LimiterKind = 'recovery' | 'capacity' | 'time' | 'coverage'
 export interface Limiter {
   readonly kind: LimiterKind
   readonly domain: LifeDomainId
+  /**
+   * What to call this on screen, in the owner's words.
+   *
+   * It travels with the limiter rather than being chosen by whichever surface
+   * happens to render it, because the honest label depends entirely on the
+   * kind. "What is in the way" is right for a body that needs rest, a night
+   * that is nearly over, a shoulder that hurts — things that genuinely obstruct
+   * an evening. It is wrong for a quiet life area, which obstructs nothing: it
+   * is the app's own blind spot, and D-063 says so in as many words. The
+   * ranking already knew that and scored it zero; the screen was calling it an
+   * obstacle anyway.
+   *
+   * Deliberately not one universal label either. Replacing "what is in the way"
+   * with something vague enough to cover both would make it wrong for the three
+   * kinds it was right for.
+   */
+  readonly label: string
   /** One ordinary line. No clinical language, no scores. */
   readonly summary: string
   readonly evidence: readonly RecordId[]
   readonly certainty: Confidence
+}
+
+/** What each kind of limiter is called where the owner reads it. */
+export const LIMITER_LABEL: Record<LimiterKind, string> = {
+  recovery: 'What is in the way',
+  capacity: 'What is in the way',
+  time: 'What is in the way',
+  // Not an obstacle and not a judgement about him — a gap in what the app has
+  // been told, named as one.
+  coverage: 'Out of date',
 }
 
 export interface Capacity {
@@ -381,6 +408,7 @@ function findLimiter(
     const shortfall = isUsable(debt) ? debt.value : undefined
     return {
       kind: 'recovery',
+      label: LIMITER_LABEL.recovery,
       domain: DOMAIN.sleep,
       summary:
         shortfall === undefined
@@ -399,6 +427,7 @@ function findLimiter(
   if (isUsable(soreness) && soreness.value >= 0.7) {
     return {
       kind: 'capacity',
+      label: LIMITER_LABEL.capacity,
       domain: DOMAIN.health,
       summary: 'The body is asking for an easier night.',
       evidence: basisOf(soreness),
@@ -409,6 +438,7 @@ function findLimiter(
   if (isUsable(usableMinutes) && usableMinutes.value < 20) {
     return {
       kind: 'time',
+      label: LIMITER_LABEL.time,
       domain: DOMAIN.direction,
       summary: `Only about ${Math.round(usableMinutes.value)} minutes left tonight.`,
       evidence: basisOf(usableMinutes),
@@ -434,6 +464,7 @@ function findLimiter(
   if (quiet !== undefined) {
     return {
       kind: 'coverage',
+      label: LIMITER_LABEL.coverage,
       domain: quiet.domain,
       summary: quiet.summary,
       evidence: quiet.weakest?.evidence ?? [],

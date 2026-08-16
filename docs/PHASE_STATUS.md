@@ -6,8 +6,14 @@ Report format: canonical plan section 58.
 
 # Phase 4 — Coverage Engine + adaptive guides
 
-**Status: YELLOW — everything automatable passes; the owner's phone test is the
-remaining gate item.**
+**Status: YELLOW — repaired after an Android phone gate; awaiting the owner's
+acceptance.**
+
+The owner ran the phone gate on a Galaxy S24 context and it failed. Three
+blocking defects and two polish findings, none of which any automated check had
+caught, and one of them found only by reading every line on every screen after
+the suite was green and the checkpoint was already pushed. All five are fixed
+and each has a regression proved to fail when its defect is reintroduced.
 
 Section 49's goal is one sentence: make the system trustworthy without manual
 tab maintenance. The failure it exists to prevent is section 63's, and section
@@ -44,8 +50,8 @@ it is zero.
 | Format (Prettier)                         | Pass                                           |
 | Lint (ESLint)                             | Pass, 0 warnings                               |
 | Typecheck (strict TS)                     | Pass, 0 errors                                 |
-| Unit / contract / synthetic / adversarial | 556 passed / 556 (in plain Node, no DOM)       |
-| Browser tests (Playwright)                | 171 passed / 171 — 57 tests × 360, 430, 1280px |
+| Unit / contract / synthetic / adversarial | 574 passed / 574 (in plain Node, no DOM)       |
+| Browser tests (Playwright)                | 180 passed / 180 — 60 tests × 360, 430, 1280px |
 | Production build                          | Pass                                           |
 | `npm run verify` from a clean checkout    | Pass                                           |
 | Deployed SHA matches checkpoint           | Asserted live in CI                            |
@@ -226,15 +232,15 @@ asserted somewhere that could not reach it.
 Open Preview. Header → **More** → **Open the QA laboratory**, load a scenario,
 then tap **Now** or **Life**.
 
-1. **Everything current except the studying.** Now should pick the walk and,
-   above it, say _"Nothing has come in about career & learning for 7 weeks."_ —
-   with _Chosen over_ naming the subnetting recall and _Why this one_ reading
-   "Better supported by what is known." Judge whether that reads as the app
-   being honest about a blind spot or as it nagging.
-2. **The same scenario, on Life.** Eleven areas, one word each. Career should
-   read _Going quiet_; sleep and health _Fresh_; most of the rest _Nothing here
-   yet_. The question is whether this is a report you would glance at or a list
-   of chores.
+1. **Everything current except the studying.** Now should now recommend
+   _"Spend 10 minutes recalling subnetting before you reopen your notes."_ —
+   the refresh itself, chosen over the walk. The line claiming the gap was
+   "in the way" is gone, and so is the gap line entirely, because the app is
+   doing something about it rather than mentioning it.
+2. **The same scenario, on Life.** Six lines rather than forty-four: _Going
+   quiet_ with career on its own and the reason under it, then _Fresh_ and
+   _Nothing here yet_ as rows of names. The question is whether this is a report
+   you would glance at or a list of chores.
 3. **Three times running, and the app noticed.** Under the move: _"Adaya has
    managed ordering her own food on her own 3 times running. Worth calling that
    settled?"_ Answer either way and it goes. Judge the sentence — this is the
@@ -272,10 +278,29 @@ app ask you less than it did.
 - Timeline and Insights content (Phase 6), exports and backup (Phase 7), the
   legacy importer (Phase 8), the service worker (Phase 10).
 
+## What the Android phone gate changed
+
+The gate ran at 360×780 with touch, a device pixel ratio of 3 and an Android
+Chrome user agent — a real mobile context rather than a narrow desktop.
+
+| The owner found                                         | What it turned out to be                                                                                      |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| The refresh move loses to the walk on its own scenario  | DEF-0023 — the silence created the move and then sank it, by twice the margin that decided the evening        |
+| "What is in the way — Nothing has come in about career" | DEF-0024 — a coverage gap is the app's blind spot, and the label said obstacle while the ranking said nothing |
+| Insights says the app is "not yet asking" for outcomes  | DEF-0025 — false since Phase 3, and the guard written for exactly this held four remembered sentences         |
+| Life is two and a half screens of one repeated sentence | DEF-0026 — `Row` is built for `Commit / bdb1e18`, not for eleven wrapped paragraphs                           |
+| "ordering her own food on her own"                      | DEF-0027 — the skill label already carries it                                                                 |
+
+**Nine reintroductions across the repair, all caught.** Two of them are the ones
+worth naming: a brand new deferral claim nobody had acknowledged, and a denial
+of a capability in fresh wording. The old guard would have missed both, which is
+the difference between a rule and a list.
+
 ## Open defects
 
-None. Two were found and closed during the phase, and neither came from a
-failing assertion.
+None. Seven were found and closed during the phase. Not one came from a failing
+assertion — two from tests that could not be made to pass, one from printing the
+copy after everything was green, and four from the owner on a phone.
 
 - **DEF-0021** — the app asking for a verdict when it could ask for the fact.
   Found by a browser test written to demonstrate the derived-evidence fix, which
@@ -283,6 +308,7 @@ failing assertion.
   the question that would have produced the reading was never asked, and the
   matcher had nothing to read. The complaint that started the whole line of work
   had survived inside the repair for it.
+- **DEF-0023 … DEF-0027** — the Android phone gate, above.
 - **DEF-0022** — found by **printing every line the owner would read, on every
   scenario, after the suite was green and the checkpoint was already pushed.**
   "A week pointed at the house" said _Adaya is here_ in the premise and
@@ -309,7 +335,7 @@ failing assertion.
 
 ## Decisions made
 
-D-060 … D-071 in [`DECISION_LOG.md`](DECISION_LOG.md).
+D-060 … D-075 in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Next
 

@@ -437,7 +437,7 @@ function DetailPanel({
   const rows = [
     explanation.limiter === undefined
       ? undefined
-      : { label: 'What is in the way', value: explanation.limiter },
+      : { label: explanation.limiter.label, value: explanation.limiter.summary },
     explanation.instead === undefined
       ? undefined
       : { label: 'Chosen over', value: explanation.instead },

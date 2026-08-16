@@ -46,7 +46,11 @@ function linesOf(decision: Decision): readonly { what: string; text: string }[] 
     lines.push({ what: 'reason', text: shown.rendered.reason })
     lines.push({ what: 'follow-up', text: shown.rendered.followUp })
     lines.push({ what: 'premise', text: shown.premise })
-    if (shown.limiter !== undefined) lines.push({ what: 'limiter', text: shown.limiter })
+    if (shown.limiter !== undefined) {
+      // Both halves are owner-facing, so both go through every copy sweep.
+      lines.push({ what: 'limiter', text: shown.limiter.summary })
+      lines.push({ what: 'limiter-label', text: shown.limiter.label })
+    }
     if (shown.instead !== undefined) lines.push({ what: 'instead', text: shown.instead })
     if (shown.insteadBecause !== undefined) {
       lines.push({ what: 'instead-because', text: shown.insteadBecause })
@@ -248,6 +252,16 @@ describe('section 61 — how it is allowed to talk', () => {
   it('writes finished sentences', () => {
     for (const entry of spoken) {
       for (const line of entry.lines) {
+        /*
+         * A column heading is not a sentence and must not be held to be one.
+         *
+         * "Out of date" sits beside "Chosen over" and "Why this one" — they
+         * name the row rather than saying something, and a full stop on any of
+         * them would be wrong. Everything below still applies to it: it is
+         * swept for pronouns, for internal vocabulary and for genericity like
+         * every other line the owner reads.
+         */
+        if (line.what.endsWith('-label')) continue
         const text = line.text
         expect(text.trim(), `${entry.id} ${line.what}`).toBe(text)
         expect(text, `${entry.id} ${line.what}`).not.toContain('  ')

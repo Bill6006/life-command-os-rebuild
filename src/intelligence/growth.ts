@@ -155,12 +155,25 @@ export function growthSuggestions(situation: Situation): readonly GrowthSuggesti
 
     const person = situation.entities.linked(skill.id, 'about-person')
     const who = person?.label ?? 'she'
+    /*
+     * Said once, not twice.
+     *
+     * The first wording was "has managed ordering her own food **on her own** 3
+     * times running", which says independently twice in eight words — and the
+     * skill label supplies the first one, so any sentence that adds a second is
+     * going to stumble. "Handled" carries it on its own, and the statement uses
+     * "independently" where the label does not repeat it.
+     *
+     * It is worth the care: this is the app making a claim about his daughter,
+     * and the whole point of asking rather than deciding is that he reads the
+     * sentence and judges it.
+     */
     out.push({
       skill: ref,
       domain: skill.domain,
       person: person === undefined ? undefined : { id: person.id, kind: person.kind },
-      headline: `${who} has managed ${skill.label} on her own ${cleared.length} times running.`,
-      statement: `${who} does ${skill.label} independently now.`,
+      headline: `${who} has handled ${skill.label} ${cleared.length} times running.`,
+      statement: `${who} handles ${skill.label} independently now.`,
       occasions: cleared.length,
       evidence: cleared.map((episode) => episode.recommendation),
     })

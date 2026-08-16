@@ -311,6 +311,7 @@ describe('the filter keeps its backstop', () => {
       id: 'test/hands-on-lab/x',
       generator: 'career',
       leansOn: [],
+      resolves: [],
       proposedBecause: 'a move from an hour that does not suit it',
       semantics: {
         subject: walk,

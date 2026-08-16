@@ -1,80 +1,162 @@
 import { useMemo } from 'react'
-import { Panel, Row, Rows, Screen } from '../../components/ui'
+import { Panel, Screen } from '../../components/ui'
 import { assembleSituation, type DomainCoverage } from '../../intelligence/situation'
 import { useMemory } from '../memory/memoryContext'
+import './LifeScreen.css'
 
 /**
  * Life — where the owner inspects the model (canonical plan sections 7 and 63).
  *
  * Section 7's first sentence about this screen is the one that shapes it: *the
  * owner should not need to visit Life for routine system maintenance.* So this
- * is a report, not a chore list. Every domain says how well the app currently
- * understands it, and the ones that need nothing say so in one word.
+ * is a report, not a chore list, and the interesting thing about it is how
+ * often it should say that nothing needs doing.
  *
- * Section 63 is what it exists for. A domain may be quiet, stable or low
+ * Section 63 is what it exists for. An area may be quiet, stable or low
  * priority; it may not silently remain based on months-old assumptions while
- * the interface implies the app is current. The word beside each area is the
- * whole of that promise made visible — and the interesting thing about it is
- * how often it should say nothing needs doing.
+ * the interface implies the app is current.
  *
- * **No technical evidence terminology**, which section 7 asks for by name. No
- * record counts, no confidence numbers, no "stale". The engine's four states
- * become five ordinary phrases, and the one about a stale area names what the
- * app would do about it rather than what the owner must.
+ * ## Why it is grouped
  *
- * The status comes from `assembleSituation`, which is the same function and the
- * same reading the decision on Now was made from. It is not a second
- * computation over the same history — two of those would eventually disagree,
- * and the owner would have no way to tell which screen was lying.
+ * The first version gave all eleven areas a row of their own, each carrying a
+ * whole sentence in a right-aligned value slot. Seven of them read identically
+ * — *"Nothing here yet — you have not mentioned this, and nothing is asking you
+ * to"* — and the page ran to two and a half phone screens of the same words.
+ * Every sentence on it was true and the screen as a whole was homework.
+ *
+ * So the status does the sorting. Anything wanting attention is listed on its
+ * own with the one line that explains it; everything calm is a heading and a
+ * row of names, and the sentence that used to repeat seven times is said once
+ * for the group. Nothing about the underlying reading changed — this is the
+ * same `CoverageState`, from the same `assembleSituation` the decision on Now
+ * was made from, presented so it can be read at a glance.
+ *
+ * **No technical evidence terminology**, which section 7 asks for by name: no
+ * record counts, no confidence, no "stale", no phase.
  */
 
-/**
- * Section 7's owner-facing states, in this app's words.
- *
- * The stale case splits in two, and that is the point of the whole coverage
- * engine: an area the app is already getting evidence about needs nothing from
- * him, and one where it has run out of ideas does. Telling him to go and look
- * at both would waste the distinction the engine exists to draw.
- */
-function statusWords(coverage: DomainCoverage): { readonly word: string; readonly detail: string } {
+/** The status words, and whether the group is asking to be looked at. */
+interface Standing {
+  readonly word: string
+  readonly attention: boolean
+  /** Said once for the group rather than once per area. */
+  readonly note: string
+  /** Per area, and only where the group is worth reading line by line. */
+  readonly detail?: (coverage: DomainCoverage) => string
+}
+
+function standingFor(coverage: DomainCoverage): Standing {
   if (coverage.status === 'unheard') {
     return {
       word: 'Nothing here yet',
-      detail: 'You have not mentioned this, and nothing is asking you to.',
+      attention: false,
+      note: 'You have not mentioned these, and nothing is asking you to.',
     }
   }
-
   if (coverage.status === 'current') {
-    return { word: 'Fresh', detail: 'Up to date on what matters here.' }
+    return { word: 'Fresh', attention: false, note: 'Up to date on what matters.' }
   }
-
   if (coverage.status === 'quiet') {
-    return { word: 'Quiet', detail: 'Nothing new, and nothing that has gone out of date.' }
+    return { word: 'Quiet', attention: false, note: 'Nothing new, and nothing out of date.' }
   }
 
+  /*
+   * The stale case splits by what the app intends to do about it, which is the
+   * whole point of the coverage engine: an area it is already getting evidence
+   * about needs nothing from the owner, and one where it has run out of ideas
+   * does. Telling him to go and look at both would waste the distinction.
+   */
   switch (coverage.refresh) {
     case 'normal-life':
-      return { word: 'Catching up', detail: `${coverage.summary} An answer is already on its way.` }
-    case 'an-action':
+      return {
+        word: 'Catching up',
+        attention: false,
+        note: 'An answer is already on its way.',
+        detail: (entry) => entry.summary,
+      }
+    case 'needs-review':
+      return {
+        word: 'Needs a check-in',
+        attention: true,
+        note: 'Nothing the app can do on its own will bring these back.',
+        detail: (entry) => entry.summary,
+      }
+    default:
       return {
         word: 'Going quiet',
-        detail: `${coverage.summary} Something worth doing here may come up on Now.`,
+        attention: true,
+        note: 'The app will try to bring these back on its own.',
+        detail: (entry) => `${entry.summary} ${refreshWords(entry)}`,
       }
-    case 'a-question':
-      return { word: 'Going quiet', detail: `${coverage.summary} A question will cover it.` }
-    default:
-      return { word: 'Needs a check-in', detail: coverage.summary }
   }
 }
 
+function refreshWords(coverage: DomainCoverage): string {
+  return coverage.refresh === 'a-question'
+    ? 'A question will cover it.'
+    : 'Something worth doing here may come up on Now.'
+}
+
 /**
- * The private domain says how it stands and never what it is about.
+ * The private area says how it stands and never what it is about.
  *
- * Section 11: private detail stays off normal surfaces, and the owner comes
- * here deliberately when he wants to enter it. Saying "Fresh" or "Quiet" about
- * it exposes nothing; repeating a summary that could name a behaviour would.
+ * Section 11 — display discretion. A status exposes nothing; a summary that
+ * could name a behaviour would.
  */
-const PRIVATE_DETAIL = 'You keep this one yourself. Nothing about it appears elsewhere.'
+const PRIVATE = 'private-health'
+const PRIVATE_NOTE = 'You keep this one yourself. Nothing about it appears elsewhere.'
+
+/** Attention first, then the calm groups in descending order of interest. */
+const ORDER = [
+  'Needs a check-in',
+  'Going quiet',
+  'Catching up',
+  'Fresh',
+  'Quiet',
+  'Nothing here yet',
+]
+
+interface Group {
+  readonly word: string
+  readonly attention: boolean
+  readonly note: string
+  readonly areas: readonly { readonly coverage: DomainCoverage; readonly detail?: string }[]
+}
+
+function groupsFrom(domains: readonly DomainCoverage[]): readonly Group[] {
+  const byWord = new Map<string, Group>()
+
+  for (const coverage of domains) {
+    const standing = standingFor(coverage)
+    /*
+     * The private area never shows its summary, and shows the discreet line
+     * only where the group is being read line by line anyway.
+     *
+     * Giving it a line unconditionally would drag its whole group into the
+     * per-area layout — which on most histories is the seven-area "nothing here
+     * yet" group, and would put the wall straight back.
+     */
+    const own = standing.detail?.(coverage)
+    const detail =
+      coverage.domain === PRIVATE ? (own === undefined ? undefined : PRIVATE_NOTE) : own
+    const held = byWord.get(standing.word)
+    const entry = detail === undefined ? { coverage } : { coverage, detail }
+    if (held === undefined) {
+      byWord.set(standing.word, {
+        word: standing.word,
+        attention: standing.attention,
+        note: standing.note,
+        areas: [entry],
+      })
+    } else {
+      byWord.set(standing.word, { ...held, areas: [...held.areas, entry] })
+    }
+  }
+
+  return ORDER.map((word) => byWord.get(word)).filter(
+    (group): group is Group => group !== undefined,
+  )
+}
 
 export function LifeScreen() {
   const memory = useMemory()
@@ -88,6 +170,11 @@ export function LifeScreen() {
     }).coverage
   }, [memory.ready, memory.snapshot, memory.view, memory.now, memory.zone, memory.weekStartsOn])
 
+  const groups = useMemo(
+    () => (coverage === undefined ? [] : groupsFrom(coverage.domains)),
+    [coverage],
+  )
+
   return (
     <Screen
       title="Life"
@@ -97,37 +184,50 @@ export function LifeScreen() {
         <Panel title="Eleven areas, none of them optional">
           <p>
             An area can be quiet, stable, going out of date or urgent. It is never switched off.
-            With no history loaded there is nothing to report about any of them yet.
+            With no history loaded there is nothing to report about any of them.
           </p>
         </Panel>
       ) : (
         <>
-          <Panel title="How well each area is understood">
-            <Rows>
-              {coverage.domains.map((domain) => {
-                const { word, detail } = statusWords(domain)
-                const isPrivate = domain.domain === 'private-health'
-                return (
-                  <Row
-                    key={domain.domain}
-                    label={domain.label}
-                    value={`${word} — ${isPrivate ? PRIVATE_DETAIL : detail}`}
-                  />
-                )
-              })}
-            </Rows>
+          <Panel title="How each area stands">
+            {groups.map((group) => (
+              <section
+                key={group.word}
+                className={group.attention ? 'life-group life-group--attention' : 'life-group'}
+                data-testid={`life-group-${group.word.toLowerCase().replace(/\s+/g, '-')}`}
+              >
+                <span className="life-group__word">
+                  <span className="life-group__dot" aria-hidden="true" />
+                  {group.word}
+                </span>
+
+                {group.areas.some((area) => area.detail !== undefined) ? (
+                  group.areas.map((area) => (
+                    <div key={area.coverage.domain} className="life-area">
+                      <p className="life-area__name">{area.coverage.label}</p>
+                      {area.detail === undefined ? null : (
+                        <p className="life-area__detail">{area.detail}</p>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p className="life-names">
+                    {group.areas.map((area) => area.coverage.label).join(' · ')}
+                  </p>
+                )}
+
+                <p className="life-group__note">{group.note}</p>
+              </section>
+            ))}
           </Panel>
 
           <Panel title="Why this is here">
             <p>
               An area is allowed to be quiet. What it is not allowed to be is quiet without anybody
-              noticing — so nothing above is a task, and most of it should stay dull.
-            </p>
-            <p>
-              When something does go out of date, the app tries four things before it asks you to
-              come and look: it uses what your ordinary week already produces, works it out from
-              something related, puts a move on Now that would bring it back, or asks one small
-              question at a sensible moment.
+              noticing — so nothing above is a task, and most of it should stay dull. When something
+              does go out of date, the app tries what your ordinary week already produces, then what
+              it can work out, then a move on Now, then one small question, before it ever asks you
+              to come and look.
             </p>
           </Panel>
         </>

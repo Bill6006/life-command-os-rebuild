@@ -575,11 +575,49 @@ function ownerPreference(candidate: Candidate, situation: Situation): Dimension 
   return { name: 'owner-preference', value: 0, weight, note: 'no stated preference either way' }
 }
 
+/**
+ * What this move rests on that nobody has told us — and what it is here to ask.
+ *
+ * The second half is P4-1, and it is a rule about the whole class rather than
+ * about one generator. A move proposed *because* an area has gone quiet cannot
+ * also be marked down *because* that area has gone quiet: the same fact would
+ * create the move and then sink it, and it did — on the evening built to
+ * demonstrate a seven-week gap in the studying, the penalty came to twice the
+ * margin that decided the evening.
+ *
+ * So a concept the candidate declares it is there to resolve is set aside, and
+ * what is left is judged exactly as before. Note what setting aside is not:
+ *
+ * - **it is not a reward.** A move that resolves everything it rests on lands
+ *   on the abstention below, at zero, not on the +0.4 a move earns for genuinely
+ *   resting on known facts. Approving a move for the gap it was created by is
+ *   the same error with the other sign;
+ * - **it is not a licence.** `resolves` is narrowed to `leansOn` when the
+ *   candidate is built, so nothing can excuse itself from an unknown it never
+ *   touched;
+ * - **it changes nothing for an ordinary move.** Every generator but the two
+ *   that propose on stale evidence declares nothing, and a sweep over the whole
+ *   scenario library asserts it.
+ *
+ * The abstention costs no weight, which is D-048's rule: a dimension with
+ * nothing to say must cost nothing to have, because zero at full weight drags
+ * every move toward the middle.
+ */
 function uncertainty(candidate: Candidate, situation: Situation): Dimension {
   const weight = WEIGHTS.uncertainty
-  const leaned = candidate.leansOn
+  const settles = candidate.resolves
+  const leaned = candidate.leansOn.filter((concept) => !settles.includes(concept))
+
   if (leaned.length === 0) {
-    return { name: 'uncertainty', value: 0, weight, note: 'leans on nothing in particular' }
+    return {
+      name: 'uncertainty',
+      value: 0,
+      weight: 0,
+      note:
+        settles.length === 0
+          ? 'leans on nothing in particular'
+          : 'nothing to say — this move is here to settle what it rests on',
+    }
   }
 
   const missing = leaned.filter((concept) => !isUsable(situation.view.facts.knowledgeFor(concept)))

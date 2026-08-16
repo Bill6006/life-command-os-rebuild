@@ -362,24 +362,163 @@ describe('development scaffolding does not become the product — DEF-0007', () 
     }
   })
 
-  it('claims nothing about the app that has stopped being true', () => {
-    // The specific false sentence, and the shape of the ones like it: a screen
-    // describing a part of the system as absent when it has since been built.
-    const built = [
-      /does not exist until/i,
-      /there is no record store/i,
-      /no engine (?:yet|choosing)/i,
-      /nothing is stored/i,
+  /*
+   * From a list of past mistakes to a rule — P4-3.
+   *
+   * The first version of this guard held four literal sentences that had once
+   * been wrong. It passed for two whole phases while Insights told the owner
+   * the app was "not yet asking" for outcomes — untrue since Phase 3, and by
+   * Phase 4 untrue twice over, since some answers are now worked out without
+   * being asked at all. More carried the same claim in different words. A guard
+   * made of remembered strings only ever catches the mistake somebody already
+   * made.
+   *
+   * Two rules replace it, and neither is a list of bad phrases.
+   *
+   * The first is a **burden inversion**: every deferral claim in owner-facing
+   * copy has to be acknowledged. New copy that says the app does not do
+   * something fails the build until a person either fixes it or states, in the
+   * list below, why it is still true. The list grows with deliberate decisions
+   * rather than with defects.
+   *
+   * The second **ties the claim to the code**: a handful of capabilities the
+   * kernel demonstrably has, each proved by an export that must exist, and each
+   * with the ways of denying it. If the capability is there and a screen denies
+   * it, the build fails — and if the capability is ever genuinely removed, the
+   * proof fails first and says so.
+   */
+
+  /** Language that tells the owner something is absent, deferred or not built. */
+  const DEFERRAL_CLAIMS = [
+    /\bnot yet\b/i,
+    /\byet to\b/i,
+    /\bnot built\b/i,
+    /\bdoes not exist\b/i,
+    /\barrives? in Phase\b/i,
+    /\buntil Phase\b/i,
+    /\bwill arrive\b/i,
+  ]
+
+  /**
+   * Deferral claims that are still true, and why.
+   *
+   * Each entry is a substring that must appear near the claim. Adding one is a
+   * statement that somebody checked; leaving a stale one here is the only way
+   * this guard can be defeated, and it takes a deliberate edit rather than
+   * forgetting.
+   */
+  const STILL_TRUE: readonly { readonly near: string; readonly because: string }[] = [
+    { near: 'What is missing is this view of it', because: 'Timeline and Insights are Phase 6' },
+    { near: 'Exports, backup and restore are not built yet', because: 'Phase 7' },
+    {
+      near: 'not built into a production release',
+      because: 'the QA surface really is preview-only',
+    },
+    {
+      near: 'That wall-clock time does not exist here',
+      because: 'about a DST gap, not about the app',
+    },
+    { near: '> Not yet <', because: 'a button label — the owner answering, not a claim' },
+  ]
+
+  it('acknowledges every claim that something is not built', () => {
+    const offenders: string[] = []
+
+    for (const file of FEATURES) {
+      // Prose in JSX is split across lines by the formatter, so it is joined
+      // back up before matching — otherwise a claim escapes by wrapping.
+      const prose = readCode(file).replace(/\s+/g, ' ')
+      for (const claim of DEFERRAL_CLAIMS) {
+        const pattern = new RegExp(claim.source, `${claim.flags}g`)
+        let found: RegExpExecArray | null
+        while ((found = pattern.exec(prose)) !== null) {
+          /*
+           * A panel's worth of context, not the whole file.
+           *
+           * The claim is often the panel title and what makes it acceptable is
+           * the sentence underneath — "Not built yet" is fine directly above
+           * "what is missing is this view of it" and nowhere else. The window
+           * reaches forward far enough to hold one panel's prose and no
+           * further, so an acknowledgement cannot cover a claim three screens
+           * away.
+           */
+          const window = prose.slice(Math.max(0, found.index - 120), found.index + 460)
+          if (STILL_TRUE.some((allowed) => window.includes(allowed.near))) continue
+          offenders.push(`${repoPath(file)} — “…${window.trim()}…”`)
+        }
+      }
+    }
+
+    expect(
+      offenders,
+      'an owner-facing claim that something is not built, with nothing saying it is still true',
+    ).toEqual([])
+  })
+
+  it('denies no capability the kernel demonstrably has', () => {
+    const capabilities = [
+      {
+        what: 'asks what came of a move',
+        provenBy: {
+          file: 'src/intelligence/outcomes.ts',
+          symbol: 'export function outcomeQuestionsFor',
+        },
+        denials: [/\bnot (?:yet )?asking\b/i, /\bdoes not (?:yet )?ask\b/i],
+      },
+      {
+        what: 'watches what happens afterwards',
+        provenBy: {
+          file: 'src/intelligence/lifecycle.ts',
+          symbol: 'export function collectEpisodes',
+        },
+        denials: [/\bnot (?:yet )?watch/i, /\bdoes not watch\b/i],
+      },
+      {
+        what: 'learns from what happened',
+        provenBy: { file: 'src/intelligence/learning.ts', symbol: 'export function buildLearning' },
+        denials: [/\bnothing (?:has been )?learned\b/i, /\bnot (?:yet )?learn(?:ed|t|ing)\b/i],
+      },
+      {
+        what: 'chooses one move and explains it',
+        provenBy: { file: 'src/intelligence/arbitrate.ts', symbol: 'export function arbitrate' },
+        denials: [/\bno engine\b/i, /\bdoes not decide\b/i, /\bnothing is chosen\b/i],
+      },
+      {
+        what: 'keeps a canonical history',
+        provenBy: { file: 'src/memory/facts.ts', symbol: 'export function resolveFacts' },
+        denials: [/\bthere is no record store\b/i, /\bnothing is stored\b/i],
+      },
+      {
+        what: 'notices when a life area has gone quiet',
+        provenBy: {
+          file: 'src/intelligence/coverage.ts',
+          symbol: 'export function assembleCoverage',
+        },
+        denials: [/\bdoes not notice\b/i, /\bnothing notices\b/i],
+      },
     ]
 
     const offenders: string[] = []
-    for (const file of FEATURES) {
-      const code = readCode(file)
-      for (const claim of built) {
-        if (claim.test(code)) offenders.push(`${repoPath(file)} — ${claim.source}`)
+    for (const capability of capabilities) {
+      // The proof first. If this ever fails, the capability has gone and the
+      // guard is telling you before the copy does.
+      const source = readFileSync(join(ROOT, capability.provenBy.file), 'utf8')
+      expect(
+        source.includes(capability.provenBy.symbol),
+        `${capability.what}: ${capability.provenBy.symbol} is gone — the guard is out of date`,
+      ).toBe(true)
+
+      for (const file of FEATURES) {
+        const prose = readCode(file).replace(/\s+/g, ' ')
+        for (const denial of capability.denials) {
+          if (denial.test(prose)) {
+            offenders.push(`${repoPath(file)} denies "${capability.what}" — ${denial.source}`)
+          }
+        }
       }
     }
-    expect(offenders, 'a screen describing something that now exists as missing').toEqual([])
+
+    expect(offenders, 'a screen telling the owner the app cannot do something it does').toEqual([])
   })
 })
 

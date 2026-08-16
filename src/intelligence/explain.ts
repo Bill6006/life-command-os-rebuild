@@ -371,8 +371,16 @@ export interface Explanation {
   readonly semantics: RecommendationSemantics
   readonly rendered: RenderedRecommendation
   readonly premise: string
-  /** What is in the way, in ordinary words. Absent when nothing is. */
-  readonly limiter: string | undefined
+  /**
+   * What the app has to say about the situation beyond the move itself, with
+   * the label that honestly describes it.
+   *
+   * The label travels with the summary because it depends on the limiter kind:
+   * a body that needs rest is in the way, a life area nobody has mentioned for
+   * seven weeks is not. Two parallel fields would drift apart the first time
+   * somebody rendered one without the other.
+   */
+  readonly limiter: { readonly label: string; readonly summary: string } | undefined
   /** The move this was chosen over, when there was a real contest. */
   readonly instead: string | undefined
   /** Why it beat that one — the dimension that most separated them. */
@@ -487,7 +495,10 @@ export function explain(
       semantics,
       rendered: rendered.rendered,
       premise: describePremise(situation),
-      limiter: alreadySaid ? undefined : limiter?.summary,
+      limiter:
+        alreadySaid || limiter === undefined
+          ? undefined
+          : { label: limiter.label, summary: limiter.summary },
       instead,
       insteadBecause,
       restsOn: learned.summary,

@@ -1523,3 +1523,121 @@ Now imports is the function that writes down the answer.
 was made from, not a second computation over the same history. Two of those
 would eventually disagree and the owner would have no way to tell which screen
 was lying.
+
+---
+
+## D-072 — A move may declare what it exists to find out, and uncertainty says nothing about it
+
+**Phase:** 4 (repair) · **Status:** Active
+
+`Candidate.resolves` holds the concepts a move exists to settle. It is always a
+subset of `leansOn`, empty for every ordinary generator, and non-empty only
+where a move was proposed because something had gone quiet. `uncertainty` sets
+those aside and judges what is left.
+
+**Why:** DEF-0023. The coverage generator proposes a move because an area has
+gone quiet and `uncertainty` then marked that same move down because the area
+had gone quiet — the same fact, twice, in opposite directions, with the penalty
+the larger of the two. On the evening built to demonstrate a seven-week gap the
+differential was 0.054 against a score gap of 0.027, so section 8's third
+refresh route was reliably cancelled by the thing that created it.
+
+**Why not a compensating term**, which was the obvious alternative and is the
+owner's explicit instruction: a positive weight big enough to overpower the
+penalty is a number chosen to force an outcome, and it would be wrong by a
+different amount on every other evening. Removing the double count leaves the
+rest of the ranking to decide, which it does — a ten-minute recall serving a
+live goal beats a twenty-five minute walk with none.
+
+**Why abstaining and not rewarding.** The dimension returns zero at zero weight,
+not the +0.4 a move earns for genuinely resting on known facts. Approving a move
+for the gap it was created by is the same error wearing the other sign, and
+D-048's rule supplies the shape: a dimension with nothing to say must cost
+nothing to have.
+
+**Why it is the class and not the case.** The money generator declares it too,
+whenever the cash buffer is what is unknown. And the invariant is swept rather
+than remembered: every `stale-evidence` candidate must declare the unknowns that
+prompted it, across the whole scenario library, so a future refresh generator
+fails the build rather than quietly cancelling itself.
+
+---
+
+## D-073 — A limiter carries its own label, because the honest word depends on the kind
+
+**Phase:** 4 (repair) · **Status:** Active
+
+`Limiter.label` is set beside `summary` from one table keyed on the kind, and
+travels through `Explanation` so the two halves cannot be rendered apart.
+Recovery, capacity and time read "What is in the way". A coverage gap reads
+"Out of date".
+
+**Why:** DEF-0024. Now hardcoded "What is in the way" for whatever the limiter
+happened to be, and produced **"What is in the way — Nothing has come in about
+career & learning for 7 weeks."** A quiet life area obstructs nothing; it is the
+app's own blind spot, which D-063 states outright and `bottleneck-fit` already
+scored at zero. The ranking knew and the screen did not.
+
+**Why not one new universal label.** Something vague enough to cover both would
+be wrong for the three kinds the old one was right for. A body that needs rest
+really is in the way of an effortful evening, and saying so plainly is worth
+more than a word that fits everything.
+
+**Why on the limiter rather than in the surface:** the kind is in scope where
+the limiter is built and nowhere else, and a second surface rendering the
+summary would otherwise have to make the same judgement again.
+
+---
+
+## D-074 — The copy guard is a rule about claims, not a list of past mistakes
+
+**Phase:** 4 (repair) · **Status:** Active
+
+Two checks replace the four remembered sentences. Every deferral claim in
+owner-facing copy must appear in a short acknowledged list with a reason. And
+six capabilities the kernel demonstrably has — asking what came of a move,
+watching what happens afterwards, learning from it, choosing and explaining,
+keeping a canonical history, noticing a quiet area — are each proved by an
+export that must exist, and may not be denied on any screen.
+
+**Why:** DEF-0025. The old guard passed for two whole phases while Insights told
+the owner the app was "not yet asking" for outcomes. A guard made of strings
+somebody already got wrong can only ever catch the mistake somebody already
+made, and copy of this kind goes stale silently: it looks deliberate, nothing
+revisits it, and the only person who finds it is the owner on a phone.
+
+**Why a burden inversion works where a longer list does not.** New copy that
+says the app cannot do something now fails the build until a person either fixes
+it or writes down why it is still true. The list grows with deliberate decisions
+rather than with defects, and it is currently five entries long.
+
+**Why the capability half matters as well:** it ties the claim to the code. If a
+capability is genuinely removed one day, the proof fails first and names itself,
+rather than the guard quietly enforcing a rule about something that no longer
+exists.
+
+---
+
+## D-075 — Life groups by standing, and says each thing once
+
+**Phase:** 4 (repair) · **Status:** Active
+
+The overview lists areas wanting attention individually with the line that
+explains each, and everything calm as a heading and a row of names, with the
+group's explanation said once.
+
+**Why:** DEF-0026. One row per domain followed the data structure rather than
+the question the owner is asking, and with a whole sentence in a right-aligned
+value slot it produced two and a half phone screens, seven of the eleven lines
+identical. Every sentence was true; the screen was homework.
+
+**What did not change, and it is the constraint that matters:** one coverage
+computation. This is the same `CoverageState` from the same `assembleSituation`
+the decision on Now was made from — presentation only, no second reading, no
+questionnaire, no maintenance chores, and no cards added to fill space.
+
+**Consequence for the private area:** it appears by name in whichever group it
+falls into and shows its discreet line only where the group is being read line
+by line anyway. Giving it a line unconditionally would drag its whole group into
+the per-area layout, which on most histories is the seven-area quiet group — the
+wall, straight back.

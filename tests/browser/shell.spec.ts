@@ -144,7 +144,7 @@ test.describe('preview build identity', () => {
 /**
  * Life — the coverage overview (canonical plan sections 7 and 63).
  */
-test.describe('Life reports how well each area is understood', () => {
+test.describe('Life reports how each area stands', () => {
   const APP_LIFE = '/life-command-os-rebuild/preview/'
 
   async function loadAndOpenLife(page: import('@playwright/test').Page, title: string) {
@@ -155,15 +155,69 @@ test.describe('Life reports how well each area is understood', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Life' })).toBeVisible()
   }
 
-  test('gives every area a word, and names the one that has gone quiet', async ({ page }) => {
+  test('puts the area that has gone quiet on its own, with the reason', async ({ page }) => {
     await loadAndOpenLife(page, 'Everything current except the studying')
 
-    const rows = page.locator('.rows__row')
-    await expect(rows).toHaveCount(11)
+    const going = page.getByTestId('life-group-going-quiet')
+    await expect(going).toContainText('Career & Learning')
+    await expect(going).toContainText('7 weeks')
+    await expect(going).toContainText('may come up on Now')
 
-    await expect(rows.filter({ hasText: 'Career & Learning' })).toContainText('Going quiet')
-    await expect(rows.filter({ hasText: 'Career & Learning' })).toContainText('7 weeks')
-    await expect(rows.filter({ hasText: 'Sleep & Recovery' })).toContainText('Fresh')
+    // And everything calm is a row of names, not a stack of paragraphs.
+    await expect(page.getByTestId('life-group-fresh')).toContainText('Sleep & Recovery')
+    await expect(page.getByTestId('life-group-nothing-here-yet')).toContainText('Faith & Meaning')
+  })
+
+  /**
+   * P4-4 — the regression for the wall itself.
+   *
+   * The first version gave all eleven areas a row carrying the same sentence,
+   * right-aligned; seven read identically and the page ran to two and a half
+   * phone screens. Every assertion about it passed. So this measures the thing
+   * that was actually wrong: how much the screen repeats itself, and how long
+   * it is.
+   */
+  test('says the same sentence once rather than seven times', async ({ page }) => {
+    await loadAndOpenLife(page, 'Everything current except the studying')
+
+    const repeats = await page.evaluate(() => {
+      const seen = new Map<string, number>()
+      for (const node of document.querySelectorAll('.screen p, .screen li, .screen dd')) {
+        const text = (node.textContent ?? '').trim()
+        if (text.length < 25) continue
+        seen.set(text, (seen.get(text) ?? 0) + 1)
+      }
+      return [...seen.entries()].filter(([, count]) => count > 1)
+    })
+    expect(repeats, 'a sentence the owner reads more than once').toEqual([])
+  })
+
+  test('fits in about a screen and a half rather than two and a half', async ({ page }) => {
+    await loadAndOpenLife(page, 'Everything current except the studying')
+    const ratio = await page.evaluate(
+      () => document.body.scrollHeight / document.documentElement.clientHeight,
+    )
+    expect(ratio, 'Life is still a wall').toBeLessThan(1.9)
+  })
+
+  test('names every one of the eleven areas exactly once', async ({ page }) => {
+    await loadAndOpenLife(page, 'Everything current except the studying')
+    const text = await page.locator('.screen').innerText()
+    for (const area of [
+      'Health & Physical Capacity',
+      'Sleep & Recovery',
+      'Fatherhood / Family',
+      'Career & Learning',
+      'Money & Financial Resilience',
+      'Social & Relationships',
+      'Emotional Health',
+      'Faith & Meaning',
+      'Home & Environment',
+      'Private / Sexual Health',
+      'Long-Range Direction / Identity',
+    ]) {
+      expect(text.split(area).length - 1, `${area} should appear once`).toBe(1)
+    }
   })
 
   test('uses no evidence terminology and no phase language', async ({ page }) => {
@@ -177,11 +231,13 @@ test.describe('Life reports how well each area is understood', () => {
     }
   })
 
-  test('says nothing about what the private area contains', async ({ page }) => {
-    // Section 11 — display discretion. The status is fine; the subject is not.
+  test('never puts the private subject on screen', async ({ page }) => {
+    // Section 11 — display discretion. A status exposes nothing; a summary that
+    // could name a behaviour would.
     await loadAndOpenLife(page, 'Two ordinary weeks')
-    const row = page.locator('.rows__row', { hasText: 'Private / Sexual Health' })
-    await expect(row).toContainText('You keep this one yourself')
+    const text = await page.locator('.screen').innerText()
+    expect(text).toContain('Private / Sexual Health')
+    expect(text.toLowerCase()).not.toContain('pattern')
   })
 
   test('reports nothing at all rather than guessing, with no history loaded', async ({ page }) => {

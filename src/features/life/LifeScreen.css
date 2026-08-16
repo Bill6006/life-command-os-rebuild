@@ -1,0 +1,80 @@
+/*
+ * Life — a report you glance at, not a list you work through.
+ *
+ * The first version put all eleven areas through the shared `Row`, which is
+ * built for short values like `Commit / bdb1e18`. With a whole sentence in the
+ * value slot, right-aligned, seven of the eleven read identically and the page
+ * ran to two and a half phone screens of the same words. That is the "wall" the
+ * phone gate found: technically accurate, and homework to read.
+ *
+ * So the grouping carries the meaning. Anything wanting attention is listed
+ * individually with its own line; everything calm is a heading and a row of
+ * names, and the explanation that used to repeat seven times is said once.
+ */
+
+.life-group {
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.life-group:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.life-group__word {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* One accent, and only where something actually wants looking at. */
+.life-group--attention .life-group__word {
+  color: var(--accent);
+}
+
+.life-group__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+}
+
+.life-group__note {
+  margin: var(--space-2) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+/* The calm groups: names only, wrapped, read as a list rather than a stack. */
+.life-names {
+  margin: var(--space-2) 0 0;
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+}
+
+/* The attention groups: one block each, left-aligned so it can be scanned. */
+.life-area {
+  margin-top: var(--space-3);
+}
+
+.life-area__name {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.life-area__detail {
+  margin: var(--space-1) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}

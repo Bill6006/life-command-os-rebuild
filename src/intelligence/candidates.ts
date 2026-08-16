@@ -53,6 +53,28 @@ export interface Candidate {
   readonly semantics: RecommendationSemantics
   /** Concepts this move leans on. Drives uncertainty scoring and the guide. */
   readonly leansOn: readonly ConceptId[]
+  /**
+   * Concepts this move exists in order to find something out about.
+   *
+   * Always a subset of `leansOn`, and almost always empty: an ordinary move
+   * rests on what is known and settles nothing. It is not empty for a move
+   * proposed *because* something has gone quiet, and that is the whole point of
+   * the field — `uncertainty` has nothing to say about a concept the move is
+   * there to resolve.
+   *
+   * Without it the same silence both created the move and marked it down, and
+   * the penalty was the larger of the two: on the evening built to demonstrate
+   * a seven-week gap in the studying, the score gap was 0.027 and the
+   * uncertainty differential 0.054. Section 8's third refresh route was
+   * cancelling itself, and the screen read as circular — nothing has come in
+   * about your studying, so here is a walk, because it is better supported by
+   * what is known.
+   *
+   * **Declaring a concept here buys silence, never approval.** The dimension
+   * abstains; it does not turn positive. Rewarding a move for the gap it was
+   * created by would be the same error wearing the other sign.
+   */
+  readonly resolves: readonly ConceptId[]
   /** One line for the trace: why this was proposed at all. */
   readonly proposedBecause: string
 }
@@ -87,6 +109,8 @@ interface CandidateInput {
   readonly leansOn: readonly ConceptId[]
   readonly proposedBecause: string
   readonly relatedGoal?: EntityRef
+  /** Concepts this move exists to find something out about. Rarely any. */
+  readonly resolves?: readonly ConceptId[]
 }
 
 function candidate(input: CandidateInput, situation: Situation): Candidate {
@@ -107,6 +131,9 @@ function candidate(input: CandidateInput, situation: Situation): Candidate {
     generator: input.generator,
     semantics,
     leansOn: input.leansOn,
+    // Narrowed to what the move actually rests on, so a generator cannot claim
+    // to settle something it never touches.
+    resolves: (input.resolves ?? []).filter((concept) => input.leansOn.includes(concept)),
     proposedBecause: input.proposedBecause,
   }
 }
@@ -494,6 +521,7 @@ const moneyCandidates: Generator = (situation) => {
 
   const ref: EntityRef = { id: goal.id, kind: goal.kind }
   const cash = situation.view.facts.knowledgeFor(CONCEPT.cashBuffer)
+  const known = isUsable(cash)
   return [
     candidate(
       {
@@ -502,9 +530,12 @@ const moneyCandidates: Generator = (situation) => {
         domain: DOMAIN.money,
         verb: 'handle-money-item',
         object: ref,
-        trigger: isUsable(cash) ? 'goal-behind' : 'stale-evidence',
+        trigger: known ? 'goal-behind' : 'stale-evidence',
         evidence: basisOf(cash),
         leansOn: [CONCEPT.cashBuffer],
+        // When the buffer is unknown, dealing with the item is how the app
+        // finds out — so the not-knowing may not also count against it.
+        ...(known ? {} : { resolves: [CONCEPT.cashBuffer] }),
         proposedBecause: 'this one is open and keeps being carried forward',
       },
       situation,
@@ -587,6 +618,10 @@ const coverageCandidates: Generator = (situation) => {
         trigger: 'stale-evidence',
         evidence: quiet.weakest?.evidence ?? [],
         leansOn: shape.leansOn,
+        // The whole reason this move exists. Whatever it rests on that has gone
+        // quiet is what it is here to bring back, so `uncertainty` says nothing
+        // about it — the same fact may not create a move and then sink it.
+        resolves: shape.leansOn,
         proposedBecause: shape.because,
       },
       situation,

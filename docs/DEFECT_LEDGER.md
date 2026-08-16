@@ -39,6 +39,181 @@ None.
 
 ## Fixed
 
+### DEF-0023 — the coverage move was cancelled by the silence that created it
+
+- Status: Fixed
+- Severity: Blocker — the phase's headline feature undoing itself
+- Found in: Phase 4 / `bdb1e18`
+- Found by: **the owner's Android phone gate**, reading the ranking in the QA
+  inspector rather than trusting the score
+- Class: **one fact counted twice, in opposite directions, by two dimensions.**
+  The coverage generator proposes a move _because_ an area has gone quiet;
+  `uncertainty` then marks that same move down _because_ the area has gone
+  quiet. Nothing in either half is wrong on its own, which is why it survived —
+  the generator is right to propose, and `uncertainty` is right that the move
+  rests on something unknown. What is wrong is that the second is a restatement
+  of the first.
+- Reproduction: load "Everything current except the studying" and open the QA
+  ranking.
+
+  | move                 | uncertainty | score |
+  | -------------------- | ----------- | ----- |
+  | a 25-minute walk     | +0.40       | 0.166 |
+  | recalling subnetting | −1.00       | 0.139 |
+
+  Total weight 15.6, so the uncertainty differential is 0.054 against a score
+  gap of 0.027 — **exactly twice the margin that decided the evening**. On Now
+  it read as circular reasoning: _"Nothing has come in about career & learning
+  for 7 weeks"_, then a walk, explained as _"Better supported by what is
+  known."_
+
+- Root cause: `uncertainty` had no way to tell "this move rests on something we
+  do not know" from "this move exists to find that out".
+- Fix: `Candidate.resolves` — the concepts a move exists to settle, always a
+  subset of `leansOn` and empty for every ordinary generator. `uncertainty` sets
+  those aside and judges what is left. Three things it deliberately is not: not
+  a reward (the dimension abstains at zero, it does not turn positive — the
+  owner's instruction, and the same error with the other sign), not a licence
+  (`resolves` is narrowed to `leansOn` when the candidate is built), and not a
+  special case for career (`money` declares it too, whenever the cash buffer is
+  the thing that is unknown).
+- Regression: `tests/synthetic/evidence-moves.test.ts` — nine checks, including
+  the control that `uncertainty` still bites on an ordinary move resting on an
+  unknown, and the class-wide invariant that **every** `stale-evidence`
+  candidate declares the unknowns that prompted it, swept over the whole
+  scenario library so a future refresh generator cannot quietly cancel itself.
+  Three separate reintroductions — the penalty restored, the abstention turned
+  into a reward, and a generator forgetting to declare — all caught.
+- Consequence, and it is the point: on "Everything current except the studying"
+  the refresh is now the recommendation rather than the runner-up. A ten-minute
+  recall serving a live CCNA goal beats a twenty-five minute walk with no goal
+  attached, which is what the app would have chosen anyway had the topic been
+  fresh. The limiter line disappears from that screen, because the app is doing
+  something about the gap instead of mentioning it.
+- Fixed in: the Phase 4 repair checkpoint
+
+### DEF-0024 — a gap in what the app knows was labelled as an obstacle
+
+- Status: Fixed
+- Severity: Blocker — the screen contradicting the ranking underneath it
+- Found in: Phase 4 / `bdb1e18`
+- Found by: the owner's Android phone gate
+- Class: **one label hardcoded for every kind of thing it can describe.** Now
+  rendered `label: 'What is in the way'` for whatever the limiter happened to
+  be. That is right for a body that needs rest, a sore shoulder, a night nearly
+  over. It is wrong for a quiet life area, which obstructs nothing — D-063 says
+  so in as many words, and `bottleneck-fit` already scored it zero. The screen
+  was calling it an obstacle anyway.
+- Reproduction: load "Everything current except the studying" and open Now:
+  **"What is in the way — Nothing has come in about career & learning for 7
+  weeks."**
+- Root cause: the label lived in the surface, where the limiter kind was not in
+  scope.
+- Fix: `Limiter.label`, set beside the summary from one table keyed on the kind,
+  and travelling with it through `Explanation` so the two halves cannot drift.
+  Recovery, capacity and time keep "What is in the way" — replacing it with one
+  word vague enough to cover a coverage gap as well would make it wrong for the
+  three it was right for. A coverage gap reads "Out of date".
+- Regression: `tests/synthetic/g007-coverage-freshness.test.ts` — "calls a
+  coverage gap what it is, and never an obstacle", "still calls a real limiter
+  an obstacle, because it is one", and "gives every limiter kind a label, so a
+  fifth cannot arrive unnamed". Reverting the label table was tried; the first
+  fails.
+- Siblings: the label now passes through every copy sweep in
+  `no-hidden-genericity` alongside the summary, minus the finished-sentence rule
+  — a column heading is not a sentence and a full stop on it would be wrong.
+- Fixed in: the Phase 4 repair checkpoint
+
+### DEF-0025 — two screens described an app from two phases ago
+
+- Status: Fixed
+- Severity: Blocker — a false claim on a primary destination
+- Found in: Phase 4 / `bdb1e18`
+- Found by: the owner's Android phone gate, reading every surface rather than
+  the ones the flows touched
+- Class: **DEF-0007's, and the guard written for DEF-0007 could not catch it.**
+  That guard held four literal sentences that had once been wrong. It passed for
+  two whole phases while Insights told the owner _"the app is not yet asking"_
+  for outcomes — untrue since Phase 3, and untrue twice over in Phase 4, where
+  some answers are worked out without being asked at all. More carried the same
+  claim in different words.
+- Reproduction: open Insights, or More, on any build since Phase 3.
+- Root cause: a guard made of remembered strings only ever catches the mistake
+  somebody already made.
+- Fix, in two parts and neither of them a longer list. **A burden inversion:**
+  every deferral claim in owner-facing copy must be acknowledged in a short list
+  with a reason, so new copy saying the app does not do something fails the
+  build until a person either fixes it or states why it is still true. **A tie
+  to the code:** six capabilities the kernel demonstrably has, each proved by an
+  export that must exist, each with the ways of denying it — if the capability
+  is there and a screen denies it, the build fails, and if the capability is
+  ever genuinely removed the proof fails first and says so.
+- Regression: `tests/unit/architecture-guards.test.ts` — "acknowledges every
+  claim that something is not built" and "denies no capability the kernel
+  demonstrably has". Four reintroductions, all caught: both original sentences
+  verbatim, **a brand new deferral nobody had acknowledged**, and **a denial of
+  a capability in fresh wording** — the last two being exactly what the old
+  guard would have missed.
+- Fixed in: the Phase 4 repair checkpoint
+
+### DEF-0026 — the Life overview was a wall of the same sentence
+
+- Status: Fixed
+- Severity: Major — the phase's main new surface reading as homework
+- Found in: Phase 4 / `bdb1e18`
+- Found by: the owner's Android phone gate, at 360×780
+- Class: **a component used past what it was built for.** `Row` renders a short
+  label against a short right-aligned value — `Commit / bdb1e18`. Given a whole
+  sentence it wraps to four or five lines with a ragged left edge, and given
+  eleven of them, seven identical, it produced 1856px on a 780px screen: about
+  two and a half screens of _"Nothing here yet — You have not mentioned this,
+  and nothing is asking you to."_ Every sentence was true and every existing
+  assertion passed.
+- Reproduction: load any scenario and open Life on a phone-sized viewport.
+- Root cause: the presentation followed the data structure — one row per domain
+  — rather than the question the owner is asking, which is "does anything here
+  need me?".
+- Fix: presentation only, and one coverage computation still. The status does
+  the sorting: anything wanting attention is listed on its own with the line
+  that explains it, everything calm is a heading and a row of names, and the
+  sentence that repeated seven times is said once for the group. Attention
+  groups come first. No questionnaire, no chores, no decorative cards, and the
+  private area still never shows its subject.
+- Regression: `tests/browser/shell.spec.ts` — "says the same sentence once
+  rather than seven times", which fails on any sentence the owner reads twice,
+  and "fits in about a screen and a half rather than two and a half", which
+  measures the page against the viewport. Both were proved to fail with the
+  repeated line restored. Plus "names every one of the eleven areas exactly
+  once", so compressing the screen cannot quietly drop an area.
+- Note on what the old tests proved: `toHaveCount(11)` and a text match on the
+  quiet area both passed throughout. They asserted the data was present, which
+  was never in doubt.
+- Fixed in: the Phase 4 repair checkpoint
+
+### DEF-0027 — the app said "her own" twice about his daughter
+
+- Status: Fixed
+- Severity: Minor — but on the one sentence where the app makes a claim about
+  the owner's child
+- Found in: Phase 4 / `bdb1e18`
+- Found by: the owner's Android phone gate
+- Class: **composed copy repeating what the subject already carries.** The
+  headline was `${who} has managed ${skill.label} on her own ${n} times
+running`, and the skill is labelled "ordering her own food" — so it read
+  "managed ordering her own food on her own", saying independently twice in
+  eight words. Any sentence that adds an independence phrase to a skill label
+  that already contains one will stumble the same way.
+- Reproduction: load "Three times running, and the app noticed" and read the
+  panel under the move.
+- Fix: "has handled" carries it alone. The statement uses "independently", which
+  the label does not repeat.
+- Regression: `tests/synthetic/g003-growth-evidence.test.ts` — "says
+  independently once, in both sentences", which sweeps both sentences for any
+  repeated independence word rather than matching the old string, and "reads as
+  a whole sentence beside the question the panel asks". Restoring the old
+  wording was tried; the first fails.
+- Fixed in: the Phase 4 repair checkpoint
+
 ### DEF-0022 — the premise said she was here and the line above it said nothing had
 
 - Status: Fixed

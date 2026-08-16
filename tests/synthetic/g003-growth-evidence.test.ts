@@ -107,6 +107,39 @@ describe('G-003 — repeated evidence proposes a growth-status update', () => {
     expect(suggestion?.occasions).toBe(3)
   })
 
+  /**
+   * P4-5 — it has to read like something a person would say.
+   *
+   * "Adaya has managed ordering her own food **on her own** 3 times running"
+   * says independently twice in eight words, because the skill label already
+   * carries it. The app is making a claim about his daughter and asking him to
+   * confirm it; a sentence he has to re-read is a sentence he will not trust.
+   *
+   * The rule, rather than the instance: no phrase in either sentence may say
+   * the same thing the skill label has already said.
+   */
+  it('says independently once, in both sentences', () => {
+    for (const suggestion of decision.growth) {
+      for (const line of [suggestion.headline, suggestion.statement]) {
+        const words: readonly string[] = line.toLowerCase().match(/[a-z']+/g) ?? []
+        const saidTwice = words.filter(
+          (word, index) =>
+            words.indexOf(word) !== index &&
+            ['own', 'independently', 'alone', 'herself'].includes(word),
+        )
+        expect(saidTwice, `"${line}" says it twice`).toEqual([])
+      }
+    }
+  })
+
+  it('reads as a whole sentence beside the question the panel asks', () => {
+    // The panel appends "Worth calling that settled?", so the headline has to
+    // be a finished sentence on its own rather than a fragment.
+    const headline = decision.growth[0]?.headline ?? ''
+    expect(headline).toMatch(/[.?!]$/)
+    expect(headline.charAt(0)).toBe(headline.charAt(0).toUpperCase())
+  })
+
   it('points at the skill and at the person it belongs to', () => {
     const suggestion = decision.growth[0]
     expect(suggestion?.skill.id).toBe(ORDERING.id)

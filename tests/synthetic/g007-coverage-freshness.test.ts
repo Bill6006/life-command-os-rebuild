@@ -5,7 +5,7 @@ import { entityRef } from '../../src/domain/entities'
 import { isUsable } from '../../src/domain/knowledge'
 import { addLocalDays, timeZone, type Instant } from '../../src/domain/time'
 import { decide, type Decision } from '../../src/intelligence/engine'
-import { assembleSituation, type Situation } from '../../src/intelligence/situation'
+import { assembleSituation, LIMITER_LABEL, type Situation } from '../../src/intelligence/situation'
 import { nextGuideStep } from '../../src/intelligence/guide'
 import { snapshotFromWire } from '../../src/memory/snapshot'
 import { buildView } from '../../src/memory/view'
@@ -117,7 +117,7 @@ describe('G-007 — the domain does not silently remain frozen', () => {
   it('reaches the owner, either as the move or as the line above it', () => {
     const named =
       chosenDomain(decision) === DOMAIN.career ||
-      (decision.explanation?.limiter ?? '').toLowerCase().includes('career')
+      (decision.explanation?.limiter?.summary ?? '').toLowerCase().includes('career')
     expect(named, 'the owner is told nothing about the quiet area').toBe(true)
   })
 
@@ -139,13 +139,83 @@ describe('G-007 — the domain does not silently remain frozen', () => {
     expect(strained.situation.limiter?.kind).toBe('recovery')
   })
 
-  it('offers the refresh as the alternative, in words about what is known', () => {
-    // The walk wins this evening and the studying is what it was chosen over.
-    // "Better supported by what is known" is the honest phrase for it: the app
-    // has a reading of his body from an hour ago and nothing about the CCNA
-    // since May, and that difference is the whole of why the walk is ahead.
-    expect(decision.explanation?.instead?.toLowerCase()).toContain('subnetting')
-    expect(decision.explanation?.limiter).toContain('career')
+  /**
+   * The refresh is the recommendation, and P4-1 is why.
+   *
+   * It used to lose. The walk came out at 0.166 against 0.139, and the whole of
+   * that margin and more was `uncertainty` marking the refresh down for the
+   * silence that had created it — the differential was 0.054 against a gap of
+   * 0.027. So the app said "nothing has come in about your studying for seven
+   * weeks", suggested a walk, and explained the walk as "better supported by
+   * what is known": the same fact three times, arguing against itself.
+   *
+   * With the double count gone the evening reads the way it should. A ten-minute
+   * recall serving a live CCNA goal beats a twenty-five minute walk with no goal
+   * attached, which is what the app would have chosen anyway had the topic been
+   * fresh — and the quiet area gets its refresh rather than a mention.
+   */
+  it('makes the refresh the recommendation rather than the runner-up', () => {
+    expect(decision.evaluation?.candidate.generator).toBe('coverage')
+    expect(decision.explanation?.rendered.sentence.toLowerCase()).toContain('subnetting')
+    expect(decision.explanation?.instead?.toLowerCase()).toContain('walk')
+  })
+
+  it('no longer argues against the refresh with the gap that raised it', () => {
+    expect(decision.explanation?.insteadBecause).not.toBe('Better supported by what is known.')
+  })
+
+  /**
+   * P4-2 — a coverage gap is not an obstacle, and the label may not say it is.
+   *
+   * The row read **"What is in the way — Nothing has come in about career &
+   * learning for 7 weeks."** That is not something in the way; it is what the
+   * app has not been told, and D-063 says so in as many words: a quiet area is
+   * the app's own blind spot. The ranking already knew — `bottleneck-fit` scores
+   * it zero — and the screen was calling it an obstacle anyway.
+   *
+   * The class is a label hardcoded for every kind, so the fix is per kind and
+   * not a new universal word: replacing "what is in the way" with something
+   * vague enough to cover both would make it wrong for the three it was right
+   * for.
+   */
+  it('calls a coverage gap what it is, and never an obstacle', () => {
+    const shown = situation.limiter
+    expect(shown?.kind).toBe('coverage')
+    expect(shown?.label).toBe(LIMITER_LABEL.coverage)
+    expect(shown?.label.toLowerCase()).not.toContain('in the way')
+  })
+
+  it('still calls a real limiter an obstacle, because it is one', () => {
+    for (const [id, kind] of [
+      ['running-on-empty', 'recovery'],
+      ['settled-evening', 'time'],
+    ] as const) {
+      const other = loadScenario(id).decision().situation.limiter
+      expect(other?.kind, id).toBe(kind)
+      expect(other?.label, id).toBe('What is in the way')
+    }
+  })
+
+  it('gives every limiter kind a label, so a fifth cannot arrive unnamed', () => {
+    for (const kind of ['recovery', 'capacity', 'time', 'coverage'] as const) {
+      expect(LIMITER_LABEL[kind], kind).toBeTruthy()
+    }
+  })
+
+  it('says nothing about the gap once the move is the thing that closes it', () => {
+    // The line earns its place when the app chose something that does not
+    // address the quiet area. Here it chose the refresh, so repeating the gap
+    // above it would be the boilerplate section 61 forbids.
+    expect(decision.explanation?.limiter).toBeUndefined()
+  })
+
+  it('carries the label to the screen with the summary it belongs to', () => {
+    // On a history where the chosen move is elsewhere, the row appears — and
+    // the two halves travel together rather than the surface picking a word.
+    const elsewhere = loadScenario('gone-quiet').decision()
+    expect(elsewhere.situation.limiter?.kind).toBe('coverage')
+    expect(elsewhere.explanation?.limiter?.label).toBe(LIMITER_LABEL.coverage)
+    expect(elsewhere.explanation?.limiter?.summary).toContain('home')
   })
 
   /**
@@ -413,8 +483,8 @@ describe('G-007 — every scenario in the library is honest about what it knows'
       if (limiter === undefined) continue
       if (!isUsable(made.situation.childPresent) || !made.situation.childPresent.value) continue
       expect(
-        limiter.toLowerCase(),
-        `${entry.id}: "${made.explanation?.premise}" / "${limiter}"`,
+        limiter.summary.toLowerCase(),
+        `${entry.id}: "${made.explanation?.premise}" / "${limiter.summary}"`,
       ).not.toContain('fatherhood')
     }
   })
