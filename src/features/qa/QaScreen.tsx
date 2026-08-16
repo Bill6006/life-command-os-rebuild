@@ -487,6 +487,15 @@ export function QaScreen() {
                       : `${row.samples}, pulling the starting belief ${Math.round(row.pull * 100)} percent of the way`
                   }
                 />
+                {/*
+                  Where the evidence came from, beside how much of it there is.
+                  "3 comparable results" could be three things the owner said,
+                  three things the app worked out, or a mix, and he cannot judge
+                  whether to correct a belief without knowing which.
+                */}
+                {row.evidenceMix === undefined ? null : (
+                  <Row label="Who said so" value={row.evidenceMix} />
+                )}
                 <Row
                   label="Could it happen"
                   value={`${row.followThrough.samples === 0 ? 'never tested' : `${Math.round(row.followThrough.rate * 100)} percent`} — ${row.followThrough.note}`}
@@ -505,7 +514,12 @@ export function QaScreen() {
                 ) : null}
               </Rows>
               {row.evidence.length === 0 ? null : (
-                <p className="note">Evidence: {row.evidence.join(', ')}</p>
+                <p className="note">
+                  Evidence:{' '}
+                  {row.evidence
+                    .map((ref) => `${ref.record} (${ref.source}, worth ${ref.reliability})`)
+                    .join(', ')}
+                </p>
               )}
             </details>
           ))

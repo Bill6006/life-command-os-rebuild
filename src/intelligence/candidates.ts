@@ -34,7 +34,16 @@ import { entityValue } from './values'
  * say "this would be a sensible thing to do, and here is why I thought so".
  */
 
-export type GeneratorId = 'sleep' | 'career' | 'fatherhood' | 'home' | 'social' | 'health' | 'money'
+export type GeneratorId =
+  | 'sleep'
+  | 'career'
+  | 'fatherhood'
+  | 'home'
+  | 'social'
+  | 'health'
+  | 'money'
+  /** Section 8's third preference: an action that produces evidence. */
+  | 'coverage'
 
 export interface Candidate {
   /** Deterministic, so a trace can be compared across runs. */
@@ -489,6 +498,88 @@ const moneyCandidates: Generator = (situation) => {
   ]
 }
 
+/**
+ * A move that would bring something back about an area that has gone quiet.
+ *
+ * Section 8's third preference: "create a useful action that naturally produces
+ * evidence." It comes third for a reason — after using what normal life is
+ * already producing and after cautious inference — so this fires only when
+ * coverage has already decided that neither of those will do.
+ *
+ * **It relaxes nothing that DEF-0006 tightened.** The moves below make no claim
+ * about how the owner feels: clearing a room, going back over a topic, dealing
+ * with a money item. Movement and the social moves are deliberately absent,
+ * because "there is capacity for it" and "you are up for people" are claims
+ * about the body and the mood, and a quiet fortnight is not evidence of either.
+ * A stale area is a reason to find something out; it is not a reason to pretend
+ * to know something.
+ *
+ * And the subject is always the owner's own (D-021). A domain with nothing
+ * named in it produces nothing here, which is why coverage falls through to a
+ * question or to the Life signal in that case rather than inventing a subject.
+ */
+const REFRESHING_MOVE: readonly {
+  readonly domain: LifeDomainId
+  readonly kind: SemanticEntity['kind']
+  readonly verb: ActionVerb
+  readonly leansOn: readonly ConceptId[]
+  readonly because: string
+}[] = [
+  {
+    domain: DOMAIN.home,
+    kind: 'place',
+    verb: 'reset-space',
+    leansOn: [CONCEPT.homeFriction],
+    because: 'nothing has come in about the house for a while, and this would',
+  },
+  {
+    domain: DOMAIN.career,
+    kind: 'learning-topic',
+    verb: 'recall-practice',
+    leansOn: [CONCEPT.learningTopic],
+    because: 'nothing has come in about the studying for a while, and this would',
+  },
+  {
+    domain: DOMAIN.money,
+    kind: 'financial-goal',
+    verb: 'handle-money-item',
+    leansOn: [CONCEPT.cashBuffer],
+    because: 'nothing has come in about the money for a while, and this would',
+  },
+]
+
+const coverageCandidates: Generator = (situation) => {
+  const quiet = situation.coverage.mostNeglected
+  if (quiet === undefined) return []
+  // Only when coverage has concluded that an action is the right route. If
+  // evidence is already coming, or a question would do, this is not the answer.
+  if (quiet.refresh !== 'an-action') return []
+
+  const shape = REFRESHING_MOVE.find((entry) => entry.domain === quiet.domain)
+  if (shape === undefined) return []
+
+  const subject = firstOfKind(situation, shape.kind, shape.domain)
+  if (subject === undefined) return []
+
+  const ref: EntityRef = { id: subject.id, kind: subject.kind }
+  return [
+    candidate(
+      {
+        generator: 'coverage',
+        subject: ref,
+        domain: shape.domain,
+        verb: shape.verb,
+        object: ref,
+        trigger: 'stale-evidence',
+        evidence: quiet.weakest?.evidence ?? [],
+        leansOn: shape.leansOn,
+        proposedBecause: shape.because,
+      },
+      situation,
+    ),
+  ]
+}
+
 const GENERATORS: readonly Generator[] = [
   sleepCandidates,
   careerCandidates,
@@ -497,6 +588,9 @@ const GENERATORS: readonly Generator[] = [
   socialCandidates,
   healthCandidates,
   moneyCandidates,
+  // Last, so that a generator with live evidence gets to propose the move
+  // first and the coverage one is deduplicated away rather than the reverse.
+  coverageCandidates,
 ]
 
 export function generateCandidates(situation: Situation): readonly Candidate[] {
@@ -504,8 +598,13 @@ export function generateCandidates(situation: Situation): readonly Candidate[] {
   const seen = new Set<string>()
   for (const generate of GENERATORS) {
     for (const produced of generate(situation)) {
-      if (seen.has(produced.id)) continue
-      seen.add(produced.id)
+      // By what the move *is*, not by which generator thought of it. Two
+      // generators reaching the same move is agreement, not two options, and
+      // offering the owner one sentence twice is the failure section 6 calls a
+      // feed of generic cards.
+      const key = `${produced.semantics.target.verb}/${produced.semantics.target.object.id}`
+      if (seen.has(key)) continue
+      seen.add(key)
       out.push(produced)
     }
   }

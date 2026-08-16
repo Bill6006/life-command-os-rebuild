@@ -131,12 +131,7 @@ function scaled(value: number): number {
 // The dimensions
 // ---------------------------------------------------------------------------
 
-function bottleneckFit(
-  candidate: Candidate,
-  situation: Situation,
-  profile: MoveProfile,
-  friction: number,
-): Dimension {
+function bottleneckFit(situation: Situation, profile: MoveProfile, friction: number): Dimension {
   const limiter = situation.limiter
   if (limiter === undefined) {
     return {
@@ -148,34 +143,30 @@ function bottleneckFit(
   }
 
   /*
-   * A life area that has gone quiet — section 63, reaching the ranking.
+   * A life area that has gone quiet scores nothing here, either way.
    *
-   * Deliberately one-sided, and the shape matters more than the number. A move
-   * that would produce evidence about the quiet area scores for it; **every
-   * other move scores exactly what it scored before this limiter existed**,
-   * which is zero at full weight, the same as an evening with no limiter at
-   * all. Penalising the rest would let a quiet fortnight in one corner of the
-   * owner's life reshuffle every decision he gets, and there is no argument for
-   * that: stale coverage is not an obstacle to doing something else, it is a
-   * reason to do one particular thing.
+   * This dimension means "answers what is actually in the way", and a quiet
+   * fortnight in one corner of the owner's life is not in the way of anything.
+   * It is the app's own blind spot. The first version of this gave a move in
+   * the quiet area a healthy bonus, and on the scenario built to demonstrate
+   * exactly this case it produced "spend 15 minutes clearing the kitchen" on a
+   * Saturday evening with the owner's daughter in the house — beating time with
+   * her, on the strength of the app not knowing what the kitchen looks like.
+   * That is DEF-0006's family: acting confidently from ignorance, with an
+   * explanation that would have read "answers what is actually in the way".
    *
-   * So the worst this can do on any evening is bring a move forward. It cannot
-   * push one back, and it cannot on its own turn a quiet evening into a busy
-   * one — a move still has to clear `WORTH_DOING` on its own merits.
-   *
-   * The comparison is on data flowing through, not on a name: which area is
-   * quiet comes from the situation, and D-030 still holds — there is no life
-   * area written down anywhere in this file.
+   * A stale area earns a candidate that would not otherwise exist, and that
+   * candidate carries a low `stale-evidence` urgency. So it wins on an evening
+   * with nothing better and loses to anything real, which is what "eventually
+   * surface naturally" means. The owner is told either way: the limiter line
+   * says what has gone quiet whenever the chosen move is not about it.
    */
   if (limiter.kind === 'coverage') {
-    const addresses = candidate.semantics.domain === limiter.domain
     return {
       name: 'bottleneck-fit',
-      value: addresses ? 0.6 : 0,
+      value: 0,
       weight: WEIGHTS['bottleneck-fit'],
-      note: addresses
-        ? `would bring something back about the one area that has gone quiet`
-        : 'nothing in particular is in the way',
+      note: 'nothing is in the way — an area has just gone quiet',
     }
   }
 
@@ -645,7 +636,6 @@ export function evaluateCandidate(candidate: Candidate, situation: Situation): E
 
   const dimensions: readonly Dimension[] = [
     bottleneckFit(
-      candidate,
       situation,
       profile,
       situation.learning.frictionFor(candidate.semantics.target.verb, situation.context).friction,

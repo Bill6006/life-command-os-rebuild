@@ -104,12 +104,47 @@ function mostValuable(swings: readonly Swing[], decision: Decision): Swing | und
     decision.evaluation?.candidate.id ?? `nothing (${decision.noAction?.reason ?? 'unknown'})`
   const order = QUESTIONS.map((question) => question.concept)
 
+  /*
+   * How far past its own mark this concept has gone — section 8's contribution
+   * to adaptive question selection, and deliberately the smallest one that is
+   * honest.
+   *
+   * **Coverage never makes a question askable.** It sits below the two
+   * measurements that already decide that, and above the catalogue's order,
+   * which is what it replaces: order was a reasonable last resort and carried
+   * no information at all. Between two questions the engine has already judged
+   * equally worth a tap, the one about the thing nobody has mentioned for
+   * longest is the better use of it.
+   *
+   * Putting coverage any higher would be the failure DEF-0008 records and
+   * section 47 fails a phase for: a coverage engine that can create questions
+   * is the most likely thing yet built to turn a guide into a questionnaire.
+   */
+  const overdue = (concept: Swing['concept']): number => {
+    for (const domain of decision.situation.coverage.domains) {
+      for (const entry of domain.concepts) {
+        if (entry.concept !== concept) continue
+        if (entry.daysSince === undefined || entry.neglectedAfterDays === undefined) return 0
+        return entry.daysSince / entry.neglectedAfterDays
+      }
+    }
+    return 0
+  }
+
   const rank = (swing: Swing) => ({
     outcomes: new Set(swing.outcomes.map((outcome) => outcome.wouldChoose)).size,
     overturns: swing.outcomes.filter((outcome) => outcome.wouldChoose !== standing).length,
     options: questionFor(swing.concept)?.options.length ?? 0,
+    overdue: overdue(swing.concept),
     position: order.indexOf(swing.concept),
   })
+
+  const beats = (mine: ReturnType<typeof rank>, theirs: ReturnType<typeof rank>): boolean => {
+    if (mine.outcomes !== theirs.outcomes) return mine.outcomes > theirs.outcomes
+    if (mine.overturns !== theirs.overturns) return mine.overturns > theirs.overturns
+    if (mine.overdue !== theirs.overdue) return mine.overdue > theirs.overdue
+    return mine.position < theirs.position
+  }
 
   let best: Swing | undefined
   let bestRank: ReturnType<typeof rank> | undefined
@@ -118,14 +153,7 @@ function mostValuable(swings: readonly Swing[], decision: Decision): Swing | und
     if (!swing.changesTheAnswer) continue
     const scored = rank(swing)
     if (!worthATap(scored.overturns, scored.options)) continue
-    if (
-      bestRank === undefined ||
-      scored.outcomes > bestRank.outcomes ||
-      (scored.outcomes === bestRank.outcomes && scored.overturns > bestRank.overturns) ||
-      (scored.outcomes === bestRank.outcomes &&
-        scored.overturns === bestRank.overturns &&
-        scored.position < bestRank.position)
-    ) {
+    if (bestRank === undefined || beats(scored, bestRank)) {
       best = swing
       bestRank = scored
     }

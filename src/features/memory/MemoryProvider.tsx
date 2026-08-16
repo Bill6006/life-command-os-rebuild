@@ -9,6 +9,7 @@ import {
   type WeekStartDay,
 } from '../../domain/time'
 import type { ValidationIssue } from '../../domain/validation'
+import { derivedOutcomeRecords } from '../../intelligence/derived'
 import { nextOutcomeDueAt } from '../../intelligence/outcomes'
 import { indexedDbAvailable, openIndexedDbStore } from '../../memory/indexedDbStore'
 import { createMemoryStore } from '../../memory/memoryStore'
@@ -260,6 +261,32 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     document.addEventListener('visibilitychange', catchUp)
     return () => document.removeEventListener('visibilitychange', catchUp)
   }, [clock, travelled])
+
+  /*
+   * Outcomes the history already implies, written down once.
+   *
+   * Section 8 prefers evidence normal life is already producing over asking for
+   * it, and the morning sleep reading after an early night *is* the answer to
+   * the question the app would otherwise ask. `deriveOutcomes` is pure and
+   * returns records; this is the one place with a store to put them in.
+   *
+   * There is a real tension with D-043 — nothing is written because a screen
+   * rendered — and it resolves rather than being ignored. D-043's objection is
+   * that a history growing a row per render is unreadable within a week. These
+   * ids are derived from the episode, so there is at most **one** derived row
+   * per episode ever, whatever happens afterwards: the filter below skips what
+   * is already there, and even without it the store would treat the second
+   * append as a no-op (D-015). The loop terminates for the same reason.
+   */
+  useEffect(() => {
+    if (!ready) return
+    const known = new Set(snapshot.records.map((record) => record.id))
+    const fresh = derivedOutcomeRecords(view, { now, zone }).filter(
+      (record) => !known.has(record.id),
+    )
+    if (fresh.length === 0) return
+    void append(fresh)
+  }, [ready, snapshot, view, now, zone, append])
 
   useEffect(() => {
     if (travelled) return

@@ -229,6 +229,14 @@ describe('there is exactly one arbitration path', () => {
    * chooses nothing, because it is part of how a move is ranked, and a surface
    * reading it directly could put a number on screen the arbitration never saw.
    */
+  /*
+   * `derived` joined in Phase 4, and it belongs on the recording side of the
+   * line for the same reason `outcomes` does: it turns history into canonical
+   * records and chooses nothing. `coverage` is deliberately **not** here — it
+   * is reached through `situation`, which every surface already has, so the
+   * status a Life page shows is the object the decision itself was made from
+   * rather than a second computation that could drift away from it.
+   */
   const OPEN_TO_SURFACES = [
     'engine',
     'guide',
@@ -239,6 +247,7 @@ describe('there is exactly one arbitration path', () => {
     'lifecycle',
     'outcomes',
     'corrections',
+    'derived',
   ]
   const DECIDES = [
     'candidates',
