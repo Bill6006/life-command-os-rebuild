@@ -43,11 +43,24 @@ export const isProduction = runningBuild.target === 'production'
  * So phase language now appears in exactly two places — the build panel behind
  * More, and the QA laboratory — and both read it from here.
  * `tests/unit/architecture-guards.test.ts` fails the build if a third appears.
+ *
+ * QA-B1 (Phase 5): the number and title were the only fields anything actually
+ * read from here. The sentence describing what the build currently does, and
+ * what is next, was hand-written prose living in `MoreScreen.tsx` itself —
+ * so bumping `number` to 5 still left an owner reading, in the app's own
+ * voice, that ten shipped pages were still in the future. `summary` exists so
+ * that sentence has exactly one source too; `MoreScreen.tsx` renders it
+ * rather than carrying its own copy of the claim.
  */
 export const REBUILD_PHASE = {
-  number: 4,
-  title: 'the coverage engine and adaptive guides',
-  next: 'the Life domain experience',
+  number: 5,
+  title: 'the Life domain experience',
+  next: 'Timeline and Insights',
+  summary:
+    'The app decides, explains itself, watches what happens afterwards, learns from it, and ' +
+    'notices when a life area has gone quiet rather than carrying on as though a months-old ' +
+    'picture were today’s — and the ten pages behind Life now let you see what it ' +
+    'believes about each area and correct it directly. Timeline and Insights are next.',
 } as const
 
 function isDeployTarget(value: unknown): value is DeployTarget {

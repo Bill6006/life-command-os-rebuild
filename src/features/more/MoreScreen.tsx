@@ -71,11 +71,7 @@ export function MoreScreen({ freshness }: { freshness: BuildFreshness }) {
           <Row label="Phase" value={`${REBUILD_PHASE.number} — ${REBUILD_PHASE.title}`} />
           <Row label="Next" value={REBUILD_PHASE.next} />
         </Rows>
-        <p className="note">
-          The app decides, explains itself, watches what happens afterwards and learns from it — and
-          now notices when a life area has gone quiet, rather than carrying on as though a
-          months-old picture were today&rsquo;s. The domain pages behind Life are next.
-        </p>
+        <p className="note">{REBUILD_PHASE.summary}</p>
       </Panel>
     </Screen>
   )

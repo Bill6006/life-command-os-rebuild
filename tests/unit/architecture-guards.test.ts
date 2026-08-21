@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, posix, relative, sep } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { REBUILD_PHASE } from '../../src/platform/buildInfo'
 
 /**
  * Boundaries the plan draws, enforced rather than remembered.
@@ -397,6 +398,11 @@ describe('development scaffolding does not become the product — DEF-0007', () 
     /\barrives? in Phase\b/i,
     /\buntil Phase\b/i,
     /\bwill arrive\b/i,
+    // QA-B1: "The domain pages behind Life are next" shipped this same phase.
+    // A claim phrased as "still ahead of us" rather than "missing" slipped
+    // past every pattern above, on the one screen (More) that is one tap from
+    // every other screen in the app.
+    /\b(?:is|are) next\b/i,
   ]
 
   /**
@@ -419,15 +425,41 @@ describe('development scaffolding does not become the product — DEF-0007', () 
       because: 'about a DST gap, not about the app',
     },
     { near: '> Not yet <', because: 'a button label — the owner answering, not a claim' },
+    {
+      near: 'Timeline and Insights are next',
+      because:
+        'Phase 6, genuinely not built yet — this is REBUILD_PHASE.next, and this same ' +
+        'entry stops being true the moment that field changes without this claim changing with it',
+    },
   ]
+
+  /**
+   * Every owner-facing narrative sentence this guard has to hold to account —
+   * not only the FEATURES files' own literal prose.
+   *
+   * `REBUILD_PHASE.summary` is exactly this kind of sentence and used to live
+   * as hand-written JSX text inside `MoreScreen.tsx`, which is why it is
+   * checked here rather than assumed to be covered by the FEATURES sweep
+   * below: QA-B1 was reachable precisely because the claim moved to data
+   * (`src/platform/buildInfo.ts`) that the FEATURES-only scan never reads.
+   */
+  function proseSources(): readonly { readonly path: string; readonly prose: string }[] {
+    return [
+      ...FEATURES.map((file) => ({
+        path: repoPath(file),
+        prose: readCode(file).replace(/\s+/g, ' '),
+      })),
+      { path: 'src/platform/buildInfo.ts (REBUILD_PHASE.summary)', prose: REBUILD_PHASE.summary },
+    ]
+  }
 
   it('acknowledges every claim that something is not built', () => {
     const offenders: string[] = []
 
-    for (const file of FEATURES) {
-      // Prose in JSX is split across lines by the formatter, so it is joined
-      // back up before matching — otherwise a claim escapes by wrapping.
-      const prose = readCode(file).replace(/\s+/g, ' ')
+    // Prose in JSX is split across lines by the formatter, so each FEATURES
+    // file's text is joined back up before matching — otherwise a claim
+    // escapes by wrapping. `REBUILD_PHASE.summary` is already one line.
+    for (const { path, prose } of proseSources()) {
       for (const claim of DEFERRAL_CLAIMS) {
         const pattern = new RegExp(claim.source, `${claim.flags}g`)
         let found: RegExpExecArray | null
@@ -444,7 +476,7 @@ describe('development scaffolding does not become the product — DEF-0007', () 
            */
           const window = prose.slice(Math.max(0, found.index - 120), found.index + 460)
           if (STILL_TRUE.some((allowed) => window.includes(allowed.near))) continue
-          offenders.push(`${repoPath(file)} — “…${window.trim()}…”`)
+          offenders.push(`${path} — “…${window.trim()}…”`)
         }
       }
     }
@@ -453,6 +485,15 @@ describe('development scaffolding does not become the product — DEF-0007', () 
       offenders,
       'an owner-facing claim that something is not built, with nothing saying it is still true',
     ).toEqual([])
+  })
+
+  it('the current phase is stated once, and matches what has actually shipped', () => {
+    // Direct and deliberately unsubtle: this is the one line a human has to
+    // remember to bump, and the whole point is that forgetting fails loudly
+    // rather than silently, the way DEF-0031's stale "Phase 4" did.
+    expect(REBUILD_PHASE.number).toBe(5)
+    expect(REBUILD_PHASE.title).toBe('the Life domain experience')
+    expect(REBUILD_PHASE.summary).not.toMatch(/domain pages? behind life are next/i)
   })
 
   it('denies no capability the kernel demonstrably has', () => {
@@ -496,6 +537,22 @@ describe('development scaffolding does not become the product — DEF-0007', () 
         },
         denials: [/\bdoes not notice\b/i, /\bnothing notices\b/i],
       },
+      {
+        // QA-B1. Absolute rather than acknowledgeable on purpose: unlike
+        // Timeline/Insights (genuinely Phase 6, and named in STILL_TRUE
+        // above), it can never again become true that the domain pages do
+        // not exist once they are shipped, so no acknowledgment should be
+        // able to excuse denying this one.
+        what: 'provides domain pages behind Life',
+        provenBy: {
+          file: 'src/features/life/domainPages.ts',
+          symbol: 'export function assembleDomainPageData',
+        },
+        denials: [
+          /domain pages? behind life (?:is|are) next/i,
+          /no domain pages? (?:yet|behind life)/i,
+        ],
+      },
     ]
 
     const offenders: string[] = []
@@ -508,11 +565,10 @@ describe('development scaffolding does not become the product — DEF-0007', () 
         `${capability.what}: ${capability.provenBy.symbol} is gone — the guard is out of date`,
       ).toBe(true)
 
-      for (const file of FEATURES) {
-        const prose = readCode(file).replace(/\s+/g, ' ')
+      for (const { path, prose } of proseSources()) {
         for (const denial of capability.denials) {
           if (denial.test(prose)) {
-            offenders.push(`${repoPath(file)} denies "${capability.what}" — ${denial.source}`)
+            offenders.push(`${path} denies "${capability.what}" — ${denial.source}`)
           }
         }
       }
