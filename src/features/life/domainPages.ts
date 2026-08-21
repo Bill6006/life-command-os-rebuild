@@ -1,4 +1,5 @@
 import type { ActiveGoal } from '../../intelligence/situation'
+import type { ConceptRegistry } from '../../domain/concepts'
 import { DOMAIN, type LifeDomainId } from '../../domain/domains'
 import type { EntityIndex } from '../../domain/entities'
 import type { RecordId } from '../../domain/ids'
@@ -210,6 +211,7 @@ function describeChange(
   record: CanonicalRecord,
   entities: EntityIndex,
   history: Situation['view']['history'],
+  concepts: ConceptRegistry,
 ): string | undefined {
   const labelFor = (ref: Parameters<EntityIndex['labelFor']>[0]) => entities.labelFor(ref)
   const about = (base: string, recommendation: RecordId): string => {
@@ -220,15 +222,28 @@ function describeChange(
     const withoutFullStop = base.endsWith('.') ? base.slice(0, -1) : base
     return `${withoutFullStop} — ${subject}.`
   }
+  /*
+   * A concept's own label leads the line, the same way "Goal:" and
+   * "Commitment:" already do below.
+   *
+   * Found on the Android gate: a record can carry a concept whose *registered*
+   * domain differs from the domain the record itself is tagged with — reading
+   * how much time is free tonight is filed under Direction in several
+   * scenarios, not Career, because it is evidence about the week rather than
+   * about the topic. Without the label, "Recently" on the Direction page read
+   * a bare "60 min" with nothing saying what it measured.
+   */
+  const concept = (id: ConceptId, value: FactValue): string =>
+    `${concepts.definitionFor(id).label}: ${describeFactValue(value, labelFor)}`
 
   switch (record.kind) {
     case 'observation':
     case 'explicit-fact':
-      return describeFactValue(record.value, labelFor)
+      return concept(record.concept, record.value)
     case 'context':
       return record.durability === 'situational'
-        ? `${describeFactValue(record.value, labelFor)} — for now`
-        : describeFactValue(record.value, labelFor)
+        ? `${concept(record.concept, record.value)} — for now`
+        : concept(record.concept, record.value)
     case 'goal':
       return `Goal: ${record.statement}${record.status === 'active' ? '' : ` (${record.status})`}`
     case 'domain-update':
@@ -274,7 +289,12 @@ function recentChanges(
 
   const out: RecentChange[] = []
   for (const record of sorted) {
-    const text = describeChange(record, situation.entities, situation.view.history)
+    const text = describeChange(
+      record,
+      situation.entities,
+      situation.view.history,
+      situation.concepts,
+    )
     if (text === undefined) continue
     out.push({ id: record.id, at: record.occurredAt, text })
     if (out.length >= limit) break
