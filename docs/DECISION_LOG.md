@@ -2004,3 +2004,183 @@ presentation format. [`docs/qa/README.md`](qa/README.md) section 3a is
 amended to require it alongside the existing next-prompt rule, for every QA
 PASS and FAIL. It applies equally to builder handoffs under section 43,
 which is where the requirement is stated for that side.
+
+---
+
+## D-084 — A number reaches an owner surface only through the thing that names what it measures
+
+**Phase:** 6 · **Status:** Active
+
+There is one `MeasuredRate` type and one component that can render it
+(`src/features/evidence/EvidencePieces.tsx`). The type carries the aspect, a
+sentence naming the quantity in ordinary words, its own numerator and its own
+denominator; the component renders all four together. A guard in
+`tests/unit/architecture-guards.test.ts` fails the build if any other owner
+surface prints a per-cent sign or multiplies by a hundred. The QA laboratory is
+exempt and says why — it is a developer surface whose job is the machinery
+(section 35), and it is not in a production build.
+
+Four aspects, and there is no fifth: **follow-through**, **direct result**,
+**downstream effect**, **comfort**. A rate for one is never combined with a rate
+for another, and a sweep fails on an aspect whose name contains "success",
+"overall", "effectiveness", "score" or "total".
+
+**Why:** section 51 states the rule — _"Any percentage must identify the
+quantity it measures. Do not merge direct result, downstream effect,
+comfort/friction, or follow-through into one generic success statistic."_ —
+and DEF-0020 is the record of what happens when four facts share one carrier
+because nothing stopped them. A rule about how a number is worded cannot be kept
+by everyone remembering it at each call site. It can be kept by there being one
+place that knows how, taking the whole rate, so that printing the figure without
+its sentence is not something a caller is able to do.
+
+**The threshold is four, and it is defensible rather than round.** `PATIENCE` in
+`learning.ts` is 3 — where observation starts outweighing the starting belief —
+so a figure the app is willing to _print_ should rest on more evidence than it
+takes to move a belief a quarter of the way. `tests/unit/insights-copy.test.ts`
+asserts that relationship rather than the number, so re-tuning either forces the
+other to be reconsidered.
+
+**Below it, the figure is withheld with the reason and the count.** That is
+G-009's "unknown stays unknown" applied to a pattern: the app would rather say
+it cannot tell yet than manufacture a figure, and showing how far off it is
+("only 2 so far") is more useful than silence. `MeasuredRate.percent` and
+`.withheld` are exactly one of the two, never both and never neither, which
+makes the honest state a value the type can hold rather than a case a surface
+has to remember to check for.
+
+---
+
+## D-085 — Insights reads the situation's learning index and may never build one
+
+**Phase:** 6 · **Status:** Active
+
+`src/intelligence/insights.ts` joins the modules a surface may import. It reads
+beliefs off `situation.learning` — the index the decision on Now was made from —
+and takes its raw counts over the episode set that same index selects, through
+`comparableEpisodes`, now exported from `learning.ts` for that purpose.
+
+Three things are structural rather than promised, each with a reintroduction
+proved to fail:
+
+- it cannot reach `candidates`, `constraints`, `evaluate`, `arbitrate` or
+  `advisor`, so it has nowhere to obtain a recommendation from;
+- it cannot reach `renderRecommendation`, so a card physically cannot print an
+  instruction;
+- it cannot call `buildLearning` or `noLearning`, so it cannot compute beliefs
+  of its own.
+
+**Why the module is open at all, when `learning` is closed.** The reason
+`learning` is closed is that a surface reading it directly could put a number on
+screen the arbitration never saw. `insights` does not have that property: every
+figure it shows is over the evidence the arbitration used, because it is handed
+the same index and the same selection rather than repeating either. That is
+D-071's argument for coverage — _the status Life shows is the object the
+decision was made from, and two computations over one history would eventually
+disagree with the owner unable to tell which screen was lying_ — applied to a
+second reader.
+
+**Why one definition of "a situation like this one" matters more here than
+anywhere else.** Insights counts raw answers over the set a belief was computed
+from. If it drew that set with a filter of its own, a card would eventually say
+"4 evenings like tonight" over a belief that had counted five, and nothing on
+either screen would explain the difference. That is DEF-0033's shape with
+numbers instead of sentences.
+
+---
+
+## D-086 — One card per move about what happens when you do it
+
+**Phase:** 6 · **Status:** Active
+
+Four cards can describe the same run of episodes — a context split, a change
+over time, a counterexample against the run, and the flat pattern. At most one
+reaches the screen, chosen in that order, and the split and the trend are still
+computed and still reach the deeper view whichever wins.
+
+**Why the order.** A context split _explains_ the exceptions rather than
+reporting them. On twelve evenings clearing the kitchen, "usually helps, and on
+20 June it did not" presents as random what is in fact systematic: it helped on
+all six weekday evenings and on two of six weekends. A change subsumes the
+single counterexample that signalled it, and both subsume the flat average —
+which on that history is eight of twelve, true, and a description of an evening
+that never happened.
+
+**Why only one.** Printing two would put "Getting out for a walk usually makes a
+difference" directly above "Getting out for a walk has not been going as well
+since May", both true, both from the same episodes, and the screen as a whole
+wrong. That is DEF-0033's class: a contradiction between two lines the reader
+has no way to reconcile. The card that reports the _age_ of the evidence stands
+beside whichever won, because it answers a different question from what the
+evidence says.
+
+**Consequence, and it is the reason this is a decision rather than a
+preference:** a finding that does not win the headline is not lost. It is in the
+Pattern Detail under "where it looks different" or "earlier and later", which is
+where section 51 puts both of them anyway.
+
+---
+
+## D-087 — Timeline offers nothing to press, and no filter
+
+**Phase:** 6 · **Status:** Active
+
+Timeline is the only primary destination with no action on it: no button but
+the pager, no field, no correction, and no import of `corrections`, `lifecycle`,
+`outcomes` or `growth`. A guard counts the click handlers and fails on a second
+one.
+
+**Why:** section 26 requires that Timeline "never create phantom actionable
+items from corrupt data". The usual way to satisfy that is to check that corrupt
+rows produce no action, which proves it for the corruption somebody thought of.
+This proves it for all of them, including the ones nobody has written a fixture
+for yet: there is nothing on the surface for a corrupt row to produce.
+
+**Where corrections live instead.** Beside the claim. Now carries the
+correction for the belief it states, and a domain page carries the corrections
+for the readings it shows. Timeline makes no claim — it is the record — so
+there is nothing on it to disagree with.
+
+**No filter, and it is section 51's own wording:** "filters if actually needed,
+not by default". Day headings plus a page that grows on request do the work a
+filter would on every history in the library. This is worth revisiting when a
+real history makes scrolling to a known area genuinely tedious; a control
+nobody needs is one that has to be maintained and understood.
+
+---
+
+## D-088 — A record's line is written once; the surfaces differ in what they ask for
+
+**Phase:** 6 · **Status:** Active
+
+`src/features/history/describe.ts` turns one canonical record into one line and
+a short owner-facing word for its kind. Timeline and a domain page's "Recently"
+panel both read it. They differ in two things and only two: **which record kinds
+they ask about**, and **what discretion they owe** — Timeline is a primary
+surface and fixes `DISCREET_PRIMARY`; a domain page is inspection, and reveals
+private detail only on the page that is for it.
+
+**Why shared.** DEF-0028 and DEF-0029 were both the same defect — a line failing
+to say what it was about — found separately on two record kinds. Fixing that
+twice, in two files, is how one of them gets fixed and the other does not.
+
+**What the owner's deferral covers, and what it does not.** The owner deferred
+rebuilding a domain page's panel to match the whole-life surface: it is still
+domain-scoped, still narrower, still shows its own thirteen record kinds and not
+Timeline's twenty. That stands untouched. What is shared is the _wording_ of a
+line, which was never what the deferral was about.
+
+**One rule the shared version adds.** Every line is written to read correctly
+with no tag beside it, because a domain page shows none. An outcome says which
+of the three questions it answers in the sentence itself — "How far clearing the
+kitchen got: completely" against "What clearing the kitchen was worth: a real
+difference" — rather than leaving that to a label only one of the two surfaces
+renders. That also keeps Timeline from printing the same word twice in a row,
+which is section 61's repeated boilerplate.
+
+**A latent hole closed on the way past.** Phase 5's panel rendered every matched
+record's detail unconditionally, so a record tagged with both `home` and
+`private-health` would have shown its private detail on the Home page. No
+history in the library has such a record, so nothing observable changes — but
+the rule is now the same one Timeline obeys rather than an accident of how the
+fixtures happen to be tagged.

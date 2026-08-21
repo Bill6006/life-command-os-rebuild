@@ -243,11 +243,20 @@ export function describeRecord(
     case 'explicit-fact':
       return plain(concept(record.concept, record.value))
     case 'context':
-      return plain(
-        record.durability === 'situational'
-          ? `${concept(record.concept, record.value)} — for now`
-          : concept(record.concept, record.value),
-      )
+      /*
+       * The tag follows the durability, because the row otherwise contradicts
+       * itself: a situational exception rendered "Standing — child with the
+       * owner: no — for now", which is the tag saying one thing and the
+       * sentence saying its opposite, on one line. DEF-0033's class at the
+       * smallest possible scale.
+       */
+      return record.durability === 'situational'
+        ? {
+            tag: 'Temporary',
+            text: `${concept(record.concept, record.value)} — for now`,
+            withheld: false,
+          }
+        : plain(concept(record.concept, record.value))
     case 'constraint':
       return plain(record.description)
     case 'goal':

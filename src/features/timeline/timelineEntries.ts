@@ -64,9 +64,19 @@ export interface TimelineDay {
  * beside real history as though the app understood it.
  */
 export interface UnreadableRow {
-  /** Position in the file it arrived in, so a person can find it. */
-  readonly index: number
-  readonly id: string | undefined
+  /** Where in the file it was, in words: "Record row 6", "Entity row 1". */
+  readonly where: string
+  /**
+   * What is wrong, in ordinary language.
+   *
+   * Deliberately not the parser's own words. The first version printed them
+   * straight — "missing a non-empty string (records[6].id), and 8 other
+   * problems" — which is precisely the developer vocabulary section 36 puts
+   * *behind* inspection: "errors should be visible but concise; detailed
+   * technical diagnostics belong behind inspection". The QA laboratory already
+   * lists every issue with its path, which is where a person who wants that
+   * goes.
+   */
   readonly problem: string
 }
 
@@ -107,16 +117,23 @@ function labelForDay(dayId: LocalDayId, today: LocalDayId, yesterday: LocalDayId
   return `${Number(day)} ${name} ${year}`
 }
 
-function problemOf(
-  issues: readonly { readonly problem: string; readonly path?: string }[],
-): string {
-  const first = issues[0]
-  if (first === undefined) return 'could not be read'
-  const rest = issues.length - 1
-  const where = first.path === undefined || first.path === '' ? '' : ` (${first.path})`
-  return rest === 0
-    ? `${first.problem}${where}`
-    : `${first.problem}${where}, and ${rest} other problem${rest === 1 ? '' : 's'}`
+/**
+ * Which list a malformed row came from, in words.
+ *
+ * Records and entities are parsed from two arrays and each row's `index` is
+ * relative to its own, so numbering them all "Row N" put a "Row 1" and a
+ * "Row 6" in one list with nothing saying they were counted from different
+ * places. The issue's own path is the only thing that knows which.
+ */
+function whereItWas(index: number, issues: readonly { readonly path?: string }[]): string {
+  const path = issues[0]?.path ?? ''
+  const kind = path.startsWith('entities') ? 'Entity' : 'Record'
+  return `${kind} row ${index + 1}`
+}
+
+function problemOf(issues: readonly { readonly problem: string }[]): string {
+  if (issues.length <= 1) return 'could not be read'
+  return `could not be read — ${issues.length} things wrong with it`
 }
 
 /**
@@ -189,8 +206,7 @@ export function assembleTimeline(situation: Situation, limit = TIMELINE_PAGE): T
   }
 
   const unreadable: UnreadableRow[] = situation.view.snapshot.malformed.map((row) => ({
-    index: row.index,
-    id: row.id,
+    where: whereItWas(row.index, row.issues),
     problem: problemOf(row.issues),
   }))
 
@@ -204,15 +220,14 @@ export function assembleTimeline(situation: Situation, limit = TIMELINE_PAGE): T
    * because the owner's question is the same — *is anything in here not being
    * understood?* — and the honest answer names both kinds.
    */
-  const tangled: UnreadableRow[] = situation.view.history.issues.map((issue, index) => ({
-    index,
-    id: issue.record,
+  const tangled: UnreadableRow[] = situation.view.history.issues.map((issue) => ({
+    where: 'An entry',
     problem:
       issue.problem === 'supersession-cycle'
-        ? `two entries each claim to replace the other (${issue.target})`
+        ? 'and another each claim to replace the other, so neither is used'
         : issue.problem === 'dangling-correction'
-          ? `withdraws an entry that is not here (${issue.target})`
-          : `replaces an entry that is not here (${issue.target})`,
+          ? 'withdraws something that is not in the record'
+          : 'replaces something that is not in the record',
   }))
 
   return { days, shown, total, unreadable, tangled }

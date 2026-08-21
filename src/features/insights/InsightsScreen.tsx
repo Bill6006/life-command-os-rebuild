@@ -235,7 +235,11 @@ function InsightCard({
             title="Occasions that went the other way"
             lines={evidence.counterexamples}
           />
-          <EvidenceLines title="Everything counted" lines={evidence.included} limit={8} />
+          <EvidenceLines
+            title={evidence.includedTitle ?? 'Everything counted'}
+            lines={evidence.included}
+            limit={8}
+          />
           <EvidenceLines title="Left out" lines={evidence.excluded} />
 
           <EvidenceNote title="How this was arrived at">

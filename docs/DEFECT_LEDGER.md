@@ -39,6 +39,160 @@ None.
 
 ## Fixed
 
+### DEF-0044 — a fixed heading over a list that was never counted toward anything
+
+- Status: Fixed
+- Severity: Minor — a heading describing a list as something it is not
+- Found in: Phase 6 / `df06a12`
+- Found by: the builder's own Android-style gate, against the deployed Preview
+- Class: **DEF-0038's, on the block underneath it.** One shared panel wording something in a way that is right for one card and wrong for another.
+- Reproduction: deployed Preview at 360×780, "Everything current except the studying" → Insights → **See the evidence** on the coverage card: **EVERYTHING COUNTED / Current learning topic — last heard 7 weeks ago.** Nothing was counted; the list is what is overdue. The trajectory card had the same heading over a list of readings.
+- Root cause: the heading was a literal in the surface, which cannot know what any given card's list is.
+- Fix: `PatternEvidence.includedTitle`, set by the card that built the evidence — "What is overdue here" for coverage, "Every reading" for a trajectory — and absent everywhere the list genuinely is everything counted.
+- Regression: none dedicated. `tests/synthetic/insights.test.ts` already sweeps every card's owner-facing strings, and the heading is now a value on the evidence rather than a literal in one component, so the failure mode it had is gone rather than guarded against. Recorded here so the omission is a decision rather than an oversight.
+- Fixed in: the Phase 6 repair checkpoint
+
+### DEF-0043 — the parser talking to the owner, in two numbering schemes at once
+
+- Status: Fixed
+- Severity: Major — developer diagnostics on a primary surface, and a row reference that points at the wrong list
+- Found in: Phase 6 / `df06a12`
+- Found by: the builder's own Android-style gate, against the deployed Preview
+- Class: **DEF-0007's** — development output reaching the product — compounded by two indexes with the same name.
+- Reproduction: deployed Preview at 360×780, "A file with damage in it" → Timeline, scroll to the bottom:
+
+  ```
+  Row 6      expected an object (records[5])
+  Row 7      missing a non-empty string (records[6].id), and 8 other problems
+  Row 8 (GE000000000000000000000001)
+             expected an ISO-8601 instant, got string (records[7].occurredAt)
+  Row 1 (person:ghost)
+             missing a non-empty string (entities[0].label), and 3 other problems
+  ```
+
+- Root cause: two of them. The validator's `ValidationIssue.problem` and `.path` were rendered verbatim, which is correct for the QA inspector — where they already appear, in full, with every issue listed — and is exactly what section 36 puts _behind_ inspection: "errors should be visible but concise; detailed technical diagnostics belong behind inspection". And records and entities are parsed from two arrays, each row's `index` relative to its own, so "Row 1" and "Row 6" appeared in one list with nothing saying they were counted from different places.
+- Fix: `UnreadableRow` carries `where` and a plain `problem`. `where` reads "Record row 6" or "Entity row 1", decided from the issue's own path, which is the only thing that knows. `problem` reads "could not be read", with a count when there is more than one thing wrong. No paths, no validator vocabulary, and no record identifiers — the supersession issues lost theirs too, since the identifier was unactionable on a surface with nothing to act with.
+- Regression: `tests/synthetic/timeline.test.ts` — "says which list a bad row came from, and reports both", and "reports the damage without the parser talking to the owner", which sweeps both kinds of damaged row for validator paths, schema vocabulary and record ids.
+- Fixed in: the Phase 6 repair checkpoint
+
+### DEF-0042 — a temporary exception tagged as a standing arrangement
+
+- Status: Fixed
+- Severity: Major — a row contradicting itself between its label and its sentence
+- Found in: Phase 6 / `df06a12`
+- Found by: the builder's own Android-style gate, against the deployed Preview
+- Class: **DEF-0033's, at the smallest possible scale** — two parts of one line, each true of something, saying opposite things about the same record.
+- Reproduction: deployed Preview at 360×780, "A settled arrangement, and one week away" → Timeline. Yesterday, 11:00: **Standing — Child with the owner: no — for now.**
+- Root cause: `describe.ts` tagged every `context` record "Standing", which is the right word for a durable one and the wrong word for the situational exception that exists precisely to override it for a window (section 8, G-002, D-081). The sentence had the durability right; the tag did not read it.
+- Fix: the tag follows `durability` — "Standing" or "Temporary". The sentence keeps its own "— for now", because it has to read correctly on a domain page, which shows no tag at all (D-088).
+- Regression: `tests/synthetic/timeline.test.ts` — "does not call a temporary exception a standing arrangement", which requires both kinds to exist in the library and asserts that neither carries the other's wording.
+- Fixed in: the Phase 6 repair checkpoint
+
+### DEF-0041 — a regression sweep that could not fail
+
+- Status: Fixed
+- Severity: Major — the guard written for DEF-0037 passed with DEF-0037 still in place
+- Found in: Phase 6 / pre-checkpoint
+- Found by: **the reintroduction pass required by plan section 42, step 4** — not by anything the suite reported
+- Class: **a guard that cannot fail.** `tests/unit/architecture-guards.test.ts` has said since Phase 1 that "a guard that cannot fail is decoration" and proves each of its own scans bites on a violation. A sweep written elsewhere carries no such proof, so the only thing standing between it and decoration is the reintroduction step.
+- Reproduction: put the raw day id back into `PatternEvidence.counted` (DEF-0037's defect) and run `tests/synthetic/insights.test.ts`. All twenty-nine tests pass.
+- Root cause: the regex literal had been written through a shell heredoc and arrived in the file with its two `\b` word boundaries replaced by **literal backspace characters** (U+0008). The pattern therefore required a backspace either side of the date and could never match anything. It read correctly in an editor, it exercised the right strings, and it passed.
+- **ESLint would have caught it, and the sequencing is why it did not.** `no-control-regex` is on and flags exactly this shape. It was never given the chance: the corruption was written, found by the reintroduction pass, and repaired, all before the next full `npm run verify`. The rule proved itself a few hours later by catching the identical mistake in `tests/synthetic/timeline.test.ts` the moment lint ran over it. So the lesson is narrower than "a guard cannot be trusted": **the reintroduction step and the lint gate cover the same failure, and running lint before believing a new guard is the cheaper half.** The one shape lint cannot see is the same corruption inside a `String.raw` template, which is not a regex literal — both occurrences are now plain literals.
+- Fix: the pattern rewritten so it survives being written, verified by reintroducing DEF-0037 and watching the test fail. A sweep over the whole repository for stray control characters was run twice — once at discovery and once at the close of the phase — and found one other occurrence, in `src/domain/ids.ts`: `parts.join('\x00')`, a deliberate hash separator from Phase 1, and correct.
+- Regression: the reintroduction pass itself, run for every guard this phase added — nineteen defects reintroduced one at a time, nineteen caught — plus `npm run lint`, which is already in `npm run verify` and in CI.
+- Fixed in: the Phase 6 checkpoint
+
+### DEF-0040 — inspector language on Now's evidence panel
+
+- Status: Fixed
+- Severity: Major — internal vocabulary on a primary owner surface
+- Found in: Phase 6 / pre-checkpoint
+- Found by: the builder, reading the assembled panel rather than asserting on it
+- Class: **DEF-0007's** — development vocabulary reaching the product, on a field that was written for the QA inspector and then read by something else.
+- Reproduction: load any history where the chosen move leans on a concept nothing has answered, open **See evidence** on Now: "Usable time tonight: not known — never-observed".
+- Root cause: `ConsideredFact.reading` spells an absence as `not known — ${knowledge.reason}`, where `reason` is a `KnowledgeGap` identifier. That is correct for the trace, which is where it was written to be read (section 35). The evidence panel reused the field verbatim.
+- Fix: `ConditionLine` carries `known`, and an unknown reading renders as "Not known yet". The condition is still listed — a fact the choice leaned on and does not know is part of why the app is hedging, and dropping it would hide that.
+- Regression: `tests/synthetic/decision-evidence.test.ts` — "speaks in ordinary language, with no machinery and no lost nouns", which sweeps every scenario for inspector vocabulary and asserts the wording of every unknown condition. Proved to fail when the field is read verbatim again.
+- Fixed in: the Phase 6 checkpoint
+
+### DEF-0039 — the app's conclusion and its own tally contradicted each other on one screen
+
+- Status: Fixed
+- Severity: Blocker — two figures about the same move, on one screen, reading as opposites
+- Found in: Phase 6 / pre-checkpoint
+- Found by: the builder, reading the whole of Now with the evidence open
+- Class: **DEF-0033's, and DEF-0022's before it** — two lines of one screen, each individually true, that a reader has no way to reconcile.
+- Reproduction: load "Nine months of evenings", open **See evidence** on Now. Directly above the panel: _"Reset a space has made little difference in situations like tonight."_ Inside it: _"How often clearing the kitchen made a difference afterwards — 67% — 8 of 12."_
+- Root cause: not an error in either. The line on Now is `learning.ts`'s belief — a weighted mean of the effect answers, where similarity to tonight decides the weight, and tonight is a weekend. The figure in the panel is the plain proportion of comparable evenings that made any difference, unweighted. They measure different things and the screen said nothing about that.
+- Fix: three parts, none of which suppresses either number. The panel now carries the same sentence Now shows, under "What the app took from them", with one line saying it leans hardest on the evenings most like tonight and can therefore be more cautious than the plain count. And the split line names which side tonight falls on — "6 of 6 on a weekday, 2 of 6 at the weekend. Tonight is at the weekend." — which is what the difference between the two numbers actually is.
+- Regression: `tests/synthetic/decision-evidence.test.ts` — "states the belief in the words Now already used, never a second version" (the panel's `concluded` must be `explanation.restsOn` on every scenario) and "says where it goes better, and says which set that figure is over". Both proved to fail when reintroduced.
+- Fixed in: the Phase 6 checkpoint
+
+### DEF-0038 — a count labelled in units its own card does not count
+
+- Status: Fixed
+- Severity: Major — a number described as something it is not, on the surface whose job is to be honest about numbers
+- Found in: Phase 6 / pre-checkpoint
+- Found by: the builder, opening the deeper view on each kind of card in turn
+- Class: **DEF-0033's** — one shared panel wording a value in a way that is right for one card and wrong for another.
+- Reproduction: load "Nine months of evenings", open **See the evidence** on the "Over time" card: "12 comparable occasions, between 8 January and 12 November." The twelve are nightly sleep readings. Nothing was compared to anything. The same sentence appeared on the life-season card, where the count was of entries predating a standing arrangement.
+- Root cause: the surface composed the sentence from `PatternEvidence.comparable`, a number it could render but could not know the units of.
+- Fix: `PatternEvidence.counted` is a sentence, written by whichever card built the evidence, in the units that card counts — and absent on the three kinds whose own detail line already says it, rather than repeated one tap lower.
+- Regression: `tests/synthetic/insights.test.ts` — "says what a count is of, in the units that card actually counts", which requires the sentence on every belief-bearing card and forbids it on every reading-style one. Proved to fail when a trajectory is given a count of "comparable occasions".
+- Fixed in: the Phase 6 checkpoint
+
+### DEF-0037 — a machine identifier where a person expects a date
+
+- Status: Fixed
+- Severity: Major — an identifier on the surface section 27 asks to be readable without research language
+- Found in: Phase 6 / pre-checkpoint
+- Found by: the builder, reading the deeper view
+- Class: **DEF-0029's** — a value rendered without the thing that makes it legible, on a surface where nothing else supplies it.
+- Reproduction: open any Insight's evidence: "12 comparable occasions, between 2026-01-08 and 2026-11-12."
+- Root cause: `PatternEvidence.window` holds `LocalDayId`s, which are identifiers by design (section 15 — a day id is derived and never an instant), and the sentence interpolated them directly.
+- Fix: `describeDay` everywhere a day reaches owner-facing text — "8 January" — with the window kept as ids in the data for anything that needs to compare them.
+- Regression: `tests/synthetic/insights.test.ts` — "puts no machine identifier where a person expects a date", swept over every owner-facing string an insight can produce, so a new card composing a sentence from a `dayId` fails there rather than on whichever history reaches it. See DEF-0041 for what the first version of this sweep turned out to be.
+- Fixed in: the Phase 6 checkpoint
+
+### DEF-0036 — a day heading came to rest behind the app bar
+
+- Status: Fixed
+- Severity: Major — sticky chrome covering content, which section 37 rules out by name
+- Found in: Phase 6 / pre-checkpoint
+- Found by: the builder, **measuring rather than looking** — a scripted geometry pass over the rendered surface at 375px
+- Class: two sticky elements in one scroll container, neither aware of the other.
+- Reproduction: Timeline on a long history at 375×812, scrolled to 1200px. A `.tl-day__label` sits at 8–38px; `.topbar` occupies 0–53px. The date rests underneath translucent chrome.
+- Root cause: `.tl-day__label` was `position: sticky; top: 0; z-index: 1`. The app bar is `position: sticky; top: 0; z-index: 20` in the same scroll container, so "top" for the heading is behind the bar.
+- Fix: the sticky positioning removed rather than corrected. Keeping it would have meant reproducing the bar's own safe-area arithmetic in a second file and keeping the two in step forever; day headings recur every few entries, so one that scrolls away costs nothing.
+- Regression: `tests/browser/timeline-insights.spec.ts` — "pins nothing of its own under the app bar", which asserts that no element inside Timeline computes to `position: sticky` or `fixed`. **The first version of this test was wrong and is worth recording:** it asserted that no heading ever intersects the bar, which cannot hold and should not — ordinary content scrolls under a sticky translucent bar by design — and it passed at 360px only because the scroll position happened to be kind, failing at 430px. What distinguishes the defect from normal scrolling is whether Timeline pins anything at all.
+- Fixed in: the Phase 6 checkpoint
+
+### DEF-0035 — the order within a day came from an arbitrary tiebreak
+
+- Status: Fixed
+- Severity: Major — the chronological surface reading as though it were not chronological
+- Found in: Phase 6 / pre-checkpoint
+- Found by: the builder, reading a whole page of Timeline on a long history
+- Class: a sort that ignores half of the canonical order and lets an identifier decide the rest.
+- Reproduction: Timeline on "Nine months of evenings". On 4 November the day reads "Done" then "Suggested"; on 19 September the same pair reads "Suggested" then "Done". Same fixture, same shape of episode.
+- Root cause: every event in one session shares an `occurredAt` — that is what `occurredAt` means (the moment being reasoned about, D-037) — so the whole order within a day fell to the tiebreak, which was the record id and carries no meaning.
+- Fix: `-compareRecordOrder(a, b)`, the canonical order reversed. `compareRecordOrder` is when it happened, then when it was written down, then the id; reversing it puts what was written last at the top, which is what a reverse-chronological list means.
+- Regression: `tests/synthetic/timeline.test.ts` — "reads a day in one consistent order rather than an arbitrary one", asserted across every scenario in the library rather than on the two dates that showed it.
+- Fixed in: the Phase 6 checkpoint
+
+### DEF-0034 — the record described the schema rather than what happened
+
+- Status: Fixed
+- Severity: Major — generic language section 4.6 asks the app not to settle for, over most of a surface
+- Found in: Phase 6 / pre-checkpoint
+- Found by: the builder, reading a whole page of Timeline
+- Class: **DEF-0028's, arriving at the scale that makes it a wall.** The repair for DEF-0028 appended the resolved subject to a generic sentence — "Followed through on a suggestion here — the kitchen." — which was tolerable on a domain page where a handful sit under a heading that already supplies the area.
+- Reproduction: Timeline on "Nine months of evenings". Four lines a day, most of the screen: "Followed through on a suggestion here — a walk." / "Said what a suggestion here was worth — a walk." / "Said how far a suggestion here got — your sister." The subject was resolved and the sentence was still about the app's own record shape. Worse, an outcome row said nothing about the answer: "Said what a suggestion here was worth" over an evening the owner had marked as having backfired.
+- Root cause: the sentence was written for a panel with a heading above it and reused on a surface with none, and the outcome's `observation` — the thing the owner actually said — was never read.
+- Fix: the line names the move and states the answer, and both halves are read rather than composed. The move's name comes from the same table Insights uses (`patternNameFor`); the answer comes from the same table the button was rendered from (`outcomeAnswerLabel`, new in `outcomes.ts`) — DEF-0020's own sibling rule that "the words on the button and the words in the trace have to mean the same thing". Which of the three questions an outcome answers is carried by the sentence rather than by a tag, because a domain page shows no tag. Where the reference cannot be resolved the generic sentence stands, unchanged (D-018).
+- Regression: `tests/synthetic/timeline.test.ts` — "says what became of a suggestion by naming the suggestion" (no line about an episode may say "a suggestion here" while the reference resolves), "tells a result, an effect and a comfort apart in the sentence itself", and "says what the owner answered, in the words the button used". Phase 5's own DEF-0028 regression was rewritten to assert the rule rather than the sentences the first repair happened to produce — it would otherwise have failed for an improvement, which is the failure mode DEF-0020's repair records.
+- Fixed in: the Phase 6 checkpoint
+
 ### DEF-0033 — a domain's calm word and a concept's own tag answered different questions
 
 - Status: Fixed

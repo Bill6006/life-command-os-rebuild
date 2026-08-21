@@ -135,18 +135,9 @@ export function TimelineScreen() {
             is unaffected.
           </p>
           <ul className="tl-damaged" data-testid="tl-damaged">
-            {data.unreadable.map((row) => (
-              <li key={`bad-${row.index}`}>
-                <span className="tl-damaged__where">
-                  Row {row.index + 1}
-                  {row.id === undefined ? '' : ` (${row.id})`}
-                </span>
-                <span className="tl-damaged__why">{row.problem}</span>
-              </li>
-            ))}
-            {data.tangled.map((row) => (
-              <li key={`tangled-${row.id ?? row.index}`}>
-                <span className="tl-damaged__where">{row.id ?? 'An entry'}</span>
+            {[...data.unreadable, ...data.tangled].map((row, index) => (
+              <li key={`${row.where}-${index}`}>
+                <span className="tl-damaged__where">{row.where}</span>
                 <span className="tl-damaged__why">{row.problem}</span>
               </li>
             ))}

@@ -212,6 +212,23 @@ describe('the record kinds an owner reads chronologically', () => {
     }
   })
 
+  it('does not call a temporary exception a standing arrangement', () => {
+    /*
+     * Found on the deployed build by reading a row: a situational context
+     * rendered "Standing — child with the owner: no — for now", the tag saying
+     * one thing and the sentence saying its opposite on one line. DEF-0033's
+     * class at the smallest possible scale.
+     */
+    const entries = allEntries('durable-custody')
+    const standing = entries.filter((entry) => entry.tag === 'Standing')
+    const temporary = entries.filter((entry) => entry.tag === 'Temporary')
+
+    expect(standing.length, 'no durable context on a history built around one').toBeGreaterThan(0)
+    expect(temporary.length, 'no situational exception on the week-away history').toBeGreaterThan(0)
+    for (const entry of standing) expect(entry.text, entry.text).not.toContain('for now')
+    for (const entry of temporary) expect(entry.text, entry.text).toContain('for now')
+  })
+
   it('shows a correction as a withdrawal and marks what replaced something', () => {
     const data = timelineFor('corrections')
     const entries = data.days.flatMap((day) => day.entries)
@@ -282,8 +299,38 @@ describe('a file with damage in it', () => {
   it('reports the unreadable rows rather than dropping them', () => {
     expect(data.unreadable.length).toBeGreaterThan(0)
     for (const row of data.unreadable) {
+      expect(row.where, 'no way to find the row in the file').toMatch(/^(Record|Entity) row \d+$/)
       expect(row.problem.length).toBeGreaterThan(0)
-      expect(row.index).toBeGreaterThanOrEqual(0)
+    }
+  })
+
+  it('says which list a bad row came from, and reports both', () => {
+    /*
+     * Records and entities are parsed from two arrays, each row's index is
+     * relative to its own, and this fixture damages both. Numbering them all
+     * "Row N" put a "Row 1" and a "Row 6" in one list with nothing saying they
+     * were counted from different places.
+     */
+    const wheres = data.unreadable.map((row) => row.where)
+    expect(wheres.some((where) => where.startsWith('Record row'))).toBe(true)
+    expect(wheres.some((where) => where.startsWith('Entity row'))).toBe(true)
+  })
+
+  it('reports the damage without the parser talking to the owner', () => {
+    /*
+     * Section 36: "errors should be visible but concise; detailed technical
+     * diagnostics belong behind inspection". The first version printed the
+     * validator's own words — "missing a non-empty string (records[6].id), and
+     * 8 other problems" — on a primary surface. The QA laboratory already
+     * lists every issue with its path, which is where that belongs.
+     */
+    for (const row of [...data.unreadable, ...data.tangled]) {
+      const text = `${row.where} ${row.problem}`
+      expect(text, text).not.toMatch(
+        new RegExp(String.raw`records\[|entities\[|\.id\b|ISO-8601|non-empty`),
+      )
+      // And no record identifier either.
+      expect(text, text).not.toMatch(new RegExp(String.raw`\b[A-Z0-9]{20,}\b`))
     }
   })
 

@@ -20,6 +20,290 @@ reopens Phase 4 or any completed phase.
 
 ---
 
+# Phase 6 — Timeline + Insights
+
+**Status: YELLOW — READY FOR INDEPENDENT QA.**
+
+Section 51's goal is one sentence: make memory and learning visible without
+turning the normal experience into a statistics dashboard. Three surfaces
+carry it — Timeline, Insights, and a compact **See evidence** on Now — and
+the hard part was never the wiring. It is what is honest to show.
+
+Per D-077 this checkpoint does not self-certify. Everything below is the
+builder's own gate — unit, contract, synthetic, adversarial, browser, a
+clean-checkout `npm run verify`, a privacy scan, CI, the deployed Preview
+SHA matching this checkpoint, and the builder's own Android-style pass
+against that deployed Preview. Independent QA has not run.
+
+## The problem this phase actually had to solve
+
+DEF-0020 was four different facts collapsing into one carrier, because
+nothing stopped them. Section 51 exists because that defect has an obvious
+second form:
+
+> Any percentage must identify the quantity it measures. Do not merge direct
+> result, downstream effect, comfort/friction, or follow-through into one
+> generic success statistic.
+
+So there is no success rate in this phase and no type that could hold one. A
+`MeasuredRate` carries the aspect it measures, a sentence naming that
+quantity in ordinary words, and its own numerator and denominator — and
+exactly one component in the whole app can render one, taking the whole rate
+(D-084). Printing a figure without the sentence beside it is not something a
+caller is able to do, and a guard fails the build if a second place learns
+how.
+
+Below four comparable occasions the figure is withheld with the reason and
+the count. That threshold is defensible rather than round: `PATIENCE` in
+`learning.ts` is 3, the point where observation starts outweighing the
+starting belief, so a figure the app is willing to _print_ should rest on
+more than it takes to move a belief a quarter of the way. A test asserts the
+relationship rather than the number.
+
+## What the builder's own gate found — eight defects, none from an assertion
+
+**DEF-0034 to DEF-0041**, all found by reading the assembled screens or by
+measuring them, none reported by a failing test. Two are worth naming here.
+
+**DEF-0039** is the one that matters. Now said _"Reset a space has made
+little difference in situations like tonight"_ directly above a panel
+reporting _"How often clearing the kitchen made a difference afterwards —
+67% — 8 of 12."_ Neither is wrong. The line on Now is the belief, weighted
+by how much each evening resembles tonight, and tonight is a weekend; the
+figure is the plain proportion across every comparable evening. They measure
+different things and the screen said nothing about that. The fix suppresses
+neither: the panel carries the same sentence Now uses, and the split line
+now names which side tonight falls on — _"6 of 6 on a weekday, 2 of 6 at the
+weekend. Tonight is at the weekend."_ — which is what the difference between
+the two numbers actually was.
+
+**DEF-0041 is the reason the reintroduction step is not a formality.** The
+sweep written for DEF-0037 passed with DEF-0037 still in place: its regex
+had been corrupted into a pair of literal backspace characters and could
+never match anything. It read correctly, exercised the right strings, and
+was decoration. A repository-wide sweep for stray control characters found
+one other, in `src/domain/ids.ts`, which is a deliberate hash separator and
+correct.
+
+**Nineteen defects were reintroduced one at a time. All nineteen were
+caught.**
+
+## Build identity
+
+|                      |                                                                            |
+| -------------------- | -------------------------------------------------------------------------- |
+| Checkpoint SHA       | `df06a12` — the product checkpoint every result below was measured against |
+| Closing SHA          | current `main` HEAD — documentation only past `df06a12`, no product code   |
+| Deployed Preview SHA | identical to `main` HEAD                                                   |
+| Do they match?       | Yes, by construction — D-004, and asserted live in CI                      |
+| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/                |
+| Live proof           | `preview/build-info.json`                                                  |
+
+## Verification
+
+| Gate                                      | Result                                              |
+| ----------------------------------------- | --------------------------------------------------- |
+| Privacy scan                              | Clean, 159 tracked files                            |
+| Format (Prettier)                         | Pass                                                |
+| Lint (ESLint)                             | Pass, 0 warnings                                    |
+| Typecheck (strict TS)                     | Pass, 0 errors                                      |
+| Unit / contract / synthetic / adversarial | 697 passed / 697, 42 files (in plain Node, no DOM)  |
+| Browser tests (Playwright)                | 288 passed / 288 — 96 tests × 360, 430, 1280px      |
+| Production build                          | Pass                                                |
+| `npm run verify` from a clean checkout    | Pass                                                |
+| Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand          |
+| Reintroduction pass                       | 19 defects reintroduced one at a time; 19 caught    |
+| Builder's own Android-style gate          | Pass — see below                                    |
+| Independent QA (D-077)                    | **Not run. This is what the phase is waiting for.** |
+
+### Where the 697 sit
+
+Phase 5 ended at 610. The 87 new ones are four new suites plus growth in the
+library-wide sweeps, and the second half is worth noting: several existing
+suites grew without being edited, because they walk every scenario and the
+library gained one.
+
+| Suite                                                                  | Tests |
+| ---------------------------------------------------------------------- | ----: |
+| `synthetic/insights.test.ts` — the rate rules, and the gate claims     |    29 |
+| `synthetic/timeline.test.ts` — section 26, rule by rule                |    28 |
+| `synthetic/decision-evidence.test.ts` — Now's panel reads the decision |    15 |
+| `unit/insights-copy.test.ts` — the copy tables, swept                  |    10 |
+| `unit/architecture-guards.test.ts` — five new guards                   |    +5 |
+| existing sweeps, over the new long history                             |    +6 |
+
+Browser: `tests/browser/timeline-insights.spec.ts`, 24 tests × 3 viewports =
+72 new, on top of the 216 already in `shell.spec.ts`, `now.spec.ts`,
+`qa-lab.spec.ts` and `life-domain.spec.ts` — all unchanged, all still green.
+
+## Gate checklist (section 51, and the phase brief)
+
+| Requirement                                                                | Status                                                                                                                              |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| The fourteen existing golden scenarios still pass, unchanged               | Pass — none of their files changed this phase                                                                                       |
+| Timeline renders real canonical history for the kinds that matter          | Pass — all twenty record kinds have a line and a word; swept across every history in the library                                    |
+| Malformed rows isolated rather than breaking the surface                   | Pass — reported apart from the record, undated, and every rendered entry traces to a record the store accepted                      |
+| At least one Insight card from real synthetic learning history             | Pass — six cards on "Nine months of evenings", one on "A month of what actually worked"                                             |
+| …and it demonstrably changes when a counterexample is added                | Pass — `insights.test.ts` "one counterexample, and what it changes": the kind, the headline, the figure and the confidence all move |
+| "See evidence" opens real evidence for the actual current recommendation   | Pass — every field read off the decision's own explanation, evaluation and trace; asserted across the whole library                 |
+| No percentage without a defensible sample and a named measured aspect      | Pass — structurally (one renderer, taking the whole rate) and by sweep over every figure the library can produce                    |
+| At least one synthetic scenario proves the "not enough evidence yet" state | Pass — two: the withheld figure on a lab with two results, and "Still gathering" on a move with two occasions                       |
+| Private-domain discretion holds on Timeline                                | Pass — the row stays, the detail is withheld, and there is no control anywhere that could reveal it                                 |
+| CI green: privacy scan, format, lint, typecheck, unit, browser, build      | Pass                                                                                                                                |
+| `npm run verify` passes from a clean checkout                              | Pass                                                                                                                                |
+| Preview deploys automatically, deployed SHA equals checkpoint SHA          | Pass                                                                                                                                |
+| Builder's own Android-style mobile pass against the deployed Preview       | Pass — 360×780 and 375×812, touch, mobile UA, device pixel ratio 3                                                                  |
+| Independent QA (required from Phase 5 on, D-077)                           | **Outstanding — this phase is YELLOW until it passes**                                                                              |
+
+## What changed
+
+### `src/intelligence/insights.ts` — the rules that decide when a number is honest
+
+Reads what has been learned and turns it into cards. It builds no learning
+index: the beliefs come off `situation.learning`, the object the decision on
+Now was made from, and the raw counts are taken over the episode set that
+index itself selects. Two definitions of "a situation like this one" would
+eventually disagree, and the owner would have no way to tell which screen
+was lying — D-071's argument for coverage, applied to a second reader
+(D-085).
+
+Ten kinds of card, covering section 27's list. Two orderings turned out to
+be load-bearing and are asserted rather than commented. A card leads with
+the aspect that _means_ most, not the one with the most evidence: with
+follow-through first, one card read "has worked every time it has come up"
+over a figure that said only that it could be done. And a context split
+leads over the counterexample it explains (D-086).
+
+`evidenceForDecision` is the same discipline pointed at Now: every field
+comes from the decision the surface already has, so there is nothing on that
+panel to disagree with.
+
+### `src/features/timeline/` — the record, with nothing to press
+
+Days, newest first, in the canonical order reversed. Timeline is the only
+primary destination with no action on it at all, which is how section 26's
+"never create a phantom actionable item from corrupt data" is held: there is
+nothing for a corrupt row to produce (D-087). Unreadable rows are reported
+apart from the record, undated and unsorted, because they have no date and
+no meaning. No filter — section 51's own "if actually needed, not by
+default".
+
+### `src/features/history/describe.ts` — one line per record, written once
+
+Shared by Timeline and a domain page's "Recently" panel, which differ only
+in which record kinds they ask for and what discretion they owe (D-088).
+Every line reads correctly with no tag beside it, because a domain page
+shows none.
+
+### `src/features/evidence/` — the only place a figure is rendered
+
+One component, taking the whole `MeasuredRate`. Used by both Insights and
+Now, so the two surfaces cannot drift apart on how a number is worded.
+
+### `src/synthetic/scenarios.ts` — "Nine months of evenings"
+
+The history section 51's gate needs and the library did not have: twelve
+evenings clearing the kitchen that split cleanly on the kind of evening, ten
+walks that reverse across the year, six labs that mostly never happened, and
+a result and a comfort that disagree about the same five episodes.
+
+**Product behaviour changed:** yes — two shells became real surfaces, and
+Now gained one closed link.
+**Semantic behaviour changed:** no. Nothing here decides anything, no
+ranking moved, and no golden scenario's outcome changed.
+
+## Phone check (what to look at)
+
+Open Preview. Header → **More** → **Open the QA laboratory**, load "Nine
+months of evenings".
+
+1. **Insights, closed.** Six cards, six sentences, no figure anywhere on the
+   screen. Judge whether each one is something you would want to be told.
+2. **One card, opened.** Tap "See the evidence" under _Clearing the kitchen
+   goes better on a weekday than at the weekend._ Every figure should say
+   what it measures and how many it is over.
+3. **Now, and the thing under it.** Tap **See evidence**. Read the whole
+   panel against the sentence directly above it — the app's conclusion, the
+   plain counts, and the line saying which side of the split tonight is on.
+   That relationship is DEF-0039 and it is the thing most worth a second
+   opinion.
+4. **Timeline.** Scroll a full page. Does it read as a record of a life or
+   as a log?
+5. **"A file with damage in it"**, then Timeline. The readable history, and
+   the broken rows reported separately with nothing to press.
+6. **"Two ordinary weeks"**, then Timeline. One row reads _Private entry_.
+   The thing it is about should be nowhere on the screen.
+7. **"One answer, and a lot of silence"**, then Insights. It should say it
+   has nothing worth saying, and mean it.
+
+## Deliberately not built
+
+- **Filters on Timeline.** Section 51 asks for them "if actually needed, not
+  by default", and on every history in the library the day headings and a
+  growing page do the work one would (D-087).
+- **A reveal control for private detail on Timeline.** `privacy.ts` supports
+  it and no surface offers it. Section 11 keeps explicit private detail off
+  primary surfaces; the domain page is where the owner goes for it.
+- **A peak-state likelihood.** Section 51 lists it as something the deeper
+  view "may eventually include". Nothing in the current model defines that
+  quantity well enough to put a number on, and inventing one to fill the
+  slot is what the rest of this phase is arranged against.
+- **Correcting an insight in any way other than rejecting the belief.** The
+  existing `belief-correction` watershed is offered on every card that
+  concludes something. A card cannot yet be edited, scoped or annotated.
+- **Rebuilding a domain page's "Recently" panel** to match Timeline. The
+  owner deferred it; what is shared is the wording of a line, not the panel
+  (D-088).
+- Exports, backup and restore (Phase 7), the legacy importer (Phase 8), the
+  service worker (Phase 10).
+
+## Open defects
+
+None. Eight were found and closed during the phase — DEF-0034 to DEF-0041 in
+[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md) — and not one came from a failing
+assertion. Six came from reading the assembled screens, one from measuring
+them, and one from the reintroduction pass discovering that a guard could
+not fail.
+
+## Deferred, with reasons
+
+Unchanged and reconfirmed. Nothing in this phase touched the guide, the
+lifecycle or the ranking.
+
+From Phase 4:
+
+- **P4-6 — the no-action eyebrow** renders a whole sentence in an uppercase
+  micro-label slot.
+- **P4-7 — the More button is 81×36** (re-measured this phase at 80.6×36),
+  below the 44px minimum. It remains the only sub-44px control on any
+  surface: a geometry pass over Timeline, Insights and Now's evidence panel
+  at 375×812 found no others.
+- **A started move that is never settled** stays "Under way" indefinitely.
+
+From Phase 5:
+
+- **An inline Life-area link** is below a 44px touch target, deliberately.
+- **Creating a brand-new goal from a domain page** is not supported.
+- **No domain page offers a dated situational-exception control.**
+- **"Recent changes" on a domain page is domain-scoped, not chronological.**
+
+And the older ones, also unchanged: the older ranking dimensions still cost
+weight when they know nothing; `hold` is still never generated; free-text
+constraints are still shown rather than enforced; Emotional Health still has
+no standing concept.
+
+## Decisions made
+
+D-084 to D-088 in [`DECISION_LOG.md`](DECISION_LOG.md).
+
+## Next
+
+**Independent QA** (D-077), in a **new** conversation, against this deployed
+checkpoint. Report path `docs/qa/PHASE_06_QA_HANDOFF.md`. See
+[`NEXT_PROMPT.md`](NEXT_PROMPT.md) for the complete prompt.
+
+---
+
 # Phase 5 — the Life domain experience
 
 **Status: GREEN — independent QA passed.**
@@ -362,9 +646,8 @@ D-081 and D-082 in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Next
 
-Phase 6 — Timeline + Insights (canonical plan section 51), normally in a
-**new** builder conversation. See [`NEXT_PROMPT.md`](NEXT_PROMPT.md) for the
-copy/paste kickoff prompt.
+Phase 6 — Timeline + Insights (canonical plan section 51). Built; the entry
+above carries its acceptance report.
 
 ---
 

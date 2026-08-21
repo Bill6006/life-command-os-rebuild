@@ -215,6 +215,15 @@ export interface PatternEvidence {
   readonly rates: readonly MeasuredRate[]
   readonly counterexamples: readonly EvidenceLine[]
   readonly included: readonly EvidenceLine[]
+  /**
+   * What to call the list above, when "everything counted" is not what it is.
+   *
+   * A coverage card's list is what is overdue and a trajectory's is every
+   * reading — neither was counted toward anything, and the fixed heading said
+   * they were. Same shape of mislabelling as `counted` (DEF-0038), on the
+   * block underneath it.
+   */
+  readonly includedTitle: string | undefined
   /** Occasions deliberately left out, each saying why. */
   readonly excluded: readonly EvidenceLine[]
   readonly strongerIn: string | undefined
@@ -862,6 +871,7 @@ function evidenceFor(
     rates: ratesFor(episodes, subject),
     counterexamples: [...counterexamples.values()],
     included: episodes.map((episode) => lineFor(episode, describeEpisodeOutcome(episode))),
+    includedTitle: undefined,
     excluded: extras.excluded ?? [],
     strongerIn: extras.strongerIn ?? worked.strongerIn,
     weakerIn: extras.weakerIn ?? worked.weakerIn,
@@ -1293,6 +1303,7 @@ function coverageCards(situation: Situation): readonly Built[] {
     rates: [],
     counterexamples: [],
     included: lines,
+    includedTitle: 'What is overdue here',
     excluded: [],
     strongerIn: undefined,
     weakerIn: undefined,
@@ -1504,6 +1515,7 @@ function trajectoryCards(situation: Situation): readonly Built[] {
             when: reading.dayId,
             text: `${describeDay(reading.dayId)} — ${round(reading.value)}${held.unit}`,
           })),
+          includedTitle: 'Every reading',
           excluded: [],
           strongerIn: undefined,
           weakerIn: undefined,
@@ -1573,6 +1585,7 @@ function lifeSeasonCards(situation: Situation): readonly Built[] {
           rates: [],
           counterexamples: [],
           included: [],
+          includedTitle: undefined,
           excluded: [],
           strongerIn: undefined,
           weakerIn: undefined,

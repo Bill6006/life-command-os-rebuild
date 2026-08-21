@@ -73,6 +73,19 @@ shows is the object the decision on Now was made from rather than a second
 computation over the same history. Two of those would eventually disagree, and
 the owner would have no way to tell which screen was lying.
 
+Phase 6 added `insights`, and it is the sharpest test of that line yet: it reads
+what has been _learned_, which is exactly why `learning` is closed. It is open
+anyway, because it does not have the property the closure exists to prevent. A
+surface reading `learning` directly could put a number on screen the arbitration
+never saw; `insights` cannot, because it never builds an index — it is handed
+`situation.learning`, the one the decision was made from, and takes its raw
+counts over the episode set that same index selects (`comparableEpisodes`, now
+exported from `learning.ts` for that purpose). Three imports are forbidden to it
+and the guard fails the build on each: the deciding pipeline, so it has nowhere
+to obtain a recommendation; `renderRecommendation`, so a card physically cannot
+print an instruction; and `buildLearning`, so it cannot compute a belief of its
+own (D-085).
+
 Three further boundaries hold inside the folder:
 
 - the evaluator and the arbiter know no life area by name (D-030) — they judge
@@ -84,8 +97,8 @@ Three further boundaries hold inside the folder:
   by the code paths not meeting rather than by anyone remembering them.
 
 _Created in Phase 2. Phase 3 added `lifecycle.ts`, `outcomes.ts`, `learning.ts`
-and `corrections.ts`. Phase 4 added `coverage.ts`, `derived.ts` and
-`growth.ts`._
+and `corrections.ts`. Phase 4 added `coverage.ts`, `derived.ts` and `growth.ts`.
+Phase 6 added `insights.ts`._
 
 ## `src/features/` — owner surfaces
 
@@ -107,6 +120,23 @@ _Now, Life, Timeline, Insights and More exist as shells from Phase 0. The QA
 laboratory arrived in Phase 1: it lives behind More, loads as its own chunk, and
 resolves to Now in a production build. Phase 2 gave Now a real engine and the
 adaptive guide, and took More out of the bottom bar (D-028)._
+
+**One rule about numbers is enforced here rather than remembered.** Exactly one
+component may render a percentage — `src/features/evidence/EvidencePieces.tsx` —
+and it takes the whole `MeasuredRate`, so the figure, the sentence naming what
+it measures, and the count it is over cannot be separated on the way to a
+screen. Every other owner surface fails the build on a per-cent sign or on
+multiplying by a hundred; the QA laboratory is exempt because its job is the
+machinery (D-084, section 51).
+
+_Phase 6 added `src/features/timeline/`, `src/features/insights/`,
+`src/features/evidence/` (the shared deeper-evidence components) and
+`src/features/history/` (`describe.ts` — one canonical record as one line,
+shared by Timeline and a domain page's "Recently" panel, which differ only in
+which record kinds they ask for and what discretion they owe, D-088). Timeline
+is the only primary destination with no action on it at all, which is how
+section 26's "never create a phantom actionable item from corrupt data" is held
+— there is nothing on the surface for a corrupt row to produce (D-087)._
 
 _Phase 5 added the ten domain pages under `src/features/life/`. `domainPages.ts`
 is a plain feature-local module, not part of `src/intelligence/` — it decides
