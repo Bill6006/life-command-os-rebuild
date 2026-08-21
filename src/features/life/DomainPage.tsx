@@ -312,7 +312,11 @@ function CoveragePanel({
   onReviewed: () => void
   onSubmit: (summary: string) => void
 }) {
-  const canCorrect = coverage.status === 'stale' || coverage.status === 'quiet'
+  // Matches Life's own grouping (LifeScreen.tsx, D-075): only a stale area is
+  // asking for anything. "Quiet" already reads as calm and unflagged there —
+  // offering a correction for it here would ask the owner to confirm
+  // something the app never doubted.
+  const canCorrect = coverage.status === 'stale'
 
   return (
     <Panel title={showLabel ? coverage.label : 'How this stands'}>
