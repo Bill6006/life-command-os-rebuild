@@ -74,7 +74,14 @@
 
 /* Every area name opens its own page (section 50) — the wording carries the
    link rather than a chevron or a button, so the calm groups still read as a
-   row of names and not a row of controls. */
+   row of names and not a row of controls.
+
+   Deliberately not padded out to a 44px target. This is prose, not a row of
+   buttons: WCAG 2.5.5 exempts an inline link that is part of a sentence, and
+   an earlier attempt to pad the hit area on wrapped, comma-separated names
+   made adjacent links overlap — one tap could land on the neighbour rather
+   than the name under a thumb, which is worse than the small target it tried
+   to fix. */
 .life-area__link {
   color: inherit;
   text-decoration: none;
