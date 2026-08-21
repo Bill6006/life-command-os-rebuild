@@ -22,7 +22,7 @@ reopens Phase 4 or any completed phase.
 
 # Phase 5 — the Life domain experience
 
-**Status: YELLOW — READY FOR INDEPENDENT QA.**
+**Status: GREEN — independent QA passed.**
 
 Section 50's goal is one sentence: give the owner optional deep inspection
 without fragmenting the brain. Ten pages, reachable from Life and nowhere
@@ -91,23 +91,85 @@ start. That gap predates D-082, recorded the same day: from here on, every QA
 run or retest carries its own complete next prompt automatically, on both PASS
 and FAIL ([`qa/README.md`](qa/README.md) section 3a).
 
+## Independent QA — round 2 (retest): PASS
+
+The same QA conversation retested repaired checkpoint `8d06dae` (deployed at
+`72c6d9f`, documentation-only past the repair) against each finding's exact
+original repro steps rather than against the builder's account of the fix —
+full retest record in [`qa/PHASE_05_QA_HANDOFF.md`](qa/PHASE_05_QA_HANDOFF.md),
+"Round 2 — retest". All three findings verified fixed:
+
+- **QA-B1** — `#/more` reads Phase 5, correct "Next," and a summary sentence
+  QA confirmed accurate against what both rounds actually exercised. The QA
+  lab's own eyebrow reads "PHASE 5."
+- **QA-B2** — verified in substance, not merely in wording: on Career (a
+  standing-concept domain), the pointer sentence replaces the two generic
+  buttons, and correcting the named concept still closes the loop
+  immediately. On a constructed Social case (no standing concept), the
+  original two buttons are still present and still work exactly as before —
+  confirming the fix did not regress the case it was never broken for. QA
+  also read the `coverage.ts` diff directly and confirmed the repair
+  changed nothing about the staleness computation itself, only which
+  control `DomainPage.tsx` offers.
+- **QA-M1** — the domain-level sentence no longer claims "nothing has gone
+  out of date"; the concept-level tag is unchanged and still visible
+  immediately below it. The contradiction is gone without the freshness
+  signal being hidden.
+
+One scope correction QA made to its own round-1 report: QA-B2 affects
+**seven** of the ten pages, not eight — Fatherhood's only standing concept
+(`custodyArrangement`) is durable and, per D-061, can never be neglected, so
+it was never actually reachable by this defect. `DEF-0032` already recorded
+seven; round 1's narrative text said eight. Corrected for the record; the
+verdict is unaffected.
+
+Nothing in round 1's PASS list regressed (spot-checked, not redone at full
+depth, per the retest prompt). No new findings. Every deferred item —
+P4-6, P4-7 (re-measured at 80.575×36), the never-settled started move, and
+the inline Life-area link (re-measured at 115.9×20.8) — reconfirmed
+unchanged, and none newly introduced by this phase.
+
+**Recommendation: PASS.** Per [`qa/README.md`](qa/README.md) §6, this
+closeout follows in the same response.
+
+## Formal GREEN closeout
+
+- **Final status:** GREEN.
+- **Approved checkpoint SHA:** `8d06dae` — the repaired product checkpoint
+  independent QA retested and passed.
+- **Closing SHA:** current `main` HEAD — documentation only past `8d06dae`
+  (this closeout included); no product code changes.
+- **Deployed Preview SHA:** identical to `main` HEAD, asserted live in CI and
+  confirmed by hand against `preview/build-info.json`.
+- **Verification:** 610/610 unit·contract·synthetic·adversarial, 216/216
+  browser (3 viewports), clean privacy scan, clean `npm run verify` from a
+  checkout, green CI — all unchanged since the repaired checkpoint, since
+  nothing after it touched `src/` or `tests/`.
+- **QA report path:** [`qa/PHASE_05_QA_HANDOFF.md`](qa/PHASE_05_QA_HANDOFF.md).
+  **SHA QA tested:** `72c6d9f` (at/after `8d06dae`). **Result:** PASS.
+- **Deferred and open items:** P4-6, P4-7, the never-settled started move,
+  and the sub-44px inline Life-area link all remain, all reconfirmed
+  unchanged by both QA rounds. No new deferrals from this phase. Zero open
+  defects — DEF-0028 through DEF-0033 are all Fixed in
+  [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
+- **Decisions made:** D-081, D-082.
+
 ## Build identity
 
 |                      |                                                                          |
 | -------------------- | ------------------------------------------------------------------------ |
-| Verified product SHA | `8d06dae` — the repaired checkpoint; where the retest below should run   |
-| Prior tested SHA     | `34e03b6` — what independent QA's round 1 (FAIL) actually tested         |
+| Approved checkpoint  | `8d06dae` — the repaired build QA's retest passed                        |
+| Round 1 tested SHA   | `34e03b6` — FAIL (QA-B1, QA-B2, QA-M1)                                   |
+| Round 2 (retest) SHA | `72c6d9f` — PASS, at/after `8d06dae`                                     |
 | Checkpoint SHA       | current `main` HEAD — documentation only past `8d06dae`, no product code |
 | Deployed Preview SHA | identical to `main` HEAD                                                 |
 | Do they match?       | Yes, by construction — D-004, and asserted live in CI                    |
 | Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/              |
 | Live proof           | `preview/build-info.json`                                                |
 
-Test whatever `main` HEAD is at the moment of testing, confirmed against
-`preview/build-info.json`. `8d06dae` is pinned above because it is the exact
-repaired SHA every verification result below was measured against, including
-a fresh Android-style pass confirming all three fixes live; nothing
-observable has changed since.
+`8d06dae` is pinned above because it is the exact repaired SHA every
+verification result below was measured against, including the Android-style
+pass and both QA rounds; nothing observable has changed since.
 
 ## Verification
 
@@ -154,6 +216,7 @@ still green.
 | `npm run verify` passes from a clean checkout                         | Pass                                                                                                                                                                                                      |
 | Preview deploys automatically, deployed SHA equals checkpoint SHA     | Pass                                                                                                                                                                                                      |
 | Builder's own Android-style mobile pass against the deployed Preview  | Pass — 360×780, touch, mobile UA; six findings across two rounds, all fixed (DEF-0028–0033) — see "Independent QA — round 1" above                                                                        |
+| Independent QA (required from Phase 5 on, D-077)                      | **PASS** — round 2 retest, checkpoint `8d06dae` deployed at `72c6d9f`; report at `qa/PHASE_05_QA_HANDOFF.md`                                                                                              |
 
 ## What changed
 
@@ -299,10 +362,9 @@ D-081 and D-082 in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Next
 
-Independent QA retest, in the same conversation that produced
-[`qa/PHASE_05_QA_HANDOFF.md`](qa/PHASE_05_QA_HANDOFF.md), against repaired
-checkpoint `8d06dae`. See [`NEXT_PROMPT.md`](NEXT_PROMPT.md) for the
-copy/paste retest prompt.
+Phase 6 — Timeline + Insights (canonical plan section 51), normally in a
+**new** builder conversation. See [`NEXT_PROMPT.md`](NEXT_PROMPT.md) for the
+copy/paste kickoff prompt.
 
 ---
 
