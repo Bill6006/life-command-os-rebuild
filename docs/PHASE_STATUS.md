@@ -2,6 +2,15 @@
 
 Report format: canonical plan section 58.
 
+**From Phase 5 onward, a builder conversation may not approve its own phase.**
+An implementation that believes it is finished reaches
+**YELLOW — READY FOR INDEPENDENT QA**, and a separate conversation tests the
+deployed checkpoint and writes `docs/qa/PHASE_XX_QA_HANDOFF.md` before anything
+becomes GREEN. Owner decision D-077; the protocol is [`qa/README.md`](qa/README.md).
+
+Phase 4 is the argument for it, and the record below is the evidence: every
+automated gate passed, and the phone found five defects afterwards.
+
 ---
 
 # Phase 4 — Coverage Engine + adaptive guides

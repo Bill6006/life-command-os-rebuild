@@ -1672,3 +1672,86 @@ still his eyes and not a script's.
 **Consequence:** later phases should run the Android context as part of the
 gate rather than instead of it. Phase 4 is the evidence for that: every defect
 it closed was invisible to 171 passing browser tests at three viewport widths.
+
+---
+
+## D-077 — A builder conversation may not approve its own phase
+
+**Phase:** 4 → permanent · **Status:** Active — **owner decision, governs every remaining build phase**
+
+From Phase 5 onward, a builder that believes an implementation is complete moves
+the phase to **YELLOW — READY FOR INDEPENDENT QA** and never to GREEN. A fresh
+conversation performs independent QA against the deployed checkpoint, writes
+`docs/qa/PHASE_XX_QA_HANDOFF.md`, and recommends PASS or FAIL. QA tests and may
+not change product code; the builder fixes and does not test its own repair. The
+loop repeats in the same QA conversation until QA passes, and only then does the
+owner return to the builder for the formal closeout.
+
+The full protocol is [`docs/qa/README.md`](qa/README.md).
+
+**Why:** Phase 4 is the argument. It passed everything it could measure — 574
+unit tests, 171 browser tests at three viewport widths, a clean-checkout verify,
+green CI, a matching Preview SHA — and then failed a phone gate on five counts,
+three of them blocking. **Not one came from a failing assertion.** The builder
+had written the tests, so the tests asked the questions the builder already knew
+to ask; the defects lived exactly where its attention had not been. DEF-0023 is
+the sharpest case: two individually correct halves of the ranking cancelling
+each other, which no assertion about either half could have caught.
+
+**Why a separate conversation rather than a second pass:** a reviewer who
+inherits the author's model of why something is correct re-checks what the
+author already checked. Section 43 already says an independent retest "may not
+be cleared by the same reasoning context that authored the repairs it is
+certifying" — this applies that rule one phase at a time instead of once at the
+end.
+
+**Why QA may not repair:** the moment the tester can fix, it stops looking for
+what it cannot fix, and the report stops being a record of what was actually
+wrong.
+
+**What it does not replace:** section 56's independent adversarial hardening.
+Per-phase QA asks whether this phase worked; section 56 asks whether the phases
+break each other once they all exist. Both remain.
+
+**Consequence for handoffs:** every builder response that ends a phase now
+carries the QA prompt without being asked, and every intelligence-level
+recommendation is the lowest level appropriate to the work rather than Max by
+default — High for ordinary implementation, UI, domain wiring, documentation and
+normal repairs; Max reserved for hard cross-system semantics, inference
+mathematics, privacy or migration architecture, and genuinely ambiguous
+root-cause work.
+
+---
+
+## D-078 — Eleven domains, ten baseline pages, and the pair that shares one
+
+**Phase:** 4 · **Status:** Active
+
+The model keeps **eleven** life domains. Phase 5 builds **ten** baseline pages.
+The difference is not a dropped domain: section 50's first page, **Health &
+Recovery**, covers two of section 4.1's domains — _Health & Physical Capacity_
+and _Sleep & Recovery_. Every other entry maps one-to-one under looser naming
+("Money" for _Money & Financial Resilience_, "Fatherhood / Adaya" for
+_Fatherhood / Family_, "Long-Range Direction" for _Long-Range Direction /
+Identity_).
+
+**Why the plan is consistent rather than contradictory:** section 4.1 is titled
+"Whole-life model, no domain shutoff" and is about the **model** — what the
+engine reasons over, and what may never be switched off. Section 50 is a list of
+**pages** — surfaces the owner navigates. A page is free to cover two domains
+where the domains are read together, and these two are: section 23's own
+Health / Physical Capacity list contains sleep, energy, soreness, recovery,
+movement and workout readiness in one breath, and the engine already fuses them
+in a single `Capacity` reading of hours slept, sleep debt, energy, soreness and
+strain.
+
+**Why it is worth a decision rather than a note:** the mismatch reads like an
+off-by-one, and the two ways of "fixing" it are both wrong. Building eleven
+pages splits a reading the engine takes as one. Building ten domains drops
+_Sleep & Recovery_ from the model, which section 4.1 forbids outright and which
+would silently break the coverage engine, the recovery limiter and G-005.
+
+**The rule for Phase 5:** all eleven domains stay in the registry, every one
+remains reportable on the Life overview, and every one is reachable from a page.
+Ten pages, none omitted, none duplicated, and the Health & Recovery page names
+both domains it covers.

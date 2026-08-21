@@ -155,3 +155,7 @@ Fixtures are synthetic only. Real owner data never enters this repository
 - `DEFECT_LEDGER.md` — verified defects and regressions
 - `NEXT_PROMPT.md` — the next intelligence level, conversation instruction and copy/paste prompt
 - `ARCHITECTURE_BOUNDARIES.md` — this file
+- `qa/README.md` — the independent QA protocol (D-077), which governs how a
+  phase reaches GREEN from Phase 5 onward
+- `qa/PHASE_XX_QA_HANDOFF.md` — one report per phase, written by the QA
+  conversation and read by the builder. Only QA writes these.
