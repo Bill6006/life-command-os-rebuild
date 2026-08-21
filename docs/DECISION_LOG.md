@@ -1839,3 +1839,56 @@ full rule and the required-fields list for both the builder's YELLOW handoff
 and the QA report's PASS/FAIL recommendation. `docs/NEXT_PROMPT.md` states the
 model outside its copy/paste prompt, same as it already does for intelligence
 level and conversation.
+
+---
+
+## D-081 — A domain page corrects a durable concept as context, and everything else as a fact
+
+**Phase:** 5 · **Status:** Active
+
+`factCorrectionRecord` and `contextCorrectionRecord` (`corrections.ts`) both
+correct a concept reading, and a domain page's correction control picks
+between them on one test: whether `ConceptDefinition.freshness.unit ===
+'durable'`. Only `custodyArrangement` sets it in the starting registry.
+Durable goes through `contextCorrectionRecord` with `durability: 'durable'`;
+everything else goes through `factCorrectionRecord`.
+
+**Why this is not a free choice.** `resolveOne` in `src/memory/facts.ts` picks
+its candidate pool by the highest `scopeTier` present — `context` records
+score 1 (durable) or 2 (situational), everything else scores 3 — and the
+highest tier wins **outright, regardless of date**. An `explicit-fact` is
+tier 3. Write one for `custodyArrangement`, whose freshness is `DURABLE` and
+therefore never ages out of `bucket.applicable`, and it would outrank every
+`context` record for that concept **forever**, including situational
+exceptions written after it. The mechanism that lets a temporary exception
+override a durable arrangement "for a window without erasing it" (section 8,
+G-02) depends on the override arriving as a `context` record; a fact
+correction on a durable concept would quietly turn that mechanism off for the
+rest of the concept's history.
+
+**Why `childPresent` still goes through `factCorrectionRecord`.** Its
+freshness is `localDays(1)`, not durable, so a fact correction there behaves
+exactly like tonight's guide answer already does: it wins for about a day and
+then ages out of `applicable`, at which point whatever `context` is currently
+in force — durable or situational — resumes answering the concept. That is
+the same "a statement about tonight beats a temporary arrangement, which
+beats a standing one" rule `situation.ts` already documents, so a domain-page
+correction of `childPresent` needed no new mechanism, only the existing one
+reached from a second surface.
+
+**Why the rule reads the registry rather than a hardcoded concept list.** A
+future durable concept — a home address, a standing work arrangement — gets
+the correct behaviour automatically, from the same `freshness` field that
+already governs everything else about how that concept ages. Naming
+`custodyArrangement` specifically in the domain page would be section 4.5's
+mistake in a new place: a rule that has to be remembered to be extended
+correctly rather than one that extends itself.
+
+**Consequence:** `tests/synthetic/domain-corrections.test.ts` proves the
+`context` half — a situational correction overriding a durable one for a
+window and reverting after — and the browser suite
+(`tests/browser/life-domain.spec.ts`) proves the closed-option control on
+`childPresent` writes and reads back correctly from the fatherhood page. No
+regression test proves the `explicit-fact`-outranks-context-forever failure
+directly, because `contextCorrectionRecord` makes it structurally
+unreachable from the domain page rather than merely discouraged.

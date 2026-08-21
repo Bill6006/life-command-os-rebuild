@@ -108,6 +108,14 @@ laboratory arrived in Phase 1: it lives behind More, loads as its own chunk, and
 resolves to Now in a production build. Phase 2 gave Now a real engine and the
 adaptive guide, and took More out of the bottom bar (D-028)._
 
+_Phase 5 added the ten domain pages under `src/features/life/`. `domainPages.ts`
+is a plain feature-local module, not part of `src/intelligence/` — it decides
+nothing, only groups a `Situation` (already assembled by the engine) by domain
+into what a page reads: coverage from `situation.coverage`, goals from
+`situation.direction.goals`, concept readings from `situation.view.facts`, and
+recent changes from `situation.view.history.effective`. A domain page's
+correction controls write through `corrections.ts`, already open to surfaces._
+
 ## `src/synthetic/` — invented histories
 
 The scenario library. No React, no DOM. Scenarios emit JSON documents rather
