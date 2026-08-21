@@ -383,12 +383,12 @@ export function rejectedBeliefs(view: MemoryView): ReadonlyMap<string, Instant> 
  * that is what new evidence means here — evidence the owner has not already
  * seen and disagreed with. It needs no threshold nobody chose.
  */
-function comparable(
+export function comparableEpisodes(
   episodes: readonly Episode[],
   verb: ActionVerb,
   context: DecisionContext,
-  moment: Moment,
-  after: Instant | undefined,
+  moment: { readonly now: Instant; readonly zone: TimeZoneId },
+  after?: Instant,
 ): readonly WeightedEpisode[] {
   const today = localDayIdAt(moment.now, moment.zone)
   const out: WeightedEpisode[] = []
@@ -411,6 +411,26 @@ function comparable(
   }
 
   return out
+}
+
+/**
+ * The same selection, under the name the rest of this file already used.
+ *
+ * Exported above rather than duplicated because **"a situation like this one"
+ * has to mean one thing.** `insights.ts` counts raw answers over the set a
+ * belief was computed from, and if it drew that set with its own filter the two
+ * would eventually disagree — the card would say "4 evenings like tonight" over
+ * a belief that had counted five. That is DEF-0033's shape with numbers instead
+ * of sentences, so there is one definition and both read it.
+ */
+function comparable(
+  episodes: readonly Episode[],
+  verb: ActionVerb,
+  context: DecisionContext,
+  moment: Moment,
+  after: Instant | undefined,
+): readonly WeightedEpisode[] {
+  return comparableEpisodes(episodes, verb, context, moment, after)
 }
 
 function shrink(prior: number, observed: number, n: number): { value: number; pull: number } {

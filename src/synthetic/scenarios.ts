@@ -2,7 +2,7 @@ import { CONCEPT } from '../domain/concepts'
 import { DOMAIN, type LifeDomainId } from '../domain/domains'
 import { entityRef, type SemanticEntity } from '../domain/entities'
 import { sequentialRecordIds } from '../domain/ids'
-import type { CanonicalRecord } from '../domain/records'
+import type { CanonicalRecord, DecisionContext } from '../domain/records'
 import { timeZone } from '../domain/time'
 import type { SnapshotWire } from '../memory/snapshot'
 import { createKit, pastEpisodeRecords, type Scenario } from './kit'
@@ -1778,6 +1778,368 @@ function careerGoneQuiet(): Scenario {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Section 51 — a long history, where context and later evidence change the story
+// ---------------------------------------------------------------------------
+
+/**
+ * Nine months of evenings, and three different things the record says.
+ *
+ * Phase 6's gate asks for a synthetic history long enough to prove two claims a
+ * month of evidence cannot: *context and combinations can change a pattern's
+ * interpretation*, and *counterexamples and later contradictory evidence can
+ * weaken or reverse an earlier learned pattern*. Both need a run with two
+ * distinguishable halves in it, so this history is built around three
+ * deliberately different shapes.
+ *
+ * **Clearing the kitchen splits on the evening rather than on the move.** Six
+ * weekday evenings alone, every one of which helped; six weekend evenings with
+ * his daughter in the house, four of which did not. The flat average across all
+ * twelve — two thirds — is true, and is the least informative reading
+ * available: it describes an evening that never happened. Both halves clear the
+ * minimum denominator on their own, which is what makes the split sayable
+ * rather than a story about one good week.
+ *
+ * **Walking reverses.** Six through the spring, every one of which made a
+ * difference; four through the autumn, one of which he said backfired. Nothing
+ * about the move changed. What the app believes about it has to be able to move
+ * back, and the same arithmetic that built the belief is what pulls it down —
+ * section 20's "learned effects should be reversible when later evidence
+ * contradicts them", with enough on both sides to tell a reversal from a bad
+ * week.
+ *
+ * **Labs are not a question about labs.** Four of six could not be done at all.
+ * That is evidence about his afternoons, and it lands on follow-through where
+ * section 20 puts it, never on whether a lab is worth doing.
+ *
+ * **Reaching out answers two questions at once.** It is the only history in the
+ * library where a result and a comfort are both recorded for the same episodes,
+ * and they deliberately disagree: the easiest one to make was the one that got
+ * nothing back. A single "success" figure would have to pick one of those and
+ * call it the answer, which is the collapse DEF-0020 exists to prevent.
+ *
+ * The sleep readings run the whole span so a trajectory has something real to
+ * describe, and the custody arrangement is written as durable context partway
+ * through so a life season has a start date the owner actually recorded rather
+ * than one the app inferred.
+ */
+function aLongRun(): Scenario {
+  const kit = createKit('GQ', 'America/Denver', '2026-01-02T12:00:00Z')
+  const nextId = sequentialRecordIds('GQX')
+  const kitchen = entityRef('place', 'the kitchen')
+  const subnetting = entityRef('learning-topic', 'subnetting')
+  const walk = entityRef('routine', 'a walk')
+  const sister = entityRef('person', 'your sister')
+  const adaya = entityRef('person', 'Adaya')
+  const now = kit.local('2026-11-14', '19:30')
+
+  const weekdayAlone: DecisionContext = {
+    block: 'evening',
+    weekend: false,
+    strain: 'none',
+    childPresent: false,
+    usableMinutes: 60,
+  }
+  const weekendWithHer: DecisionContext = {
+    block: 'evening',
+    weekend: true,
+    strain: 'none',
+    childPresent: true,
+    usableMinutes: 60,
+  }
+
+  return {
+    id: 'long-run',
+    title: 'Nine months of evenings',
+    summary:
+      'Twelve evenings clearing the kitchen, ten walks that stopped working, and six labs that mostly did not happen.',
+    proves:
+      'Section 51 — context changes what a pattern means, and later evidence can reverse an earlier one.',
+    zone: kit.zone,
+    now,
+    build() {
+      const place = kit.entity({
+        kind: 'place',
+        label: 'the kitchen',
+        domain: DOMAIN.home,
+        privacy: 'normal',
+      })
+      const topic = kit.entity({
+        kind: 'learning-topic',
+        label: 'subnetting',
+        domain: DOMAIN.career,
+        privacy: 'normal',
+      })
+      const child = kit.entity({
+        kind: 'person',
+        label: 'Adaya',
+        domain: DOMAIN.fatherhood,
+        privacy: 'child-family-sensitive',
+      })
+      const person = kit.entity({
+        kind: 'person',
+        label: 'your sister',
+        domain: DOMAIN.social,
+        privacy: 'normal',
+      })
+
+      /*
+       * A standing arrangement with a date on it.
+       *
+       * Written as durable context rather than as a fact, for the reason D-081
+       * gives: a fact would outrank every context record for this concept
+       * forever, and the mechanism that lets a week away override a settled
+       * arrangement depends on the override arriving as context.
+       */
+      const custody = kit.record(
+        'context',
+        {
+          occurredAt: kit.local('2026-05-01', '09:00'),
+          domains: [DOMAIN.fatherhood],
+          entities: [adaya],
+          privacy: 'child-family-sensitive',
+        },
+        {
+          concept: CONCEPT.custodyArrangement,
+          value: { type: 'text', value: 'full custody' },
+          durability: 'durable',
+          validFrom: kit.local('2026-05-01', '09:00'),
+        },
+      )
+
+      /*
+       * Sleep across the whole span: short through the winter, better since.
+       *
+       * Deterministic rather than random. A fixture that changes between runs
+       * is a fixture nobody can reason about, and section 60 warns that a
+       * fixture can quietly make wrong logic look correct.
+       */
+      const nights: readonly (readonly [string, number])[] = [
+        ['2026-01-08', 6],
+        ['2026-01-22', 6.25],
+        ['2026-02-05', 5.75],
+        ['2026-02-19', 6.5],
+        ['2026-03-05', 6],
+        ['2026-03-19', 6.25],
+        ['2026-06-04', 7.5],
+        ['2026-07-02', 7.75],
+        ['2026-08-06', 7.25],
+        ['2026-09-03', 7.75],
+        ['2026-10-08', 8],
+        ['2026-11-12', 7.5],
+      ]
+
+      const sleep = nights.map(([day, hours]) =>
+        kit.record(
+          'observation',
+          { occurredAt: kit.local(day, '07:00'), domains: [DOMAIN.sleep] },
+          {
+            concept: CONCEPT.sleepHours,
+            value: { type: 'number', value: hours, unit: 'hours' },
+            method: 'self-report',
+          },
+        ),
+      )
+
+      const friction = kit.record(
+        'observation',
+        {
+          occurredAt: kit.local('2026-11-14', '18:00'),
+          domains: [DOMAIN.home],
+          entities: [kitchen],
+        },
+        {
+          concept: CONCEPT.homeFriction,
+          value: { type: 'text', value: 'the kitchen table is buried again' },
+          method: 'self-report',
+        },
+      )
+
+      const studying = kit.record(
+        'observation',
+        {
+          occurredAt: kit.local('2026-11-10', '20:00'),
+          domains: [DOMAIN.career],
+          entities: [subnetting],
+        },
+        {
+          concept: CONCEPT.learningTopic,
+          value: { type: 'entity', value: subnetting },
+          method: 'self-report',
+        },
+      )
+
+      const energy = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-11-14', '18:30'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.energy,
+          value: { type: 'scale', value: 4, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      const time = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-11-14', '19:00'), domains: [DOMAIN.direction] },
+        {
+          concept: CONCEPT.usableTimeTonight,
+          value: { type: 'duration', minutes: 60 },
+          method: 'self-report',
+        },
+      )
+
+      const past = pastEpisodeRecords(
+        kit,
+        [
+          // Weekday evenings alone: clearing the kitchen helped, every time.
+          ...[
+            '2026-03-03',
+            '2026-04-07',
+            '2026-05-12',
+            '2026-06-16',
+            '2026-08-11',
+            '2026-09-15',
+          ].map((on) => ({
+            verb: 'reset-space' as const,
+            object: kitchen,
+            domain: DOMAIN.home,
+            on,
+            context: weekdayAlone,
+            ending: 'completed' as const,
+            result: 'all' as const,
+            effect: 'real' as const,
+          })),
+          // Weekend evenings with her in the house: mostly it did not.
+          ...['2026-03-07', '2026-04-11', '2026-05-16', '2026-06-20'].map((on) => ({
+            verb: 'reset-space' as const,
+            object: kitchen,
+            domain: DOMAIN.home,
+            on,
+            context: weekendWithHer,
+            ending: 'completed' as const,
+            result: 'part' as const,
+            effect: 'little' as const,
+          })),
+          ...['2026-08-15', '2026-09-19'].map((on) => ({
+            verb: 'reset-space' as const,
+            object: kitchen,
+            domain: DOMAIN.home,
+            on,
+            context: weekendWithHer,
+            ending: 'completed' as const,
+            result: 'all' as const,
+            effect: 'some' as const,
+          })),
+          // Six walks through the spring, all of which did something.
+          ...[
+            '2026-01-14',
+            '2026-02-04',
+            '2026-02-25',
+            '2026-03-18',
+            '2026-04-15',
+            '2026-05-06',
+          ].map((on) => ({
+            verb: 'move' as const,
+            object: walk,
+            domain: DOMAIN.health,
+            on,
+            context: weekdayAlone,
+            ending: 'completed' as const,
+            effect: 'real' as const,
+          })),
+          // Four through the autumn that did not, one of them badly.
+          {
+            verb: 'move' as const,
+            object: walk,
+            domain: DOMAIN.health,
+            on: '2026-09-09',
+            context: weekdayAlone,
+            ending: 'completed' as const,
+            effect: 'some' as const,
+          },
+          ...['2026-10-07', '2026-10-28'].map((on) => ({
+            verb: 'move' as const,
+            object: walk,
+            domain: DOMAIN.health,
+            on,
+            context: weekdayAlone,
+            ending: 'completed' as const,
+            effect: 'little' as const,
+          })),
+          {
+            verb: 'move' as const,
+            object: walk,
+            domain: DOMAIN.health,
+            on: '2026-11-04',
+            context: weekdayAlone,
+            ending: 'completed' as const,
+            effect: 'harm' as const,
+          },
+          // Labs: four of six never happened at all.
+          ...['2026-04-01', '2026-05-20', '2026-07-08', '2026-10-14'].map((on) => ({
+            verb: 'hands-on-lab' as const,
+            object: subnetting,
+            domain: DOMAIN.career,
+            on,
+            at: '17:00',
+            context: { ...weekdayAlone, block: 'afternoon' as const },
+            ending: 'unable-now' as const,
+          })),
+          ...['2026-06-10', '2026-09-23'].map((on) => ({
+            verb: 'hands-on-lab' as const,
+            object: subnetting,
+            domain: DOMAIN.career,
+            on,
+            at: '17:00',
+            context: { ...weekdayAlone, block: 'afternoon' as const },
+            ending: 'completed' as const,
+            result: 'part' as const,
+          })),
+          // Reaching out, where the result and the comfort disagree.
+          ...['2026-06-02', '2026-07-14'].map((on) => ({
+            verb: 'reach-out' as const,
+            object: sister,
+            domain: DOMAIN.social,
+            on,
+            context: weekdayAlone,
+            ending: 'completed' as const,
+            result: 'all' as const,
+            comfort: 'hard' as const,
+          })),
+          ...['2026-08-18', '2026-09-29'].map((on) => ({
+            verb: 'reach-out' as const,
+            object: sister,
+            domain: DOMAIN.social,
+            on,
+            context: weekdayAlone,
+            ending: 'completed' as const,
+            result: 'part' as const,
+            comfort: 'awkward' as const,
+          })),
+          {
+            verb: 'reach-out' as const,
+            object: sister,
+            domain: DOMAIN.social,
+            on: '2026-10-20',
+            context: weekdayAlone,
+            ending: 'completed' as const,
+            result: 'none' as const,
+            comfort: 'easy' as const,
+          },
+        ],
+        nextId,
+      )
+
+      return kit.document({
+        entities: [place, topic, child, person],
+        records: [custody, ...sleep, friction, studying, energy, time, ...past],
+        exportedAt: now,
+      })
+    },
+  }
+}
+
 export const SCENARIOS: readonly Scenario[] = [
   subnettingStruggle(),
   sleepDeficitAgainstCareer(),
@@ -1795,6 +2157,7 @@ export const SCENARIOS: readonly Scenario[] = [
   goneQuiet(),
   growthEvidence(),
   careerGoneQuiet(),
+  aLongRun(),
 ]
 
 export function scenarioById(id: string): Scenario | undefined {
