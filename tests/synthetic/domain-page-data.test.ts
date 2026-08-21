@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { CONCEPT } from '../../src/domain/concepts'
 import { DOMAIN } from '../../src/domain/domains'
+import { entityRef } from '../../src/domain/entities'
+import { addLocalDays } from '../../src/domain/time'
 import { assembleDomainPageData, pageBySlug } from '../../src/features/life/domainPages'
+import { assembleSituation } from '../../src/intelligence/situation'
+import { snapshotFromWire } from '../../src/memory/snapshot'
+import { buildView } from '../../src/memory/view'
+import { createKit } from '../../src/synthetic/kit'
 import { loadScenario } from './harness'
 
 /**
@@ -94,5 +100,52 @@ describe('a domain page reads the same situation Now and Life were built from', 
     for (const entry of [...completions, ...outcomes]) {
       expect(entry.text, entry.text).toContain('the kitchen')
     }
+  })
+
+  it('never claims a domain has nothing out of date while a reading on the same page is tagged out of date — QA-M1', () => {
+    // homeFriction's own freshness window is 7 days; three times that,
+    // floored at a week, is 21 — so a reading 10 days old is genuinely past
+    // its own window (`stale`, "out of date" on its row) without yet being
+    // neglected at the domain level (`quiet`, not `stale`). Both readings
+    // are honest; the old copy asserted a blanket "nothing has gone out of
+    // date" that the row directly underneath it contradicted.
+    const kit = createKit('m1', 'America/Denver', '2026-01-01T00:00:00Z')
+    const now = kit.local('2026-07-14', '19:00')
+    const tenDaysAgo = addLocalDays(now, -10, kit.zone)
+
+    const homeFriction = kit.record(
+      'observation',
+      { occurredAt: tenDaysAgo, domains: [DOMAIN.home] },
+      {
+        concept: CONCEPT.homeFriction,
+        value: { type: 'text', value: 'kitchen counter' },
+        method: 'self-report',
+      },
+    )
+    const matters = kit.record(
+      'preference',
+      { occurredAt: tenDaysAgo, domains: [DOMAIN.home] },
+      { about: entityRef('place', 'the kitchen'), stance: 'prefers', statement: 'a clear counter' },
+    )
+
+    const loaded = snapshotFromWire(
+      kit.document({ records: [homeFriction, matters], entities: [], exportedAt: now }),
+    )
+    expect(loaded.loaded).toBe(true)
+    const view = buildView(loaded.snapshot, { now, zone: kit.zone })
+    const situation = assembleSituation(view, { now, zone: kit.zone, weekStartsOn: 1 })
+
+    const page = pageBySlug('home')
+    if (page === undefined) throw new Error('home page missing')
+    const data = assembleDomainPageData(situation, page)
+
+    expect(data.coverage[0]?.status).toBe('quiet')
+    const friction = data.readings.find((entry) => entry.concept === CONCEPT.homeFriction)
+    expect(friction?.state).toBe('stale')
+    expect(friction?.outOfDate).toBe(true)
+
+    const summary = data.coverage[0]?.summary ?? ''
+    expect(summary.toLowerCase()).not.toContain('nothing here has gone out of date')
+    expect(summary.toLowerCase()).not.toContain('nothing here')
   })
 })

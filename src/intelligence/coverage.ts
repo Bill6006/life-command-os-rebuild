@@ -389,7 +389,20 @@ function describe(label: string, status: CoverageStatus, daysSince: number | und
     case 'current':
       return `${label} is current.`
     case 'quiet':
-      return `${label} has been quiet, and nothing here has gone out of date.`
+      /*
+       * QA-M1. This used to say "and nothing here has gone out of date" — a
+       * claim about every reading in the domain. `quiet` only means no
+       * *standing* concept has gone past its neglect threshold and the
+       * domain is not `goneQuiet` either (D-061); a concept can still be
+       * individually `stale` in the fact layer well before it crosses that
+       * threshold, since neglect is three times a concept's own freshness
+       * window (`NEGLECT_MULTIPLE`), floored at a week. A domain page shows
+       * both this sentence and a concept's own "out of date" tag on one
+       * screen, and the two are answering different questions — this one is
+       * about whether the *domain* needs the owner's attention, not whether
+       * every fact in it is still within its own window.
+       */
+      return `${label} has been quiet, without anything here needing your attention.`
     case 'unheard':
       return `Nothing has ever come in about ${label.toLowerCase()}.`
     case 'stale':
