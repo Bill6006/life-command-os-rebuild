@@ -95,6 +95,35 @@ test.describe('a correction, and what it changes', () => {
     await expect(page.getByText('Not right?').first()).toBeVisible()
   })
 
+  test('QA-B2 — points at the overdue reading instead of offering a button that cannot settle it', async ({
+    page,
+  }) => {
+    // Career's staleness here comes from a neglected standing concept
+    // (the learning topic), not from domain-wide silence alone. Neither
+    // "I've been keeping on top of this" nor "Something's changed" can
+    // clear that — both write domain-level evidence with no concept to
+    // resolve against — so offering them was the defect (QA-B2): a tap
+    // wrote a "Recently" row and "How this stands" never moved.
+    await loadInQa(page, 'Everything current except the studying')
+    await page.goto(`${APP}#/life/career`)
+
+    await expect(page.getByText(/Nothing has come in about career/)).toBeVisible()
+    await expect(
+      page.getByText(/Current learning topic is what is actually overdue here/),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: "I've been keeping on top of this" }),
+    ).toHaveCount(0)
+    await expect(page.getByRole('button', { name: "Something's changed" })).toHaveCount(0)
+
+    // The concept's own correction is untouched and is still the way in.
+    await expect(
+      page
+        .locator('.domain-reading', { hasText: 'Current learning topic' })
+        .getByRole('button', { name: 'Not right?' }),
+    ).toBeVisible()
+  })
+
   test('correcting a stale reading turns the area current and updates the recommendation', async ({
     page,
   }) => {

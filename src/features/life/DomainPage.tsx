@@ -317,12 +317,31 @@ function CoveragePanel({
   // offering a correction for it here would ask the owner to confirm
   // something the app never doubted.
   const canCorrect = coverage.status === 'stale'
+  /*
+   * QA-B2. A domain can be stale because nothing has been heard about it at
+   * all (`goneQuiet`), or because one specific standing concept has gone
+   * past its own window (`coverage.weakest`, which is only ever set when
+   * that is true — see `pickWeakest` in coverage.ts). The two buttons below
+   * write domain-level evidence: a review happened, or something changed, in
+   * the owner's own words. Neither carries a `concept` to resolve against,
+   * so neither can move the specific fact the sentence above is actually
+   * about — offering them as if they could is the defect. When a concept is
+   * the cause, the honest and capable action is the "Not right?" control on
+   * that concept's own row, so this points there instead of offering a
+   * button that would look like it worked and would not.
+   */
+  const concept = coverage.weakest
 
   return (
     <Panel title={showLabel ? coverage.label : 'How this stands'}>
       <p className="domain-coverage__summary">{coverage.summary}</p>
 
-      {!canCorrect ? null : open ? (
+      {!canCorrect ? null : concept !== undefined ? (
+        <p className="domain-coverage__pointer">
+          <strong>{concept.label}</strong> is what is actually overdue here — answering it below is
+          what will settle this.
+        </p>
+      ) : open ? (
         <div className="domain-correction">
           <input
             type="text"
