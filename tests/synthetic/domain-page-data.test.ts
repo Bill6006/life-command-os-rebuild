@@ -71,4 +71,28 @@ describe('a domain page reads the same situation Now and Life were built from', 
     const arrangement = data.readings.find((entry) => entry.concept === CONCEPT.custodyArrangement)
     expect(arrangement?.state).toBe('explicit')
   })
+
+  it('names the subject a completion or an outcome was about, in "recently"', () => {
+    // Found on the Android gate: "Said what a suggestion here was worth" four
+    // times running, on a page whose whole history is about one place. The
+    // subject is one lookup away — the record just was not resolving it.
+    const loaded = loadScenario('what-worked')
+    const situation = loaded.decision().situation
+    const page = pageBySlug('home')
+    if (page === undefined) throw new Error('home page missing')
+
+    const data = assembleDomainPageData(situation, page)
+
+    const completions = data.recentChanges.filter((entry) =>
+      entry.text.startsWith('Followed through on a suggestion here'),
+    )
+    const outcomes = data.recentChanges.filter((entry) =>
+      entry.text.startsWith('Said what a suggestion here was worth'),
+    )
+    expect(completions.length).toBeGreaterThan(0)
+    expect(outcomes.length).toBeGreaterThan(0)
+    for (const entry of [...completions, ...outcomes]) {
+      expect(entry.text, entry.text).toContain('the kitchen')
+    }
+  })
 })

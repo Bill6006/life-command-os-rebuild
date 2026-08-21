@@ -184,8 +184,43 @@ export interface RecentChange {
   readonly text: string
 }
 
-function describeChange(record: CanonicalRecord, entities: EntityIndex): string | undefined {
+/**
+ * What a lifecycle or outcome record was about, in the owner's own words.
+ *
+ * `action-completion`, `action-decline`, `action-unable-now` and `outcome`
+ * all point at the `action-recommendation` they belong to rather than
+ * carrying a subject of their own, so without this a "recently" line can only
+ * say "a suggestion here" — true, and exactly the generic language section
+ * 4.6 asks the app not to settle for when the subject is known. Resolving it
+ * costs one lookup and never invents a subject it cannot find: an
+ * unresolvable reference is silently absent rather than shown as a broken one
+ * (the reading is still true without it, only less specific).
+ */
+function subjectOf(
+  recommendation: RecordId,
+  history: Situation['view']['history'],
+  entities: EntityIndex,
+): string | undefined {
+  const found = history.byId(recommendation)
+  if (found === undefined || found.kind !== 'action-recommendation') return undefined
+  return entities.labelFor(found.recommendation.target.object)
+}
+
+function describeChange(
+  record: CanonicalRecord,
+  entities: EntityIndex,
+  history: Situation['view']['history'],
+): string | undefined {
   const labelFor = (ref: Parameters<EntityIndex['labelFor']>[0]) => entities.labelFor(ref)
+  const about = (base: string, recommendation: RecordId): string => {
+    const subject = subjectOf(recommendation, history, entities)
+    if (subject === undefined) return base
+    // The full stop belongs at the end of the whole sentence, not stranded
+    // before the em dash that names the subject.
+    const withoutFullStop = base.endsWith('.') ? base.slice(0, -1) : base
+    return `${withoutFullStop} — ${subject}.`
+  }
+
   switch (record.kind) {
     case 'observation':
     case 'explicit-fact':
@@ -201,17 +236,20 @@ function describeChange(record: CanonicalRecord, entities: EntityIndex): string 
     case 'coverage-update':
       return 'Reviewed — the owner has looked at this.'
     case 'action-completion':
-      return 'Followed through on a suggestion here.'
+      return about('Followed through on a suggestion here.', record.recommendation)
     case 'action-decline':
-      return 'Passed on a suggestion here.'
+      return about('Passed on a suggestion here.', record.recommendation)
     case 'action-unable-now':
-      return "Said a suggestion here didn't fit at the time."
+      return about("Said a suggestion here didn't fit at the time.", record.recommendation)
     case 'outcome':
-      return record.aspect === 'result'
-        ? 'Said how far a suggestion here got.'
-        : record.aspect === 'effect'
-          ? 'Said what a suggestion here was worth.'
-          : 'Said how a suggestion here felt.'
+      return about(
+        record.aspect === 'result'
+          ? 'Said how far a suggestion here got.'
+          : record.aspect === 'effect'
+            ? 'Said what a suggestion here was worth.'
+            : 'Said how a suggestion here felt.',
+        record.about,
+      )
     case 'relationship-event':
       return record.nature
     case 'commitment':
@@ -236,7 +274,7 @@ function recentChanges(
 
   const out: RecentChange[] = []
   for (const record of sorted) {
-    const text = describeChange(record, situation.entities)
+    const text = describeChange(record, situation.entities, situation.view.history)
     if (text === undefined) continue
     out.push({ id: record.id, at: record.occurredAt, text })
     if (out.length >= limit) break
