@@ -60,10 +60,16 @@ starting belief, so a figure the app is willing to _print_ should rest on
 more than it takes to move a belief a quarter of the way. A test asserts the
 relationship rather than the number.
 
-## What the builder's own gate found — eight defects, none from an assertion
+## What the builder's own gate found — eleven defects, none from an assertion
 
-**DEF-0034 to DEF-0041**, all found by reading the assembled screens or by
-measuring them, none reported by a failing test. Two are worth naming here.
+**DEF-0034 to DEF-0044**, all found by reading the assembled screens or by
+measuring them, none reported by a failing test. Eight came from reading a
+local build before the first push; three more came from the Android-style
+pass against the **deployed** Preview, on lines the local read had gone
+past — a situational context tagged "Standing" while its own sentence said
+"for now", the validator's own words handed to the owner on Timeline's
+damaged-row report, and a fixed "Everything counted" heading over a list of
+what is overdue. Three are worth naming here.
 
 **DEF-0039** is the one that matters. Now said _"Reset a space has made
 little difference in situations like tonight"_ directly above a panel
@@ -88,37 +94,46 @@ correct.
 **Nineteen defects were reintroduced one at a time. All nineteen were
 caught.**
 
+**And one correction to DEF-0041's own account.** ESLint's `no-control-regex`
+would have caught the corrupted sweep. It was simply never given the chance:
+the corruption was written, found by the reintroduction pass and repaired
+between two full gates. The rule proved it a few hours later by catching the
+identical mistake the moment lint ran over it. The narrower lesson is the
+useful one — the reintroduction step and the lint gate cover the same
+failure, and lint is the cheaper half.
+
 ## Build identity
 
-|                      |                                                                            |
-| -------------------- | -------------------------------------------------------------------------- |
-| Checkpoint SHA       | `df06a12` — the product checkpoint every result below was measured against |
-| Closing SHA          | current `main` HEAD — documentation only past `df06a12`, no product code   |
-| Deployed Preview SHA | identical to `main` HEAD                                                   |
-| Do they match?       | Yes, by construction — D-004, and asserted live in CI                      |
-| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/                |
-| Live proof           | `preview/build-info.json`                                                  |
+|                      |                                                                                                                                           |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Product checkpoint   | `e681a66` — the build every result below was measured against, and the one QA should test                                                 |
+| Repair SHA           | `91728ee` — `e681a66` only untracks a scratch harness and adds an ignore rule                                                             |
+| Closing SHA          | current `main` HEAD — documentation only past `e681a66`, no product code                                                                  |
+| Deployed Preview SHA | identical to `main` HEAD; `e681a66` itself was confirmed deployed and hand-checked against `preview/build-info.json` before this closeout |
+| Do they match?       | Yes, by construction — D-004, and asserted live in CI                                                                                     |
+| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                               |
+| Live proof           | `preview/build-info.json`                                                                                                                 |
 
 ## Verification
 
 | Gate                                      | Result                                              |
 | ----------------------------------------- | --------------------------------------------------- |
-| Privacy scan                              | Clean, 159 tracked files                            |
+| Privacy scan                              | Clean, 160 tracked files                            |
 | Format (Prettier)                         | Pass                                                |
 | Lint (ESLint)                             | Pass, 0 warnings                                    |
 | Typecheck (strict TS)                     | Pass, 0 errors                                      |
-| Unit / contract / synthetic / adversarial | 697 passed / 697, 42 files (in plain Node, no DOM)  |
+| Unit / contract / synthetic / adversarial | 700 passed / 700, 42 files (in plain Node, no DOM)  |
 | Browser tests (Playwright)                | 288 passed / 288 — 96 tests × 360, 430, 1280px      |
 | Production build                          | Pass                                                |
 | `npm run verify` from a clean checkout    | Pass                                                |
 | Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand          |
 | Reintroduction pass                       | 19 defects reintroduced one at a time; 19 caught    |
-| Builder's own Android-style gate          | Pass — see below                                    |
+| Builder's own Android-style gate          | Pass — against the deployed `e681a66`; no findings  |
 | Independent QA (D-077)                    | **Not run. This is what the phase is waiting for.** |
 
-### Where the 697 sit
+### Where the 700 sit
 
-Phase 5 ended at 610. The 87 new ones are four new suites plus growth in the
+Phase 5 ended at 610. The 90 new ones are four new suites plus growth in the
 library-wide sweeps, and the second half is worth noting: several existing
 suites grew without being edited, because they walk every scenario and the
 library gained one.
@@ -126,7 +141,7 @@ library gained one.
 | Suite                                                                  | Tests |
 | ---------------------------------------------------------------------- | ----: |
 | `synthetic/insights.test.ts` — the rate rules, and the gate claims     |    29 |
-| `synthetic/timeline.test.ts` — section 26, rule by rule                |    28 |
+| `synthetic/timeline.test.ts` — section 26, rule by rule                |    31 |
 | `synthetic/decision-evidence.test.ts` — Now's panel reads the decision |    15 |
 | `unit/insights-copy.test.ts` — the copy tables, swept                  |    10 |
 | `unit/architecture-guards.test.ts` — five new guards                   |    +5 |
@@ -152,7 +167,7 @@ Browser: `tests/browser/timeline-insights.spec.ts`, 24 tests × 3 viewports =
 | CI green: privacy scan, format, lint, typecheck, unit, browser, build      | Pass                                                                                                                                |
 | `npm run verify` passes from a clean checkout                              | Pass                                                                                                                                |
 | Preview deploys automatically, deployed SHA equals checkpoint SHA          | Pass                                                                                                                                |
-| Builder's own Android-style mobile pass against the deployed Preview       | Pass — 360×780 and 375×812, touch, mobile UA, device pixel ratio 3                                                                  |
+| Builder's own Android-style mobile pass against the deployed Preview       | Pass — 360×780, touch, Android UA, device pixel ratio 3, run twice: three findings, all repaired, clean on the re-run               |
 | Independent QA (required from Phase 5 on, D-077)                           | **Outstanding — this phase is YELLOW until it passes**                                                                              |
 
 ## What changed
@@ -214,8 +229,8 @@ ranking moved, and no golden scenario's outcome changed.
 
 ## Phone check (what to look at)
 
-Open Preview. Header → **More** → **Open the QA laboratory**, load "Nine
-months of evenings".
+Open Preview — the build should read `e681a66`. Header → **More** → **Open
+the QA laboratory**, load "Nine months of evenings".
 
 1. **Insights, closed.** Six cards, six sentences, no figure anywhere on the
    screen. Judge whether each one is something you would want to be told.
@@ -259,11 +274,19 @@ months of evenings".
 
 ## Open defects
 
-None. Eight were found and closed during the phase — DEF-0034 to DEF-0041 in
+None. Eleven were found and closed during the phase — DEF-0034 to DEF-0044 in
 [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md) — and not one came from a failing
-assertion. Six came from reading the assembled screens, one from measuring
+assertion. Nine came from reading the assembled screens, one from measuring
 them, and one from the reintroduction pass discovering that a guard could
 not fail.
+
+**One observation, offered rather than hidden.** During the repair gate,
+`now.spec.ts`'s "creates one episode from a double tap" — a Phase 3 test,
+untouched this phase — failed once in a full desktop run, then passed on a
+full re-run and on three consecutive runs of that file on its own. Nothing
+in this phase touches Now's lifecycle buttons. It is recorded because a
+single unexplained failure is worth a reader knowing about even when it
+does not reproduce.
 
 ## Deferred, with reasons
 
