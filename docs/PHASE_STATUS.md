@@ -11,6 +11,13 @@ becomes GREEN. Owner decision D-077; the protocol is [`qa/README.md`](qa/README.
 Phase 4 is the argument for it, and the record below is the evidence: every
 automated gate passed, and the phone found five defects afterwards.
 
+**The canonical plan is now v1.2** (D-079) — the independent-QA gate and the
+eleven-domains/ten-pages rule are now stated directly in the plan itself rather
+than only in this project's decisions, and Phase 6 gains progressively
+disclosed evidence/analytics. Every handoff from here also names a recommended
+**Claude model**, not only an intelligence level (D-080). Neither change
+reopens Phase 4 or any completed phase.
+
 ---
 
 # Phase 4 — Coverage Engine + adaptive guides

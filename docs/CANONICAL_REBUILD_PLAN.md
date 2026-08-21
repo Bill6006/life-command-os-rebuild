@@ -1,4 +1,4 @@
-# Life Command OS — Canonical Rebuild Plan v1.1
+# Life Command OS — Canonical Rebuild Plan v1.2
 
 ## Status
 
@@ -16,14 +16,23 @@
 
 ---
 
+## v1.2 change log
+
+This revision makes two focused product/workflow clarifications without changing the rebuild sequence or reopening completed phases:
+
+- adds a permanent independent-QA phase gate: the builder stops at **YELLOW — READY FOR INDEPENDENT QA**, a fresh QA conversation tests the deployed checkpoint in a real Android-style mobile context, writes a standard handoff report, and the original builder repairs any failures before GREEN;
+- extends Phase 6 with progressively disclosed evidence/analytics so the owner can inspect the actual numerical support behind a recommendation or learned pattern without turning Now into a statistics dashboard;
+- permits likelihood/rate percentages only when the underlying quantity is defined and enough comparable evidence exists, with sample size, context, counterexamples, uncertainty, and the measured outcome aspect kept visible;
+- clarifies that the eleven modeled core areas intentionally map to ten baseline Life pages because Health & Physical Capacity and Sleep & Recovery share the **Health & Recovery** inspection page.
+
 ## v1.1 change log
 
-This revision closes four implementation ambiguities before developer handoff:
+This revision closed four implementation ambiguities before developer handoff:
 
-- makes the plan self-contained and explicitly excludes old planning/archive documents from normal developer inputs;
-- locks the rebuild to a brand-new repository: `Bill6006/life-command-os-rebuild`, with hard safeguards protecting `Bill6006/life-command-os`;
-- strengthens the phone-preview contract so owner-visible verified checkpoints are consistently deployable to one stable phone URL and Preview SHA must be reported against checkpoint SHA;
-- requires every Claude Code handoff to recommend the intelligence level and CURRENT/NEW conversation, explain both choices, and provide the next copy/paste prompt immediately.
+- made the plan self-contained and explicitly excluded old planning/archive documents from normal developer inputs;
+- locked the rebuild to a brand-new repository: `Bill6006/life-command-os-rebuild`, with hard safeguards protecting `Bill6006/life-command-os`;
+- strengthened the phone-preview contract so owner-visible verified checkpoints are consistently deployable to one stable phone URL and Preview SHA must be reported against checkpoint SHA;
+- required every Claude Code handoff to recommend the intelligence level and CURRENT/NEW conversation, explain both choices, and provide the next copy/paste prompt immediately.
 
 # 1. Source authority
 
@@ -1222,7 +1231,14 @@ Deep evidence can expose:
 - included/excluded evidence;
 - confidence;
 - context similarity;
-- reason trace.
+- counterexamples;
+- relevant trend over time;
+- reason trace;
+- a rate or estimated likelihood when the evidence actually supports one.
+
+Any number must say what it measures. Do not collapse direct result, downstream effect, comfort/friction, or follow-through into one generic “success” percentage.
+
+A percentage must not appear merely because the interface has room for one. When the denominator is too small, the situations are not comparable enough, or the quantity is not well-defined, say that there is not enough evidence yet.
 
 Do not display research machinery by default.
 
@@ -1966,6 +1982,128 @@ Prefer the current conversation when:
 
 An independent Explorer/Retest role may not be cleared by the same reasoning context that authored the repairs it is certifying.
 
+## Permanent per-phase independent QA protocol
+
+Beginning with Phase 5, a builder conversation may not self-approve its own phase.
+
+When the builder believes implementation is complete:
+
+1. complete the normal automated/build/deploy gate;
+2. confirm the deployed Preview SHA matches the checkpoint SHA;
+3. run its own Android-style mobile gate where the phase has owner-visible behavior;
+4. stop at **YELLOW — READY FOR INDEPENDENT QA**;
+5. output the complete independent-QA handoff in the same response.
+
+The builder's QA handoff must include:
+
+- checkpoint SHA;
+- deployed Preview SHA and match status;
+- exact verification results;
+- known open and deferred items;
+- recommended Claude Code intelligence level for QA;
+- **NEW CONVERSATION REQUIRED FOR INDEPENDENCE**;
+- the exact report path `docs/qa/PHASE_XX_QA_HANDOFF.md`;
+- a complete ready-to-paste QA prompt.
+
+### Independent QA role
+
+Independent QA always begins in a fresh conversation.
+
+It must:
+
+- read the governing repository docs and the actual implementation fresh;
+- test the deployed checkpoint, not merely local source;
+- use an Android-style Playwright mobile context with touch, a mobile user agent, realistic device pixel ratio, scrolling, and mobile interaction behavior rather than only narrowing a desktop viewport;
+- test semantic, behavioral, adversarial, state-transition, privacy, and owner-facing UI behavior relevant to the phase;
+- read complete screens as an owner would, not only individual asserted strings;
+- look for contradictions, stale scaffolding, subject/noun loss, questions the app already knows the answer to, claims made from ignorance, false precision, questionnaire/nag behavior, overflow, safe-area problems, target-size problems, control movement, and double-tap hazards;
+- identify where existing automated tests gave false confidence;
+- actively try to disprove that the phase is correct.
+
+Independent QA does **not** repair application/product code during discovery or retest.
+
+It may create or update only its QA handoff report and narrowly scoped QA evidence artifacts needed by the protocol.
+
+### QA report contract
+
+Use:
+
+`docs/qa/PHASE_XX_QA_HANDOFF.md`
+
+For each report, include at minimum:
+
+- phase;
+- checkpoint SHA tested;
+- deployed SHA tested;
+- Android/mobile configuration;
+- governing acceptance criteria;
+- scenarios/flows tested;
+- PASS/FAIL per flow;
+- exact reproductions for defects;
+- semantic, behavioral, privacy, and mobile/UI findings as applicable;
+- blocking vs non-blocking classification;
+- evidence/screenshot references where useful;
+- automated tests that gave false confidence;
+- explicit deferred items confirmed unchanged;
+- overall recommendation: PASS or FAIL;
+- recommended next action.
+
+The QA prompt should provide requirements, acceptance criteria, checkpoint, explicit deferrals, and repository paths, but should not be contaminated with the builder's conclusion that particular behavior is correct.
+
+### Defect loop
+
+If independent QA fails:
+
+1. return to the **original builder conversation**;
+2. the builder reads the exact QA handoff report;
+3. repair each blocking defect under section 42;
+4. deploy a new checkpoint;
+5. remain YELLOW;
+6. output the repaired SHA and a retest prompt;
+7. return to the **same independent QA conversation**;
+8. QA retests the repaired checkpoint and updates the same report.
+
+Repeat until independent QA passes.
+
+The builder remains the fixer. The QA conversation remains the tester.
+
+Owner screenshot/interface review may add additional phase-gate feedback after the QA run. Material findings return through the same builder → QA retest loop.
+
+After independent QA passes, return to the original builder conversation for the formal GREEN closeout. Independent QA does not replace owner physical-phone approval where this plan separately requires it.
+
+### Default conversation routing
+
+- same unresolved phase implementation/repair → **CURRENT builder conversation**;
+- independent QA → **NEW QA conversation**;
+- QA retest after repair → **SAME QA conversation**;
+- genuinely new phase after GREEN → normally **NEW builder conversation**, while still requiring an explicit recommendation at the handoff.
+
+### Intelligence-level default
+
+Do not default every task to Max.
+
+Use the lowest level appropriate to the work:
+
+- ordinary implementation, UI work, straightforward domain wiring, documentation, normal repairs, and normal independent QA → usually **High**;
+- difficult cross-system semantics, learning/inference design, privacy architecture, migration architecture, ambiguous root-cause work, or especially demanding adversarial reasoning → **Max** or the strongest appropriate reasoning mode;
+- lower levels remain valid for truly mechanical/local work.
+
+This guidance does not override the requirement to recommend the level based on the actual next task.
+
+### Relationship to Phase 11
+
+Per-phase independent QA does not replace Phase 11.
+
+Per-phase QA asks:
+
+> **Did this phase actually work?**
+
+Phase 11 asks:
+
+> **Can the completed system be broken across phase boundaries?**
+
+Both remain required.
+
 ## Prompt presentation format
 
 At every boundary, print the next action in this exact human-facing structure:
@@ -2274,6 +2412,8 @@ Give the owner optional deep inspection without fragmenting the brain.
 
 ## Include baseline pages
 
+The intelligence model contains eleven core areas, but Phase 5 intentionally presents ten baseline Life pages. **Health & Physical Capacity** and **Sleep & Recovery** remain separate modeled areas and share one **Health & Recovery** inspection page. Do not merge their underlying semantics, duplicate them into extra pages, or treat one as missing.
+
 - Health & Recovery
 - Fatherhood / Adaya
 - Career & Learning
@@ -2307,7 +2447,9 @@ No domain page should look like a static questionnaire dump.
 
 ## Goal
 
-Make memory and learning visible.
+Make memory and learning visible without turning the normal experience into a statistics dashboard.
+
+The system, not the owner, is responsible for discovering useful patterns from recorded history, context, outcomes, counterexamples, and change over time. The owner may inspect or correct what the system concludes, but is not required to diagnose his own patterns before the system can learn.
 
 ## Build
 
@@ -2318,12 +2460,74 @@ Make memory and learning visible.
 - pattern confidence;
 - context-specific learning;
 - coverage insights;
-- explanation drill-down.
+- explanation drill-down;
+- progressively disclosed evidence/analytics for learned patterns;
+- progressively disclosed evidence for the current Now recommendation.
+
+## Evidence / analytics detail
+
+The first view stays human-readable and concise.
+
+A learned Insight can open a deeper **Pattern Detail / Evidence** surface. The exact mobile interaction may be a dedicated detail view, bottom sheet, or another owner-tested pattern; do not force a permanently expanded analytics block into the primary view.
+
+The deeper view can expose, when relevant and supported:
+
+- comparable-situation count;
+- sample size and time window;
+- helpful, neutral, adverse, partial, or unachieved evidence as appropriate to the learned aspect;
+- counterexamples;
+- context similarity;
+- contexts where the pattern appears stronger or weaker;
+- trend/change over time;
+- confidence/evidence strength;
+- included/excluded evidence where useful;
+- reason trace;
+- a rate or estimated likelihood when mathematically and semantically justified.
+
+Any percentage must identify the quantity it measures. Do not merge direct result, downstream effect, comfort/friction, or follow-through into one generic success statistic.
+
+When enough comparable historical evidence exists, the deeper view should show a meaningful rate or estimated likelihood where that quantity is well-defined. This may eventually include a **peak-state likelihood** or a recommendation-specific likelihood. These are predictions, not guarantees.
+
+When the evidence is too sparse, too heterogeneous, or not sufficiently calibrated, withhold the percentage and say that there is not enough evidence yet.
+
+## Current recommendation evidence
+
+Now remains action-first and uncluttered.
+
+Provide a compact secondary entry point such as **See evidence** for the current recommendation. Opening it should expose an owner-readable subset of the same evidence and reasoning already used by the decision/learning system, such as:
+
+- the current conditions that materially influenced the choice;
+- relevant comparable situations;
+- prior outcomes for the move or learned family when applicable;
+- sample size and counterexamples;
+- confidence/evidence strength;
+- why the chosen move beat the strongest credible alternative.
+
+Do not create a second analytics engine, a second recommendation brain, or a parallel explanation truth.
+
+## Pattern quality rules
+
+Insights must not degrade into one-variable folklore.
+
+- One success is not proof.
+- Context similarity matters.
+- Counterexamples matter.
+- Learned effects remain reversible when later evidence contradicts them.
+- Association must not be written as causal certainty.
+- Combinations and interactions may be more informative than isolated variables.
+- A discovered pattern should remain scoped to the contexts the evidence actually supports.
+- The absence of enough evidence is a valid result.
 
 ## Gate
 
 - useful insights are understandable without research language;
-- deep evidence exists but is not forced into the first view;
+- the owner can open a deeper evidence view without that machinery being forced into the first view;
+- a current recommendation can expose the meaningful evidence behind its choice without cluttering Now;
+- percentages/rates appear only when the underlying quantity, denominator, context, and evidence are defensible;
+- any displayed rate names the aspect it measures and does not collapse result/effect/comfort/follow-through;
+- weak evidence produces an honest “not enough evidence yet” state rather than invented precision;
+- synthetic long histories prove that context and combinations can change a pattern's interpretation;
+- counterexamples and later contradictory evidence can weaken or reverse an earlier learned pattern;
 - malformed records do not break surfaces;
 - private data obeys display policy.
 
@@ -2548,6 +2752,9 @@ Every phase ends with:
 - stable Preview URL/state;
 - files changed;
 - exact test counts;
+- independent QA required? yes/no;
+- independent QA report path when required;
+- QA-tested SHA and PASS/FAIL when available;
 - owner-phone test required? yes/no;
 - product behavior changed;
 - semantic behavior changed;
@@ -2561,6 +2768,8 @@ Every phase ends with:
 - reason for the conversation choice;
 - required references/attachments;
 - complete next copy/paste prompt.
+
+Beginning with Phase 5, implementation completion is **YELLOW — READY FOR INDEPENDENT QA**, not GREEN. GREEN requires the independent QA loop in section 43 to pass, plus any separately required owner phone approval.
 
 If owner-visible behavior changed, the phase cannot be GREEN until the Preview deployment is current enough for the required owner phone check.
 
@@ -2829,7 +3038,13 @@ The following are no longer open questions unless the owner explicitly reopens t
 - Synthetic JSON QA is first-class.
 - Easy phone preview exists throughout development and tracks the latest verified owner-visible checkpoint through one stable reusable URL.
 - Every phase/checkpoint handoff includes the recommended Claude Code intelligence level and whether to continue in the current conversation or start a new one.
+- Beginning with Phase 5, a builder cannot self-approve GREEN; implementation stops at YELLOW — READY FOR INDEPENDENT QA until a fresh QA conversation passes the deployed checkpoint.
+- Independent QA uses `docs/qa/PHASE_XX_QA_HANDOFF.md`, does not repair product code, and returns failures to the original builder conversation; repaired checkpoints return to the same QA conversation for retest.
 - Independent retest/review roles that require independence use a fresh conversation.
+- New phases normally begin in a fresh builder conversation; same-phase repairs normally remain in the current builder conversation.
+- Intelligence level is chosen for the actual job and must not default mechanically to Max.
+- Phase 6 exposes progressively disclosed numerical evidence/analytics, including rates or likelihoods only when justified by comparable evidence, while keeping Now simple.
+- The eleven modeled core areas intentionally map to ten baseline Life pages because Health & Physical Capacity and Sleep & Recovery share one Health & Recovery inspection page.
 - The next copy/paste prompt is provided immediately at the boundary, not after an extra “go” turn.
 - Visual direction is dark-first, modern, alive, dimensional, and personality-rich.
 - No submarine panel.

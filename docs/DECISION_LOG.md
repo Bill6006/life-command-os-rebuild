@@ -1755,3 +1755,87 @@ would silently break the coverage engine, the recovery limiter and G-005.
 remains reportable on the Life overview, and every one is reachable from a page.
 Ten pages, none omitted, none duplicated, and the Health & Recovery page names
 both domains it covers.
+
+---
+
+## D-079 — Canonical plan adopted as v1.2
+
+**Phase:** 4 → permanent · **Status:** Active
+
+`docs/CANONICAL_REBUILD_PLAN.md` now holds the owner's v1.2 revision, copied
+verbatim, replacing v1.1. Section 34 requires it verbatim; D-004's "copied
+into repo as `docs/CANONICAL_REBUILD_PLAN.md`" step is what this decision
+re-runs.
+
+v1.2's own change log names four changes, and none of them reopen a completed
+phase:
+
+- the permanent independent-QA gate beginning at Phase 5 — already recorded as
+  [[D-077]] and now also stated directly in the plan (section 43's "Permanent
+  per-phase independent QA protocol", section 58);
+- Phase 6 (section 51) extended with progressively disclosed evidence and
+  analytics — a compact "See evidence" entry point from a Now recommendation, a
+  Pattern Detail / Evidence view opened from an Insight, sample size,
+  comparable situations, counterexamples, context, confidence, and a rate or
+  likelihood only when the underlying quantity is well-defined and enough
+  comparable evidence exists. No fake precision, no second recommendation
+  engine, and no collapsing of direct result, downstream effect, comfort and
+  follow-through into one generic percentage. This governs Phase 6 when the
+  owner opens it; it changes nothing about Phase 5's scope;
+- the eleven-domains/ten-pages clarification — already recorded as [[D-078]]
+  and now stated directly in the plan (section 50);
+- the per-phase independent QA workflow this project already built in
+  [`docs/qa/README.md`](qa/README.md).
+
+**Why this is a decision and not a silent file swap:** the plan is the second
+rung of the authority order (plan section 1), and D-078's own case for a
+decision applies here too — a document swap that looks routine is exactly the
+kind of change that should be visible rather than inferred from a diff.
+
+**What did not change:** Phase 4's approval, the deferred items from its
+closeout, and every decision D-001 through D-078. v1.2 formalizes what D-077
+and D-078 had already established; it does not amend them.
+
+---
+
+## D-080 — Every handoff recommends a Claude model, not only a level
+
+**Phase:** 4 → permanent · **Status:** Active — **owner decision, applies to
+every remaining checkpoint, QA, repair and phase handoff**
+
+Section 43 already requires an intelligence level and a CURRENT/NEW
+conversation instruction, each with a one-sentence reason, at every handoff.
+From this decision forward, every handoff adds a third, parallel
+recommendation: **which Claude model** to run that next step on. All three —
+model, intelligence level, conversation — are stated outside the copy/paste
+prompt, each with its own one-sentence reason, so the owner can set up the
+next conversation before pasting anything.
+
+**The rule:** choose the lowest model/effort combination that does not
+materially risk quality. Do not default to the strongest available model or
+to Max effort.
+
+- Ordinary implementation, UI work, straightforward domain wiring,
+  documentation, routine repairs, and ordinary independent QA → the current
+  Sonnet-class coding model, at High when High is sufficient.
+- Difficult cross-system semantic reasoning, learning/inference design,
+  privacy architecture, migration architecture, unusually ambiguous
+  root-cause analysis, or demanding adversarial reasoning → the current
+  Opus-class model, at High or Max according to actual difficulty.
+- Genuinely safe, mechanical, local work may use a cheaper/lower option.
+- If Anthropic renames or replaces a model, recommend the closest current
+  equivalent rather than preserving an obsolete name, and say that is what
+  happened.
+
+**Why:** this generalizes the intelligence-level rule already in
+[[D-077]] and in [`docs/qa/README.md`](qa/README.md) — recommend for the job,
+not for headroom — to the axis of which model runs the job at all. The two
+choices are independent: a Sonnet-class model at High and an Opus-class model
+at High are not the same recommendation, and collapsing them back into one
+"intelligence level" line under-specifies the handoff.
+
+**Where this is enforced:** [`docs/qa/README.md`](qa/README.md) carries the
+full rule and the required-fields list for both the builder's YELLOW handoff
+and the QA report's PASS/FAIL recommendation. `docs/NEXT_PROMPT.md` states the
+model outside its copy/paste prompt, same as it already does for intelligence
+level and conversation.

@@ -43,9 +43,9 @@ Android-style mobile pass where the phase touches a surface.
 
 In that **same response**, without being asked, it provides: phase status;
 checkpoint SHA; deployed Preview SHA and whether they match; exact verification
-counts; known, open and deferred items; the recommended intelligence level for
-QA; the conversation instruction (**NEW**); the exact QA report path; and the
-complete copy/paste prompt for the QA conversation.
+counts; known, open and deferred items; the recommended Claude model and
+intelligence level for QA; the conversation instruction (**NEW**); the exact QA
+report path; and the complete copy/paste prompt for the QA conversation.
 
 ## 2 — Independent QA runs
 
@@ -82,7 +82,9 @@ and flows tested; PASS/FAIL for each; exact reproductions for defects; semantic,
 behavioural and mobile/UI defects separately; blocking vs non-blocking;
 screenshot and evidence references; automated tests that gave false confidence;
 confirmation that known deferred items are unchanged; an overall **PASS** or
-**FAIL**; and a recommended next action.
+**FAIL**; a recommended next action; and, when the recommendation sends the
+owner back to the builder, the recommended Claude model and intelligence level
+for that next step.
 
 ## 4 — The defect loop, when QA fails
 
@@ -117,8 +119,9 @@ The closing response carries, without being asked: final status; approved
 checkpoint SHA; the closing SHA if a docs-only closeout moved it; deployed
 Preview SHA and match; verification results; the QA report path and the SHA QA
 tested; deferred and open items; decisions; the next phase; the recommended
-intelligence level; CURRENT or NEW with a short reason for each; required
-references; and the complete next copy/paste prompt.
+Claude model; the recommended intelligence level; CURRENT or NEW; a short
+reason for each of the three; required references; and the complete next
+copy/paste prompt.
 
 ---
 
@@ -147,6 +150,32 @@ Recommend the **lowest level appropriate to the work**, not Max by default.
 
 The recommendation stays **outside** the copy/paste prompt so the owner can
 switch levels before sending it.
+
+## Model recommendation rule
+
+Owner decision D-080. Every handoff also names **which Claude model** the next
+step should run on — a third recommendation, alongside intelligence level and
+conversation, each with its own one-sentence reason, all stated outside the
+copy/paste prompt.
+
+Choose the **lowest model/effort combination that does not materially risk
+quality**. Do not default to the strongest available model or to Max effort.
+
+- **Sonnet-class, High when sufficient** — ordinary implementation, UI work,
+  straightforward domain wiring, documentation, routine repairs, and ordinary
+  independent QA.
+- **Opus-class, High or Max by actual difficulty** — difficult cross-system
+  semantic reasoning, learning/inference design, privacy architecture,
+  migration architecture, unusually ambiguous root-cause analysis, or
+  demanding adversarial reasoning.
+- **A cheaper/lower option** — genuinely safe, mechanical, local work.
+- If Anthropic renames or replaces a model, recommend the nearest current
+  equivalent and say that is what happened rather than naming a model that no
+  longer exists.
+
+Model and intelligence level are independent choices. A Sonnet-class model at
+High and an Opus-class model at High are different recommendations; state
+both rather than collapsing them into one line.
 
 ## What this does not replace
 

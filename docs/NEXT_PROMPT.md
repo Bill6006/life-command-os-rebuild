@@ -11,19 +11,31 @@ owner can switch Claude Code before pasting.
 work: it finishes at **YELLOW — READY FOR INDEPENDENT QA** and hands off to a
 separate conversation.
 
+**The canonical plan is now v1.2** (D-079), copied verbatim into
+[`docs/CANONICAL_REBUILD_PLAN.md`](CANONICAL_REBUILD_PLAN.md). Its four changes
+are the QA protocol above, Phase 6's progressively disclosed evidence/analytics
+(Phase 5 does not touch this), the eleven-domains/ten-pages rule below, and
+this workflow. From this handoff on, every boundary also names a recommended
+**Claude model**, not only an intelligence level (D-080).
+
 ---
 
 ## NEXT CLAUDE ACTION
 
+- **Model:** `Claude Sonnet 5` (current Sonnet-class)
 - **Intelligence level:** `High`
 - **Conversation:** `NEW`
-- **Why this level:** Phase 5 is domain pages, correction flows and goals on top
-  of a kernel that already holds every reading they display — ordinary
-  implementation, UI work and domain wiring, which D-077's rule puts at High.
-  The one pattern that could have needed Max already exists: the growth
-  suggestion is a worked correction with both answers recorded and read.
-  Escalate to Max only if a correction kind turns out to need new inference
-  semantics rather than a new record and a read path.
+- **Why this model:** Phase 5 is domain pages, correction flows and goals on an
+  established kernel — ordinary implementation, UI work and domain wiring, the
+  case D-080 puts on the Sonnet-class model rather than Opus-class. Nothing in
+  the phase's scope is cross-system semantic design, inference mathematics, or
+  privacy/migration architecture — the categories that would call for Opus.
+- **Why this level:** the same work is ordinary at the level of effort, not
+  only the model — D-077's rule puts it at High. The one pattern that could
+  have needed Max already exists: the growth suggestion is a worked correction
+  with both answers recorded and read. Escalate to Max (and reconsider the
+  model) only if a correction kind turns out to need new inference semantics
+  rather than a new record and a read path.
 - **Why this conversation:** Phase 4 is closed and its context is spent. Phase 5
   builds surfaces on a large kernel, and a window that has to read the coverage
   engine before rendering it is likelier to notice what it says than one that
@@ -46,7 +58,7 @@ Read these first, in this order:
 1. docs/CANONICAL_REBUILD_PLAN.md — the sole governing authority, read it completely
 2. docs/qa/README.md — the independent QA protocol. It governs how this phase ends, and it changes what you are allowed to declare.
 3. docs/PHASE_STATUS.md — what Phase 4 delivered, what the Android phone gate changed, and what it deliberately did not build
-4. docs/DECISION_LOG.md — decisions D-001 to D-078 and their reasons. D-059 to D-076 govern coverage, reliability, inferred evidence and how Life presents them; D-077 is the QA protocol; D-078 settles the domain/page count you will otherwise trip over.
+4. docs/DECISION_LOG.md — decisions D-001 to D-080 and their reasons. D-059 to D-076 govern coverage, reliability, inferred evidence and how Life presents them; D-077 is the QA protocol; D-078 settles the domain/page count you will otherwise trip over; D-079 records the plan's move to v1.2; D-080 adds a recommended Claude model to every handoff, alongside the intelligence level and conversation instruction you already provide.
 5. docs/ARCHITECTURE_BOUNDARIES.md — module ownership, and the line between deciding and recording
 6. docs/DEFECT_LEDGER.md — DEF-0001 to DEF-0027. Read DEF-0020 and DEF-0023 to DEF-0027 in full. Not one Phase 4 defect came from a failing assertion: two came from tests that could not be made to pass, one from printing the copy after everything was green, and four from the owner on a phone.
 
@@ -60,7 +72,7 @@ When you believe the implementation is complete:
 
 - the phase becomes YELLOW — READY FOR INDEPENDENT QA. Never GREEN.
 - you complete your normal gate first: unit, contract, synthetic and adversarial tests; browser tests; clean-checkout npm run verify; privacy scan; CI; deployed Preview SHA equal to the checkpoint SHA; and your own Android-style mobile pass, because this phase is almost entirely owner-facing surface.
-- in that same response, without being asked, you provide: phase status; checkpoint SHA; deployed Preview SHA and whether they match; exact verification counts; known, open and deferred items; the recommended intelligence level for QA; the conversation instruction NEW; the exact QA report path docs/qa/PHASE_05_QA_HANDOFF.md; and the COMPLETE copy/paste prompt for the independent QA conversation.
+- in that same response, without being asked, you provide: phase status; checkpoint SHA; deployed Preview SHA and whether they match; exact verification counts; known, open and deferred items; the recommended Claude model and intelligence level for QA (D-080 — lowest combination that does not risk quality, not the strongest by default); the conversation instruction NEW; the exact QA report path docs/qa/PHASE_05_QA_HANDOFF.md; and the COMPLETE copy/paste prompt for the independent QA conversation.
 
 Write that QA prompt so it does not contaminate the review. Give QA the governing requirements, the acceptance criteria, the checkpoint, the explicit deferrals and the repository paths it needs. Do not tell it what you believe is correct, which behaviours are intentional, or what conclusion you expect. A reviewer handed your answer key stops being independent, and the whole point of the protocol is that Phase 4 passed 574 unit tests and 171 browser tests and then failed a phone gate on five counts.
 
@@ -174,5 +186,7 @@ WORKING RULES
 
 HANDING OFF TO QA
 
-End with the section 58 report, adjusted for the protocol: phase status YELLOW — READY FOR INDEPENDENT QA; checkpoint SHA; deployed Preview SHA and whether they match; Preview URL; files changed; exact test counts; product and semantic behaviour changed; open defects; deferred items confirmed unchanged; decisions made; the recommended Claude Code intelligence level for QA; the conversation instruction NEW; one short reason for each; required references; the QA report path docs/qa/PHASE_05_QA_HANDOFF.md; and the complete QA copy/paste prompt — all in the same response. Do not make the owner ask for the QA prompt.
+End with the section 58 report, adjusted for the protocol: phase status YELLOW — READY FOR INDEPENDENT QA; checkpoint SHA; deployed Preview SHA and whether they match; Preview URL; files changed; exact test counts; product and semantic behaviour changed; open defects; deferred items confirmed unchanged; decisions made; the recommended Claude model for QA; the recommended Claude Code intelligence level for QA; the conversation instruction NEW; one short reason for each of those three; required references; the QA report path docs/qa/PHASE_05_QA_HANDOFF.md; and the complete QA copy/paste prompt — all in the same response. Do not make the owner ask for the QA prompt.
+
+Recommend the model per D-080: the lowest model/effort combination that does not materially risk quality, not the strongest by default. Independent QA on a phase like this is ordinarily Sonnet-class at High; escalate only if what you are handing off genuinely needs Opus-class cross-system reasoning to review — for example, if Phase 5's correction flows turned out to need new inference semantics rather than the existing record-and-read pattern.
 ```
