@@ -15,11 +15,20 @@
   margin-top: var(--space-5);
 }
 
+/*
+ * Not sticky, and that is the second version of this rule.
+ *
+ * The first kept the date on screen while a long day scrolled, which sounded
+ * useful and was measurably wrong: the app bar is itself sticky at the top of
+ * the same scroll container, so a stuck heading came to rest *behind* it —
+ * measured at 8–38px under a bar occupying 0–53px, a date smeared under
+ * translucent chrome. Section 37 rules out sticky chrome covering content, and
+ * the fix that keeps the feature would have meant reproducing the bar's own
+ * safe-area arithmetic here and keeping the two in step forever.
+ *
+ * Day headings recur every few entries. A heading that scrolls away is fine.
+ */
 .tl-day__label {
-  position: sticky;
-  /* Under the header, so a long day keeps its date on screen while scrolling. */
-  top: 0;
-  z-index: 1;
   padding: var(--space-2) 0;
   margin: 0 0 var(--space-2);
   font-size: var(--text-xs);
