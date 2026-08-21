@@ -1,9 +1,60 @@
 # Phase 5 QA handoff — the Life domain experience
 
-**Overall: FAIL.** Two blocking defects, one major defect, both blocking
-defects reproducible on the deployed Preview from a clean/default state.
+**Overall (round 2, retest): PASS.** All three findings from round 1 —
+QA-B1, QA-B2 and QA-M1 — were reproduced against their exact original repro
+steps on the repaired, deployed checkpoint and no longer reproduce. Nothing
+in the round-1 PASS list regressed. See "Round 2 — retest" below for the
+verification of each, then the identity/PASS/deferral sections that follow
+are the unmodified round-1 record, kept for history.
 
-## Identity
+## Round 2 — retest
+
+| | |
+|---|---|
+| Retested | this same QA conversation, per `qa/README.md` §4 |
+| Repaired checkpoint (given) | `8d06dae` |
+| `main` HEAD at retest time | `72c6d9f5b41e239ad23ca5bd976ba2dcf565287b` — `git log -- src tests` shows the last src/tests-touching commit is `ff34a0f` (QA-M1's fix), an ancestor of `8d06dae`; everything from `8d06dae` to `72c6d9f` is documentation (`git diff --stat 8d06dae..72c6d9f` touches only `docs/`) |
+| Deployed Preview SHA | `72c6d9f5b41e239ad23ca5bd976ba2dcf565287b` (`commitShort 72c6d9f`), read from `preview/build-info.json`, built `2026-08-21T17:16:26.098Z` |
+| Match | Yes — deployed Preview equals `main` HEAD, and is at/after `8d06dae` as required |
+| Configuration | Same as round 1: 360×780 mobile / 1280×900 desktop via the Claude Browser pane, same JS-driven-interaction limitation disclosed below (screenshots/native clicks were unavailable in this session too) |
+| Builder's own account | `docs/DEFECT_LEDGER.md` DEF-0031 (QA-B1), DEF-0032 (QA-B2), DEF-0033 (QA-M1) — read before retesting, then verified independently rather than taken on faith |
+
+### QA-B1 — retest: **PASS, fixed**
+
+`#/more` now reads **Phase: 5 — the Life domain experience** / **Next: Timeline and Insights**, with the paragraph: *"...the ten pages behind Life now let you see what it believes about each area and correct it directly. Timeline and Insights are next."* This is accurate — Timeline and Insights genuinely are Phase 6, not built yet, and the ten pages genuinely exist and were exercised throughout both rounds. No false claim remains. `#/qa`'s header eyebrow now reads **"PHASE 5"**. `docs/DEFECT_LEDGER.md`'s account (a `summary` field replacing separate hand-written prose in `MoreScreen.tsx`, plus a `REBUILD_PHASE.number`-vs-actual-phase regression and a widened D-074 guard pattern) matches what the diff shows and what the deployed screen shows — verified, not just claimed.
+
+### QA-B2 — retest: **PASS, fixed in substance, not merely in wording**
+
+Verified both sub-cases the builder's account distinguishes:
+
+- **Standing-concept case** (Career, via "Everything current except the studying"): the two generic buttons are gone from `#/life/career`. In their place: *"Current learning topic is what is actually overdue here — answering it below is what will settle this."* Tapping the concept's own "Not right?" and saving a new topic flips "How this stands" to "Career & Learning is current." immediately — the correction now genuinely closes the loop, through the control the pointer sentence names.
+- **No-standing-concept case** (Social, no built-in scenario stresses this so I constructed it: loaded a custom synthetic document with a single `goal` record on `DOMAIN.social` dated 46 days before the travelled clock — the same shape `tests/synthetic/domain-corrections.test.ts`'s own fixture uses, reproduced independently rather than trusted from the test file). `#/life/social` showed "Nothing has come in about social & relationships for 7 weeks" with the **original two buttons still present** (correctly — Social has no standing concept, so `coverage.weakest` is `undefined` and the old path applies). Tapping "I've been keeping on top of this" flipped "How this stands" to "Social & Relationships is current." immediately, exactly as it always could. No regression.
+- The concept-level correction path itself (round 1's PASS) still works identically — confirmed above via the Career case, and matches the unchanged `factCorrectionRecord`/`contextCorrectionRecord` code paths, which this repair did not touch.
+
+On the builder's claim that this "required no change to the coverage staleness computation itself — only to which control the page offers": the diff (`git diff 34e03b6..8d06dae -- src/intelligence/coverage.ts src/features/life/DomainPage.tsx`) confirms this precisely — `coverage.ts`'s status/`weakest` logic is byte-for-byte unchanged from round 1 (only the `describe()` wording touched, which is QA-M1's fix, not QA-B2's); the entire QA-B2 repair is in `DomainPage.tsx`'s `CoveragePanel`, swapping the two buttons for a pointer sentence exactly when `coverage.weakest !== undefined`. That is not a cosmetic dodge: `pickWeakest` (unchanged) already only returns a value when a standing concept is genuinely, structurally the reason for `stale`, so gating the UI on it is the correct fix for "an offered action whose own copy implies it can do something it structurally cannot" — the defect was in what the page offered, not in what coverage believed, and the account holds up.
+
+One scope correction to my own round-1 report: I listed the affected pages as eight (including Fatherhood). DEF-0032 correctly narrows this to seven — Fatherhood's only standing concept, `custodyArrangement`, is `DURABLE`, and `neglectedAfterDaysFor` returns `undefined` for a durable freshness window, so `neglected` (which requires `neglectedAfter !== undefined`) can never be true for it. Fatherhood was never actually reachable by this defect. This doesn't change the verdict — seven pages (Sleep/Health & Recovery, Career, Money, Home, Private, Direction, Faith) is still the large majority of the ten — but the retest is the correct place to record the correction.
+
+### QA-M1 — retest: **PASS, fixed, and the freshness signal still reaches the owner**
+
+Round 1's exact default-seed-data repro is no longer available to reproduce verbatim (a fresh/cleared QA-lab session has no auto-loaded default seed — round 1's "default state" was apparently carried over in-browser state from a prior session, not an app-level seed). Built the equivalent instead, matching DEF-0033's own regression fixture: a single `home.friction` observation dated 10 days before the travelled clock (past its own 7-day freshness window, short of the ~21-day neglect threshold), with no other record on the domain (so `mattersToOwner` is false and the domain reads `quiet`, exactly as in the original repro). `#/life/home` now reads:
+
+> "How this stands: **Home & Environment has been quiet, without anything here needing your attention.**"
+> "Home friction — kitchen counter — **out of date**"
+
+The contradiction is gone — the domain-level sentence now claims only that nothing needs the owner's attention (true), not that nothing has aged (which was false). The concept-level "out of date" tag is untouched and still visible directly below it, so the freshness signal §8/§63 requires is not hidden by the reword — a person reading the panel gets one honest domain-level claim and one honest, still-visible concept-level flag, rather than two claims that fought each other.
+
+### Spot-check of the round-1 PASS list — nothing regressed
+
+Re-checked (not redone at full round-1 depth, per this prompt's instruction): all ten pages still reachable from Life with correct hrefs, none omitted/duplicated; malformed-record scenario still isolates 6 unreadable rows without blanking Life or a domain page; private-domain entry (a new sentence, entered fresh) still appears nowhere but its own page and its own Recently list, and Life's overview still shows only "Fresh — Up to date on what matters" for Private with no detail line; rapid navigation (20 hash changes across all ten pages, no delay) settles correctly with no console errors; touch target on the concept-row "Not right?" control measured 44×44px; no horizontal overflow. Deferred items (P4-6, P4-7 at 80.6×36, the started-move case, the inline Life-area link at ~21px height) were not re-measured this round — the diff between `34e03b6` and `8d06dae` touches only `buildInfo.ts`, `MoreScreen.tsx`, `coverage.ts`, `DomainPage.tsx`/`.css`, and test files, none of which are Now/guide/lifecycle/LifeScreen surfaces, so round 1's confirmation stands.
+
+### New findings this round
+
+None.
+
+---
+
+## Identity (round 1)
 
 |                          |                                                                                                                                                                                                                                                                     |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -101,7 +152,7 @@ defects reproducible on the deployed Preview from a clean/default state.
 
 ---
 
-## Recommendation
+## Recommendation (round 1, historical)
 
 **FAIL.** Return to the original builder conversation with this report.
 
@@ -113,3 +164,7 @@ Both blocking defects are narrowly scoped:
 QA-M1 should be fixed or explicitly deferred with a stated reason in the same pass, since it sits in the same code paths as QA-B2's fix.
 
 **Recommended next step:** the original builder conversation, **Sonnet-class at High**. Reason: QA-B1 is mechanical. QA-B2 is a real but narrow design/root-cause fix inside a single, well-understood module (`coverage.ts`'s status computation plus `corrections.ts`'s two record builders) rather than architecture, learning/inference, or privacy work — High is sufficient; Max is not needed. **Conversation: the builder repairs in its own current/continuing conversation for this unresolved phase** (per `qa/README.md` §4); **retest returns to this same QA conversation** once a repaired checkpoint is deployed.
+
+## Recommendation (round 2, current)
+
+**PASS.** All three round-1 findings — QA-B1, QA-B2, QA-M1 — are verified fixed on the deployed checkpoint (`72c6d9f`, at/after the given repaired checkpoint `8d06dae`), against their original repro steps and not merely against the builder's description of the fix. Nothing previously passing regressed. Per `qa/README.md` §6, this phase can now proceed to the formal GREEN closeout in the original builder conversation.
