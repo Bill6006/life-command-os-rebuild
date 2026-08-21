@@ -39,6 +39,94 @@ None.
 
 ## Fixed
 
+### DEF-0030 — a domain page asked the owner to confirm an area it never doubted
+
+- Status: Fixed
+- Severity: Minor — an unnecessary correction control, not a wrong reading
+- Found in: Phase 5 / `727ad7b`
+- Found by: the builder's own Android-style gate, against the deployed Preview
+- Class: **a control offered on a wider condition than the sentence above it
+  actually claims.** `CoveragePanel`'s correction buttons — "I've been keeping
+  on top of this" and "Something's changed" — appeared whenever
+  `coverage.status` was `stale` or `quiet`. Life's own grouping (D-075) already
+  treats `quiet` as calm and unflagged: "Nothing new, and nothing out of
+  date," `attention: false`. Offering a correction there asks the owner to
+  confirm something the app was not asking about.
+- Reproduction: load a scenario with a domain heard from eight to twenty-seven
+  days ago and nothing currently held, open that domain's page — the
+  correction buttons appear under a summary that says nothing is overdue.
+- Root cause: `canCorrect` was written against "the app has anything to say
+  about staleness" rather than against "the app is actually asking for
+  something," and `quiet` satisfies the first without meaning the second.
+- Fix: `canCorrect = coverage.status === 'stale'` — the same condition Life's
+  own grouping uses to decide whether an area gets `attention: true`.
+- Regression: none dedicated; the existing `tests/browser/life-domain.spec.ts`
+  suite exercises `stale` areas throughout, and a `quiet`-area regression was
+  judged not worth a fixture of its own for a control that is now simply
+  absent rather than behaving differently.
+- Fixed in: `34e03b6`
+
+### DEF-0029 — a fact's own concept went unnamed in "Recently"
+
+- Status: Fixed
+- Severity: Major — an owner-facing line that does not say what it is about
+- Found in: Phase 5 / `727ad7b`
+- Found by: the builder's own Android-style gate, against the deployed Preview
+- Class: **the same class DEF-0028 belongs to, on the other kind of record.**
+  `describeChange` rendered an observation, explicit-fact or context record as
+  its bare value — `describeFactValue(record.value)` — with nothing saying
+  which concept it was a reading of.
+- Reproduction: load "A week pointed at the house" and open the Direction
+  page: "Recently" read **"60 min"**, alone, with no indication it was a
+  reading of usable time tonight rather than of the week's direction itself.
+  Reachable because a record's own `domains` tag and its concept's
+  _registered_ domain can differ by design — `usableTimeTonight`'s concept is
+  filed under Career, and several scenarios tag the record itself under
+  Direction because it is evidence about the week rather than about the
+  topic — so a reading can legitimately appear on a page other than the one
+  its concept lives on, with nothing else on that page to supply the context
+  a reader on the concept's own page gets for free.
+- Root cause: the value was rendered without its concept's label, which is
+  fine wherever a heading already supplies it (the "What the app currently
+  believes" panel) and wrong wherever nothing does (a chronological list).
+- Fix: every observation, explicit-fact and context line now leads with
+  `concepts.definitionFor(record.concept).label`, the same "Label: value"
+  shape `"Goal:"` and `"Commitment:"` already used two lines down.
+- Regression: none dedicated — covered by reading the rendered line in the
+  fix itself and by the unchanged `domain-page-data.test.ts` /
+  `life-domain.spec.ts` suites, which use substring matching and did not need
+  updating.
+- Fixed in: `2adc6f4`
+
+### DEF-0028 — four repeats of "a suggestion here," never naming which one
+
+- Status: Fixed
+- Severity: Major — generic language section 4.6 asks the app not to settle
+  for when the subject is known
+- Found in: Phase 5 / `727ad7b`
+- Found by: the builder's own Android-style gate, against the deployed Preview
+- Class: **the object of a lifecycle or outcome record was never resolved.**
+  `action-completion`, `action-decline`, `action-unable-now` and `outcome`
+  records carry a reference to the `action-recommendation` they belong to
+  rather than a subject of their own, and `describeChange` never followed it.
+- Reproduction: load "A month of what actually worked" and open the Home
+  page: "Recently" read **"Said what a suggestion here was worth"** and
+  **"Followed through on a suggestion here"**, each four times, on a history
+  whose only subject for a month was one place.
+- Root cause: the generic phrasing was correct as far as it went — the record
+  itself carries no subject — but nothing resolved the recommendation it
+  points at to find one, even though the reference was one lookup away.
+- Fix: `subjectOf` resolves the referenced `action-recommendation` and reads
+  its target object's label; `describeChange` appends it with an em dash
+  ("...here — the kitchen.") when resolvable, and leaves the sentence exactly
+  as generic as before when it is not — never a broken reference in place of
+  an absent one. Punctuation gets its own fix in the same commit: the first
+  version stranded the full stop before the em dash.
+- Regression: `tests/synthetic/domain-page-data.test.ts` — "names the subject
+  a completion or an outcome was about, in 'recently'", against the same
+  scenario the gate found it on.
+- Fixed in: `e4944a5`
+
 ### DEF-0023 — the coverage move was cancelled by the silence that created it
 
 - Status: Fixed
