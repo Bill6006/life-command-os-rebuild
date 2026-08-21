@@ -39,6 +39,46 @@ None.
 
 ## Fixed
 
+### DEF-0033 — a domain's calm word and a concept's own tag answered different questions
+
+- Status: Fixed
+- Severity: Major — undercuts section 50's "whether it is fresh" promise on the default state of two of ten pages
+- Found in: Phase 5 independent QA (QA-M1) / checkpoint `34e03b6`
+- Found by: independent QA, reading a whole domain page as a person rather than asserting on parts of it
+- Class: a contradiction between two lines of the same screen — the same class DEF-0022 and DEF-0017 belong to, on a new pair of sentences.
+- Reproduction: on the default seed data, `#/life/health-recovery`: "Sleep & Recovery has been quiet, and nothing here has gone out of date." two lines above "Hours slept last night — 7 hours — out of date." `#/life/home` showed the identical shape.
+- Root cause: `coverage.ts`'s `describe()` for the `quiet` status made an absolute claim about every reading in the domain. `quiet` only means no standing concept has crossed its own neglect threshold and the domain is not `goneQuiet` (D-061); neglect is three times a concept's own freshness window, floored at a week, so a concept can be individually `stale` in the fact layer for up to two of those windows before the domain-level sentence would ever say so. Both sentences were individually true; the copy asserted one and showed its negation underneath.
+- Fix: reworded to the claim that is actually true — `"${label} has been quiet, without anything here needing your attention."` The concept row's own "out of date" tag is untouched.
+- Regression: `tests/synthetic/domain-page-data.test.ts` — "never claims a domain has nothing out of date while a reading on the same page is tagged out of date — QA-M1", built on a homeFriction reading 10 days old (past its own 7-day window, short of its 21-day neglect threshold). Reverting the wording was tried; it fails.
+- Fixed in: the Phase 5 repair checkpoint
+
+### DEF-0032 — two of six correction kinds wrote a record and then visibly did nothing
+
+- Status: Fixed
+- Severity: Blocker — fails the phase's own stated acceptance gate ("a correction demonstrably changes later reasoning") for 2 of 6 kinds on 7 of 10 pages
+- Found in: Phase 5 independent QA (QA-B2) / checkpoint `34e03b6`
+- Found by: independent QA, on the deployed Preview
+- Class: an offered action whose own copy implies it can do something it structurally cannot.
+- Reproduction: load "A month of history, three weeks ago", open `#/life/home`. "How this stands" reads the 3-week-stale sentence with both correction buttons showing. Tapping either — "I've been keeping on top of this" or "Something's changed" — writes a real row to "Recently," and "How this stands" is unchanged, buttons still offered, immediately under the sentence the owner just tried to answer.
+- Root cause: `coverageInterpretationRecord` and `domainStatusCorrectionRecord` write non-concept-bearing records (`coverage-update` / `domain-update`), correctly folded by `evidenceByDomain` into heard-from evidence. `ConceptCoverage.neglected` is computed per standing concept from that concept's own `knowledge.observedAt`, which neither record carries a reference to — so on any domain whose staleness comes from a neglected standing concept (seven of the ten pages: Sleep, Career, Money, Home, Private, Direction, Faith — not Social or Emotional, which have no standing concept, and not Fatherhood, whose only standing concept is durable and per D-061 can never be neglected), the buttons cannot move the sentence they sit under. This was the fact layer correctly refusing to invent a value nobody reported, not a bug in `coverage.ts`.
+- Fix: not a change to the coverage computation, which was already honest. `CoveragePanel` now reads `coverage.weakest` (already computed, non-undefined exactly when a specific standing concept is the cause) and, when set, shows which concept is actually overdue and points at that concept's own "Not right?" control instead of offering the two generic buttons. When `weakest` is undefined (the `goneQuiet`-only case), the original two buttons are unchanged.
+- Regression: `tests/synthetic/domain-corrections.test.ts` — two new siblings to the existing Social/Emotional cases proving Home specifically does not manufacture freshness, plus a sweep across every domain with a neglectable standing concept (Sleep, Career, Money, Home, Private, Direction, Faith). `tests/browser/life-domain.spec.ts` — "QA-B2 — points at the overdue reading instead of offering a button that cannot settle it," proving the UI consequence on Career.
+- Siblings: the existing Social/Emotional tests in `domain-corrections.test.ts` are exactly the false-confidence gap QA-B2 named — both fixtures were built on the only two domains where this defect is structurally unreachable. Kept, and now captioned as such.
+- Fixed in: the Phase 5 repair checkpoint
+
+### DEF-0031 — the app's own build screen denied that Phase 5 exists
+
+- Status: Fixed
+- Severity: Blocker — a false, owner-visible claim about the phase's own core deliverable, on a screen one tap from every other screen
+- Found in: Phase 5 independent QA (QA-B1) / checkpoint `34e03b6`
+- Found by: independent QA
+- Class: stale scaffolding copy reaching a primary owner surface — the same class D-074's copy guard exists to catch, on a claim phrased as "still ahead of us" rather than "missing," which the guard's fixed pattern list did not cover.
+- Reproduction: `#/more` → "Where the rebuild is": "Phase: 4 — the coverage engine and adaptive guides / Next: the Life domain experience," followed by "...the domain pages behind Life are next" — on the exact checkpoint that shipped them, reachable and exercised throughout the same QA pass. The QA laboratory's own header eyebrow separately read "Phase 4."
+- Root cause: `REBUILD_PHASE.number`/`.title` were the only fields anything read from `buildInfo.ts`. The sentence describing what the build currently does and what is next was separate hand-written prose in `MoreScreen.tsx`, so bumping the number left that sentence's own claim stale.
+- Fix: `REBUILD_PHASE` gains a `summary` field; `MoreScreen.tsx` renders it instead of carrying its own copy of the claim. `DEFERRAL_CLAIMS` (the D-074 guard) gains `/\b(?:is|are) next\b/i`, and the guard's prose sweep now also covers `REBUILD_PHASE.summary` directly rather than only the FEATURES files' literal source — the claim used to live as data specifically to have one source, so the guard has to follow it there. A new capability entry, "provides domain pages behind Life," denies the claim absolutely (no acknowledgment can excuse it, unlike Timeline/Insights which genuinely are Phase 6).
+- Regression: `tests/unit/architecture-guards.test.ts` — "the current phase is stated once, and matches what has actually shipped" (direct), plus the strengthened `DEFERRAL_CLAIMS`/capability sweeps. `REBUILD_PHASE.number` reverted to 4, and the old sentence pasted back into `MoreScreen.tsx`, were both tried; both fail on the repaired guard.
+- Fixed in: the Phase 5 repair checkpoint
+
 ### DEF-0030 — a domain page asked the owner to confirm an area it never doubted
 
 - Status: Fixed

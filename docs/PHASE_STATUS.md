@@ -56,51 +56,84 @@ tried to fix, and the small target itself is WCAG 2.5.5's own exception for
 a link inside a sentence. Documented in `LifeScreen.css` rather than silently
 dropped.
 
+## Independent QA — round 1: FAIL, repaired
+
+Independent QA (D-077) tested checkpoint `34e03b6` fresh, in a new
+conversation, against the deployed Preview — full report in
+[`qa/PHASE_05_QA_HANDOFF.md`](qa/PHASE_05_QA_HANDOFF.md). **Overall: FAIL.**
+Two blocking defects, one major, all three the same shape as Phase 4's phone
+gate: individually reasonable code that reads wrong once a whole screen is
+read as a person would.
+
+- **QA-B1** — `#/more` still said Phase 4 and called the ten shipped domain
+  pages "next," on the exact checkpoint that shipped them.
+- **QA-B2** — coverage interpretation and domain status wrote a real record
+  and then visibly did nothing: on any of seven pages whose staleness comes
+  from a neglected standing concept, "How this stands" never moved and both
+  buttons stayed offered under the unchanged sentence.
+- **QA-M1** — a domain page could say "nothing here has gone out of date"
+  two lines above a concept row tagged "out of date."
+
+All three are fixed — DEF-0031 to DEF-0033 in
+[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md) — each with a regression proved to
+fail when the defect is reintroduced before being restored. QA-B2 in
+particular was a real semantic question, not a UI patch: `coverage.ts`'s
+staleness computation was already honest (it correctly refuses to invent a
+concept's current value from a record that says nothing about it), so the
+fix is `CoveragePanel` pointing at the actual overdue concept instead of
+offering two buttons that could never move it. Repaired checkpoint:
+`8d06dae`. Phase 5 **remains YELLOW**, per D-077 — repair returns to the
+same independent QA conversation for retest, not to GREEN here.
+
 ## Build identity
 
-|                      |                                                                           |
-| -------------------- | ------------------------------------------------------------------------- |
-| Verified product SHA | `34e03b6` — where the builder's own gate, including the Android pass, ran |
-| Checkpoint SHA       | current `main` HEAD — documentation only past `34e03b6`, no product code  |
-| Deployed Preview SHA | identical to `main` HEAD                                                  |
-| Do they match?       | Yes, by construction — D-004, and asserted live in CI                     |
-| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/               |
-| Live proof           | `preview/build-info.json`                                                 |
+|                      |                                                                          |
+| -------------------- | ------------------------------------------------------------------------ |
+| Verified product SHA | `8d06dae` — the repaired checkpoint; where the retest below should run   |
+| Prior tested SHA     | `34e03b6` — what independent QA's round 1 (FAIL) actually tested         |
+| Checkpoint SHA       | current `main` HEAD — documentation only past `8d06dae`, no product code |
+| Deployed Preview SHA | identical to `main` HEAD                                                 |
+| Do they match?       | Yes, by construction — D-004, and asserted live in CI                    |
+| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/              |
+| Live proof           | `preview/build-info.json`                                                |
 
 Test whatever `main` HEAD is at the moment of testing, confirmed against
-`preview/build-info.json`. `34e03b6` is pinned above because it is the exact
-SHA every verification result below was measured against, including the
-Android-style pass; nothing observable has changed since.
+`preview/build-info.json`. `8d06dae` is pinned above because it is the exact
+repaired SHA every verification result below was measured against, including
+a fresh Android-style pass confirming all three fixes live; nothing
+observable has changed since.
 
 ## Verification
 
-| Gate                                      | Result                                                                                                  |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Privacy scan                              | Clean, 147 tracked files                                                                                |
-| Format (Prettier)                         | Pass                                                                                                    |
-| Lint (ESLint)                             | Pass, 0 warnings                                                                                        |
-| Typecheck (strict TS)                     | Pass, 0 errors                                                                                          |
-| Unit / contract / synthetic / adversarial | 599 passed / 599, 38 files (in plain Node, no DOM)                                                      |
-| Browser tests (Playwright)                | 213 passed / 213 — 71 tests × 360, 430, 1280px                                                          |
-| Production build                          | Pass                                                                                                    |
-| `npm run verify` from a clean checkout    | Pass                                                                                                    |
-| Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand                                                              |
-| Builder's own Android-style gate          | Pass — see "What the gate found" above; three findings, all fixed and redeployed before this checkpoint |
+| Gate                                      | Result                                                                                                                                                                     |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy scan                              | Clean, 147 tracked files                                                                                                                                                   |
+| Format (Prettier)                         | Pass                                                                                                                                                                       |
+| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                                                           |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                                                             |
+| Unit / contract / synthetic / adversarial | 610 passed / 610, 38 files (in plain Node, no DOM)                                                                                                                         |
+| Browser tests (Playwright)                | 216 passed / 216 — 72 tests × 360, 430, 1280px                                                                                                                             |
+| Production build                          | Pass                                                                                                                                                                       |
+| `npm run verify` from a clean checkout    | Pass                                                                                                                                                                       |
+| Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand                                                                                                                                 |
+| Builder's own Android-style gate          | Pass — three findings pre-QA (DEF-0028–0030) and three from independent QA (DEF-0031–0033), all fixed and redeployed before this checkpoint; re-confirmed live post-repair |
 
-### Where the 599 sit
+### Where the 610 sit
 
-Phase 4 ended at 574. The 25 new ones:
+Phase 4 ended at 574. The 36 new ones:
 
-| Suite                                                                       | Tests |
-| --------------------------------------------------------------------------- | ----: |
-| `synthetic/domain-corrections.test.ts` — section 62's other six kinds       |     6 |
-| `synthetic/domain-page-data.test.ts` — a domain page against real histories |     5 |
-| `unit/life-pages.test.ts` — D-078, asserted rather than inspected           |     8 |
-| `unit/routing.test.ts` — `lifePageSlugFromHash` additions                   |     6 |
+| Suite                                                                                                      | Tests |
+| ---------------------------------------------------------------------------------------------------------- | ----: |
+| `synthetic/domain-corrections.test.ts` — section 62's other six kinds, plus QA-B2's standing-concept sweep |    15 |
+| `synthetic/domain-page-data.test.ts` — a domain page against real histories, plus QA-M1                    |     6 |
+| `unit/life-pages.test.ts` — D-078, asserted rather than inspected                                          |     8 |
+| `unit/routing.test.ts` — `lifePageSlugFromHash` additions                                                  |     6 |
+| `unit/architecture-guards.test.ts` — QA-B1's phase-identity assertion                                      |     1 |
 
-Browser: `tests/browser/life-domain.spec.ts`, 11 tests × 3 viewports = 33 new,
-on top of the 180 already in `shell.spec.ts`, `now.spec.ts` and
-`qa-lab.spec.ts`, all unchanged and all still green.
+Browser: `tests/browser/life-domain.spec.ts`, 12 tests × 3 viewports = 36 new
+(11 pre-QA + QA-B2's pointer-message test), on top of the 180 already in
+`shell.spec.ts`, `now.spec.ts` and `qa-lab.spec.ts`, all unchanged and all
+still green.
 
 ## Gate checklist (section 50, and the phase brief)
 
@@ -114,7 +147,7 @@ on top of the 180 already in `shell.spec.ts`, `now.spec.ts` and
 | CI green: privacy scan, format, lint, typecheck, unit, browser, build | Pass                                                                                                                                                                                                      |
 | `npm run verify` passes from a clean checkout                         | Pass                                                                                                                                                                                                      |
 | Preview deploys automatically, deployed SHA equals checkpoint SHA     | Pass                                                                                                                                                                                                      |
-| Builder's own Android-style mobile pass against the deployed Preview  | Pass — 360×780, touch, mobile UA; three findings, fixed (DEF-0028–0030)                                                                                                                                   |
+| Builder's own Android-style mobile pass against the deployed Preview  | Pass — 360×780, touch, mobile UA; six findings across two rounds, all fixed (DEF-0028–0033) — see "Independent QA — round 1" above                                                                        |
 
 ## What changed
 
@@ -227,10 +260,11 @@ having lived, not a log grep.
 
 ## Open defects
 
-None. Three were found and closed during the phase, all by the builder's own
-Android-style gate against the deployed Preview, none from a failing
-assertion — DEF-0028 to DEF-0030 in
-[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
+None. Six were found and closed across two rounds: DEF-0028 to DEF-0030 by
+the builder's own Android-style gate before the first QA handoff, and
+DEF-0031 to DEF-0033 by independent QA's round 1 (FAIL) against checkpoint
+`34e03b6` — all six in [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md), none from a
+failing assertion.
 
 ## Deferred, with reasons
 
@@ -259,7 +293,10 @@ D-081 in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Next
 
-Independent QA. See the handoff below.
+Independent QA retest, in the same conversation that produced
+[`qa/PHASE_05_QA_HANDOFF.md`](qa/PHASE_05_QA_HANDOFF.md), against repaired
+checkpoint `8d06dae`. See [`NEXT_PROMPT.md`](NEXT_PROMPT.md) for the
+copy/paste retest prompt.
 
 ---
 
