@@ -5,6 +5,9 @@ coverage
 playwright-report
 test-results
 *.local
+# Scratch harnesses run from the repo root because they need its
+# node_modules — the Android gate is one. They are not part of the product.
+*.local.mjs
 .DS_Store
 .claude
 .vscode/*
