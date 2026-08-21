@@ -20,6 +20,243 @@ reopens Phase 4 or any completed phase.
 
 ---
 
+# Phase 5 — the Life domain experience
+
+**Status: YELLOW — READY FOR INDEPENDENT QA.**
+
+Section 50's goal is one sentence: give the owner optional deep inspection
+without fragmenting the brain. Ten pages, reachable from Life and nowhere
+else in the primary navigation, each answering the five things section 50
+asks a domain page to answer — what the app believes, why, what changed,
+whether it is fresh, and how to correct it — without becoming the static
+questionnaire dump section 59 excludes by name.
+
+Per D-077, this checkpoint does not self-certify. Everything below is the
+builder's own gate — unit, contract, synthetic, browser, a clean-checkout
+`npm run verify`, a privacy scan, CI, the deployed Preview SHA matching this
+checkpoint, and the builder's own Android-style pass against that deployed
+Preview — not the owner's phone approval and not independent QA. Both remain
+required before GREEN.
+
+**The builder's own gate found three defects, all on the deployed Preview,
+none from a failing assertion** — DEF-0028 to DEF-0030 in
+[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md). All three are the same shape Phase
+4's phone gate kept finding: individually reasonable code that reads wrong
+once a whole screen is read as a person would rather than asserted on in
+parts. A "recently" line naming its subject as "a suggestion here" four times
+running on a history about one place; a bare "60 min" on the Direction page
+with nothing saying it measured usable time tonight, reachable because a
+record's own domain tag can legitimately differ from its concept's registered
+one; and a correction control offered on an area Life's own grouping already
+treats as calm. A fourth suspected finding — an inline Life-area link too
+short for a 44px touch target — was investigated and reverted rather than
+fixed: padding the hit area with the usual negative-margin trick made
+adjacent wrapped names overlap, which is worse than the small target it
+tried to fix, and the small target itself is WCAG 2.5.5's own exception for
+a link inside a sentence. Documented in `LifeScreen.css` rather than silently
+dropped.
+
+## Build identity
+
+|                      |                                                             |
+| -------------------- | ----------------------------------------------------------- |
+| Checkpoint SHA       | `34e03b6` — current `main` HEAD                             |
+| Deployed Preview SHA | `34e03b6` — identical                                       |
+| Do they match?       | Yes — confirmed live against `preview/build-info.json`      |
+| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Live proof           | `preview/build-info.json`                                   |
+
+## Verification
+
+| Gate                                      | Result                                                                                                  |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Privacy scan                              | Clean, 147 tracked files                                                                                |
+| Format (Prettier)                         | Pass                                                                                                    |
+| Lint (ESLint)                             | Pass, 0 warnings                                                                                        |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                                                          |
+| Unit / contract / synthetic / adversarial | 599 passed / 599, 38 files (in plain Node, no DOM)                                                      |
+| Browser tests (Playwright)                | 213 passed / 213 — 71 tests × 360, 430, 1280px                                                          |
+| Production build                          | Pass                                                                                                    |
+| `npm run verify` from a clean checkout    | Pass                                                                                                    |
+| Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand                                                              |
+| Builder's own Android-style gate          | Pass — see "What the gate found" above; three findings, all fixed and redeployed before this checkpoint |
+
+### Where the 599 sit
+
+Phase 4 ended at 574. The 25 new ones:
+
+| Suite                                                                       | Tests |
+| --------------------------------------------------------------------------- | ----: |
+| `synthetic/domain-corrections.test.ts` — section 62's other six kinds       |     6 |
+| `synthetic/domain-page-data.test.ts` — a domain page against real histories |     5 |
+| `unit/life-pages.test.ts` — D-078, asserted rather than inspected           |     8 |
+| `unit/routing.test.ts` — `lifePageSlugFromHash` additions                   |     6 |
+
+Browser: `tests/browser/life-domain.spec.ts`, 11 tests × 3 viewports = 33 new,
+on top of the 180 already in `shell.spec.ts`, `now.spec.ts` and
+`qa-lab.spec.ts`, all unchanged and all still green.
+
+## Gate checklist (section 50, and the phase brief)
+
+| Requirement                                                           | Status                                                                                                                                                                                                    |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The fourteen existing golden scenarios still pass, unchanged          | Pass — none of their files changed this phase                                                                                                                                                             |
+| Every registry domain reachable from exactly one page                 | Pass — `unit/life-pages.test.ts`, D-078 asserted directly                                                                                                                                                 |
+| A correction on a domain page demonstrably changes later reasoning    | Pass — proved for all six new kinds in `synthetic/domain-corrections.test.ts`, and live: correcting a stale learning topic on Career turns the area current and removes the coverage-driven move from Now |
+| The private domain is manual-entry-first and discreet elsewhere       | Pass — `life-domain.spec.ts`: the reading appears only on its own page, never on Life, Now or Timeline; "Not known yet" reads as an invitation ("Add this"), not a gap                                    |
+| No domain page looks like a static questionnaire dump                 | Pass — every correction control closed until tapped, asserted structurally (`input.domain-input` has zero matches before a tap)                                                                           |
+| CI green: privacy scan, format, lint, typecheck, unit, browser, build | Pass                                                                                                                                                                                                      |
+| `npm run verify` passes from a clean checkout                         | Pass                                                                                                                                                                                                      |
+| Preview deploys automatically, deployed SHA equals checkpoint SHA     | Pass                                                                                                                                                                                                      |
+| Builder's own Android-style mobile pass against the deployed Preview  | Pass — 360×780, touch, mobile UA; three findings, fixed (DEF-0028–0030)                                                                                                                                   |
+
+## What changed
+
+### `src/intelligence/corrections.ts` — the other six of section 62
+
+Phase 4 could honestly offer two of section 62's eight correctable kinds — a
+learned effect and a learned preference, both through `beliefCorrectionRecord`
+— because Now was the only surface that could see a decision to disagree
+with. This phase adds the other six, and every one of them writes a record
+kind that already existed: `factCorrectionRecord` and
+`contextCorrectionRecord` for facts, context and direction (the weekly focus
+is simply a fact about `CONCEPT.weeklyFocus`); `goalCorrectionRecord`,
+superseding rather than appending, because there is no "latest wins" for a
+goal; `coverageInterpretationRecord` and `domainStatusCorrectionRecord`,
+writing the same `coverage-update` and `domain-update` kinds `growth.ts`
+already writes for a growth answer. No new record kinds, no changes to
+`facts.ts`, `direction.ts` or `coverage.ts` — a domain-page correction changes
+what the app reports next through the read paths that already governed these
+records (D-081 records the one real judgment call: a durable concept has to
+go through `contextCorrectionRecord`, never `factCorrectionRecord`, or it
+would outrank every context record for that concept forever regardless of
+date).
+
+### `src/features/life/domainPages.ts` — the ten-page registry, and what a page reads
+
+`LIFE_PAGES` is D-078 in code. `assembleDomainPageData` reads a domain page's
+four sections from the same `Situation` Now and Life already read — nothing
+decides anything and nothing is a second computation: coverage from
+`situation.coverage`, goals from `situation.direction.goals`, concept
+readings from `situation.view.facts`, recent changes from the records
+`coverage.ts` already treats as meaningful evidence about the area, each
+described in one line with its subject resolved where one exists (DEF-0028,
+DEF-0029).
+
+### `src/features/life/DomainPage.tsx` and `LifeScreen.tsx` — the pages, and the links to them
+
+A domain page offers exactly one thing beyond what Life already shows: a
+correction, closed until tapped, for each of the four things section 50 asks
+it to answer. A concept reading reuses its `QuestionSpec`'s options where one
+exists — the same control the guide already offers — and a plain text field
+otherwise. Coverage gets "I've been keeping on top of this" and a free-text
+"Something's changed", offered only when the area is actually stale
+(DEF-0030). Goals get Done / No longer this. Every Life area name now links
+to its page.
+
+### `src/platform/routing.ts` — a domain page is a second hash segment under Life
+
+`#/life/health-recovery`, not a fifth destination — section 5's four stay
+fixed. `lifePageSlugFromHash` stays syntactic, so `src/platform` does not
+have to depend on the page list in `src/features`.
+
+**Product behaviour changed:** yes — ten new pages, reachable from Life, each
+with a working correction path.
+**Semantic behaviour changed:** no new decision logic — every correction
+changes what the existing fact layer, direction and coverage engine already
+read, through paths that predate this phase.
+
+## Phone check (what to look at)
+
+Open Preview. Header → **More** → **Open the QA laboratory**, load
+"Everything current except the studying", then **Life** → **Career &
+Learning**.
+
+1. **The stale reading, corrected.** "Current learning topic" reads
+   _subnetting_, flagged out of date, with a "Not right?" link. Tap it, type a
+   new topic, **Save**. "How this stands" should read _"Career & Learning is
+   current"_ rather than the seven-week-silence sentence, and "Recently"
+   should show the new topic at the top, dated today.
+2. **The same correction, on Now.** Back out to Now: the coverage-driven
+   refresh move should be gone, because the app is no longer reading the area
+   as quiet.
+3. **A closed set of answers.** Load "A settled arrangement, and one week
+   away", open **Fatherhood / Adaya**, tap "Not right?" under "Child with the
+   owner". It should offer _Yes_ / _Not tonight_ — the same options the guide
+   would — not a text field.
+4. **The private page.** Open **Private / Sexual Health** on a history where
+   nothing has been entered: "Not known yet" with an **Add this** button, not
+   a gap. Enter something, then check Now, Life and Timeline — it should
+   appear nowhere but here.
+5. **A goal, settled.** On Career, tap **Done** under "Pass the CCNA" — it
+   should leave the goals list.
+6. **The wall, still absent.** Life itself should read exactly as it did at
+   Phase 4's close — grouped, dull where it should be dull — with every area
+   name now a link.
+
+What to judge is section 50's own list, read as a person: does each page say
+what the app believes, why, what changed, whether it is fresh, and how to
+fix it — and does the "Recently" list read as a sentence you would recognise
+having lived, not a log grep.
+
+## Deliberately not built
+
+- **Creating a new goal.** Section 50's build list says "goals"; what this
+  phase offers is correcting the standing of an existing one (`Done` /
+  `No longer this`), not authoring one. A new goal needs an entity-creation
+  flow this phase did not need to build for the correction gate to hold.
+- **A dedicated "state a situational exception" control**, beyond what the
+  guide's own `childPresent` question already offers through the same
+  correction path. `contextCorrectionRecord` supports a situational, dated
+  exception on any concept; no domain page offers a control to set one with
+  its own end date. `tests/synthetic/domain-corrections.test.ts` proves the
+  mechanism works; nothing in the UI reaches it yet for concepts other than
+  the ones with a `QuestionSpec`.
+- **The full chronological Timeline.** "Recent changes" is domain-scoped and
+  reads the same records `coverage.ts` already treats as meaningful evidence
+  — Phase 6 builds the whole-life surface.
+- **Progressively disclosed evidence/analytics** — D-079, explicitly Phase 6.
+- Exports, backup and restore (Phase 7), the legacy importer (Phase 8), the
+  service worker (Phase 10).
+
+## Open defects
+
+None. Three were found and closed during the phase, all by the builder's own
+Android-style gate against the deployed Preview, none from a failing
+assertion — DEF-0028 to DEF-0030 in
+[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
+
+## Deferred, with reasons
+
+Unchanged from Phase 4, confirmed still true — none of this phase's work
+touched Now, the guide, or the lifecycle:
+
+- **P4-6 — the no-action eyebrow.**
+- **P4-7 — the More button is 81×36.**
+- **A started move that is never settled.**
+
+And the older ones, also unchanged:
+
+- **The older ranking dimensions still cost weight when they know nothing**
+  outside `follow-through`, `direct-result` and the coverage branch of
+  `bottleneck-fit`.
+- **`hold` is still never generated.**
+- **Free-text constraints are still shown, not enforced.**
+- **Emotional Health has no standing concept** in the registry, so it can
+  only go stale through the domain-level backstop — unchanged, and now also
+  the reason its domain page's "current understanding" panel is thin: there
+  is exactly one concept (`emotionalState`) to show.
+
+## Decisions made
+
+D-081 in [`DECISION_LOG.md`](DECISION_LOG.md).
+
+## Next
+
+Independent QA. See the handoff below.
+
+---
+
 # Phase 4 — Coverage Engine + adaptive guides
 
 **Status: GREEN — owner-approved on `1d52de4`.**

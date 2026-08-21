@@ -1,192 +1,228 @@
 # Next prompt
 
-Canonical plan section 43. The intelligence level sits outside the prompt so the
-owner can switch Claude Code before pasting.
+Canonical plan section 43. The intelligence level, model and conversation
+instruction sit outside the prompt so the owner can switch Claude Code before
+pasting.
 
-**Phase 4 is GREEN**, approved by the owner on `1d52de4` and closed at
-`297de05`.
-
-**Phase 5 is the first phase under the independent QA protocol** (D-077,
-[`qa/README.md`](qa/README.md)). The builder below does not approve its own
-work: it finishes at **YELLOW — READY FOR INDEPENDENT QA** and hands off to a
-separate conversation.
-
-**The canonical plan is now v1.2** (D-079), copied verbatim into
-[`docs/CANONICAL_REBUILD_PLAN.md`](CANONICAL_REBUILD_PLAN.md). Its four changes
-are the QA protocol above, Phase 6's progressively disclosed evidence/analytics
-(Phase 5 does not touch this), the eleven-domains/ten-pages rule below, and
-this workflow. From this handoff on, every boundary also names a recommended
-**Claude model**, not only an intelligence level (D-080).
+**Phase 5 is YELLOW — READY FOR INDEPENDENT QA**, at checkpoint `34e03b6`
+(deployed Preview SHA identical, confirmed live). It does not become GREEN
+here. Owner decision D-077 and the protocol in
+[`qa/README.md`](qa/README.md): a builder conversation may not approve its
+own phase. The full closing report is in
+[`PHASE_STATUS.md`](PHASE_STATUS.md) under "Phase 5 — the Life domain
+experience."
 
 ---
 
 ## NEXT CLAUDE ACTION
 
-- **Model:** `Claude Sonnet 5` (current Sonnet-class)
-- **Intelligence level:** `High`
-- **Conversation:** `NEW`
-- **Why this model:** Phase 5 is domain pages, correction flows and goals on an
-  established kernel — ordinary implementation, UI work and domain wiring, the
-  case D-080 puts on the Sonnet-class model rather than Opus-class. Nothing in
-  the phase's scope is cross-system semantic design, inference mathematics, or
-  privacy/migration architecture — the categories that would call for Opus.
-- **Why this level:** the same work is ordinary at the level of effort, not
-  only the model — D-077's rule puts it at High. The one pattern that could
-  have needed Max already exists: the growth suggestion is a worked correction
-  with both answers recorded and read. Escalate to Max (and reconsider the
-  model) only if a correction kind turns out to need new inference semantics
-  rather than a new record and a read path.
-- **Why this conversation:** Phase 4 is closed and its context is spent. Phase 5
-  builds surfaces on a large kernel, and a window that has to read the coverage
-  engine before rendering it is likelier to notice what it says than one that
-  remembers writing it.
-- **Attach/reference:** Nothing. The prompt names the files to read. Do not
-  attach or request any old Life Command OS document.
+- **Model:** Sonnet-class (Claude Sonnet 5 or the nearest current equivalent)
+- **Intelligence level:** High
+- **Conversation:** **NEW — required for independence**
+- **Why this model:** ordinary UI/record-correction work under an established
+  pattern (`qa/README.md`'s "Sonnet-class, High when sufficient" bucket) —
+  nothing here needs cross-system semantic redesign, learning/inference
+  mathematics, or privacy/migration architecture.
+- **Why this level:** the same reason — routine independent QA against a
+  phase whose acceptance criteria are already concrete and testable.
+- **Why a new conversation:** independent QA must not inherit the builder's
+  model of why its own work is correct (plan section 43, D-077). A reviewer
+  handed the author's reasoning stops being independent.
+- **Attach/reference:** nothing beyond what the prompt below already names —
+  the repository is public and the prompt gives every path QA needs.
+
+---
 
 ## COPY/PASTE PROMPT
 
 ```text
-You are continuing the Life Command OS rebuild. Phase 4 is complete and GREEN, approved by the owner. Begin Phase 5.
+You are independent QA for Life Command OS Phase 5 — the Life domain
+experience. This is a NEW conversation with no memory of how this phase was
+built. Do not ask for or assume access to any prior conversation.
 
-Work in this repository:
-D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
-GitHub: Bill6006/life-command-os-rebuild (public, default branch main)
-Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
-Phase 4 was approved on checkpoint 1d52de4 and closed at 297de05. Work from main.
+Repository: https://github.com/Bill6006/life-command-os-rebuild (public,
+branch main). Checkpoint SHA to test: 34e03b6. Deployed Preview SHA: 34e03b6
+(should match — verify this yourself against
+https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+before testing anything else; if it does not match, stop and report that
+alone).
 
-Read these first, in this order:
-1. docs/CANONICAL_REBUILD_PLAN.md — the sole governing authority, read it completely
-2. docs/qa/README.md — the independent QA protocol. It governs how this phase ends, and it changes what you are allowed to declare.
-3. docs/PHASE_STATUS.md — what Phase 4 delivered, what the Android phone gate changed, and what it deliberately did not build
-4. docs/DECISION_LOG.md — decisions D-001 to D-080 and their reasons. D-059 to D-076 govern coverage, reliability, inferred evidence and how Life presents them; D-077 is the QA protocol; D-078 settles the domain/page count you will otherwise trip over; D-079 records the plan's move to v1.2; D-080 adds a recommended Claude model to every handoff, alongside the intelligence level and conversation instruction you already provide.
-5. docs/ARCHITECTURE_BOUNDARIES.md — module ownership, and the line between deciding and recording
-6. docs/DEFECT_LEDGER.md — DEF-0001 to DEF-0027. Read DEF-0020 and DEF-0023 to DEF-0027 in full. Not one Phase 4 defect came from a failing assertion: two came from tests that could not be made to pass, one from printing the copy after everything was green, and four from the owner on a phone.
+Preview URL: https://bill6006.github.io/life-command-os-rebuild/preview/
 
-Then read the engine you are building on: src/intelligence/coverage.ts, growth.ts, derived.ts, situation.ts, engine.ts, evaluate.ts, explain.ts, learning.ts, corrections.ts, outcomes.ts, lifecycle.ts. Also src/domain/concepts.ts, src/domain/records.ts, src/domain/domains.ts, src/memory/facts.ts, and the surfaces you will be extending: src/features/life/LifeScreen.tsx and src/features/now/NowScreen.tsx.
+Read these, in this order, before testing anything:
 
-HOW THIS PHASE ENDS — READ BEFORE YOU START
+1. docs/CANONICAL_REBUILD_PLAN.md — the sole governing authority (v1.2).
+   Section 50 governs this phase directly. Sections 4.1, 7, 8, 11, 59, 61,
+   62 and 63 govern specific claims the phase makes. Read the whole
+   document, not only section 50 — several of the rules a domain page can
+   violate are stated elsewhere (section 11 for the private domain, section
+   61 for copy style, section 4.6 for specificity, sections 37 for mobile/
+   accessibility).
+2. docs/qa/README.md — the protocol you are executing. It governs your role,
+   what you may and may not do, and the report you must produce.
+3. docs/PHASE_STATUS.md — read only the "Phase 5 — the Life domain
+   experience" section (the first phase entry in the file) for the exact
+   gate checklist, verification results and files changed. Do not read this
+   as a claim of correctness — it is the builder's own account of its own
+   gate, which is exactly what you are here to test independently.
+4. docs/DECISION_LOG.md — D-081 specifically (a domain page corrects a
+   durable concept as context, not as a fact). D-070 to D-076 give
+   background on the coverage engine and growth-suggestion mechanism this
+   phase's corrections build on.
+5. docs/ARCHITECTURE_BOUNDARIES.md — module ownership, particularly the
+   `src/features/life/` paragraph.
+6. docs/DEFECT_LEDGER.md — DEF-0028 to DEF-0030 specifically: three defects
+   the builder's own gate found and fixed before this checkpoint. Read them
+   so you know what was already caught; do not assume they are the only
+   defects of their class.
 
-You may not approve your own phase. This is owner decision D-077 and it is not negotiable by anything you conclude while building.
+Then read the implementation: src/features/life/domainPages.ts,
+src/features/life/DomainPage.tsx, src/features/life/LifeScreen.tsx,
+src/intelligence/corrections.ts, src/platform/routing.ts.
 
-When you believe the implementation is complete:
+## What this phase claims to build
 
-- the phase becomes YELLOW — READY FOR INDEPENDENT QA. Never GREEN.
-- you complete your normal gate first: unit, contract, synthetic and adversarial tests; browser tests; clean-checkout npm run verify; privacy scan; CI; deployed Preview SHA equal to the checkpoint SHA; and your own Android-style mobile pass, because this phase is almost entirely owner-facing surface.
-- in that same response, without being asked, you provide: phase status; checkpoint SHA; deployed Preview SHA and whether they match; exact verification counts; known, open and deferred items; the recommended Claude model and intelligence level for QA (D-080 — lowest combination that does not risk quality, not the strongest by default); the conversation instruction NEW; the exact QA report path docs/qa/PHASE_05_QA_HANDOFF.md; and the COMPLETE copy/paste prompt for the independent QA conversation.
+Ten domain pages (section 50), reachable only from Life, each showing what
+the app currently believes about that domain, why, what changed recently,
+whether it is fresh, and offering a way to correct it. Every Life area name
+links to its page. A domain page correction writes a canonical record
+through one of six new functions in corrections.ts (facts, context, goals,
+direction, coverage interpretation, domain status) plus the two that already
+existed from Phase 4 (a learned effect, a learned preference — both still
+reached from Now, not from a domain page).
 
-Write that QA prompt so it does not contaminate the review. Give QA the governing requirements, the acceptance criteria, the checkpoint, the explicit deferrals and the repository paths it needs. Do not tell it what you believe is correct, which behaviours are intentional, or what conclusion you expect. A reviewer handed your answer key stops being independent, and the whole point of the protocol is that Phase 4 passed 574 unit tests and 171 browser tests and then failed a phone gate on five counts.
+## Governing acceptance criteria (canonical plan section 50, and the phase
+## brief this builder worked from)
 
-If QA reports FAIL, the owner returns here. You read docs/qa/PHASE_05_QA_HANDOFF.md, take each blocking defect through plan section 42 — reproduce, identify the whole class, write a regression, prove it fails when the defect is reintroduced, fix the root cause, rerun the full gate, deploy a new checkpoint — and you still do not mark the phase GREEN. You give the repaired SHA and a retest prompt for the SAME QA conversation.
+- The fourteen existing golden scenarios (G-001 through G-014, minus none)
+  still pass, unchanged.
+- Every domain in the registry (eleven of them — see section 4.1) is
+  reachable from exactly one of the ten pages, none omitted, none
+  duplicated. The Health & Recovery page is the one page that covers two
+  domains (Health & Physical Capacity, Sleep & Recovery) — this is
+  deliberate (D-078), not a defect, but confirm both domains are actually
+  represented on that page rather than only named in its title.
+- A correction made on a domain page demonstrably changes later reasoning —
+  not merely that a record is written, but that some other screen (Life's
+  coverage status, Now's recommendation, the guide's questions) reads
+  differently afterward because of it.
+- The private domain (Private / Sexual Health) is manual-entry-first and
+  discreet elsewhere: explicit content entered there must not appear on Now,
+  Life's overview, Timeline, or any other domain page — test this directly,
+  do not take the builder's word for it.
+- No domain page reads as a static questionnaire dump (section 59 excludes
+  the old domain maturity UI and the old category switches by name). Judge
+  this as a person reading the whole page, not by checking whether input
+  fields exist.
+- Coverage status shown on a domain page must agree with what Life's
+  overview shows for the same domain at the same moment — one computation,
+  not two that could disagree.
+- CI green: privacy scan, format, lint, typecheck, unit, browser, build.
+- `npm run verify` passes from a clean checkout.
+- The deployed Preview SHA equals the checkpoint SHA (checked above).
+- Section 61's copy rules apply to every new sentence: concise, specific,
+  ordinary, no research-report language, no internal type names, no moral
+  judgment.
 
-Only after QA reports PASS does the owner return here for the formal closeout, and only then is the phase GREEN.
+## How to test
 
-HARD RULES
+Use a real Android-style Playwright context — touch, a mobile user agent
+(e.g. Galaxy S24 or Pixel-class, ~360×780), a realistic device pixel ratio
+(2 or 3), mobile scrolling and interaction — against the deployed Preview
+URL above, not merely a narrow desktop viewport. Also exercise a desktop
+width, since the repository's own browser suite tests three widths and a
+regression could be width-specific.
 
-- The canonical plan is the sole governing authority. Authority order: explicit current owner decisions, then the plan, then owner-approved amendments, then docs/DECISION_LOG.md, then verified implementation in this repository.
-- The old planning and archive documents are intentionally excluded. Do not ask for them. Do not treat the old app as a specification.
-- Bill6006/life-command-os is legacy/reference only. Never clone, inspect, modify, repoint or mine it. It is not a requirements source. It also holds 32 commits that exist only on this machine, so never run git push, reset or clean against it.
-- No real owner data enters this repository. Fixtures are synthetic only. scripts/privacy-scan.mjs runs in CI and must stay clean.
-- No legacy feature returns merely because it existed before.
-- Run npm run verify before every push. Not a subset of it. Run npm run test:browser before handing off to QA.
-- If something conflicts with the plan or is genuinely ambiguous, stop and ask the owner rather than guessing.
+The QA laboratory is reachable from the deployed Preview at
+`#/qa` (header → More → "Open the QA laboratory" also works). It has a
+library of synthetic scenarios you can load, a clock you can move, and an
+inspector over facts, coverage, entities and history. No real owner data
+exists anywhere in this repository or its scenarios (section 39) — you may
+load, edit and time-travel through any of them freely.
 
-WHAT PHASES 1 TO 4 BUILT, AND WHAT YOU MUST NOT WEAKEN
+Test at minimum:
 
-A working intelligence kernel in src/intelligence/, pure and clock-free, with one entry point: decide(view, moment, options). It assembles the situation from resolved facts, notices which life areas have gone quiet, generates candidates from the owner's own entities, filters what does not fit and records why, scores across seventeen dimensions, chooses one move or a valid non-action, explains it in the owner's particulars, records what the owner does about it, asks for the right kind of result when there is one to give, works some results out for itself, and learns from all of it.
+- Reaching each of the ten domain pages from Life, and from a direct hash
+  link (`#/life/<slug>` — slugs are health-recovery, fatherhood, career,
+  money, social, emotional, faith, home, private, direction).
+- Reading each page as a person: does it say what the app believes, why,
+  what changed, whether it is fresh, and how to correct it — in that order
+  of importance, without contradictions between two lines of the same
+  screen.
+- Making at least one correction of each of the six new kinds (fact,
+  context, goal, direction, coverage interpretation, domain status) and
+  confirming it changes something else in the app, not only the field you
+  edited.
+- The private domain specifically: enter something there, then check Now,
+  Life, Timeline and every other domain page for leakage.
+- A domain with nothing known yet (an "unheard" area) — does it read as an
+  invitation to enter something, or as a gap/failure? Section 4.4 forbids
+  the latter.
+- A domain that is stale — does the correction path offered there actually
+  match what a person would want to say, or does it feel like it is asking
+  the wrong question?
+- Malformed or contradictory synthetic data (the QA lab has scenarios for
+  this) against a domain page — confirm nothing blanks the surface.
+- Rapid navigation between domain pages (a real double-tap or fast swipe
+  case) — confirm nothing crashes and nothing shows stale/wrong content
+  from the previous page.
+- Touch targets, overflow, safe-area behavior, and whether the fixed bottom
+  navigation ever covers content or a control on a domain page.
+- Whether any owner-facing sentence on a new screen claims the app cannot
+  do something it actually can (section 61, and the architecture guard this
+  repository already enforces for it) — read the copy skeptically rather
+  than trusting it.
+- Which existing automated tests, if any, gave false confidence — i.e.
+  passed while the actual owner-facing behavior was wrong. Name them
+  specifically if you find any.
 
-These are load-bearing. Breaking any of them is a regression, and each has a test that will fail:
+## Explicit deferrals — confirmed unchanged, do not report these as new
 
-- Unknown stays unknown. Four knowledge states, no default escape hatch, no valueOr (D-014). Reliability never changes which state a record resolves to: a derived or model reading is inferred at any reliability, including one (D-060).
-- A recommendation that cannot resolve its subject renders nothing (D-018). There is no fallback wording, ever.
-- Canonical records are append-first. A correction is a new record; nothing is edited in place (D-015).
-- Nothing below the UI reads the wall clock. The moment is always an argument (guarded).
-- There is exactly one arbitration path. No surface may import candidates, constraints, evaluate, arbitrate, advisor, moves, learning or coverage — features ask the engine or get nothing (guarded). lifecycle, outcomes, corrections, derived and growth are open because they record rather than decide. Coverage is reached through situation so Life shows the object the decision was made from (D-071, D-075).
-- The evaluator and the arbiter know no life area by name (D-030).
-- The engine may name its own routines and never the owner's life (D-021).
-- The explanation may only cite evidence the decision leaned on (D-031), may not assert an absence from ignorance (D-038), and takes what a move was chosen over from the arbitration (D-035).
-- A context in force is current, whatever the age of the record carrying it (D-012, DEF-0022). Coverage never contradicts the fact layer and never contradicts the premise on the same screen.
-- A move proposed to resolve an unknown is not scored down for that unknown, and is not rewarded for it either (D-072).
-- A limiter carries its own label; a coverage gap is not called an obstacle (D-073).
-- Owner-facing copy may not claim the app cannot do something it does. The guard is a rule, not a phrase list: every deferral claim must be acknowledged with a reason, and six proved capabilities may not be denied (D-074). If you write a screen that says something is not built, expect to add an acknowledgement with a reason, and expect that to be read.
-- A question names what it is about (D-039), is asked only when at least half its answers would land somewhere else (D-036), and stops once an answer has changed nothing (D-033). The guide can ask zero questions and must keep being able to. Coverage orders questions and never authorises one (D-068).
-- Inference completes a loop and never opens one (D-064). It may never conclude harm (D-066).
-- A growth-stage change is proposed after three occasions and never applied by the app (D-070).
-- The bottom navigation has exactly four primary destinations; More is a header entry and QA lives inside it (D-028).
-- Phase language appears in exactly two places — the build panel behind More, and the QA laboratory — both reading REBUILD_PHASE from src/platform/buildInfo.ts (D-034). Update REBUILD_PHASE when Phase 5 lands.
-- Scenarios shown to the owner must be lives he recognises (D-041). He has full custody of his daughter Adaya.
-- The deterministic baseline is the selected architecture (D-024). No live model inference (D-025) — owner decision, do not raise unless asked.
+From Phase 4, untouched by this phase (Now, the guide and the lifecycle were
+not modified):
 
-DEFERRED BY THE OWNER — DO NOT FIX THESE AS INCIDENTAL WORK
+- The no-action eyebrow renders a whole sentence in an uppercase micro-label
+  slot (P4-6).
+- The More button is 81×36, below the 44px touch-target minimum (P4-7).
+- A started move that is never settled stays "Under way" indefinitely.
 
-Three items were deferred explicitly at the Phase 4 closeout. They are decisions, not oversights. Do not fold them into Phase 5 unless the owner reopens them, and tell QA they are known so it does not report them as new:
+New to this phase, and deliberate:
 
-- P4-6 — the no-action eyebrow renders a whole sentence in an uppercase micro-label slot.
-- P4-7 — the More button is 81x36, below the 44px minimum. It predates Phase 4.
-- A started move that is never settled stays "Under way" indefinitely and no result is ever asked for.
+- Creating a brand-new goal is not supported from a domain page — only
+  correcting the standing of an existing one (mark done / no longer this).
+- No domain page offers a control to set a dated situational exception on a
+  concept other than the ones already reachable through the adaptive
+  guide's own questions (e.g. "is she with you tonight"). The underlying
+  mechanism supports it; no UI reaches it yet for other concepts.
+- "Recent changes" on a domain page is domain-scoped, not a full
+  chronological timeline — the whole-life Timeline is Phase 6.
+- Progressively disclosed evidence/analytics (sample sizes, rates,
+  likelihoods) do not exist anywhere yet — Phase 6, per D-079. Do not
+  expect them on a domain page.
+- An inline Life-area link (e.g. "Career & Learning" in a row of names) is
+  smaller than a 44px touch target. This was investigated deliberately: the
+  usual padding/negative-margin fix made adjacent wrapped links overlap,
+  which is a worse defect than the small target, and the small target
+  itself falls under WCAG 2.5.5's exception for a link inside a sentence.
+  If you still think this is wrong, say so — the reasoning is in
+  `LifeScreen.css` (search "44px") for you to evaluate independently rather
+  than take on faith.
 
-ELEVEN DOMAINS, TEN PAGES — SETTLED, DO NOT RE-DERIVE
+## Report
 
-The plan says eleven core domains in section 4.1 and lists ten baseline pages in section 50. That is not an off-by-one and both numbers are correct. D-078 settles it:
+Write your findings to `docs/qa/PHASE_05_QA_HANDOFF.md`. Follow the format
+in `docs/qa/README.md` section 3 exactly: phase; checkpoint SHA tested;
+deployed SHA tested; Android/mobile configuration used; the acceptance
+criteria you used; every scenario/flow tested with PASS/FAIL; exact
+reproductions for any defect; semantic, behavioral, privacy and mobile/UI
+findings kept separate; blocking vs non-blocking classification; evidence
+references; which automated tests gave false confidence, if any; explicit
+confirmation the deferred items above are unchanged; an overall PASS or
+FAIL; and a recommended next action, including the recommended Claude model
+and intelligence level for that next step if it sends the owner back to the
+builder.
 
-- The MODEL keeps ELEVEN domains. Section 4.1 is about what the engine reasons over and what may never be switched off.
-- Phase 5 builds TEN pages. Section 50 is a list of surfaces.
-- The difference is one page covering two domains: "Health & Recovery" covers BOTH "Health & Physical Capacity" AND "Sleep & Recovery". Every other entry maps one to one under looser naming — "Money" is "Money & Financial Resilience", "Fatherhood / Adaya" is "Fatherhood / Family", "Long-Range Direction" is "Long-Range Direction / Identity".
-
-The rule: all eleven domains stay in the registry, every one remains reportable on the Life overview, and every one is reachable from a page. Ten pages, none omitted, none duplicated, and the Health & Recovery page names both domains it covers. Do not build eleven pages — that splits a reading the engine takes as one. Do not reduce the registry to ten — that drops Sleep & Recovery from the model, which section 4.1 forbids and which would break the coverage engine, the recovery limiter and G-005. Write a test that asserts every registry domain is reachable from exactly one page.
-
-PHASE 5 GOAL (plan section 50)
-
-Give the owner optional deep inspection without fragmenting the brain. Life is where he goes to see what the app believes, why, what changed, whether it is fresh, and how to correct it — and he must never need to go there to keep the app working.
-
-BUILD
-
-- ten domain pages, per the rule above
-- correction flows — section 62 lists eight kinds and two exist
-- goals
-- current understanding, per area
-- coverage, per area and sub-area
-- recent changes
-- optional manual updates
-- Private / Sexual Health, manual-entry-first, with discreet behaviour on normal surfaces (section 11)
-
-The Life overview already exists and passed a phone gate. It groups eleven areas by standing, says each thing once, and reads in about a screen and a half. Extend it; do not restart it, and do not undo the grouping — DEF-0026 is what one-row-per-domain produced.
-
-WHAT MUST BE TRUE
-
-- Section 50's gate is a person navigating each page on a phone and understanding what the app believes, why, what changed, whether it is fresh, and how to correct it.
-- No domain page may look like a static questionnaire dump. Section 59 excludes the old domain maturity UI and the old category switches.
-- A domain page is not a second brain (section 7). It contributes facts, interpretation, constraints and candidates; one arbitration path still decides.
-- Section 62's corrections need a read path each. A correction nothing reads is D-029's mistake, and the growth suggestion is the worked example of doing it properly: both answers are records and both are read by the coverage engine.
-- Private / Sexual Health must be enterable deliberately and must not leak into Now or Timeline. Section 11 also forbids the app deciding that any of it is morally wrong.
-- Coverage status on a domain page must agree with the overview, which means one computation and not two (D-071).
-
-GATE — Phase 5 reaches YELLOW — READY FOR INDEPENDENT QA when all of these hold
-
-- the fourteen existing golden scenarios still pass, unchanged
-- every registry domain is reachable from exactly one page, asserted by a test
-- a correction made on a domain page demonstrably changes later reasoning
-- the private domain is manual-entry-first and discreet elsewhere
-- no domain page looks like a static questionnaire dump
-- CI is green: privacy scan, format, lint, typecheck, unit, browser, build
-- npm run verify passes from a clean checkout
-- preview deploys automatically and the deployed Preview SHA equals the checkpoint SHA
-- your own Android-style mobile pass finds nothing blocking — a real mobile browser context with touch, a mobile user agent and a realistic device pixel ratio, run against the deployed Preview, not merely a narrow desktop viewport
-
-Phase 5 becomes GREEN only after independent QA reports PASS and the owner returns here for the closeout.
-
-Phase 2's gate was failed four times by the owner on a phone. Phase 3's largest defect came from his first pass. Phase 4 passed every automated check — 574 unit tests and 171 browser tests at three widths — and then failed an Android gate on five counts: a self-cancelling ranking, a label that contradicted the ranking underneath it, two screens describing an app from two phases earlier, a wall of repeated text, and a sentence about his daughter that said the same thing twice. Every one was invisible to the suite, because the suite was written by the same reasoning that wrote the code. Expect the same: do not treat a green suite as evidence the phase is done, run a real mobile context as part of your own gate, print what the owner will actually read, prove every regression fails when its defect is reintroduced, and when the owner or QA disagrees with a diagnosis, check the code before defending it.
-
-WORKING RULES
-
-- Make reasonably small checkpoint commits. Every push to main that passes the gate redeploys Preview automatically, so tell the owner when a new phone-testable checkpoint is available.
-- Keep the kernel pure and clock-free.
-- Write tests that verify semantic behaviour, not implementation paths. An exact-string assertion proves a string is stable, not that it is right — and a count assertion proves the data is present, not that the screen is readable.
-- Follow plan section 42 for any defect: reproduce, identify the whole defect class, write a focused regression, prove it fails when reintroduced, fix the root cause, rerun the gate.
-- Keep docs/DECISION_LOG.md, docs/PHASE_STATUS.md, docs/DEFECT_LEDGER.md and docs/NEXT_PROMPT.md current. Do not write docs/qa/PHASE_05_QA_HANDOFF.md — that file belongs to QA.
-
-HANDING OFF TO QA
-
-End with the section 58 report, adjusted for the protocol: phase status YELLOW — READY FOR INDEPENDENT QA; checkpoint SHA; deployed Preview SHA and whether they match; Preview URL; files changed; exact test counts; product and semantic behaviour changed; open defects; deferred items confirmed unchanged; decisions made; the recommended Claude model for QA; the recommended Claude Code intelligence level for QA; the conversation instruction NEW; one short reason for each of those three; required references; the QA report path docs/qa/PHASE_05_QA_HANDOFF.md; and the complete QA copy/paste prompt — all in the same response. Do not make the owner ask for the QA prompt.
-
-Recommend the model per D-080: the lowest model/effort combination that does not materially risk quality, not the strongest by default. Independent QA on a phase like this is ordinarily Sonnet-class at High; escalate only if what you are handing off genuinely needs Opus-class cross-system reasoning to review — for example, if Phase 5's correction flows turned out to need new inference semantics rather than the existing record-and-read pattern.
+You do not repair product code. If you find something wrong, describe it
+precisely enough that the original builder conversation can reproduce it
+without guessing.
 ```
