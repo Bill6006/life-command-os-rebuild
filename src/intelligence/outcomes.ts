@@ -4,6 +4,7 @@ import { newRecordId, type RecordId } from '../domain/ids'
 import { renderRecommendation, type ActionVerb } from '../domain/recommendation'
 import {
   bearsConcept,
+  factValuesEqual,
   type FactValue,
   type OutcomeAspect,
   type OutcomeRecord,
@@ -637,6 +638,30 @@ export function outcomeRecord(
       ...(answer.sentiment === undefined ? {} : { sentiment: answer.sentiment }),
     },
   )
+}
+
+/**
+ * What the owner picked, in the words the button used.
+ *
+ * A surface reporting an outcome has the record's `observation` — a step on a
+ * scale — and needs the sentence that step was offered as. Reading it back out
+ * of the same table the button was rendered from is not a convenience: DEF-0020's
+ * own repair found a level labelled "A little" on screen being reported back as
+ * "a fair amount" in the trace, and recorded the rule as "the words on the
+ * button and the words in the trace have to mean the same thing".
+ *
+ * Per verb, because the answers are. "Not at all" is what a half-cleared
+ * kitchen gets; "Nothing back" is what an unanswered message gets, and neither
+ * sentence would survive being written for the other.
+ */
+export function outcomeAnswerLabel(
+  verb: ActionVerb,
+  aspect: OutcomeAspect,
+  observation: FactValue,
+): string | undefined {
+  const question = OUTCOME_QUESTIONS[verb][aspect]
+  if (question === undefined) return undefined
+  return question.answers.find((answer) => factValuesEqual(answer.observation, observation))?.label
 }
 
 /** Every question the catalogue can produce, for the class-wide sweeps. */

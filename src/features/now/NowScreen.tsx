@@ -3,8 +3,9 @@ import { Panel, PrimarySurface, Row, Rows, Screen } from '../../components/ui'
 import type { RecommendationSemantics } from '../../domain/recommendation'
 import { localDateTimeAt, systemClock } from '../../domain/time'
 import { beliefCorrectionRecord, describeBelief } from '../../intelligence/corrections'
-import { decide } from '../../intelligence/engine'
+import { decide, type Decision } from '../../intelligence/engine'
 import type { Explanation } from '../../intelligence/explain'
+import { evidenceForDecision, type DecisionEvidence } from '../../intelligence/insights'
 import { nextGuideStep } from '../../intelligence/guide'
 import { growthAnswerRecords, type GrowthSuggestion } from '../../intelligence/growth'
 import {
@@ -24,6 +25,12 @@ import { answerRecord, type QuestionOption, type QuestionSpec } from '../../inte
 import type { Situation } from '../../intelligence/situation'
 import { isPreview, isProduction } from '../../platform/buildInfo'
 import { hashForDestination } from '../../platform/routing'
+import {
+  EvidenceConfidence,
+  EvidenceLines,
+  EvidenceNote,
+  EvidenceRate,
+} from '../evidence/EvidencePieces'
 import { useMemory } from '../memory/memoryContext'
 import './NowScreen.css'
 
@@ -109,6 +116,15 @@ function EmptyNow() {
 export function NowScreen() {
   const memory = useMemory()
   const [working, setWorking] = useState(false)
+  /*
+   * Closed until asked for, and closed again whenever the decision changes.
+   *
+   * Section 51: Now stays action-first and uncluttered, and the evidence is a
+   * "compact secondary entry point". Keying the panel to the move it belongs
+   * to is what stops it staying open across a recomputation and showing the
+   * evidence for a suggestion that is no longer the one on screen.
+   */
+  const [evidenceFor, setEvidenceFor] = useState<string | undefined>(undefined)
 
   /*
    * A synchronous latch, deliberately a ref rather than state.
@@ -288,6 +304,16 @@ export function NowScreen() {
             state={decision.state}
             disabled={busy}
             onCorrect={correct}
+          />
+
+          <EvidencePanel
+            decision={decision}
+            open={evidenceFor === explanation.rendered.sentence}
+            onToggle={() =>
+              setEvidenceFor((held) =>
+                held === explanation.rendered.sentence ? undefined : explanation.rendered.sentence,
+              )
+            }
           />
         </>
       )}
@@ -490,6 +516,124 @@ function DetailPanel({
         </p>
       )}
     </Panel>
+  )
+}
+
+/**
+ * The evidence behind the move on screen (canonical plan section 51).
+ *
+ * Everything here comes from `evidenceForDecision`, which reads the decision's
+ * own explanation, evaluation and trace. Nothing on this panel is recomputed
+ * and nothing is a second opinion: section 51 forbids "a second analytics
+ * engine, a second recommendation brain, or a parallel explanation truth", and
+ * the way to honour that is for the panel to have no source of its own to
+ * disagree from.
+ *
+ * **It is closed by default and it is the only thing this adds to Now.** One
+ * link, at the bottom, under everything the screen already showed. The plan is
+ * specific about this — Now must be able to expose the meaningful evidence
+ * behind its choice *without cluttering Now* — so nothing above this line moved
+ * to make room for it.
+ *
+ * There is no evidence panel on an evening with no move. A no-action evening
+ * has its own explanation directly on the screen, and a "see evidence" link
+ * over a decision that was not made would be a button with nothing behind it.
+ */
+function EvidencePanel({
+  decision,
+  open,
+  onToggle,
+}: {
+  decision: Decision
+  open: boolean
+  onToggle: () => void
+}) {
+  const evidence: DecisionEvidence | undefined = evidenceForDecision(decision)
+  if (evidence === undefined) return null
+
+  return (
+    <div className="now-evidence">
+      <button
+        type="button"
+        className="ev-open"
+        aria-expanded={open}
+        // Named for anyone who cannot see which move it sits under (D-039).
+        aria-label={
+          open
+            ? `Hide the evidence for: ${evidence.move}`
+            : `See the evidence for: ${evidence.move}`
+        }
+        onClick={onToggle}
+        data-testid="now-see-evidence"
+      >
+        {open ? 'Hide evidence' : 'See evidence'}
+      </button>
+
+      {!open ? null : (
+        <div className="ev-detail" data-testid="now-evidence">
+          {evidence.conditions.length === 0 ? null : (
+            <EvidenceNote title="What this rested on tonight">
+              {evidence.conditions.map((condition) => (
+                <p key={condition.concept}>
+                  {condition.label}: {condition.reading}
+                </p>
+              ))}
+            </EvidenceNote>
+          )}
+
+          <EvidenceNote title="Situations like tonight">
+            <p>{evidence.comparable}</p>
+            {/*
+              The unit is named, because the two numbers on this panel count
+              different things: twelve evenings, and the twenty-four answers
+              given about them. "Who said so: 24" under "12 evenings" reads as a
+              contradiction, and it is not one.
+            */}
+            {evidence.mix === undefined ? null : (
+              <p>Answers behind these figures: {evidence.mix}.</p>
+            )}
+          </EvidenceNote>
+
+          {evidence.concluded === undefined ? null : (
+            <EvidenceNote title="What the app took from them">
+              <p>{evidence.concluded}</p>
+              <p className="note">
+                This leans hardest on the evenings most like tonight, so it can be more cautious
+                than the plain count below.
+              </p>
+            </EvidenceNote>
+          )}
+
+          {evidence.rates.length === 0 ? null : (
+            <div className="ev-block">
+              <p className="ev-block__title">What happened those times</p>
+              {evidence.rates.map((rate) => (
+                <EvidenceRate key={rate.aspect} rate={rate} />
+              ))}
+            </div>
+          )}
+
+          {evidence.context === undefined ? null : (
+            <EvidenceNote title="Where it goes better">
+              <p>{evidence.context}</p>
+            </EvidenceNote>
+          )}
+
+          <EvidenceLines
+            title="Occasions that went the other way"
+            lines={evidence.counterexamples}
+          />
+
+          <EvidenceConfidence confidence={evidence.confidence} />
+
+          <EvidenceNote title="How this was arrived at">
+            {evidence.reasoning.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+          </EvidenceNote>
+        </div>
+      )}
+    </div>
   )
 }
 

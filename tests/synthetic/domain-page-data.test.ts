@@ -79,9 +79,20 @@ describe('a domain page reads the same situation Now and Life were built from', 
   })
 
   it('names the subject a completion or an outcome was about, in "recently"', () => {
-    // Found on the Android gate: "Said what a suggestion here was worth" four
-    // times running, on a page whose whole history is about one place. The
-    // subject is one lookup away — the record just was not resolving it.
+    /*
+     * DEF-0028, found on the Android gate: "Said what a suggestion here was
+     * worth" four times running, on a page whose whole history is about one
+     * place. The subject was one lookup away and nothing was following it.
+     *
+     * The rule this asserts is the one the defect was about — **every line
+     * about an episode names what the episode was about** — rather than the
+     * exact sentences the repair happened to produce. Phase 6 changed those
+     * sentences: an outcome row now states the answer as well as the subject,
+     * because on Timeline the old wording was most of the screen. An assertion
+     * on the old strings would have failed for an improvement, which is the
+     * failure mode DEF-0020's own repair records ("an exact-string assertion
+     * proves a string is stable, not that it is right").
+     */
     const loaded = loadScenario('what-worked')
     const situation = loaded.decision().situation
     const page = pageBySlug('home')
@@ -89,16 +100,17 @@ describe('a domain page reads the same situation Now and Life were built from', 
 
     const data = assembleDomainPageData(situation, page)
 
-    const completions = data.recentChanges.filter((entry) =>
-      entry.text.startsWith('Followed through on a suggestion here'),
+    const episodeLines = data.recentChanges.filter((entry) =>
+      /suggestion here|clearing the kitchen/i.test(entry.text),
     )
-    const outcomes = data.recentChanges.filter((entry) =>
-      entry.text.startsWith('Said what a suggestion here was worth'),
-    )
-    expect(completions.length).toBeGreaterThan(0)
-    expect(outcomes.length).toBeGreaterThan(0)
-    for (const entry of [...completions, ...outcomes]) {
+    expect(episodeLines.length, 'no episode lines on a month about one place').toBeGreaterThan(0)
+    for (const entry of episodeLines) {
       expect(entry.text, entry.text).toContain('the kitchen')
+    }
+
+    // And the generic form appears nowhere, since the subject resolves here.
+    for (const entry of data.recentChanges) {
+      expect(entry.text.includes('a suggestion here.'), entry.text).toBe(false)
     }
   })
 

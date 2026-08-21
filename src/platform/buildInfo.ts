@@ -53,14 +53,16 @@ export const isProduction = runningBuild.target === 'production'
  * rather than carrying its own copy of the claim.
  */
 export const REBUILD_PHASE = {
-  number: 5,
-  title: 'the Life domain experience',
-  next: 'Timeline and Insights',
+  number: 6,
+  title: 'Timeline and Insights',
+  next: 'AI exports, backup and restore',
   summary:
     'The app decides, explains itself, watches what happens afterwards, learns from it, and ' +
     'notices when a life area has gone quiet rather than carrying on as though a months-old ' +
-    'picture were today’s — and the ten pages behind Life now let you see what it ' +
-    'believes about each area and correct it directly. Timeline and Insights are next.',
+    'picture were today’s. The ten pages behind Life show what it believes about each area ' +
+    'and let you correct it. Timeline is the whole record in order, and Insights says what has ' +
+    'been worked out from it — with the evidence behind every figure one tap away, and an ' +
+    'honest “not enough yet” wherever the evidence does not support one.',
 } as const
 
 function isDeployTarget(value: unknown): value is DeployTarget {

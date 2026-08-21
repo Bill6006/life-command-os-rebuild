@@ -1,0 +1,145 @@
+/*
+ * Timeline (canonical plan sections 24 and 26).
+ *
+ * A record, read with one thumb. The restraint here is the design: no cards
+ * per entry, no icon per kind, no colour per domain. Section 24 rules out the
+ * developer-dashboard grid and the card soup by name, and a lifetime of history
+ * is exactly the surface that turns into both if every row is given furniture.
+ *
+ * So a day is a heading and its entries are lines. What separates them is
+ * space and a hairline, not a border; what distinguishes a kind is one small
+ * word, not a colour the owner would have to learn.
+ */
+
+.tl-day + .tl-day {
+  margin-top: var(--space-5);
+}
+
+.tl-day__label {
+  position: sticky;
+  /* Under the header, so a long day keeps its date on screen while scrolling. */
+  top: 0;
+  z-index: 1;
+  padding: var(--space-2) 0;
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--ground);
+}
+
+.tl-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.tl-entry {
+  display: grid;
+  /* Time and tag are fixed and narrow; the sentence takes whatever is left, so
+   * nothing can push the page sideways on a 360px phone. */
+  grid-template-columns: 2.75rem 4.5rem minmax(0, 1fr);
+  gap: var(--space-2) var(--space-3);
+  align-items: baseline;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.tl-entry:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.tl-entry__when {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tl-entry__tag {
+  justify-self: start;
+  padding: 0.0625rem var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.tl-entry__text {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-primary);
+  text-wrap: pretty;
+  /* A long entered note must wrap rather than overflow. */
+  overflow-wrap: anywhere;
+}
+
+/* Withheld detail reads as a real entry with its content kept back, never as
+ * a gap or an error. Section 11 — discretion, not absence. */
+.tl-entry__text--held {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.tl-entry__note {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.tl-more {
+  align-self: stretch;
+  /* Comfortably over the 44px minimum, and full width so it is unmissable at
+   * the bottom of a long scroll (section 37). */
+  min-height: 2.75rem;
+  padding: var(--space-3) var(--space-4);
+  font: inherit;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.tl-more:hover {
+  background: var(--surface-3);
+}
+
+.tl-damaged {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.tl-damaged li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.tl-damaged__where {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.tl-damaged__why {
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}

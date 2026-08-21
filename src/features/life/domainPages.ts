@@ -1,8 +1,8 @@
 import type { ActiveGoal } from '../../intelligence/situation'
-import type { ConceptRegistry } from '../../domain/concepts'
 import { DOMAIN, type LifeDomainId } from '../../domain/domains'
 import type { EntityIndex } from '../../domain/entities'
 import type { RecordId } from '../../domain/ids'
+import type { DisplayPolicy } from '../../domain/privacy'
 import { matchKnowledge, type Knowledge, type KnowledgeState } from '../../domain/knowledge'
 import {
   describeFactValue,
@@ -14,6 +14,7 @@ import type { Instant } from '../../domain/time'
 import type { ConceptId } from '../../domain/windows'
 import type { DomainCoverage, Situation } from '../../intelligence/situation'
 import { questionFor, type QuestionSpec } from '../../intelligence/questions'
+import { describeRecord } from '../history/describe'
 
 /**
  * The ten baseline Life pages (canonical plan section 50, D-078).
@@ -186,117 +187,71 @@ export interface RecentChange {
 }
 
 /**
- * What a lifecycle or outcome record was about, in the owner's own words.
+ * Which kinds of entry a domain page's "Recently" panel shows.
  *
- * `action-completion`, `action-decline`, `action-unable-now` and `outcome`
- * all point at the `action-recommendation` they belong to rather than
- * carrying a subject of their own, so without this a "recently" line can only
- * say "a suggestion here" — true, and exactly the generic language section
- * 4.6 asks the app not to settle for when the subject is known. Resolving it
- * costs one lookup and never invents a subject it cannot find: an
- * unresolvable reference is silently absent rather than shown as a broken one
- * (the reading is still true without it, only less specific).
+ * Unchanged from Phase 5, and deliberately narrower than Timeline's. The owner
+ * deferred rebuilding this panel to match the whole-life surface — it serves a
+ * narrower, faster purpose — so what is shared with Timeline is the *wording*
+ * of a line (`describeRecord`), not which lines a panel is interested in. One
+ * definition of how a record reads; two decisions about what to read.
  */
-function subjectOf(
-  recommendation: RecordId,
-  history: Situation['view']['history'],
-  entities: EntityIndex,
-): string | undefined {
-  const found = history.byId(recommendation)
-  if (found === undefined || found.kind !== 'action-recommendation') return undefined
-  return entities.labelFor(found.recommendation.target.object)
-}
-
-function describeChange(
-  record: CanonicalRecord,
-  entities: EntityIndex,
-  history: Situation['view']['history'],
-  concepts: ConceptRegistry,
-): string | undefined {
-  const labelFor = (ref: Parameters<EntityIndex['labelFor']>[0]) => entities.labelFor(ref)
-  const about = (base: string, recommendation: RecordId): string => {
-    const subject = subjectOf(recommendation, history, entities)
-    if (subject === undefined) return base
-    // The full stop belongs at the end of the whole sentence, not stranded
-    // before the em dash that names the subject.
-    const withoutFullStop = base.endsWith('.') ? base.slice(0, -1) : base
-    return `${withoutFullStop} — ${subject}.`
-  }
-  /*
-   * A concept's own label leads the line, the same way "Goal:" and
-   * "Commitment:" already do below.
-   *
-   * Found on the Android gate: a record can carry a concept whose *registered*
-   * domain differs from the domain the record itself is tagged with — reading
-   * how much time is free tonight is filed under Direction in several
-   * scenarios, not Career, because it is evidence about the week rather than
-   * about the topic. Without the label, "Recently" on the Direction page read
-   * a bare "60 min" with nothing saying what it measured.
-   */
-  const concept = (id: ConceptId, value: FactValue): string =>
-    `${concepts.definitionFor(id).label}: ${describeFactValue(value, labelFor)}`
-
-  switch (record.kind) {
-    case 'observation':
-    case 'explicit-fact':
-      return concept(record.concept, record.value)
-    case 'context':
-      return record.durability === 'situational'
-        ? `${concept(record.concept, record.value)} — for now`
-        : concept(record.concept, record.value)
-    case 'goal':
-      return `Goal: ${record.statement}${record.status === 'active' ? '' : ` (${record.status})`}`
-    case 'domain-update':
-      return record.summary
-    case 'coverage-update':
-      return 'Reviewed — the owner has looked at this.'
-    case 'action-completion':
-      return about('Followed through on a suggestion here.', record.recommendation)
-    case 'action-decline':
-      return about('Passed on a suggestion here.', record.recommendation)
-    case 'action-unable-now':
-      return about("Said a suggestion here didn't fit at the time.", record.recommendation)
-    case 'outcome':
-      return about(
-        record.aspect === 'result'
-          ? 'Said how far a suggestion here got.'
-          : record.aspect === 'effect'
-            ? 'Said what a suggestion here was worth.'
-            : 'Said how a suggestion here felt.',
-        record.about,
-      )
-    case 'relationship-event':
-      return record.nature
-    case 'commitment':
-      return `Commitment: ${record.statement}`
-    case 'preference':
-      return record.statement
-    default:
-      return undefined
-  }
-}
+const RECENT_KINDS: ReadonlySet<CanonicalRecord['kind']> = new Set([
+  'observation',
+  'explicit-fact',
+  'context',
+  'goal',
+  'domain-update',
+  'coverage-update',
+  'action-completion',
+  'action-decline',
+  'action-unable-now',
+  'outcome',
+  'relationship-event',
+  'commitment',
+  'preference',
+])
 
 function recentChanges(
   situation: Situation,
   domains: readonly LifeDomainId[],
   limit = 8,
 ): readonly RecentChange[] {
+  /*
+   * A domain page is inspection, and the private page is the one place explicit
+   * private detail belongs (section 11's manual-entry-first rule).
+   *
+   * Reading the policy off the page's own domains rather than showing
+   * everything closes a hole nothing in the library currently reaches: a record
+   * carrying both `home` and `private-health` would appear on the Home page,
+   * and Phase 5 rendered every matched record's detail unconditionally. No
+   * shipped history has such a record, so nothing observable changes — but the
+   * rule is now the same one Timeline obeys rather than an accident of how the
+   * fixtures happen to be tagged.
+   */
+  const policy: DisplayPolicy = {
+    surface: 'inspection',
+    revealPrivate: domains.includes(DOMAIN.privateHealth),
+  }
+  const context = {
+    entities: situation.entities,
+    history: situation.view.history,
+    concepts: situation.concepts,
+    policy,
+  }
+
   const matching = situation.view.history.effective.filter(
     (record) =>
-      record.occurredAt <= situation.at && record.domains.some((d) => domains.includes(d)),
+      record.occurredAt <= situation.at &&
+      RECENT_KINDS.has(record.kind) &&
+      record.domains.some((d) => domains.includes(d)),
   )
   const sorted = [...matching].sort((a, b) => b.occurredAt - a.occurredAt)
 
   const out: RecentChange[] = []
   for (const record of sorted) {
-    const text = describeChange(
-      record,
-      situation.entities,
-      situation.view.history,
-      situation.concepts,
-    )
-    if (text === undefined) continue
-    out.push({ id: record.id, at: record.occurredAt, text })
+    const described = describeRecord(record, context)
+    if (described === undefined) continue
+    out.push({ id: record.id, at: record.occurredAt, text: described.text })
     if (out.length >= limit) break
   }
   return out

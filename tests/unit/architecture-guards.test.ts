@@ -244,6 +244,20 @@ describe('there is exactly one arbitration path', () => {
    * over the same history — and two of those would eventually disagree, with
    * the owner having no way to tell which screen was lying.
    */
+  /*
+   * `insights` joined in Phase 6, and it is the most interesting entry on this
+   * list because it looks like it should not be.
+   *
+   * It reads what has been learned, which is exactly why `learning` is closed.
+   * The difference is where the numbers come from: `insights` never builds a
+   * learning index. It takes the one already on the `Situation` — the object
+   * the decision on Now was made from — and counts raw answers over the episode
+   * set that same index selected. So a figure on Insights is over the evidence
+   * the arbitration saw, rather than being a second reading of the same history
+   * that would eventually disagree with it. That is D-071's argument for
+   * coverage, applied to a second reader, and the guard below makes it
+   * structural rather than a promise.
+   */
   const OPEN_TO_SURFACES = [
     'engine',
     'guide',
@@ -256,6 +270,7 @@ describe('there is exactly one arbitration path', () => {
     'corrections',
     'derived',
     'growth',
+    'insights',
   ]
   const DECIDES = [
     'candidates',
@@ -281,6 +296,48 @@ describe('there is exactly one arbitration path', () => {
       }
     }
     expect(offenders, 'a surface may ask the engine, and may not do the deciding').toEqual([])
+  })
+
+  it('keeps Insights an interpretation of history rather than a second brain', () => {
+    /*
+     * Section 51, in as many words: "Do not create a second analytics engine, a
+     * second recommendation brain, or a parallel explanation truth."
+     *
+     * Two things make that structural rather than stated.
+     *
+     * `insights.ts` cannot reach the pipeline that decides — no generator, no
+     * filter, no evaluator, no arbiter, no advisor — so it has nowhere to get a
+     * recommendation from even if a future card wanted one. And it cannot
+     * render one either: `renderRecommendation` is the only way a move becomes
+     * a sentence, and it is out of reach here, so a card physically cannot
+     * print an instruction.
+     *
+     * It also may not build a learning index. `buildLearning` and `noLearning`
+     * are what would let this file compute beliefs of its own over the same
+     * history the engine already read — two answers to "how well does this
+     * work", one on Now and one on Insights, drifting apart with every change
+     * to either. The situation's index is the only one there is.
+     */
+    const code = readCode(join(ROOT, 'src/intelligence/insights.ts'))
+    const offenders: string[] = []
+
+    for (const module of ['candidates', 'constraints', 'evaluate', 'arbitrate', 'advisor']) {
+      if (new RegExp(`from '\\./${module}'`).test(code)) {
+        offenders.push(`insights.ts imports ${module} — it must not be able to decide`)
+      }
+    }
+    if (/\brenderRecommendation\b/.test(code)) {
+      offenders.push('insights.ts can render a recommendation sentence')
+    }
+    for (const symbol of ['buildLearning', 'noLearning']) {
+      if (new RegExp(`\\b${symbol}\\b`).test(code)) {
+        offenders.push(`insights.ts builds its own learning index via ${symbol}`)
+      }
+    }
+    // And the positive half: it really does read the situation's own index.
+    expect(code).toContain('situation.learning')
+
+    expect(offenders, 'Insights interprets history; it does not decide').toEqual([])
   })
 
   it('keeps the ranking and the choice ignorant of which life area a move is in', () => {
@@ -414,7 +471,6 @@ describe('development scaffolding does not become the product — DEF-0007', () 
    * forgetting.
    */
   const STILL_TRUE: readonly { readonly near: string; readonly because: string }[] = [
-    { near: 'What is missing is this view of it', because: 'Timeline and Insights are Phase 6' },
     { near: 'Exports, backup and restore are not built yet', because: 'Phase 7' },
     {
       near: 'not built into a production release',
@@ -425,12 +481,6 @@ describe('development scaffolding does not become the product — DEF-0007', () 
       because: 'about a DST gap, not about the app',
     },
     { near: '> Not yet <', because: 'a button label — the owner answering, not a claim' },
-    {
-      near: 'Timeline and Insights are next',
-      because:
-        'Phase 6, genuinely not built yet — this is REBUILD_PHASE.next, and this same ' +
-        'entry stops being true the moment that field changes without this claim changing with it',
-    },
   ]
 
   /**
@@ -491,9 +541,12 @@ describe('development scaffolding does not become the product — DEF-0007', () 
     // Direct and deliberately unsubtle: this is the one line a human has to
     // remember to bump, and the whole point is that forgetting fails loudly
     // rather than silently, the way DEF-0031's stale "Phase 4" did.
-    expect(REBUILD_PHASE.number).toBe(5)
-    expect(REBUILD_PHASE.title).toBe('the Life domain experience')
+    expect(REBUILD_PHASE.number).toBe(6)
+    expect(REBUILD_PHASE.title).toBe('Timeline and Insights')
     expect(REBUILD_PHASE.summary).not.toMatch(/domain pages? behind life are next/i)
+    // QA-B1's own lesson, one phase on: the sentence describing what the build
+    // does may not still be describing the phase before it.
+    expect(REBUILD_PHASE.summary).not.toMatch(/timeline and insights are next/i)
   })
 
   it('denies no capability the kernel demonstrably has', () => {
@@ -538,11 +591,44 @@ describe('development scaffolding does not become the product — DEF-0007', () 
         denials: [/\bdoes not notice\b/i, /\bnothing notices\b/i],
       },
       {
+        /*
+         * Phase 6, and absolute for the same reason the domain pages are.
+         *
+         * The previous phase's own blocking defect was a screen still saying
+         * these two were "next" on the checkpoint that shipped the phase before
+         * them (DEF-0031). The acknowledgement that made that claim allowable
+         * has been removed from STILL_TRUE, and this replaces it from the other
+         * side: once Timeline and Insights exist, no wording anywhere may say
+         * they do not, and no entry in STILL_TRUE can excuse it.
+         */
+        what: 'shows the record in order, and what it has learned',
+        provenBy: {
+          file: 'src/features/timeline/timelineEntries.ts',
+          symbol: 'export function assembleTimeline',
+        },
+        denials: [
+          /\btimeline (?:and insights )?(?:is|are) next\b/i,
+          /\bno timeline\b/i,
+          /\btimeline is not built\b/i,
+        ],
+      },
+      {
+        what: 'says what it has worked out, with the evidence behind it',
+        provenBy: {
+          file: 'src/intelligence/insights.ts',
+          symbol: 'export function insightsFor',
+        },
+        denials: [
+          /\binsights (?:is|are) next\b/i,
+          /\bno insights\b/i,
+          /\binsights is not built\b/i,
+        ],
+      },
+      {
         // QA-B1. Absolute rather than acknowledgeable on purpose: unlike
-        // Timeline/Insights (genuinely Phase 6, and named in STILL_TRUE
-        // above), it can never again become true that the domain pages do
-        // not exist once they are shipped, so no acknowledgment should be
-        // able to excuse denying this one.
+        // a genuinely future phase, it can never again become true that the
+        // domain pages do not exist once they are shipped, so no
+        // acknowledgment should be able to excuse denying this one.
         what: 'provides domain pages behind Life',
         provenBy: {
           file: 'src/features/life/domainPages.ts',
@@ -575,6 +661,110 @@ describe('development scaffolding does not become the product — DEF-0007', () 
     }
 
     expect(offenders, 'a screen telling the owner the app cannot do something it does').toEqual([])
+  })
+})
+
+describe('a figure never reaches a screen without what it measures', () => {
+  /*
+   * Canonical plan section 51, and DEF-0020's second form.
+   *
+   * > Any percentage must identify the quantity it measures. Do not merge
+   * > direct result, downstream effect, comfort/friction, or follow-through
+   * > into one generic success statistic.
+   *
+   * A rule about how a number is worded cannot be kept by everyone remembering
+   * it at every call site — DEF-0020 is the record of what happens when four
+   * facts share one carrier because nothing stopped them. So exactly one
+   * component may render a percentage, it takes the whole `MeasuredRate`, and
+   * the sentence naming the quantity and the count it is over are rendered by
+   * the same function that renders the figure. Printing the figure alone is not
+   * something a caller is able to do.
+   *
+   * The QA laboratory is exempt and says why: it is a developer surface whose
+   * whole job is to show the machinery (section 35), and it is not in a
+   * production build at all.
+   */
+  const MAY_PRINT_A_FIGURE = 'src/features/evidence/EvidencePieces.tsx'
+  const DEVELOPER_SURFACES = ['src/features/qa/']
+
+  it('renders the figure and its sentence from one place', () => {
+    const source = readFileSync(join(ROOT, MAY_PRINT_A_FIGURE), 'utf8')
+    // The figure, the sentence and the count, in one component.
+    expect(source).toContain('rate.percent')
+    expect(source).toContain('rate.measures')
+    expect(source).toContain('rate.hit')
+    expect(source).toContain('rate.of')
+  })
+
+  it('lets no other owner surface print one', () => {
+    const offenders: string[] = []
+    for (const file of FEATURES) {
+      const path = repoPath(file)
+      if (path === MAY_PRINT_A_FIGURE) continue
+      if (DEVELOPER_SURFACES.some((allowed) => path.startsWith(allowed))) continue
+
+      const code = readCode(file)
+      // A literal per-cent sign in owner-facing text, or the arithmetic that
+      // produces one. Both are how a bare figure gets onto a screen.
+      if (/'[^']*%[^']*'|"[^"]*%[^"]*"|`[^`]*%[^`]*`/.test(code)) {
+        offenders.push(`${path} prints a per-cent sign`)
+      }
+      if (/\*\s*100\b|\bpercent\b/i.test(code)) {
+        offenders.push(`${path} computes a percentage`)
+      }
+    }
+
+    expect(
+      offenders,
+      'only the shared evidence component may put a figure on an owner surface',
+    ).toEqual([])
+  })
+})
+
+describe('Timeline offers nothing to press', () => {
+  it('has no button, no input and no correction on it', () => {
+    /*
+     * Section 26: "Timeline should never create phantom actionable items from
+     * corrupt data." The usual way to satisfy that is to check that corrupt
+     * rows produce no action — which proves it for the corruption somebody
+     * thought of. This proves it for all of them: there is no action on the
+     * surface at all, so there is nothing for a corrupt row to produce.
+     *
+     * The one exception is the pager, which reveals more of the same record and
+     * changes nothing.
+     */
+    for (const file of FEATURES.filter((entry) =>
+      repoPath(entry).startsWith('src/features/timeline/'),
+    )) {
+      const path = repoPath(file)
+      const code = readCode(file)
+      const offenders: string[] = []
+
+      if (/<input\b|<textarea\b|<select\b/.test(code)) offenders.push('a field to type into')
+
+      // Nothing on Timeline may write a record — not "does not currently", but
+      // cannot reach anything that could.
+      if (/\bappend\(/.test(code)) offenders.push('a write to the store')
+      for (const module of ['corrections', 'lifecycle', 'outcomes', 'growth']) {
+        if (new RegExp(`intelligence/${module}'`).test(code)) {
+          offenders.push(`an import of ${module}, which writes records`)
+        }
+      }
+
+      /*
+       * The pager is counted rather than filtered out by shape. A second
+       * handler appearing beside it is exactly the change this guard exists to
+       * catch, and a filter written to remove the pager would remove that one
+       * too.
+       */
+      const handlers = code.split('onClick=').length - 1
+      if (handlers > 1) offenders.push(`${handlers} click handlers`)
+      if (handlers === 1 && !code.includes('setLimit')) {
+        offenders.push('a click handler that is not the pager')
+      }
+
+      expect(offenders, `${path} makes Timeline actionable`).toEqual([])
+    }
   })
 })
 

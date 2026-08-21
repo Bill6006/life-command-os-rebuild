@@ -197,6 +197,21 @@ export interface EvidenceLine {
 export interface PatternEvidence {
   readonly comparable: number
   readonly window: { readonly from: LocalDayId; readonly to: LocalDayId } | undefined
+  /**
+   * How much evidence there is, as a sentence, in the units this card counts.
+   *
+   * Composed here rather than by the surface, because the surface cannot know
+   * what the number is *of*. Rendering "12 comparable occasions" under every
+   * card put that sentence over a run of nightly sleep readings, where nothing
+   * was compared and the twelve were readings — and over a standing custody
+   * arrangement, where the count was of entries predating it. One panel
+   * labelling a number with a word that is right for one card and wrong for
+   * another is DEF-0033's shape.
+   *
+   * Absent where the card's own detail line already says it. Repeating it one
+   * tap lower would be section 61's repeated boilerplate.
+   */
+  readonly counted: string | undefined
   readonly rates: readonly MeasuredRate[]
   readonly counterexamples: readonly EvidenceLine[]
   readonly included: readonly EvidenceLine[]
@@ -835,9 +850,15 @@ function evidenceFor(
     }
   }
 
+  const window = windowOf(episodes)
   return {
     comparable: episodes.length,
-    window: windowOf(episodes),
+    window,
+    counted: `${episodes.length} comparable ${episodes.length === 1 ? 'occasion' : 'occasions'}${
+      window === undefined
+        ? '.'
+        : `, between ${describeDay(window.from)} and ${describeDay(window.to)}.`
+    }`,
     rates: ratesFor(episodes, subject),
     counterexamples: [...counterexamples.values()],
     included: episodes.map((episode) => lineFor(episode, describeEpisodeOutcome(episode))),
@@ -1266,6 +1287,9 @@ function coverageCards(situation: Situation): readonly Built[] {
   const evidence: PatternEvidence = {
     comparable: quiet.length,
     window: undefined,
+    // The list below names each thing and how long it has been, which is the
+    // count said properly. A tally on top of it would say nothing extra.
+    counted: undefined,
     rates: [],
     counterexamples: [],
     included: lines,
@@ -1466,6 +1490,10 @@ function trajectoryCards(situation: Situation): readonly Built[] {
         evidence: {
           comparable: ordered.length,
           window: { from: first.dayId, to: last.dayId },
+          // The card's own detail already says how many readings and over what
+          // span. These are readings rather than occasions, and nothing here
+          // was compared to anything.
+          counted: undefined,
           // No rate: an average of a measured quantity is not a proportion of
           // anything, and printing one as a percentage would be a number
           // measuring nothing nameable.
@@ -1539,6 +1567,9 @@ function lifeSeasonCards(situation: Situation): readonly Built[] {
         evidence: {
           comparable: before.length,
           window: undefined,
+          // Said on the card itself, and they are entries rather than
+          // occasions — nothing here was compared to anything either.
+          counted: undefined,
           rates: [],
           counterexamples: [],
           included: [],
@@ -1688,8 +1719,14 @@ export interface DecisionEvidence {
   readonly move: string
   /** Current conditions the decision actually leaned on — never everything known. */
   readonly conditions: readonly ConditionLine[]
-  readonly limiter: { readonly label: string; readonly summary: string } | undefined
-  /** How many comparable situations there were, in a sentence. */
+  /**
+   * How many comparable situations there were, in a sentence.
+   *
+   * There is deliberately no limiter here. Now already prints it directly under
+   * the decision, with the label the limiter carries for its own kind (D-073),
+   * and repeating it one tap lower would be section 61'''s repeated boilerplate
+   * on the screen with the least room for it.
+   */
   readonly comparable: string
   readonly window: { readonly from: LocalDayId; readonly to: LocalDayId } | undefined
   readonly rates: readonly MeasuredRate[]
@@ -1708,8 +1745,31 @@ export interface DecisionEvidence {
    * instead of as two sentences.
    */
   readonly context: string | undefined
-  /** What it was chosen over, and the one thing that separated them. */
-  readonly instead: { readonly move: string; readonly because: string } | undefined
+  /**
+   * What the app took from those evenings, in the words Now already used.
+   *
+   * Present so the summary and the counts can be read together. Without it the
+   * panel puts "8 of 12 made a difference afterwards" under a line on Now
+   * saying the move "has made little difference in situations like tonight" —
+   * two honest statements about different quantities, with nothing on the
+   * screen to reconcile them. That is DEF-0033's class, and the fix is not to
+   * suppress one of them but to show what separates them: the belief leans
+   * harder on the evenings most like tonight, and `context` says which side of
+   * that tonight is on.
+   *
+   * Absent when the learning has not moved anything worth stating — Now shows
+   * no such line then either.
+   */
+  readonly concluded: string | undefined
+  /**
+   * There is deliberately no runner-up here.
+   *
+   * Now prints "Chosen over" and "Why this one" directly under the decision,
+   * from the same explanation, and has since Phase 2. Repeating both one tap
+   * lower is section 61's repeated boilerplate — and on a phone it is two of
+   * the four lines the panel opens with. The tradeoff stays in the first view,
+   * where the owner already knows to look for it.
+   */
   readonly mix: string | undefined
   readonly reasoning: readonly string[]
 }
@@ -1730,6 +1790,28 @@ export interface DecisionEvidence {
  * explanation of its own on Now, and offering "see evidence" for a decision
  * that was not made would be a button with nothing behind it.
  */
+/**
+ * Where a move goes better, and which side of that tonight is on.
+ *
+ * The last clause is the one that matters. Without it the panel states a split
+ * and leaves the reader to work out which half applies — and the half that
+ * applies is exactly what explains why the app's own conclusion is more
+ * cautious than the plain tally directly above it.
+ */
+function describeSplitForTonight(split: FoundSplit, context: DecisionContext): string {
+  const strong = split.strongSide
+  const weak = split.weakSide
+  const answer = split.split.test(context)
+  const tonight =
+    answer === undefined ? '' : ` Tonight is ${answer ? split.split.label : split.split.opposite}.`
+
+  return (
+    `Across every occasion, not only the ones like tonight: ` +
+    `${strong.rate.hit} of ${strong.rate.of} ${strong.label}, ` +
+    `${weak.rate.hit} of ${weak.rate.of} ${weak.label}.${tonight}`
+  )
+}
+
 export function evidenceForDecision(decision: Decision): DecisionEvidence | undefined {
   const explanation = decision.explanation
   const evaluation = decision.evaluation
@@ -1799,7 +1881,6 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
   return {
     move: explanation.rendered.sentence,
     conditions,
-    limiter: explanation.limiter,
     comparable:
       alike.length === 0
         ? 'Nothing in the record is much like tonight yet.'
@@ -1810,22 +1891,21 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
     rates: ratesFor(alike, name),
     counterexamples: [...counterexamples.values()],
     confidence: confidenceFrom(alike.length, counterexamples.size),
-    context:
-      split === undefined
-        ? undefined
-        : `Across every occasion, not only the ones like tonight: ${split.strongSide.rate.hit} of ${split.strongSide.rate.of} ${split.strongSide.label}, ${split.weakSide.rate.hit} of ${split.weakSide.rate.of} ${split.weakSide.label}.`,
-    instead:
-      explanation.instead === undefined
-        ? undefined
-        : {
-            move: explanation.instead,
-            because: explanation.insteadBecause ?? 'It was ahead on the whole.',
-          },
+    concluded: explanation.restsOn,
+    context: split === undefined ? undefined : describeSplitForTonight(split, situation.context),
     mix: describeEvidenceMix(evidenceRefsFor(alike)),
+    /*
+     * Written without "above" or "below".
+     *
+     * The panel's own order is a rendering decision and these sentences sit at
+     * the end of it, so a reference to "the figures below" was pointing at a
+     * block the reader had already scrolled past. Small, and exactly the kind
+     * of thing that is only ever found by reading the assembled screen.
+     */
     reasoning: [
-      'These are the conditions the choice actually rested on, not everything the app knows about tonight.',
+      'The conditions listed are the ones the choice actually rested on, not everything the app knows about tonight.',
       'An evening counts as comparable on the same few things the app compares evenings on: the part of the day, how rested you are, whether it is a weekday, whether she is here, and roughly how much time there is.',
-      'Each figure below measures one thing and says which. None of them are added together.',
+      'Each figure here measures one thing and says which. None of them are added together.',
     ],
   }
 }

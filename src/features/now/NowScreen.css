@@ -150,3 +150,17 @@
     transform: none;
   }
 }
+
+/*
+ * The evidence entry point (canonical plan section 51).
+ *
+ * A link at the end of the screen, below everything Now already showed, and
+ * nothing above it moved to make room. Section 51 asks for "a compact secondary
+ * entry point" precisely so that the analytics do not arrive on the surface
+ * whose job is one move — so this is the smallest thing on the screen when it
+ * is closed, and the page simply grows downward when it is not.
+ */
+.now-evidence {
+  display: flex;
+  flex-direction: column;
+}

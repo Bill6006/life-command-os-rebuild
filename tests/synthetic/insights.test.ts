@@ -177,6 +177,65 @@ describe('every card, read as a person would', () => {
     }
   })
 
+  it('puts no machine identifier where a person expects a date', () => {
+    /*
+     * DEF-0029's class, found the same way it was: by reading the rendered
+     * screen rather than by an assertion. The deeper view showed "12 comparable
+     * occasions, between 2026-01-08 and 2026-11-12" — a local day id, which is
+     * an identifier, on the one surface whose whole job is to be readable.
+     *
+     * Swept over every owner-facing string an insight can produce, so a new
+     * card composing a sentence from a `dayId` fails here rather than on
+     * whichever history happens to reach it.
+     */
+    const dayId = new RegExp(String.raw`\d{4}-\d{2}-\d{2}`)
+    for (const { scenario, insight } of cards) {
+      const text = [
+        insight.eyebrow,
+        insight.headline,
+        insight.detail,
+        insight.confidence?.because ?? '',
+        insight.evidence.counted ?? '',
+        insight.evidence.strongerIn ?? '',
+        insight.evidence.weakerIn ?? '',
+        insight.evidence.trend ?? '',
+        insight.evidence.mix ?? '',
+        ...insight.evidence.reasoning,
+        ...insight.evidence.included.map((line) => line.text),
+        ...insight.evidence.excluded.map((line) => line.text),
+        ...insight.evidence.counterexamples.map((line) => line.text),
+        ...insight.evidence.rates.map((rate) => `${rate.measures} ${rate.withheld ?? ''}`),
+      ]
+      for (const line of text) {
+        expect(dayId.test(line), `${scenario} / ${insight.id}: "${line}"`).toBe(false)
+      }
+    }
+  })
+
+  it('says what a count is of, in the units that card actually counts', () => {
+    /*
+     * The other half of the same finding. One shared panel rendering "N
+     * comparable occasions" put that sentence over a run of nightly sleep
+     * readings — where nothing was compared and the twelve were readings — and
+     * over a standing arrangement, where the count was of entries predating it.
+     * A card that cannot say honestly what its number is of does not get to
+     * show one.
+     */
+    for (const { scenario, insight } of cards) {
+      const counted = insight.evidence.counted
+      const compares =
+        insight.kind !== 'trajectory' &&
+        insight.kind !== 'life-season' &&
+        insight.kind !== 'coverage-gap'
+      expect(
+        counted !== undefined,
+        `${scenario} / ${insight.kind}: ${compares ? 'no count' : 'a count of nothing comparable'}`,
+      ).toBe(compares)
+      if (counted === undefined) continue
+      expect(counted).toMatch(/comparable occasions?/)
+    }
+  })
+
   it('carries a confidence word only where it states a belief', () => {
     for (const { scenario, insight } of cards) {
       const reading =
