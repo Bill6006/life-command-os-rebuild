@@ -1943,3 +1943,64 @@ carries the full rule. [`docs/CANONICAL_REBUILD_PLAN.md`](CANONICAL_REBUILD_PLAN
 section 43 states it directly in the QA report contract and defect loop, as a
 v1.2 addendum rather than a new plan version — it completes a QA gate v1.2
 already added (D-079) rather than introducing a new one.
+
+---
+
+## D-083 — A handoff that writes to an existing handoff MD also closes with a short launcher, separate from the full prompt
+
+**Phase:** 5 → permanent · **Status:** Active — **owner decision, governs
+every builder and QA response that writes or updates
+`docs/NEXT_PROMPT.md` or a `docs/qa/PHASE_XX_QA_HANDOFF.md`**
+
+D-082 fixed QA's handoff so the complete next prompt is always produced
+automatically, in the same response, on both PASS and FAIL. It did not say
+where that prompt has to live relative to the chat. Section 43's prompt
+presentation format already asks for the complete prompt printed in the
+response every time, and D-082 inherited that shape for QA — so the same
+several-hundred-line prompt has been appearing twice: once written into the
+governing MD, once again pasted into the chat response.
+
+This decision keeps the MD file requirement exactly as it was and adds a
+second, separate ending to the chat response. Whenever a builder or QA
+response writes or updates `docs/NEXT_PROMPT.md` or a
+`docs/qa/PHASE_XX_QA_HANDOFF.md` — a builder's YELLOW handoff, a QA run or
+retest on either PASS or FAIL, a repair handoff, or a GREEN closeout — the
+response still writes the complete prompt into that MD file, exactly as
+section 43 and `qa/README.md` section 3a already require. The response then
+also ends with a short, standalone launcher block:
+
+- the recommended Claude **model**;
+- the recommended **intelligence level**;
+- the **conversation** instruction — NEW, CURRENT, or SAME;
+- a short ready-to-copy **launcher prompt** that names the repository path,
+  the exact MD file the next conversation must read
+  (`docs/NEXT_PROMPT.md`, or the specific
+  `docs/qa/PHASE_XX_QA_HANDOFF.md`), which handoff it is executing, an
+  instruction to read that file in full and execute it exactly as written,
+  and an instruction not to ask the owner to paste the file's contents back.
+
+**Why:** the owner should never have to open GitHub and hunt for the next
+prompt, and should also not have to read the same prompt twice — once
+because it is genuinely needed, once again because that was the only way to
+satisfy the "print the next prompt" rule. Printing the whole thing a second
+time in the chat solved the first problem by recreating a version of the
+second: Phase 6's own kickoff prompt is long enough that finding "what do I
+actually do next" inside it, a second time, is itself work. A launcher that
+just says which file to read and to execute it as written removes that
+without touching what gets written to disk.
+
+**What this does not change:** the governing MD — `docs/NEXT_PROMPT.md`, or
+the relevant `docs/qa/PHASE_XX_QA_HANDOFF.md` — still must carry the
+complete prompt, per section 43's prompt presentation format and, for QA,
+D-082 and `qa/README.md` section 3a. This decision does not create a new
+handoff file type and does not shorten what is written to either file; it
+only gives the chat response's closing block a second, shorter form in
+addition to the file write.
+
+**Where this is enforced:**
+[`docs/CANONICAL_REBUILD_PLAN.md`](CANONICAL_REBUILD_PLAN.md) section 43
+states the launcher block directly, alongside the existing prompt
+presentation format. [`docs/qa/README.md`](qa/README.md) section 3a is
+amended to require it alongside the existing next-prompt rule, for every QA
+PASS and FAIL. It applies equally to builder handoffs under section 43,
+which is where the requirement is stated for that side.

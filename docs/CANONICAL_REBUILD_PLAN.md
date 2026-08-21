@@ -27,6 +27,8 @@ This revision makes two focused product/workflow clarifications without changing
 
 **v1.2 addendum (D-082):** the independent-QA gate this revision added did not yet say, in the plan itself, that a QA handoff must carry the complete next prompt automatically on both PASS and FAIL. Phase 5's first QA run returned FAIL without one, and the owner had to ask for it separately. Section 43's QA report contract and defect loop now state the requirement directly. This is a completion of the QA gate already listed above, not a new workflow, so it does not warrant its own version number.
 
+**v1.2 addendum (D-083):** writing the complete next prompt into the governing MD (D-082, section 43) and then also pasting that same prompt into the chat response was solving one owner problem — never having to hunt for the next instruction — by recreating another: reading a long prompt twice. Section 43 now also requires a short, separate launcher at the end of any response that writes or updates `docs/NEXT_PROMPT.md` or a `docs/qa/PHASE_XX_QA_HANDOFF.md`, naming the model, intelligence level, conversation instruction, and a short copy/paste prompt that points at the exact file to read and execute rather than repeating it. This does not shorten what is written to either file; it does not warrant its own version number for the same reason D-082 did not.
+
 ## v1.1 change log
 
 This revision closed four implementation ambiguities before developer handoff:
@@ -2130,6 +2132,42 @@ At every boundary, print the next action in this exact human-facing structure:
 The intelligence-level instruction should be shown **outside** the copy/paste prompt so the owner can manually switch Claude Code first.
 
 Do not bury the level inside the prompt.
+
+## Launcher requirement when a handoff MD is written or updated (owner decision D-083)
+
+`docs/NEXT_PROMPT.md` and `docs/qa/PHASE_XX_QA_HANDOFF.md` are the only two handoff MD types this repository uses (the rolling next-action handoff, and that phase's QA report). No other handoff file type may be introduced to satisfy this rule or any other.
+
+Whenever a builder or QA response writes or updates one of those two files — a builder's YELLOW handoff, an independent QA run or retest on either PASS or FAIL, a repair handoff, or a formal GREEN closeout — the response still writes the complete next prompt into that file in full, exactly as the prompt presentation format above and, for QA, `qa/README.md` section 3a already require.
+
+The response must then **also** end with a second, short, standalone block — in addition to, not instead of, the full prompt already written to the file:
+
+- the recommended Claude **model**;
+- the recommended **intelligence level**;
+- the **conversation** instruction — **NEW**, **CURRENT**, or **SAME**;
+- a short ready-to-copy **launcher prompt** that:
+  - names the repository path;
+  - names the exact MD file the next conversation must read (`docs/NEXT_PROMPT.md`, or the specific `docs/qa/PHASE_XX_QA_HANDOFF.md`);
+  - states which handoff it is executing — builder, QA, repair, retest, closeout, or next-phase;
+  - instructs the next conversation to read that file **in full** and execute it **exactly as written**;
+  - instructs the next conversation **not** to ask the owner to paste the file's contents.
+
+Do not duplicate the entire MD prompt inside the response merely to satisfy this rule — the launcher exists precisely so that duplication is not necessary. Only repeat the full prompt inline when there is a specific reason to (for example, the owner asks to see it, or nothing has yet been written to any file).
+
+**Why:** the owner should not have to open GitHub and manually hunt for the next prompt, and should also not have to read the same long prompt twice in one response merely because it was written once to satisfy the file requirement and once again to satisfy the "print it in the response" requirement. See decision D-083.
+
+Example launcher shape:
+
+```text
+Continue the Life Command OS rebuild.
+
+Repository:
+<repository path>
+
+Read <exact MD path> in full and execute the current <builder / QA / repair /
+retest / closeout / next-phase> handoff exactly as written.
+
+Do not ask me to paste the file contents.
+```
 
 ## Prompt timing
 

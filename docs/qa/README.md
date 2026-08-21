@@ -107,6 +107,19 @@ recommendation but no prompt, and the owner had to come back and ask for one
 before the builder conversation could act. That extra turn is exactly what
 this rule removes.
 
+**D-083 amendment.** The complete next prompt above still gets written in
+full into `docs/qa/PHASE_XX_QA_HANDOFF.md` (and, on PASS, the builder's
+closeout still writes the next phase's complete prompt into
+`docs/NEXT_PROMPT.md`). The chat response does not need to repeat that whole
+prompt to satisfy 3a. It closes instead with a short, separate launcher:
+the recommended model, the recommended intelligence level, the conversation
+instruction (NEW/CURRENT/SAME), and a short ready-to-copy prompt that names
+the repository path, the exact MD file the next conversation must read,
+which handoff it is, and instructs that conversation to read the file in
+full and execute it exactly as written — not to ask the owner to paste the
+file's contents. See decision D-083 and plan section 43's launcher
+requirement for the full rule and an example shape.
+
 **On FAIL**, the next prompt is addressed to **CURRENT — the original builder
 conversation for the unresolved phase**, and instructs it to:
 
