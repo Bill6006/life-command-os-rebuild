@@ -1,11 +1,18 @@
 import { lazy, useEffect } from 'react'
+import { DomainPage } from '../life/DomainPage'
+import { pageBySlug } from '../life/domainPages'
 import { InsightsScreen } from '../insights/InsightsScreen'
 import { LifeScreen } from '../life/LifeScreen'
 import { MoreScreen } from '../more/MoreScreen'
 import { NowScreen } from '../now/NowScreen'
 import { TimelineScreen } from '../timeline/TimelineScreen'
 import { isPreview, runningBuild } from '../../platform/buildInfo'
-import { useDestination, type Destination } from '../../platform/routing'
+import {
+  hashForDestination,
+  useDestination,
+  useLifePageSlug,
+  type Destination,
+} from '../../platform/routing'
 import { useBuildFreshness, type BuildFreshness } from '../../platform/useBuildFreshness'
 import { BottomNav } from './BottomNav'
 import { DESTINATION_LABELS } from './labels'
@@ -85,12 +92,41 @@ function StaleBuildNotice({ freshness }: { freshness: BuildFreshness }) {
   )
 }
 
+/**
+ * Life or one of its ten domain pages (canonical plan section 50).
+ *
+ * A domain page is a second hash segment under Life rather than a
+ * destination of its own (section 5's four stay fixed), so the routing here
+ * reads the same hash `useDestination` already resolved to `life` and decides
+ * only which of the two screens that destination shows.
+ */
+function LifeRoute() {
+  const slug = useLifePageSlug()
+  if (slug === undefined) return <LifeScreen />
+
+  const page = pageBySlug(slug)
+  if (page === undefined) {
+    return (
+      <div className="life-route-missing">
+        <p>There is no page here.</p>
+        <p>
+          <a className="domain-linkish" href={hashForDestination('life')}>
+            Back to Life
+          </a>
+        </p>
+      </div>
+    )
+  }
+
+  return <DomainPage page={page} />
+}
+
 function screenFor(destination: Destination, freshness: BuildFreshness) {
   switch (destination) {
     case 'now':
       return <NowScreen />
     case 'life':
-      return <LifeScreen />
+      return <LifeRoute />
     case 'timeline':
       return <TimelineScreen />
     case 'insights':

@@ -1,7 +1,10 @@
 import { useMemo } from 'react'
 import { Panel, Screen } from '../../components/ui'
+import type { LifeDomainId } from '../../domain/domains'
 import { assembleSituation, type DomainCoverage } from '../../intelligence/situation'
+import { hashForLifePage } from '../../platform/routing'
 import { useMemory } from '../memory/memoryContext'
+import { pageForDomain } from './domainPages'
 import './LifeScreen.css'
 
 /**
@@ -89,6 +92,24 @@ function standingFor(coverage: DomainCoverage): Standing {
         detail: (entry) => `${entry.summary} ${refreshWords(entry)}`,
       }
   }
+}
+
+/**
+ * The area's name, linked to its own page where one exists (section 50).
+ *
+ * A page not existing is not an error here — `pageForDomain` returning
+ * `undefined` would mean a domain the D-078 registry test would already have
+ * failed on — but the link degrades to plain text rather than a dead href on
+ * the strength of that guarantee alone.
+ */
+function AreaLink({ domain, label }: { domain: LifeDomainId; label: string }) {
+  const page = pageForDomain(domain)
+  if (page === undefined) return <>{label}</>
+  return (
+    <a className="life-area__link" href={hashForLifePage(page.slug)}>
+      {label}
+    </a>
+  )
 }
 
 function refreshWords(coverage: DomainCoverage): string {
@@ -204,7 +225,9 @@ export function LifeScreen() {
                 {group.areas.some((area) => area.detail !== undefined) ? (
                   group.areas.map((area) => (
                     <div key={area.coverage.domain} className="life-area">
-                      <p className="life-area__name">{area.coverage.label}</p>
+                      <p className="life-area__name">
+                        <AreaLink domain={area.coverage.domain} label={area.coverage.label} />
+                      </p>
                       {area.detail === undefined ? null : (
                         <p className="life-area__detail">{area.detail}</p>
                       )}
@@ -212,7 +235,12 @@ export function LifeScreen() {
                   ))
                 ) : (
                   <p className="life-names">
-                    {group.areas.map((area) => area.coverage.label).join(' · ')}
+                    {group.areas.map((area, index) => (
+                      <span key={area.coverage.domain}>
+                        {index === 0 ? '' : ' · '}
+                        <AreaLink domain={area.coverage.domain} label={area.coverage.label} />
+                      </span>
+                    ))}
                   </p>
                 )}
 

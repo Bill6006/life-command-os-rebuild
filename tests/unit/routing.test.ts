@@ -11,8 +11,10 @@ import {
   DESTINATIONS,
   destinationFromHash,
   hashForDestination,
+  hashForLifePage,
   isDestination,
   isReachable,
+  lifePageSlugFromHash,
   PRIMARY_DESTINATIONS,
   QA_AVAILABLE,
   SECONDARY_DESTINATIONS,
@@ -89,5 +91,39 @@ describe('primary navigation shape', () => {
     expect(QA_AVAILABLE).toBe(true)
     expect(destinationFromHash('#/qa')).toBe('qa')
     expect(isReachable('qa')).toBe(true)
+  })
+})
+
+describe('lifePageSlugFromHash — a domain page is a second segment under Life', () => {
+  it('reads the slug from a Life sub-route', () => {
+    expect(lifePageSlugFromHash('#/life/health-recovery')).toBe('health-recovery')
+    expect(lifePageSlugFromHash(hashForLifePage('fatherhood'))).toBe('fatherhood')
+  })
+
+  it('is undefined on the bare Life route, and on every other destination', () => {
+    expect(lifePageSlugFromHash('#/life')).toBeUndefined()
+    expect(lifePageSlugFromHash('#/life/')).toBeUndefined()
+    expect(lifePageSlugFromHash('#/now')).toBeUndefined()
+    expect(lifePageSlugFromHash('#/now/health-recovery')).toBeUndefined()
+    expect(lifePageSlugFromHash('')).toBeUndefined()
+  })
+
+  it('does not decide whether the slug is a real page', () => {
+    // Syntactic only, on purpose — src/platform does not know the page list.
+    expect(lifePageSlugFromHash('#/life/nonsense')).toBe('nonsense')
+  })
+
+  it('ignores a trailing query string', () => {
+    expect(lifePageSlugFromHash('#/life/money?from=insights')).toBe('money')
+  })
+
+  it('is case insensitive, like every other route in this file', () => {
+    expect(lifePageSlugFromHash('#/Life/Health-Recovery')).toBe('health-recovery')
+  })
+
+  it('still resolves the primary destination to Life on a sub-route', () => {
+    // Section 5's four primary destinations must not gain a fifth just
+    // because a domain page exists underneath one of them.
+    expect(destinationFromHash('#/life/health-recovery')).toBe('life')
   })
 })

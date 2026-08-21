@@ -66,6 +66,44 @@ export function hashForDestination(destination: Destination): string {
   return `#/${destination}`
 }
 
+/**
+ * A Life domain page (canonical plan section 50) is a second hash segment
+ * under `life` — `#/life/health-recovery` — rather than a destination of its
+ * own. Section 5 fixes the four primary destinations; a domain page is
+ * optional inspection reached *from* Life, not a fifth thing the bottom bar
+ * would have to know about. `destinationFromHash` already resolves the first
+ * segment to `life` for a hash like this, which is what keeps the primary nav
+ * correctly highlighted on a domain page without any change there.
+ *
+ * This stays syntactic on purpose — it does not know which slugs are real
+ * pages, so `src/platform` does not have to depend on `src/features`. The Life
+ * feature decides what an unrecognised slug means.
+ */
+export function lifePageSlugFromHash(hash: string): string | undefined {
+  const parts = hash.replace(/^#\/?/, '').split(/[/?]/)
+  if ((parts[0] ?? '').toLowerCase() !== 'life') return undefined
+  const slug = parts[1]
+  return slug === undefined || slug === '' ? undefined : slug.toLowerCase()
+}
+
+export function hashForLifePage(slug: string): string {
+  return `#/life/${slug}`
+}
+
+export function useLifePageSlug(): string | undefined {
+  const [slug, setSlug] = useState<string | undefined>(() =>
+    lifePageSlugFromHash(window.location.hash),
+  )
+
+  useEffect(() => {
+    const onHashChange = () => setSlug(lifePageSlugFromHash(window.location.hash))
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  return slug
+}
+
 export function useDestination(): [Destination, (next: Destination) => void] {
   const [destination, setDestination] = useState<Destination>(() =>
     destinationFromHash(window.location.hash),
