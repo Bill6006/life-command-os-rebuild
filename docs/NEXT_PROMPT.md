@@ -4,9 +4,11 @@ Canonical plan section 43. The intelligence level, model and conversation
 instruction sit outside the prompt so the owner can switch Claude Code before
 pasting.
 
-**Phase 5 is YELLOW — READY FOR INDEPENDENT QA**, at checkpoint `34e03b6`
-(deployed Preview SHA identical, confirmed live). It does not become GREEN
-here. Owner decision D-077 and the protocol in
+**Phase 5 is YELLOW — READY FOR INDEPENDENT QA.** Verified product checkpoint
+`34e03b6`; current `main` HEAD is documentation only past that SHA — no
+product code differs. Test whatever `main` HEAD is deployed at the moment of
+testing, confirmed against `preview/build-info.json`. It does not become
+GREEN here. Owner decision D-077 and the protocol in
 [`qa/README.md`](qa/README.md): a builder conversation may not approve its
 own phase. The full closing report is in
 [`PHASE_STATUS.md`](PHASE_STATUS.md) under "Phase 5 — the Life domain
@@ -41,11 +43,14 @@ experience. This is a NEW conversation with no memory of how this phase was
 built. Do not ask for or assume access to any prior conversation.
 
 Repository: https://github.com/Bill6006/life-command-os-rebuild (public,
-branch main). Checkpoint SHA to test: 34e03b6. Deployed Preview SHA: 34e03b6
-(should match — verify this yourself against
+branch main). The verified product checkpoint is 34e03b6; current `main`
+HEAD may be a later SHA if documentation-only commits followed it — check
+`git log -- src tests` from HEAD if you want to confirm nothing under
+those two directories differs from 34e03b6 (it should not). Fetch
 https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
-before testing anything else; if it does not match, stop and report that
-alone).
+first and treat its `commitSha` as the SHA under test — verify it is at or
+after 34e03b6 before testing anything else; if the Preview is somehow behind
+34e03b6, stop and report that alone.
 
 Preview URL: https://bill6006.github.io/life-command-os-rebuild/preview/
 

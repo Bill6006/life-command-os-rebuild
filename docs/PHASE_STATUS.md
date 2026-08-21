@@ -58,13 +58,19 @@ dropped.
 
 ## Build identity
 
-|                      |                                                             |
-| -------------------- | ----------------------------------------------------------- |
-| Checkpoint SHA       | `34e03b6` — current `main` HEAD                             |
-| Deployed Preview SHA | `34e03b6` — identical                                       |
-| Do they match?       | Yes — confirmed live against `preview/build-info.json`      |
-| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/ |
-| Live proof           | `preview/build-info.json`                                   |
+|                      |                                                                           |
+| -------------------- | ------------------------------------------------------------------------- |
+| Verified product SHA | `34e03b6` — where the builder's own gate, including the Android pass, ran |
+| Checkpoint SHA       | current `main` HEAD — documentation only past `34e03b6`, no product code  |
+| Deployed Preview SHA | identical to `main` HEAD                                                  |
+| Do they match?       | Yes, by construction — D-004, and asserted live in CI                     |
+| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/               |
+| Live proof           | `preview/build-info.json`                                                 |
+
+Test whatever `main` HEAD is at the moment of testing, confirmed against
+`preview/build-info.json`. `34e03b6` is pinned above because it is the exact
+SHA every verification result below was measured against, including the
+Android-style pass; nothing observable has changed since.
 
 ## Verification
 
