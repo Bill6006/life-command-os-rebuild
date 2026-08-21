@@ -25,6 +25,8 @@ This revision makes two focused product/workflow clarifications without changing
 - permits likelihood/rate percentages only when the underlying quantity is defined and enough comparable evidence exists, with sample size, context, counterexamples, uncertainty, and the measured outcome aspect kept visible;
 - clarifies that the eleven modeled core areas intentionally map to ten baseline Life pages because Health & Physical Capacity and Sleep & Recovery share the **Health & Recovery** inspection page.
 
+**v1.2 addendum (D-082):** the independent-QA gate this revision added did not yet say, in the plan itself, that a QA handoff must carry the complete next prompt automatically on both PASS and FAIL. Phase 5's first QA run returned FAIL without one, and the owner had to ask for it separately. Section 43's QA report contract and defect loop now state the requirement directly. This is a completion of the QA gate already listed above, not a new workflow, so it does not warrant its own version number.
+
 ## v1.1 change log
 
 This revision closed four implementation ambiguities before developer handoff:
@@ -2046,9 +2048,12 @@ For each report, include at minimum:
 - automated tests that gave false confidence;
 - explicit deferred items confirmed unchanged;
 - overall recommendation: PASS or FAIL;
-- recommended next action.
+- recommended next action, including the recommended Claude model, intelligence level, and CURRENT/NEW/SAME conversation instruction for that action, each with a one-sentence reason;
+- the complete ready-to-paste next prompt.
 
 The QA prompt should provide requirements, acceptance criteria, checkpoint, explicit deferrals, and repository paths, but should not be contaminated with the builder's conclusion that particular behavior is correct.
+
+**Every independent QA handoff — PASS or FAIL, first run or retest — outputs the complete ready-to-paste next prompt automatically, in the same response, without waiting for another owner turn.** On FAIL the prompt goes to the original builder conversation for repair under section 42; on PASS it goes to the original builder conversation for the formal GREEN closeout. QA does not wait to be asked for it (D-082).
 
 ### Defect loop
 

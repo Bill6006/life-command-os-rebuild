@@ -85,6 +85,12 @@ offering two buttons that could never move it. Repaired checkpoint:
 `8d06dae`. Phase 5 **remains YELLOW**, per D-077 — repair returns to the
 same independent QA conversation for retest, not to GREEN here.
 
+Round 1's own FAIL report gave a recommended next action but no ready-to-paste
+prompt — the owner had to return and ask for one before the repair above could
+start. That gap predates D-082, recorded the same day: from here on, every QA
+run or retest carries its own complete next prompt automatically, on both PASS
+and FAIL ([`qa/README.md`](qa/README.md) section 3a).
+
 ## Build identity
 
 |                      |                                                                          |
@@ -289,7 +295,7 @@ And the older ones, also unchanged:
 
 ## Decisions made
 
-D-081 in [`DECISION_LOG.md`](DECISION_LOG.md).
+D-081 and D-082 in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Next
 

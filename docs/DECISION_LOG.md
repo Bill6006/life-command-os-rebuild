@@ -1892,3 +1892,54 @@ window and reverting after — and the browser suite
 regression test proves the `explicit-fact`-outranks-context-forever failure
 directly, because `contextCorrectionRecord` makes it structurally
 unreachable from the domain page rather than merely discouraged.
+
+---
+
+## D-082 — Every independent QA handoff outputs the complete next prompt, automatically
+
+**Phase:** 5 → permanent · **Status:** Active — **owner decision, governs every
+remaining QA run and retest**
+
+Independent QA's response — first run or retest, PASS or FAIL — must end with
+the complete ready-to-paste next prompt, in the same response, without the
+owner asking for one. Alongside it: the QA-tested product SHA, the QA-report
+commit SHA if the report was committed, the exact report path, and the
+recommended Claude model, intelligence level, and conversation instruction for
+the next action, each with a one-sentence reason. On FAIL, the prompt is
+addressed to **CURRENT — the original builder conversation** and instructs it
+to read the report, stay YELLOW, repair under section 42, preserve everything
+already passed and every explicit deferral, deploy a repaired checkpoint, and
+give a retest prompt for the same QA conversation. On PASS, the prompt is
+addressed to that same builder conversation and instructs it to confirm the
+tested SHA and the PASS, perform the formal GREEN closeout, update the
+governing docs, preserve deferred items, and provide the next phase's
+recommendation and prompt.
+
+**Why:** Phase 5's first QA run is the case. It returned FAIL with a
+recommended next action — "the original builder conversation, Sonnet-class at
+High" — but no prompt to paste into it. The owner had to return with an
+explicit request before the repair could start. Section 43 already required
+this discipline of the _builder's_ handoffs (D-011's "ready-to-paste next
+prompt immediately," restated for QA at D-077); this decision closes the one
+place the same requirement had not yet been written down for QA's own output,
+and [`qa/README.md`](qa/README.md)'s section 3a is where the full rule lives.
+
+**Why QA rather than the owner assembles it:** QA holds the exact
+reproduction, the defect class, and the acceptance expectation the moment it
+finishes testing. Deferring the prompt to a later turn re-derives from a
+report what QA already knows, and is the same "wasted turn" section 43
+already argues against for the builder side.
+
+**What this does not change:** QA still does not prescribe the implementation
+fix — the FAIL prompt gives reproductions, defect class, evidence and
+acceptance expectations, and leaves root-cause repair to the builder. The
+conversation-routing rule is unchanged (NEW for a first QA run, SAME for a
+retest, CURRENT for the builder either way); this decision only requires that
+the prompt following that routing rule actually gets produced, every time,
+without being asked for.
+
+**Where this is enforced:** [`docs/qa/README.md`](qa/README.md) section 3a
+carries the full rule. [`docs/CANONICAL_REBUILD_PLAN.md`](CANONICAL_REBUILD_PLAN.md)
+section 43 states it directly in the QA report contract and defect loop, as a
+v1.2 addendum rather than a new plan version — it completes a QA gate v1.2
+already added (D-079) rather than introducing a new one.

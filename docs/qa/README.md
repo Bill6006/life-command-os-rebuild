@@ -81,14 +81,66 @@ Android/mobile configuration; the governing acceptance criteria used; scenarios
 and flows tested; PASS/FAIL for each; exact reproductions for defects; semantic,
 behavioural and mobile/UI defects separately; blocking vs non-blocking;
 screenshot and evidence references; automated tests that gave false confidence;
-confirmation that known deferred items are unchanged; an overall **PASS** or
-**FAIL**; a recommended next action; and, when the recommendation sends the
-owner back to the builder, the recommended Claude model and intelligence level
-for that next step.
+confirmation that known deferred items are unchanged; and an overall **PASS**
+or **FAIL**.
+
+## 3a — The QA handoff output rule (owner decision D-082)
+
+**Every independent QA run or retest — PASS or FAIL — automatically ends its
+response with the complete next handoff.** QA does not wait for the owner to
+ask for it, and does not stop at "recommended next action." In the same
+response as the report, QA provides:
+
+- overall **PASS** or **FAIL**;
+- the QA-tested product SHA;
+- the QA-report commit SHA, if the report was committed;
+- the exact QA report path;
+- the recommended Claude **model** for the next action, with a one-sentence
+  reason;
+- the recommended **intelligence level**, with a one-sentence reason;
+- the **conversation** instruction (which conversation the next prompt goes
+  to), with a one-sentence reason;
+- the **complete ready-to-paste next prompt**.
+
+Phase 5's first QA run is why this exists: it returned FAIL with a
+recommendation but no prompt, and the owner had to come back and ask for one
+before the builder conversation could act. That extra turn is exactly what
+this rule removes.
+
+**On FAIL**, the next prompt is addressed to **CURRENT — the original builder
+conversation for the unresolved phase**, and instructs it to:
+
+- read the exact QA report;
+- keep the phase **YELLOW**;
+- repair each blocking/material defect under plan section 42 (reproduce,
+  identify the whole class, regression, prove it fails when reintroduced, fix
+  the root cause, rerun the full gate);
+- preserve everything QA already passed and every explicit deferral;
+- deploy a repaired checkpoint;
+- provide a retest prompt addressed to the **same** QA conversation;
+- not start the next phase.
+
+QA should not prescribe the implementation fix beyond what its own evidence
+supports — reproductions, the defect class, the evidence, and the acceptance
+expectation the fix must meet are QA's to give; root-cause repair is the
+builder's.
+
+**On PASS**, the next prompt is addressed to **CURRENT — the original builder
+conversation for that phase**, and instructs it to:
+
+- read the QA report;
+- confirm the QA-tested SHA and the PASS;
+- perform the formal GREEN closeout;
+- update the governing docs;
+- preserve deferred items;
+- provide the next phase's recommended model, intelligence level, CURRENT/NEW
+  instruction, and the complete next-phase prompt;
+- not make the owner ask for another handoff.
 
 ## 4 — The defect loop, when QA fails
 
-1. The owner returns to the **original builder conversation**.
+1. The owner returns to the **original builder conversation**, carrying the
+   FAIL prompt QA already produced under 3a.
 2. The builder reads `docs/qa/PHASE_XX_QA_HANDOFF.md`.
 3. Each blocking defect goes through plan section 42: reproduce, identify the
    whole class, write a regression, **prove it fails when the defect is
@@ -97,8 +149,9 @@ for that next step.
 4. The builder does **not** mark the phase GREEN.
 5. The builder gives the exact repaired SHA and a retest prompt for the **same**
    QA conversation.
-6. The owner returns to that same QA conversation, which retests and updates the
-   same report.
+6. The owner returns to that same QA conversation, which retests, updates the
+   same report, and again outputs the complete next handoff under 3a —
+   whichever way the retest goes.
 
 Repeat until QA passes.
 
@@ -111,9 +164,10 @@ when warranted.
 
 ## 6 — GREEN
 
-Only after QA reports PASS. The owner returns to the builder conversation; the
-builder reads the report, confirms the tested SHA and the PASS, performs the
-formal closeout, and only then is the phase GREEN.
+Only after QA reports PASS. The owner returns to the builder conversation,
+carrying the PASS closeout prompt QA already produced under 3a; the builder
+reads the report, confirms the tested SHA and the PASS, performs the formal
+closeout, and only then is the phase GREEN.
 
 The closing response carries, without being asked: final status; approved
 checkpoint SHA; the closing SHA if a docs-only closeout moved it; deployed
