@@ -1784,7 +1784,7 @@ function trajectoryCards(situation: Situation): readonly Built[] {
      * collected them, used them to decide which past evenings resembled
      * tonight, and never once reported what they had done over time.
      */
-    if (definition.tracked !== true) continue
+    if (definition.tracked === undefined) continue
     if (definition.privacy === 'private') continue
     const value = numericValue(record.value)
     if (value === undefined) continue

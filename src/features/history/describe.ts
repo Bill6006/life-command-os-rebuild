@@ -319,10 +319,17 @@ export function describeRecord(
     case 'correction':
       return plain(`Withdrew an earlier entry — ${record.reason}`)
     case 'belief-correction':
+      /*
+       * The index goes in, so the sentence can name the action rather than the
+       * verb (R3-B2). A correction about a walk read as "stop assuming what the
+       * app has worked out follows moving" here — a sentence that fits the bike
+       * ride the owner never disputed, on the one surface that is meant to be
+       * the canonical account of what he did.
+       */
       return plain(
         record.stance === 'reject'
-          ? `Told the app to stop assuming ${describeBelief(record.belief)}.`
-          : `Let the app go back to what it had learned about ${describeBelief(record.belief)}.`,
+          ? `Told the app to stop assuming ${describeBelief(record.belief, entities)}.`
+          : `Let the app go back to what it had learned about ${describeBelief(record.belief, entities)}.`,
       )
     case 'relationship-event':
       return plain(record.nature)

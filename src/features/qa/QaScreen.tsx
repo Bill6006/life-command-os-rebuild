@@ -218,8 +218,10 @@ export function QaScreen() {
           ))}
         </div>
         <div className="qa-actions">
+          {/* It cannot reach the owner's own records, and the old name said it
+              could. Emptying the laboratory is what puts his history back. */}
           <button type="button" onClick={() => void memory.clear()} disabled={memory.busy}>
-            Clear everything
+            Empty the laboratory
           </button>
         </div>
       </Panel>

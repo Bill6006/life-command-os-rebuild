@@ -3,6 +3,7 @@ import { Panel, Screen } from '../../components/ui'
 import { systemClock } from '../../domain/time'
 import { beliefCorrectionRecord, describeBelief } from '../../intelligence/corrections'
 import { insightsFor, type Insight } from '../../intelligence/insights'
+import type { EntityIndex } from '../../domain/entities'
 import { assembleSituation } from '../../intelligence/situation'
 import {
   EvidenceConfidence,
@@ -123,6 +124,7 @@ export function InsightsScreen() {
           <InsightCard
             key={insight.id}
             insight={insight}
+            entities={memory.view.entities}
             open={open === insight.id}
             disabled={busy}
             onToggle={() => setOpen((held) => (held === insight.id ? undefined : insight.id))}
@@ -157,12 +159,15 @@ export function InsightsScreen() {
 
 function InsightCard({
   insight,
+  entities,
   open,
   disabled,
   onToggle,
   onCorrect,
 }: {
   insight: Insight
+  /** So a correction control can name the action, not the verb (R3-B2). */
+  entities: EntityIndex
   open: boolean
   disabled: boolean
   onToggle: () => void
@@ -259,7 +264,7 @@ function InsightCard({
                 className="ev-open"
                 disabled={disabled}
                 aria-label={`Not right — stop the app assuming ${
-                  insight.beliefLabel ?? describeBelief(insight.belief)
+                  insight.beliefLabel ?? describeBelief(insight.belief, entities)
                 }`}
                 onClick={() => onCorrect(insight.belief as string)}
               >

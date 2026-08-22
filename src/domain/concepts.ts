@@ -112,10 +112,22 @@ export interface ConceptDefinition {
    * and after an action? True for how he feels and how he slept; false for how
    * much time he has tonight, which is noise with a timestamp.
    *
-   * The default is false, for the same reason `standing`'s is: a new concept
+   * **It names the shape, because it is a claim that has to be satisfiable
+   * (R3-B3).** It was a boolean, and `emotionalState` carried it while its
+   * readings are free text — which `numericValue` discards before any scale,
+   * direction, trajectory or before-and-after comparison exists. So the concept
+   * was declared tracked, said to participate, and could not: nothing checked
+   * that the machinery could read what the concept actually holds.
+   *
+   * Saying *how* a reading becomes a number is what makes the claim checkable.
+   * A concept whose values cannot be read as a number is not a dimension that
+   * can be tracked, whatever anyone writes in the registry, and
+   * `tests/unit/registries.test.ts` now fails the build for the mismatch.
+   *
+   * Absent, for the same reason `standing`'s default is false: a new concept
    * earns a place on a surface by somebody deciding it should have one.
    */
-  readonly tracked?: boolean
+  readonly tracked?: TrackedReading
   /**
    * Where this concept disagrees with the default table, and why.
    *
@@ -125,6 +137,17 @@ export interface ConceptDefinition {
    */
   readonly reliability?: SourceReliability
 }
+
+/**
+ * How a reading of a tracked concept becomes a number.
+ *
+ * Exactly the value shapes `numericValue` can read. A scale carries its own
+ * top, so 4-of-5 and 8-of-10 are the same reading; a number and a duration are
+ * already quantities. Text and an entity reference are neither, and a concept
+ * that holds one of those is not a dimension with a scale and a direction — it
+ * is something the owner says, which is a different and equally real thing.
+ */
+export type TrackedReading = 'scale' | 'number' | 'duration'
 
 const HOURS = 3_600_000
 
@@ -168,7 +191,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     domain: DOMAIN.sleep,
     freshness: localDays(1),
     standing: true,
-    tracked: true,
+    tracked: 'number',
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
     /*
@@ -193,7 +216,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     label: 'Sleep quality last night',
     domain: DOMAIN.sleep,
     freshness: localDays(1),
-    tracked: true,
+    tracked: 'scale',
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
     // How a night *felt* is the owner's to report. A watch scoring it is
@@ -206,7 +229,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     label: 'Current energy',
     domain: DOMAIN.health,
     freshness: elapsedHours(6),
-    tracked: true,
+    tracked: 'scale',
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
     // "A model's inference about how he feels should generally be weaker than
@@ -219,7 +242,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     label: 'Soreness or pain',
     domain: DOMAIN.health,
     freshness: elapsedHours(12),
-    tracked: true,
+    tracked: 'scale',
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
     // Nothing measures whether a shoulder hurts.
@@ -275,7 +298,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     domain: DOMAIN.money,
     freshness: localDays(30),
     standing: true,
-    tracked: true,
+    tracked: 'number',
     privacy: 'sensitive',
     ask: { materialToDecision: false, askWhenStale: true },
     // The second case D-059 names: a financial record of a balance beats an
@@ -288,7 +311,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     label: 'Social energy',
     domain: DOMAIN.social,
     freshness: elapsedHours(8),
-    tracked: true,
+    tracked: 'scale',
     privacy: 'normal',
     ask: { materialToDecision: false, askWhenStale: true },
     reliability: { owner: 1, device: 0.35, derived: 0.3, model: 0.2 },
@@ -333,7 +356,24 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     label: 'Current emotional state',
     domain: DOMAIN.emotional,
     freshness: elapsedHours(8),
-    tracked: true,
+    /*
+     * Deliberately **not** tracked, and that is the honest state of it (R3-B3,
+     * D-091 invariant 6).
+     *
+     * Its readings are free text — "flat" — so there is no scale, no direction
+     * and nothing two of them can be compared along. Marking it tracked did not
+     * give it those; it only made the app claim a participation the machinery
+     * discarded one line later, in `numericValue`.
+     *
+     * The answer is not to invent a scale for it. Mood, stress, confidence and
+     * motivation are four different things, and one number standing in for all
+     * four is the wellness score the owner rules out. Which dimensions exist
+     * here is his to say, and until he says, this stays what it actually is: a
+     * sensitive thing he tells the app, asked for when it matters, shown as he
+     * said it, and not pretended to be a trend.
+     *
+     * Open question for the owner. Nothing else about this concept changes.
+     */
     privacy: 'sensitive',
     ask: { materialToDecision: true, askWhenStale: true },
     reliability: { owner: 1, device: 0.4, derived: 0.35, model: 0.2 },

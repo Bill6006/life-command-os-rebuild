@@ -39,6 +39,51 @@ None.
 
 ## Fixed
 
+### DEF-0056 — a concept declared trackable whose readings the tracking path throws away
+
+- Status: Fixed
+- Severity: Blocker — D-091 invariant 6, and the builder had told QA this concept "participates"
+- Found in: Phase 6 / `481c3a7`
+- Found by: **independent Codex QA, Round 3** (R3-B3), checking a builder claim against the code rather than against the registry
+- Class: **an unverifiable declaration.** `tracked` was a boolean asserting that a concept is worth a trend and can be learned from, and nothing anywhere checked that the machinery could read what the concept actually holds. Any concept could carry it, truthfully or not.
+- Reproduction: `emotionalState` was `tracked: true`. Its values are free text — `flat`. Both the trajectory path and `association.ts` call `numericValue`, which returns `undefined` for text, so every reading was discarded before any scale, direction, trajectory or before-and-after comparison existed. The concept was declared tracked, said to participate, and could not.
+- Root cause: the registry described no value shapes at all, so `tracked` was a claim with nothing to check it against. QA-A1's repair had added the flag to fix a real problem — that no subjective dimension could be learned from — and reached one concept too far.
+- Fix: `tracked` now names **how** a reading becomes a number — `'scale' | 'number' | 'duration'`, exactly the shapes `numericValue` reads. Six concepts declare theirs. `emotionalState` declares none and is not tracked, with the reason written where the concept is defined.
+- **What was deliberately not done:** no scale was invented for how he feels. Mood, stress, confidence and motivation are four things and one number for all four is the wellness score the owner rules out. The concept keeps everything else — asked for, material to a decision, sensitive, shown as he said it. Which dimensions exist is his to say, and it stays an open question (D-091 invariant 6).
+- Regression: `tests/unit/registries.test.ts` → "a tracked dimension is one thing, on one scale" — "can actually be read as a number by the path that tracks it" runs each declared shape through the real `numericValue` rather than trusting the label; "never declares a shape the tracking path would throw away"; "leaves the emotional taxonomy open rather than inventing one". Proved by declaring a concept tracked on a text shape and watching it fail.
+- Siblings: swept — the other six tracked concepts all declare shapes the path reads, and the trajectory consumer was moved from `!== true` to `=== undefined` in the same pass.
+- Fixed in: this checkpoint
+
+### DEF-0055 — a correction scoped to a walk, described to the owner as the verb
+
+- Status: Fixed
+- Severity: Blocker — the phase gate forbids printing a learned relationship under a name that fits a different action
+- Found in: Phase 6 / `481c3a7`
+- Found by: **independent Codex QA, Round 3** (R3-B2), by pressing the control and then reading Timeline
+- Class: **an invariant that held in the key and died on the way to the screen.** DEF-0046 scoped the association, its key and its card control to the action. The _stored_ record is read back by a different renderer, months later, and that path was never part of the identity work.
+- Reproduction: open the walk relationship — its control correctly says `what the app has worked out follows a walk` — press `That is not right`, then open Timeline. The row read: **`Told the app to stop assuming what the app has worked out follows move.`** A sentence that fits the bike ride the owner never disputed, on the surface that is meant to be the canonical account of what he did.
+- Root cause: `Insight.beliefLabel` knows the object only while the card renders. `describeBelief` works from the key alone, and a key carries an action scope but not an entity registry, so it fell back to the verb — and `describeRecord` used that fallback.
+- Fix: `actionScopeParts` reads the action back out of a scope, and `describeBelief` takes the entity index and names the object. Every owner-facing caller passes one. A family scope names several actions on purpose and says so. The key, the watershed and the evidence underneath are untouched.
+- Regression: `tests/synthetic/observed-relationships.test.ts` → "names the action in the owner's own history, not the verb" builds a real correction and passes it through `assembleTimeline` — the shared renderer, which is where the assertion was missing. Proved twice by reintroduction: the verb fallback, and the renderer dropping the index.
+- Siblings: checked. `NowScreen`'s beliefs are the five verb-scoped aspects, where naming the verb is correct; Insights already preferred `beliefLabel` and now passes the index behind it.
+- Fixed in: this checkpoint
+
+### DEF-0054 — loading a QA scenario destroyed the owner's real history
+
+- Status: Fixed
+- Severity: Blocker — reproducible loss of canonical owner data, with no warning and no undo
+- Found in: Phase 6 / `481c3a7`
+- Found by: **the owner**, who answered a question on a normal Now and later found Timeline empty — then reproduced and diagnosed by independent Codex QA, Round 3 (R3-B1)
+- Class: **a separation drawn on one axis and not on the other axis it exists to protect.** `indexedDbStore.ts`'s own comment states the rule: without a database name per target, "synthetic QA data would land in the same place as real history — exactly the separation section 33 requires." That was applied between Preview and production, and never between the laboratory and the owner. Within one target they were one store.
+- Reproduction: on a normal Now, record something. It appears in Timeline and survives navigation, refresh, tab close and reopen. Open QA, load any scenario. The owner's history is gone — `loadDocument` calls `replaceAll`, which clears every object store before writing the fixture.
+- Root cause: one database, `life-command-os:${target}`, for every surface including the laboratory.
+- Fix: two databases. The laboratory gets `…:laboratory` and nothing it does can reach the owner's. Which one is active is **derived** from whether the laboratory is holding anything, rather than remembered in a flag — an empty laboratory is one that is not in use, so putting a fixture away is emptying it, nothing can drift, and a reload lands where it left off. Answers written while a fixture is on screen go to the fixture, which is right: his own history comes back untouched.
+- **And the app now says whose evening it is.** A fixture must stay inspectable from Now, Timeline, Insights, Life and a domain page — that is the point of the laboratory — which is exactly why a person standing on Now has to be told when the evening in front of him is not his. A notice on every surface says so and offers `Show mine`, which costs nothing because his history was never written over. `Clear everything` is now `Empty the laboratory`, because the old name promised something it must no longer do.
+- Regression: `tests/browser/qa-lab.spec.ts` → "the laboratory and the owner keep separate histories" — three tests: his record survives a loaded scenario and comes back when the laboratory is emptied; a normal surface says whose evening is on screen; a reload keeps both the fixture and the notice. Proved by pointing both names at one database and watching his record vanish.
+- **False confidence, named by QA and confirmed:** `qa-lab.spec.ts` already proved a loaded scenario survives reload and reopen, and even exercised clearing — and never once put an owner record in front of the laboratory. Every assertion passed while the defect destroyed real data.
+- Siblings: swept. Deployment does not orphan the store — the database name carries no SHA and `DB_VERSION` is unchanged — and Preview and production remain separated. `append`, `clear` and `verifyStorage` all act on the active store.
+- Fixed in: this checkpoint
+
 ### DEF-0053 — a status word renamed in one file and ordered in another, and three areas silently left off Life
 
 - Status: Fixed

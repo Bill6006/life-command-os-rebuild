@@ -13,6 +13,7 @@ import {
   useLifePageSlug,
   type Destination,
 } from '../../platform/routing'
+import { useMemory } from '../memory/memoryContext'
 import { useBuildFreshness, type BuildFreshness } from '../../platform/useBuildFreshness'
 import { BottomNav } from './BottomNav'
 import { DESTINATION_LABELS } from './labels'
@@ -93,6 +94,40 @@ function StaleBuildNotice({ freshness }: { freshness: BuildFreshness }) {
 }
 
 /**
+ * Whose evening this is (R3-B1).
+ *
+ * The laboratory can be inspected from every surface, which is the point of it
+ * — and that is exactly why a person standing on Now has to be told when the
+ * evening in front of him is not his. Every other honesty rule in this app is
+ * about not claiming more than the evidence supports; showing somebody a
+ * synthetic history in the same frame as his own, unlabelled, is the largest
+ * version of that mistake available.
+ *
+ * It says how to get out, and getting out costs nothing: his history was never
+ * written over, so it comes back exactly as he left it.
+ */
+function LaboratoryNotice() {
+  const memory = useMemory()
+  if (memory.source !== 'laboratory') return null
+
+  return (
+    <div className="lab-notice" role="status">
+      <span className="lab-notice__text">
+        This is a test history, not yours. Nothing of yours has been changed.
+      </span>
+      <button
+        type="button"
+        className="lab-notice__button"
+        disabled={memory.busy}
+        onClick={() => void memory.clear()}
+      >
+        Show mine
+      </button>
+    </div>
+  )
+}
+
+/**
  * Life or one of its ten domain pages (canonical plan section 50).
  *
  * A domain page is a second hash segment under Life rather than a
@@ -154,6 +189,7 @@ export function AppShell() {
     <div className="shell">
       <TopBar current={destination} onNavigate={navigate} />
       <StaleBuildNotice freshness={freshness} />
+      <LaboratoryNotice />
 
       {/* Re-keying on the destination restarts the entry transition, which is
           what makes a tab change read as a change rather than a repaint. */}

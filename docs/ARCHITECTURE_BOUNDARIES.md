@@ -198,6 +198,7 @@ the defect and the defect from the rule.
 | tracked state meaning | `src/domain/concepts.ts` + `tests/unit/registries.test.ts`                     |
 | historical order      | `tests/synthetic/domain-page-data.test.ts`, `tests/synthetic/timeline.test.ts` |
 | freshness language    | `tests/unit/life-pages.test.ts`, `tests/synthetic/domain-page-data.test.ts`    |
+| synthetic vs real     | `tests/browser/qa-lab.spec.ts`                                                 |
 
 Two rules about these tests, both learned the expensive way:
 

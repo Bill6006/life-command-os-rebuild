@@ -27,7 +27,12 @@ import {
 } from '../../memory/store'
 import { buildView } from '../../memory/view'
 import { runningBuild } from '../../platform/buildInfo'
-import { MemoryContext, type MemoryContextValue, type StorageCheck } from './memoryContext'
+import {
+  MemoryContext,
+  type HistorySource,
+  type MemoryContextValue,
+  type StorageCheck,
+} from './memoryContext'
 
 /**
  * One store and one clock, for every surface (canonical plan sections 14 and 31).
@@ -50,21 +55,43 @@ import { MemoryContext, type MemoryContextValue, type StorageCheck } from './mem
 
 const EMPTY: StoreSnapshot = { schemaVersion: 1, records: [], entities: [], malformed: [] }
 
-const DB_NAME = `life-command-os:${runningBuild.target}`
+/**
+ * Two databases: the owner's, and the laboratory's (R3-B1).
+ *
+ * The separation this file already drew was between **targets** — Preview and
+ * production are two paths on one github.io origin, so without a name apiece
+ * they would share a database and synthetic data would land where real history
+ * lives. That is section 33's rule, and it was applied to one axis and not to
+ * the other axis it exists to protect: within a single target, the QA
+ * laboratory and the owner's own app were still one store, and loading a
+ * fixture called `replaceAll`, which clears every object store before writing.
+ * Seven records of the owner's evening, gone, with no warning and no undo.
+ *
+ * A fixture is not a version of his life. It gets its own database, and nothing
+ * the laboratory does can reach his.
+ */
+const OWNER_DB = `life-command-os:${runningBuild.target}`
+const LABORATORY_DB = `${OWNER_DB}:laboratory`
 
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-async function openStore(): Promise<CanonicalStore> {
+async function openStore(name: string): Promise<CanonicalStore> {
   if (!indexedDbAvailable()) return createMemoryStore()
   try {
-    return await openIndexedDbStore({ name: DB_NAME })
+    return await openIndexedDbStore({ name })
   } catch {
     // Private browsing, a blocked upgrade, a quota refusal. Keep working, and
     // let the surface report that nothing is being kept.
     return createMemoryStore()
   }
+}
+
+function holdsAnything(snapshot: StoreSnapshot): boolean {
+  return (
+    snapshot.records.length > 0 || snapshot.entities.length > 0 || snapshot.malformed.length > 0
+  )
 }
 
 function contentOf(snapshot: StoreSnapshot): string {
@@ -77,8 +104,32 @@ function contentOf(snapshot: StoreSnapshot): string {
 }
 
 export function MemoryProvider({ children }: { children: ReactNode }) {
-  const store = useRef<CanonicalStore | undefined>(undefined)
+  /*
+   * Both stores stay open, and which one is *active* is derived from whether
+   * the laboratory is holding anything.
+   *
+   * Derived rather than remembered in a flag, because a flag is a second place
+   * for the truth to live and this one would be read on every surface. An empty
+   * laboratory is a laboratory that is not in use; putting a fixture away is
+   * emptying it. Nothing can drift, nothing needs migrating, and a reload lands
+   * exactly where it left off — which is the behaviour `qa-lab.spec.ts` already
+   * requires.
+   */
+  const stores = useRef<{ owner?: CanonicalStore; laboratory?: CanonicalStore }>({})
+  const sourceRef = useRef<HistorySource>('owner')
+  const [source, setSource] = useState<HistorySource>('owner')
   const clock = useMemo(() => systemClock(), [])
+
+  const activeStore = useCallback(
+    (): CanonicalStore | undefined =>
+      sourceRef.current === 'laboratory' ? stores.current.laboratory : stores.current.owner,
+    [],
+  )
+
+  const showFrom = useCallback((next: HistorySource) => {
+    sourceRef.current = next
+    setSource(next)
+  }, [])
 
   const [ready, setReady] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -99,19 +150,24 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     let live = true
 
     void (async () => {
-      const opened = await openStore()
+      const owner = await openStore(OWNER_DB)
+      const laboratory = await openStore(LABORATORY_DB)
       if (!live) {
-        opened.close()
+        owner.close()
+        laboratory.close()
         return
       }
-      store.current = opened
-      setBackend(opened.backend)
-      setDurable(opened.durable)
+      stores.current = { owner, laboratory }
+      setBackend(owner.backend)
+      setDurable(owner.durable)
 
       try {
         // Whatever was left here last time is still here. That is the point of
         // a durable store, and it is the first thing the owner should see.
-        setSnapshot(await opened.snapshot())
+        const fixture = await laboratory.snapshot()
+        const inLaboratory = holdsAnything(fixture)
+        showFrom(inLaboratory ? 'laboratory' : 'owner')
+        setSnapshot(inLaboratory ? fixture : await owner.snapshot())
       } catch (caught) {
         setError(describe(caught))
       }
@@ -120,31 +176,40 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
 
     return () => {
       live = false
-      store.current?.close()
-      store.current = undefined
+      stores.current.owner?.close()
+      stores.current.laboratory?.close()
+      stores.current = {}
     }
-  }, [])
+  }, [showFrom])
 
-  const apply = useCallback(async (load: SnapshotLoad, label: string | undefined) => {
-    const current = store.current
-    if (current === undefined) return
+  /*
+   * A loaded document always lands in the laboratory, never in the owner's
+   * store, and `replaceAll` is therefore only ever destructive to a fixture.
+   */
+  const apply = useCallback(
+    async (load: SnapshotLoad, label: string | undefined) => {
+      const laboratory = stores.current.laboratory
+      if (laboratory === undefined) return
 
-    setBusy(true)
-    setError(undefined)
-    setStorageCheck(undefined)
-    try {
-      if (load.loaded) {
-        await current.replaceAll(load.snapshot)
-        setSnapshot(await current.snapshot())
-        setLoadedLabel(label)
+      setBusy(true)
+      setError(undefined)
+      setStorageCheck(undefined)
+      try {
+        if (load.loaded) {
+          await laboratory.replaceAll(load.snapshot)
+          showFrom('laboratory')
+          setSnapshot(await laboratory.snapshot())
+          setLoadedLabel(label)
+        }
+        setIssues(load.issues)
+      } catch (caught) {
+        setError(describe(caught))
+      } finally {
+        setBusy(false)
       }
-      setIssues(load.issues)
-    } catch (caught) {
-      setError(describe(caught))
-    } finally {
-      setBusy(false)
-    }
-  }, [])
+    },
+    [showFrom],
+  )
 
   const loadDocument = useCallback(
     async (json: string, label?: string) => {
@@ -153,32 +218,51 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     [apply],
   )
 
-  const append = useCallback(async (records: readonly CanonicalRecord[]) => {
-    const current = store.current
-    if (current === undefined || records.length === 0) return
+  /*
+   * Answers go wherever the owner is currently looking.
+   *
+   * Answering a question while a fixture is on screen writes to the fixture,
+   * which is right: it is the fixture's evening being answered about, and his
+   * own history must come back untouched when the fixture is put away.
+   */
+  const append = useCallback(
+    async (records: readonly CanonicalRecord[]) => {
+      const current = activeStore()
+      if (current === undefined || records.length === 0) return
 
-    setBusy(true)
-    setError(undefined)
-    try {
-      const result = await current.append(records)
-      if (result.rejected.length > 0) {
-        setError(result.rejected.map((rejection) => rejection.problem).join('; '))
+      setBusy(true)
+      setError(undefined)
+      try {
+        const result = await current.append(records)
+        if (result.rejected.length > 0) {
+          setError(result.rejected.map((rejection) => rejection.problem).join('; '))
+        }
+        setSnapshot(await current.snapshot())
+      } catch (caught) {
+        setError(describe(caught))
+      } finally {
+        setBusy(false)
       }
-      setSnapshot(await current.snapshot())
-    } catch (caught) {
-      setError(describe(caught))
-    } finally {
-      setBusy(false)
-    }
-  }, [])
+    },
+    [activeStore],
+  )
 
+  /*
+   * Put the laboratory away, and hand the owner his own history back.
+   *
+   * This used to clear whatever store was open, which on a shared store meant
+   * his records. It cannot reach them now: it empties the laboratory database
+   * and switches back, and his history returns exactly as he left it because it
+   * was never touched.
+   */
   const clear = useCallback(async () => {
-    const current = store.current
-    if (current === undefined) return
+    const { owner, laboratory } = stores.current
+    if (owner === undefined || laboratory === undefined) return
     setBusy(true)
     try {
-      await current.clear()
-      setSnapshot(await current.snapshot())
+      await laboratory.clear()
+      showFrom('owner')
+      setSnapshot(await owner.snapshot())
       setIssues([])
       setLoadedLabel(undefined)
       setStorageCheck(undefined)
@@ -187,19 +271,22 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     } finally {
       setBusy(false)
     }
-  }, [])
+  }, [showFrom])
 
   const verifyStorage = useCallback(async () => {
     setBusy(true)
     try {
-      // Close the connection and open a new one. Reading back through the same
+      // Close the connections and open new ones. Reading back through the same
       // handle would prove very little; this proves the bytes are on disk.
-      store.current?.close()
-      const reopened = await openStore()
-      store.current = reopened
-      setBackend(reopened.backend)
-      setDurable(reopened.durable)
+      stores.current.owner?.close()
+      stores.current.laboratory?.close()
+      const owner = await openStore(OWNER_DB)
+      const laboratory = await openStore(LABORATORY_DB)
+      stores.current = { owner, laboratory }
+      setBackend(owner.backend)
+      setDurable(owner.durable)
 
+      const reopened = sourceRef.current === 'laboratory' ? laboratory : owner
       const fromDisk = await reopened.snapshot()
       const same = contentOf(fromDisk) === contentOf(snapshot)
       setSnapshot(fromDisk)
@@ -312,6 +399,7 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     view,
     issues,
     loadedLabel,
+    source,
     error,
     storageCheck,
     loadDocument,

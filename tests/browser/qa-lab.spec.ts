@@ -109,10 +109,10 @@ test.describe('a real store', () => {
     }
   })
 
-  test('clears everything back to nothing known', async ({ page }) => {
+  test('empties the laboratory back to nothing known', async ({ page }) => {
     await openQa(page)
     await loadScenario(page, 'Two ordinary weeks')
-    await page.getByRole('button', { name: 'Clear everything' }).click()
+    await page.getByRole('button', { name: 'Empty the laboratory' }).click()
     await expect(rowValue(page, 'Records')).toHaveText('0')
   })
 })
@@ -267,5 +267,120 @@ test.describe('the inspector says where a belief came from', () => {
     await page.locator('summary', { hasText: 'What it has learned' }).click()
     const said = page.locator('.rows__row', { hasText: 'Who said so' }).first()
     await expect(said).toContainText('you answered')
+  })
+})
+
+/**
+ * R3-B1 — the laboratory cannot reach the owner's own history.
+ *
+ * The defect this replaces was reproducible in four steps and destroyed real
+ * data: record something on a normal Now, open QA, load any scenario, and the
+ * owner's history was gone — `replaceAll` on a store both surfaces shared. No
+ * warning, no undo, and every automated test passed, because none of them had
+ * ever put an owner record in front of the laboratory.
+ *
+ * The two halves have to hold together. A fixture must still be inspectable
+ * from every normal surface, which is the whole point of the laboratory; and
+ * the owner's history must be exactly where he left it afterwards.
+ */
+test.describe('the laboratory and the owner keep separate histories', () => {
+  const HIS_OWN = 'weekly review on Sunday'
+
+  /**
+   * Something of the owner's own, in the owner's own database.
+   *
+   * Written straight into IndexedDB rather than through a screen, and that is
+   * deliberate: this test is *about* the two databases, so naming one of them
+   * is the subject rather than a leak of an implementation detail. It also has
+   * to be: a domain page on a completely empty store has nothing to correct and
+   * offers no control, so there is no owner-surface route to a first record in
+   * a fresh browser context.
+   *
+   * The row is the same wire shape `recordToWire` writes, so the app reads it
+   * exactly as it would read one of its own.
+   */
+  async function seedHisOwnHistory(page: Page) {
+    await page.goto(APP)
+    await expect(page.getByRole('heading', { level: 1, name: 'Now' })).toBeVisible()
+
+    await page.evaluate(async (text: string) => {
+      const open = indexedDB.open('life-command-os:preview', 1)
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        open.onsuccess = () => resolve(open.result)
+        open.onerror = () => reject(open.error)
+      })
+      const transaction = db.transaction(['records'], 'readwrite')
+      transaction.objectStore('records').put({
+        // A real record id: 26 characters of Crockford base32, no I, L, O or U.
+        id: '01JQWNSEED0000000000000000',
+        schemaVersion: 1,
+        kind: 'observation',
+        occurredAt: '2026-05-01T18:00:00.000Z',
+        recordedAt: '2026-05-01T18:00:00.000Z',
+        zone: 'America/Denver',
+        domains: ['home'],
+        entities: [],
+        privacy: 'normal',
+        provenance: { source: 'owner', writtenBy: 'life' },
+        concept: 'home.friction',
+        value: { type: 'text', value: text },
+        method: 'self-report',
+      })
+      await new Promise<void>((resolve, reject) => {
+        transaction.oncomplete = () => resolve()
+        transaction.onerror = () => reject(transaction.error)
+      })
+      db.close()
+    }, HIS_OWN)
+
+    await page.reload()
+    await page.goto(`${APP}#/timeline`)
+    await expect(page.getByText(HIS_OWN)).toBeVisible()
+  }
+
+  test('a loaded scenario does not overwrite what the owner recorded', async ({ page }) => {
+    await seedHisOwnHistory(page)
+
+    // The fixture is still inspectable from a normal surface — the behaviour
+    // that must survive the repair rather than be traded away for it.
+    await openQa(page)
+    await loadScenario(page, 'Two months of readings, and nothing graded')
+    await page.goto(`${APP}#/timeline`)
+    await expect(page.getByText(HIS_OWN)).toHaveCount(0)
+    await expect(page.getByText('Current energy').first()).toBeVisible()
+
+    // And his own history is not gone — it was never written over.
+    await page.goto(`${APP}#/qa`)
+    await page.getByRole('button', { name: 'Empty the laboratory' }).click()
+    await page.goto(`${APP}#/timeline`)
+    await expect(page.getByText(HIS_OWN)).toBeVisible()
+  })
+
+  test('says whose evening is on screen, from a normal surface', async ({ page }) => {
+    /*
+     * Inspecting a fixture from Now is intended. Being unable to tell that is
+     * what it is would be the largest version of the claim-wider-than-the-
+     * evidence mistake this whole phase has been about.
+     */
+    await openQa(page)
+    await loadScenario(page, 'Two ordinary weeks')
+
+    await page.goto(`${APP}#/now`)
+    const notice = page.locator('.lab-notice')
+    await expect(notice).toBeVisible()
+    await expect(notice).toContainText('not yours')
+
+    await notice.getByRole('button', { name: 'Show mine' }).click()
+    await expect(page.locator('.lab-notice')).toHaveCount(0)
+  })
+
+  test('survives a reload while the laboratory is loaded, and still says so', async ({ page }) => {
+    await openQa(page)
+    await loadScenario(page, 'Two ordinary weeks')
+    await page.reload()
+    await expect(page.getByRole('heading', { level: 1, name: 'QA' })).toBeVisible()
+
+    await page.goto(`${APP}#/now`)
+    await expect(page.locator('.lab-notice')).toBeVisible()
   })
 })

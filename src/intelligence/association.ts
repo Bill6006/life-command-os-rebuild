@@ -1,6 +1,6 @@
 import type { ConceptRegistry } from '../domain/concepts'
 import type { EntityRef } from '../domain/entities'
-import type { RecordId } from '../domain/ids'
+import { entityIdKind, isEntityId, type RecordId } from '../domain/ids'
 import type { ActionTarget, ActionVerb } from '../domain/recommendation'
 import { bearsConcept, type CanonicalRecord, type FactValue } from '../domain/records'
 import {
@@ -115,6 +115,36 @@ export const ACTION_FAMILIES: readonly ActionFamily[] = []
 export function actionScopeOf(target: ActionTarget): string {
   const family = ACTION_FAMILIES.find((entry) => entry.members.includes(targetKey(target)))
   return family === undefined ? targetKey(target) : `family:${family.id}`
+}
+
+/**
+ * The action a scope names, read back out of it (D-091 invariant 1).
+ *
+ * A scope is written by {@link actionScopeOf} and then stored — inside a
+ * correction record, which outlives the screen that produced it. Anything
+ * describing that record later has to be able to say *which* action it was
+ * about, and the only honest source is the scope itself. Without this, a
+ * correction about a walk gets described by its verb, and "the app has stopped
+ * assuming this about moving" fits the bike ride the owner never disputed.
+ *
+ * A family scope resolves to its label instead: it names several actions on
+ * purpose, and pretending it names one would be the same defect inverted.
+ */
+export function actionScopeParts(
+  scope: string,
+):
+  | { readonly verb: ActionVerb; readonly object: EntityRef }
+  | { readonly family: ActionFamily }
+  | undefined {
+  const family = ACTION_FAMILIES.find((entry) => scope === `family:${entry.id}`)
+  if (family !== undefined) return { family }
+
+  const cut = scope.indexOf('/')
+  if (cut <= 0) return undefined
+  const verb = scope.slice(0, cut) as ActionVerb
+  const id = scope.slice(cut + 1)
+  if (!isEntityId(id)) return undefined
+  return { verb, object: { id, kind: entityIdKind(id) as EntityRef['kind'] } }
 }
 
 /**

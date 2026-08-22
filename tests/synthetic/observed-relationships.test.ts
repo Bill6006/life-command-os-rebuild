@@ -25,6 +25,7 @@ import { snapshotFromWire, type SnapshotWire } from '../../src/memory/snapshot'
 import { buildView } from '../../src/memory/view'
 import { createKit, pastEpisodeRecords, type PastEpisode } from '../../src/synthetic/kit'
 import { SCENARIOS } from '../../src/synthetic/scenarios'
+import { assembleTimeline } from '../../src/features/timeline/timelineEntries'
 import { decideOn, loadScenario } from './harness'
 
 /**
@@ -1021,6 +1022,42 @@ describe('correcting what the app has worked out', () => {
     expect(situationOn(after).learning.episodes.length).toBe(
       situationOn(before).learning.episodes.length,
     )
+  })
+
+  it('names the action in the owner’s own history, not the verb', () => {
+    /*
+     * R3-B2, and the assertion whose absence let it through. The key is scoped
+     * to the action and the card's own control says "follows a walk" — but the
+     * *stored* correction is read back by the shared history renderer months
+     * later, and that path named the verb: "Told the app to stop assuming what
+     * the app has worked out follows moving." A sentence that fits the bike
+     * ride he never disputed, on the surface that is supposed to be the
+     * canonical account of what he did.
+     *
+     * The identity invariant survived in the key and died on the way to the
+     * screen, so this test goes through the screen.
+     */
+    const built = evenings(rows(), { reject: { object: 'a walk', at: ['2026-03-24', '09:00'] } })
+    const entries = assembleTimeline(situationOn(built), 500).days.flatMap((day) => day.entries)
+
+    const correction = entries.find((entry) => /stop assuming/i.test(entry.text))
+    expect(correction, 'the correction never reached Timeline').toBeDefined()
+    expect(correction?.text, correction?.text).toContain('a walk')
+    /*
+     * The verb alone would fit an action he never disputed.
+     *
+     * Written as substring checks rather than a word-boundary regex on
+     * purpose. `\b` written through a shell heredoc has arrived in this
+     * repository as a literal backspace three times now (DEF-0041), and a
+     * sweep that cannot fail is worse than no sweep. There is nothing a
+     * boundary buys here that these two do not.
+     */
+    const said = (correction?.text ?? '').toLowerCase()
+    for (const verbAlone of ['follows move', 'follows moving']) {
+      expect(said.includes(verbAlone), `"${said}" names the verb, which fits a bike ride too`).toBe(
+        false,
+      )
+    }
   })
 
   it('lets the app conclude again from evidence he has not disputed', () => {

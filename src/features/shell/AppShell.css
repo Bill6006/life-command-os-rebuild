@@ -132,6 +132,48 @@
   transform: scale(0.96);
 }
 
+/*
+ * Deliberately not the build notice's colour.
+ *
+ * A newer build being available is news; looking at somebody else's evening
+ * while believing it is yours is a different kind of thing, and the two should
+ * not read as the same interruption.
+ */
+.lab-notice {
+  position: sticky;
+  top: 0;
+  z-index: 19;
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--edge);
+  animation: notice-in var(--dur-slow) var(--ease-out);
+}
+
+.lab-notice__text {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.lab-notice__button {
+  flex-shrink: 0;
+  padding: 0.4375rem var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  background: var(--surface-3);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-pill);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.lab-notice__button:active {
+  transform: scale(0.96);
+}
+
 @keyframes notice-in {
   from {
     opacity: 0;

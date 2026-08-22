@@ -1,6 +1,7 @@
 import { createRecordFactory } from '../domain/build'
 import { coreConcepts, type ConceptRegistry } from '../domain/concepts'
 import type { LifeDomainId } from '../domain/domains'
+import type { EntityIndex } from '../domain/entities'
 import { newRecordId, type RecordId } from '../domain/ids'
 import { verbLabel, type ActionVerb } from '../domain/recommendation'
 import type {
@@ -16,6 +17,7 @@ import type {
 } from '../domain/records'
 import type { Instant, TimeZoneId } from '../domain/time'
 import type { ConceptId } from '../domain/windows'
+import { actionScopeParts } from './association'
 import { parseBeliefKey } from './learning'
 
 /**
@@ -108,28 +110,39 @@ export function beliefCorrectionRecord(
  * D-039's rule, applied to a third kind of owner-facing sentence: a question
  * names what it is about, and so must a button that withdraws something. "That
  * is not right" on its own could be about anything on the screen.
+ *
+ * `entities` is optional only because a key is sometimes described where no
+ * index exists. Every owner-facing surface has one and must pass it: without
+ * it, an association correction can only name its verb (R3-B2).
  */
-export function describeBelief(key: string): string {
+export function describeBelief(key: string, entities?: EntityIndex): string {
   const parsed = parseBeliefKey(key)
   if (parsed === undefined) return key
 
   /*
-   * An association key carries an action scope, not a verb.
+   * An association key carries an action scope, not a verb (R3-B2).
    *
-   * `move/walk` and `move/bike-ride` are two different beliefs about two
-   * different things (D-091), and the key keeps them apart even though this
-   * sentence can only name the verb — the entity's own label lives in the
-   * entity registry, which a key does not carry. A card that knows the label
-   * supplies a better phrase through `Insight.beliefLabel`; this is the
-   * fallback, and it is still about the right belief.
+   * `move/routine:a-walk` and `move/routine:a-bike-ride` are two beliefs about
+   * two different things, and the key keeps them apart — but this sentence is
+   * what the owner actually reads, on Timeline, months later. Naming the verb
+   * there produces "stop assuming what the app has worked out follows moving",
+   * which fits the bike ride he never disputed. The correction was scoped and
+   * its description was not, which is the identity invariant surviving in the
+   * key and dying on the way to the screen.
+   *
+   * So the object gets named, from the scope, whenever an entity index is at
+   * hand — and every owner-facing caller has one. A family scope names several
+   * actions deliberately and says so.
    */
   if (parsed.aspect === 'association') {
-    const verb = parsed.verb.startsWith('family:')
-      ? undefined
-      : (parsed.verb.split('/')[0] as ActionVerb | undefined)
-    return verb === undefined
-      ? 'what the app has worked out about these'
-      : `what the app has worked out follows ${verbLabel(verb).toLowerCase()}`
+    const parts = actionScopeParts(parsed.verb)
+    if (parts === undefined) return 'what the app has worked out about this'
+    if ('family' in parts) return `what the app has worked out follows ${parts.family.label}`
+
+    const named = entities?.labelFor(parts.object)
+    return named === undefined
+      ? `what the app has worked out follows ${verbLabel(parts.verb).toLowerCase()}`
+      : `what the app has worked out follows ${named}`
   }
 
   const move = verbLabel(parsed.verb as ActionVerb).toLowerCase()

@@ -2458,6 +2458,20 @@ about the same moment as the thing it corrects, so `occurredAt` alone can never
 separate the two, and a list sorted on it alone shows an order of events that
 did not happen.
 
+**8 — SYNTHETIC AND REAL NEVER SHARE A STORE.** A synthetic history is not a
+version of the owner's life and may never be written over it. The laboratory
+keeps its own database; nothing it does can reach his; and a fixture stays
+inspectable from every normal surface — which is precisely why every normal
+surface must **say whose evening is on screen** while one is loaded, and offer
+one press back to his own.
+
+This is not a new rule. `indexedDbStore.ts` carried it from Phase 1: without a
+database name per target, "synthetic QA data would land in the same place as
+real history — exactly the separation section 33 requires." It had been applied
+between Preview and production and never between the laboratory and the owner,
+and the owner lost real records to the gap (DEF-0054). **A separation is only
+drawn where somebody drew it**; the axis nobody looked at is where the data goes.
+
 ### And one that is not about learning
 
 **Freshness language.** _How recently has anything come in about this_ and _is
@@ -2471,7 +2485,9 @@ can name itself.
 `src/intelligence/association.ts` holds 1–5 in the computation and says so in
 its own header. `src/features/life/domainPages.ts` and
 `src/features/life/standing.ts` hold 7 and the freshness rule.
-`src/domain/concepts.ts` holds 6. The regression architecture is
+`src/domain/concepts.ts` holds 6 — and holds it by naming the value shape a
+tracked reading takes, so the declaration can be checked against `numericValue`
+rather than believed (DEF-0056). `src/features/memory/MemoryProvider.tsx` holds 8. The regression architecture is
 `tests/synthetic/observed-relationships.test.ts` — one describe block per
 invariant, each proved to fail when its own defect is reintroduced — with the
 two owner-surface invariants in `tests/synthetic/domain-page-data.test.ts` and

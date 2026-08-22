@@ -22,7 +22,74 @@ reopens Phase 4 or any completed phase.
 
 # Phase 6 — Timeline + Insights
 
-**Status: YELLOW — REPAIRED, AWAITING CODEX RETEST.**
+**Status: YELLOW — ROUND 3 REPAIRED, AWAITING CODEX RETEST.**
+
+Codex's Round 3 retest confirmed all seven of the previous round's blockers
+repaired, and QA-A1 still repaired — and returned **FAIL** on three siblings the
+seven had not reached. Full report at
+[`qa/PHASE_06_QA_HANDOFF.md`](qa/PHASE_06_QA_HANDOFF.md) under "Round 3 — Codex
+retest". The three are repaired here.
+
+| Finding | What it was                                                                                                                                      | Repaired as |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
+| R3-B1   | Loading a QA scenario called `replaceAll` on a store the laboratory shared with the owner, destroying his real history. **The owner lost data.** | DEF-0054    |
+| R3-B2   | A correction scoped to a walk, described on Timeline as "follows move" — a sentence that fits the bike ride he never disputed                    | DEF-0055    |
+| R3-B3   | `emotionalState` declared `tracked` and said to participate, while `numericValue` discarded its free-text readings before anything used them     | DEF-0056    |
+
+**The first one is the one that matters.** It is the owner's "Plenty" answer
+that vanished — the concern carried into the Round 3 handoff with the
+instruction not to assume user error. It was not user error. `MemoryProvider`
+kept one database for every surface, and `loadDocument` clears all four object
+stores before writing a fixture.
+
+The class is the one this phase keeps producing: **a rule applied on the axis
+somebody was looking at, and not on the axis it exists to protect.**
+`indexedDbStore.ts` already carried the rule in its own comment — synthetic data
+must not land where real history lives — and it had been applied between Preview
+and production, never between the laboratory and the owner.
+
+So the laboratory has its own database now, and nothing it does can reach his.
+Which one is active is derived from whether the laboratory holds anything rather
+than remembered in a flag, so nothing can drift out of step. A fixture stays
+inspectable from every normal surface, because that is what the laboratory is
+for — and every normal surface now **says whose evening it is**, with one press
+back to his own, which costs nothing because his history was never written over.
+
+**QA named the test that gave false confidence, and it is worth repeating.**
+`qa-lab.spec.ts` already proved a loaded scenario survives a reload and a
+reopen, and exercised clearing. It had never once put an owner record in front
+of the laboratory. Every assertion passed while the defect destroyed real data.
+
+**R3-B2 is DEF-0046's invariant surviving in the key and dying on the way to the
+screen.** The scope, the key and the card's own control were all correct; the
+stored record is read back by a different renderer, and that path had never been
+part of the identity work. It now names the object, and the regression goes
+through `assembleTimeline` rather than around it.
+
+**R3-B3 was an unverifiable declaration.** `tracked` asserted that a concept
+could be learned from and nothing checked that the machinery could read what the
+concept holds. It now names _how_ a reading becomes a number, which is a claim
+that can be — and is — checked against `numericValue` itself.
+
+**And no scale was invented for how he feels.** Mood, stress, confidence and
+motivation are four things; one number for all four is the wellness score the
+owner rules out. `emotionalState` keeps everything else and is simply no longer
+claimed to be a trackable dimension. Which dimensions exist is his to say, and
+it stays an open question (D-091 invariant 6). QA accepted the reasoning and
+rejected only the claim, which is exactly the distinction this repair makes.
+
+**Every Round 3 PASS was preserved and re-verified**: the seven semantic
+invariants, QA-A1's observe-first owner flow, the exact-three-verb
+`inferred-evidence` decision QA accepted, section 51's already-passing gate
+items, DEF-0034–DEF-0044, and every explicit deferral.
+
+**Four defects reintroduced one at a time; four caught** — the shared database,
+the verb-named correction, the renderer dropping the entity index, and a concept
+tracked on a shape the path cannot read.
+
+---
+
+**Round 2 status, superseded by the above: YELLOW — REPAIRED, AWAITING CODEX RETEST.**
 
 Round 2's repair was deployed and then read by an **independent Codex cold-use
 and semantic audit**, which reproduced **seven blocking defects** in it. The
@@ -268,20 +335,20 @@ failure, and lint is the cheaper half.
 
 ## Verification
 
-| Gate                                      | Result                                                                                                                                             |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Privacy scan                              | Clean, 163 tracked files                                                                                                                           |
-| Format (Prettier)                         | Pass                                                                                                                                               |
-| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                                   |
-| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                                     |
-| Unit / contract / synthetic / adversarial | 764 passed / 764, 43 files (in plain Node, no DOM)                                                                                                 |
-| Browser tests (Playwright)                | 291 passed / 291 — 97 tests × 360, 430, 1280px                                                                                                     |
-| Production build                          | Pass                                                                                                                                               |
-| `npm run verify` from a clean checkout    | Pass                                                                                                                                               |
-| Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand                                                                                                         |
-| Reintroduction pass                       | 19 for the phase, 12 for QA-A1, **17 for the audit's seven**; all 48 caught                                                                        |
-| Builder's own Android-style gate          | Pass — against the deployed checkpoint; no findings                                                                                                |
-| Independent QA                            | **Round 1 PASS withdrawn on QA-A1; round 2 repaired; seven blockers found by Codex cold-use audit, repaired here. Awaiting Codex retest (D-090).** |
+| Gate                                      | Result                                                                                                                                                                                                                                             |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy scan                              | Clean, 163 tracked files                                                                                                                                                                                                                           |
+| Format (Prettier)                         | Pass                                                                                                                                                                                                                                               |
+| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                                                                                                                                   |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                                                                                                                                     |
+| Unit / contract / synthetic / adversarial | 768 passed / 768, 43 files (in plain Node, no DOM)                                                                                                                                                                                                 |
+| Browser tests (Playwright)                | 300 passed / 300 — 100 tests × 360, 430, 1280px                                                                                                                                                                                                    |
+| Production build                          | Pass                                                                                                                                                                                                                                               |
+| `npm run verify` from a clean checkout    | Pass                                                                                                                                                                                                                                               |
+| Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand                                                                                                                                                                                                         |
+| Reintroduction pass                       | 19 for the phase, 12 for QA-A1, 17 for the audit's seven, **4 for Codex Round 3**; all 52 caught                                                                                                                                                   |
+| Builder's own Android-style gate          | Pass — against the deployed checkpoint; no findings                                                                                                                                                                                                |
+| Independent QA                            | **Round 1 PASS withdrawn on QA-A1; round 2 repaired; seven blockers found by Codex cold-use audit, repaired here. Codex Round 3 confirmed those seven and returned FAIL on three siblings, repaired here. Awaiting Codex Round 4 retest (D-090).** |
 
 ### Where the 700 sit
 

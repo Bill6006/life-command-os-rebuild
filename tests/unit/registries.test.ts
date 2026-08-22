@@ -13,7 +13,15 @@ import {
   createDomainRegistry,
   DOMAIN,
 } from '../../src/domain/domains'
-import { CONCEPT, coreConcepts, createConceptRegistry } from '../../src/domain/concepts'
+import {
+  CONCEPT,
+  coreConcepts,
+  createConceptRegistry,
+  type TrackedReading,
+} from '../../src/domain/concepts'
+import { entityRef } from '../../src/domain/entities'
+import type { FactValue } from '../../src/domain/records'
+import { numericValue } from '../../src/intelligence/association'
 import {
   DISCREET_PRIMARY,
   FULL_EXPORT,
@@ -204,10 +212,76 @@ describe('privacy', () => {
  * can be read as a number, in a window that expects it to change.
  */
 describe('a tracked dimension is one thing, on one scale', () => {
-  const tracked = coreConcepts.all().filter((concept) => concept.tracked === true)
+  const tracked = coreConcepts.all().filter((concept) => concept.tracked !== undefined)
 
   it('has some, or the trend machinery is reading nothing', () => {
     expect(tracked.length).toBeGreaterThan(3)
+  })
+
+  it('can actually be read as a number by the path that tracks it', () => {
+    /*
+     * R3-B3, and the assertion whose absence let it through. `emotionalState`
+     * was declared tracked and said to participate; its readings are free text,
+     * which `numericValue` discards before any scale, direction, trajectory or
+     * before-and-after comparison exists. The registry made a claim and nothing
+     * checked that the machinery could honour it.
+     *
+     * This runs the declared shape through the real function rather than
+     * trusting the label on it, so the two cannot drift apart.
+     */
+    const sample: Partial<Record<TrackedReading, FactValue>> = {
+      scale: { type: 'scale', value: 3, of: 5 },
+      number: { type: 'number', value: 7.5, unit: 'hours' },
+      duration: { type: 'duration', minutes: 45 },
+    }
+
+    for (const concept of tracked) {
+      const shape = concept.tracked
+      if (shape === undefined) continue
+      const reading = sample[shape]
+      // Named rather than indexed blindly, so a shape nobody has a sample for
+      // fails with a sentence instead of a null dereference.
+      expect(
+        reading,
+        `${concept.id} declares "${shape}", which is not a reading shape`,
+      ).toBeDefined()
+      expect(
+        reading === undefined ? undefined : numericValue(reading),
+        `${concept.id} declares ${shape}, which the tracking path cannot read as a number`,
+      ).toBeTypeOf('number')
+    }
+  })
+
+  it('never declares a shape the tracking path would throw away', () => {
+    /*
+     * The other direction, and the one that matters for the next concept
+     * somebody adds. Text and an entity reference are real things the owner
+     * says; they are not dimensions with a scale and a direction, and a
+     * concept holding one of those may not be marked tracked.
+     */
+    for (const value of [
+      { type: 'text', value: 'flat' },
+      { type: 'entity', value: entityRef('routine', 'a walk') },
+    ] as readonly FactValue[]) {
+      expect(
+        numericValue(value),
+        `${value.type} is not a quantity, so no tracked concept may hold it`,
+      ).toBeUndefined()
+    }
+  })
+
+  it('leaves the emotional taxonomy open rather than inventing one', () => {
+    /*
+     * D-091 invariant 6, as a standing decision rather than as today's state.
+     * The repair for R3-B3 is *not* giving emotional state a scale — mood,
+     * stress, confidence and motivation are four things, and one number for all
+     * four is the wellness score the owner rules out. It stays what it is until
+     * he says otherwise, and it stays asked for.
+     */
+    const emotional = coreConcepts.definitionFor(CONCEPT.emotionalState)
+    expect(emotional.tracked, 'a scale was invented for how he feels').toBeUndefined()
+    expect(emotional.ask.materialToDecision, 'it still matters to a decision').toBe(true)
+    expect(emotional.privacy).toBe('sensitive')
   })
 
   it('expects to change, so it is never durable', () => {
