@@ -374,6 +374,88 @@ test.describe('the laboratory and the owner keep separate histories', () => {
     await expect(page.locator('.lab-notice')).toHaveCount(0)
   })
 
+  /**
+   * R4-B1 — the return has to actually show him his own history, and keep
+   * showing it.
+   *
+   * The notice disappearing was all the first version of this checked, and the
+   * notice disappeared correctly while Timeline said "Nothing here yet"
+   * indefinitely. His bytes were safe in their own database the whole time;
+   * what was wrong was the picture of them, and a reload being able to fix it
+   * does not make a false empty-history claim acceptable — least of all one
+   * printed under a promise that nothing of his had been changed.
+   *
+   * Both assertions matter and they are different. The immediate one catches a
+   * return that never publishes his history. The delayed one catches the
+   * actual defect: a slower operation, started against the laboratory, landing
+   * afterwards and publishing the store it was working against.
+   */
+  for (const route of [
+    {
+      name: 'Show mine, from a normal surface',
+      async leave(page: Page) {
+        await page.goto(`${APP}#/now`)
+        await page.locator('.lab-notice').getByRole('button', { name: 'Show mine' }).click()
+      },
+    },
+    {
+      name: 'Empty the laboratory, from QA',
+      async leave(page: Page) {
+        await page.goto(`${APP}#/qa`)
+        await page.getByRole('button', { name: 'Empty the laboratory' }).click()
+      },
+    },
+  ]) {
+    test(`gives him his history back and keeps it — ${route.name}`, async ({ page }) => {
+      await seedHisOwnHistory(page)
+      await openQa(page)
+      await loadScenario(page, 'Two months of readings, and nothing graded')
+
+      await route.leave(page)
+
+      await page.goto(`${APP}#/timeline`)
+      await expect(page.getByText(HIS_OWN)).toBeVisible()
+      await expect(page.locator('.lab-notice')).toHaveCount(0)
+
+      // And it stays his. Anything still in flight against the laboratory has
+      // had time to land by now, and none of it may reach the screen.
+      await page.waitForTimeout(1500)
+      await expect(page.getByText(HIS_OWN)).toBeVisible()
+      await expect(page.getByText('Current energy: 2 of 5')).toHaveCount(0)
+      await expect(page.locator('.lab-notice')).toHaveCount(0)
+    })
+  }
+
+  test('a load still in flight cannot pull him back into the laboratory', async ({ page }) => {
+    /*
+     * The race made deterministic, rather than waited for.
+     *
+     * QA's focused run failed this three-for-three and the full suite passed
+     * it 300/300 on the same code — an order-dependent false green, which is
+     * worth less than no test at all because it reads as evidence. So this one
+     * does not hope to catch two operations overlapping: it starts a slow one
+     * (replacing the store with a 142-record fixture) and interrupts it with a
+     * fast one, every run.
+     *
+     * Whichever way the two land in the store, only the newer one may reach
+     * the screen.
+     */
+    await seedHisOwnHistory(page)
+    await openQa(page)
+
+    // Deliberately not awaited: the load is still running when the next line
+    // clicks.
+    void page.getByRole('button', { name: /Two months of readings/ }).click()
+    await page.getByRole('button', { name: 'Empty the laboratory' }).click()
+
+    await page.goto(`${APP}#/timeline`)
+    await expect(page.getByText(HIS_OWN)).toBeVisible()
+
+    await page.waitForTimeout(1500)
+    await expect(page.getByText(HIS_OWN), 'the abandoned load published over him').toBeVisible()
+    await expect(page.locator('.lab-notice')).toHaveCount(0)
+  })
+
   test('survives a reload while the laboratory is loaded, and still says so', async ({ page }) => {
     await openQa(page)
     await loadScenario(page, 'Two ordinary weeks')

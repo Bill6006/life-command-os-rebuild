@@ -4,6 +4,7 @@ import type { Instant, TimeZoneId, WeekStartDay } from '../../domain/time'
 import type { ValidationIssue } from '../../domain/validation'
 import type { StoreBackend, StoreSnapshot } from '../../memory/store'
 import type { MemoryView } from '../../memory/view'
+import type { HistorySource } from './projection'
 
 /**
  * What every surface can see and do (canonical plan sections 14 and 31).
@@ -29,11 +30,17 @@ export interface StorageCheck {
  * the laboratory — and the owner's own history is still there, untouched, when
  * the fixture is put away.
  *
- * This is on the context rather than kept inside the laboratory screen because
- * the surfaces that most need to say it are the ones furthest from QA: a person
- * looking at Now is entitled to know whether he is looking at his own evening.
+ * It reaches surfaces through the context rather than through the laboratory
+ * screen because the surfaces that most need to say it are the ones furthest
+ * from QA: a person looking at Now is entitled to know whether he is looking at
+ * his own evening.
+ *
+ * Declared in `projection.ts` and re-exported here, not written out twice. The
+ * two copies were identical, which is exactly how they stay identical right up
+ * until they do not — DEF-0053's class, on the type this time rather than on a
+ * word.
  */
-export type HistorySource = 'owner' | 'laboratory'
+export type { HistorySource } from './projection'
 
 export interface MemoryContextValue {
   readonly ready: boolean

@@ -1988,6 +1988,7 @@ The owner manually changes Claude Code's intelligence/effort level. The develope
 - one short reason for the model choice;
 - one short reason for the level choice;
 - one short reason for the conversation choice;
+- **and the response ends with the model, the level, the conversation, and a short copyable launcher naming the exact MD file the next conversation must read and execute** (owner decision D-092). This holds for every handoff in both directions — builder to QA, QA to builder on PASS or FAIL, repair to retest, the GREEN closeout, and phase to phase. The complete prompt still goes into the MD file in full; the launcher points at it, so the owner never hunts through a report or copies a long prompt out of one. It adds no new file type.
 - any files/docs that should be attached or referenced;
 - **ready-to-paste next prompt immediately**.
 

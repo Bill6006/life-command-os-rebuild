@@ -2492,3 +2492,64 @@ rather than believed (DEF-0056). `src/features/memory/MemoryProvider.tsx` holds 
 invariant, each proved to fail when its own defect is reintroduced — with the
 two owner-surface invariants in `tests/synthetic/domain-page-data.test.ts` and
 `tests/unit/life-pages.test.ts`.
+
+---
+
+## D-092 — Every handoff ends with four lines and a launcher, in the response itself
+
+**Phase:** 6 (Round 4 repair) · **Status:** Active — **owner decision, governing
+every handoff in every direction from here**
+
+The owner must never have to hunt through a report for the next instruction, and
+must never have to copy a long prompt out of one. Every handoff response —
+without exception and without being asked — **ends** with:
+
+1. **Model** — the Claude model where the next step is the builder's, the Codex
+   model where it is QA's.
+2. **Reasoning / intelligence level.**
+3. **Conversation** — NEW, CURRENT or SAME, and which system it addresses.
+4. **A short, complete, copyable launcher**, printed in the response, that names
+   the repository path and the exact MD file to read, and instructs the next
+   conversation to read that file in full and execute it — never asking the
+   owner to paste anything.
+
+### Which handoffs
+
+All of them, in both directions:
+
+- builder → QA (a phase reaching YELLOW),
+- QA → builder (PASS or FAIL),
+- repair → retest (back to the SAME QA conversation),
+- PASS → GREEN closeout,
+- phase → phase.
+
+### Where the detail lives
+
+**In the repository, not in the response.** The full instructions stay in the
+governing MD files, which is what the launcher points at:
+
+- `docs/NEXT_PROMPT.md` — what the builder writes for whoever acts next.
+- `docs/qa/PHASE_XX_QA_HANDOFF.md` — what QA writes, and QA alone.
+
+**No new file type.** This decision adds nothing to the repository's shape; it
+constrains the last four lines of a response.
+
+### What this changes about D-082 and D-083
+
+Neither is overturned and both are tightened. D-082 said a QA handoff must
+carry the complete next prompt automatically; D-083 said a response that writes
+one into an MD may close with a short launcher instead of repeating it. This
+makes the launcher **mandatory rather than permitted**, extends it to builder
+handoffs as well as QA ones, and fixes the four lines that precede it.
+
+The reason is the same one D-082 was written for, one step further on: a
+recommendation the owner has to assemble is a recommendation that costs him a
+turn. Round 4's handoff was correct and complete in the repository and still
+left him reading a long report to find the paste-able part.
+
+### What it does not license
+
+It does not shorten what gets written to the MD files — the full prompt still
+goes there in full. It does not let a builder mark its own phase GREEN, and it
+does not let a builder write the QA report or QA write product code (D-077,
+D-090). A launcher is how a handoff ends, not what a handoff is.

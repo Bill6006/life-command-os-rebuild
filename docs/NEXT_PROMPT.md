@@ -1,25 +1,20 @@
 # Next prompt
 
 Canonical plan section 43, and the independent-QA protocol in
-[`qa/README.md`](qa/README.md). The model, reasoning level and conversation
-instruction sit outside the prompt so the owner can set them before pasting.
+[`qa/README.md`](qa/README.md). Independent QA is Codex (D-090); Claude builds.
 
-**Independent QA is Codex (D-090).** Claude builds; Codex tests. The loop is
-Claude builds → Codex QA (NEW) → Claude repairs → the **same** Codex
-conversation retests → PASS → Claude GREEN closeout → next phase.
+Every handoff ends with the model, the level, the conversation and a short
+copyable launcher (D-092). The detail lives here, in the repository — the owner
+should never have to hunt through a report for the next instruction.
 
-**Phase 6 is YELLOW — ROUND 3 REPAIRED, AWAITING CODEX RETEST.** Codex's Round
-3 retest confirmed all seven of the previous round's blockers repaired and
-QA-A1 still repaired, and returned **FAIL** on three siblings: the QA
-laboratory replaced the owner's real history, a scoped association correction
-was described on Timeline by its verb, and `emotionalState` was declared
-trackable while its readings were discarded. All three are repaired.
+**Phase 6 is YELLOW — ROUND 4 REPAIRED, AWAITING CODEX RETEST.** Codex's Round
+4 retest confirmed R3-B2, R3-B3 and the two physical databases, and failed the
+phase on **R4-B1**: returning from the laboratory could publish an empty owner
+history that stayed empty until a reload. Repaired.
 
-Builder account in [`PHASE_STATUS.md`](PHASE_STATUS.md) under "Phase 6 —
-Timeline + Insights"; the defects are DEF-0054, DEF-0055 and DEF-0056 in
-[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md); the principles are D-090 and D-091 in
-[`DECISION_LOG.md`](DECISION_LOG.md), which gains an eighth invariant —
-synthetic and real never share a store.
+Builder account in [`PHASE_STATUS.md`](PHASE_STATUS.md); the defect is DEF-0057
+in [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md); the decisions are D-090, D-091 and
+the new D-092 in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ---
 
@@ -29,138 +24,102 @@ synthetic and real never share a store.
 - **Model:** GPT-5.1-Codex-class — the current Codex coding/review model, or its
   nearest equivalent if it has been renamed
 - **Reasoning level:** **Medium**
-- **Conversation:** **SAME — the Codex conversation that ran the Round 3
-  retest.** It holds the three reproductions and its own reasoning about them.
-- **Why this model:** the work is reproducing three concrete failures on a
-  deployed build and judging whether the repairs meet criteria it wrote itself.
-  That is a coding-and-review model's job, and Round 3 was done at this class.
-- **Why this level:** Medium. All three boundaries are already located and
-  written down; this is verification against stated criteria rather than open
-  root-cause search. `qa/README.md` asks for the lowest level that does not risk
-  quality — reach higher only if a new defect genuinely needs it, and say so.
-- **Why the same conversation:** `qa/README.md`'s conversation rule. A retest
-  after a builder repair returns to the conversation that ran the original test.
-- **Attach/reference:** nothing beyond what the prompt below already names.
+- **Conversation:** **SAME — the Codex conversation that ran Rounds 3 and 4.**
+- **Why this model:** reproducing one concrete asynchronous failure on a
+  deployed build and judging a repair against criteria it wrote itself.
+- **Why this level:** Medium. The boundary is located, written down and covered
+  in three layers; this is verification, not open root-cause search. Reach
+  higher only if something new appears, and say so.
+- **Why the same conversation:** `qa/README.md`'s conversation rule — a retest
+  returns to the conversation that ran the original test.
 
 ---
 
 ## COPY/PASTE PROMPT
 
 ```text
-Phase 6's Round 3 repair is ready for your retest. This is the same Codex QA
-conversation that ran Round 3 — you have your own three reproductions and the
-reasoning behind them.
+Phase 6's Round 4 repair is ready for your retest. This is the same Codex QA
+conversation that ran Rounds 3 and 4 — you have your own reproduction of
+R4-B1 and the reasoning behind it.
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
 
 Your report is docs/qa/PHASE_06_QA_HANDOFF.md. Update it in place with a
-"Round 4 — Codex retest" section. It is the only file you may write, and you
-may not change application or product code. The builder has not edited your
-Round 3 report; it was committed exactly as you wrote it.
+"Round 5 — Codex retest" section. It is the only file you may write, and you
+may not change application or product code. Your Round 4 report was committed
+exactly as you wrote it; the builder has not edited it.
 
-START WITH THE APP, NOT THE DIFF.
+START WITH THE APP.
 
 Open the deployed Preview at a normal Now on a phone-sized Android-style
-context and use it. The three findings below are all about what the owner sees
-and what happens to what he records, so reading them off the screen comes
-first.
+context. Record something of your own. Then open QA, load a scenario, inspect
+it across Now, Timeline, Insights, Life and a domain page, and come back with
+Show mine.
 
 WHAT TO RETEST
 
-1. R3-B1 — the laboratory and the owner's history.
+1. R4-B1 — the return.
 
-   Record something on a normal Now. Confirm it persists. Then open QA, load a
-   scenario, and confirm BOTH halves:
-   - the fixture is still inspectable from Now, Timeline, Insights, Life and a
-     domain page — that capability had to survive the repair;
-   - his own record is not gone, and comes back when the laboratory is emptied.
+   Both entry points: Show mine on a normal surface, and Empty the laboratory
+   in QA. After each, his own history must be on screen immediately, without a
+   reload, and must still be there after pending work has had time to land.
+   The fixture must not reappear. Try it having just answered a question while
+   the fixture was on screen, and having just loaded a scenario, so there is
+   real work in flight when you press it.
 
-   Then judge the rest of the boundary yourself: what happens on reload with a
-   fixture loaded; whether answering a question while a fixture is on screen
-   writes to the fixture rather than to his history; whether "Empty the
-   laboratory" can reach his records at all; whether a deployment can orphan
-   either store; and whether Preview and production remain separated.
+   Judge the whole class, not the one interleaving you reported: a scenario
+   load the owner walks away from, a return that is overtaken by newer work,
+   two operations over the same store finishing out of order, and busy/error
+   state left behind by work that no longer owns the screen.
 
-   The repair also added a notice on every normal surface saying the history on
-   screen is not his, with one press back. Judge that as product copy, not only
-   as a mechanism: it is the thing standing between him and believing a
-   synthetic evening is his own.
+2. Everything Round 4 passed, which must stay passed.
 
-2. R3-B2 — the correction's subject in his own history.
+   The two physical databases and the owner's bytes; fixture inspectability
+   across normal surfaces; fixture-scoped writes; reload preserving the
+   fixture and the notice; the notice copy itself; R3-B2's correction naming
+   the action on Timeline; R3-B3's tracked concepts and the still-open
+   emotional taxonomy; the seven semantic invariants; QA-A1; section 51;
+   DEF-0034 to DEF-0044; the exact-three-verb decision; and every explicit
+   deferral.
 
-   Reject the walk relationship, then read Timeline. The sentence must name the
-   action, and must not name a verb that also fits the bike ride. Check the
-   stored record still carries the scoped key, that the watershed still works,
-   and that nothing underneath it was deleted.
+3. The coverage itself, because you were right about it.
 
-3. R3-B3 — tracked concepts.
+   Your Round 4 regression failed focused and passed in the full suite on
+   identical code. When the builder ran that same focused suite on this
+   repair, it passed first time — so the browser test was deliberately not
+   allowed to be the proof. The rule now lives in
+   src/features/memory/projection.ts with its own sequence tests, and
+   tests/unit/memory-provider-race.test.tsx drives the provider with fake
+   stores whose reads the test holds open, so the overlap is constructed
+   rather than hoped for. Judge whether that is genuinely deterministic and
+   whether it covers what you reported. Five reintroductions were run and all
+   five caught; three escaped on the first attempt, which is what moved the
+   rule out of the component.
 
-   `tracked` now names how a reading becomes a number, and emotionalState no
-   longer carries it. Judge whether the type, the behaviour, the tests and the
-   builder's claims are now honest about which concepts are trackable
-   dimensions — and confirm no scale was invented for how he feels. The
-   taxonomy question stays open to the owner; that was your acceptance
-   expectation and it is the part most worth checking has not been quietly
-   resolved by the implementation.
-
-ALSO CONFIRM NOTHING YOU PASSED HAS REGRESSED
-
-The seven semantic invariants from your cold-use audit, QA-A1's observe-first
-owner flow, section 51's already-passing gate items, DEF-0034 to DEF-0044, the
-exact-three-verb inferred-evidence decision you accepted, and every explicit
-deferral (P4-6, P4-7, the never-settled started move, and Phase 5's four).
-
-Full-suite duplication only on a concrete trigger, as before: a builder claim
-that does not match what you observe, a suspected false-green, or a change to
-the test harness itself.
-
-WHAT THE BUILDER CHANGED
-
-Read it fresh rather than from this list, which exists so you know where to
-look and not what to conclude:
-
-- src/features/memory/MemoryProvider.tsx, src/features/memory/memoryContext.ts
-  — two databases, and which is active.
-- src/features/shell/AppShell.tsx, AppShell.css — the notice.
-- src/features/qa/QaScreen.tsx — the button that used to say "Clear
-  everything".
-- src/intelligence/association.ts, src/intelligence/corrections.ts,
-  src/features/history/describe.ts, src/features/insights/InsightsScreen.tsx —
-  reading an action back out of a scope, and naming it.
-- src/domain/concepts.ts, src/intelligence/insights.ts — what `tracked` means.
-- tests/browser/qa-lab.spec.ts, tests/unit/registries.test.ts,
-  tests/synthetic/observed-relationships.test.ts — the three regressions, plus
-  the cross-surface isolation coverage you asked for.
+Full-suite duplication only on a concrete trigger, as before.
 
 THE CHECKPOINT
 
-The product checkpoint is in docs/PHASE_STATUS.md's build identity table.
-
-The Preview serves the current main HEAD and every push redeploys, so
-build-info.json will normally report a docs commit rather than the checkpoint
-itself. That is expected and is not a mismatch. Verify it this way instead:
-`git diff <checkpoint>..HEAD --name-only` must list nothing outside docs/. If
-it lists anything else, the deployed product code is not the checkpoint's, and
-that is a finding.
-
-Check the SHA yourself against preview/build-info.json and against what the app
-shows under More → This build.
+The product checkpoint is in docs/PHASE_STATUS.md's build identity table. The
+Preview serves the current main HEAD and every push redeploys, so
+build-info.json will normally report a docs commit rather than the checkpoint.
+That is expected. Verify it with `git diff <checkpoint>..HEAD --name-only`,
+which must list nothing outside docs/.
 
 HOW THIS ENDS
 
 Update docs/qa/PHASE_06_QA_HANDOFF.md with the retest record and an overall
-PASS or FAIL, and in the same response, without being asked: the verdict; the
-QA-tested SHA; the report path; the recommended model, level and conversation
-instruction for the next action, each with a one-sentence reason — naming a
-Claude model where the next step is the builder's — and the complete next
-prompt written into the report file. Close with a short launcher rather than
-repeating the whole prompt inline.
+PASS or FAIL. In the same response, end with the model, the reasoning or
+intelligence level, the conversation instruction, and a short copyable
+launcher naming the exact file the next conversation must read — naming a
+Claude model where the next step is the builder's (D-092). Write the complete
+prompt into the report file rather than into the response.
 
-On PASS the next prompt goes to CURRENT — the Claude builder conversation — for
-the formal GREEN closeout. On FAIL it goes to CURRENT for another repair round,
-and this phase stays YELLOW.
+On PASS the next step is CURRENT — the Claude builder conversation — for the
+GREEN closeout. On FAIL it is CURRENT for another repair round, and Phase 6
+stays YELLOW.
 
 Do not ask the owner to paste anything — you have the paths.
 ```

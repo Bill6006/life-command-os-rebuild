@@ -25,6 +25,30 @@ same reading of them.
 
 ---
 
+## How every handoff ends (owner decision D-092)
+
+**Every** handoff response, in either direction, ends with four things — no
+exceptions, and without being asked:
+
+1. **Model** — a Claude model where the next step is the builder's, a **Codex**
+   model where it is QA's.
+2. **Reasoning / intelligence level.**
+3. **Conversation** — NEW, CURRENT or SAME, and which system it addresses.
+4. **A short, complete, copyable launcher**, printed in the response, naming the
+   repository path and the exact MD file to read, and telling that conversation
+   to read the file in full and execute it.
+
+This covers builder → QA, QA → builder on PASS or FAIL, repair → retest, the
+GREEN closeout, and phase → phase.
+
+The **detail stays in the repository**: the complete prompt is written into
+`docs/NEXT_PROMPT.md` or `docs/qa/PHASE_XX_QA_HANDOFF.md` in full, and the
+launcher points at it. The owner should never have to hunt through a report for
+the next instruction, or copy a long prompt out of one. **No new file type** —
+this is a rule about the last four lines of a response.
+
+---
+
 ## The two roles
 
 **QA tests. The builder fixes.** They never share a conversation.
@@ -64,7 +88,9 @@ checkpoint SHA; deployed Preview SHA and whether they match; exact verification
 counts; known, open and deferred items; the recommended **Codex model** and
 **Codex reasoning level** for QA; the conversation instruction (**NEW**); the
 exact QA report path; and the complete copy/paste prompt for the QA
-conversation.
+conversation, written into `docs/NEXT_PROMPT.md`.
+
+It **ends** with the four lines and the launcher (D-092).
 
 ## 2 — Independent QA runs
 
@@ -144,12 +170,20 @@ response as the report, QA provides:
   (Codex), with a one-sentence reason;
 - the **conversation** instruction (which conversation the next prompt goes
   to), with a one-sentence reason;
-- the **complete ready-to-paste next prompt**.
+- the **complete ready-to-paste next prompt**, written into the report file.
+
+And it **ends** with the four lines and the launcher (D-092): model, level,
+conversation, and a short copyable block naming the file the next conversation
+must read.
 
 Phase 5's first QA run is why this exists: it returned FAIL with a
 recommendation but no prompt, and the owner had to come back and ask for one
 before the builder conversation could act. That extra turn is exactly what
 this rule removes.
+
+**D-092 supersedes the permission below with a requirement.** The launcher is
+no longer something a response _may_ close with — it is how every handoff ends,
+in both directions, preceded by the model, the level and the conversation.
 
 **D-083 amendment.** The complete next prompt above still gets written in
 full into `docs/qa/PHASE_XX_QA_HANDOFF.md` (and, on PASS, the builder's
@@ -230,9 +264,12 @@ The closing response carries, without being asked: final status; approved
 checkpoint SHA; the closing SHA if a docs-only closeout moved it; deployed
 Preview SHA and match; verification results; the QA report path and the SHA QA
 tested; deferred and open items; decisions; the next phase; the recommended
-Claude model; the recommended intelligence level; CURRENT or NEW; a short
-reason for each of the three; required references; and the complete next
-copy/paste prompt.
+model; the recommended level; CURRENT, NEW or SAME; a short reason for each of
+the three; required references; and the complete next copy/paste prompt written
+into `docs/NEXT_PROMPT.md`.
+
+It **ends** with the four lines and the launcher (D-092), like every other
+handoff.
 
 ---
 

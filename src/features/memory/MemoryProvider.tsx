@@ -27,12 +27,8 @@ import {
 } from '../../memory/store'
 import { buildView } from '../../memory/view'
 import { runningBuild } from '../../platform/buildInfo'
-import {
-  MemoryContext,
-  type HistorySource,
-  type MemoryContextValue,
-  type StorageCheck,
-} from './memoryContext'
+import { MemoryContext, type MemoryContextValue, type StorageCheck } from './memoryContext'
+import { createProjection, type HistorySource } from './projection'
 
 /**
  * One store and one clock, for every surface (canonical plan sections 14 and 31).
@@ -116,20 +112,24 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
    * requires.
    */
   const stores = useRef<{ owner?: CanonicalStore; laboratory?: CanonicalStore }>({})
-  const sourceRef = useRef<HistorySource>('owner')
   const [source, setSource] = useState<HistorySource>('owner')
   const clock = useMemo(() => systemClock(), [])
 
-  const activeStore = useCallback(
-    (): CanonicalStore | undefined =>
-      sourceRef.current === 'laboratory' ? stores.current.laboratory : stores.current.owner,
+  /**
+   * Which history is on screen, and which work may still say so (R4-B1).
+   *
+   * The rule and its reasoning live in `projection.ts`, where they can be
+   * tested in order rather than by hoping two operations overlap. Everything
+   * below follows one shape: begin a job, do the slow thing, and then ask the
+   * job whether the owner still wants to hear about it.
+   */
+  const projection = useRef(createProjection('owner')).current
+
+  const storeFor = useCallback(
+    (which: HistorySource): CanonicalStore | undefined =>
+      which === 'laboratory' ? stores.current.laboratory : stores.current.owner,
     [],
   )
-
-  const showFrom = useCallback((next: HistorySource) => {
-    sourceRef.current = next
-    setSource(next)
-  }, [])
 
   const [ready, setReady] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -149,6 +149,8 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let live = true
 
+    const opening = projection.beginHere()
+
     void (async () => {
       const owner = await openStore(OWNER_DB)
       const laboratory = await openStore(LABORATORY_DB)
@@ -166,10 +168,16 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
         // a durable store, and it is the first thing the owner should see.
         const fixture = await laboratory.snapshot()
         const inLaboratory = holdsAnything(fixture)
-        showFrom(inLaboratory ? 'laboratory' : 'owner')
-        setSnapshot(inLaboratory ? fixture : await owner.snapshot())
+        const first = inLaboratory ? fixture : await owner.snapshot()
+        // Opening is work like any other: if the owner has already asked for
+        // something else, that answer is the newer one.
+        const showing: HistorySource = inLaboratory ? 'laboratory' : 'owner'
+        if (projection.show(showing, opening)) {
+          setSource(showing)
+          setSnapshot(first)
+        }
       } catch (caught) {
-        setError(describe(caught))
+        if (opening.isCurrent()) setError(describe(caught))
       }
       setReady(true)
     })()
@@ -180,7 +188,7 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
       stores.current.laboratory?.close()
       stores.current = {}
     }
-  }, [showFrom])
+  }, [projection])
 
   /*
    * A loaded document always lands in the laboratory, never in the owner's
@@ -188,6 +196,7 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
    */
   const apply = useCallback(
     async (load: SnapshotLoad, label: string | undefined) => {
+      const job = projection.begin('laboratory')
       const laboratory = stores.current.laboratory
       if (laboratory === undefined) return
 
@@ -197,18 +206,22 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
       try {
         if (load.loaded) {
           await laboratory.replaceAll(load.snapshot)
-          showFrom('laboratory')
-          setSnapshot(await laboratory.snapshot())
+          const fixture = await laboratory.snapshot()
+          // A load the owner has already walked away from does not get to pull
+          // him back into the laboratory he has just left.
+          if (!projection.show('laboratory', job)) return
+          setSource('laboratory')
+          setSnapshot(fixture)
           setLoadedLabel(label)
         }
-        setIssues(load.issues)
+        if (job.isCurrent()) setIssues(load.issues)
       } catch (caught) {
-        setError(describe(caught))
+        if (job.isCurrent()) setError(describe(caught))
       } finally {
-        setBusy(false)
+        if (job.isCurrent()) setBusy(false)
       }
     },
-    [showFrom],
+    [projection],
   )
 
   const loadDocument = useCallback(
@@ -227,24 +240,34 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
    */
   const append = useCallback(
     async (records: readonly CanonicalRecord[]) => {
-      const current = activeStore()
+      const job = projection.beginHere()
+      const current = storeFor(job.against)
       if (current === undefined || records.length === 0) return
 
       setBusy(true)
       setError(undefined)
       try {
         const result = await current.append(records)
+        const after = await current.snapshot()
+        /*
+         * The defect, in one condition. This snapshot is of the store this
+         * append was asked to write to; if the owner has since switched away
+         * from it, publishing it would show him a history that is not the one
+         * he asked for — and if he switched *to* the owner while the
+         * laboratory was being cleared, it would show him an empty one.
+         */
+        if (!job.mayPublish()) return
         if (result.rejected.length > 0) {
           setError(result.rejected.map((rejection) => rejection.problem).join('; '))
         }
-        setSnapshot(await current.snapshot())
+        setSnapshot(after)
       } catch (caught) {
-        setError(describe(caught))
+        if (job.isCurrent()) setError(describe(caught))
       } finally {
-        setBusy(false)
+        if (job.isCurrent()) setBusy(false)
       }
     },
-    [activeStore],
+    [projection, storeFor],
   )
 
   /*
@@ -256,24 +279,33 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
    * was never touched.
    */
   const clear = useCallback(async () => {
+    const job = projection.begin('laboratory')
     const { owner, laboratory } = stores.current
     if (owner === undefined || laboratory === undefined) return
     setBusy(true)
     try {
       await laboratory.clear()
-      showFrom('owner')
-      setSnapshot(await owner.snapshot())
+      const his = await owner.snapshot()
+      if (!projection.show('owner', job)) return
+      /*
+       * Published together, in one continuation, so React renders the source
+       * and the history it belongs to in the same pass. A reader never sees
+       * the owner's word over the laboratory's records or the reverse.
+       */
+      setSource('owner')
+      setSnapshot(his)
       setIssues([])
       setLoadedLabel(undefined)
       setStorageCheck(undefined)
     } catch (caught) {
-      setError(describe(caught))
+      if (job.isCurrent()) setError(describe(caught))
     } finally {
-      setBusy(false)
+      if (job.isCurrent()) setBusy(false)
     }
-  }, [showFrom])
+  }, [projection])
 
   const verifyStorage = useCallback(async () => {
+    const job = projection.beginHere()
     setBusy(true)
     try {
       // Close the connections and open new ones. Reading back through the same
@@ -286,9 +318,10 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
       setBackend(owner.backend)
       setDurable(owner.durable)
 
-      const reopened = sourceRef.current === 'laboratory' ? laboratory : owner
+      const reopened = job.against === 'laboratory' ? laboratory : owner
       const fromDisk = await reopened.snapshot()
       const same = contentOf(fromDisk) === contentOf(snapshot)
+      if (!job.mayPublish()) return
       setSnapshot(fromDisk)
       setStorageCheck({
         ok: same,
@@ -297,11 +330,11 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
           : `what came back differs — ${fromDisk.records.length} records against ${snapshot.records.length} in memory`,
       })
     } catch (caught) {
-      setStorageCheck({ ok: false, detail: describe(caught) })
+      if (job.isCurrent()) setStorageCheck({ ok: false, detail: describe(caught) })
     } finally {
-      setBusy(false)
+      if (job.isCurrent()) setBusy(false)
     }
-  }, [snapshot])
+  }, [projection, snapshot])
 
   const travelTo = useCallback((at: Instant) => {
     setNow(at)

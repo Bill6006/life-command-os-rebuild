@@ -39,6 +39,22 @@ None.
 
 ## Fixed
 
+### DEF-0057 — the return from the laboratory published an empty history, and said nothing of his had changed
+
+- Status: Fixed
+- Severity: Blocker — the owner was told his history was untouched and shown an empty one, indefinitely
+- Found in: Phase 6 / `8680642`
+- Found by: **independent Codex QA, Round 4** (R4-B1), on the deployed build — one press of **Show mine** after inspecting a fixture
+- Class: **an async operation publishing a store the owner has already left.** Not a storage defect: DEF-0054's two databases held, and every byte of his history was safe throughout. What was wrong was the _picture_ of it, and the picture is what he reads.
+- Reproduction: record something at a normal Now; open QA and load a scenario; press **Show mine**. Timeline says "Nothing here yet" and stays saying it. A full reload restores everything.
+- Root cause: `append` captured the active store, awaited its write, and then published `await current.snapshot()`. When `clear()` ran during that await — emptying the laboratory and switching to the owner — the append then published the laboratory's snapshot, now empty. `apply`, `verifyStorage` and the shared `busy`/`error` state had the same shape.
+- Fix: the rule moved out of the component into `src/features/memory/projection.ts`. Every operation claims a job before it starts; anything newer makes it stale; a stale job still finishes its write — the records are already going somewhere real — but publishes nothing: not a snapshot, not `busy`, not an error, not the source. A switch is atomic from the reader's side.
+- **Why it left the component.** A rule about interleaving cannot be tested by hoping two things overlap, and this is the third round on one defect class. In `projection.ts` the sequences are written down and asserted in order, every run.
+- Regression: `tests/unit/memory-projection.test.ts` — eight sequences, including the reported one exactly. `tests/unit/memory-provider-race.test.tsx` — the provider driven with fake stores whose reads are **held open by the test**, so the overlap is constructed rather than awaited. `tests/browser/qa-lab.spec.ts` — both entry points with owner content, asserted immediately and after a delay. Five reintroductions, five caught.
+- **False confidence, and it is the point of this entry.** QA's Round 4 regression failed three-for-three in a focused run and passed three-hundred-for-three-hundred in the full suite, on identical code. Re-running it green proves nothing; it reads as evidence either way. On this repair the same focused run passed for the builder first time, which is exactly why the browser test was not allowed to be the proof.
+- Siblings: swept — `apply`, `clear`, `verifyStorage` and the startup read all take a job and all check it. `HistorySource` had been declared in two files and now has one home, DEF-0053's class on a type.
+- Fixed in: this checkpoint
+
 ### DEF-0056 — a concept declared trackable whose readings the tracking path throws away
 
 - Status: Fixed
