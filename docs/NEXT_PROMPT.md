@@ -153,10 +153,17 @@ OR REJECT
 
 THE CHECKPOINT
 
-The product checkpoint and the deployed Preview SHA are in
-docs/PHASE_STATUS.md's build identity table. Verify both yourself against
-preview/build-info.json and against what the app shows under More → This build,
-and check `git log <checkpoint>..HEAD --stat` for anything outside docs/.
+The product checkpoint is in docs/PHASE_STATUS.md's build identity table.
+
+The Preview serves the current main HEAD and every push redeploys, so
+build-info.json will normally report a docs commit rather than the checkpoint
+itself. That is expected and is not a mismatch. Verify it this way instead:
+`git diff <checkpoint>..HEAD --name-only` must list nothing outside docs/. If
+it lists anything else, the deployed product code is not the checkpoint's, and
+that is a finding.
+
+Check the SHA yourself against preview/build-info.json and against what the app
+shows under More → This build.
 
 HOW THIS ENDS
 

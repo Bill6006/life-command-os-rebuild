@@ -255,16 +255,16 @@ failure, and lint is the cheaper half.
 
 ## Build identity
 
-|                      |                                                                                                |
-| -------------------- | ---------------------------------------------------------------------------------------------- |
-| Product checkpoint   | `481c3a7` — the build every result below was measured against, and the one Codex should retest |
-| Round 2 checkpoint   | `36c75ef` — the QA-A1 repair the Codex audit read and found seven blockers in                  |
-| Round 1 checkpoint   | `e681a66` — what QA tested before the PASS was withdrawn                                       |
-| Closing SHA          | current `main` HEAD — documentation only past `481c3a7`, no product code                       |
-| Deployed Preview SHA | `481c3a7`, read live from `preview/build-info.json` and confirmed by hand on a mobile context  |
-| Do they match?       | Yes, by construction — D-004, and asserted live in CI                                          |
-| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/                                    |
-| Live proof           | `preview/build-info.json`                                                                      |
+|                      |                                                                                                                                                                                                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Product checkpoint   | `481c3a7` — the build every result below was measured against, and the one Codex should retest                                                                                                                                                                                                   |
+| Round 2 checkpoint   | `36c75ef` — the QA-A1 repair the Codex audit read and found seven blockers in                                                                                                                                                                                                                    |
+| Round 1 checkpoint   | `e681a66` — what QA tested before the PASS was withdrawn                                                                                                                                                                                                                                         |
+| Closing SHA          | current `main` HEAD — documentation only past `481c3a7`, no product code                                                                                                                                                                                                                         |
+| Deployed Preview SHA | the closing SHA. Every push redeploys, so this is a rule rather than a frozen number: `git diff 481c3a7..HEAD --name-only` shows only `docs/`, so the deployed product code **is** the checkpoint's. `481c3a7` itself was deployed and read by hand on a mobile context before the docs commits. |
+| Do they match?       | Yes, by construction — D-004, and asserted live in CI                                                                                                                                                                                                                                            |
+| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                                                                                                                                                      |
+| Live proof           | `preview/build-info.json`                                                                                                                                                                                                                                                                        |
 
 ## Verification
 
