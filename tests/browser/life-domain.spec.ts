@@ -139,7 +139,12 @@ test.describe('a correction, and what it changes', () => {
     await page.locator('input.domain-input').fill('VLANs and trunking')
     await page.getByRole('button', { name: 'Save' }).click()
 
-    await expect(page.getByText('Career & Learning is current.')).toBeVisible()
+    // Not "is current" — that reads as a claim about what the app believes,
+    // and the correction is evidence of intake, not of everything here being
+    // up to date (DEF-0051).
+    await expect(
+      page.getByText(/Something has come in about career & learning recently/i),
+    ).toBeVisible()
     await expect(
       page.locator('.domain-reading', { hasText: 'Current learning topic' }),
     ).toContainText('VLANs and trunking')

@@ -160,4 +160,112 @@ describe('a domain page reads the same situation Now and Life were built from', 
     expect(summary.toLowerCase()).not.toContain('nothing here has gone out of date')
     expect(summary.toLowerCase()).not.toContain('nothing here')
   })
+
+  it('puts a same-moment correction after the thing it corrects, in "recently"', () => {
+    /*
+     * The audit, reading Life on the deployed Preview: *"Energy 3 of 5"*, then
+     * a walk, then *"Energy 2 of 5"* — the correction of the first reading,
+     * printed two rows below it and underneath an event that happened after
+     * both. A list of what has been happening, in an order in which it did not
+     * happen (DEF-0050).
+     *
+     * A correction is *always* about the same moment as the thing it corrects,
+     * so `occurredAt` alone can never separate them. Only `recordedAt` can, and
+     * `compareRecordOrder` is where that rule already lives — Timeline has used
+     * it since it was written, and this is the same list of the same records.
+     */
+    const kit = createKit('ord', 'America/Denver', '2026-01-01T00:00:00Z')
+    const now = kit.local('2026-07-14', '21:00')
+    const evening = kit.local('2026-07-14', '18:00')
+
+    const energy = (step: number, recordedAt: number) =>
+      kit.record(
+        'observation',
+        { occurredAt: evening, recordedAt: recordedAt as typeof evening, domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.energy,
+          value: { type: 'scale', value: step, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+    // Said at 18:01, corrected at 18:20 — both *about* six o'clock.
+    const first = energy(3, kit.local('2026-07-14', '18:01'))
+    const corrected = energy(2, kit.local('2026-07-14', '18:20'))
+
+    const loaded = snapshotFromWire(
+      // Deliberately written newest-first, so nothing can pass by accident of
+      // the order the records happen to arrive in.
+      kit.document({ records: [corrected, first], entities: [], exportedAt: now }),
+    )
+    expect(loaded.loaded).toBe(true)
+    const view = buildView(loaded.snapshot, { now, zone: kit.zone })
+    const situation = assembleSituation(view, { now, zone: kit.zone, weekStartsOn: 1 })
+
+    const page = pageBySlug('health-recovery')
+    if (page === undefined) throw new Error('health-recovery page missing')
+    const rows = assembleDomainPageData(situation, page).recentChanges
+
+    const correctedRow = rows.findIndex((row) => row.id === corrected.id)
+    const firstRow = rows.findIndex((row) => row.id === first.id)
+    expect(correctedRow, 'the corrected reading is not in the list').toBeGreaterThanOrEqual(0)
+    expect(firstRow, 'the reading it replaced is not in the list').toBeGreaterThanOrEqual(0)
+    expect(
+      correctedRow,
+      'the correction printed below the reading it replaced, newest first',
+    ).toBeLessThan(firstRow)
+  })
+
+  it('never says an area is up to date while a reading on the same page is not', () => {
+    /*
+     * QA-C7, and the same class as QA-M1 above one status along. `current`
+     * means *something has come in recently* — it says nothing about whether
+     * what the app believes is still good, and the audit found "Fresh — up to
+     * date on what matters" sitting directly above a belief the app had itself
+     * marked out of date (DEF-0051).
+     *
+     * A reading four days past its own seven-day window, in a domain that heard
+     * from him this morning: both readings are honest, and the summary must not
+     * flatten them into one claim.
+     */
+    const kit = createKit('c7', 'America/Denver', '2026-01-01T00:00:00Z')
+    const now = kit.local('2026-07-14', '19:00')
+
+    const stale = kit.record(
+      'observation',
+      { occurredAt: addLocalDays(now, -11, kit.zone), domains: [DOMAIN.home] },
+      {
+        concept: CONCEPT.homeFriction,
+        value: { type: 'text', value: 'kitchen counter' },
+        method: 'self-report',
+      },
+    )
+    // Something standing and current, so the domain itself reads `current`.
+    const held = kit.record(
+      'preference',
+      { occurredAt: addLocalDays(now, -1, kit.zone), domains: [DOMAIN.home] },
+      { about: entityRef('place', 'the kitchen'), stance: 'prefers', statement: 'a clear counter' },
+    )
+
+    const loaded = snapshotFromWire(
+      kit.document({ records: [stale, held], entities: [], exportedAt: now }),
+    )
+    expect(loaded.loaded).toBe(true)
+    const view = buildView(loaded.snapshot, { now, zone: kit.zone })
+    const situation = assembleSituation(view, { now, zone: kit.zone, weekStartsOn: 1 })
+
+    const page = pageBySlug('home')
+    if (page === undefined) throw new Error('home page missing')
+    const data = assembleDomainPageData(situation, page)
+
+    expect(data.coverage[0]?.status, 'this fixture is meant to read as current').toBe('current')
+    const friction = data.readings.find((entry) => entry.concept === CONCEPT.homeFriction)
+    expect(friction?.outOfDate, 'the fixture no longer holds an out-of-date reading').toBe(true)
+
+    const summary = (data.coverage[0]?.summary ?? '').toLowerCase()
+    expect(summary, 'the app claims a whole area is current').not.toMatch(/is current/)
+    expect(summary, 'the app claims everything here is up to date').not.toMatch(/up to date/)
+    // What it may say is what it actually knows: that something came in.
+    expect(summary).toMatch(/has come in/)
+  })
 })

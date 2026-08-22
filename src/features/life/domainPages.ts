@@ -5,6 +5,7 @@ import type { RecordId } from '../../domain/ids'
 import type { DisplayPolicy } from '../../domain/privacy'
 import { matchKnowledge, type Knowledge, type KnowledgeState } from '../../domain/knowledge'
 import {
+  compareRecordOrder,
   describeFactValue,
   type CanonicalRecord,
   type FactValue,
@@ -245,7 +246,19 @@ function recentChanges(
       RECENT_KINDS.has(record.kind) &&
       record.domains.some((d) => domains.includes(d)),
   )
-  const sorted = [...matching].sort((a, b) => b.occurredAt - a.occurredAt)
+  /*
+   * Canonical order, newest first — `occurredAt`, then `recordedAt`, then id.
+   *
+   * Sorting on `occurredAt` alone leaves two records about the same moment in
+   * whatever order they happen to arrive in, and a correction is *always*
+   * about the same moment as the thing it corrects. So "energy 3 of 5" could
+   * print above the correction that replaced it and below the walk that came
+   * after both, and the list read as a sequence of events that never happened
+   * (DEF-0050). Timeline has used `compareRecordOrder` since it was written;
+   * this is the same list of the same records, and there is only one right
+   * order for them.
+   */
+  const sorted = [...matching].sort((a, b) => -compareRecordOrder(a, b))
 
   const out: RecentChange[] = []
   for (const record of sorted) {

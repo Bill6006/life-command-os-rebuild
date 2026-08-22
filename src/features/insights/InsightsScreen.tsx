@@ -258,7 +258,9 @@ function InsightCard({
                 type="button"
                 className="ev-open"
                 disabled={disabled}
-                aria-label={`Not right — stop the app assuming ${describeBelief(insight.belief)}`}
+                aria-label={`Not right — stop the app assuming ${
+                  insight.beliefLabel ?? describeBelief(insight.belief)
+                }`}
                 onClick={() => onCorrect(insight.belief as string)}
               >
                 That is not right

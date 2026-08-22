@@ -186,3 +186,63 @@ describe('privacy', () => {
     }
   })
 })
+
+/**
+ * What a tracked dimension means, and what it must not become (D-091).
+ *
+ * `tracked` says a concept is worth reading as a trend and learning from. The
+ * invariant underneath it is that such a dimension has a **stable construct, a
+ * stable scale and a stable direction** — and that separate dimensions stay
+ * separate. Mood, stress, confidence and motivation are four things; one
+ * generic emotional quantity standing in for all four is the wellness score the
+ * owner rules out, and it is how a system starts telling somebody their life is
+ * a 7.
+ *
+ * Which dimensions exist is the owner's to decide, so nothing here invents a
+ * taxonomy. What it does enforce is that the registry cannot drift into an
+ * aggregate: a tracked concept must be a reading of one thing, on a scale that
+ * can be read as a number, in a window that expects it to change.
+ */
+describe('a tracked dimension is one thing, on one scale', () => {
+  const tracked = coreConcepts.all().filter((concept) => concept.tracked === true)
+
+  it('has some, or the trend machinery is reading nothing', () => {
+    expect(tracked.length).toBeGreaterThan(3)
+  })
+
+  it('expects to change, so it is never durable', () => {
+    for (const concept of tracked) {
+      expect(
+        concept.freshness.unit,
+        `${concept.id}: a durable fact is not a dimension to track`,
+      ).not.toBe('durable')
+    }
+  })
+
+  it('never becomes an aggregate score of several constructs', () => {
+    /*
+     * The names a wellness score arrives under. This is a guard on drift rather
+     * than on today's registry: every one of these words describes a number
+     * standing in for several separate things, which is exactly what a tracked
+     * dimension may not be.
+     */
+    const aggregate =
+      /overall|wellness|wellbeing|well-being|composite|\bscore\b|\bindex\b|readiness/i
+    for (const concept of tracked) {
+      expect(aggregate.test(concept.id), `${concept.id}: reads as an aggregate`).toBe(false)
+      expect(
+        aggregate.test(concept.label),
+        `${concept.label}: reads as an aggregate of several things`,
+      ).toBe(false)
+    }
+  })
+
+  it('says who is most worth believing about it, per concept', () => {
+    // D-059's rule, and the reason a tracked dimension can be compared at all:
+    // two readings of one concept mean the same thing whoever supplied them.
+    for (const concept of tracked) {
+      expect(concept.reliability, `${concept.id}: no reliability`).toBeDefined()
+      expect(concept.reliability?.owner, `${concept.id}: no owner reliability`).toBeGreaterThan(0)
+    }
+  })
+})

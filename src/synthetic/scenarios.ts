@@ -2206,7 +2206,7 @@ function observedEvenings(): Scenario {
     id: 'observed-evenings',
     title: 'Two months of readings, and nothing graded',
     summary:
-      'Energy before and after, on fourteen evenings with a walk and fourteen without. No causal question anywhere.',
+      'Energy before and after, on fourteen evenings with a walk, fourteen where it was turned down, and three nobody asked about. No causal question anywhere.',
     proves:
       'D-089 — the app works out what follows an action, against a comparison group, without asking the owner to.',
     zone: kit.zone,
@@ -2245,6 +2245,13 @@ function observedEvenings(): Scenario {
        * Evenings without one, on the same clock, from the same question. Four
        * of fourteen higher — an ordinary evening drifts down, which is the
        * whole point of having a comparison group rather than a figure.
+       *
+       * Each of these carries a **declined** walk, below, and that is not
+       * decoration. An evening the app never asked about is an evening the
+       * record cannot place: it does not say a walk happened and it does not
+       * say one did not. Counting those as "without" is how a comparison group
+       * fills up with evenings nobody knows anything about (DEF-0048). Here
+       * the record genuinely says no, so the group is genuinely a group.
        */
       const withoutWalk: readonly (readonly [string, number, number])[] = [
         ['2026-03-04', 3, 2],
@@ -2274,7 +2281,21 @@ function observedEvenings(): Scenario {
         ['2026-04-22', 2, 4],
       ]
 
-      const readings = [...withWalk, ...withoutWalk, ...confounded].flatMap(
+      /*
+       * And three evenings nobody asked about, with readings on both sides.
+       *
+       * They exist to be *left out*. Nothing here says a walk happened and
+       * nothing says one did not, so they are evidence about neither side —
+       * and the app reports how many there are rather than quietly rounding
+       * them into whichever group would make the finding look better.
+       */
+      const unplaced: readonly (readonly [string, number, number])[] = [
+        ['2026-04-27', 2, 4],
+        ['2026-04-28', 2, 4],
+        ['2026-04-29', 2, 4],
+      ]
+
+      const readings = [...withWalk, ...withoutWalk, ...confounded, ...unplaced].flatMap(
         ([day, before, after]) => [energyAt(day, '18:00', before), energyAt(day, '20:30', after)],
       )
 
@@ -2364,6 +2385,24 @@ function observedEvenings(): Scenario {
         nextId,
       )
 
+      /*
+       * The same walk, offered and turned down. This is what makes an evening
+       * a *known* evening without one.
+       */
+      const declined = pastEpisodeRecords(
+        kit,
+        withoutWalk.map(([day]) => ({
+          verb: 'move' as const,
+          object: walk,
+          domain: DOMAIN.health,
+          on: day,
+          at: '19:00',
+          context: anEvening,
+          ending: 'declined' as const,
+        })),
+        nextId,
+      )
+
       const alsoCleared = pastEpisodeRecords(
         kit,
         confounded.map(([day]) => ({
@@ -2380,7 +2419,15 @@ function observedEvenings(): Scenario {
 
       return kit.document({
         entities: [place],
-        records: [...readings, ...soreness, ...tonight, time, ...walks, ...alsoCleared],
+        records: [
+          ...readings,
+          ...soreness,
+          ...tonight,
+          time,
+          ...walks,
+          ...declined,
+          ...alsoCleared,
+        ],
         exportedAt: now,
       })
     },

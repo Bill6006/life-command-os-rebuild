@@ -1,5 +1,6 @@
 import { confidence, isUsable, type Confidence } from '../domain/knowledge'
 import { addLocalDays } from '../domain/time'
+import { applicableAssociation } from './association'
 import type { Candidate } from './candidates'
 import type { LearnedEffect } from './learning'
 import { profileFor, type MoveProfile } from './moves'
@@ -327,10 +328,22 @@ function nextDayEffect(candidate: Candidate, situation: Situation): Dimension {
  * is about walks.
  */
 function observedChange(candidate: Candidate, situation: Situation): Dimension {
-  const verb = candidate.semantics.target.verb
-  const found = situation.learning.associationFor(verb)
+  const found = situation.learning.associationFor(candidate.semantics.target)
 
-  if (found === undefined || found.withheld !== undefined) {
+  /*
+   * The band tonight actually falls in, not the whole record (D-091).
+   *
+   * Walks that helped on every weekday and on no weekend collapse to "no
+   * different" across the record, and that collapsed figure is precisely what
+   * must not decide a Tuesday. `applicableAssociation` returns the supported
+   * band this moment is in, and nothing at all when the bands disagree and
+   * tonight's is not supported — because the honest answer there is that the
+   * app does not know about tonight.
+   */
+  const side =
+    found === undefined ? undefined : applicableAssociation(found, situation.at, situation.zone)
+
+  if (found === undefined || side === undefined) {
     return {
       name: 'observed-change',
       value: 0,
@@ -338,16 +351,18 @@ function observedChange(candidate: Candidate, situation: Situation): Dimension {
       note:
         found === undefined
           ? 'nothing observable is expected to move, so nothing is claimed'
-          : 'not enough on both sides to compare yet',
+          : found.disagree
+            ? 'what follows this depends on the kind of evening, and there is not enough of one like tonight'
+            : 'not enough on both sides to compare yet',
     }
   }
 
   return {
     name: 'observed-change',
     // Already −1…1: the difference of two proportions.
-    value: found.gap,
+    value: side.gap,
     weight: WEIGHTS['observed-change'],
-    note: `${found.label.toLowerCase()} rose ${found.roseWith} of ${found.with.length} times with it, ${found.roseWithout} of ${found.without.length} without`,
+    note: `${found.label.toLowerCase()} rose ${side.rosePresent} of ${side.present.length} times with it and ${side.roseAbsent} of ${side.absent.length} without, ${side.label}`,
   }
 }
 

@@ -39,6 +39,126 @@ None.
 
 ## Fixed
 
+### DEF-0053 — a status word renamed in one file and ordered in another, and three areas silently left off Life
+
+- Status: Fixed
+- Severity: Major — no error, no empty group, three of eleven areas simply absent
+- Found in: Phase 6 / this repair, by the browser gate
+- Found by: the **builder's own browser suite**, on the rerun after DEF-0051's copy change — and only because a test asserts every one of the eleven areas appears exactly once
+- Class: **one decision held in two files, and only one of them updated.** The word a group is called and the order the groups render in are the same decision; they lived in `standingFor` and in a `const ORDER` array respectively.
+- Reproduction: rename the `current` group's word without editing `ORDER`. Life renders `ORDER.map(...).filter(...)`, so a group whose word is not listed is dropped — along with every area in it.
+- Root cause: the filter is correct behaviour for a fixed layout and dangerous unchecked. An unlisted word does not render wrong; it does not render.
+- Fix: `GROUP_ORDER` moved into `src/features/life/standing.ts` beside the words it orders, and `everyStandingWord()` enumerates every word `standingFor` can produce so the pairing can be checked rather than remembered.
+- Regression: `tests/unit/life-pages.test.ts` → "gives every word it can produce a place in the order Life renders". Proved by renaming the word and watching it fail.
+- Siblings: swept — no other surface filters a rendered list against a separately held vocabulary.
+- Note: recorded even though it never reached the owner. The class is the same one that produced DEF-0051 two files away, and the guard is what makes the next rename safe.
+- Fixed in: this checkpoint
+
+### DEF-0052 — a conclusion the app reached on its own, with no way for the owner to say it was wrong
+
+- Status: Fixed
+- Severity: Blocker — the app can now conclude things about his life, and could not be told it had misread one
+- Found in: Phase 6 / `5f93465`
+- Found by: **independent Codex cold-use and semantic audit**, after QA-A1's repair had already been deployed
+- Class: **a conclusion with no correction identity.** Every belief card the app already showed carried a `belief` key and a "That is not right" control, because each was a tally of the owner's own opinions. The one card that states a conclusion of the app's own — the class most worth being able to overrule — had `belief: undefined`, with a comment explaining that there was nothing to disagree with.
+- Reproduction: build any history where a comparison clears both groups. The observed-relationship card appears, ranks a recommendation through the `observed-change` dimension, and offers no control. The owner's only routes to changing it were to stop recording readings or to delete history.
+- Root cause: the correction machinery is keyed on `beliefKey(aspect, verb)`, and the five aspects were all summaries of owner attributions. A learned relationship is not one of those, is scoped to an action rather than a verb, and so had no identity in that namespace at all.
+- Fix: a sixth `BeliefAspect`, `association`, whose payload is the **action scope** rather than a verb (`associationBeliefKey`), so rejecting what the app concluded about walking says nothing about cycling. `buildLearning` passes the rejections through to `observedAssociations` as a per-scope watershed. Rejection deletes nothing: readings, episodes and history are untouched, everything before the moment he said so stops counting toward that conclusion, and evidence after it counts normally — so the app can reach the opposite conclusion later from evidence he has not disputed.
+- Regression: `tests/synthetic/observed-relationships.test.ts` → "correcting what the app has worked out" — "offers the finding as something to disagree with", "scopes the correction to the action, not to the verb", "stops the disputed run counting, and deletes nothing", "lets the app conclude again from evidence he has not disputed". Proved by reintroduction twice: `belief: undefined` on the card, and a watershed that never filters.
+- Siblings: checked. The other five aspects already had correction identities and keep them; `describeBelief` gained an `association` branch, and `Insight.beliefLabel` lets a card name the object where the key can only name the verb.
+- Principle: D-091 invariant 5. **Preserve history. Correct future interpretation.**
+- Fixed in: this checkpoint
+
+### DEF-0051 — "up to date on what matters", printed above a belief the app had marked out of date
+
+- Status: Fixed
+- Severity: Major — the owner cannot trust a freshness claim he can see contradicted on the same screen
+- Found in: Phase 6 / `5f93465`
+- Found by: **independent Codex cold-use audit**, reading Life on the deployed Preview
+- Class: **one word answering two different questions.** _How recently has anything come in about this area_ and _is what the app believes about this area still good_ are separate facts about separate things. `CoverageStatus` measures the first; Life's word and note asserted the second.
+- Reproduction: any domain whose coverage reads `current` while a concept on the same page is past its own freshness window. Life shows **"Fresh — Up to date on what matters."** and the domain page shows **"Career & Learning is current."**, directly above a reading tagged out of date.
+- Root cause: `describe()`'s `current` branch and `standingFor`'s `current` branch were both written as claims about the area rather than about the app's intake. `current` means _something came in recently, or a standing concept is held_ — nothing more. QA-M1 had already repaired exactly this sentence for the `quiet` status; the `current` status was the untouched sibling, and `quiet`'s Life note ("Nothing new, and nothing out of date") still carried the old over-claim.
+- Fix: the coverage summary says `Something has come in about <area> recently.` and Life says `Recent — Something has come in here lately. Anything out of date says so on its own line.` Neither concept is dropped and neither absorbs the other; the out-of-date row still names itself. `quiet` repaired in the same pass.
+- Regression: `tests/unit/life-pages.test.ts` → "the status word Life puts on a group of areas" (no status word may claim currency of belief; `current` must say something came in), and `tests/synthetic/domain-page-data.test.ts` → "never says an area is up to date while a reading on the same page is not". Written as rules about what the copy may not claim rather than as its exact sentences, so an improvement to the wording does not fail them.
+- Siblings: `unheard` and the three `stale` variants checked and clean. `standingFor` moved to `src/features/life/standing.ts` so the rule can be tested directly rather than through a rendered screen.
+- Principle: D-091's freshness-language rule.
+- Fixed in: this checkpoint
+
+### DEF-0050 — Life's "recently" showed a sequence of events in an order in which they did not happen
+
+- Status: Fixed
+- Severity: Major
+- Found in: Phase 6 / `5f93465`
+- Found by: **independent Codex cold-use audit**, reading a domain page on the deployed Preview
+- Class: **history presented as a sequence, ordered on `occurredAt` alone.** A correction is _always_ about the same moment as the thing it corrects, so `occurredAt` can never separate the two, and the tie falls to whatever order the records happen to arrive in.
+- Reproduction: record energy 3 of 5 at six o'clock, complete a walk, then correct the six o'clock reading to 2 of 5. Life's "Recently" shows 3/5, then the walk, then the correction — the correction two rows below the reading it replaces and beneath an event that happened after both.
+- Root cause: `recentChanges` sorted with `(a, b) => b.occurredAt - a.occurredAt`. Timeline has used `compareRecordOrder` — `occurredAt`, then `recordedAt`, then id — since it was written. The same list of the same records had two different orders depending on which surface asked.
+- Fix: `-compareRecordOrder(a, b)`. There is one right order for canonical records and it already existed.
+- Regression: `tests/synthetic/domain-page-data.test.ts` → "puts a same-moment correction after the thing it corrects, in 'recently'". The fixture is written newest-first so nothing can pass by accident of insertion order.
+- Siblings: swept. Timeline was already correct; no other surface sorts records on `occurredAt` alone.
+- Principle: D-091 invariant 7.
+- Fixed in: this checkpoint
+
+### DEF-0049 — "nothing else happened in between", from a check of one record kind
+
+- Status: Fixed
+- Severity: Blocker — the sentence is a claim about the owner's life made from a partial check, on the card whose whole job is to say what the finding rests on
+- Found in: Phase 6 / `5f93465`
+- Found by: **independent Codex cold-use and semantic audit**
+- Class: **claiming the check you did not run.** The app can only know what it was told; the defect is not the narrow check, it is describing a narrow check in words that assert a broad one.
+- Reproduction: a history with four walks, each followed by a recorded `relationship-event` between the walk and the later energy reading. `confounded` comes back **0**, and the card's reasoning reads "No occasion had to be left out for something else happening in between."
+- Root cause: the confounding test was `other completed episodes of a different scope`, and nothing else. Four difficult conversations, a change of circumstances, a constraint coming into force and a decision the owner recorded were all invisible to it — and the copy generalized from "no other suggestion was completed" to "nothing else happened".
+- Fix: `CONFOUNDING_KINDS` names the recorded classes that make a before-and-after uninterpretable — `relationship-event`, `context`, `constraint`, `domain-update`, `decision` — checked alongside other-scope completions. The copy now names the classes it looked in, both when it found something and when it did not, so the sentence describes the check rather than the evening.
+- Regression: `tests/synthetic/observed-relationships.test.ts` → "what else the record holds about the gap" — "discards a pair with a recorded event in between, not only another move", "treats the confounding classes as a class, not as one special case", "claims only the check it actually ran".
+- Siblings: readings are deliberately **not** confounders — an observation falling between two others is the ordinary business of a day. Stated in the registry's own comment so the omission is a decision rather than an oversight.
+- Principle: D-091 invariant 4.
+- Fixed in: this checkpoint
+
+### DEF-0048 — an evening nobody was asked about, counted as an evening without the move
+
+- Status: Fixed
+- Severity: Blocker — the comparison group is the whole reason the first number means anything, and it was being filled with evenings the record says nothing about
+- Found in: Phase 6 / `5f93465`
+- Found by: **independent Codex cold-use and semantic audit**
+- Class: **missing evidence treated as negative evidence.** G-009's rule — unknown is unknown — applied to exposure rather than to a fact.
+- Reproduction: a history with eight completed walks, twelve evenings carrying before-and-after readings and no episode at all, and no occasion where the record says he did not walk. The app stated a relationship over "eight with it, twelve without". Nothing in that history says he did not walk on those twelve evenings; it says nobody asked.
+- Root cause: exposure was a boolean. A completed episode of this scope in the gap meant _with_; everything else meant _without_.
+- Fix: three states. **present** — a completed episode of this exact action settled in the gap. **absent** — the move was put in front of him and he declined it or could not, so the record positively says so. **unknown** — anything else, which belongs to no comparison group, is counted in `unknownExposure`, and is reported on the card and in the withheld message. Where no legitimate comparison group exists the app abstains and says why. The `observed-evenings` scenario was rebuilt so its fourteen evenings without a walk carry declined episodes, and it gained three evenings nobody asked about, which exist to be left out.
+- Regression: `tests/synthetic/observed-relationships.test.ts` → "evenings the record cannot place" — four tests, including the abstention and the card's own sentence — plus a library-wide sweep, "never treats an evening the record cannot place as one without the move", that walks every scenario.
+- Siblings: checked. `unable-now` counts as absent alongside `declined`; a missing reading on either side was already excluded and still is.
+- Principle: D-091 invariant 2. **Missing evidence is not negative evidence.**
+- Fixed in: this checkpoint
+
+### DEF-0047 — a relationship that held on weekdays and on no weekend, printed as "no different" and used to rank a Tuesday
+
+- Status: Fixed
+- Severity: Blocker
+- Found in: Phase 6 / `5f93465`
+- Found by: **independent Codex cold-use and semantic audit**, with a focused adversarial history
+- Class: **a claim scoped wider than the contexts its evidence covers.** The plan already required a discovered pattern to stay scoped to the contexts the evidence supports; the new learned quantity was built outside that rule.
+- Reproduction: four weekday evenings where a walk was followed by higher energy and four where it was declined and energy fell; four weekend evenings the other way round. The app reports four of eight against four of eight — "no different" — a figure describing an evening that never happened, and that figure reaches the ranking on a Tuesday.
+- Root cause: the comparison was computed once, over the whole record. Every other learned quantity in the system is context-aware; this one had no notion of context at all.
+- Fix: every change pair carries the coarse context of its own moment, and the relationship is computed per band as well as across the record. Bands are the two features derivable from an instant alone — weekend/weekday and evening/earlier — deliberately, because an occasion where nothing was decided has no assembled context, and banding on the richer features would mean inventing context for exactly the occasions the comparison depends on. Where two supported bands materially disagree, `applicableAssociation` returns the band the moment falls in or nothing at all, and the card states both bands and does not print the whole-record figure — not softened, not with a caveat beside it. A reader given a number and a caveat remembers the number.
+- Regression: `tests/synthetic/observed-relationships.test.ts` → "a relationship that depends on the kind of evening" — five tests, including one that runs the whole engine at a Tuesday and asserts the ranking used the weekday comparison, and one that holds the other half of the rule: where nothing disagrees the whole record is the honest scope.
+- Siblings: the previous round's test "reads the whole record rather than only evenings like tonight" **approved** this behaviour explicitly. It was revisited, not deleted: it is now "reads the whole record where nothing disagrees, and says so".
+- Principle: D-091 invariant 3.
+- Fixed in: this checkpoint
+
+### DEF-0046 — four walks and four bike rides pooled under one verb, and printed as a finding about a walk
+
+- Status: Fixed
+- Severity: Blocker
+- Found in: Phase 6 / `5f93465`
+- Found by: **independent Codex cold-use and semantic audit**, with a focused adversarial history
+- Class: **identity.** A verb is not an action. The system had a perfectly good notion of a semantic action — `targetKey` is verb _and_ object, and episodes have used it since Phase 3 — and the new learned quantity keyed on the verb alone.
+- Reproduction: four walks after which energy was higher, four bike rides after which it was lower. The app pools all eight, cancels them to "no different", and prints the result under whichever object it happened to meet first — "Current energy moves about the same whether or not **a walk** happens."
+- Root cause: `associationFor(verb)` and a learning index keyed by verb.
+- Fix: scoped to `actionScopeOf(target)` — the target key, or an explicitly declared family. `ACTION_FAMILIES` is the only route back to aggregation and starts **empty**: pooling two of the owner's subjects is a claim that they are the same thing for the purposes of a learned relationship, so it is a written decision with a reason attached rather than a default.
+- Regression: `tests/synthetic/observed-relationships.test.ts` → "the action a relationship is about" — five tests. `tests/unit/architecture-guards.test.ts` → "an interchangeable-action family is a written decision" — three tests, proved to bite by adding a reasonless family, a family of one, a malformed member and an action pooled twice.
+- Siblings: **found during the repair, same class, one layer out.** With the arithmetic scoped correctly, the card's _name_ still fell back to the verb's phrase when the object's label did not resolve — so two findings with different numbers would both have printed as "after getting some movement in", with nothing on screen to say which was which. A finding the app cannot name is now a finding it may not state: no card, and a gathering line where nothing is claimed. Regression: "never borrows the verb's phrase for an action it cannot name". The learning index, the ranking, the evidence panel, the gathering lines and the card ids were all swept for verb-keying at the same time.
+- Principle: D-091 invariant 1.
+- Fixed in: this checkpoint
+
 ### DEF-0045 — the app asked the owner to do the causal analysis it exists to do, and printed his answers as measurements
 
 - Status: Fixed

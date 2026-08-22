@@ -1,6 +1,6 @@
 import type { ConceptRegistry } from '../domain/concepts'
 import type { RecordId } from '../domain/ids'
-import { verbLabel, type ActionVerb } from '../domain/recommendation'
+import { verbLabel, type ActionTarget, type ActionVerb } from '../domain/recommendation'
 import {
   evidenceSourceOf,
   type DecisionContext,
@@ -17,7 +17,7 @@ import {
 } from '../domain/time'
 import type { ConceptId } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
-import { observedAssociations, type ObservedAssociation } from './association'
+import { actionScopeOf, observedAssociations, type ObservedAssociation } from './association'
 import { WANTED_SOMETHING_ELSE, type Episode } from './lifecycle'
 import { profileFor } from './moves'
 import { comfortFrictionOf, effectValueOf, resultValueOf } from './outcomes'
@@ -63,7 +63,25 @@ export const RECOGNISABLE = 0.4
 /** A refusal counts fully; asking for something else counts for less. */
 const WANTED_ANOTHER_WEIGHT = 0.5
 
-export type BeliefAspect = 'effect' | 'result' | 'follow-through' | 'appetite' | 'friction'
+export type BeliefAspect =
+  | 'effect'
+  | 'result'
+  | 'follow-through'
+  | 'appetite'
+  | 'friction'
+  /**
+   * What the record shows follows an action (D-089, D-091).
+   *
+   * The fifth aspect is the app's own conclusion rather than a summary of the
+   * owner's, and it needs a correction identity for exactly that reason: it can
+   * move a recommendation, so he has to be able to say the app has read his
+   * life wrong without deleting the readings it read. Preserve history, correct
+   * the interpretation.
+   *
+   * Its payload is an **action scope** — verb and object, or an explicit family
+   * — not a verb, because that is what the relationship is scoped to.
+   */
+  | 'association'
 
 const BELIEF_ASPECTS: readonly BeliefAspect[] = [
   'effect',
@@ -71,6 +89,7 @@ const BELIEF_ASPECTS: readonly BeliefAspect[] = [
   'follow-through',
   'appetite',
   'friction',
+  'association',
 ]
 
 /**
@@ -82,6 +101,17 @@ const BELIEF_ASPECTS: readonly BeliefAspect[] = [
  */
 export function beliefKey(aspect: BeliefAspect, verb: ActionVerb): string {
   return `${aspect}:${verb}`
+}
+
+/**
+ * The correction identity for a learned relationship (D-091).
+ *
+ * Scoped to the action rather than the verb, so rejecting what the app has
+ * concluded about walking says nothing about cycling — the same identity rule
+ * the relationship itself is computed under.
+ */
+export function associationBeliefKey(scope: string): string {
+  return `association:${scope}`
 }
 
 export function parseBeliefKey(
@@ -349,7 +379,7 @@ export interface LearningIndex {
    * — most of them — and present-but-withheld when the record has not enough
    * of either group to compare.
    */
-  associationFor(verb: ActionVerb): ObservedAssociation | undefined
+  associationFor(target: ActionTarget): ObservedAssociation | undefined
   readonly associations: readonly ObservedAssociation[]
   effectFor(verb: ActionVerb, context: DecisionContext): LearnedEffect
   resultFor(verb: ActionVerb, context: DecisionContext): LearnedResult
@@ -558,12 +588,25 @@ export function buildLearning(
    * reading of a concept in the record, and the ranking asks about it for each
    * of a handful of moves on every decision.
    */
-  const associations = observedAssociations(episodes, view, {
-    now: moment.now,
-    zone: moment.zone,
-    concepts: moment.concepts,
-  })
-  const associationsByVerb = new Map(associations.map((entry) => [entry.verb, entry]))
+  const associations = observedAssociations(
+    episodes,
+    view,
+    { now: moment.now, zone: moment.zone, concepts: moment.concepts },
+    /*
+     * The watershed the owner sets, keyed by action scope.
+     *
+     * `rejectedBeliefs` already folds `belief-correction` records into "this
+     * belief, rejected at this moment"; an association key carries an action
+     * scope where the others carry a verb, so the same map serves both without
+     * a second correction path.
+     */
+    new Map(
+      [...rejected]
+        .filter(([key]) => key.startsWith('association:'))
+        .map(([key, at]) => [key.slice('association:'.length), at]),
+    ),
+  )
+  const associationsByScope = new Map(associations.map((entry) => [entry.scope, entry]))
 
   const memo = <T>(key: string, build: () => T): T => {
     const held = cache.get(key)
@@ -864,7 +907,7 @@ export function buildLearning(
     frictionFor,
     rejected,
     associations,
-    associationFor: (verb) => associationsByVerb.get(verb),
+    associationFor: (target) => associationsByScope.get(actionScopeOf(target)),
   }
 }
 

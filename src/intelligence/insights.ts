@@ -14,11 +14,24 @@ import {
   localDaysBetween,
   type Instant,
   type LocalDayId,
+  type TimeZoneId,
 } from '../domain/time'
 import type { Decision } from './engine'
 import { describeDays } from './coverage'
-import type { ObservedAssociation } from './association'
-import { beliefKey, comparableEpisodes, describeEvidenceMix, type EvidenceRef } from './learning'
+import {
+  actionScopeOf,
+  applicableAssociation,
+  type AssociationSide,
+  type ChangePair,
+  type ObservedAssociation,
+} from './association'
+import {
+  associationBeliefKey,
+  beliefKey,
+  comparableEpisodes,
+  describeEvidenceMix,
+  type EvidenceRef,
+} from './learning'
 import type { Episode } from './lifecycle'
 import {
   COMFORT_FRICTION,
@@ -302,6 +315,16 @@ export interface Insight {
    * conclusions to be corrected.
    */
   readonly belief: string | undefined
+  /**
+   * What to call that belief out loud, where the card can say it better than
+   * the key can.
+   *
+   * `describeBelief` works from the key alone and a key carries an action
+   * scope, not an entity registry, so it can say "walking" but not "a walk
+   * after work". Where the card knows the object's own name it supplies the
+   * phrase; where it does not, the key still describes itself.
+   */
+  readonly beliefLabel?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -1308,71 +1331,110 @@ function staleBeliefCard(
 // ---------------------------------------------------------------------------
 
 /**
- * What the record shows has followed a move (D-089).
+ * What the record shows follows one action (D-089, D-091).
  *
- * The only card in this file built from readings the app took rather than from
- * judgments the owner supplied, and the only one permitted to state a
- * relationship at all. Three rules shape every word of it.
+ * Everything difficult about this card is in what it is allowed to say, and
+ * each restriction below is a defect that reached the owner's screen.
  *
- * **It never says cause.** "Has usually been higher afterwards" is a statement
- * about the record. "Improves your energy" is a claim about the world that a
- * comparison of two proportions cannot support, in either direction — which is
- * D-066 generalized: a reading that is lower afterwards is a lower reading, not
- * harm, and there is no wording here that could make it one.
+ * It is scoped to the **action**, not the verb: four walks and four bike rides
+ * are two findings, never one finding printed under whichever name came first.
+ * It reads the **band tonight falls in** when the bands disagree, because a
+ * relationship that held every weekday and on no weekend is not a relationship
+ * that "holds about half the time". It counts only occasions the record can
+ * actually place, and says how many it could not. And it carries a `belief`,
+ * because it is the one card here that states a conclusion of the app's own —
+ * so it is the one card the owner must be able to overrule.
  *
- * **It always shows both sides.** The occasions without the move are the whole
- * reason the figure means anything, so they are in the headline rather than
- * buried in the evidence. A figure built only from the evenings that included
- * a walk describes those evenings.
- *
- * **It says nothing when either side is thin**, and the withheld sentence names
- * which side. That is also the guard against selectively recorded state: if
- * readings only ever get entered on the evenings that went well, the occasions
- * without the move never accumulate a pair and no finding is produced.
+ * It never says cause, in either direction. A lower reading afterwards is a
+ * lower reading.
  */
 function associationCard(found: ObservedAssociation, situation: Situation): Built | undefined {
   const episodes = situation.learning.episodes.filter(
-    (episode) => episode.semantics.target.verb === found.verb,
+    (episode) => actionScopeOf(episode.semantics.target) === found.scope,
   )
-  const subject = patternName(found.verb, episodes, situation)
   const reading = lowerFirst(found.label)
 
   if (found.withheld !== undefined) return undefined
 
   /*
-   * The object's own name where it resolves — "a walk", not "getting out for a
-   * walk".
+   * The object's own name, and **only** the object's own name — "a walk", not
+   * "getting out for a walk" and not "getting some movement in".
    *
    * This sentence has to say "after X than without one", and the gerund phrase
    * the pattern cards lead with does not survive that shape: "after getting out
-   * for a walk than without one" is not something a person would say. The
-   * fallback keeps the pattern name rather than reaching for a pronoun (D-018).
+   * for a walk than without one" is not something a person would say.
+   *
+   * The verb's phrase is not an acceptable fallback here, which is what makes
+   * this different from every other card in the file. A relationship is scoped
+   * to the action (D-091), so a walk and a bike ride are two findings with two
+   * sets of numbers — and falling back to the verb would print *both* of them
+   * as "after getting some movement in", with different counts underneath and
+   * nothing on screen to say which was which. That is the pooling defect
+   * reappearing in the copy after the arithmetic was fixed. A finding the app
+   * cannot name is one it may not state; `insightsFor` reports it as gathering
+   * instead, where it makes no claim.
    */
-  const first = episodes[0]
-  const thing =
-    first === undefined
-      ? lowerFirst(subject)
-      : (situation.entities.labelFor(first.semantics.target.object) ?? lowerFirst(subject))
+  const thing = situation.entities.labelFor(found.object)
+  if (thing === undefined) return undefined
 
-  const withPart = `${found.roseWith} of ${found.with.length}`
-  const withoutPart = `${found.roseWithout} of ${found.without.length}`
+  /*
+   * Which reading the card states.
+   *
+   * Where two contexts materially disagree, the card states **both** and the
+   * whole-record figure is not printed at all — not softened, not printed with
+   * a caveat beside it. It describes an evening that never happened, and a
+   * reader given a number plus a caveat remembers the number.
+   */
+  const split = found.splits.find((entry) => entry.disagree)
+  const sides: readonly AssociationSide[] =
+    split === undefined ? [found.overall] : [split.yes, split.no]
 
   const headline =
-    found.direction === 'higher'
-      ? `${reading} has more often been higher after ${thing} than without one.`
-      : found.direction === 'lower'
-        ? `${reading} has more often been lower after ${thing} than without one.`
-        : `${reading} moves about the same whether or not ${thing} happens.`
+    split === undefined
+      ? capitalise(sentenceFor(reading, thing, found.overall, false))
+      : capitalise(
+          `what follows ${thing} depends on when. ` +
+            `${capitalise(sentenceFor(reading, thing, split.yes, true))} ` +
+            `${capitalise(sentenceFor(reading, thing, split.no, true))}`,
+        )
+
+  const detail = sides
+    .map(
+      (side) =>
+        `Higher afterwards on ${side.rosePresent} of ${side.present.length} occasions with ${thing} and ${side.roseAbsent} of ${side.absent.length} without${
+          split === undefined ? '' : `, ${side.label}`
+        }.`,
+    )
+    .join(' ')
+
+  /*
+   * Both groups, and the word "occasions" on the number.
+   *
+   * DEF-0038's rule: a card that cannot say honestly what its number is of does
+   * not get to show one, and this one counts occasions — not readings, and not
+   * the "comparable occasions" the belief cards count, because nothing here was
+   * compared to tonight.
+   */
+  const counted = sides
+    .map(
+      (side) =>
+        `${side.present.length} occasions with ${thing} and ${side.absent.length} without${
+          split === undefined ? '' : ` ${side.label}`
+        }`,
+    )
+    .join(', ')
+
+  const all = [...sides.flatMap((side) => side.present), ...sides.flatMap((side) => side.absent)]
 
   return {
     rank: 95,
     insight: {
-      id: `association:${found.verb}`,
+      id: `association:${found.scope}`,
       kind: 'state-association',
       eyebrow: EYEBROW['state-association'],
       domain: domainOf(episodes),
-      headline: capitalise(headline),
-      detail: `Higher afterwards on ${withPart} occasions with ${thing}, and ${withoutPart} without.`,
+      headline,
+      detail,
       /*
        * No confidence word, for the same reason a trajectory and a coverage gap
        * carry none: this reports what the record contains rather than a
@@ -1382,9 +1444,9 @@ function associationCard(found: ObservedAssociation, situation: Situation): Buil
        */
       confidence: undefined,
       evidence: {
-        comparable: found.with.length + found.without.length,
+        comparable: all.length,
         window: found.window,
-        counted: `${found.with.length} occasions with ${thing} and ${found.without.length} without${
+        counted: `${counted}${
           found.window === undefined
             ? '.'
             : `, between ${describeDay(found.window.from)} and ${describeDay(found.window.to)}.`
@@ -1398,40 +1460,127 @@ function associationCard(found: ObservedAssociation, situation: Situation): Buil
          */
         rates: [],
         counterexamples: [],
-        included: [...found.with]
-          .sort((a, b) => b.at - a.at)
-          .map((pair) => ({
-            record: pair.records[0] ?? (found.concept as unknown as RecordId),
-            when: pair.dayId,
-            text: `${describeDay(pair.dayId)} — ${reading} went ${pair.rose ? 'up' : 'down or stayed'} after ${thing}`,
-          })),
-        includedTitle: 'Occasions with it',
-        excludedTitle: 'Occasions without it',
-        excluded: [...found.without]
-          .sort((a, b) => b.at - a.at)
-          .map((pair) => ({
-            record: pair.records[0] ?? (found.concept as unknown as RecordId),
-            when: pair.dayId,
-            text: `${describeDay(pair.dayId)} — ${reading} went ${pair.rose ? 'up' : 'down or stayed'}, without ${thing}`,
-          })),
+        included: linesFor(
+          sides.flatMap((side) => side.present),
+          found,
+          reading,
+          thing,
+          split !== undefined,
+          true,
+        ),
+        includedTitle: `Occasions with ${thing}`,
+        excludedTitle: `Occasions without ${thing}`,
+        excluded: linesFor(
+          sides.flatMap((side) => side.absent),
+          found,
+          reading,
+          thing,
+          split !== undefined,
+          false,
+        ),
         strongerIn: undefined,
         weakerIn: undefined,
         trend: undefined,
         mix: undefined,
-        reasoning: [
-          `Both sides come from the same rule: two readings of ${reading} close enough together to be about the same stretch of the day, sorted by whether ${thing} happened in between.`,
-          found.confounded === 0
-            ? 'No occasion had to be left out for something else happening in between.'
-            : `${found.confounded} ${found.confounded === 1 ? 'occasion was' : 'occasions were'} left out because something else happened in between, which would have made them evidence about neither.`,
-          'This says what has followed what. It is not a claim that one brought the other about, and a lower reading afterwards is a lower reading rather than a sign of something going wrong.',
-          'It can only compare occasions where a reading exists on both sides, so it describes the record rather than every evening.',
-        ],
+        reasoning: reasoningFor(found, reading, thing, split !== undefined),
       },
-      // Nothing to disagree with: this is a count of readings the owner gave,
-      // not a conclusion the app drew about what a move is worth.
-      belief: undefined,
+      /*
+       * The one card here that can be wrong about his life rather than about
+       * his own opinions, so the one that has to be correctable (D-091).
+       *
+       * Rejecting it deletes no reading. The readings stay, the occasions stay,
+       * and what stops counting toward *this conclusion* is everything before
+       * the moment he said so — so the app can reach the opposite conclusion
+       * later, from evidence he has not disputed.
+       */
+      belief: associationBeliefKey(found.scope),
+      beliefLabel: `what the app has worked out follows ${thing}`,
     },
   }
+}
+
+/** One side of the comparison, as a sentence. */
+function sentenceFor(
+  reading: string,
+  thing: string,
+  side: AssociationSide,
+  banded: boolean,
+): string {
+  const where = banded ? ` ${side.label}` : ''
+  switch (side.direction) {
+    case 'higher':
+      return `${reading} has more often been higher after ${thing} than without one${where}.`
+    case 'lower':
+      return `${reading} has more often been lower after ${thing} than without one${where}.`
+    case 'no different':
+      return `${reading} moves about the same whether or not ${thing} happens${where}.`
+  }
+}
+
+function linesFor(
+  pairs: readonly ChangePair[],
+  found: ObservedAssociation,
+  reading: string,
+  thing: string,
+  banded: boolean,
+  present: boolean,
+): readonly EvidenceLine[] {
+  return [...pairs]
+    .sort((a, b) => b.at - a.at)
+    .map((pair) => ({
+      record: pair.records[0] ?? (found.concept as unknown as RecordId),
+      when: pair.dayId,
+      text:
+        `${describeDay(pair.dayId)} — ${reading} went ${pair.rose ? 'up' : 'down or stayed'}` +
+        `${present ? ` after ${thing}` : `, without ${thing}`}` +
+        `${banded ? ` (${pair.weekend ? 'weekend' : 'weekday'}, ${pair.evening ? 'evening' : 'earlier in the day'})` : ''}`,
+    }))
+}
+
+/**
+ * How the comparison was arrived at, in the owner's language.
+ *
+ * Every line states something that was actually checked. The confounding line
+ * in particular names *what* was looked for, because the version that said
+ * "nothing else happened in between" had checked completed suggestions only,
+ * and four events recorded between the two readings had not been looked at at
+ * all (DEF-0049).
+ */
+function reasoningFor(
+  found: ObservedAssociation,
+  reading: string,
+  thing: string,
+  banded: boolean,
+): readonly string[] {
+  const lines = [
+    `Both sides come from the same rule: two readings of ${reading} close enough together to be about the same stretch of the day, sorted by whether ${thing} happened in between.`,
+    `Only ${thing} counts as ${thing}. Anything else you did, even something similar, is a separate comparison and is not pooled with this one.`,
+  ]
+
+  if (banded) {
+    lines.push(
+      'The record disagrees with itself depending on when, so it is reported that way rather than averaged into a single figure that would describe neither.',
+    )
+  }
+
+  lines.push(
+    found.confounded === 0
+      ? 'No occasion had to be left out for something else recorded in between — another suggestion completed, a change in circumstances, a constraint, or something noted about someone.'
+      : `${found.confounded} ${found.confounded === 1 ? 'occasion was' : 'occasions were'} left out because something else was recorded in between — another suggestion completed, a change in circumstances, a constraint, or something noted about someone — which would have made them evidence about neither.`,
+  )
+
+  lines.push(
+    found.unknownExposure === 0
+      ? 'Every occasion counted is one the record can place on one side or the other.'
+      : `${found.unknownExposure} ${found.unknownExposure === 1 ? 'occasion is' : 'occasions are'} in neither group, because nothing in the record says whether ${thing} happened. Not knowing is not the same as it not happening, so they are left out rather than counted as without.`,
+  )
+
+  lines.push(
+    'This says what has followed what. It is not a claim that one brought the other about, and a lower reading afterwards is a lower reading rather than a sign of something going wrong.',
+    'It can only compare occasions where a reading exists on both sides, so it describes the record rather than every evening.',
+  )
+
+  return lines
 }
 
 function coverageCards(situation: Situation): readonly Built[] {
@@ -1872,11 +2021,31 @@ export function insightsFor(situation: Situation): InsightsReport {
       observed.add(found.verb)
       continue
     }
-    if (found.withheld === undefined) continue
+    /*
+     * Named by the action, not the verb.
+     *
+     * Two objects under one verb are two of these lines, and each has to be
+     * about its own object — "current energy after a bike ride" is a different
+     * report from "current energy after a walk", and running them together
+     * under the verb's name is the identity defect one layer up (D-091).
+     *
+     * The second branch is the finding the app has but cannot name. It states
+     * nothing, which is why the verb's phrase is allowed here and forbidden on
+     * the card: a gathering line makes no claim about what happened, so two of
+     * them reading alike misleads nobody.
+     */
+    const named = situation.entities.labelFor(found.object)
+    const needs =
+      found.withheld ??
+      (named === undefined ? 'the app has no name for what this is about' : undefined)
+    if (needs === undefined) continue
+
     gathering.push({
-      subject: `${capitalise(lowerFirst(found.label))} after ${lowerFirst(patternNameFor(found.verb, undefined))}`,
-      occasions: found.with.length + found.without.length,
-      needs: found.withheld,
+      subject: `${capitalise(lowerFirst(found.label))} after ${lowerFirst(
+        patternNameFor(found.verb, named),
+      )}`,
+      occasions: found.overall.present.length + found.overall.absent.length,
+      needs,
     })
   }
 
@@ -2103,20 +2272,37 @@ function describeSplitForTonight(split: FoundSplit, context: DecisionContext): s
  * Both counts, because the comparison group is the whole reason the first
  * number means anything, and no causal word anywhere — the same discipline the
  * card follows, in a shorter sentence.
+ *
+ * It reads the same side of the comparison the ranking read, through the same
+ * function, so the panel cannot quote a figure that did not reach the decision.
+ * That is DEF-0039's class: a line and a tally that disagree leave the reader
+ * to work out which one the app actually believes.
  */
 function describeAssociationBriefly(
   found: ObservedAssociation | undefined,
   subject: string,
+  at: Instant,
+  zone: TimeZoneId,
 ): string | undefined {
   if (found === undefined || found.withheld !== undefined) return undefined
+
   const reading = lowerFirst(found.label)
+  const side = applicableAssociation(found, at, zone)
+
+  if (side === undefined) {
+    return found.disagree
+      ? `What follows ${subject} depends on the kind of evening, and there is not enough of one like tonight to say.`
+      : undefined
+  }
+
   const shape =
-    found.direction === 'higher'
+    side.direction === 'higher'
       ? 'more often been higher afterwards'
-      : found.direction === 'lower'
+      : side.direction === 'lower'
         ? 'more often been lower afterwards'
         : 'moved about the same either way'
-  return `Across the whole record, ${reading} has ${shape} with ${subject} than without: ${found.roseWith} of ${found.with.length} against ${found.roseWithout} of ${found.without.length}.`
+  const where = found.disagree ? `On evenings ${side.label}` : 'Across the whole record'
+  return `${where}, ${reading} has ${shape} with ${subject} than without: ${side.rosePresent} of ${side.present.length} against ${side.roseAbsent} of ${side.absent.length}.`
 }
 
 export function evidenceForDecision(decision: Decision): DecisionEvidence | undefined {
@@ -2205,8 +2391,10 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
      * walk than without" is. Same reason the card itself uses it.
      */
     observed: describeAssociationBriefly(
-      situation.learning.associationFor(verb),
+      situation.learning.associationFor(explanation.semantics.target),
       subject ?? lowerFirst(name),
+      situation.at,
+      situation.zone,
     ),
     context: split === undefined ? undefined : describeSplitForTonight(split, situation.context),
     mix: describeEvidenceMix(evidenceRefsFor(alike)),

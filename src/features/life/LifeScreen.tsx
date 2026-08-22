@@ -5,6 +5,7 @@ import { assembleSituation, type DomainCoverage } from '../../intelligence/situa
 import { hashForLifePage } from '../../platform/routing'
 import { useMemory } from '../memory/memoryContext'
 import { pageForDomain } from './domainPages'
+import { GROUP_ORDER, standingFor } from './standing'
 import './LifeScreen.css'
 
 /**
@@ -38,62 +39,6 @@ import './LifeScreen.css'
  * record counts, no confidence, no "stale", no phase.
  */
 
-/** The status words, and whether the group is asking to be looked at. */
-interface Standing {
-  readonly word: string
-  readonly attention: boolean
-  /** Said once for the group rather than once per area. */
-  readonly note: string
-  /** Per area, and only where the group is worth reading line by line. */
-  readonly detail?: (coverage: DomainCoverage) => string
-}
-
-function standingFor(coverage: DomainCoverage): Standing {
-  if (coverage.status === 'unheard') {
-    return {
-      word: 'Nothing here yet',
-      attention: false,
-      note: 'You have not mentioned these, and nothing is asking you to.',
-    }
-  }
-  if (coverage.status === 'current') {
-    return { word: 'Fresh', attention: false, note: 'Up to date on what matters.' }
-  }
-  if (coverage.status === 'quiet') {
-    return { word: 'Quiet', attention: false, note: 'Nothing new, and nothing out of date.' }
-  }
-
-  /*
-   * The stale case splits by what the app intends to do about it, which is the
-   * whole point of the coverage engine: an area it is already getting evidence
-   * about needs nothing from the owner, and one where it has run out of ideas
-   * does. Telling him to go and look at both would waste the distinction.
-   */
-  switch (coverage.refresh) {
-    case 'normal-life':
-      return {
-        word: 'Catching up',
-        attention: false,
-        note: 'An answer is already on its way.',
-        detail: (entry) => entry.summary,
-      }
-    case 'needs-review':
-      return {
-        word: 'Needs a check-in',
-        attention: true,
-        note: 'Nothing the app can do on its own will bring these back.',
-        detail: (entry) => entry.summary,
-      }
-    default:
-      return {
-        word: 'Going quiet',
-        attention: true,
-        note: 'The app will try to bring these back on its own.',
-        detail: (entry) => `${entry.summary} ${refreshWords(entry)}`,
-      }
-  }
-}
-
 /**
  * The area's name, linked to its own page where one exists (section 50).
  *
@@ -112,12 +57,6 @@ function AreaLink({ domain, label }: { domain: LifeDomainId; label: string }) {
   )
 }
 
-function refreshWords(coverage: DomainCoverage): string {
-  return coverage.refresh === 'a-question'
-    ? 'A question will cover it.'
-    : 'Something worth doing here may come up on Now.'
-}
-
 /**
  * The private area says how it stands and never what it is about.
  *
@@ -126,16 +65,6 @@ function refreshWords(coverage: DomainCoverage): string {
  */
 const PRIVATE = 'private-health'
 const PRIVATE_NOTE = 'You keep this one yourself. Nothing about it appears elsewhere.'
-
-/** Attention first, then the calm groups in descending order of interest. */
-const ORDER = [
-  'Needs a check-in',
-  'Going quiet',
-  'Catching up',
-  'Fresh',
-  'Quiet',
-  'Nothing here yet',
-]
 
 interface Group {
   readonly word: string
@@ -174,7 +103,7 @@ function groupsFrom(domains: readonly DomainCoverage[]): readonly Group[] {
     }
   }
 
-  return ORDER.map((word) => byWord.get(word)).filter(
+  return GROUP_ORDER.map((word) => byWord.get(word)).filter(
     (group): group is Group => group !== undefined,
   )
 }

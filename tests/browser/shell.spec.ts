@@ -164,7 +164,7 @@ test.describe('Life reports how each area stands', () => {
     await expect(going).toContainText('may come up on Now')
 
     // And everything calm is a row of names, not a stack of paragraphs.
-    await expect(page.getByTestId('life-group-fresh')).toContainText('Sleep & Recovery')
+    await expect(page.getByTestId('life-group-recent')).toContainText('Sleep & Recovery')
     await expect(page.getByTestId('life-group-nothing-here-yet')).toContainText('Faith & Meaning')
   })
 

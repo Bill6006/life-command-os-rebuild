@@ -1,41 +1,51 @@
 # Next prompt
 
 Canonical plan section 43, and the independent-QA protocol in
-[`qa/README.md`](qa/README.md) section 4. The model, intelligence level and
-conversation instruction sit outside the prompt so the owner can switch Claude
-Code before pasting.
+[`qa/README.md`](qa/README.md). The model, reasoning level and conversation
+instruction sit outside the prompt so the owner can set them before pasting.
 
-**Phase 6 is YELLOW — QA-A1 repaired, awaiting retest.** Independent QA
-withdrew its round-1 PASS on QA-A1: the app asked the owner to perform the
-causal analysis the system exists to make, and rendered his answers as
-percentages that read as measurements. The finding held, the repair is done,
-and the phase stays YELLOW until the same QA conversation retests it.
+**Independent QA is Codex from here (D-090).** Claude builds; Codex tests. The
+loop is Claude builds → Codex QA (NEW) → Claude repairs → the **same** Codex
+conversation retests → PASS → Claude GREEN closeout → next phase. This is not a
+relaxation of D-077 — it is how D-077's rule is satisfied, since two
+conversations of the same model reading the same documents reach the same
+reading of them.
 
-Full builder account in [`PHASE_STATUS.md`](PHASE_STATUS.md) under "Phase 6 —
-Timeline + Insights"; the defect is DEF-0045 in
-[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md); the principle is D-089 in
+**Phase 6 is YELLOW — REPAIRED, AWAITING CODEX RETEST.** A Codex cold-use and
+semantic audit reproduced seven blocking defects in a phase that had already
+passed Claude independent QA, had that PASS withdrawn on QA-A1, been repaired,
+and carried 22 purpose-written regressions, all green. The seven are repaired.
+The phase stays YELLOW until Codex retests it.
+
+Builder account in [`PHASE_STATUS.md`](PHASE_STATUS.md) under "Phase 6 —
+Timeline + Insights"; the defects are DEF-0046 … DEF-0053 in
+[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md); the principles are D-090 and D-091 in
 [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ---
 
-## NEXT CLAUDE ACTION
+## NEXT ACTION
 
-- **Model:** Opus-class (Claude Opus 5 or the nearest current equivalent)
-- **Intelligence level:** High
-- **Conversation:** **SAME — the independent QA conversation that raised QA-A1**
-- **Why this model:** the retest has to judge whether a _new learned quantity_
-  is honest — whether a comparison group is really a comparison group, whether
-  a relationship is stated as association rather than cause, and whether the
-  owner's judgments and the app's findings are now genuinely distinguishable on
-  screen. That is the cross-system semantic reasoning D-080 reserves Opus-class
-  for, and it is a step up from round 1's Sonnet-class recommendation because
-  the thing under test changed.
-- **Why this level:** High. The judgement is demanding but the evidence is
-  counts printed on screen and a small pure module; Max is for ambiguous
-  root-cause work, and the root cause here is already found and written down.
-- **Why the same conversation:** `qa/README.md`'s conversation rule — a retest
-  after a builder repair returns to the conversation that ran the original
-  test. It raised QA-A1 and holds the reasoning the repair has to satisfy.
+- **System:** **Codex**
+- **Model:** GPT-5.1-Codex-class — the current Codex coding/review model, or its
+  nearest equivalent if it has been renamed
+- **Reasoning level:** **Medium**
+- **Conversation:** **SAME — the Codex conversation that ran the cold-use audit
+  and raised the seven blockers.** If that conversation is gone, start a NEW
+  Codex one and follow the prompt from step 1; it is written to work either way.
+- **Why this model:** the work is reading owner-facing screens critically and
+  tracing each claim to the evidence under it, then reproducing seven specific
+  failures. That is a coding-and-review model's job, and the audit that found
+  these defects was done at this class.
+- **Why this level:** Medium. The hard part is judgement — does this sentence
+  mean what the numbers under it support — not depth of search, and the root
+  causes are already found and written down. `qa/README.md` asks for the lowest
+  level that does not risk quality; save the top of the range for a defect that
+  turns out to need architectural reasoning, and say so if one does.
+- **Why the same conversation:** `qa/README.md`'s conversation rule. A retest
+  after a builder repair returns to the conversation that ran the original test;
+  it holds the seven reproductions and its own reasoning about them, which is
+  what the repair has to satisfy.
 - **Attach/reference:** nothing beyond what the prompt below already names.
 
 ---
@@ -43,111 +53,124 @@ Timeline + Insights"; the defect is DEF-0045 in
 ## COPY/PASTE PROMPT
 
 ```text
-Phase 6's QA-A1 repair is ready for your retest. This is the same QA
-conversation that raised it — you have the round-1 record and your own
-reasoning about the finding.
+You are independent QA for the Life Command OS rebuild. Claude is the builder;
+you are the reviewer, and the builder cannot approve its own phase.
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
 
 Your report is docs/qa/PHASE_06_QA_HANDOFF.md. Update it in place with a
-"Round 2 — retest" section. It is the only file you may write, and you may
-not change application or product code (D-077).
+"Round 3 — Codex retest" section. It is the only file you may write, and you
+may not change application or product code. The builder may not edit that
+report; it is yours, including during this retest.
 
-WHAT CHANGED
+START HERE, BEFORE READING ANY REPOSITORY DOCUMENT.
 
-The governing documents moved first, because you were right that this is a
-specification gap before it is an implementation defect:
+1. Open the deployed Preview at a normal Now, on a phone-sized Android-style
+   context — touch, mobile user agent, realistic device pixel ratio, real
+   scrolling. Use it as the owner. Answer what it asks. Move between Now,
+   Timeline, Insights, Life and a domain page.
+2. Write down what the app appears to claim, in its own words, before you know
+   what it is supposed to claim. This step is the reason the last three rounds
+   of defects were found by a person and not by 750 passing tests.
 
-- D-089 records the principle — observe first, infer cautiously, ask for a
-  concrete fact, ask for current subjective state when that state itself
-  matters, never ask the owner for the causal relationship the system exists
-  to learn.
-- Canonical plan sections 20 and 51 now state it directly, as owner-approved
-  amendments under section 1. The v1.2 change log carries an addendum.
-- D-054, D-064, D-066 and D-069 are annotated as incomplete, revisited or
-  generalized. None is overturned.
+Only then read the repository.
 
-Then the code. Read it fresh rather than from this list:
+WHAT TO TEST, IN THIS ORDER
 
-- src/intelligence/association.ts — new. The comparison.
-- src/intelligence/moves.ts — MoveProfile.affects.
-- src/intelligence/outcomes.ts — the grading question, and what replaced it.
-- src/intelligence/learning.ts, src/intelligence/evaluate.ts — how the
-  finding reaches the decision.
-- src/domain/concepts.ts — ConceptDefinition.tracked.
-- src/intelligence/insights.ts, src/features/insights/InsightsScreen.tsx,
-  src/features/now/NowScreen.tsx — what is now said, and how.
-- src/synthetic/scenarios.ts — "Two months of readings, and nothing graded".
-- tests/synthetic/observed-relationships.test.ts — the twelve behaviours you
-  required.
+Step 2 — claim to evidence. For each claim on screen, establish what it
+actually rests on. Every defect in this phase's three rounds was a claim
+printed wider than the evidence underneath it.
 
-`git diff a6a9e67..HEAD` is the whole repair.
+Step 3 — the seven you raised. Reproduce each one on the deployed build and
+judge the repair against your own criteria, not against the builder's account
+of them:
 
-WHAT TO TEST
+  1. Two objects under one verb. Four walks with energy higher and four bike
+     rides with energy lower must be two findings, never one, and neither may
+     be printed under the other's name.
+  2. Context. A relationship that holds on weekdays and not at weekends must
+     not collapse to one figure, and the collapsed figure must not reach a
+     recommendation on a Tuesday.
+  3. Exposure. An occasion the record cannot place must be in neither group,
+     counted, and reported. Silence is not a "without".
+  4. Confounding. Recorded events between the two readings must invalidate the
+     pair, and the copy must claim only the check that was actually run.
+  5. Correctability. The owner must be able to reject what the app has worked
+     out without deleting the history under it, and the app must be able to
+     conclude again from evidence he has not disputed.
+  6. Order. Life's "Recently" must show a same-moment correction after the
+     thing it corrects.
+  7. Freshness. No surface may answer "is what the app believes still current"
+     with "something came in recently".
 
-Retest QA-A1 against your own acceptance criteria A–I, from your own report,
-rather than against the builder's account of them. In particular:
+Step 4 — the phase gate. Canonical plan section 51, including the lines D-091
+added to it, now that you understand what the screens mean.
 
-- Is a figure built from the owner's judgments now distinguishable from one
-  built from observed state, on screen, by a reader who has not read any of
-  this? (B)
-- Is a relationship stated only against a comparison group, and only as
-  association — in both directions, including when the reading is lower
-  afterwards? (C, E)
-- Can a state dimension now be learned from at all, and is it separate
-  dimensions rather than one score? (D)
-- Does a missing before- or after-observation produce an honest "not enough",
-  rather than a figure over whichever occasions have both? (F)
-- Do existing aspect:'effect' records still mean what they meant? (G)
-- Is the owner still asked for how he is, and no longer asked to grade what a
-  move did? (H)
-- Were any sensors or integrations invented? (I)
+Step 5 — targeted regression on what this repair touched: Timeline, Insights,
+Now's evidence panel, Life, and the domain pages. Confirm nothing you passed in
+earlier rounds has regressed, that QA-A1's repair is intact — the owner is
+still asked how he is and never asked to grade what a move did — and that every
+deferred item is unchanged (P4-6, P4-7, the never-settled started move, and
+Phase 5's four).
 
-And the one whose absence let this through: **does the engine learn something
-useful when the owner answers no causal question at all?** The scenario "Two
-months of readings, and nothing graded" contains no effect outcome anywhere.
+Step 6 — architecture inspection only where a defect suggests the boundary is
+wrong rather than the line.
 
-Two things the builder decided rather than implemented, which are yours to
-accept or reject:
+Step 7 — full-suite duplication ONLY on a concrete trigger: a builder claim
+that does not match what you observe, a suspected false-green, or a change to
+the test harness itself. The builder's suite is green and that is evidence;
+re-running it to watch it pass again is not QA and costs the attention steps 1
+and 2 need.
 
-1. `tests/synthetic/inferred-evidence.test.ts`'s assertions that
-   `deriveOutcomes` fires for exactly three verbs are **kept**, with the
-   reasoning written into the file. The argument is that extending that
-   mechanism would have produced more attributions wearing the app's name
-   rather than the owner's, and that the repair was to stop needing them.
-   You named these tests; judge the argument.
-2. `emotionalState` is **not** split into named dimensions. It is now
-   `tracked` so it participates, but which dimensions is the owner's to say,
-   and the builder judged inventing a taxonomy to be the same mistake the
-   finding is about. Recorded as an open question for the owner.
+ONE THING THE OWNER RAISED, WHICH IS YOURS TO SETTLE
 
-Also confirm nothing round 1 passed has regressed — all eleven of
-DEF-0034 to DEF-0044 — and that every deferred item is unchanged (P4-6, P4-7,
-the never-settled started move, and Phase 5's four).
+Using the normal app — not the QA laboratory — the owner answered a
+current-energy question with "Plenty", and Timeline then showed "Nothing here
+yet". Do not assume this is user error. Establish what actually happens:
+
+- does an answer given at a normal Now persist as a canonical record;
+- does it survive navigation, a refresh, closing and reopening the browser, and
+  a new Preview deployment;
+- does Timeline show the observation immediately;
+- is QA-scenario data isolated from normal owner data;
+- can loading or leaving the QA laboratory overwrite or clear normal history;
+- can a deployment orphan or reset the IndexedDB store.
+
+Reproducible data loss is a Phase 6 blocker. If it does not reproduce, record
+which transitions you tested and what the expected behaviour is, so the next
+person does not have to guess.
+
+TWO DECISIONS THE BUILDER MADE RATHER THAN IMPLEMENTED, STILL YOURS TO ACCEPT
+OR REJECT
+
+1. tests/synthetic/inferred-evidence.test.ts's assertions that deriveOutcomes
+   fires for exactly three verbs are kept, with the reasoning in the file.
+2. emotionalState is not split into named dimensions. It is tracked, so it
+   participates, but which dimensions exist is the owner's to say. D-091
+   invariant 6 records it as an open question.
 
 THE CHECKPOINT
 
 The product checkpoint and the deployed Preview SHA are in
 docs/PHASE_STATUS.md's build identity table. Verify both yourself against
-preview/build-info.json and against what the app shows under More → This
-build, and check `git log <checkpoint>..HEAD --stat` for anything outside
-docs/. Test the deployed Preview in a real Android-style mobile context, as
-you did in round 1.
+preview/build-info.json and against what the app shows under More → This build,
+and check `git log <checkpoint>..HEAD --stat` for anything outside docs/.
 
 HOW THIS ENDS
 
 Update docs/qa/PHASE_06_QA_HANDOFF.md with the retest record and an overall
-PASS or FAIL, and in the same response, without being asked (D-082,
-qa/README.md section 3a): the verdict; the QA-tested SHA; the report path;
-the recommended Claude model, intelligence level and conversation instruction
-for the next action, each with a one-sentence reason; and the complete next
-prompt written into the report file. Close with the short launcher block
-D-083 requires rather than repeating the whole prompt inline.
+PASS or FAIL, and in the same response, without being asked: the verdict; the
+QA-tested SHA; the report path; the recommended model, level and conversation
+instruction for the next action, each with a one-sentence reason — naming a
+Claude model where the next step is the builder's — and the complete next
+prompt written into the report file. Close with a short launcher rather than
+repeating the whole prompt inline.
 
-On PASS the next prompt goes to CURRENT — the builder conversation — for the
-formal GREEN closeout. On FAIL it goes to CURRENT for another repair round.
+On PASS the next prompt goes to CURRENT — the Claude builder conversation — for
+the formal GREEN closeout. On FAIL it goes to CURRENT for another repair round,
+and this phase stays YELLOW.
 
 Do not ask the owner to paste anything — you have the paths.
 ```

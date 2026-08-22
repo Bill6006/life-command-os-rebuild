@@ -22,7 +22,69 @@ reopens Phase 4 or any completed phase.
 
 # Phase 6 — Timeline + Insights
 
-**Status: YELLOW — QA FAIL, REPAIRED, AWAITING RETEST.**
+**Status: YELLOW — REPAIRED, AWAITING CODEX RETEST.**
+
+Round 2's repair was deployed and then read by an **independent Codex cold-use
+and semantic audit**, which reproduced **seven blocking defects** in it. The
+phase carried 22 purpose-written regressions over the repaired code, all green,
+and not one of them asked the questions the audit asked.
+
+**The through-line of all three rounds is one failure.** DEF-0020: four
+different facts sharing one carrier. QA-A1: one fact — _who performed the
+inference_ — missing from the model entirely. And now: the inference performed
+correctly and then **stated wider than the evidence underneath it**, in five
+separate ways, plus two owner-facing surfaces saying more than they knew.
+
+## What the audit found, and what was done
+
+| #   | The defect                                                                                                                  | Repaired as                                                                      |
+| --- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 1   | Four walks and four bike rides pooled under the `move` verb, cancelled to "no different", printed as a finding about a walk | DEF-0046 — scope on the semantic action, verb **and** object                     |
+| 2   | Walks that helped every weekday and no weekend collapsed to 4-of-8, and that figure ranked a Tuesday                        | DEF-0047 — per-context bands; the collapsed figure is not printed                |
+| 3   | An evening nobody was asked about, counted as an evening without the walk                                                   | DEF-0048 — present / absent / **unknown**, and abstention                        |
+| 4   | Four recorded relationship events between a walk and the later reading confounded nothing, and the card said so out loud    | DEF-0049 — named confounding classes, and copy that claims only the check it ran |
+| 5   | The app's own conclusion could rank a recommendation and could not be disagreed with                                        | DEF-0052 — an `association` belief key scoped to the action                      |
+| 6   | Life's "Recently" printed a same-moment correction below the reading it replaced                                            | DEF-0050 — canonical order, `occurredAt` → `recordedAt` → id                     |
+| 7   | "Fresh — up to date on what matters", above a belief the app had marked out of date                                         | DEF-0051 — freshness says which question it answers                              |
+
+Two more were found by the repair itself and are in the ledger: the card
+borrowing the **verb's** phrase when an object had no name (DEF-0046's sibling —
+two findings would have printed as one sentence), and Life silently dropping
+three of eleven areas because the group word and the group order lived in two
+files (DEF-0053).
+
+## What this is now governed by
+
+- **D-091** states the seven invariants as rules rather than as repairs: action
+  identity, negative exposure, context, confounding, correctability, tracked
+  state meaning, historical order — plus the freshness-language rule. Plan
+  section 51 carries them in the pattern-quality rules and in the gate.
+- **D-090** moves independent QA permanently from Claude to **Codex**, and sets
+  the order it works in: sealed cold owner-use first, then a claim-to-evidence
+  audit, then semantics, then the phase gate, then targeted regression, with
+  full-suite duplication only on a concrete trigger. Green builder tests are
+  evidence; re-running them to watch them pass again is not QA.
+
+## What was preserved
+
+Everything QA-A1's repair established, verified rather than assumed: no causal
+grading where state is observable; the owner still reports his own state; the
+app learns the relationship; association is never causation in either direction;
+historical `aspect: 'effect'` records still mean what they meant and still
+count; an attribution and a system finding are still visibly different on
+screen; missing observations still stay missing; weak evidence still abstains;
+the four state dimensions stay separate; contradictory evidence still reverses a
+finding; the finding still reaches the ranking and the evidence panel.
+
+`emotionalState` is still **not** split into named dimensions — D-091 invariant
+6 records why, and it remains an open question for the owner. The two decisions
+round 2 handed to QA (keeping `inferred-evidence.test.ts`'s three-verb
+assertions, and not inventing an emotional taxonomy) are unchanged and still
+QA's to accept or reject.
+
+---
+
+**Round 2 status, superseded by the above: YELLOW — QA FAIL, REPAIRED, AWAITING RETEST.**
 
 Independent QA passed round 1 against section 51's gate item by item, and then
 **withdrew the PASS**. The owner read one sentence on Now — _"How much did a
@@ -205,20 +267,20 @@ failure, and lint is the cheaper half.
 
 ## Verification
 
-| Gate                                      | Result                                                                |
-| ----------------------------------------- | --------------------------------------------------------------------- |
-| Privacy scan                              | Clean, 163 tracked files                                              |
-| Format (Prettier)                         | Pass                                                                  |
-| Lint (ESLint)                             | Pass, 0 warnings                                                      |
-| Typecheck (strict TS)                     | Pass, 0 errors                                                        |
-| Unit / contract / synthetic / adversarial | 732 passed / 732, 43 files (in plain Node, no DOM)                    |
-| Browser tests (Playwright)                | 291 passed / 291 — 97 tests × 360, 430, 1280px                        |
-| Production build                          | Pass                                                                  |
-| `npm run verify` from a clean checkout    | Pass                                                                  |
-| Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand                            |
-| Reintroduction pass                       | 19 for the phase, then 12 more for QA-A1; all 31 caught               |
-| Builder's own Android-style gate          | Pass — against the deployed `e681a66`; no findings                    |
-| Independent QA (D-077)                    | **Round 1 PASS, withdrawn on QA-A1. Repaired here; awaiting retest.** |
+| Gate                                      | Result                                                                                                                                             |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy scan                              | Clean, 163 tracked files                                                                                                                           |
+| Format (Prettier)                         | Pass                                                                                                                                               |
+| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                                   |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                                     |
+| Unit / contract / synthetic / adversarial | 764 passed / 764, 43 files (in plain Node, no DOM)                                                                                                 |
+| Browser tests (Playwright)                | 291 passed / 291 — 97 tests × 360, 430, 1280px                                                                                                     |
+| Production build                          | Pass                                                                                                                                               |
+| `npm run verify` from a clean checkout    | Pass                                                                                                                                               |
+| Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand                                                                                                         |
+| Reintroduction pass                       | 19 for the phase, 12 for QA-A1, **17 for the audit's seven**; all 48 caught                                                                        |
+| Builder's own Android-style gate          | Pass — against the deployed checkpoint; no findings                                                                                                |
+| Independent QA                            | **Round 1 PASS withdrawn on QA-A1; round 2 repaired; seven blockers found by Codex cold-use audit, repaired here. Awaiting Codex retest (D-090).** |
 
 ### Where the 700 sit
 
@@ -227,15 +289,18 @@ library-wide sweeps, and the second half is worth noting: several existing
 suites grew without being edited, because they walk every scenario and the
 library gained one.
 
-| Suite                                                                  | Tests |
-| ---------------------------------------------------------------------- | ----: |
-| `synthetic/insights.test.ts` — the rate rules, and the gate claims     |    29 |
-| `synthetic/timeline.test.ts` — section 26, rule by rule                |    31 |
-| `synthetic/decision-evidence.test.ts` — Now's panel reads the decision |    15 |
-| `unit/insights-copy.test.ts` — the copy tables, swept                  |    10 |
-| `synthetic/observed-relationships.test.ts` — QA-A1's twelve behaviours |    22 |
-| `unit/architecture-guards.test.ts` — five phase guards, four for D-089 |    +9 |
-| existing sweeps, over the two new histories                            |   +11 |
+| Suite                                                                                                 | Tests |
+| ----------------------------------------------------------------------------------------------------- | ----: |
+| `synthetic/insights.test.ts` — the rate rules, and the gate claims                                    |    29 |
+| `synthetic/timeline.test.ts` — section 26, rule by rule                                               |    31 |
+| `synthetic/decision-evidence.test.ts` — Now's panel reads the decision                                |    15 |
+| `unit/insights-copy.test.ts` — the copy tables, swept                                                 |    10 |
+| `synthetic/observed-relationships.test.ts` — QA-A1's twelve behaviours, then D-091's seven invariants |    43 |
+| `unit/architecture-guards.test.ts` — five phase guards, four for D-089, three for `ACTION_FAMILIES`   |   +12 |
+| `unit/registries.test.ts` — what a tracked dimension may not become                                   |    +4 |
+| `unit/life-pages.test.ts` — what a status word may not claim                                          |    +3 |
+| `synthetic/domain-page-data.test.ts` — canonical order, honest freshness                              |    +2 |
+| existing sweeps, over the two new histories                                                           |   +11 |
 
 Browser: `tests/browser/timeline-insights.spec.ts`, 25 tests × 3 viewports =
 75 new, on top of the 216 already in `shell.spec.ts`, `now.spec.ts`,

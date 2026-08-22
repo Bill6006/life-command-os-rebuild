@@ -387,7 +387,17 @@ function strengthFor(
 function describe(label: string, status: CoverageStatus, daysSince: number | undefined): string {
   switch (status) {
     case 'current':
-      return `${label} is current.`
+      /*
+       * QA-C7, and the same class as QA-M1 below.
+       *
+       * This used to say "is current", which reads as *what the app believes
+       * about this area is up to date* — and the app was saying it directly
+       * above a belief it had itself marked out of date. `current` means
+       * something has come in recently, or a standing concept is held. Those
+       * are two different facts about two different things, and the honest
+       * sentence is the one about intake, in the app's own voice (DEF-0012).
+       */
+      return `Something has come in about ${label.toLowerCase()} recently.`
     case 'quiet':
       /*
        * QA-M1. This used to say "and nothing here has gone out of date" — a

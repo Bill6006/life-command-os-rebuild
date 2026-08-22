@@ -2308,3 +2308,171 @@ computes the relationship against a comparison group and is the only thing
 allowed to state one; and `tests/unit/architecture-guards.test.ts` fails the
 build if an owner surface renders an attribution-derived figure in observed-fact
 language.
+
+---
+
+## D-090 — Independent QA runs in Codex, begins cold, and audits meaning before it duplicates gates
+
+**Phase:** 6 (second QA repair) · **Status:** Active — **owner decision,
+governing every phase from here**
+
+Independent QA moves permanently from Claude to **Codex**. Claude remains the
+builder. The loop is unchanged in shape and changed in who runs which half:
+
+> Claude builds → **Codex** independent QA (NEW conversation) → Claude repairs →
+> the **same** Codex conversation retests → PASS → Claude GREEN closeout → next
+> phase.
+
+D-077 is not overturned; it is satisfied more strictly. Its rule was never "a
+different Claude conversation" — it was **the reviewer must not inherit the
+author's model of why the thing is correct**. Two conversations of the same
+model, reading the same documents, reach the same reading of them. Phase 6 is
+the demonstration: a Claude QA conversation checked section 51's gate item by
+item, passed it, and had to withdraw the pass when the owner read one sentence
+on Now. The gate was checked correctly and the screen was not honest.
+
+### The order Codex works in
+
+Cold first, and the order is the decision.
+
+1. **Sealed cold owner-use.** Open the deployed Preview at a normal Now, as the
+   owner, **before reading any repository document**. Use it. Write down what it
+   appears to claim.
+2. **Claim-to-evidence semantic audit.** For each claim the screens make, find
+   what it actually rests on. Every defect in Phase 6's three rounds was a claim
+   printed wider than its evidence, and every one of them was visible here.
+3. **Semantic and product correctness.** Does the app mean what it says, and is
+   what it says worth saying?
+4. **Targeted phase acceptance.** The phase's own gate, now that the meaning is
+   understood.
+5. **Targeted known-defect regression.** The ledger's entries for surfaces this
+   phase touched.
+6. **Architecture inspection where warranted** — where a defect suggests the
+   boundary rather than the line is wrong.
+7. **Full-suite duplication only on a concrete trigger**: a builder claim that
+   does not match observed behaviour, a suspected false-green, or a change to
+   the harness itself.
+
+**Green builder tests are evidence.** Re-running a suite the builder already ran
+green, to watch it go green again, buys nothing and costs the attention that
+steps 1 and 2 need. This makes QA leaner, not weaker: the three rounds of Phase
+6 were lost to things no suite was asked, and found by somebody using the app.
+
+### Why cold, and why sealed
+
+The audit that produced this decision found seven blockers in a phase that had
+already passed independent QA once, been repaired, and had 22 purpose-written
+regressions passing over it. It found them by using the app first. A reviewer
+who reads `D-089` before opening Now already knows what the walk card is
+_supposed_ to mean, and will read the screen as confirming it.
+
+### What does not change
+
+- The builder never approves its own phase, and never marks GREEN (D-077).
+- The report path stays `docs/qa/PHASE_XX_QA_HANDOFF.md`. **No new file type.**
+- Every QA run and retest still ends with the complete next handoff (D-082) and
+  a short launcher (D-083).
+- The builder may not edit the QA report; QA may not edit product code.
+- Phase status, deferrals and the defect ledger stay the builder's to write.
+
+### The handoff standard this changes
+
+A handoff names the model, the level and the conversation **for whoever runs the
+next step**, which is no longer always Claude:
+
+- **Builder handoffs** name the Claude model, the intelligence level, and
+  CURRENT/NEW, each with a one-sentence reason.
+- **QA handoffs** name the **Codex model**, the **Codex reasoning level**, and
+  **NEW or SAME**, each with a one-sentence reason. First QA run of a phase is
+  **NEW**; a retest after a builder repair is **SAME**.
+
+D-080's rule carries over unchanged in substance: recommend the lowest
+model/effort that does not materially risk quality, for whichever system is
+being addressed. Do not mechanically reach for the strongest Codex model or the
+highest reasoning level.
+
+---
+
+## D-091 — A learned claim is scoped to the evidence under it, and the owner can overrule it
+
+**Phase:** 6 (second QA repair) · **Status:** Active — **owner decision,
+governing every phase from here**
+
+D-089 said the system must do the inference rather than ask the owner for it.
+This says how far the result may then be stated. An independent cold-use audit
+found the app doing the inference and then printing it wider than the evidence
+underneath it, in five separate ways — the same failure as DEF-0020 and QA-A1,
+one layer further in.
+
+Seven invariants. They apply to anything the app works out, not only to the
+first thing that worked anything out.
+
+**1 — ACTION IDENTITY.** A learned relationship is scoped to the semantic
+action: verb **and** object. Never the verb alone. Four walks followed by higher
+energy and four bike rides followed by lower energy are two findings, and
+pooling them produced "no different" printed as a finding about _a walk_. Two
+objects may be aggregated only through an explicit, named, reasoned entry in an
+interchangeable-action registry (`ACTION_FAMILIES`), which starts empty. **A
+finding the app cannot name is a finding it may not state** — falling back to
+the verb's phrase would print two different findings under one sentence, which
+is the same defect in the copy after it was fixed in the arithmetic.
+
+**2 — NEGATIVE EXPOSURE.** Three states, not two: the action was **present**,
+the action was **absent**, or the record is **silent**. Absence must be
+positively recorded — the move was put in front of him and he declined it or
+could not. Silence is **unknown**, belongs to no comparison group, is counted,
+and is reported. _Missing evidence is not negative evidence._ Where there is no
+legitimate comparison group, the app abstains and says why.
+
+**3 — CONTEXT.** Context must be able to change a learned relationship, and a
+global relationship may not drive a contextual recommendation when the contexts
+it covers materially disagree. Where two supported contexts disagree, the
+whole-record figure describes an occasion that never happened: it is not
+softened and not printed with a caveat beside it — it is not printed. The
+applicable reading is the one for the occasion being asked about, or nothing.
+
+**4 — CONFOUNDING.** The classes of recorded evidence that invalidate a
+before-and-after are named, checked, and stated. The app may claim only the
+check it ran. "Nothing else happened in between" is a claim about his life; what
+the app knows is which recorded classes it looked in.
+
+**5 — CORRECTABILITY.** Every conclusion the app reaches on its own carries a
+correction identity, scoped as the conclusion is scoped, so the owner can reject
+the interpretation without rewriting the history under it. **Preserve history.
+Correct future interpretation.** A rejection is a watershed, not a silence: what
+came before it stops counting toward that conclusion, what comes after counts
+normally, and the app may reach the opposite conclusion later from evidence he
+has not disputed.
+
+**6 — TRACKED STATE MEANING.** A tracked dimension has a stable construct, a
+stable scale and a stable direction, and dimensions are not collapsed into one
+another. Mood, stress, confidence and motivation are four things; a single
+generic emotional quantity standing for all of them is the wellness score the
+owner rules out. Which dimensions exist is the owner's to say — inventing a
+taxonomy to fill the field in is the mistake D-089 is about. `emotionalState`
+remains one undivided dimension and an **open question for the owner**.
+
+**7 — HISTORICAL ORDER.** Anything that presents history as a sequence orders it
+canonically: `occurredAt`, then `recordedAt`, then id. A correction is always
+about the same moment as the thing it corrects, so `occurredAt` alone can never
+separate the two, and a list sorted on it alone shows an order of events that
+did not happen.
+
+### And one that is not about learning
+
+**Freshness language.** _How recently has anything come in about this_ and _is
+what the app believes about this still good_ are two questions about two
+different things. No surface may answer the second with the first, and neither
+concept absorbs the other. Anything out of date says so on its own row, where it
+can name itself.
+
+### Where this is enforced
+
+`src/intelligence/association.ts` holds 1–5 in the computation and says so in
+its own header. `src/features/life/domainPages.ts` and
+`src/features/life/standing.ts` hold 7 and the freshness rule.
+`src/domain/concepts.ts` holds 6. The regression architecture is
+`tests/synthetic/observed-relationships.test.ts` — one describe block per
+invariant, each proved to fail when its own defect is reintroduced — with the
+two owner-surface invariants in `tests/synthetic/domain-page-data.test.ts` and
+`tests/unit/life-pages.test.ts`.

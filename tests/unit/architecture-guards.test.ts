@@ -1,6 +1,8 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, posix, relative, sep } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { ACTION_VERBS } from '../../src/domain/recommendation'
+import { ACTION_FAMILIES } from '../../src/intelligence/association'
 import { REBUILD_PHASE } from '../../src/platform/buildInfo'
 
 /**
@@ -908,5 +910,59 @@ describe('the intelligence kernel keeps the layer below it honest', () => {
       /\bDate\.now\s*\(|new Date\s*\(\s*\)/.test(readCode(file)),
     ).map(repoPath)
     expect(offenders, 'time travel has to reach the engine, not stop at the UI').toEqual([])
+  })
+})
+
+/**
+ * Pooling two of the owner's subjects is a decision with a name on it (D-091).
+ *
+ * `ACTION_FAMILIES` exists because the app once pooled four walks and four bike
+ * rides — both the `move` verb — and printed the averaged result as a finding
+ * about *a walk*. The registry is the only route back to aggregation, and it
+ * starts empty. An entry is a claim that two things the owner keeps apart are
+ * the same thing for the purpose of a learned relationship, so it must say who
+ * decided that and why.
+ */
+describe('an interchangeable-action family is a written decision', () => {
+  it('carries a reason, a label and at least two members', () => {
+    for (const family of ACTION_FAMILIES) {
+      expect(family.id, 'a family needs an id').toMatch(/^[a-z][a-z0-9-]*$/)
+      expect(family.label.trim().length, `${family.id}: a family needs a label`).toBeGreaterThan(0)
+      expect(
+        family.because.trim().length,
+        `${family.id}: pooling two actions without saying why is the defect this registry exists to prevent`,
+      ).toBeGreaterThan(20)
+      expect(
+        family.members.length,
+        `${family.id}: a family of fewer than two is not an aggregation`,
+      ).toBeGreaterThanOrEqual(2)
+    }
+  })
+
+  it('never puts one action in two families', () => {
+    const seen = new Set<string>()
+    const twice: string[] = []
+    for (const family of ACTION_FAMILIES) {
+      for (const member of family.members) {
+        if (seen.has(member)) twice.push(member)
+        seen.add(member)
+      }
+    }
+    expect(twice, 'an action pooled two ways has two answers').toEqual([])
+  })
+
+  it('names members in the form a target key actually takes', () => {
+    /*
+     * `targetKey` is `${verb}/${object.id}`. A member written any other way
+     * would silently never match, which is the worst outcome available here: a
+     * registry that looks like it is doing something and is not.
+     */
+    for (const family of ACTION_FAMILIES) {
+      for (const member of family.members) {
+        const [verb, ...rest] = member.split('/')
+        expect(ACTION_VERBS as readonly string[], `${member}: not a verb`).toContain(verb)
+        expect(rest.join('/').length, `${member}: no object`).toBeGreaterThan(0)
+      }
+    }
   })
 })

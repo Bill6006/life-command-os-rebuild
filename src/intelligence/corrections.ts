@@ -112,6 +112,26 @@ export function beliefCorrectionRecord(
 export function describeBelief(key: string): string {
   const parsed = parseBeliefKey(key)
   if (parsed === undefined) return key
+
+  /*
+   * An association key carries an action scope, not a verb.
+   *
+   * `move/walk` and `move/bike-ride` are two different beliefs about two
+   * different things (D-091), and the key keeps them apart even though this
+   * sentence can only name the verb — the entity's own label lives in the
+   * entity registry, which a key does not carry. A card that knows the label
+   * supplies a better phrase through `Insight.beliefLabel`; this is the
+   * fallback, and it is still about the right belief.
+   */
+  if (parsed.aspect === 'association') {
+    const verb = parsed.verb.startsWith('family:')
+      ? undefined
+      : (parsed.verb.split('/')[0] as ActionVerb | undefined)
+    return verb === undefined
+      ? 'what the app has worked out about these'
+      : `what the app has worked out follows ${verbLabel(verb).toLowerCase()}`
+  }
+
   const move = verbLabel(parsed.verb as ActionVerb).toLowerCase()
   switch (parsed.aspect) {
     case 'effect':

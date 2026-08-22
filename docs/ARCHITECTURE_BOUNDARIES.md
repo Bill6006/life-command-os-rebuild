@@ -182,6 +182,33 @@ _Exists._
 - `tests/browser/` — real owner flows at phone and desktop widths
 - `tests/adversarial/` — malformed data, races, double taps, timezone, DST, long histories
 
+### Where a semantic invariant lives (D-091)
+
+An invariant about **what the app is allowed to claim** gets a named home, one
+`describe` block per invariant, so that a later reader can find the rule from
+the defect and the defect from the rule.
+
+| Invariant             | Home                                                                           |
+| --------------------- | ------------------------------------------------------------------------------ |
+| action identity       | `tests/synthetic/observed-relationships.test.ts`                               |
+| negative exposure     | `tests/synthetic/observed-relationships.test.ts`                               |
+| context               | `tests/synthetic/observed-relationships.test.ts`                               |
+| confounding           | `tests/synthetic/observed-relationships.test.ts`                               |
+| correctability        | `tests/synthetic/observed-relationships.test.ts`                               |
+| tracked state meaning | `src/domain/concepts.ts` + `tests/unit/registries.test.ts`                     |
+| historical order      | `tests/synthetic/domain-page-data.test.ts`, `tests/synthetic/timeline.test.ts` |
+| freshness language    | `tests/unit/life-pages.test.ts`, `tests/synthetic/domain-page-data.test.ts`    |
+
+Two rules about these tests, both learned the expensive way:
+
+- **A guard is not a guard until its own defect has been reintroduced and
+  caught.** Plan section 42 requires it; Phase 6's first repair found four of
+  twelve guards did not bite on the first attempt, including one that asserted
+  a tautology.
+- **Assert the rule, not the sentence.** An exact-string assertion proves a
+  string is stable, not that it is right, and it fails for improvements. Every
+  copy invariant here is written as what the copy may not claim.
+
 Fixtures are synthetic only. Real owner data never enters this repository
 (section 39).
 
@@ -193,7 +220,10 @@ Fixtures are synthetic only. Real owner data never enters this repository
 - `DEFECT_LEDGER.md` — verified defects and regressions
 - `NEXT_PROMPT.md` — the next intelligence level, conversation instruction and copy/paste prompt
 - `ARCHITECTURE_BOUNDARIES.md` — this file
-- `qa/README.md` — the independent QA protocol (D-077), which governs how a
-  phase reaches GREEN from Phase 5 onward
+- `qa/README.md` — the independent QA protocol (D-077, D-090), which governs how
+  a phase reaches GREEN from Phase 5 onward. Claude builds; **Codex** runs
+  independent QA.
 - `qa/PHASE_XX_QA_HANDOFF.md` — one report per phase, written by the QA
-  conversation and read by the builder. Only QA writes these.
+  conversation and read by the builder. **Only QA writes these**, including
+  during a retest, which is why they are in `.prettierignore`: a format gate
+  that only the party forbidden to satisfy it could satisfy is not a gate.

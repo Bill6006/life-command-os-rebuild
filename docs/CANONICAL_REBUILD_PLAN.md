@@ -39,6 +39,8 @@ closes a gap in what the plan asked for rather than changing the rebuild
 sequence, so it does not warrant its own version number, for the same reason
 D-082 and D-083 did not.
 
+**v1.2 addendum (D-090, D-091):** the QA gate this revision added said the reviewer must be a fresh conversation; it did not say the reviewer must be a *different reader*. Phase 6 showed the difference. A Claude QA conversation checked section 51's gate item by item and passed it, the pass was withdrawn on a sentence the owner read, and after the repair an independent Codex cold-use audit found seven further blockers in a phase carrying 22 purpose-written regressions, all green. Independent QA therefore moves permanently to **Codex**, begins with sealed cold owner-use before reading any repository document, and audits meaning before duplicating gates the builder already ran (D-090, section 43). D-091 states how far anything the app works out may then be stated: identity, negative exposure, context, confounding, correctability, tracked-state meaning, and historical order. Both close gaps in what the plan asked for rather than changing the rebuild sequence, so neither warrants its own version number, for the same reason D-082, D-083 and D-089 did not.
+
 **v1.2 addendum (D-083):** writing the complete next prompt into the governing MD (D-082, section 43) and then also pasting that same prompt into the chat response was solving one owner problem — never having to hunt for the next instruction — by recreating another: reading a long prompt twice. Section 43 now also requires a short, separate launcher at the end of any response that writes or updates `docs/NEXT_PROMPT.md` or a `docs/qa/PHASE_XX_QA_HANDOFF.md`, naming the model, intelligence level, conversation instruction, and a short copy/paste prompt that points at the exact file to read and execute rather than repeating it. This does not shorten what is written to either file; it does not warrant its own version number for the same reason D-082 did not.
 
 ## v1.1 change log
@@ -1980,8 +1982,10 @@ The owner manually changes Claude Code's intelligence/effort level. The develope
 - open issues;
 - decision log;
 - next phase/role;
-- **recommended Claude Code intelligence level**;
-- **conversation instruction: CURRENT or NEW**;
+- **recommended model for whoever runs the next step** — a Claude model where that is the builder, a **Codex model** where it is independent QA (D-090);
+- **recommended intelligence level (Claude) or reasoning level (Codex)**;
+- **conversation instruction: CURRENT, NEW or SAME**, and which system it addresses;
+- one short reason for the model choice;
 - one short reason for the level choice;
 - one short reason for the conversation choice;
 - any files/docs that should be attached or referenced;
@@ -2040,6 +2044,8 @@ An independent Explorer/Retest role may not be cleared by the same reasoning con
 
 Beginning with Phase 5, a builder conversation may not self-approve its own phase.
 
+**Claude builds; Codex runs independent QA (owner decision D-090).** The rule was never "a different Claude conversation" — it was that the reviewer must not inherit the author's model of why the thing is correct, and two conversations of the same model reading the same documents reach the same reading of them. This does not overturn the independent-QA gate; it is how that gate is satisfied from here.
+
 When the builder believes implementation is complete:
 
 1. complete the normal automated/build/deploy gate;
@@ -2054,14 +2060,24 @@ The builder's QA handoff must include:
 - deployed Preview SHA and match status;
 - exact verification results;
 - known open and deferred items;
-- recommended Claude Code intelligence level for QA;
-- **NEW CONVERSATION REQUIRED FOR INDEPENDENCE**;
+- recommended **Codex model** for QA, and recommended **Codex reasoning level**, each with a one-sentence reason;
+- **NEW CODEX CONVERSATION REQUIRED FOR INDEPENDENCE** — and a retest after a builder repair goes to the **SAME** Codex conversation;
 - the exact report path `docs/qa/PHASE_XX_QA_HANDOFF.md`;
 - a complete ready-to-paste QA prompt.
 
 ### Independent QA role
 
-Independent QA always begins in a fresh conversation.
+Independent QA always begins in a fresh **Codex** conversation, and works in this order (D-090):
+
+1. **sealed cold owner-use** — open the deployed Preview at a normal Now and use it as the owner would, **before reading any repository document**, recording what it appears to claim;
+2. **claim-to-evidence semantic audit** — for each claim on screen, establish what it actually rests on;
+3. **semantic and product correctness** — does the app mean what it says, and is what it says worth saying;
+4. **targeted phase acceptance**, now that the meaning is understood;
+5. **targeted known-defect regression** for the surfaces this phase touched;
+6. **architecture inspection where warranted**, when a defect suggests the boundary is wrong rather than the line;
+7. **full-suite duplication only on a concrete trigger** — a builder claim that does not match observed behavior, a suspected false-green, or a change to the test harness itself.
+
+Green builder tests are evidence. Re-running a suite the builder already ran green, to watch it go green again, buys nothing and costs the attention steps 1 and 2 need. This makes QA leaner, not weaker: three rounds of Phase 6 were lost to things no suite was asked and a person found by using the app.
 
 It must:
 
@@ -2609,6 +2625,36 @@ Insights must not degrade into one-variable folklore.
   sufficient.
 - **A stated relationship requires a comparison group**, and reads as
   association rather than as cause.
+- **A learned claim is scoped to the evidence under it** (D-091). Seven
+  invariants, and each was a defect an independent cold-use audit reproduced on
+  the deployed build:
+  - **action identity** — a relationship is scoped to the semantic action, verb
+    _and_ object, never the verb alone; two objects are pooled only through an
+    explicit, named, reasoned registry entry; and a finding the app cannot name
+    is a finding it may not state;
+  - **negative exposure** — present, absent and unknown are three states, not
+    two; absence must be positively recorded; silence belongs to no comparison
+    group, is counted, and is reported; where no legitimate comparison group
+    exists the app abstains and says why;
+  - **context** — context must be able to change a learned relationship, and
+    where two supported contexts materially disagree the whole-record figure is
+    not printed at all and may not drive a contextual recommendation;
+  - **confounding** — the recorded classes that invalidate a before-and-after
+    are named, checked, and stated, and the app claims only the check it ran;
+  - **correctability** — every conclusion the app reaches on its own carries a
+    correction identity scoped as the conclusion is scoped, so the owner can
+    reject the interpretation without rewriting the history under it; a
+    rejection is a watershed, not a silence;
+  - **tracked state meaning** — a tracked dimension has a stable construct,
+    scale and direction, and separate dimensions are not collapsed into one
+    generic emotional quantity;
+  - **historical order** — anything presenting history as a sequence orders it
+    canonically, `occurredAt` then `recordedAt` then id, because a correction is
+    always about the same moment as the thing it corrects.
+- **Freshness language says which question it answers** (D-091). _How recently
+  has anything come in about this_ and _is what the app believes about this
+  still good_ are two questions about two different things; no surface answers
+  the second with the first, and neither concept absorbs the other.
 - One success is not proof.
 - Context similarity matters.
 - Counterexamples matter.
@@ -2626,6 +2672,8 @@ Insights must not degrade into one-variable folklore.
 - percentages/rates appear only when the underlying quantity, denominator, context, and evidence are defensible;
 - any displayed rate names the aspect it measures and does not collapse result/effect/comfort/follow-through;
 - any displayed figure makes clear **whether it is the system’s finding or the owner’s own judgment**, and a relationship is stated only against a comparison group and only as association (D-089);
+- a learned relationship is **scoped to the action, exposure, context and confounders its evidence actually covers**, is **correctable by the owner without deleting the history under it**, and is never printed under a name that would fit a different action (D-091);
+- no surface answers *is what the app believes still current* with *something came in recently* (D-091);
 - weak evidence produces an honest “not enough evidence yet” state rather than invented precision;
 - synthetic long histories prove that context and combinations can change a pattern's interpretation;
 - counterexamples and later contradictory evidence can weaken or reverse an earlier learned pattern;

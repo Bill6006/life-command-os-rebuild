@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { coreDomains, DOMAIN } from '../../src/domain/domains'
 import { LIFE_PAGES, pageForDomain, pageBySlug } from '../../src/features/life/domainPages'
+import { everyStandingWord, GROUP_ORDER, standingFor } from '../../src/features/life/standing'
+import type { CoverageStatus, DomainCoverage } from '../../src/intelligence/coverage'
 
 /**
  * D-078 — eleven domains, ten baseline pages, and the pair that shares one.
@@ -77,5 +79,68 @@ describe('D-078 — every registry domain is reachable from exactly one page', (
     const slugs = LIFE_PAGES.map((page) => page.slug)
     expect(new Set(slugs).size).toBe(slugs.length)
     for (const slug of slugs) expect(slug).toMatch(/^[a-z][a-z-]*[a-z]$/)
+  })
+})
+
+/**
+ * The word Life puts on a group of areas, and what that word is allowed to
+ * claim (DEF-0051).
+ *
+ * `CoverageStatus` answers *how recently has anything come in about this?* It
+ * does not answer *is what the app believes about it still good?* — and Life
+ * said "Fresh — up to date on what matters" directly above a belief carrying
+ * its own out-of-date line. Two different questions, one word, and no way for
+ * the owner to tell they were not contradicting each other.
+ *
+ * Asserted as a rule about the copy rather than as its exact sentences, so an
+ * improvement to the wording does not fail this: the invariant is that no
+ * status word claims currency of *belief*, and that "nothing here is out of
+ * date" is never asserted for a whole group.
+ */
+describe('the status word Life puts on a group of areas', () => {
+  const coverage = (status: CoverageStatus): DomainCoverage => ({
+    domain: DOMAIN.home,
+    label: 'Home',
+    status,
+    strength: 'moderate',
+    matters: true,
+    lastEvidenceAt: undefined,
+    daysSinceEvidence: undefined,
+    daysSinceHeard: undefined,
+    source: undefined,
+    concepts: [],
+    weakest: undefined,
+    refresh: 'needs-review',
+    summary: '',
+  })
+
+  it('never claims what the app believes is up to date', () => {
+    for (const status of ['current', 'quiet', 'stale', 'unheard'] as const) {
+      const standing = standingFor(coverage(status))
+      const said = `${standing.word} ${standing.note}`.toLowerCase()
+      expect(said, `${status}: "${said}"`).not.toMatch(/up to date/)
+      expect(said, `${status}: "${said}"`).not.toMatch(/nothing out of date/)
+      expect(said, `${status}: "${said}"`).not.toMatch(/nothing (?:here )?has gone out of date/)
+    }
+  })
+
+  it('gives every word it can produce a place in the order Life renders', () => {
+    /*
+     * Life renders `GROUP_ORDER` and discards any group whose word is not in
+     * it. That is right for a fixed layout and dangerous unchecked: renaming
+     * "Fresh" to "Recent" left the order untouched and three of the eleven
+     * areas silently stopped appearing on the screen — no error, no empty
+     * group, just gone.
+     */
+    for (const word of everyStandingWord()) {
+      expect(GROUP_ORDER, `"${word}" has no place in the order, so Life drops it`).toContain(word)
+    }
+  })
+
+  it('says what "current" actually means, which is that something came in', () => {
+    const standing = standingFor(coverage('current'))
+    expect(`${standing.word} ${standing.note}`.toLowerCase()).toMatch(/come in/)
+    // And it does not ask to be looked at, which is the other half of the word.
+    expect(standing.attention).toBe(false)
   })
 })

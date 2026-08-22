@@ -1,7 +1,8 @@
 # Independent QA protocol
 
-Owner decision D-077. This governs every remaining build phase from Phase 5 on,
-and sits above the canonical plan in the authority order (plan section 1).
+Owner decisions D-077 and D-090. This governs every remaining build phase from
+Phase 5 on, and sits above the canonical plan in the authority order (plan
+section 1).
 
 **A builder conversation may not approve its own phase.**
 
@@ -11,18 +12,35 @@ matching Preview SHA — and then failed a phone gate on five counts, three of
 them blocking. Not one came from a failing assertion. The builder had written
 the tests, so the tests asked the questions the builder already knew to ask.
 
+**Claude builds. Codex tests (D-090).**
+
+Phase 6 is why _that_. A Claude QA conversation checked section 51's gate item
+by item and passed it; the owner then read one sentence on Now and the pass had
+to be withdrawn. After the repair, an independent Codex cold-use audit found
+seven further blockers in a phase carrying 22 purpose-written regressions, all
+green. D-077's rule was never "a different Claude conversation" — it was that
+the reviewer must not inherit the author's model of why the thing is correct,
+and two conversations of the same model reading the same documents reach the
+same reading of them.
+
 ---
 
 ## The two roles
 
 **QA tests. The builder fixes.** They never share a conversation.
 
-|                         | Builder                                  | Independent QA                                 |
-| ----------------------- | ---------------------------------------- | ---------------------------------------------- |
-| Conversation            | continues across a phase and its repairs | a new one, started fresh                       |
-| May change product code | yes                                      | **no**                                         |
-| May write               | anything                                 | this report and QA-only evidence, nothing else |
-| Decides GREEN           | no                                       | no — it recommends; the owner decides          |
+|                         | Builder                                  | Independent QA                                  |
+| ----------------------- | ---------------------------------------- | ----------------------------------------------- |
+| Runs on                 | **Claude**                               | **Codex**                                       |
+| Conversation            | continues across a phase and its repairs | a new one for the phase; the same one to retest |
+| May change product code | yes                                      | **no**                                          |
+| May write               | anything                                 | this report and QA-only evidence, nothing else  |
+| Decides GREEN           | no                                       | no — it recommends; the owner decides           |
+
+The builder may not edit the QA report, and QA owns every update to it —
+including during a retest. `docs/qa/PHASE_XX_QA_HANDOFF.md` is in
+`.prettierignore` for exactly that reason: a format gate the only person
+forbidden to satisfy it would have to satisfy is not a gate.
 
 QA reviews the checkpoint rather than continuing the builder's reasoning. That
 is the whole value: a reviewer who inherits the author's model of why something
@@ -43,15 +61,39 @@ Android-style mobile pass where the phase touches a surface.
 
 In that **same response**, without being asked, it provides: phase status;
 checkpoint SHA; deployed Preview SHA and whether they match; exact verification
-counts; known, open and deferred items; the recommended Claude model and
-intelligence level for QA; the conversation instruction (**NEW**); the exact QA
-report path; and the complete copy/paste prompt for the QA conversation.
+counts; known, open and deferred items; the recommended **Codex model** and
+**Codex reasoning level** for QA; the conversation instruction (**NEW**); the
+exact QA report path; and the complete copy/paste prompt for the QA
+conversation.
 
 ## 2 — Independent QA runs
 
-In a **new** conversation. It reads the governing docs and the implementation
-fresh, inspects the phase's acceptance criteria, and tests the deployed
-checkpoint.
+In a **new Codex conversation**, in this order (D-090). The order is the point:
+everything Phase 6 lost three rounds to was visible in step 1 and invisible to
+every suite.
+
+1. **Sealed cold owner-use.** Open the deployed Preview at a normal Now and use
+   it as the owner, **before reading any repository document**. Write down what
+   it appears to claim.
+2. **Claim-to-evidence semantic audit.** For each claim on screen, find what it
+   actually rests on. Every Phase 6 defect across three rounds was a claim
+   printed wider than its evidence.
+3. **Semantic and product correctness.** Does the app mean what it says, and is
+   what it says worth saying?
+4. **Targeted phase acceptance**, now that the meaning is understood.
+5. **Targeted known-defect regression** for the surfaces this phase touched.
+6. **Architecture inspection where warranted** — where a defect suggests the
+   boundary is wrong rather than the line.
+7. **Full-suite duplication only on a concrete trigger**: a builder claim that
+   does not match observed behaviour, a suspected false-green, or a change to
+   the test harness itself.
+
+**Green builder tests are evidence.** Re-running a suite the builder already ran
+green, to watch it go green again, buys nothing and costs the attention steps 1
+and 2 need. This makes QA leaner, not weaker.
+
+It reads the governing docs and the implementation fresh, inspects the phase's
+acceptance criteria, and tests the deployed checkpoint.
 
 It uses a real Android-style Playwright context — touch, a mobile user agent, a
 realistic device pixel ratio, mobile scrolling and interaction — not a narrow
@@ -95,9 +137,11 @@ response as the report, QA provides:
 - the QA-tested product SHA;
 - the QA-report commit SHA, if the report was committed;
 - the exact QA report path;
-- the recommended Claude **model** for the next action, with a one-sentence
-  reason;
-- the recommended **intelligence level**, with a one-sentence reason;
+- the recommended **model** for the next action, with a one-sentence reason —
+  a **Claude** model where the next step is the builder's, a **Codex** model
+  where it is QA's;
+- the recommended **intelligence level** (Claude) or **reasoning level**
+  (Codex), with a one-sentence reason;
 - the **conversation** instruction (which conversation the next prompt goes
   to), with a one-sentence reason;
 - the **complete ready-to-paste next prompt**.
@@ -194,14 +238,16 @@ copy/paste prompt.
 
 ## Conversation rule
 
-- Implementing or repairing the **same unresolved phase** → CURRENT builder
+- Implementing or repairing the **same unresolved phase** → CURRENT **Claude**
+  builder conversation.
+- Independent QA → **NEW Codex** conversation.
+- QA retest after a builder repair → the **same Codex** conversation that ran
+  the original test.
+- A genuinely new phase after GREEN → normally a NEW Claude builder
   conversation.
-- Independent QA → **NEW** conversation.
-- QA retest after a builder repair → the **same** QA conversation that ran the
-  original test.
-- A genuinely new phase after GREEN → normally a NEW builder conversation.
 
-Recommend CURRENT or NEW explicitly at every handoff. Never assume it forever.
+Recommend CURRENT, NEW or SAME explicitly at every handoff, and say which system
+it is addressed to. Never assume it forever.
 
 ## Intelligence level rule
 
@@ -212,18 +258,22 @@ Recommend the **lowest level appropriate to the work**, not Max by default.
 - **Max** — difficult cross-system semantics, learning and inference
   mathematics, privacy architecture, migration architecture, or especially
   ambiguous root-cause-heavy defects.
-- **Independent QA** — High by default; Max when the phase or a discovered
-  defect genuinely needs deeper architectural reasoning.
+- **Independent QA (Codex)** — a middle reasoning level by default. QA's hard
+  work is reading a screen as a person and tracing a claim to its evidence,
+  which is judgement rather than depth of search. Reach for the highest level
+  only when a discovered defect genuinely needs architectural reasoning, and say
+  why. Do not mechanically recommend the top of the range.
 
 The recommendation stays **outside** the copy/paste prompt so the owner can
 switch levels before sending it.
 
 ## Model recommendation rule
 
-Owner decision D-080. Every handoff also names **which Claude model** the next
-step should run on — a third recommendation, alongside intelligence level and
+Owner decisions D-080 and D-090. Every handoff also names **which model** the
+next step should run on — a third recommendation, alongside level and
 conversation, each with its own one-sentence reason, all stated outside the
-copy/paste prompt.
+copy/paste prompt. A builder handoff names a **Claude** model; a QA handoff
+names a **Codex** model.
 
 Choose the **lowest model/effort combination that does not materially risk
 quality**. Do not default to the strongest available model or to Max effort.
@@ -236,9 +286,12 @@ quality**. Do not default to the strongest available model or to Max effort.
   migration architecture, unusually ambiguous root-cause analysis, or
   demanding adversarial reasoning.
 - **A cheaper/lower option** — genuinely safe, mechanical, local work.
-- If Anthropic renames or replaces a model, recommend the nearest current
-  equivalent and say that is what happened rather than naming a model that no
-  longer exists.
+- **For Codex QA**, the same rule in Codex's own range: pick the model that can
+  read a screen critically and hold the phase's semantics, not automatically the
+  largest one. Name the model and the reasoning level separately.
+- If a model is renamed or replaced, recommend the nearest current equivalent
+  and say that is what happened rather than naming a model that no longer
+  exists.
 
 Model and intelligence level are independent choices. A Sonnet-class model at
 High and an Opus-class model at High are different recommendations; state
@@ -261,3 +314,9 @@ explicit deferrals and the repository paths it needs.
 Do **not** tell it what the builder believes is correct, which behaviours are
 intentional, or what conclusion is expected. A reviewer handed the author's
 answer key stops being independent.
+
+And do not front-load the governing documents. Step 2's first move is cold use
+of the running app; a reviewer who reads D-089 before opening Now already knows
+what the walk card is _supposed_ to mean, and will read the screen as confirming
+it. The prompt gives paths, not conclusions, and says plainly that the reading
+comes after the using.
