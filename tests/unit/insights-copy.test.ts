@@ -5,6 +5,7 @@ import { ACTION_VERBS } from '../../src/domain/recommendation'
 import {
   everyPatternHeadline,
   MEASURED_ASPECTS,
+  measuresSentenceFor,
   MIN_FOR_A_RATE,
   patternNameFor,
   type MeasuredAspect,
@@ -126,10 +127,56 @@ describe('the sentence a card leads with', () => {
   })
 
   it('always names the subject and never reaches for a pronoun', () => {
+    /*
+     * Containment rather than a prefix, since D-089. Three of the four aspects
+     * are tallies of the owner's own judgment and now say so — "You usually say
+     * clearing the kitchen makes a difference" — which moves the subject into
+     * the middle of the sentence. The rule being protected was never that the
+     * subject comes first; it is that the sentence names it and reaches for no
+     * pronoun instead.
+     */
     for (const { sentence } of headlines) {
-      expect(sentence.startsWith(SUBJECT), `"${sentence}" loses its subject`).toBe(true)
-      expect(orphansIn(sentence.slice(SUBJECT.length)), `"${sentence}"`).toEqual([])
+      expect(
+        sentence.toLowerCase().includes(SUBJECT.toLowerCase()),
+        `"${sentence}" loses its subject`,
+      ).toBe(true)
+      const withoutSubject = sentence.toLowerCase().split(SUBJECT.toLowerCase()).join(' ')
+      expect(orphansIn(withoutSubject), `"${sentence}"`).toEqual([])
     }
+  })
+
+  it('says whose judgment a figure is, on every aspect the owner grades', () => {
+    /*
+     * QA-A1, in the copy layer. "How often clearing the kitchen made a
+     * difference afterwards — 67% — 8 of 12" asserts an observed fact about the
+     * world over a count of the occasions the owner *said* so. Section 51's
+     * percentage rule did not catch it: it requires a figure to name the
+     * quantity it measures, not to name who inferred it.
+     *
+     * Follow-through is the one exception and it is deliberate — whether a move
+     * could be done at all is read from what he did, not from anything he was
+     * asked to assess — so it is asserted as an exception rather than skipped.
+     */
+    const GRADED: readonly MeasuredAspect[] = ['downstream-effect', 'direct-result', 'comfort']
+    const owned = /\byou\b/i
+
+    for (const { aspect, sentence } of headlines) {
+      const isGraded = GRADED.includes(aspect)
+      expect(
+        owned.test(sentence),
+        isGraded
+          ? `"${sentence}" reads as an observed fact over a tally of his own answers`
+          : `"${sentence}" claims he judged something he did not`,
+      ).toBe(isGraded)
+    }
+
+    for (const aspect of GRADED) {
+      expect(
+        measuresSentenceFor(aspect, SUBJECT),
+        `the figure for ${aspect} does not say whose judgment it is`,
+      ).toMatch(owned)
+    }
+    expect(measuresSentenceFor('follow-through', SUBJECT)).not.toMatch(owned)
   })
 
   it('never claims one aspect in another one’s words', () => {

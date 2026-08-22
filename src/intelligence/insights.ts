@@ -17,6 +17,7 @@ import {
 } from '../domain/time'
 import type { Decision } from './engine'
 import { describeDays } from './coverage'
+import type { ObservedAssociation } from './association'
 import { beliefKey, comparableEpisodes, describeEvidenceMix, type EvidenceRef } from './learning'
 import type { Episode } from './lifecycle'
 import {
@@ -224,6 +225,15 @@ export interface PatternEvidence {
    * block underneath it.
    */
   readonly includedTitle: string | undefined
+  /**
+   * What to call the second list, when "left out" is not what it is.
+   *
+   * An association card puts the occasions *without* the move in this slot, and
+   * they are the whole reason its figure means anything — the opposite of left
+   * out. Same mislabelling as `counted` and `includedTitle` before it
+   * (DEF-0038, DEF-0044), on the third block down.
+   */
+  readonly excludedTitle: string | undefined
   /** Occasions deliberately left out, each saying why. */
   readonly excluded: readonly EvidenceLine[]
   readonly strongerIn: string | undefined
@@ -236,6 +246,8 @@ export interface PatternEvidence {
 }
 
 export type InsightKind =
+  /** What the record shows has followed a move, against occasions without it. */
+  | 'state-association'
   | 'stable-strength'
   | 'repeated-friction'
   | 'move-effectiveness'
@@ -249,6 +261,8 @@ export type InsightKind =
 
 /** Ordinary words for the kind. No taxonomy language on the card. */
 const EYEBROW: Record<InsightKind, string> = {
+  // Not "works for you" — that is the one this card must never be mistaken for.
+  'state-association': 'What tends to follow',
   'stable-strength': 'Works for you',
   'repeated-friction': 'Keeps getting in the way',
   'move-effectiveness': 'What actually happens',
@@ -479,18 +493,38 @@ function tallyFor(aspect: MeasuredAspect, episodes: readonly Episode[]): Tally {
   return { aspect, hit, of, against, records }
 }
 
-/** What each aspect's number measures, said in full beside every figure. */
+/**
+ * What each aspect's number measures, said in full beside every figure —
+ * **including who did the judging** (D-089).
+ *
+ * QA-A1: *"how often clearing the kitchen made a difference afterwards — 67% —
+ * 8 of 12"* asserts an observed fact about the world. The eight are a count of
+ * the occasions the owner **said** it made a difference. Both halves were
+ * honest and the sentence they formed was not, and section 51's rule did not
+ * catch it because the rule requires a figure to name the quantity it measures
+ * and does not require it to name who inferred it.
+ *
+ * So three of the four now say "you said" out loud, because three of the four
+ * are tallies of his own judgment. Follow-through is the exception and is not
+ * an oversight: whether a move could be done at all is read from what he
+ * *did* — a start, a completion, an inability — not from anything he was asked
+ * to assess.
+ */
+export function measuresSentenceFor(aspect: MeasuredAspect, subject: string): string {
+  return measuresSentence(aspect, subject)
+}
+
 function measuresSentence(aspect: MeasuredAspect, subject: string): string {
   const it = lowerFirst(subject)
   switch (aspect) {
     case 'follow-through':
       return `how often ${it} could actually be done when it came up`
     case 'direct-result':
-      return `how often ${it} got all the way there`
+      return `how often you said ${it} got all the way there`
     case 'downstream-effect':
-      return `how often ${it} made a difference afterwards`
+      return `how often you said ${it} made a difference afterwards`
     case 'comfort':
-      return `how often ${it} felt easy`
+      return `how often you said ${it} felt easy`
   }
 }
 
@@ -872,6 +906,7 @@ function evidenceFor(
     counterexamples: [...counterexamples.values()],
     included: episodes.map((episode) => lineFor(episode, describeEpisodeOutcome(episode))),
     includedTitle: undefined,
+    excludedTitle: undefined,
     excluded: extras.excluded ?? [],
     strongerIn: extras.strongerIn ?? worked.strongerIn,
     weakerIn: extras.weakerIn ?? worked.weakerIn,
@@ -992,20 +1027,33 @@ function headlineFor(subject: string, rate: MeasuredRate): string {
   const share = rate.percent ?? 0
   const every = rate.hit === rate.of
   switch (rate.aspect) {
+    /*
+     * "You have said" rather than "it has", on both aspects the owner grades.
+     *
+     * QA-A1's clearest single line. The card is a summary of his own answers,
+     * and a headline that drops him out of the sentence turns a report of what
+     * he thinks into a finding about the world. It reads slightly longer and it
+     * is the difference between honest and not.
+     */
     case 'downstream-effect':
-      if (every) return `${subject} has made a difference every time.`
-      if (share >= 60) return `${subject} usually makes a difference afterwards.`
-      if (share >= 35) return `${subject} makes a difference about half the time.`
-      return `${subject} has not made much difference.`
+      if (every) return `You have said ${lowerFirst(subject)} made a difference every time.`
+      if (share >= 60) return `You usually say ${lowerFirst(subject)} makes a difference.`
+      if (share >= 35)
+        return `You say ${lowerFirst(subject)} makes a difference about half the time.`
+      return `You have not often said ${lowerFirst(subject)} made much difference.`
     case 'direct-result':
-      if (every) return `${subject} has got all the way there every time.`
-      if (share >= 60) return `${subject} usually gets all the way there.`
-      if (share >= 35) return `${subject} gets all the way there about half the time.`
-      return `${subject} rarely gets all the way there.`
+      if (every) return `You have said ${lowerFirst(subject)} got all the way there every time.`
+      if (share >= 60) return `You usually say ${lowerFirst(subject)} gets all the way there.`
+      if (share >= 35)
+        return `You say ${lowerFirst(subject)} gets all the way there about half the time.`
+      return `You rarely say ${lowerFirst(subject)} gets all the way there.`
     case 'comfort':
-      if (share >= 75) return `${subject} has felt easy nearly every time.`
-      if (share >= 40) return `${subject} feels easy about as often as not.`
-      return `${subject} has felt like hard work more often than not.`
+      // How something felt is his to report and nobody else's, so this one is
+      // an owner statement by nature rather than by relabelling. It still says
+      // so, because the card sits beside two that had to be corrected.
+      if (share >= 75) return `You have found ${lowerFirst(subject)} easy nearly every time.`
+      if (share >= 40) return `You find ${lowerFirst(subject)} easy about as often as not.`
+      return `You have found ${lowerFirst(subject)} hard work more often than not.`
     case 'follow-through':
       // No back-reference to the subject, even though the subject opens the
       // sentence. G-001's rule is cheap to keep and expensive to reintroduce.
@@ -1077,6 +1125,7 @@ function patternCard(
         reasoning: [
           `Counted over every occasion ${lowerFirst(subject)} has come up, oldest first.`,
           'Each figure is about one thing only — how far it got, what it was worth afterwards, whether it could be done at all, or how it felt. They are never added together.',
+          'These are counts of what you said, not of what the app observed. Whether one thing actually follows another is a separate question, and the app answers it from readings rather than from your judgment.',
         ],
       }),
       belief: beliefKey('effect', verb),
@@ -1258,6 +1307,133 @@ function staleBeliefCard(
 // Coverage, trajectory and season — readings of the record rather than beliefs
 // ---------------------------------------------------------------------------
 
+/**
+ * What the record shows has followed a move (D-089).
+ *
+ * The only card in this file built from readings the app took rather than from
+ * judgments the owner supplied, and the only one permitted to state a
+ * relationship at all. Three rules shape every word of it.
+ *
+ * **It never says cause.** "Has usually been higher afterwards" is a statement
+ * about the record. "Improves your energy" is a claim about the world that a
+ * comparison of two proportions cannot support, in either direction — which is
+ * D-066 generalized: a reading that is lower afterwards is a lower reading, not
+ * harm, and there is no wording here that could make it one.
+ *
+ * **It always shows both sides.** The occasions without the move are the whole
+ * reason the figure means anything, so they are in the headline rather than
+ * buried in the evidence. A figure built only from the evenings that included
+ * a walk describes those evenings.
+ *
+ * **It says nothing when either side is thin**, and the withheld sentence names
+ * which side. That is also the guard against selectively recorded state: if
+ * readings only ever get entered on the evenings that went well, the occasions
+ * without the move never accumulate a pair and no finding is produced.
+ */
+function associationCard(found: ObservedAssociation, situation: Situation): Built | undefined {
+  const episodes = situation.learning.episodes.filter(
+    (episode) => episode.semantics.target.verb === found.verb,
+  )
+  const subject = patternName(found.verb, episodes, situation)
+  const reading = lowerFirst(found.label)
+
+  if (found.withheld !== undefined) return undefined
+
+  /*
+   * The object's own name where it resolves — "a walk", not "getting out for a
+   * walk".
+   *
+   * This sentence has to say "after X than without one", and the gerund phrase
+   * the pattern cards lead with does not survive that shape: "after getting out
+   * for a walk than without one" is not something a person would say. The
+   * fallback keeps the pattern name rather than reaching for a pronoun (D-018).
+   */
+  const first = episodes[0]
+  const thing =
+    first === undefined
+      ? lowerFirst(subject)
+      : (situation.entities.labelFor(first.semantics.target.object) ?? lowerFirst(subject))
+
+  const withPart = `${found.roseWith} of ${found.with.length}`
+  const withoutPart = `${found.roseWithout} of ${found.without.length}`
+
+  const headline =
+    found.direction === 'higher'
+      ? `${reading} has more often been higher after ${thing} than without one.`
+      : found.direction === 'lower'
+        ? `${reading} has more often been lower after ${thing} than without one.`
+        : `${reading} moves about the same whether or not ${thing} happens.`
+
+  return {
+    rank: 95,
+    insight: {
+      id: `association:${found.verb}`,
+      kind: 'state-association',
+      eyebrow: EYEBROW['state-association'],
+      domain: domainOf(episodes),
+      headline: capitalise(headline),
+      detail: `Higher afterwards on ${withPart} occasions with ${thing}, and ${withoutPart} without.`,
+      /*
+       * No confidence word, for the same reason a trajectory and a coverage gap
+       * carry none: this reports what the record contains rather than a
+       * conclusion drawn from it. "Fairly consistent" over a comparison would
+       * attach to the relationship, which is precisely the claim this card is
+       * arranged not to make. How much there is, is said in `counted`.
+       */
+      confidence: undefined,
+      evidence: {
+        comparable: found.with.length + found.without.length,
+        window: found.window,
+        counted: `${found.with.length} occasions with ${thing} and ${found.without.length} without${
+          found.window === undefined
+            ? '.'
+            : `, between ${describeDay(found.window.from)} and ${describeDay(found.window.to)}.`
+        }`,
+        /*
+         * No `MeasuredRate` here, and that is deliberate rather than an
+         * omission. The four measured aspects are all tallies of the owner's
+         * own judgments about an action; this is neither an aspect nor a
+         * judgment, and rendering it through the same component would put it in
+         * the same column as the thing it exists to be distinguished from.
+         */
+        rates: [],
+        counterexamples: [],
+        included: [...found.with]
+          .sort((a, b) => b.at - a.at)
+          .map((pair) => ({
+            record: pair.records[0] ?? (found.concept as unknown as RecordId),
+            when: pair.dayId,
+            text: `${describeDay(pair.dayId)} — ${reading} went ${pair.rose ? 'up' : 'down or stayed'} after ${thing}`,
+          })),
+        includedTitle: 'Occasions with it',
+        excludedTitle: 'Occasions without it',
+        excluded: [...found.without]
+          .sort((a, b) => b.at - a.at)
+          .map((pair) => ({
+            record: pair.records[0] ?? (found.concept as unknown as RecordId),
+            when: pair.dayId,
+            text: `${describeDay(pair.dayId)} — ${reading} went ${pair.rose ? 'up' : 'down or stayed'}, without ${thing}`,
+          })),
+        strongerIn: undefined,
+        weakerIn: undefined,
+        trend: undefined,
+        mix: undefined,
+        reasoning: [
+          `Both sides come from the same rule: two readings of ${reading} close enough together to be about the same stretch of the day, sorted by whether ${thing} happened in between.`,
+          found.confounded === 0
+            ? 'No occasion had to be left out for something else happening in between.'
+            : `${found.confounded} ${found.confounded === 1 ? 'occasion was' : 'occasions were'} left out because something else happened in between, which would have made them evidence about neither.`,
+          'This says what has followed what. It is not a claim that one brought the other about, and a lower reading afterwards is a lower reading rather than a sign of something going wrong.',
+          'It can only compare occasions where a reading exists on both sides, so it describes the record rather than every evening.',
+        ],
+      },
+      // Nothing to disagree with: this is a count of readings the owner gave,
+      // not a conclusion the app drew about what a move is worth.
+      belief: undefined,
+    },
+  }
+}
+
 function coverageCards(situation: Situation): readonly Built[] {
   /*
    * Never the private area, of the app's own accord.
@@ -1305,6 +1481,7 @@ function coverageCards(situation: Situation): readonly Built[] {
     included: lines,
     includedTitle: 'What is overdue here',
     excluded: [],
+    excludedTitle: undefined,
     strongerIn: undefined,
     weakerIn: undefined,
     trend: undefined,
@@ -1399,10 +1576,35 @@ function numericValue(value: FactValue): number | undefined {
   }
 }
 
-function unitOf(value: FactValue): string {
-  if (value.type === 'number' && value.unit !== undefined) return ` ${value.unit}`
-  if (value.type === 'duration') return ' min'
-  return ''
+/**
+ * How to print a reading of this concept in the terms it was given in.
+ *
+ * `numericValue` turns a scale into a ratio so two readings can be compared —
+ * 4-of-5 and 8-of-10 are the same reading. That is right for the arithmetic and
+ * wrong for the screen: once state dimensions became trackable (D-089), the
+ * trajectory card started reading **"Current energy: steady around 0.5"**, which
+ * is a number the owner has never seen and could not act on. He answered
+ * "Enough" and the app showed him a ratio.
+ *
+ * So the scale's own top travels with the series, and the reading is rendered
+ * back onto it.
+ */
+interface ReadingScale {
+  readonly of: number | undefined
+  readonly unit: string
+}
+
+function scaleOf(value: FactValue): ReadingScale {
+  if (value.type === 'scale') return { of: value.of, unit: '' }
+  if (value.type === 'number' && value.unit !== undefined)
+    return { of: undefined, unit: ` ${value.unit}` }
+  if (value.type === 'duration') return { of: undefined, unit: ' min' }
+  return { of: undefined, unit: '' }
+}
+
+function describeReading(value: number, scale: ReadingScale): string {
+  if (scale.of === undefined) return `${Math.round(value * 10) / 10}${scale.unit}`
+  return `${Math.round(value * scale.of * 10) / 10} of ${scale.of}`
 }
 
 /**
@@ -1416,14 +1618,24 @@ function unitOf(value: FactValue): string {
 function trajectoryCards(situation: Situation): readonly Built[] {
   const byConcept = new Map<
     ConceptId,
-    { readings: Reading[]; unit: string; label: string; spanNeeded: number }
+    { readings: Reading[]; scale: ReadingScale; label: string; spanNeeded: number }
   >()
 
   for (const record of situation.view.history.effective) {
     if (!bearsConcept(record)) continue
     if (record.occurredAt > situation.at) continue
     const definition = situation.concepts.definitionFor(record.concept)
-    if (definition.standing !== true) continue
+    /*
+     * `tracked`, not `standing` — D-089.
+     *
+     * This gated on `standing`, and `standing` is false for every dimension the
+     * owner reports about how he is right now, deliberately and for a good
+     * reason of its own (D-061). The effect was that energy, soreness, mood,
+     * social energy and sleep quality could never appear here: the app
+     * collected them, used them to decide which past evenings resembled
+     * tonight, and never once reported what they had done over time.
+     */
+    if (definition.tracked !== true) continue
     if (definition.privacy === 'private') continue
     const value = numericValue(record.value)
     if (value === undefined) continue
@@ -1438,7 +1650,7 @@ function trajectoryCards(situation: Situation): readonly Built[] {
     if (held === undefined) {
       byConcept.set(record.concept, {
         readings: [reading],
-        unit: unitOf(record.value),
+        scale: scaleOf(record.value),
         label: definition.label,
         spanNeeded: spanNeededFor(definition.freshness),
       })
@@ -1467,7 +1679,7 @@ function trajectoryCards(situation: Situation): readonly Built[] {
     const after = mean(later)
     const shift = before === 0 ? 0 : (after - before) / Math.abs(before)
 
-    const round = (value: number): string => String(Math.round(value * 10) / 10)
+    const round = (value: number): string => describeReading(value, held.scale)
     const direction: 'up' | 'down' | 'steady' =
       Math.abs(shift) < TRAJECTORY_SHIFT ? 'steady' : after > before ? 'up' : 'down'
 
@@ -1481,8 +1693,8 @@ function trajectoryCards(situation: Situation): readonly Built[] {
      */
     const headline =
       direction === 'steady'
-        ? `${held.label}: steady around ${round(after)}${held.unit}.`
-        : `${held.label}: about ${round(after)}${held.unit} lately, against ${round(before)}${held.unit} earlier.`
+        ? `${held.label}: steady around ${round(after)}.`
+        : `${held.label}: about ${round(after)} lately, against ${round(before)} earlier.`
 
     out.push({
       rank: 30 + Math.min(10, ordered.length),
@@ -1513,17 +1725,18 @@ function trajectoryCards(situation: Situation): readonly Built[] {
           included: ordered.map((reading) => ({
             record: reading.record,
             when: reading.dayId,
-            text: `${describeDay(reading.dayId)} — ${round(reading.value)}${held.unit}`,
+            text: `${describeDay(reading.dayId)} — ${round(reading.value)}`,
           })),
           includedTitle: 'Every reading',
           excluded: [],
+          excludedTitle: undefined,
           strongerIn: undefined,
           weakerIn: undefined,
-          trend: `${round(before)}${held.unit} across the first ${earlier.length}, ${round(after)}${held.unit} across the last ${later.length}.`,
+          trend: `${round(before)} across the first ${earlier.length}, ${round(after)} across the last ${later.length}.`,
           mix: undefined,
           reasoning: [
             'Every reading of this in the record, oldest first, split in half by date.',
-            'This says what the numbers did. It does not say what caused them.',
+            'This says what the numbers did. It is not a statement about why.',
           ],
         },
         belief: undefined,
@@ -1587,6 +1800,7 @@ function lifeSeasonCards(situation: Situation): readonly Built[] {
           included: [],
           includedTitle: undefined,
           excluded: [],
+          excludedTitle: undefined,
           strongerIn: undefined,
           weakerIn: undefined,
           trend: undefined,
@@ -1642,6 +1856,30 @@ export function insightsFor(situation: Situation): InsightsReport {
   const built: Built[] = []
   const gathering: GatheringLine[] = []
 
+  /*
+   * Observed relationships first, and they lead the screen.
+   *
+   * First in the code because a belief card about the same move defers to one
+   * (below), and first on the screen because they are the only cards here that
+   * are not a summary of the owner's own opinions. Ranked at 95 — above a
+   * contradiction, the highest a belief card reaches.
+   */
+  const observed = new Set<ActionVerb>()
+  for (const found of situation.learning.associations) {
+    const card = associationCard(found, situation)
+    if (card !== undefined) {
+      built.push(card)
+      observed.add(found.verb)
+      continue
+    }
+    if (found.withheld === undefined) continue
+    gathering.push({
+      subject: `${capitalise(lowerFirst(found.label))} after ${lowerFirst(patternNameFor(found.verb, undefined))}`,
+      occasions: found.with.length + found.without.length,
+      needs: found.withheld,
+    })
+  }
+
   for (const [verb, episodes] of episodesByVerb(situation)) {
     /*
      * **One card per move about what happens when you do it.**
@@ -1673,10 +1911,29 @@ export function insightsFor(situation: Situation): InsightsReport {
       patternCard(verb, episodes, situation)
 
     /*
+     * And an observed relationship displaces the belief card entirely (D-089).
+     *
+     * The same rule, extended to the card D-089 added, for the same reason:
+     * "You usually say getting out for a walk makes a difference" directly
+     * under "Current energy has more often been higher after a walk than
+     * without it" is two statements about one move — one a summary of his
+     * opinions, one a finding — with nothing on the screen saying which is
+     * which. That is the confusion this whole repair exists to remove, so
+     * printing both would reintroduce it in a new place.
+     *
+     * Repeated friction survives, because it answers a question the
+     * association does not: whether the move happens at all.
+     */
+    const kept =
+      observed.has(verb) && whatHappens?.insight.kind !== 'repeated-friction'
+        ? undefined
+        : whatHappens
+
+    /*
      * The age of the evidence is a different question from what it says, so
      * this one stands beside whichever card won rather than competing with it.
      */
-    const cards = [whatHappens, staleBeliefCard(verb, episodes, situation)].filter(
+    const cards = [kept, staleBeliefCard(verb, episodes, situation)].filter(
       (card): card is Built => card !== undefined,
     )
 
@@ -1684,6 +1941,10 @@ export function insightsFor(situation: Situation): InsightsReport {
       built.push(...cards)
       continue
     }
+
+    // Nothing said, and nothing to say — but only report that where the app is
+    // not already reporting something observed about the same move.
+    if (observed.has(verb)) continue
 
     const subject = patternName(verb, episodes, situation)
     const best = ratesFor(episodes, subject).reduce<number>(
@@ -1775,6 +2036,17 @@ export interface DecisionEvidence {
    */
   readonly concluded: string | undefined
   /**
+   * What the record shows has followed this move, against occasions without it.
+   *
+   * The single most meaningful thing the panel can carry on a history the owner
+   * never graded, and it was missing from the first version of this repair:
+   * Insights led with the finding, the ranking used it, and the one surface
+   * that exists to answer *why this?* said nothing about it. Absent where the
+   * move has no observable dimension, or where the comparison has too little on
+   * either side to stand on.
+   */
+  readonly observed: string | undefined
+  /**
    * There is deliberately no runner-up here.
    *
    * Now prints "Chosen over" and "Why this one" directly under the decision,
@@ -1823,6 +2095,28 @@ function describeSplitForTonight(split: FoundSplit, context: DecisionContext): s
     `${strong.rate.hit} of ${strong.rate.of} ${strong.label}, ` +
     `${weak.rate.hit} of ${weak.rate.of} ${weak.label}.${tonight}`
   )
+}
+
+/**
+ * The observed relationship in one line, for a panel that has room for one.
+ *
+ * Both counts, because the comparison group is the whole reason the first
+ * number means anything, and no causal word anywhere — the same discipline the
+ * card follows, in a shorter sentence.
+ */
+function describeAssociationBriefly(
+  found: ObservedAssociation | undefined,
+  subject: string,
+): string | undefined {
+  if (found === undefined || found.withheld !== undefined) return undefined
+  const reading = lowerFirst(found.label)
+  const shape =
+    found.direction === 'higher'
+      ? 'more often been higher afterwards'
+      : found.direction === 'lower'
+        ? 'more often been lower afterwards'
+        : 'moved about the same either way'
+  return `Across the whole record, ${reading} has ${shape} with ${lowerFirst(subject)} than without: ${found.roseWith} of ${found.with.length} against ${found.roseWithout} of ${found.without.length}.`
 }
 
 export function evidenceForDecision(decision: Decision): DecisionEvidence | undefined {
@@ -1905,6 +2199,7 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
     counterexamples: [...counterexamples.values()],
     confidence: confidenceFrom(alike.length, counterexamples.size),
     concluded: explanation.restsOn,
+    observed: describeAssociationBriefly(situation.learning.associationFor(verb), name),
     context: split === undefined ? undefined : describeSplitForTonight(split, situation.context),
     mix: describeEvidenceMix(evidenceRefsFor(alike)),
     /*

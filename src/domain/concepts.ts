@@ -95,6 +95,28 @@ export interface ConceptDefinition {
    */
   readonly standing?: boolean
   /**
+   * Whether a run of readings of this is worth reporting over time (D-089).
+   *
+   * **A different question from `standing`, and conflating them was QA-A1's
+   * smaller half.** `standing` asks whether a gap here is a gap in the app's
+   * understanding of an area, and it is deliberately false for everything the
+   * owner reports about right now: energy goes stale in six hours by design,
+   * and counting it as coverage would put every domain permanently in the red
+   * (D-061). Insights' trajectory card then gated on `standing`, which meant
+   * **no subjective dimension the owner can actually report could produce a
+   * trend or be learned from at all** — they were collected, spent as
+   * similarity features, and never read as evidence.
+   *
+   * So this asks the question that was actually being asked: is a series of
+   * these readings a thing worth showing the owner, and worth comparing before
+   * and after an action? True for how he feels and how he slept; false for how
+   * much time he has tonight, which is noise with a timestamp.
+   *
+   * The default is false, for the same reason `standing`'s is: a new concept
+   * earns a place on a surface by somebody deciding it should have one.
+   */
+  readonly tracked?: boolean
+  /**
    * Where this concept disagrees with the default table, and why.
    *
    * Absent means the defaults are fine. An entry here is a claim about this
@@ -146,6 +168,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     domain: DOMAIN.sleep,
     freshness: localDays(1),
     standing: true,
+    tracked: true,
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
     /*
@@ -170,6 +193,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     label: 'Sleep quality last night',
     domain: DOMAIN.sleep,
     freshness: localDays(1),
+    tracked: true,
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
     // How a night *felt* is the owner's to report. A watch scoring it is
@@ -182,6 +206,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     label: 'Current energy',
     domain: DOMAIN.health,
     freshness: elapsedHours(6),
+    tracked: true,
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
     // "A model's inference about how he feels should generally be weaker than
@@ -194,6 +219,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     label: 'Soreness or pain',
     domain: DOMAIN.health,
     freshness: elapsedHours(12),
+    tracked: true,
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
     // Nothing measures whether a shoulder hurts.
@@ -249,6 +275,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     domain: DOMAIN.money,
     freshness: localDays(30),
     standing: true,
+    tracked: true,
     privacy: 'sensitive',
     ask: { materialToDecision: false, askWhenStale: true },
     // The second case D-059 names: a financial record of a balance beats an
@@ -261,6 +288,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     label: 'Social energy',
     domain: DOMAIN.social,
     freshness: elapsedHours(8),
+    tracked: true,
     privacy: 'normal',
     ask: { materialToDecision: false, askWhenStale: true },
     reliability: { owner: 1, device: 0.35, derived: 0.3, model: 0.2 },
@@ -305,6 +333,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     label: 'Current emotional state',
     domain: DOMAIN.emotional,
     freshness: elapsedHours(8),
+    tracked: true,
     privacy: 'sensitive',
     ask: { materialToDecision: true, askWhenStale: true },
     reliability: { owner: 1, device: 0.4, derived: 0.35, model: 0.2 },

@@ -280,7 +280,16 @@ test.describe('the evidence behind the move on Now', () => {
     const panel = page.getByTestId('now-evidence')
     await expect(panel).toBeVisible()
     await expect(panel).toContainText('12 evenings in the record are like tonight.')
-    await expect(panel).toContainText('How often clearing the kitchen made a difference afterwards')
+    /*
+     * "you said", since D-089 and QA-A1. This panel used to read "how often
+     * clearing the kitchen made a difference afterwards — 67% — 8 of 12", which
+     * asserts an observed fact about the world over a count of the occasions
+     * the owner said so. The eight are his judgments and the sentence now says
+     * whose they are.
+     */
+    await expect(panel).toContainText(
+      'How often you said clearing the kitchen made a difference afterwards',
+    )
     expect(move).toContain('the kitchen')
   })
 
@@ -318,6 +327,29 @@ test.describe('the evidence behind the move on Now', () => {
     await expect(panel).toContainText('Nothing in the record is much like tonight yet.')
     await expect(panel.locator('.ev-rate')).toHaveCount(0)
     await expect(panel).toContainText('Too early to say')
+  })
+
+  test('asks for a reading rather than a grade of what a move did', async ({ page }) => {
+    /*
+     * QA-A1, on the surface it was found on. The app used to ask "How much did
+     * a walk do for you?" and offer four grades of difference — the causal
+     * question the system exists to answer, handed to the owner. It now asks
+     * for the reading and works the rest out.
+     */
+    await loadInQa(page, 'Two months of readings, and nothing graded')
+    await go(page, 'Insights')
+    await expect(page.getByTestId('insight-state-association')).toBeVisible()
+    await expect(
+      page.getByText(/has more often been higher after a walk than without one/),
+    ).toBeVisible()
+
+    // And the finding reaches the panel behind the decision, not only Insights.
+    await go(page, 'Now')
+    await page.getByTestId('now-see-evidence').click()
+    const panel = page.getByTestId('now-evidence')
+    await expect(panel).toContainText('What the record shows follows it')
+    await expect(panel).toContainText('11 of 14 against 4 of 14')
+    expect(await panel.innerText()).not.toMatch(/\bcauses?\b|\bimproves?\b/i)
   })
 
   test('closes again, and the entry point is a real touch target', async ({ page }) => {

@@ -367,13 +367,25 @@ describe('the guide can still ask nothing at all', () => {
     expect(step(busy).because).toContain('that is enough')
   })
 
-  it('falls back to the ordinary question when the better one will not be asked', () => {
+  it('asks for the reading itself when the guide will not ask for it', () => {
     /*
-     * The swap has to be a swap. A reading given before the window opened is
-     * about a different night, so it cannot settle this result — and it does
-     * leave the concept currently known, so the guide will not ask for it
-     * again. Holding the effect question back on top of that would mean no
-     * reading, no question, and a window closing with nothing collected.
+     * **Rewritten under D-089, and the old expectation is worth recording.**
+     *
+     * This test was written for D-069's swap: a sleep reading given at 04:30 is
+     * about the night before the window opens, so it cannot settle this result,
+     * and it does leave the concept currently known — so the guide will not ask
+     * again. Holding the effect question back on top of that meant no reading,
+     * no question, and a window closing with nothing collected. The fix at the
+     * time was to let the effect question stand, and this asserted that.
+     *
+     * D-089 removes that fallback, because the effect question is the one the
+     * app may no longer ask: "how much did winding down do for your sleep?"
+     * asks the owner for the causal relationship the system exists to work out.
+     * The window still must not close empty, so the honest replacement is the
+     * one this now asserts — the app asks for **the reading**, which is a fact
+     * only he holds and which the app can then compare for itself.
+     *
+     * Same gap, same window, one fewer thing asked of him.
      */
     const session = morningAfterAnEarlyNight('04:30')
     const view = reopened(session.snapshot, session.now, session.zone)
@@ -383,7 +395,12 @@ describe('the guide can still ask nothing at all', () => {
       CONCEPT.sleepHours,
     )
     const due = nextDueOutcome(view, moment, decide(view, moment).situation.entities)
-    expect(due?.questions[0]?.aspect, 'the ordinary question should stand').toBe('effect')
+    expect(due, 'the window must not close with nothing asked').toBeDefined()
+    expect(due?.reading, 'it should ask for the reading').toBe(CONCEPT.sleepHours)
+    expect(
+      due?.questions.some((question) => question.aspect === 'effect'),
+      'and never for the owner’s own grade of what the move did',
+    ).toBe(false)
   })
 
   it('never asks for a reading a result is waiting on more than once', () => {

@@ -46,6 +46,8 @@ export type DimensionName =
   | 'follow-through'
   /** Whether doing it reaches what it was for (DEF-0020). Penalty-only. */
   | 'direct-result'
+  /** What has actually followed it, against occasions without it (D-089). */
+  | 'observed-change'
   | 'uncertainty'
   | 'protection'
   /** Only present under the hybrid architecture. Bounded by `MAX_NUDGE`. */
@@ -88,6 +90,7 @@ const WEIGHTS: Record<DimensionName, number> = {
   'owner-preference': 1,
   'follow-through': 0.9,
   'direct-result': 0.9,
+  'observed-change': 0.9,
   uncertainty: 0.6,
   protection: 0.9,
   advisor: 0.5,
@@ -299,6 +302,52 @@ function nextDayEffect(candidate: Candidate, situation: Situation): Dimension {
       learned.moved === 'tomorrow' ? learned : undefined,
       'tomorrow',
     ),
+  }
+}
+
+/**
+ * What the record shows has followed this move, against occasions without it.
+ *
+ * The only dimension in this file built from readings the app took rather than
+ * from a judgment somebody supplied (D-089). It exists because removing the
+ * causal question from the owner would otherwise have made the engine *worse*
+ * at deciding: `immediate-benefit` would keep whatever the old attributions
+ * taught it and learn nothing further.
+ *
+ * **It abstains rather than defaulting.** No observable state dimension, or not
+ * enough of either group to compare, returns zero at zero weight — which is
+ * D-048's rule, and is exactly what `uncertainty` does for a move whose unknowns
+ * it has no business judging (D-072). A dimension with nothing to say must cost
+ * nothing to have, or every move without evidence is quietly marked down for
+ * not having any.
+ *
+ * The value is the *gap* between the two proportions, not either one of them.
+ * How often energy rose after a walk is a fact about the owner's evenings; how
+ * much more often it rose after a walk than without one is the only part that
+ * is about walks.
+ */
+function observedChange(candidate: Candidate, situation: Situation): Dimension {
+  const verb = candidate.semantics.target.verb
+  const found = situation.learning.associationFor(verb)
+
+  if (found === undefined || found.withheld !== undefined) {
+    return {
+      name: 'observed-change',
+      value: 0,
+      weight: 0,
+      note:
+        found === undefined
+          ? 'nothing observable is expected to move, so nothing is claimed'
+          : 'not enough on both sides to compare yet',
+    }
+  }
+
+  return {
+    name: 'observed-change',
+    // Already −1…1: the difference of two proportions.
+    value: found.gap,
+    weight: WEIGHTS['observed-change'],
+    note: `${found.label.toLowerCase()} rose ${found.roseWith} of ${found.with.length} times with it, ${found.roseWithout} of ${found.without.length} without`,
   }
 }
 
@@ -692,6 +741,7 @@ export function evaluateCandidate(candidate: Candidate, situation: Situation): E
     ownerPreference(candidate, situation),
     followThrough(candidate, situation),
     directResult(candidate, situation),
+    observedChange(candidate, situation),
     uncertainty(candidate, situation),
     protection(situation, profile),
   ]

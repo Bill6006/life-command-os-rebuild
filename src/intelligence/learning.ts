@@ -17,6 +17,7 @@ import {
 } from '../domain/time'
 import type { ConceptId } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
+import { observedAssociations, type ObservedAssociation } from './association'
 import { WANTED_SOMETHING_ELSE, type Episode } from './lifecycle'
 import { profileFor } from './moves'
 import { comfortFrictionOf, effectValueOf, resultValueOf } from './outcomes'
@@ -334,6 +335,22 @@ export interface LearnedAppetite {
 
 export interface LearningIndex {
   readonly episodes: readonly Episode[]
+  /**
+   * What has actually followed a move, observed rather than asked for (D-089).
+   *
+   * Deliberately beside the five learned beliefs rather than folded into
+   * `effect`. Every belief above is built from a judgment somebody supplied;
+   * this is built from readings the app took, against a comparison group of
+   * occasions without the move. Merging them would put an opinion and an
+   * observation back into one number, which is QA-A1 and, one level down,
+   * DEF-0020.
+   *
+   * Undefined for a verb whose profile declares no observable state dimension
+   * — most of them — and present-but-withheld when the record has not enough
+   * of either group to compare.
+   */
+  associationFor(verb: ActionVerb): ObservedAssociation | undefined
+  readonly associations: readonly ObservedAssociation[]
   effectFor(verb: ActionVerb, context: DecisionContext): LearnedEffect
   resultFor(verb: ActionVerb, context: DecisionContext): LearnedResult
   followThroughFor(verb: ActionVerb, context: DecisionContext): LearnedFollowThrough
@@ -535,6 +552,18 @@ export function buildLearning(
 ): LearningIndex {
   const rejected = rejectedBeliefs(view)
   const cache = new Map<string, unknown>()
+
+  /*
+   * Worked out once per history rather than per candidate: it reads every
+   * reading of a concept in the record, and the ranking asks about it for each
+   * of a handful of moves on every decision.
+   */
+  const associations = observedAssociations(episodes, view, {
+    now: moment.now,
+    zone: moment.zone,
+    concepts: moment.concepts,
+  })
+  const associationsByVerb = new Map(associations.map((entry) => [entry.verb, entry]))
 
   const memo = <T>(key: string, build: () => T): T => {
     const held = cache.get(key)
@@ -826,7 +855,17 @@ export function buildLearning(
       }
     })
 
-  return { episodes, effectFor, resultFor, followThroughFor, appetiteFor, frictionFor, rejected }
+  return {
+    episodes,
+    effectFor,
+    resultFor,
+    followThroughFor,
+    appetiteFor,
+    frictionFor,
+    rejected,
+    associations,
+    associationFor: (verb) => associationsByVerb.get(verb),
+  }
 }
 
 /** An empty index, for a history with nothing in it. */

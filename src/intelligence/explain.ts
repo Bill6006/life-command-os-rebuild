@@ -361,6 +361,10 @@ export const AHEAD_BECAUSE: Record<DimensionName, string> = {
   'owner-preference': 'Closer to what you have said you want.',
   'follow-through': 'More likely to actually happen.',
   'direct-result': 'More likely to get all the way there.',
+  // Association, never cause (D-089). "What usually follows" is a
+  // statement about the record; "what it does for you" would be a claim
+  // about the world that a comparison of two proportions cannot support.
+  'observed-change': 'What usually follows it looks better in the record.',
   uncertainty: 'Better supported by what is known.',
   protection: 'The other one would borrow against tomorrow.',
   advisor: 'What you wrote about the last attempt points here.',

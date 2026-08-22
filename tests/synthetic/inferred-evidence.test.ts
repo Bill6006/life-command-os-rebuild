@@ -652,6 +652,41 @@ describe('deriving twice changes nothing', () => {
   })
 })
 
+/**
+ * The scope of `deriveOutcomes`, kept deliberately — QA-A1, and read this
+ * before widening it.
+ *
+ * Independent QA named these three assertions as tests that "pin the limitation
+ * in place as intended behaviour", and warned that they "would fail if a
+ * builder extended observe-first derivation to the walk". Both statements are
+ * accurate. They are kept anyway, and the reasoning is the point.
+ *
+ * `deriveOutcomes` does not observe a relationship. It reads a sleep reading
+ * and maps it onto the four-level **effect** scale against a fixed baseline —
+ * eight hours becomes "a real difference" with no comparison to nights without
+ * the wind-down. That is an attribution, made by the app instead of by the
+ * owner, and D-064 acknowledges it only as a reliability discount. QA's own
+ * question 9 says so: *"under the new principle the reading and the attribution
+ * must be separate objects rather than one discounted number."*
+ *
+ * So the correct repair for QA-A1 was never to extend this to more verbs. That
+ * would have produced more attributions, wearing the app's name instead of the
+ * owner's, over more concepts. It was to stop *needing* the attribution:
+ * `association.ts` compares readings before and after against a comparison
+ * group and states no causal claim at all, and `MoveProfile.affects` is what
+ * carries the pairing for it.
+ *
+ * The three sleep verbs keep this path because D-064's four owner conditions
+ * still hold and because history must keep its meaning (D-089's fifth
+ * consequence). What changed around them is that the effect *question* is no
+ * longer asked for any verb declaring `affects` — which is all three of these —
+ * so on a morning with no reading the window now closes with nothing collected
+ * rather than falling back to asking him to grade it.
+ *
+ * These assertions therefore still describe correct behaviour. They stop being
+ * correct the day somebody decides a fourth concept should be mapped onto the
+ * effect scale, and on that day this comment is the argument to answer.
+ */
 describe('it only fires where the move profile says it can', () => {
   it('covers exactly the moves whose outcome is a morning reading of sleep', () => {
     const eligible = Object.entries(MOVE_PROFILES)
@@ -675,6 +710,21 @@ describe('it only fires where the move profile says it can', () => {
       expect(profileFor(verb).measures).toBe(CONCEPT.sleepHours)
       expect(profileFor(verb).outcome.when).toBe('next-morning')
     }
+  })
+
+  it('is not the mechanism that learns a relationship, and says which is', () => {
+    /*
+     * The positive half of the caption above, asserted rather than trusted.
+     * Every verb this derives an attribution for also declares an observable
+     * dimension, so the observe-first path reaches them by the route that makes
+     * no causal claim — and the one verb QA raised, the walk, is reached by
+     * that route and by nothing else.
+     */
+    for (const verb of ['protect-sleep', 'recover', 'wind-down'] as const) {
+      expect(profileFor(verb).affects).toBe(CONCEPT.sleepHours)
+    }
+    expect(profileFor('move').affects).toBe(CONCEPT.energy)
+    expect(profileFor('move').outcome.when, 'and it is judged in the same block').toBe('same-block')
   })
 
   it('derives nothing about a move judged in the same block', () => {

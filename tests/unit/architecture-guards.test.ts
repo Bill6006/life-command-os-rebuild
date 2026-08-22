@@ -664,6 +664,112 @@ describe('development scaffolding does not become the product — DEF-0007', () 
   })
 })
 
+describe('the owner is not asked to do the app’s thinking — D-089', () => {
+  /*
+   * QA-A1, held structurally.
+   *
+   * The app asked *"How much did a walk do for you?"* and offered four grades
+   * of difference. That is the causal question the system exists to answer,
+   * handed to the owner, and his answers were then counted back to him as
+   * percentages labelled as observed facts. Three properties keep it gone, and
+   * none of them is a promise:
+   *
+   * 1. a move that declares an observable state dimension has the grading
+   *    question taken off it, in one place, for every such verb;
+   * 2. the only thing that may state a relationship is `association.ts`, and it
+   *    needs a comparison group to do so;
+   * 3. nothing that states a relationship can reach the words that would turn
+   *    it into a cause.
+   */
+
+  it('takes the grading question off every move that declares a state dimension', () => {
+    // One rule, in one place, keyed on the profile — not a list of verbs, which
+    // is how the walk ended up being the only one anybody noticed.
+    const code = readCode(join(ROOT, 'src/intelligence/outcomes.ts'))
+    expect(code).toContain('.affects !== undefined')
+    expect(code, 'the suppression is not keyed on the profile').toMatch(
+      /observes[\s\S]{0,400}question\.aspect === 'effect'/,
+    )
+  })
+
+  it('lets only the association module state a relationship', () => {
+    /*
+     * `association.ts` is the one file that compares what happened with an
+     * action against what happened without one. Nothing else may grow a second
+     * one: two answers to "does this follow that" is QA-A1's shape returning,
+     * and the second would not have a comparison group.
+     */
+    const offenders: string[] = []
+    for (const file of [...INTELLIGENCE, ...FEATURES]) {
+      const path = repoPath(file)
+      if (path === 'src/intelligence/association.ts') continue
+      const code = readCode(file)
+      // The comparison group is what makes a relationship claim honest, so the
+      // words for it are the marker.
+      if (/withoutAction|comparisonGroup|controlGroup/.test(code)) {
+        offenders.push(`${path} builds a comparison group of its own`)
+      }
+    }
+    expect(offenders, 'one place compares, and it needs both sides').toEqual([])
+  })
+
+  it('cannot say one thing caused another, on any surface', () => {
+    /*
+     * D-089's second consequence, and D-066 generalized. An observed
+     * relationship is association: "has more often been higher afterwards", not
+     * "improves". A worse reading afterwards is a worse reading, not harm.
+     *
+     * Swept over the owner surfaces and over the module that words the finding,
+     * because the sentence is composed in the kernel and rendered in the shell
+     * and either end could reintroduce it.
+     */
+    const causal = [
+      /\bcauses?\b/i,
+      /\bcaused\b/i,
+      /\bcausing\b/i,
+      /\bimproves?\b/i,
+      /\bboosts?\b/i,
+      /\bmakes? you (?:feel|more|less)\b/i,
+    ]
+
+    const offenders: string[] = []
+    const sources = [
+      ...FEATURES.filter((file) => !repoPath(file).startsWith('src/features/qa/')),
+      join(ROOT, 'src/intelligence/association.ts'),
+      join(ROOT, 'src/intelligence/insights.ts'),
+    ]
+
+    for (const file of sources) {
+      const path = repoPath(file)
+      // Only string literals: a comment explaining what the file may not say is
+      // exactly the thing a naive scan would trip on.
+      for (const match of readCode(file).matchAll(/'([^']{4,})'|`([^`]{4,})`/g)) {
+        const text = match[1] ?? match[2] ?? ''
+        for (const pattern of causal) {
+          if (pattern.test(text)) offenders.push(`${path}: “${text.slice(0, 80)}”`)
+        }
+      }
+    }
+
+    expect(offenders, 'association is not causation, in either direction').toEqual([])
+  })
+
+  it('keeps the owner’s judgments and the app’s findings in different types', () => {
+    /*
+     * The fifth consequence: history keeps its meaning. Every existing
+     * `aspect: 'effect'` record is an owner attribution and stays one, so the
+     * observed quantity had to be additive rather than a redefinition.
+     * `ObservedAssociation` is not an `OutcomeRecord` and `association.ts`
+     * writes no record at all — it reads.
+     */
+    const code = readCode(join(ROOT, 'src/intelligence/association.ts'))
+    expect(code, 'the association module writes records').not.toMatch(
+      /createRecordFactory|build\(\s*'outcome'/,
+    )
+    expect(code, "and it must not touch the owner's own aspect").not.toMatch(/aspect:/)
+  })
+})
+
 describe('a figure never reaches a screen without what it measures', () => {
   /*
    * Canonical plan section 51, and DEF-0020's second form.

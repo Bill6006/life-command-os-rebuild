@@ -214,25 +214,41 @@ describe('every card, read as a person would', () => {
 
   it('says what a count is of, in the units that card actually counts', () => {
     /*
-     * The other half of the same finding. One shared panel rendering "N
-     * comparable occasions" put that sentence over a run of nightly sleep
-     * readings — where nothing was compared and the twelve were readings — and
-     * over a standing arrangement, where the count was of entries predating it.
-     * A card that cannot say honestly what its number is of does not get to
-     * show one.
+     * The other half of DEF-0038. One shared panel rendering "N comparable
+     * occasions" put that sentence over a run of nightly sleep readings — where
+     * nothing was compared and the twelve were readings — and over a standing
+     * arrangement, where the count was of entries predating it. A card that
+     * cannot say honestly what its number is of does not get to show one.
+     *
+     * Three shapes now, since D-089 added a card that counts two groups rather
+     * than one: a belief card counts comparable occasions, an observed
+     * relationship counts occasions with the move and occasions without it, and
+     * a card that reports a reading counts nothing.
      */
     for (const { scenario, insight } of cards) {
       const counted = insight.evidence.counted
+      const where = `${scenario} / ${insight.kind}`
+
+      if (insight.kind === 'state-association') {
+        // Two groups, both named. What it must never say is one number.
+        expect(counted, `${where}: no count on a comparison`).toBeDefined()
+        expect(counted, where).toMatch(/occasions with /)
+        expect(counted, where).toMatch(/ without/)
+        // Never the belief cards' units: nothing here was compared to tonight.
+        expect(counted, where).not.toMatch(/comparable/)
+        continue
+      }
+
       const compares =
         insight.kind !== 'trajectory' &&
         insight.kind !== 'life-season' &&
         insight.kind !== 'coverage-gap'
       expect(
         counted !== undefined,
-        `${scenario} / ${insight.kind}: ${compares ? 'no count' : 'a count of nothing comparable'}`,
+        `${where}: ${compares ? 'no count' : 'a count of nothing comparable'}`,
       ).toBe(compares)
       if (counted === undefined) continue
-      expect(counted).toMatch(/comparable occasions?/)
+      expect(counted, where).toMatch(/comparable occasions?/)
     }
   })
 
@@ -241,7 +257,11 @@ describe('every card, read as a person would', () => {
       const reading =
         insight.kind === 'coverage-gap' ||
         insight.kind === 'trajectory' ||
-        insight.kind === 'life-season'
+        insight.kind === 'life-season' ||
+        // D-089: an observed relationship reports what the record contains. A
+        // confidence word would attach to the relationship, which is the one
+        // claim that card is arranged not to make.
+        insight.kind === 'state-association'
       expect(
         insight.confidence === undefined,
         `${scenario} / ${insight.kind}: confidence word on a ${reading ? 'reading' : 'belief'}`,
@@ -287,6 +307,79 @@ describe('every card, read as a person would', () => {
 // ---------------------------------------------------------------------------
 // The gate's own claims
 // ---------------------------------------------------------------------------
+
+describe('what the app has read, rather than what it was told', () => {
+  const situation = loadScenario('observed-evenings').decision().situation
+  const found = insightsFor(situation).insights
+
+  it('reports a trend over a dimension the owner reports about himself', () => {
+    /*
+     * The trajectory card gated on `standing`, and `standing` is false for
+     * every such dimension by design (D-061) — so energy, soreness, mood,
+     * social energy and sleep quality were collected, spent on deciding which
+     * evenings resembled tonight, and never once reported. QA-A1's smaller
+     * half, and nothing asserted it either way until this.
+     */
+    const trends = found.filter((insight) => insight.kind === 'trajectory')
+    expect(trends.length, 'no state dimension produced a trend').toBeGreaterThan(0)
+    expect(
+      trends.some((insight) => /current energy/i.test(insight.headline)),
+      'energy is still locked out of being read over time',
+    ).toBe(true)
+  })
+
+  it('prints a reading in the terms the owner gave it in', () => {
+    /*
+     * Found by reading the card. A scale is compared as a ratio so 4-of-5 and
+     * 8-of-10 are the same reading — right for the arithmetic, and it reached
+     * the screen as **"Current energy: steady around 0.5"**. He answered
+     * "Enough"; the app showed him a number he has never seen.
+     */
+    const trends = found.filter((insight) => insight.kind === 'trajectory')
+    for (const insight of trends) {
+      const lines = [insight.headline, insight.evidence.trend ?? '']
+      for (const line of lines) {
+        if (line === '') continue
+        expect(/\b0\.\d+\b/.test(line), `"${line}" prints a ratio where a reading belongs`).toBe(
+          false,
+        )
+      }
+      if (/energy|soreness/i.test(insight.headline)) {
+        expect(insight.headline, insight.headline).toMatch(/\d of \d/)
+      }
+    }
+  })
+
+  it('makes one statement per move, counting the observed one', () => {
+    /*
+     * D-086 extended to the card D-089 added. "You usually say getting out for
+     * a walk makes a difference" directly under "Current energy has more often
+     * been higher after a walk than without one" is two statements about one
+     * move — one a summary of his opinions, one a finding — with nothing saying
+     * which is which. Grouping by belief key could not see it, because the
+     * observed card deliberately carries no belief.
+     */
+    for (const scenario of SCENARIOS) {
+      const each = insightsFor(loadScenario(scenario.id).decision().situation).insights
+      const perVerb = new Map<string, string[]>()
+      for (const insight of each) {
+        const verb = /^(?:pattern|context|change|against|association):([a-z-]+)/.exec(insight.id)
+        if (verb === null) continue
+        const held = perVerb.get(verb[1] ?? '') ?? []
+        held.push(insight.kind)
+        perVerb.set(verb[1] ?? '', held)
+      }
+      for (const [verb, kinds] of perVerb) {
+        const both =
+          kinds.includes('state-association') &&
+          kinds.some((kind) => kind !== 'state-association' && kind !== 'repeated-friction')
+        expect(both, `${scenario.id}: two statements about ${verb} — ${kinds.join(', ')}`).toBe(
+          false,
+        )
+      }
+    }
+  })
+})
 
 describe('a long history, where context changes what a pattern means', () => {
   const situation = loadScenario('long-run').decision().situation

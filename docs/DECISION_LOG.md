@@ -2184,3 +2184,127 @@ record's detail unconditionally, so a record tagged with both `home` and
 history in the library has such a record, so nothing observable changes — but
 the rule is now the same one Timeline obeys rather than an accident of how the
 fixtures happen to be tagged.
+
+---
+
+## D-089 — Observe first: the system performs the causal inference, never the owner
+
+**Phase:** 6 (QA repair) · **Status:** Active — **owner decision, raised by the
+owner after Phase 6's first QA pass, and governing every phase from here**
+
+The app may ask the owner what happened and how he is. It may not ask him what
+an action _did_ for him. Working out whether one thing follows another is the
+thing the system exists to do, and asking him to do it is asking him to hand
+over the answer and then be shown it back as a finding.
+
+**The principle, in order of preference:**
+
+1. **observe first** — read what the ordinary record already contains;
+2. **infer cautiously** — and say the inference is one;
+3. **ask for a concrete fact** when one is needed and nothing supplies it;
+4. **ask for current subjective state** when that state is itself what matters —
+   how he feels is a fact only he holds, and asking for it is not the problem;
+5. **never ask the owner for the causal relationship the system exists to
+   learn.**
+
+### What this was found by
+
+QA-A1, raised by the owner from one sentence on Now: _"How much did a walk do
+for you?"_, answered **A real difference / Some difference / Not much /
+Backfired**.
+
+That question asks for the walk's contribution against an unstated
+counterfactual, and grades it. It is generated for nine of the fifteen action
+verbs — every one whose profile lists `effect`. The answer is stored as an
+`outcome` record with `aspect: 'effect'`, and `effectFor` in `learning.ts` has
+no other source: `gather` selects on the aspect and nothing else, by an explicit
+design note that says it "asks nothing about where the record came from". The
+observe-first path that does exist, `derived.ts`, is gated to three verbs and one
+concept.
+
+On "Nine months of evenings" — the history built to demonstrate section 51 —
+**forty-six of the forty-six figures Insights prints are tallies of the owner's
+own judgments**, and none is worked out from a reading. The flagship line reads
+_"How often clearing the kitchen made a difference afterwards — 67% — 8 of 12."_
+The label asserts an observed fact about the world; the denominator counts
+opinions. Both halves are honest and the sentence they form is not.
+
+### Five consequences, each binding
+
+**1. Who inferred it is part of what a figure means.** DEF-0020 separated four
+facts that had shared one carrier. It never asked _who supplies the effect_, and
+section 51's percentage rule requires a figure to name the quantity it measures
+without requiring it to name who performed the inference. **A figure built from
+the owner's judgments and a figure built from observed state may not render as
+the same kind of claim**, and no owner surface may present an aggregate of
+attributions in language that asserts an observed fact.
+
+**2. Association is never written as causation, in either direction.** A learned
+relationship reads _"on evenings like these, your energy an hour later has
+usually been higher than on evenings without a walk"_ and never _"walks improve
+your energy"_. This **generalizes D-066** rather than overturning it: D-066
+forbids inference concluding harm, and the rule is now that inference concludes
+no causal direction at all. A worse state after an action is a worse state.
+
+**3. A relationship claim requires a comparison group.** Comparable situations
+where the action did _not_ happen must be identifiable and counted. Without
+them a figure describes the evenings that happened to include a walk; it is not
+evidence about walks. This needs no new sensors — `energy` is already
+`materialToDecision: true, askWhenStale: true`, so readings on evenings without
+an action are already being collected.
+
+**4. Absence of evidence stays a first-class answer.** Missing before- or
+after-observations produce an honest "not enough to say", never a figure
+computed over whichever occasions happen to have both. G-009's rule, applied to
+a relationship.
+
+**5. History keeps its original meaning.** Every existing
+`aspect: 'effect'` record is an owner attribution and stays exactly that — not
+relabelled, not reinterpreted as an observation, not deleted. This is the
+owner's explicit instruction and it is why the observed quantity is **additive**
+rather than a redefinition of `effect`.
+
+### What this does not say
+
+It does not say stop asking how he feels. Current state is a fact only he holds,
+and step 4 asks for it deliberately. What is removed is the demand that he
+supply the _relationship_ between an action and that state.
+
+It does not say the owner may never offer an opinion. Where a move has no
+observable state dimension the app could read, the attribution question is kept
+— and it is then labelled as his view wherever it is shown, rather than dressed
+as a measurement.
+
+It does not reopen Phase 1's canonical record layer, which is sound: records
+already carry a concept, a value and an `occurredAt`, and episodes already carry
+`shownAt`, `settledAt` and their context. The raw material for the join was
+always there. What was missing was the collection, the computation and the
+words.
+
+### Which decisions this touches
+
+- **D-066 — generalized, not overturned.** Its rule becomes the special case of
+  a broader one.
+- **D-054 — incomplete rather than wrong.** Its three aspects are all judgments
+  _about an action_; what was missing is a class that is not, and the
+  distinction between an owner attribution and a system finding.
+- **D-064 — revisited.** `effectStepForSleep` maps an absolute reading against a
+  fixed baseline with no comparison to nights without the wind-down, so it is
+  itself an attribution, acknowledged only as a reliability discount. Its four
+  owner conditions all still hold and none of them is reopened; what changes is
+  that the app stops _extending_ that shape to new concepts. The reading and the
+  relationship are separate objects from here.
+- **D-069 — generalized.** "Ask for the reading, not for the verdict" was
+  written for one concept judged the next morning. It is now the rule wherever a
+  move declares an observable state dimension.
+
+### Where this is enforced
+
+`docs/CANONICAL_REBUILD_PLAN.md` sections 20 and 51 state it directly, as
+owner-approved amendments under section 1. In code:
+`MoveProfile.affects` declares the state dimension a move is expected to move;
+`outcomes.ts` asks for that reading instead of the grade; `association.ts`
+computes the relationship against a comparison group and is the only thing
+allowed to state one; and `tests/unit/architecture-guards.test.ts` fails the
+build if an owner surface renders an attribution-derived figure in observed-fact
+language.

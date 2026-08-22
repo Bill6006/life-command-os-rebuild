@@ -240,7 +240,11 @@ function InsightCard({
             lines={evidence.included}
             limit={8}
           />
-          <EvidenceLines title="Left out" lines={evidence.excluded} />
+          <EvidenceLines
+            title={evidence.excludedTitle ?? 'Left out'}
+            lines={evidence.excluded}
+            limit={8}
+          />
 
           <EvidenceNote title="How this was arrived at">
             {evidence.reasoning.map((line) => (

@@ -27,6 +27,18 @@ This revision makes two focused product/workflow clarifications without changing
 
 **v1.2 addendum (D-082):** the independent-QA gate this revision added did not yet say, in the plan itself, that a QA handoff must carry the complete next prompt automatically on both PASS and FAIL. Phase 5's first QA run returned FAIL without one, and the owner had to ask for it separately. Section 43's QA report contract and defect loop now state the requirement directly. This is a completion of the QA gate already listed above, not a new workflow, so it does not warrant its own version number.
 
+**v1.2 addendum (D-089):** the plan said the app learns from "observed
+outcomes" (section 20) and said a percentage must name the quantity it measures
+(section 51). It never said **who supplies the judgment**. Phase 6's first QA
+pass passed section 51's gate as written and the owner then read one sentence —
+*"How much did a walk do for you?"* — and found the gap underneath it: nine of
+fifteen action verbs ask him to grade an action's causal contribution, and Phase
+6 renders tallies of those grades as percentages that read as measurements.
+Sections 20 and 51 below now state the observe-first principle directly. This
+closes a gap in what the plan asked for rather than changing the rebuild
+sequence, so it does not warrant its own version number, for the same reason
+D-082 and D-083 did not.
+
 **v1.2 addendum (D-083):** writing the complete next prompt into the governing MD (D-082, section 43) and then also pasting that same prompt into the chat response was solving one owner problem — never having to hunt for the next instruction — by recreating another: reading a long prompt twice. Section 43 now also requires a short, separate launcher at the end of any response that writes or updates `docs/NEXT_PROMPT.md` or a `docs/qa/PHASE_XX_QA_HANDOFF.md`, naming the model, intelligence level, conversation instruction, and a short copy/paste prompt that points at the exact file to read and execute rather than repeating it. This does not shorten what is written to either file; it does not warrant its own version number for the same reason D-082 did not.
 
 ## v1.1 change log
@@ -942,6 +954,44 @@ Track:
 - Same-block effects and next-day effects can differ.
 - Sleep/recovery actions may need next-morning evaluation.
 - Learned effects should be reversible when later evidence contradicts them.
+
+## Who supplies the judgment (owner decision D-089)
+
+Learning from “observed outcomes” means the **system** works out whether one
+thing followed another. It does not mean the owner is asked to work that out and
+the answer is then filed as an observation.
+
+In order of preference:
+
+1. **observe first** — read what the ordinary record already contains;
+2. **infer cautiously**, and say the inference is one;
+3. **ask for a concrete fact** when one is needed and nothing supplies it;
+4. **ask for current subjective state** when that state is itself what matters —
+   how the owner feels is a fact only he holds, and asking for it is wanted;
+5. **never ask the owner for the causal relationship the system exists to
+   learn.**
+
+Consequences:
+
+- **Who inferred a figure is part of what it means.** A figure built from the
+  owner’s own judgments and a figure built from observed state are different
+  kinds of claim and must not be rendered as the same one.
+- **Association is never written as causation, in either direction.** A worse
+  state after an action is a worse state, not harm. This generalizes the rule
+  that inference may not conclude harm.
+- **A relationship claim requires a comparison group** — comparable situations
+  where the action did not happen, identified and counted. Without one, a figure
+  describes the occasions that happened to include the action.
+- **Absence of evidence is a first-class answer.** Missing before- or
+  after-observations produce “not enough to say”, never a figure computed over
+  whichever occasions happen to have both.
+- **History keeps its original meaning.** Judgments the owner has already given
+  remain his judgments. A new observed quantity is added beside them; nothing is
+  relabelled, reinterpreted or deleted.
+
+Where a move has no observable state dimension the app could read, asking the
+owner for his own view of it remains legitimate — and it is then shown as his
+view rather than as a measurement.
 
 ---
 
@@ -2552,6 +2602,13 @@ Do not create a second analytics engine, a second recommendation brain, or a par
 
 Insights must not degrade into one-variable folklore.
 
+- **A figure must say who inferred it, not only what it measures** (D-089). A
+  tally of the owner’s own judgments about an action may not be worded as an
+  observed fact about the world. This sits beneath the percentage rule above
+  rather than replacing it: naming the quantity is necessary and is not
+  sufficient.
+- **A stated relationship requires a comparison group**, and reads as
+  association rather than as cause.
 - One success is not proof.
 - Context similarity matters.
 - Counterexamples matter.
@@ -2568,6 +2625,7 @@ Insights must not degrade into one-variable folklore.
 - a current recommendation can expose the meaningful evidence behind its choice without cluttering Now;
 - percentages/rates appear only when the underlying quantity, denominator, context, and evidence are defensible;
 - any displayed rate names the aspect it measures and does not collapse result/effect/comfort/follow-through;
+- any displayed figure makes clear **whether it is the system’s finding or the owner’s own judgment**, and a relationship is stated only against a comparison group and only as association (D-089);
 - weak evidence produces an honest “not enough evidence yet” state rather than invented precision;
 - synthetic long histories prove that context and combinations can change a pattern's interpretation;
 - counterexamples and later contradictory evidence can weaken or reverse an earlier learned pattern;

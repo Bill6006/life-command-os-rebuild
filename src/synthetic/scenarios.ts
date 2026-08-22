@@ -2140,6 +2140,253 @@ function aLongRun(): Scenario {
   }
 }
 
+// ---------------------------------------------------------------------------
+// D-089 — a relationship the app can observe, and a comparison group
+// ---------------------------------------------------------------------------
+
+/**
+ * Two months of evenings where the app took the readings itself.
+ *
+ * This is the history QA-A1 said the library did not have, and could not have
+ * had: on every other scenario, every figure Insights prints is a tally of
+ * something the owner was asked to judge. Nothing here asks him to judge
+ * anything. He answers *how much energy have you got left* — a fact only he
+ * holds — twice on an ordinary evening, and the app works out the rest.
+ *
+ * **Fourteen evenings with a walk and fourteen without**, built to the same
+ * shape: a reading around six, and another around half past eight. What differs
+ * is whether a walk was completed in between. On ten of the fourteen walk
+ * evenings the later reading is higher; on four of the fourteen without, it is.
+ * That is a real comparison and it is the only kind of thing this app may call
+ * a relationship — never *walking gives you energy*, only *energy has more
+ * often been higher afterwards than without it*.
+ *
+ * Three deliberate complications, because a history that only demonstrates the
+ * happy path proves the happy path:
+ *
+ * - **two evenings where something else also happened.** A walk *and* fifteen
+ *   minutes clearing the kitchen fall between the two readings, so neither
+ *   evening is evidence about walks and neither is a clean evening without one.
+ *   They are discarded, counted as discarded, and said out loud on the card.
+ * - **a run of soreness readings** that go up and down with no move between
+ *   them at all, so a second dimension exists that produces no finding — the
+ *   comparison group is everything and one dimension moving is not a pattern.
+ * - **not one `effect` answer anywhere in the file.** The engine has to learn
+ *   from this history without a single causal judgment, which is the case
+ *   whose absence let QA-A1 through.
+ */
+function observedEvenings(): Scenario {
+  const kit = createKit('GR', 'America/Denver', '2026-03-01T12:00:00Z')
+  const nextId = sequentialRecordIds('GRX')
+  const walk = entityRef('routine', 'a walk')
+  const kitchen = entityRef('place', 'the kitchen')
+  const now = kit.local('2026-05-02', '18:10')
+
+  const anEvening: DecisionContext = {
+    block: 'evening',
+    weekend: false,
+    strain: 'none',
+    childPresent: false,
+    usableMinutes: 60,
+  }
+
+  /** An energy reading, on the 0–5 scale the guide's own question writes. */
+  const energyAt = (day: string, time: string, step: number) =>
+    kit.record(
+      'observation',
+      { occurredAt: kit.local(day, time), domains: [DOMAIN.health] },
+      {
+        concept: CONCEPT.energy,
+        value: { type: 'scale', value: step, of: 5 },
+        method: 'self-report',
+      },
+    )
+
+  return {
+    id: 'observed-evenings',
+    title: 'Two months of readings, and nothing graded',
+    summary:
+      'Energy before and after, on fourteen evenings with a walk and fourteen without. No causal question anywhere.',
+    proves:
+      'D-089 — the app works out what follows an action, against a comparison group, without asking the owner to.',
+    zone: kit.zone,
+    now,
+    build() {
+      const place = kit.entity({
+        kind: 'place',
+        label: 'the kitchen',
+        domain: DOMAIN.home,
+        privacy: 'normal',
+      })
+
+      /*
+       * Evenings with a walk. `rose` says whether the later reading is higher —
+       * ten of the fourteen — and the pair is deliberately not always the same
+       * two steps, so nothing here turns on one arithmetic coincidence.
+       */
+      const withWalk: readonly (readonly [string, number, number])[] = [
+        ['2026-03-03', 2, 4],
+        ['2026-03-05', 2, 3],
+        ['2026-03-09', 3, 4],
+        ['2026-03-11', 1, 3],
+        ['2026-03-16', 2, 4],
+        ['2026-03-18', 3, 3],
+        ['2026-03-23', 2, 3],
+        ['2026-03-25', 1, 2],
+        ['2026-03-30', 3, 4],
+        ['2026-04-01', 2, 2],
+        ['2026-04-06', 2, 4],
+        ['2026-04-08', 3, 4],
+        ['2026-04-13', 2, 1],
+        ['2026-04-15', 2, 3],
+      ]
+
+      /*
+       * Evenings without one, on the same clock, from the same question. Four
+       * of fourteen higher — an ordinary evening drifts down, which is the
+       * whole point of having a comparison group rather than a figure.
+       */
+      const withoutWalk: readonly (readonly [string, number, number])[] = [
+        ['2026-03-04', 3, 2],
+        ['2026-03-06', 2, 2],
+        ['2026-03-10', 3, 3],
+        ['2026-03-12', 2, 1],
+        ['2026-03-17', 3, 4],
+        ['2026-03-19', 2, 2],
+        ['2026-03-24', 3, 2],
+        ['2026-03-26', 2, 3],
+        ['2026-03-31', 3, 3],
+        ['2026-04-02', 2, 1],
+        ['2026-04-07', 3, 4],
+        ['2026-04-09', 2, 2],
+        ['2026-04-14', 3, 2],
+        ['2026-04-16', 2, 3],
+      ]
+
+      /*
+       * Two evenings with a walk *and* something else in between. Neither is
+       * evidence about walks; neither is a clean evening without one. The app
+       * discards both and says so rather than absorbing them into whichever
+       * group would have been kinder.
+       */
+      const confounded: readonly (readonly [string, number, number])[] = [
+        ['2026-04-20', 2, 4],
+        ['2026-04-22', 2, 4],
+      ]
+
+      const readings = [...withWalk, ...withoutWalk, ...confounded].flatMap(
+        ([day, before, after]) => [energyAt(day, '18:00', before), energyAt(day, '20:30', after)],
+      )
+
+      // A second dimension that moves on its own, with no action anywhere near
+      // it. Nothing should be concluded from it.
+      const soreness = [
+        ['2026-03-07', 1],
+        ['2026-03-14', 3],
+        ['2026-03-21', 2],
+        ['2026-03-28', 3],
+        ['2026-04-04', 1],
+        ['2026-04-11', 2],
+        ['2026-04-18', 3],
+        ['2026-04-25', 1],
+      ].map(([day, step]) =>
+        kit.record(
+          'observation',
+          { occurredAt: kit.local(String(day), '19:00'), domains: [DOMAIN.health] },
+          {
+            concept: CONCEPT.soreness,
+            value: { type: 'scale', value: Number(step), of: 5 },
+            method: 'self-report',
+          },
+        ),
+      )
+
+      /*
+       * Tonight, so the history reaches a real decision rather than a shrug.
+       *
+       * Without a current reading the evening has nothing to go on and the
+       * ranking never runs — which would leave the observed relationship
+       * visible on Insights and invisible to the thing that decides, and the
+       * whole point of the dimension is that it reaches both.
+       */
+      const tonight = [
+        kit.record(
+          'observation',
+          { occurredAt: kit.local('2026-05-02', '17:50'), domains: [DOMAIN.health] },
+          {
+            concept: CONCEPT.energy,
+            value: { type: 'scale', value: 3, of: 5 },
+            method: 'self-report',
+          },
+        ),
+        kit.record(
+          'observation',
+          { occurredAt: kit.local('2026-05-02', '17:50'), domains: [DOMAIN.health] },
+          {
+            concept: CONCEPT.soreness,
+            value: { type: 'scale', value: 1, of: 5 },
+            method: 'self-report',
+          },
+        ),
+        kit.record(
+          'observation',
+          { occurredAt: kit.local('2026-05-02', '07:00'), domains: [DOMAIN.sleep] },
+          {
+            concept: CONCEPT.sleepHours,
+            value: { type: 'number', value: 7.5, unit: 'hours' },
+            method: 'self-report',
+          },
+        ),
+      ]
+
+      const time = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-05-02', '18:00'), domains: [DOMAIN.direction] },
+        {
+          concept: CONCEPT.usableTimeTonight,
+          value: { type: 'duration', minutes: 60 },
+          method: 'self-report',
+        },
+      )
+
+      const walks = pastEpisodeRecords(
+        kit,
+        [...withWalk, ...confounded].map(([day]) => ({
+          verb: 'move' as const,
+          object: walk,
+          domain: DOMAIN.health,
+          on: day,
+          at: '19:00',
+          context: anEvening,
+          ending: 'completed' as const,
+          // No effect answer. Nothing in this history grades anything.
+        })),
+        nextId,
+      )
+
+      const alsoCleared = pastEpisodeRecords(
+        kit,
+        confounded.map(([day]) => ({
+          verb: 'reset-space' as const,
+          object: kitchen,
+          domain: DOMAIN.home,
+          on: day,
+          at: '19:40',
+          context: anEvening,
+          ending: 'completed' as const,
+        })),
+        nextId,
+      )
+
+      return kit.document({
+        entities: [place],
+        records: [...readings, ...soreness, ...tonight, time, ...walks, ...alsoCleared],
+        exportedAt: now,
+      })
+    },
+  }
+}
+
 export const SCENARIOS: readonly Scenario[] = [
   subnettingStruggle(),
   sleepDeficitAgainstCareer(),
@@ -2158,6 +2405,7 @@ export const SCENARIOS: readonly Scenario[] = [
   growthEvidence(),
   careerGoneQuiet(),
   aLongRun(),
+  observedEvenings(),
 ]
 
 export function scenarioById(id: string): Scenario | undefined {

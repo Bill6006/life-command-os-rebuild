@@ -21,7 +21,12 @@ import {
   type OutcomeQuestion,
   type PendingOutcome,
 } from '../../intelligence/outcomes'
-import { answerRecord, type QuestionOption, type QuestionSpec } from '../../intelligence/questions'
+import {
+  answerRecord,
+  questionFor,
+  type QuestionOption,
+  type QuestionSpec,
+} from '../../intelligence/questions'
 import type { Situation } from '../../intelligence/situation'
 import { isPreview, isProduction } from '../../platform/buildInfo'
 import { hashForDestination } from '../../platform/routing'
@@ -270,7 +275,13 @@ export function NowScreen() {
         the owner scrolls with one thumb.
       */}
       {due === undefined ? null : (
-        <OutcomePanel pending={due} disabled={busy} onAnswer={answerOutcome} />
+        <OutcomePanel
+          pending={due}
+          situation={decision.situation}
+          disabled={busy}
+          onAnswer={answerOutcome}
+          onReading={answerGuide}
+        />
       )}
 
       {explanation === undefined ? (
@@ -409,13 +420,53 @@ function MoveActions({
  */
 function OutcomePanel({
   pending,
+  situation,
   disabled,
   onAnswer,
+  onReading,
 }: {
   pending: PendingOutcome
+  situation: Situation
   disabled: boolean
   onAnswer: (pending: PendingOutcome, question: OutcomeQuestion, answer: OutcomeAnswer) => void
+  onReading: (spec: QuestionSpec, option: QuestionOption) => void
 }) {
+  /*
+   * The reading comes first, and where there is one there is no grade (D-089).
+   *
+   * This used to ask "how much did a walk do for you?" and offer four levels of
+   * difference. That is the causal question the system exists to answer, handed
+   * to the owner — and his answer came back to him later as a percentage
+   * labelled as an observed fact. Where the app can read the state itself, it
+   * asks him for the reading and works the rest out.
+   *
+   * It is still one question. The count of things asked has not moved; what
+   * changed is which one, and who does the thinking.
+   */
+  const reading = pending.reading === undefined ? undefined : questionFor(pending.reading)
+  if (reading !== undefined) {
+    return (
+      <Panel title="Since then">
+        <p className="now-question" data-testid="now-reading">
+          {reading.prompt(situation)}
+        </p>
+        <div className="now-options">
+          {reading.options.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              className="now-option"
+              disabled={disabled}
+              onClick={() => onReading(reading, option)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </Panel>
+    )
+  }
+
   const question: OutcomeQuestion | undefined = pending.questions[0]
   if (question === undefined) return null
 
@@ -611,6 +662,16 @@ function EvidencePanel({
                 <EvidenceRate key={rate.aspect} rate={rate} />
               ))}
             </div>
+          )}
+
+          {evidence.observed === undefined ? null : (
+            <EvidenceNote title="What the record shows follows it">
+              <p>{evidence.observed}</p>
+              <p className="note">
+                Worked out from readings rather than from anything you were asked to judge. It says
+                what has followed what, not that one brought the other about.
+              </p>
+            </EvidenceNote>
           )}
 
           {evidence.context === undefined ? null : (

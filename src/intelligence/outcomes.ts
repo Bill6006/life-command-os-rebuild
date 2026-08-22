@@ -133,6 +133,20 @@ export interface PendingOutcome {
   readonly window: DueWindow
   /** The questions still unanswered, in the order they should be asked. */
   readonly questions: readonly OutcomeQuestion[]
+  /**
+   * A state reading the app wants instead of a judgment (D-089).
+   *
+   * When this is set, the surface asks the registry's own question for the
+   * concept — "how much energy have you got left?" — and writes an ordinary
+   * observation. It is not an outcome and it is not about the move: it is a
+   * reading of how the owner is, taken at a moment that happens to be after
+   * something. What the two readings mean together is the app's job to work
+   * out (`association.ts`), and asking him to do that instead is QA-A1.
+   *
+   * Never set at the same time as an effect question. A move that declares an
+   * observable state dimension is never graded by its owner.
+   */
+  readonly reading: ConceptId | undefined
 }
 
 /**
@@ -158,8 +172,10 @@ export function dueOutcomes(
       entities,
       readingAwaitedBy(episode, view, moment.zone) !== undefined,
     )
-    if (questions.length === 0) continue
-    out.push({ episode, window, questions })
+    const reading = stateReadingDueFor(episode, view, moment.zone)
+    // An episode with nothing to grade may still have a reading to take.
+    if (questions.length === 0 && reading === undefined) continue
+    out.push({ episode, window, questions, reading })
   }
 
   return out.sort((a, b) => a.window.earliest - b.window.earliest)
@@ -192,15 +208,13 @@ export function nextOutcomeDueAt(
     if (window === undefined) continue
     if (window.earliest <= moment.now) continue
     if (moment.now > window.latest) continue
-    if (
+    const wanted =
       unansweredQuestions(
         episode,
         entities,
         readingAwaitedBy(episode, view, moment.zone) !== undefined,
-      ).length === 0
-    ) {
-      continue
-    }
+      ).length > 0 || stateReadingDueFor(episode, view, moment.zone) !== undefined
+    if (!wanted) continue
     if (soonest === undefined || window.earliest < soonest) soonest = window.earliest
   }
 
@@ -573,6 +587,48 @@ export function readingAwaitedBy(
   return view.facts.get(measures)?.worthAsking === true ? measures : undefined
 }
 
+/**
+ * The state reading this episode's window wants, if the guide will not ask.
+ *
+ * The mirror of `readingAwaitedBy`, and between them they make sure exactly one
+ * thing is asked. `readingAwaitedBy` covers the case where the guide is going
+ * to ask for the reading anyway — sleep hours, every morning — and the outcome
+ * card simply holds back. This covers the other half: `energy` goes stale in
+ * six hours, so an hour after a walk the app already has a current reading and
+ * the guide has no reason to ask for another. But a *second* reading at a later
+ * moment is not the same fact; it is the after to the before, and it is the
+ * only way the relationship can be observed rather than asked for.
+ *
+ * That is the distinction the guide's own staleness rule cannot make, which is
+ * why this asks rather than trying to talk the guide into it. DEF-0005's rule
+ * — never state a number and ask for it in the same breath — is not violated:
+ * what is being asked for is a reading of *now*, and the app is not showing one
+ * for now.
+ */
+export function stateReadingDueFor(
+  episode: Episode,
+  view: MemoryView,
+  zone: TimeZoneId,
+): ConceptId | undefined {
+  const affects = profileFor(episode.semantics.target.verb).affects
+  if (affects === undefined) return undefined
+
+  const window = outcomeWindowFor(episode, zone)
+  if (window === undefined) return undefined
+
+  // Already in. Nothing to ask.
+  for (const record of view.history.effective) {
+    if (!bearsConcept(record)) continue
+    if (record.concept !== affects) continue
+    if (record.occurredAt >= window.earliest && record.occurredAt <= window.latest) return undefined
+  }
+
+  // The guide is going to ask for this anyway — one question, not two.
+  if (view.facts.get(affects)?.worthAsking === true) return undefined
+
+  return affects
+}
+
 function unansweredQuestions(
   episode: Episode,
   entities: EntityIndex,
@@ -590,11 +646,29 @@ function unansweredQuestions(
   const reached = resultReached(episode)
   const stopped = reached === 0
 
+  /*
+   * D-089, and it is the whole of QA-A1's repair on the asking side.
+   *
+   * A move that declares an observable state dimension is never graded by its
+   * owner. "How much did a walk do for you?" asks him for the walk's
+   * contribution against an unstated counterfactual — the causal question the
+   * system exists to answer — and the four answers grade it. Where the app can
+   * read the state itself, it reads it.
+   *
+   * This subsumes `awaiting` rather than replacing it: every verb
+   * `readingAwaitedBy` fires for declares `affects` too, so the older rule is
+   * now the special case it always was. Both are kept because they say
+   * different things — one is "a better question is coming", the other is "this
+   * question is not ours to ask".
+   */
+  const observes = profileFor(episode.semantics.target.verb).affects !== undefined
+
   return outcomeQuestionsFor(episode, entities).filter((question) => {
     if (answered.has(question.aspect)) return false
     if (stopped && question.aspect === 'effect') return false
     // Held back while a better question is available for the same fact.
     if (awaiting && question.aspect === 'effect') return false
+    if (observes && question.aspect === 'effect') return false
     return true
   })
 }

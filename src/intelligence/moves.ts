@@ -112,6 +112,31 @@ export interface MoveProfile {
    * existed.
    */
   readonly measures?: ConceptId
+  /**
+   * The observable state dimension this move is expected to move (D-089).
+   *
+   * **Distinct from `measures`, and the distinction is the whole of QA-A1.**
+   * `measures` says what an *outcome record about this move* is a reading of,
+   * so reliability can be weighed per source and per concept (D-059). It is a
+   * property of the answer. `affects` names a concept the app can read
+   * independently, before and after, on evenings with this move and on
+   * evenings without it — so the relationship can be worked out instead of
+   * asked for.
+   *
+   * Where this is set, the app **asks for the reading rather than the grade**:
+   * "how much energy have you got left?" instead of "how much did the walk do
+   * for you?". That is D-069's rule — ask for the reading, not the verdict —
+   * generalized off the one concept it was written for.
+   *
+   * **Set only where it is defensible, and deliberately absent elsewhere.**
+   * A learning topic is an entity, not a state; home friction is free text; and
+   * nothing in the registry honestly says what unhurried time with a daughter
+   * moves. Inventing a mapping to fill those in would be collecting data
+   * because a field exists (section 4.5) and asserting a relationship nobody
+   * can observe. Where it is absent the attribution question is kept, and is
+   * then shown as the owner's own view rather than as a measurement.
+   */
+  readonly affects?: ConceptId
 }
 
 const ALL_DAY: readonly DayBlock[] = ['morning', 'afternoon', 'evening']
@@ -165,6 +190,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     outcome: IN_THE_MORNING,
     aspects: ['effect'],
     measures: CONCEPT.sleepHours,
+    affects: CONCEPT.sleepHours,
   },
   'wind-down': {
     demand: 'restorative',
@@ -177,6 +203,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     outcome: IN_THE_MORNING,
     aspects: ['effect'],
     measures: CONCEPT.sleepHours,
+    affects: CONCEPT.sleepHours,
   },
   recover: {
     demand: 'restorative',
@@ -189,6 +216,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     outcome: IN_THE_MORNING,
     aspects: ['effect'],
     measures: CONCEPT.sleepHours,
+    affects: CONCEPT.sleepHours,
   },
   'ease-off': {
     demand: 'restorative',
@@ -203,6 +231,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     outcome: SOON,
     aspects: ['effect'],
     measures: CONCEPT.energy,
+    affects: CONCEPT.energy,
   },
   'time-with': {
     demand: 'light',
@@ -286,6 +315,7 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     outcome: SOON,
     aspects: ['effect'],
     measures: CONCEPT.energy,
+    affects: CONCEPT.energy,
   },
   hold: {
     demand: 'restorative',
