@@ -22,7 +22,96 @@ reopens Phase 4 or any completed phase.
 
 # Phase 6 — Timeline + Insights
 
-**Status: YELLOW — READY FOR INDEPENDENT QA.**
+**Status: YELLOW — QA FAIL, REPAIRED, AWAITING RETEST.**
+
+Independent QA passed round 1 against section 51's gate item by item, and then
+**withdrew the PASS**. The owner read one sentence on Now — _"How much did a
+walk do for you?"_, answered _A real difference / Some difference / Not much /
+Backfired_ — and asked who was doing the causal analysis. QA investigated,
+confirmed it, and recorded **QA-A1**: the app asks the owner to perform the
+inference the system exists to make, and Phase 6 renders his answers as
+percentages that read as measurements. Full report at
+[`qa/PHASE_06_QA_HANDOFF.md`](qa/PHASE_06_QA_HANDOFF.md).
+
+## QA-A1 — repaired
+
+Every line of QA's diagnosis checks out in the code. `effectFor` has exactly
+one source and cannot tell an observation from an opinion — by an explicit
+design note, written to avoid a second outcome path. The observe-first path is
+gated to three verbs and one concept and is itself an attribution.
+`MoveProfile.measures` already declared that the walk speaks to `energy`, and
+nothing read it for collection. On the history built to demonstrate section 51,
+**all forty-six figures Insights printed were tallies of the owner's judgments
+and none was worked out from a reading**.
+
+**This is a specification gap before it is an implementation defect**, which is
+why the governing documents moved first. Section 20 said the app learns from
+"observed outcomes" without saying who judges them; section 51 required a
+percentage to name the quantity it measures without requiring it to name who
+inferred it. That is exactly why round 1 checked every gate item correctly and
+passed a screen that was not honest.
+
+- **D-089** records the principle: observe first, infer cautiously, ask for a
+  concrete fact, ask for current subjective state when that state itself
+  matters, and never ask the owner for the causal relationship the system exists
+  to learn. Plan sections 20 and 51 now state it directly. D-054, D-064, D-066
+  and D-069 are annotated as incomplete, revisited or generalized — none
+  overturned.
+- **`MoveProfile.affects`** names the observable dimension a move is expected to
+  move, on five verbs where that is defensible and deliberately nowhere else. A
+  learning topic is an entity; home friction is free text; nothing in the
+  registry honestly says what unhurried time with a daughter moves.
+- **The grading question is off every verb declaring it**, keyed on the profile
+  in one place, and the app asks for the reading instead. One question still —
+  what changed is which one, and who does the thinking.
+- **`association.ts`** compares two readings close enough together to be about
+  the same stretch of day, sorted by what happened between them: this move
+  alone, nothing at all, or something else — the third discarded and counted as
+  discarded. Nothing is stated unless each side clears four pairs on its own,
+  and it never says cause in either direction.
+- **`observed-change`** carries the finding into the ranking, abstaining at zero
+  weight where there is nothing to say (D-048) — which is why no golden scenario
+  moved.
+- **`ConceptDefinition.tracked`** separates "worth a trend" from `standing`. The
+  trajectory card gated on the latter, which is false for every dimension the
+  owner reports about himself, so energy, mood and soreness were collected,
+  spent on similarity matching, and never read as evidence.
+- **Every attribution-derived figure says whose judgment it is.** "How often
+  **you said** clearing the kitchen made a difference afterwards." Follow-through
+  is the deliberate exception and is asserted as one.
+- **History keeps its meaning.** Existing `aspect: 'effect'` records are still
+  his, still counted by `effectFor`, not relabelled and not deleted. The new
+  quantity is additive and `association.ts` writes no record at all.
+
+Recorded as **DEF-0045** in [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
+
+**Twelve behaviours QA required, twenty-two tests**, including the one whose
+absence allowed this — the engine learning something real from a history with no
+causal answer in it, on a new scenario containing not one `effect` outcome.
+**Twelve defects reintroduced one at a time; twelve caught** — four only after
+the first pass showed the guard did not bite.
+
+**One thing deliberately not done.** QA is right that `emotionalState` is one
+generic dimension and closer to the wellness score the owner rules out than to
+separate dimensions. Which dimensions is his to say, and inventing a taxonomy is
+the mistake this whole finding is about. It is now `tracked`, so it
+participates; the split is an open question for the owner.
+
+**Two of QA's named tests kept, with the reasoning written into the file.**
+`inferred-evidence.test.ts`'s assertions that `deriveOutcomes` fires for exactly
+three verbs do pin a limitation in place, as QA said. Extending that mechanism
+would have produced more attributions wearing the app's name instead of the
+owner's; the repair was to stop needing them.
+
+**One thing CI found that no test could.** `prettier --check .` covered
+`docs/qa/PHASE_06_QA_HANDOFF.md`, which QA writes and D-077 forbids the builder
+to edit — a gate only the one person forbidden to satisfy it could satisfy. QA
+handoffs join the canonical plan in `.prettierignore`, for the same reason it is
+already there.
+
+---
+
+**Round 1 status, superseded by the above: YELLOW — READY FOR INDEPENDENT QA.**
 
 Section 51's goal is one sentence: make memory and learning visible without
 turning the normal experience into a statistics dashboard. Three surfaces
@@ -106,8 +195,8 @@ failure, and lint is the cheaper half.
 
 |                      |                                                                                                                                           |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Product checkpoint   | `e681a66` — the build every result below was measured against, and the one QA should test                                                 |
-| Repair SHA           | `91728ee` — `e681a66` only untracks a scratch harness and adds an ignore rule                                                             |
+| Product checkpoint   | `4a2b9b1` — set below to the repaired checkpoint; every result here was measured against it                                               |
+| Round 1 checkpoint   | `e681a66` — what QA tested before the PASS was withdrawn                                                                                  |
 | Closing SHA          | current `main` HEAD — documentation only past `e681a66`, no product code                                                                  |
 | Deployed Preview SHA | identical to `main` HEAD; `e681a66` itself was confirmed deployed and hand-checked against `preview/build-info.json` before this closeout |
 | Do they match?       | Yes, by construction — D-004, and asserted live in CI                                                                                     |
@@ -116,20 +205,20 @@ failure, and lint is the cheaper half.
 
 ## Verification
 
-| Gate                                      | Result                                              |
-| ----------------------------------------- | --------------------------------------------------- |
-| Privacy scan                              | Clean, 160 tracked files                            |
-| Format (Prettier)                         | Pass                                                |
-| Lint (ESLint)                             | Pass, 0 warnings                                    |
-| Typecheck (strict TS)                     | Pass, 0 errors                                      |
-| Unit / contract / synthetic / adversarial | 700 passed / 700, 42 files (in plain Node, no DOM)  |
-| Browser tests (Playwright)                | 288 passed / 288 — 96 tests × 360, 430, 1280px      |
-| Production build                          | Pass                                                |
-| `npm run verify` from a clean checkout    | Pass                                                |
-| Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand          |
-| Reintroduction pass                       | 19 defects reintroduced one at a time; 19 caught    |
-| Builder's own Android-style gate          | Pass — against the deployed `e681a66`; no findings  |
-| Independent QA (D-077)                    | **Not run. This is what the phase is waiting for.** |
+| Gate                                      | Result                                                                |
+| ----------------------------------------- | --------------------------------------------------------------------- |
+| Privacy scan                              | Clean, 163 tracked files                                              |
+| Format (Prettier)                         | Pass                                                                  |
+| Lint (ESLint)                             | Pass, 0 warnings                                                      |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                        |
+| Unit / contract / synthetic / adversarial | 732 passed / 732, 43 files (in plain Node, no DOM)                    |
+| Browser tests (Playwright)                | 291 passed / 291 — 97 tests × 360, 430, 1280px                        |
+| Production build                          | Pass                                                                  |
+| `npm run verify` from a clean checkout    | Pass                                                                  |
+| Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand                            |
+| Reintroduction pass                       | 19 for the phase, then 12 more for QA-A1; all 31 caught               |
+| Builder's own Android-style gate          | Pass — against the deployed `e681a66`; no findings                    |
+| Independent QA (D-077)                    | **Round 1 PASS, withdrawn on QA-A1. Repaired here; awaiting retest.** |
 
 ### Where the 700 sit
 
@@ -144,11 +233,12 @@ library gained one.
 | `synthetic/timeline.test.ts` — section 26, rule by rule                |    31 |
 | `synthetic/decision-evidence.test.ts` — Now's panel reads the decision |    15 |
 | `unit/insights-copy.test.ts` — the copy tables, swept                  |    10 |
-| `unit/architecture-guards.test.ts` — five new guards                   |    +5 |
-| existing sweeps, over the new long history                             |    +6 |
+| `synthetic/observed-relationships.test.ts` — QA-A1's twelve behaviours |    22 |
+| `unit/architecture-guards.test.ts` — five phase guards, four for D-089 |    +9 |
+| existing sweeps, over the two new histories                            |   +11 |
 
-Browser: `tests/browser/timeline-insights.spec.ts`, 24 tests × 3 viewports =
-72 new, on top of the 216 already in `shell.spec.ts`, `now.spec.ts`,
+Browser: `tests/browser/timeline-insights.spec.ts`, 25 tests × 3 viewports =
+75 new, on top of the 216 already in `shell.spec.ts`, `now.spec.ts`,
 `qa-lab.spec.ts` and `life-domain.spec.ts` — all unchanged, all still green.
 
 ## Gate checklist (section 51, and the phase brief)
@@ -274,7 +364,12 @@ the QA laboratory**, load "Nine months of evenings".
 
 ## Open defects
 
-None. Eleven were found and closed during the phase — DEF-0034 to DEF-0044 in
+None. **Twelve** were found and closed. DEF-0045 is QA-A1, and it is the only
+one found by anybody other than the builder: the owner raised it after
+independent QA had already passed the phase, and QA confirmed it and withdrew
+the PASS.
+
+The other eleven — DEF-0034 to DEF-0044 in
 [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md) — and not one came from a failing
 assertion. Nine came from reading the assembled screens, one from measuring
 them, and one from the reintroduction pass discovering that a guard could
@@ -317,7 +412,9 @@ no standing concept.
 
 ## Decisions made
 
-D-084 to D-088 in [`DECISION_LOG.md`](DECISION_LOG.md).
+D-084 to D-088 in [`DECISION_LOG.md`](DECISION_LOG.md), and **D-089** for the
+QA-A1 repair — the observe-first principle, which also amends canonical plan
+sections 20 and 51 as owner-approved amendments under section 1.
 
 ## Next
 

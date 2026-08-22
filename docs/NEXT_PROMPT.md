@@ -1,40 +1,41 @@
 # Next prompt
 
 Canonical plan section 43, and the independent-QA protocol in
-[`qa/README.md`](qa/README.md). The model, intelligence level and conversation
-instruction sit outside the prompt so the owner can switch Claude Code before
-pasting.
+[`qa/README.md`](qa/README.md) section 4. The model, intelligence level and
+conversation instruction sit outside the prompt so the owner can switch Claude
+Code before pasting.
 
-**Phase 6 is YELLOW — READY FOR INDEPENDENT QA.** Product checkpoint
-`e681a66`. Everything on `main` past it is documentation, so the deployed
-Preview SHA is `main`'s current HEAD and is at or after `e681a66`. Full
-builder report in [`PHASE_STATUS.md`](PHASE_STATUS.md) under "Phase 6 —
-Timeline + Insights".
+**Phase 6 is YELLOW — QA-A1 repaired, awaiting retest.** Independent QA
+withdrew its round-1 PASS on QA-A1: the app asked the owner to perform the
+causal analysis the system exists to make, and rendered his answers as
+percentages that read as measurements. The finding held, the repair is done,
+and the phase stays YELLOW until the same QA conversation retests it.
 
-Per D-077 the builder may not approve its own phase. What follows is the
-handoff to a fresh QA conversation.
+Full builder account in [`PHASE_STATUS.md`](PHASE_STATUS.md) under "Phase 6 —
+Timeline + Insights"; the defect is DEF-0045 in
+[`DEFECT_LEDGER.md`](DEFECT_LEDGER.md); the principle is D-089 in
+[`DECISION_LOG.md`](DECISION_LOG.md).
 
 ---
 
 ## NEXT CLAUDE ACTION
 
-- **Model:** Sonnet-class (Claude Sonnet 5 or the nearest current equivalent)
+- **Model:** Opus-class (Claude Opus 5 or the nearest current equivalent)
 - **Intelligence level:** High
-- **Conversation:** **NEW — NEW CONVERSATION REQUIRED FOR INDEPENDENCE**
-- **Why this model:** the work is reading whole screens as a person, checking
-  figures against the counts printed beside them, and driving a real mobile
-  context — careful, ordinary independent QA rather than cross-system
-  architecture reasoning. D-080 asks for the lowest combination that does not
-  materially risk quality, and every defect this phase closed was found by
-  reading rendered output rather than by reasoning about the kernel.
-- **Why this level:** High is the default for ordinary independent QA per
-  `qa/README.md`'s own rule. The one place Max would earn its keep — judging
-  whether a learned pattern is statistically defensible — is a question the
-  phase answers with counts printed on screen, so it can be checked by
-  arithmetic rather than by inference.
-- **Why a new conversation:** D-077, and it is the whole point of the gate. A
-  reviewer that inherits the builder's model of why something is correct
-  re-checks what the builder already checked.
+- **Conversation:** **SAME — the independent QA conversation that raised QA-A1**
+- **Why this model:** the retest has to judge whether a _new learned quantity_
+  is honest — whether a comparison group is really a comparison group, whether
+  a relationship is stated as association rather than cause, and whether the
+  owner's judgments and the app's findings are now genuinely distinguishable on
+  screen. That is the cross-system semantic reasoning D-080 reserves Opus-class
+  for, and it is a step up from round 1's Sonnet-class recommendation because
+  the thing under test changed.
+- **Why this level:** High. The judgement is demanding but the evidence is
+  counts printed on screen and a small pure module; Max is for ambiguous
+  root-cause work, and the root cause here is already found and written down.
+- **Why the same conversation:** `qa/README.md`'s conversation rule — a retest
+  after a builder repair returns to the conversation that ran the original
+  test. It raised QA-A1 and holds the reasoning the repair has to satisfy.
 - **Attach/reference:** nothing beyond what the prompt below already names.
 
 ---
@@ -42,209 +43,111 @@ handoff to a fresh QA conversation.
 ## COPY/PASTE PROMPT
 
 ```text
-You are independent QA for the Life Command OS rebuild. This is a fresh
-conversation and that is deliberate: you have not seen how any of this was
-built, and you should not ask.
+Phase 6's QA-A1 repair is ready for your retest. This is the same QA
+conversation that raised it — you have the round-1 record and your own
+reasoning about the finding.
 
-Work in this repository:
+Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
-GitHub: Bill6006/life-command-os-rebuild (public, default branch main)
 Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
 
-The phase under test is Phase 6 — Timeline + Insights.
+Your report is docs/qa/PHASE_06_QA_HANDOFF.md. Update it in place with a
+"Round 2 — retest" section. It is the only file you may write, and you may
+not change application or product code (D-077).
 
-Product checkpoint SHA: e681a66. Everything on main past that commit is
-documentation, so the deployed Preview SHA is main's current HEAD and is at
-or after e681a66. Verify all of that rather than taking it from here: check
-preview/build-info.json against what the app shows under More → This build,
-and check `git log e681a66..HEAD --stat` for anything outside docs/.
+WHAT CHANGED
 
-YOUR ROLE
+The governing documents moved first, because you were right that this is a
+specification gap before it is an implementation defect:
 
-You test. You do not repair. Owner decision D-077 and the protocol in
-docs/qa/README.md govern this, and the division is not negotiable by
-anything you conclude:
+- D-089 records the principle — observe first, infer cautiously, ask for a
+  concrete fact, ask for current subjective state when that state itself
+  matters, never ask the owner for the causal relationship the system exists
+  to learn.
+- Canonical plan sections 20 and 51 now state it directly, as owner-approved
+  amendments under section 1. The v1.2 change log carries an addendum.
+- D-054, D-064, D-066 and D-069 are annotated as incomplete, revisited or
+  generalized. None is overturned.
 
-- you may not change application or product code, at any point, for any
-  reason, including a change you are certain is right;
-- you may create or update exactly one file — docs/qa/PHASE_06_QA_HANDOFF.md
-  — plus narrowly scoped QA evidence artifacts the protocol needs;
-- you do not decide GREEN. You recommend PASS or FAIL; the owner decides.
+Then the code. Read it fresh rather than from this list:
 
-Read these first, in this order:
+- src/intelligence/association.ts — new. The comparison.
+- src/intelligence/moves.ts — MoveProfile.affects.
+- src/intelligence/outcomes.ts — the grading question, and what replaced it.
+- src/intelligence/learning.ts, src/intelligence/evaluate.ts — how the
+  finding reaches the decision.
+- src/domain/concepts.ts — ConceptDefinition.tracked.
+- src/intelligence/insights.ts, src/features/insights/InsightsScreen.tsx,
+  src/features/now/NowScreen.tsx — what is now said, and how.
+- src/synthetic/scenarios.ts — "Two months of readings, and nothing graded".
+- tests/synthetic/observed-relationships.test.ts — the twelve behaviours you
+  required.
 
-1. docs/CANONICAL_REBUILD_PLAN.md — the sole governing authority (v1.2), read
-   it completely. Section 51 is this phase's own goal, build list and gate.
-   Section 26 governs Timeline. Section 27 governs Insights' language.
-   Sections 4.6, 11, 36, 37, 60, 61, 63 and 64 govern specificity, private
-   display, error handling, mobile and accessibility, stale copy, product
-   copy, hidden staleness and hidden genericity — all of which this phase
-   touches.
-2. docs/qa/README.md — the protocol you are running, including section 3a
-   (D-082): your handoff must carry the complete next prompt automatically,
-   on both PASS and FAIL, and section 3a's D-083 amendment on the short
-   launcher that closes your response.
-3. docs/PHASE_STATUS.md — the Phase 6 entry in full, including what the
-   builder says it deliberately did not build and what it says it found.
-   Treat every claim in it as a claim to be checked, not as information.
-   Also read the Phase 5 and Phase 4 entries for the deferred items you must
-   confirm unchanged rather than report as new.
-4. docs/DECISION_LOG.md — D-084 to D-088 in full (this phase's decisions:
-   how a figure may reach a screen, why Insights may read what has been
-   learned, why only one card per move, why Timeline has no actions, and why
-   one description of a record is shared by two surfaces). Also D-059 to
-   D-079 for the rules those sit on top of, and D-077, D-080, D-082, D-083
-   for the protocol.
-5. docs/DEFECT_LEDGER.md — DEF-0020 in full (four facts collapsed into one,
-   from Phase 3 — the defect section 51's percentage rules exist to prevent
-   recurring), DEF-0028 to DEF-0033 (Phase 5's, all found by reading whole
-   screens rather than by a failing assertion), and DEF-0034 to DEF-0044
-   (this phase's, same). The standard you are being asked to apply is the
-   one those were found by.
-6. docs/ARCHITECTURE_BOUNDARIES.md — module ownership, and which
-   src/intelligence/ modules a surface may import (the enforced list is
-   OPEN_TO_SURFACES in tests/unit/architecture-guards.test.ts).
+`git diff a6a9e67..HEAD` is the whole repair.
 
-Then read the implementation fresh: src/intelligence/insights.ts,
-src/features/timeline/timelineEntries.ts, src/features/timeline/TimelineScreen.tsx,
-src/features/insights/InsightsScreen.tsx, src/features/evidence/EvidencePieces.tsx,
-src/features/history/describe.ts, and the changes to src/features/now/NowScreen.tsx,
-src/intelligence/learning.ts, src/intelligence/outcomes.ts and
-src/synthetic/scenarios.ts. `git diff f50137d..e681a66` is the whole phase.
+WHAT TO TEST
 
-HOW TO TEST
+Retest QA-A1 against your own acceptance criteria A–I, from your own report,
+rather than against the builder's account of them. In particular:
 
-Use a real Android-style Playwright mobile context — touch, a mobile user
-agent, a realistic device pixel ratio, mobile scrolling and interaction —
-driven against the DEPLOYED Preview, not a local build and not a narrowed
-desktop viewport. Phase 4's five defects were invisible at three desktop
-widths; Phase 5's three were found by reading whole screens as a person.
+- Is a figure built from the owner's judgments now distinguishable from one
+  built from observed state, on screen, by a reader who has not read any of
+  this? (B)
+- Is a relationship stated only against a comparison group, and only as
+  association — in both directions, including when the reading is lower
+  afterwards? (C, E)
+- Can a state dimension now be learned from at all, and is it separate
+  dimensions rather than one score? (D)
+- Does a missing before- or after-observation produce an honest "not enough",
+  rather than a figure over whichever occasions have both? (F)
+- Do existing aspect:'effect' records still mean what they meant? (G)
+- Is the owner still asked for how he is, and no longer asked to grade what a
+  move did? (H)
+- Were any sensors or integrations invented? (I)
 
-Read complete screens as an owner would rather than asserting on strings.
-Actively try to disprove that this phase is correct. Look for:
+And the one whose absence let this through: **does the engine learn something
+useful when the owner answers no causal question at all?** The scenario "Two
+months of readings, and nothing graded" contains no effect outcome anywhere.
 
-- contradictions between two lines of one screen, especially between a
-  number and the sentence above or below it;
-- a figure whose denominator, or the quantity it measures, is not defensible
-  from what is on screen;
-- research or developer vocabulary reaching a primary surface;
-- claims made from ignorance, false precision, or a pattern stated more
-  confidently than its evidence supports;
-- lost subjects and orphan pronouns;
-- stale product or scaffolding copy, and any claim that the app cannot do
-  something it demonstrably does;
-- questionnaire, dashboard or nag behaviour;
-- touch targets, horizontal overflow, sticky or fixed chrome covering
-  content, safe-area problems, control movement between renders, and
-  double-tap hazards;
-- anything on a surface that could act on corrupt data.
+Two things the builder decided rather than implemented, which are yours to
+accept or reject:
 
-Name which existing automated tests gave false confidence, if any.
+1. `tests/synthetic/inferred-evidence.test.ts`'s assertions that
+   `deriveOutcomes` fires for exactly three verbs are **kept**, with the
+   reasoning written into the file. The argument is that extending that
+   mechanism would have produced more attributions wearing the app's name
+   rather than the owner's, and that the repair was to stop needing them.
+   You named these tests; judge the argument.
+2. `emotionalState` is **not** split into named dimensions. It is now
+   `tracked` so it participates, but which dimensions is the owner's to say,
+   and the builder judged inventing a taxonomy to be the same mistake the
+   finding is about. Recorded as an open question for the owner.
 
-THE ACCEPTANCE CRITERIA YOU ARE TESTING AGAINST
+Also confirm nothing round 1 passed has regressed — all eleven of
+DEF-0034 to DEF-0044 — and that every deferred item is unchanged (P4-6, P4-7,
+the never-settled started move, and Phase 5's four).
 
-These are the plan's, not the builder's. Section 51's gate:
+THE CHECKPOINT
 
-- useful insights are understandable without research language;
-- the owner can open a deeper evidence view without that machinery being
-  forced into the first view;
-- a current recommendation can expose the meaningful evidence behind its
-  choice without cluttering Now;
-- percentages and rates appear only when the underlying quantity,
-  denominator, context and evidence are defensible;
-- any displayed rate names the aspect it measures, and does not collapse
-  direct result, downstream effect, comfort/follow-through into one generic
-  success statistic;
-- weak evidence produces an honest "not enough evidence yet" state rather
-  than invented precision;
-- synthetic long histories prove that context and combinations can change a
-  pattern's interpretation, and that counterexamples and later contradictory
-  evidence can weaken or reverse an earlier learned pattern;
-- malformed records do not break Timeline or Insights — an unreadable row is
-  isolated and reported, never silently dropped, and Timeline never creates
-  a phantom actionable item from corrupt data;
-- private data obeys display policy (src/domain/privacy.ts, section 11);
-- one arbitration path still decides; Insights contributes an interpretation
-  of history, never a second recommendation.
-
-And the phase brief's own additions: the fourteen existing golden scenarios
-still pass unchanged; CI is green; npm run verify passes from a clean
-checkout; the deployed Preview SHA equals the checkpoint SHA.
-
-WHAT MUST NOT HAVE BEEN WEAKENED
-
-Everything phases 1 to 5 established remains load-bearing: unknown stays
-unknown; canonical records are append-first; there is exactly one
-arbitration path; the evaluator and arbiter know no life area by name; an
-explanation may only cite evidence the decision leaned on; a context in
-force is current whatever the age of the record carrying it; a limiter
-carries its own label; owner-facing copy may not claim the app cannot do
-something it does; a question names what it is about; inference completes a
-loop and never opens one and may never conclude harm; a growth-stage change
-is proposed after three occasions and never applied by the app; the bottom
-navigation has exactly four primary destinations; phase language appears in
-exactly two places, both reading REBUILD_PHASE from src/platform/buildInfo.ts;
-the deterministic baseline is the selected architecture; ten domain pages
-cover eleven domains (D-078); coverage status agrees between Life and a
-domain page because both read the same computation.
-
-DEFERRED BY THE OWNER — CONFIRM UNCHANGED, DO NOT REPORT AS NEW
-
-From Phase 4:
-- P4-6 — the no-action eyebrow renders a whole sentence in an uppercase
-  micro-label slot.
-- P4-7 — the More button is below the 44px minimum (most recently measured
-  at 80.6×36).
-- A started move that is never settled stays "Under way" indefinitely and no
-  result is ever asked for.
-
-From Phase 5:
-- An inline Life-area link is below a 44px touch target, deliberately.
-- Creating a brand-new goal from a domain page is not supported.
-- No domain page offers a dated situational-exception control.
-- "Recent changes" on a domain page is domain-scoped, not chronological.
-
-Older, also unchanged: the older ranking dimensions still cost weight when
-they know nothing; `hold` is never generated; free-text constraints are
-shown rather than enforced; Emotional Health has no standing concept.
-
-The Phase 6 entry in docs/PHASE_STATUS.md lists what this phase says it
-deliberately did not build. Check those claims like any other.
-
-WHERE TO START LOOKING
-
-The QA laboratory (More → Open the QA laboratory) loads seventeen invented
-histories. "Nine months of evenings" is the longest and is where most of
-this phase's behaviour is visible; "A file with damage in it", "Two ordinary
-weeks", "A month of what actually worked", "One answer, and a lot of
-silence" and "A settled arrangement, and one week away" each exercise a
-different corner. Time travel is in the same screen.
+The product checkpoint and the deployed Preview SHA are in
+docs/PHASE_STATUS.md's build identity table. Verify both yourself against
+preview/build-info.json and against what the app shows under More → This
+build, and check `git log <checkpoint>..HEAD --stat` for anything outside
+docs/. Test the deployed Preview in a real Android-style mobile context, as
+you did in round 1.
 
 HOW THIS ENDS
 
-Write docs/qa/PHASE_06_QA_HANDOFF.md containing, at minimum: phase;
-checkpoint SHA tested; deployed SHA tested; your Android/mobile
-configuration; the governing acceptance criteria you used; scenarios and
-flows tested with PASS/FAIL for each; exact reproductions for every defect;
-semantic, behavioural, privacy and mobile/UI findings separately; blocking
-vs non-blocking; evidence references; which automated tests gave false
-confidence; confirmation that the deferred items above are unchanged; and
-an overall PASS or FAIL.
+Update docs/qa/PHASE_06_QA_HANDOFF.md with the retest record and an overall
+PASS or FAIL, and in the same response, without being asked (D-082,
+qa/README.md section 3a): the verdict; the QA-tested SHA; the report path;
+the recommended Claude model, intelligence level and conversation instruction
+for the next action, each with a one-sentence reason; and the complete next
+prompt written into the report file. Close with the short launcher block
+D-083 requires rather than repeating the whole prompt inline.
 
-Then, in the same response and without being asked (D-082, qa/README.md
-section 3a): the overall verdict; the QA-tested product SHA; the QA-report
-commit SHA if you committed it; the exact report path; the recommended
-Claude model, intelligence level and conversation instruction for the next
-action, each with a one-sentence reason; and the complete ready-to-paste
-next prompt written into the report file. Close the response with the short
-launcher block D-083 requires rather than repeating the whole prompt inline.
+On PASS the next prompt goes to CURRENT — the builder conversation — for the
+formal GREEN closeout. On FAIL it goes to CURRENT for another repair round.
 
-On FAIL the next prompt goes to CURRENT — the original builder conversation
-— to repair under plan section 42 and return to you for retest. On PASS it
-goes to CURRENT for the formal GREEN closeout.
-
-Do not prescribe the implementation fix beyond what your own evidence
-supports. Reproductions, the defect class, the evidence and the acceptance
-expectation the fix must meet are yours to give; root-cause repair is the
-builder's.
+Do not ask the owner to paste anything — you have the paths.
 ```

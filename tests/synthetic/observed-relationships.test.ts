@@ -567,6 +567,8 @@ describe('the panel behind the move on Now', () => {
     expect(evidence?.observed).toMatch(/current energy/i)
     expect(evidence?.observed).toMatch(/11 of 14 against 4 of 14/)
     expect(evidence?.observed).toMatch(/[Aa]cross the whole record/)
+    // The object's own name — "with a walk than without", not the gerund.
+    expect(evidence?.observed).toMatch(/with a walk than without/)
     expect(
       /\bcauses?\b|\bimproves?\b|\bbecause\b/i.test(evidence?.observed ?? ''),
       'the panel states a cause',

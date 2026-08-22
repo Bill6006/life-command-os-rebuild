@@ -2116,7 +2116,7 @@ function describeAssociationBriefly(
       : found.direction === 'lower'
         ? 'more often been lower afterwards'
         : 'moved about the same either way'
-  return `Across the whole record, ${reading} has ${shape} with ${lowerFirst(subject)} than without: ${found.roseWith} of ${found.with.length} against ${found.roseWithout} of ${found.without.length}.`
+  return `Across the whole record, ${reading} has ${shape} with ${subject} than without: ${found.roseWith} of ${found.with.length} against ${found.roseWithout} of ${found.without.length}.`
 }
 
 export function evidenceForDecision(decision: Decision): DecisionEvidence | undefined {
@@ -2199,7 +2199,15 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
     counterexamples: [...counterexamples.values()],
     confidence: confidenceFrom(alike.length, counterexamples.size),
     concluded: explanation.restsOn,
-    observed: describeAssociationBriefly(situation.learning.associationFor(verb), name),
+    /*
+     * The object's own name, not the gerund the cards lead with. "with getting
+     * out for a walk than without" is not something a person would say; "with a
+     * walk than without" is. Same reason the card itself uses it.
+     */
+    observed: describeAssociationBriefly(
+      situation.learning.associationFor(verb),
+      subject ?? lowerFirst(name),
+    ),
     context: split === undefined ? undefined : describeSplitForTonight(split, situation.context),
     mix: describeEvidenceMix(evidenceRefsFor(alike)),
     /*
