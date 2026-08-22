@@ -1,14 +1,275 @@
 # Phase 6 QA handoff — Timeline + Insights
 
-> **STATUS: FAIL — REPAIR REQUIRED. The round-1 PASS is withdrawn.**
+> **STATUS: FAIL — ROUND 3 CODEX RETEST. REPAIR REQUIRED.**
 >
-> Round 1 (below, kept unaltered) tested Phase 6 against section 51's gate as
-> written and passed it. An owner-raised review afterwards exposed a finding
-> that sits one level beneath that gate, and on independent investigation it
-> holds and it is material. **QA-A1** is recorded in "Round 1a — owner-raised
-> architecture review" immediately below. Phase 6 returns to
-> **YELLOW — QA FAIL / REPAIR REQUIRED**. Do not perform the GREEN closeout.
-> Do not begin Phase 7.
+> The seven Codex blockers repaired at `481c3a7` pass their direct semantic
+> reproductions, but the retest found three blocking siblings: the QA laboratory
+> replaces normal Preview history, an association correction loses its action
+> object when Timeline describes it, and `emotionalState` is declared tracked
+> while its free-text values cannot enter either tracking path. Phase 6 remains
+> **YELLOW — QA FAIL / REPAIR REQUIRED**. Do not perform the GREEN closeout or
+> begin Phase 7.
+
+---
+
+# Round 3 — Codex retest
+
+## Verdict and identity
+
+**Overall verdict: FAIL.** The repaired seven are substantially correct, and
+QA-A1 remains repaired, but the phase gate is not met because three reproducible
+claims still exceed the evidence or storage boundary underneath them.
+
+| | Retest evidence |
+|---|---|
+| Product checkpoint | `481c3a7` — "Seven blockers: the claim narrowed to the evidence under it" |
+| `main` HEAD tested | `d327cb45f3be2889f59e63207644cc66efab563d` |
+| Deployed Preview | `d327cb45f3be2889f59e63207644cc66efab563d`, built `2026-08-22T12:53:33.876Z`; read independently from `preview/build-info.json` and More → This build |
+| Checkpoint match | **PASS** — `git diff 481c3a7..HEAD --name-only` lists only `docs/NEXT_PROMPT.md` and `docs/PHASE_STATUS.md` |
+| Repository state before this report | Clean |
+
+## Mobile configuration
+
+The sealed owner pass used the deployed Preview at 412×915 in the Codex in-app
+browser with real scrolling and interaction. A second isolated Chromium context
+used Playwright's **Pixel 7** device profile and confirmed an Android 14 mobile
+UA, 412×839 CSS viewport, DPR 2.625 and one touch point. The in-app browser does
+not expose UA/DPR controls, so these two observations are complementary rather
+than a claim that resizing alone made it Android. The focused browser suite also
+ran at 360×740, 430×932 and desktop; its two "mobile" projects use Desktop
+Chrome UA and therefore count as layout regression, not Android emulation.
+
+## Sealed cold owner-use — before repository reading
+
+The persisted Preview opened on a normal Now with: *"Spend 10 minutes recalling
+subnetting before you reopen your notes"* because *"Nothing has come in about
+subnetting for a while."* Its evidence said the only material condition was the
+current learning topic, there were zero comparable occasions, and it was too
+early to say. After the owner marked that move Done, Now asked *"How much energy
+have you got left?"* — not what the move did — and `Plenty` led to *"Move for 25
+minutes: a walk"* because energy was good and the morning suited it.
+
+The owner-facing claims recorded before reading code were:
+
+- Timeline claims to be the canonical record in event order.
+- Insights distinguishes what the app has worked out from what is still being
+  gathered, and its evidence should name what was counted.
+- Life's `Recent` means something came in lately, while each stale belief names
+  itself separately; it no longer claims the whole area is up to date.
+- A domain page says exactly which belief is stale and offers correction at that
+  belief, not at the area as a whole.
+
+No contradiction appeared in that cold reading. The `Plenty` observation
+appeared in Timeline immediately as `Current energy: 4 of 5`.
+
+## The seven repaired blockers
+
+| # | Reproduction and criterion | Result |
+|---|---|---|
+| 1 | Four walks higher and four bike rides lower, with four positive absences for each. Separate scopes, cards, counts and names are required. | **PASS.** Two scopes and two opposite findings; no pooling and no borrowed name. The deployed library does not expose this exact fixture, so the exact fixture was exercised against the checkout proven byte-equivalent in product code to the deployed checkpoint. |
+| 2 | Weekdays higher, weekends lower; no 4-of-8 collapsed claim, and Tuesday must use only the weekday band. | **PASS.** The supported split is detected, the card states the disagreement without `of 8`, and Tuesday's `observed-change` note names the weekday band. Same fixture limitation as #1. |
+| 3 | Three occasions with readings but no recorded exposure. | **PASS live.** Deployed evidence says `3 occasions are in neither group`, and 14/14 remain the two legitimate groups. The abstention fixture also leaves twelve silent occasions out and states why. |
+| 4 | Recorded events between readings invalidate pairs, and copy may name only checked record classes. | **PASS live.** Deployed evidence excludes two and names another completed suggestion, circumstance, constraint, or relationship record. Focused fixtures exclude relationship and domain-update classes and prohibit "nothing else happened". |
+| 5 | Reject a system conclusion without deleting history; relearn from undisputed later evidence. | **PASS for the repair, with new blocker R3-B2 below.** The deployed card has a walk-specific correction; rejection removes the finding, writes a correction, and leaves the 142 underlying records/32 episodes. A focused later-evidence fixture reaches the opposite conclusion from four new pairs per side. |
+| 6 | Same-moment correction order on Life's Recently. | **PASS.** Canonical `occurredAt → recordedAt → id` ordering puts the later-recorded correction/replacement before the original in the newest-first list, independent of fixture insertion order. |
+| 7 | No surface may use recent intake as proof every belief is current. | **PASS live.** Life says `Recent` and immediately limits it to something having come in lately; stale rows name themselves on Life, Insights and domain pages. |
+
+## Phase gate and claim-to-evidence result
+
+Section 51 passes on progressive disclosure, comparison groups, honest
+withholding, association language, context/confounder handling, counterexamples,
+malformed-record survival, private display policy, and the shared Now/Insights
+evidence path. QA-A1 remains repaired: the live flow asked for current energy,
+never a causal grade, and the observed relationship is explicitly non-causal.
+
+It fails the action-identity/correctability language, the QA production-isolation
+boundary implicated by the owner's data-loss report, and D-091's tracked-state
+meaning. Exact findings follow.
+
+## Blocking findings
+
+### R3-B1 — loading a QA scenario destroys normal Preview history
+
+- **Severity:** Blocker — reproducible canonical data loss, explicitly named as
+  a stop condition in the retest handoff.
+- **Live reproduction:** on normal Now, record `Plenty`; Timeline immediately
+  shows `Current energy: 4 of 5`. It survives navigation, refresh, tab close and
+  reopen. Enter QA and load `Two months of readings, and nothing graded`.
+  Timeline is now the scenario's 142-record history and the seven-record normal
+  history is gone.
+- **Boundary evidence:** `MemoryProvider` creates exactly one database,
+  `life-command-os:${runningBuild.target}`, for every surface. Its QA
+  `loadDocument` calls `replaceAll`; `replaceAll` clears all four object stores
+  before writing the fixture. Leaving QA does not clear again — it exposes the
+  replacement on Now, Life, Timeline and Insights because they intentionally
+  share the same store.
+- **Deployment result:** ordinary deployment does **not** currently orphan the
+  store: neither commit SHA nor build time is in the database name, and
+  `DB_VERSION` remains 1. Preview and production are isolated from one another,
+  but normal Preview and Preview QA are not.
+- **Acceptance expectation:** loading, leaving or clearing the laboratory must
+  not replace the normal owner history underneath the normal app. Preserve the
+  already-passing ability to inspect a fixture across normal surfaces.
+- **False confidence:** `qa-lab.spec.ts` proves that a loaded scenario survives
+  reload/reopen and even tests `Clear everything`; it never seeds a normal
+  owner record and proves the laboratory cannot replace it.
+
+### R3-B2 — a scoped association correction is described as the verb alone
+
+- **Severity:** Blocker — the phase gate says a learned relationship may never
+  be printed under a name that fits a different action. The correction key is
+  scoped correctly, but the owner's canonical history no longer says which
+  conclusion was rejected.
+- **Live reproduction:** open the deployed walk relationship, whose correction
+  control correctly says `what the app has worked out follows a walk`; press
+  `That is not right`; open Timeline. The new row reads: `Told the app to stop
+  assuming what the app has worked out follows move.` The same sentence fits a
+  walk and a bike ride.
+- **Boundary evidence:** `Insight.beliefLabel` knows the object only while the
+  card renders. The stored `belief-correction` retains the scoped key, but
+  `describeBelief` parses only its verb for owner-facing history and explicitly
+  falls back to the verb. `describeRecord` then uses that fallback on Timeline.
+- **Acceptance expectation:** the stored correction remains action-scoped and
+  every owner-facing description names that same action; do not weaken the key
+  or delete the evidence underneath it.
+- **False confidence:** `observed-relationships.test.ts` separately asserts the
+  scoped key and the card's `beliefLabel`, but never passes the resulting
+  correction through the shared history renderer.
+
+### R3-B3 — `emotionalState` is declared tracked but cannot participate
+
+- **Severity:** Blocker for D-091 invariant 6 and for accepting the builder's
+  second explicit decision.
+- **Reproduction:** `emotionalState` is `tracked: true`, and the builder account
+  says it therefore participates. Its actual fixture value is free text
+  (`flat`). Both association and trajectory paths call `numericValue`, which
+  returns `undefined` for text, so every such reading is discarded before any
+  scale, direction, trajectory or before/after comparison exists.
+- **Meaning:** `Current emotional state` is not yet a stable construct with a
+  scale and direction, and marking it tracked does not make it one. The decision
+  not to invent mood/stress/confidence/motivation dimensions without the owner
+  is reasonable; claiming that the undivided placeholder participates is not.
+- **Acceptance expectation:** keep the taxonomy question open to the owner, but
+  make the implementation and owner/builder claims honest about whether the
+  current concept is a trackable dimension. Do not invent a wellness score.
+- **False confidence:** the registry guard checks forbidden aggregate words and
+  freshness, but never proves that every `tracked` concept has a value shape the
+  tracking machinery can consume.
+
+## The two builder decisions
+
+1. **ACCEPTED:** keeping `deriveOutcomes` restricted to the three sleep verbs.
+   The file's reasoning is sound: that path maps a morning reading to the old
+   effect attribution scale without a comparison group; expanding it would
+   create more system-authored attributions, while `association.ts` is the
+   observe-first comparison path.
+2. **REJECTED AS IMPLEMENTED:** not inventing emotional dimensions is accepted,
+   but `emotionalState` cannot be described as participating merely because it
+   carries `tracked: true`; R3-B3 is the unresolved semantic boundary.
+
+## Owner-data transitions tested
+
+| Transition | Result |
+|---|---|
+| Normal Now answer → Timeline immediately | **PASS** — `Plenty` becomes `Current energy: 4 of 5` |
+| Navigate Now/Timeline/Insights/Life/domain and back | **PASS** |
+| Refresh | **PASS** |
+| Close tab and reopen Preview | **PASS** |
+| Reopen IndexedDB connection | **PASS** — the normal record came back before QA replacement; builder's targeted test also verifies byte-identical fixture reopen |
+| New deployment | **PASS by architecture at this checkpoint** — stable target-based database name and unchanged v1 schema; not keyed to SHA |
+| Open and leave QA without loading/clearing | **No mutation observed/expected** |
+| Load QA scenario after normal use | **FAIL — R3-B1**, atomic replacement of normal store |
+| Clear in QA | **FAIL by the same boundary** — it clears the shared normal store |
+| Preview vs production | **PASS** — target-specific database names |
+
+## Targeted regression and deferred items
+
+- Focused semantic gate: **115/115 passed** across observed relationships,
+  domain-page data, Life words/order, registries and architecture guards.
+- Focused browser gate: **147/147 passed** across QA laboratory, Life/domain and
+  shell at the repository's three configured projects.
+- No full-suite duplication: the concrete mismatches are missing assertions,
+  not evidence that another green run would locate them.
+- Timeline, Insights, Now evidence, Life and domain pages were exercised live.
+  The prior DEF-0034–DEF-0044 behavior remained intact in the targeted sweep.
+- P4-6, P4-7 and the never-settled started move remain unchanged; the repair
+  diff does not touch Now's no-action rendering, its CSS/touch sizing, or
+  lifecycle settlement.
+- Phase 5's inline Life link, lack of new-goal creation, lack of a dated
+  exception control and domain-scoped Recently remain unchanged. The repair
+  touches Life grouping and canonical ordering, not those deferred controls.
+- `hold`, unknown-ranking weight and shown-not-enforced free-text constraints
+  remain deferred. Emotional Health's missing standing construct is no longer
+  merely carried: R3-B3 is the explicit Phase 6 decision the handoff required
+  QA to settle.
+
+## Next handoff — CURRENT Claude builder conversation
+
+**Recommended model:** **Claude Opus-class, current coding model.** The repair
+crosses storage isolation, canonical correction identity and tracked-state
+semantics, so the stronger Claude builder model is warranted.
+
+**Recommended intelligence level:** **High.** All three reproductions and their
+boundaries are concrete; Max is unnecessary unless the owner-defined emotional
+taxonomy itself is brought into scope.
+
+**Conversation:** **CURRENT — the original Phase 6 Claude builder
+conversation.** Phase 6 remains unresolved and the builder must preserve its
+own repair context while Codex retains this conversation for the next retest.
+
+### Complete ready-to-paste next prompt
+
+```text
+Phase 6 remains YELLOW — Codex Round 3 QA FAIL / REPAIR REQUIRED.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_06_QA_HANDOFF.md in full, especially "Round 3 — Codex
+retest", and execute its builder handoff exactly as written. Do not ask the
+owner to paste the report.
+
+QA-tested product checkpoint: 481c3a7
+QA-tested deployed/main SHA: d327cb45f3be2889f59e63207644cc66efab563d
+
+Keep Phase 6 YELLOW. Do not perform the GREEN closeout and do not begin Phase 7.
+
+Repair all three Round 3 blockers under canonical plan section 42:
+
+1. R3-B1 — loading or clearing a QA scenario replaces the normal Preview
+   IndexedDB history because QA and normal surfaces share one store and
+   loadDocument calls replaceAll. Preserve normal owner history while retaining
+   the already-passing ability to inspect a synthetic scenario from Now,
+   Timeline, Insights, Life and domain pages.
+2. R3-B2 — a walk-specific association correction is stored with the right
+   scope but Timeline describes it as "follows move", a label that also fits a
+   bike ride. Every owner-facing rendering of the correction must preserve the
+   action identity without weakening the correction watershed or deleting its
+   evidence.
+3. R3-B3 — emotionalState is declared tracked and claimed to participate, but
+   its free-text values are discarded by numericValue before either trajectory
+   or association analysis. Keep the taxonomy question open to the owner and do
+   not invent a wellness score, while making the type, behavior, tests and
+   claims honest about whether the present concept is a trackable dimension.
+
+For each blocker: reproduce; identify the whole class and architectural
+boundary; write a regression that fails when the defect is reintroduced; prove
+that failure; repair the root cause; sweep siblings; and rerun the full builder
+gate. In particular add cross-surface storage isolation coverage, pass a stored
+association correction through the shared history renderer, and prove every
+tracked concept has a value shape the tracking path can consume or is not
+claimed as participating.
+
+Preserve every Round 3 PASS: the seven repaired semantic invariants, QA-A1's
+observe-first owner flow, the exact-three-verb inferred-evidence decision, the
+section 51 gate items already passed, prior DEF-0034–DEF-0044 repairs, and every
+explicit deferral. Historical effect records keep their original owner-
+attribution meaning.
+
+Deploy a repaired checkpoint, keep Phase 6 YELLOW, update the builder-owned
+governing documents, and provide a retest prompt addressed to this SAME Codex
+QA conversation. Do not edit docs/qa/PHASE_06_QA_HANDOFF.md; it remains QA-owned.
+```
 
 ---
 
