@@ -4,4 +4,12 @@ node_modules
 playwright-report
 test-results
 package-lock.json
+# Copied verbatim from the owner, and reformatting it would make the copy a
+# paraphrase (section 34, D-079).
 docs/CANONICAL_REBUILD_PLAN.md
+
+# Written by the independent QA conversation, which the builder may not edit
+# (D-077, qa/README.md). Holding somebody else's document to this repository's
+# formatter is a rule that breaks at every QA handoff and can only be satisfied
+# by the one person forbidden to satisfy it — CI failed on exactly that.
+docs/qa/PHASE_*_QA_HANDOFF.md
