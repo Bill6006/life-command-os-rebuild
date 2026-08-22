@@ -1,14 +1,201 @@
 # Phase 6 QA handoff — Timeline + Insights
 
-> **STATUS: FAIL — ROUND 3 CODEX RETEST. REPAIR REQUIRED.**
+> **STATUS: FAIL — ROUND 4 CODEX RETEST. REPAIR REQUIRED.**
 >
-> The seven Codex blockers repaired at `481c3a7` pass their direct semantic
-> reproductions, but the retest found three blocking siblings: the QA laboratory
-> replaces normal Preview history, an association correction loses its action
-> object when Timeline describes it, and `emotionalState` is declared tracked
-> while its free-text values cannot enter either tracking path. Phase 6 remains
-> **YELLOW — QA FAIL / REPAIR REQUIRED**. Do not perform the GREEN closeout or
-> begin Phase 7.
+> Round 3's action-identity and tracked-concept blockers are repaired, and the
+> laboratory now uses a physically separate database. The return from that
+> laboratory is not safe yet: on the deployed build, one press of **Show mine**
+> replaced the fixture with an empty owner view until a full reload, and the
+> builder's new isolation regression failed three-for-three when run in focused
+> isolation. Phase 6 remains **YELLOW — QA FAIL / REPAIR REQUIRED**. Do not
+> perform the GREEN closeout or begin Phase 7.
+
+---
+
+# Round 4 — Codex retest
+
+## Verdict and identity
+
+**Overall verdict: FAIL.** R3-B2 and R3-B3 are repaired. R3-B1 is materially
+improved—the fixture and owner are now stored in separate databases, so the
+owner's bytes survived—but the promised one-press return to the owner renders
+an empty owner history and can remain false until the document is reloaded.
+
+| | Retest evidence |
+|---|---|
+| Product checkpoint | `8680642` — "Round 3: the laboratory stops writing over his life" |
+| `main` HEAD tested | `2aba0bc7ebcc7ec78836475e319e2f18ba30a3f0` |
+| Deployed Preview | `2aba0bc7ebcc7ec78836475e319e2f18ba30a3f0`, built `2026-08-22T21:11:00.897Z`; read independently from `preview/build-info.json` and More → This build |
+| Checkpoint match | **PASS** — `git diff 8680642..HEAD --name-only` lists only `docs/PHASE_STATUS.md` |
+| Repository state before this report | Clean |
+
+## Mobile configuration and cold-use order
+
+The sealed owner pass began on the deployed Preview before repository reading,
+at 412×915 in the Codex in-app browser with real scrolling and interaction.
+This browser does not expose UA, DPR or touch-point controls, so this is an
+Android-sized interaction pass, not a claim of Android UA emulation. The
+repository's focused browser run added 360×740, 430×932 and desktop layout
+projects; those projects use Desktop Chrome UA and are layout coverage rather
+than physical-phone validation.
+
+Normal Now first said there was nothing to suggest and asked for current energy.
+Answering `Plenty` produced *"Move for 25 minutes: a walk"* and Timeline
+immediately recorded `Current energy: 4 of 5`. The entry survived refresh and a
+tab close/reopen. Only then was the QA laboratory opened and the repository
+read.
+
+## Round 3 repair results
+
+| Repair | Result | Independent evidence |
+|---|---|---|
+| R3-B1 — laboratory/owner isolation | **FAIL — repaired storage, broken return projection (R4-B1 below).** | `OWNER_DB` and `${OWNER_DB}:laboratory` are separate, a loaded fixture stayed inspectable on Timeline/Now/Insights/Life/domain pages, answers made while it was shown stayed with it, reload preserved it and every normal surface named it as test history. The owner bytes also survived. One-press return did not render them. |
+| R3-B2 — correction loses its action object | **PASS.** | Rejecting the deployed walk relationship wrote: *"Told the app to stop assuming what the app has worked out follows a walk."* The evidence button also names the walk. The scoped correction key and its watershed remain intact in source and the 43 observed-relationship tests pass. |
+| R3-B3 — `emotionalState` declared tracked but discarded | **PASS.** | `tracked` is now optional and limited to `scale | number | duration`; `emotionalState` deliberately has none, remains sensitive and decision-material, and no fake scale was invented. Registry coverage passes values through the real numeric paths while free text and entities remain untracked. |
+
+The laboratory notice is clear and accurate about provenance while a fixture is
+active: *"This is a test history, not yours. Nothing of yours has been
+changed."* Its **Show mine** action and QA's **Empty the laboratory** action both
+call the same `memory.clear()` transition. The fixture survives reload with the
+notice, and normal-surface actions write to the active fixture rather than the
+owner. Those parts pass.
+
+## Blocking finding
+
+### R4-B1 — returning from the laboratory can render an empty owner history
+
+- **Severity:** Blocker — the owner is told that his history is unchanged and
+  offered one press to show it, but that press can present an empty canonical
+  Timeline indefinitely. A reload recovering the bytes does not make a false
+  empty-history claim acceptable.
+- **Deployed reproduction:** after the sealed owner flow above, load *Two
+  months of readings, and nothing graded*, inspect it on Timeline, then press
+  **Show mine**. Timeline says *"Nothing here yet"*. It was still empty after a
+  1.2-second wait. A full reload restored the original owner Timeline,
+  including `Current energy: 4 of 5`, proving physical separation prevented
+  deletion while the live projection was wrong.
+- **Automated reproduction:** the builder's new test at
+  `tests/browser/qa-lab.spec.ts:341` seeds *"weekly review on Sunday"*, loads a
+  fixture, presses **Empty the laboratory**, and expects that owner row on
+  Timeline. A focused run of `qa-lab.spec.ts` plus `shell.spec.ts` failed this
+  exact assertion in **mobile-small, mobile-large and desktop**: 117 passed, 3
+  failed. The complete 300-test browser run then passed the same test at all
+  three sizes. That order-dependent result is a false-green signal, not
+  contradictory evidence that clears the deployed reproduction.
+- **Code-level class:** both stores feed one mutable `snapshot`. `append()`
+  captures whichever store is active and later calls `setSnapshot(await
+  current.snapshot())`; `clear()` separately clears the laboratory, switches
+  `sourceRef` to owner and publishes `owner.snapshot()`. No generation/source
+  token prevents an already-running laboratory append or derived-outcome effect
+  from publishing its laboratory snapshot after the switch. The single shared
+  `busy` flag has the same cross-operation race. Reload remounts and selects
+  from durable store contents, which matches the observed recovery.
+- **Coverage hole:** the **Show mine** test at `qa-lab.spec.ts:359` checks only
+  that the notice disappears. It never checks that owner content returns and
+  remains visible. The stronger seeded-owner test is capable of failing, but
+  is not deterministic under the current harness/build timing.
+- **Acceptance expectation:** returning through either **Show mine** or
+  **Empty the laboratory** must atomically publish the owner snapshot and keep
+  it published without a reload. Work started against one source must not
+  update the visible projection, busy/error state, or active source after a
+  switch. Cover both entry points with owner content, assert immediate and
+  delayed stability, and prove each regression fails when the stale-write
+  behavior is reintroduced.
+
+## Preserved Phase 6 gate
+
+The seven semantic invariants repaired before Round 3 remain closed by the live
+flows, source inspection and the focused semantic run: 100/100 across
+`observed-relationships`, `registries` and `architecture-guards`. QA-A1 remains
+closed: the app asked for current energy, never a causal grade. Section 51's
+already-passing claim/evidence behavior, DEF-0034–DEF-0044, and the accepted
+exact-three-verb inferred-evidence boundary showed no regression. The repair
+diff does not reopen P4-6, P4-7, the never-settled started move, or Phase 5's
+four explicit deferrals.
+
+The concrete false-green triggered full-suite duplication:
+
+- `npm run verify`: **PASS** — formatting, lint, typecheck, 43 files / 768
+  tests, and production build.
+- `npm run test:browser`: **PASS** — 300/300 across all three projects.
+- Focused `qa-lab.spec.ts` + `shell.spec.ts`: **FAIL** — 117 passed / 3 failed,
+  all three failures at the owner-restoration assertion.
+
+The aggregate green run cannot overrule the deployed reproduction plus the
+same regression's isolated failures. Phase 6 stays YELLOW.
+
+## Recommended next action
+
+- **Model:** **Claude Opus 5** (or the current strongest Claude coding model if
+  renamed).
+- **Reasoning level:** **High.** The remaining issue is an asynchronous
+  cross-store projection race with an order-dependent browser false-green;
+  finding and closing the whole stale-work class needs deeper reasoning than a
+  localized copy or taxonomy repair.
+- **Conversation:** **CURRENT — the Claude builder conversation.** It owns the
+  repair checkpoint and can preserve the reasoning and architecture choices
+  that produced the two-store implementation; after repair it must return to
+  this same Codex QA conversation for Round 5.
+
+## Ready-to-paste next prompt
+
+```text
+Phase 6's Round 4 independent Codex retest is FAIL. Keep Phase 6 YELLOW — QA
+FAIL / REPAIR REQUIRED. Do not perform the GREEN closeout and do not begin
+Phase 7.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+Report: docs/qa/PHASE_06_QA_HANDOFF.md
+Product checkpoint QA tested: 8680642
+Deployed docs-only HEAD QA tested: 2aba0bc7ebcc7ec78836475e319e2f18ba30a3f0
+
+This prompt is for the CURRENT Claude builder conversation. Read
+docs/qa/PHASE_06_QA_HANDOFF.md in full, beginning with "Round 4 — Codex
+retest". Repair R4-B1 under canonical plan section 42. Do not edit or rewrite
+the Codex QA report.
+
+The storage boundary is materially better and must be preserved: owner and
+laboratory bytes live in separate target-stable IndexedDB databases; fixture
+actions stay with the fixture; a loaded fixture remains inspectable across
+normal surfaces; reload preserves it and the notice; deployment does not
+orphan either store. R3-B2 and R3-B3 pass and must stay closed.
+
+The remaining blocker is the return projection. On deployed 2aba0bc, after an
+owner energy reading was recorded and a QA scenario loaded, one press of Show
+mine rendered "Nothing here yet" indefinitely; a full reload restored the
+owner history. The new seeded-owner browser regression independently failed
+the same return after Empty the laboratory in mobile-small, mobile-large and
+desktop when run focused (117 passed / 3 failed), even though the complete
+browser run later passed 300/300. Treat that order/timing dependence as a
+false-green to eliminate, not as permission to rerun until green.
+
+Address the defect class, not only the observed interleaving:
+
+1. Reproduce the deployed Show mine path and the focused Empty the laboratory
+   failure before changing code. Record the exact competing operations.
+2. Make a source switch atomic from the visible consumer's perspective.
+   Async work that began against the laboratory must not publish its snapshot,
+   busy/error state, or source after the owner switch (and vice versa).
+3. Preserve the two physical databases and all passing laboratory behavior.
+   Do not trade fixture inspectability or durable reload for owner restoration.
+4. Strengthen coverage for both Show mine and Empty the laboratory. Seed owner
+   content; assert it appears without reload immediately and after pending
+   derived work has had time to settle; assert laboratory content does not
+   reappear. Make the regression deterministic in focused and full-suite order.
+5. Prove the new tests fail when the stale-write behavior is reintroduced.
+6. Recheck QA-A1, R3-B2, R3-B3, all seven semantic invariants, section 51,
+   DEF-0034–DEF-0044, the exact-three-verb decision, and every explicit
+   deferral named in Round 4.
+7. Run the full repository gate and complete browser suite, deploy the repaired
+   checkpoint, keep Phase 6 YELLOW, and return a Round 5 retest prompt to this
+   SAME Codex QA conversation.
+
+Update docs/PHASE_STATUS.md, docs/DEFECT_LEDGER.md and docs/NEXT_PROMPT.md as
+the repository workflow requires, but do not edit
+docs/qa/PHASE_06_QA_HANDOFF.md. Do not ask the owner to paste the report; you
+have its path.
+```
 
 ---
 
