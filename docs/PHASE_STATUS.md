@@ -193,15 +193,15 @@ failure, and lint is the cheaper half.
 
 ## Build identity
 
-|                      |                                                                                                                                           |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Product checkpoint   | `4a2b9b1` — set below to the repaired checkpoint; every result here was measured against it                                               |
-| Round 1 checkpoint   | `e681a66` — what QA tested before the PASS was withdrawn                                                                                  |
-| Closing SHA          | current `main` HEAD — documentation only past `e681a66`, no product code                                                                  |
-| Deployed Preview SHA | identical to `main` HEAD; `e681a66` itself was confirmed deployed and hand-checked against `preview/build-info.json` before this closeout |
-| Do they match?       | Yes, by construction — D-004, and asserted live in CI                                                                                     |
-| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                               |
-| Live proof           | `preview/build-info.json`                                                                                                                 |
+|                      |                                                                                                      |
+| -------------------- | ---------------------------------------------------------------------------------------------------- |
+| Product checkpoint   | `36c75ef` — the repaired build every result below was measured against, and the one QA should retest |
+| Round 1 checkpoint   | `e681a66` — what QA tested before the PASS was withdrawn                                             |
+| Closing SHA          | current `main` HEAD — documentation only past `36c75ef`, no product code                             |
+| Deployed Preview SHA | `36c75ef`, read live from `preview/build-info.json`                                                  |
+| Do they match?       | Yes, by construction — D-004, and asserted live in CI                                                |
+| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/                                          |
+| Live proof           | `preview/build-info.json`                                                                            |
 
 ## Verification
 
@@ -566,7 +566,7 @@ closeout follows in the same response.
 | Round 1 tested SHA   | `34e03b6` — FAIL (QA-B1, QA-B2, QA-M1)                                   |
 | Round 2 (retest) SHA | `72c6d9f` — PASS, at/after `8d06dae`                                     |
 | Checkpoint SHA       | current `main` HEAD — documentation only past `8d06dae`, no product code |
-| Deployed Preview SHA | identical to `main` HEAD                                                 |
+| Deployed Preview SHA | `36c75ef`, read live from `preview/build-info.json`                      |
 | Do they match?       | Yes, by construction — D-004, and asserted live in CI                    |
 | Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/              |
 | Live proof           | `preview/build-info.json`                                                |
@@ -818,7 +818,7 @@ it is zero.
 | -------------------- | ----------------------------------------------------------- |
 | Approved checkpoint  | `1d52de4` — the build the owner accepted                    |
 | Checkpoint SHA       | current `main` HEAD                                         |
-| Deployed Preview SHA | identical to `main` HEAD                                    |
+| Deployed Preview SHA | `36c75ef`, read live from `preview/build-info.json`         |
 | Do they match?       | Yes, by construction — D-004, and asserted live in CI       |
 | Since the approval   | documentation only; no product code changed after `1d52de4` |
 | Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/ |
@@ -1182,7 +1182,7 @@ the shape.
 |                      |                                                             |
 | -------------------- | ----------------------------------------------------------- |
 | Checkpoint SHA       | current `main` HEAD                                         |
-| Deployed Preview SHA | identical to `main` HEAD                                    |
+| Deployed Preview SHA | `36c75ef`, read live from `preview/build-info.json`         |
 | Do they match?       | Yes, by construction — D-004, and verified live by hand     |
 | Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/ |
 | Live proof           | `preview/build-info.json`                                   |
@@ -1510,7 +1510,7 @@ that _can_ be checked, and it all holds; the phone test is still the gate.
 |                      |                                                             |
 | -------------------- | ----------------------------------------------------------- |
 | Checkpoint SHA       | current `main` HEAD                                         |
-| Deployed Preview SHA | identical to `main` HEAD                                    |
+| Deployed Preview SHA | `36c75ef`, read live from `preview/build-info.json`         |
 | Do they match?       | Yes, by construction — D-004                                |
 | Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/ |
 | Live proof           | `preview/build-info.json`                                   |
