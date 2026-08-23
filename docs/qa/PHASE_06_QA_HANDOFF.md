@@ -1,14 +1,221 @@
 # Phase 6 QA handoff — Timeline + Insights
 
-> **STATUS: FAIL — ROUND 4 CODEX RETEST. REPAIR REQUIRED.**
+> **STATUS: FAIL — ROUND 5 CODEX RETEST. REPAIR REQUIRED.**
 >
-> Round 3's action-identity and tracked-concept blockers are repaired, and the
-> laboratory now uses a physically separate database. The return from that
-> laboratory is not safe yet: on the deployed build, one press of **Show mine**
-> replaced the fixture with an empty owner view until a full reload, and the
-> builder's new isolation regression failed three-for-three when run in focused
-> isolation. Phase 6 remains **YELLOW — QA FAIL / REPAIR REQUIRED**. Do not
-> perform the GREEN closeout or begin Phase 7.
+> Round 4's two-store snapshot race is repaired, but the return still does not
+> restore the owner's temporal context. A past fixture's clock remains active
+> after **Show mine** or **Empty the laboratory**, so newer owner records are
+> treated as future and disappear until reload. Phase 6 remains **YELLOW — QA
+> FAIL / REPAIR REQUIRED**. Do not perform the GREEN closeout or begin Phase 7.
+
+---
+
+# Round 5 — Codex retest
+
+## Verdict and identity
+
+**Overall verdict: FAIL.** The repair correctly prevents stale store reads from
+publishing across a source switch, and the owner bytes remain physically safe.
+The return is still incomplete: it restores the owner store while retaining the
+laboratory's travelled clock, zone and week interpretation. On ordinary
+surfaces that makes legitimate owner records later than the fixture instant
+disappear as future history.
+
+| | Retest evidence |
+|---|---|
+| Product checkpoint | `28d2efc` — "Round 4: only the newest work may say what is on the screen" |
+| `main` HEAD tested | `b9bcab118c32feb307bfc1b9cc0772a59f09cb01` |
+| Deployed Preview | `b9bcab118c32feb307bfc1b9cc0772a59f09cb01`, built `2026-08-22T23:36:28.157Z`; read independently from the live bundle, `preview/build-info.json` and More → This build |
+| Checkpoint match | **PASS** — `git diff 28d2efc..HEAD --name-only` lists only `docs/PHASE_STATUS.md` |
+| Repository state before this report | Clean |
+
+## Mobile configuration and sealed owner flow
+
+The deployed Preview was exercised before repository reading at 412×915 in the
+Codex in-app browser with real clicks and scrolling. The surface does not expose
+UA/DPR controls, so this is an Android-sized interaction pass rather than a
+claim of Android UA emulation. Repository browser projects additionally ran at
+360×740, 430×932 and desktop with Desktop Chrome UA.
+
+The persisted tab initially held the prior test history. **Show mine** returned
+to the owner correctly. Normal Now showed *"Move for 25 minutes: a walk"*;
+pressing **Done** produced a five-entry effective Timeline including the new
+suggestion and completion plus `Current energy: 4 of 5`. The history was visible
+before QA and remained durable throughout every reproduction below.
+
+A fresh fixture was then loaded and inspected successfully across Now,
+Timeline, Insights, Life and Health & Recovery. Every surface carried the
+accurate test-history notice, fixture writes stayed fixture-scoped, and reload
+preserved the fixture and notice. Those Round 4 passes remain intact.
+
+## R4-B1 repair result
+
+**PASS for the specific stale-store publication repaired; FAIL for the complete
+return acceptance because of R5-B1 below.**
+
+`projection.ts` now gives every async operation a sequence token and source.
+`MemoryProvider` consults it before publishing a snapshot, source, error or
+busy completion. The two physical target-stable databases remain separate.
+The eight direct sequence tests and three fake-store provider tests pass, and
+the deployed bundle contains the same projection implementation as checkpoint
+`28d2efc`.
+
+That abstraction protects only `source` and `snapshot`. The visible history is
+also a function of `now`, `zone`, `weekStartsOn` and `travelled`. QA changes all
+four when loading a scenario, while `clear()` restores none of them. The return
+therefore combines owner records with laboratory time—a coherent store
+projection under an incoherent temporal projection.
+
+## Blocking finding
+
+### R5-B1 — the laboratory's clock survives the return and hides newer owner history
+
+- **Severity:** Blocker — both required return controls can make a valid owner
+  history read as empty or partial until reload. The notice disappears, so the
+  screen positively presents the result as the owner's history.
+- **Show mine reproduction:** load *One answer, and a lot of silence* (clock:
+  `2026-06-15 07:00`), answer its live `Current energy` question with
+  **Plenty**, and immediately press **Show mine**. After 2.4 seconds the notice
+  is gone, but Timeline contains only the owner's two May entries; the new
+  August walk, completion and energy record are absent. Nothing from the
+  fixture is labelled anymore, yet the owner view is still being evaluated at
+  the fixture's June instant.
+- **Empty the laboratory reproduction:** from the recovered owner, load *Two
+  ordinary weeks* (clock: `2026-02-15 21:00`) and immediately press **Empty the
+  laboratory**. After 2.4 seconds QA has no laboratory notice and its Storage
+  block reports all seven raw owner records, but its clock still says February.
+  Timeline says **Nothing here yet** because every owner entry is in May or
+  August—future relative to the retained fixture clock.
+- **Durability evidence:** a full reload restores real time and the complete
+  owner Timeline. The two databases and owner bytes are not the defect.
+- **Root cause:** a scenario button calls `setZone`, `setWeekStartsOn` and
+  `travelTo` before `loadDocument`. `MemoryProvider.clear()` changes the source
+  and snapshot only; it does not call the equivalent of `returnToNow`, restore
+  the system zone, restore the owner's week-start interpretation, or clear
+  `travelled`. `buildView(snapshot, { now, zone, weekStartsOn })` then correctly
+  excludes records that have not happened yet according to the stale lab time.
+- **Why the new browser coverage passes:** `seedHisOwnHistory` fixes the owner
+  row at `2026-05-01`; every new return test loads *Two months of readings* at
+  `2026-05-02`. The owner row is one day **before** the fixture clock, so the
+  tests cannot observe future-record suppression. They assert the store
+  boundary, not the temporal half of the visible projection. None answers a
+  fixture question immediately before returning as the retest explicitly
+  required.
+- **Deterministic-test limitation:** the projection and provider tests model
+  only `source` plus `snapshot`; their fake records are not passed through a
+  view at a controlled clock. The provider test also emits repeated React
+  warnings that the environment is not configured to support `act(...)`.
+  Those tests are useful for the repaired interleaving, but they are not proof
+  of a coherent owner-facing history.
+- **Acceptance expectation:** both return controls must publish one coherent
+  owner context without reload: owner source, owner snapshot, real/system time,
+  owner/system zone, owner week-start interpretation and `travelled = false`.
+  An owner record later than the fixture clock must be visible immediately and
+  after pending work settles. No fixture row, clock or notice may remain.
+
+## Preserved Phase 6 gate
+
+R3-B2 and R3-B3 remain closed by source review and the focused semantic suite.
+The two databases, fixture-scoped writes, fixture reload/notice, all seven
+semantic invariants, QA-A1, section 51, DEF-0034–DEF-0044 and the accepted
+exact-three-verb boundary show no regression. The repair diff does not reopen
+P4-6, P4-7, the never-settled started move or Phase 5's four explicit
+deferrals.
+
+Focused verification:
+
+- Projection/provider plus semantic guards: **111/111 passed**. The three
+  provider tests pass with repeated `act(...)` environment warnings.
+- Focused `qa-lab.spec.ts`: **66/66 passed**, demonstrating the timestamp-shaped
+  coverage hole above rather than clearing the deployed reproduction.
+
+The deployed mismatch triggered full-suite duplication:
+
+- `npm run verify`: **PASS** — formatting, lint, typecheck, 45 files / 779
+  tests, and production build.
+- `npm run test:browser`: **PASS** — 309/309 across all three projects.
+
+The gate is green because no automated case puts an owner record after the
+fixture clock and then judges the rendered owner view. Phase 6 stays YELLOW.
+
+## Recommended next action
+
+- **Model:** **Claude Opus 5** (or the current strongest Claude coding model if
+  renamed).
+- **Reasoning level:** **High.** The remaining defect spans storage projection,
+  temporal projection and user-command priority; the previous repair correctly
+  solved one layer but encoded an incomplete definition of what “whose history
+  is on screen” means.
+- **Conversation:** **CURRENT — the Claude builder conversation.** It owns the
+  projection design and its reintroduction evidence; after repair it must
+  return to this same Codex QA conversation for Round 6.
+
+## Ready-to-paste next prompt
+
+```text
+Phase 6's Round 5 independent Codex retest is FAIL. Keep Phase 6 YELLOW — QA
+FAIL / REPAIR REQUIRED. Do not perform the GREEN closeout and do not begin
+Phase 7.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+Report: docs/qa/PHASE_06_QA_HANDOFF.md
+Product checkpoint QA tested: 28d2efc
+Deployed docs-only HEAD QA tested: b9bcab118c32feb307bfc1b9cc0772a59f09cb01
+
+This prompt is for the CURRENT Claude builder conversation. Read
+docs/qa/PHASE_06_QA_HANDOFF.md in full, beginning with "Round 5 — Codex
+retest". Repair R5-B1 under canonical plan section 42. Do not edit or rewrite
+the Codex QA report.
+
+The Round 4 sequence/source guard is present and its specific stale-store race
+is repaired. Preserve it, the two physical databases, fixture inspectability,
+fixture-scoped writes, reload/notice behavior, R3-B2, R3-B3 and every preserved
+Phase 6 gate item named in Round 5.
+
+The remaining blocker is the temporal half of the projection. QA scenario load
+sets now, zone, weekStartsOn and travelled. Show mine / Empty the laboratory
+restore owner source and owner snapshot but retain the fixture clock. On the
+deployed build, a February fixture followed by Empty leaves all seven raw owner
+records in Storage while Timeline says "Nothing here yet" because the owner's
+May/August records are future relative to February. A June fixture followed by
+an answer and Show mine leaves only two May owner entries visible and hides the
+new August records. Reload restores them by restoring real time.
+
+Address the whole visible-context class, not only `setNow`:
+
+1. Reproduce both deployed paths before changing code: answer the fixture's
+   energy question then immediately Show mine; freshly load a past scenario
+   then immediately Empty the laboratory. Seed/record owner history later than
+   the fixture instant.
+2. Define one coherent owner projection. A successful return must make owner
+   source, owner snapshot, real/system time, owner/system zone, owner week-start
+   interpretation and travelled=false observable together. No fixture row,
+   notice or temporal setting may survive onto normal owner surfaces.
+3. Preserve the Round 4 async guards. A stale store operation must still be
+   unable to publish, but autonomous laboratory work must not outrank the
+   owner's explicit command to leave the laboratory.
+4. Add deterministic provider/view coverage with a controlled clock and an
+   owner record later than the scenario clock. Test both return controls,
+   immediate and delayed stability, and the answer-then-return sequence. The
+   current May 1 owner / May 2 fixture pair is incapable of proving this.
+5. Extend the projection model if temporal state belongs there; do not keep
+   calling source+snapshot a complete screen projection if time can contradict
+   both. Fix the React act-environment warnings in the provider race tests.
+6. Prove the new tests fail when temporal restoration is removed and when each
+   stale-publication behavior from Round 4 is reintroduced.
+7. Recheck both databases, fixture scope and reload, R3-B2, R3-B3, all seven
+   semantic invariants, QA-A1, section 51, DEF-0034–DEF-0044, the exact-three-
+   verb decision and every explicit deferral named in Round 5.
+8. Run the full repository gate and complete browser suite, deploy the repaired
+   checkpoint, keep Phase 6 YELLOW, and return a Round 6 retest prompt to this
+   SAME Codex QA conversation.
+
+Update docs/PHASE_STATUS.md, docs/DEFECT_LEDGER.md, docs/DECISION_LOG.md if a
+new decision is genuinely required, and docs/NEXT_PROMPT.md as the repository
+workflow requires. Do not edit docs/qa/PHASE_06_QA_HANDOFF.md. Do not ask the
+owner to paste anything; you have the path.
+```
 
 ---
 
