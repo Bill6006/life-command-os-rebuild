@@ -5,122 +5,191 @@ is Codex (D-090); Claude builds. Every handoff ends with the model, the level,
 the conversation and a short copyable launcher (D-092) — the detail lives here,
 in the repository.
 
-**Phase 6 is GREEN.** Six rounds, closed on independent Codex QA PASS (Round
-6). Full record in [`PHASE_STATUS.md`](PHASE_STATUS.md) under "Phase 6 —
-Timeline + Insights"; the nine standing semantic and storage invariants are
-D-091; the QA protocol is D-090; the handoff-launcher rule is D-092, all in
-[`DECISION_LOG.md`](DECISION_LOG.md).
+**Phase 7 — AI exports + backup/restore is YELLOW: READY FOR INDEPENDENT QA.**
+Per D-077 this checkpoint does not self-certify. The full record is in
+[`PHASE_STATUS.md`](PHASE_STATUS.md) under "Phase 7 — AI exports +
+backup/restore"; the nine standing semantic and storage invariants are D-091;
+the QA protocol is [`qa/README.md`](qa/README.md) and D-090; the
+handoff-launcher rule is D-092.
 
-**Phase 7 — AI exports + backup/restore (canonical plan section 52) is next.**
-Nothing in this area is built: `MoreScreen.tsx` currently says so directly —
-"Exports, backup and restore are not built yet." `documentJson()` already
-exists on the memory context (`src/features/memory/memoryContext.ts`) and
-round-trips a `StoreSnapshot` through `snapshotToJson`/`snapshotFromWire`; it
-is the QA laboratory's load/save path today, and the phase's job is to give the
-owner the same fidelity, deliberately, with a UI in front of it.
+**Product checkpoint: `322c00b`.** Deployed to Preview and confirmed live.
 
 ---
 
 ## NEXT ACTION
 
-- **System:** **Claude**
-- **Model:** Opus-class (Claude Opus 5, or the current strongest Claude coding
-  model if renamed)
-- **Intelligence level:** **High**
-- **Conversation:** **NEW** — a phase boundary, not a continuation of the Phase
-  6 repair conversation's context.
-- **Why this model:** a full backup/restore has to be transactional and
-  verified on a real phone (the phase's own gate), and the AI handoff prompt
-  composer has to describe the app's own state honestly to an entirely
-  different assistant reading it cold — both are cross-system reasoning tasks
-  D-080 reserves Opus-class for.
-- **Why this level:** High. The shape of the work is bounded by section 52, but
-  correctness here is unusually unforgiving — a restore that silently loses or
-  duplicates data is the worst possible failure mode for an app whose entire
-  premise is being a trustworthy record of a life.
-- **Why a new conversation:** Phase 6 is closed and its repair context (six
-  rounds of laboratory-storage races) is not needed to reason about export
-  composition or restore atomicity, and carrying it forward would waste
-  context on an unrelated problem.
-- **Attach/reference:** `src/features/memory/store.ts` (`CanonicalStore`,
-  `replaceAll`), `src/memory/indexedDbStore.ts`, `src/memory/snapshot.ts`
-  (`snapshotToJson`, `snapshotFromWire`), `src/features/memory/MemoryProvider.tsx`
-  (D-091's storage-boundary reasoning — a restore is the same "whole visible
-  context, published together" problem the last three rounds just closed), and
-  `src/features/more/MoreScreen.tsx`.
+- **System:** **Codex** — independent QA (D-090)
+- **Model:** the strongest current Codex reasoning model (GPT-5.1-Codex-Max, or
+  the nearest current equivalent if renamed)
+- **Reasoning level:** **High**
+- **Conversation:** **NEW CODEX CONVERSATION REQUIRED FOR INDEPENDENCE**
+- **Why this model:** this phase writes to and replaces the owner's only copy
+  of his own history, and the interesting failures are the ones that report a
+  success they cannot deliver — which is reasoning about what a claim rests on
+  rather than about whether a control works.
+- **Why this level:** High. The surface is small and the acceptance criteria
+  are explicit, but the cost of a missed defect here is a life's record, and
+  step 2 of the protocol — claim-to-evidence — is the step that found
+  everything the last two phases lost rounds to.
+- **Why a new conversation:** independence is part of the gate. The builder's
+  model of why this is correct must not be inherited (D-077, D-090).
+- **Report path:** `docs/qa/PHASE_07_QA_HANDOFF.md` — QA owns it, and QA alone.
 
 ---
 
 ## COPY/PASTE PROMPT
 
 ```text
-Begin Phase 7 — AI exports + backup/restore. Repository:
+Independent QA — Life Command OS rebuild, Phase 7 (AI exports + backup/restore).
+Repository:
 
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Read docs/CANONICAL_REBUILD_PLAN.md section 52 in full, and
-docs/PHASE_STATUS.md's Phase 6 entry for the storage-boundary reasoning you
-will be extending rather than re-deriving. Do not ask the owner to paste
-either file; you have the paths.
+You are Codex, running independent QA under owner decisions D-077 and D-090.
+You test; you do not repair. You may write only
+docs/qa/PHASE_07_QA_HANDOFF.md and narrowly scoped QA evidence artifacts.
 
-WHERE THIS PHASE STARTS
+CHECKPOINT
 
-Nothing in this area is built. src/features/more/MoreScreen.tsx says so
-directly. What already exists and is yours to build on:
+Product checkpoint SHA: 322c00b
+Deployed Preview:       https://bill6006.github.io/life-command-os-rebuild/preview/
+Confirm for yourself that preview/build-info.json reports 322c00b before you
+conclude anything. If it does not, stop and say so.
 
-- MemoryContextValue.documentJson() (src/features/memory/memoryContext.ts)
-  round-trips the active store through snapshotToJson/snapshotFromWire. The QA
-  laboratory already uses this path to load and inspect fixtures.
-- CanonicalStore.replaceAll() (src/memory/store.ts,
-  src/memory/indexedDbStore.ts) is the transactional whole-store write a
-  restore needs — replaceAll already clears every object store and writes the
-  new one inside a single IndexedDB transaction.
-- The two-database owner/laboratory split and the D-091 projection rule in
-  MemoryProvider.tsx are the reasoning to extend, not reinvent: a restore that
-  publishes a snapshot without also publishing a coherent read of it (clock,
-  zone, week start) is the exact defect class DEF-0057 and DEF-0058 just
-  closed, one surface over.
+ORDER OF WORK — D-090's seven steps, in qa/README.md section 2
 
-WHAT SECTION 52 ASKS FOR
+1. SEALED COLD OWNER-USE. Open the deployed Preview and use it as the owner
+   would, BEFORE reading any repository document. Write down what it appears to
+   claim. Everything Phase 6 lost three rounds to was visible in this step and
+   invisible to every suite; every finding this phase's builder made after its
+   own automated gate came back clean was also found here and nowhere else.
+2. CLAIM-TO-EVIDENCE SEMANTIC AUDIT. For each claim on screen, establish what
+   it actually rests on.
+3. SEMANTIC AND PRODUCT CORRECTNESS. Does the app mean what it says, and is
+   what it says worth saying?
+4. TARGETED PHASE ACCEPTANCE, now that the meaning is understood.
+5. TARGETED KNOWN-DEFECT REGRESSION for the surfaces this phase touched.
+6. ARCHITECTURE INSPECTION WHERE WARRANTED.
+7. FULL-SUITE DUPLICATION ONLY ON A CONCRETE TRIGGER.
 
-An AI export composer: section selection, select-all, clear, a remembered last
-selection, Private/Sexual Health available for deliberate inclusion, an
-embedded handoff prompt, a Copy Prompt action, current app/engine version,
-current data range, current selected domains.
+Green builder tests are evidence. Re-running a suite that was already green
+buys nothing and costs the attention steps 1 and 2 need.
 
-An AI handoff prompt with a fixed shape: source-of-truth instruction,
-current-state review, main limiter, an app-tuning review when diagnostics are
-included, what is working, what is drifting, what to change, what to
-remove/simplify, what NOT to change, next practical actions, an uncertainty
-rule, and a instruction to ask only necessary questions.
+WHAT THIS PHASE BUILT
 
-A full backup/restore: complete, transactional, verified, with rollback, and
-tested on a real phone.
+A new destination, Data, reached from More (#/data). Three things on it, and
+the builder's claim is that they are deliberately three different things:
 
-The gate: G-013 passes; the private section can be intentionally included;
-export stays reliable on a phone; restore exactness is proven; Data/restore
-stays accessible during degraded-state tests. Look up G-013's exact wording in
-the plan rather than assuming it.
+- A REVIEW EXPORT: a description of what the app currently believes, composed
+  of chosen sections, with an embedded handoff prompt for whichever assistant
+  reads it. It is allowed to leave things out.
+- A BACKUP: the file the owner's whole recorded life comes back from. The
+  claim is that NOTHING is omitted for any reason — not the private domain,
+  not a row the parser could not read, not a field this schema version has
+  never heard of.
+- A RESTORE: replaces everything. Validate, preview, atomic apply, verify,
+  roll back on failure, and never report a success it cannot deliver.
 
-HOW TO PROCEED
+The governing requirements are canonical plan section 52 (the phase), section
+29 (full backup and restore), section 11 (the private domain's export
+requirement), G-012 and G-013 in section 32, and D-091's nine invariants. Read
+those yourself rather than taking the summary above as the specification.
 
-Follow section 43's protocol. Where the plan is ambiguous or leaves a design
-choice open, propose the choice and the reasoning rather than guessing
-silently, and flag anything that needs the owner's explicit decision rather
-than assuming it — this phase writes to the owner's only copy of his own data,
-so an assumption that turns out wrong is not a cosmetic bug.
+ACCEPTANCE THIS PHASE IS BEING HELD TO
 
-Build, verify with the full builder gate (unit, contract, synthetic, browser,
-clean-checkout npm run verify, privacy scan, CI, a real Android-style pass
-against the deployed Preview — restore in particular needs to be exercised on
-the actual device class the gate targets, not only in Playwright), deploy, and
-reach YELLOW — READY FOR INDEPENDENT QA. Do not self-certify (D-077): a
-builder conversation may not mark its own phase GREEN.
+- G-013: selected sections are present; the Private section can be included;
+  the handoff prompt is embedded; the prompt says what to keep, change, remove
+  and NOT change.
+- The export composer offers section selection, select all, clear, a
+  remembered last selection, and carries the app/engine version, the current
+  data range and the current selected domains.
+- The handoff prompt asks for an app-tuning review when diagnostics are
+  included.
+- A full backup is complete, transactional, verified, with rollback, and
+  tested on a phone.
+- Export stays reliable on a phone.
+- Restore exactness is proven.
+- Data and restore stay accessible during degraded-state tests (G-012).
 
-End with D-092's model, level, conversation and a short copyable launcher
-addressed to Codex for independent QA — cold-use first, per D-090's seven-step
-order in qa/README.md — so the owner does not need another turn to obtain the
-next prompt.
+WHERE TO PUSH HARDEST
+
+These are the builder's own claims. Treat each as something to disprove, not
+as something to confirm.
+
+- "A backup omits nothing." Take one with unreadable rows in the store. Take
+  one with something in the private domain. Compare what comes back with what
+  went in, field by field, rather than by counting.
+- "A restore never reports a success it cannot deliver." What does the owner
+  actually see if the write fails? If the read-back fails? If putting his old
+  history back fails on top of that? Is the difference between "nothing was
+  written" and "something was written and then undone" legible to a person?
+- "A backup is of his own records whatever is on screen." Load a synthetic
+  scenario in the QA laboratory and take a backup. Whose history is in the
+  file?
+- "A restore does not run while a test history is on screen." Is that the
+  right rule, or is it a refusal that will read as a bug the first time he
+  meets it? The builder chose it over the alternative and recorded why in
+  D-093 — decide whether you agree.
+- The export document itself. It leaves the device and is read by something
+  that cannot see the evidence underneath it. Does any sentence in it claim
+  more than the record supports? Does it say whose history it is? Does a
+  figure ever appear without the quantity it counts?
+- The handoff prompt. Read it as the assistant receiving it. Would it produce
+  a useful review, or a plausible one?
+- The private section. It is off by default, is not reached by "select all",
+  and is not remembered between exports. Check all three, and check that the
+  document says which way round it is when it is left out — an absence a
+  reader cannot distinguish from an empty life is its own defect.
+- Copy, on a real phone. The builder's automated Android gate passed clean and
+  a read-through then found five defects in the wording — a plural that did
+  not agree, a pronoun that did not agree, a machine timestamp and a
+  sixty-four character hash on a 360px screen. Assume there are more.
+
+KNOWN AND DISCLOSED — confirm these are unchanged rather than rediscovering them
+
+- Deliberately not built, with reasons in PHASE_STATUS.md: authenticated /
+  tamper validation (integrity is a content fingerprint, not a signature —
+  D-095); migrations (schema 1 is the first); selective restore; any way to
+  override a refused file; a library of past backups; legacy import (Phase 8).
+- DEF-0059: two standing copy guards had silently stopped reading part of each
+  file they swept. Repaired this phase, with its own self-tests.
+- DEF-0060: counts printed beside plural nouns, and the two sweeps that could
+  not fire on them. Repaired this phase.
+- guide-resume.test.ts remains recorded as resolved-unreproduced from Phase 6.
+  It did not fail during this phase.
+- npx playwright test serves a PREBUILT dist and never builds. Use
+  npm run test:browser if you change source and want the change tested.
+
+HOW TO TEST
+
+Use an Android-style Playwright context — touch, a mobile user agent, a
+realistic device pixel ratio, mobile scrolling — not a narrowed desktop
+viewport. Read whole screens as a person, not as a set of string assertions.
+The builder's own gate script is scripts/android-gate.mjs; you are welcome to
+read it, and you should assume it only checks what somebody already thought of.
+
+There is one thing this phase makes easy to get wrong when testing it: seeding
+records straight into IndexedDB does not reach the running app, because the
+provider has already opened and a hash change is not a reload. The builder lost
+a whole class of coverage to exactly that.
+
+OUTPUT
+
+Write docs/qa/PHASE_07_QA_HANDOFF.md to the contract in plan section 43 and
+qa/README.md section 3: phase; checkpoint SHA tested; deployed SHA tested;
+Android/mobile configuration; the governing acceptance criteria used; scenarios
+and flows tested; PASS/FAIL per flow; exact reproductions; semantic,
+behavioural, privacy and mobile/UI findings separately; blocking vs
+non-blocking; which automated tests gave false confidence; confirmation that
+the deferred items above are unchanged; and an overall PASS or FAIL.
+
+Then, in the SAME response and without being asked (D-082), output the complete
+ready-to-paste next prompt — on FAIL addressed to the CURRENT builder
+conversation for repair under section 42, on PASS addressed to it for the
+formal GREEN closeout — and end with the four lines and the launcher (D-092):
+model, reasoning/intelligence level, conversation, and a short copyable block
+naming the repository path and the exact MD file the next conversation must
+read.
 ```
 
 <!-- LCO_COMPLETE -->

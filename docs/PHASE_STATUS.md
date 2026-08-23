@@ -9,7 +9,9 @@ deployed checkpoint and writes `docs/qa/PHASE_XX_QA_HANDOFF.md` before anything
 becomes GREEN. Owner decision D-077; the protocol is [`qa/README.md`](qa/README.md).
 
 Phase 4 is the argument for it, and the record below is the evidence: every
-automated gate passed, and the phone found five defects afterwards.
+automated gate passed, and the phone found five defects afterwards. Phase 7
+repeated the shape from the other side — its own Android gate came back clean,
+and reading the same screen as a person found five more.
 
 **The canonical plan is now v1.2** (D-079) — the independent-QA gate and the
 eleven-domains/ten-pages rule are now stated directly in the plan itself rather
@@ -17,6 +19,363 @@ than only in this project's decisions, and Phase 6 gains progressively
 disclosed evidence/analytics. Every handoff from here also names a recommended
 **Claude model**, not only an intelligence level (D-080). Neither change
 reopens Phase 4 or any completed phase.
+
+---
+
+# Phase 7 — AI exports + backup/restore
+
+**Status: YELLOW — READY FOR INDEPENDENT QA.**
+
+Per D-077 this checkpoint does not self-certify. Independent QA is Codex
+(D-090), in a **new** conversation, cold-use first.
+
+Nothing in this area existed before this checkpoint: `MoreScreen.tsx` said so in
+as many words, and that sentence was one of the acknowledged deferrals in the
+copy guard. It is gone, replaced by the thing it was deferring.
+
+## What this phase is actually about
+
+Three artefacts that look similar and are not, and most of the design work was
+keeping them apart.
+
+**A review export** is a description of what the app currently believes,
+composed of chosen sections, written for a person or an assistant to read. It is
+allowed to leave things out — that is what choosing sections _is_.
+
+**A backup** is the file the owner's whole recorded life comes back from.
+Nothing is chosen and nothing is omitted for any reason: not the private domain,
+not a row the parser could not read, not a field this schema version has never
+heard of. Section 29, in as many words: "no silent omission of records required
+for restoration."
+
+**A restore** replaces everything he has. It is the only irreversible thing in
+the app, and it is built as three separate presses with the whole preview
+between the second and the third.
+
+## Build identity
+
+|                      |                                                                                                        |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| Product checkpoint   | `322c00b` — the build every result below was measured against, and the one Codex should test           |
+| Earlier this phase   | `cc221bd` — the first complete build; `91bf40f` — the first round of read-through repairs              |
+| Closing SHA          | current `main` HEAD — documentation only past `322c00b`, no product code                               |
+| Deployed Preview SHA | `322c00b`, read live from `preview/build-info.json` and confirmed by the Android gate's own first line |
+| Do they match?       | Yes — confirmed by hand, and asserted live in CI                                                       |
+| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/                                            |
+| Live proof           | `preview/build-info.json`                                                                              |
+
+## Verification
+
+| Gate                                      | Result                                                                                                                            |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy scan                              | Clean, 188 tracked files                                                                                                          |
+| Format (Prettier)                         | Pass                                                                                                                              |
+| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                  |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                    |
+| Unit / contract / synthetic / adversarial | 1000 passed / 1000, 52 files (in plain Node, no DOM)                                                                              |
+| Browser tests (Playwright)                | 387 passed / 387 — 129 tests × 360, 430, 1280px                                                                                   |
+| Production build                          | Pass                                                                                                                              |
+| `npm run verify` from a clean checkout    | Pass — cloned fresh at `322c00b`, `npm ci`, 1000/1000                                                                             |
+| Deployed SHA matches checkpoint           | Pass — `322c00b` live, confirmed by hand                                                                                          |
+| Reintroduction pass                       | **15 deliberate reintroductions, 15 caught.** Four escaped on the first attempt; each of those four assertions is stronger for it |
+| Builder's own Android-style gate          | Pass — `scripts/android-gate.mjs` against the deployed checkpoint: 27 checks, touch, Android UA, device pixel ratio 3, 360×780    |
+| Owner-style read-through of the screen    | **Five findings, all repaired** — none of them from a failing assertion; see below                                                |
+| Independent QA                            | **Outstanding — this phase is YELLOW until it passes**                                                                            |
+
+Phase 6 ended at 780 unit-layer tests across 45 files. The 220 new ones are seven
+new suites plus growth in the sweeps that walk the whole scenario library.
+
+| Suite                                                                           | Tests |
+| ------------------------------------------------------------------------------- | ----: |
+| `unit/checksum.test.ts` — SHA-256 against published vectors and against Node    |     5 |
+| `contract/backup-round-trip.test.ts` — every scenario, out and back unchanged   |    29 |
+| `adversarial/corrupt-backup.test.ts` — documents that parse and are not backups |    18 |
+| `unit/restore.test.ts` — apply, verify, rollback, retry, and no false success   |    15 |
+| `unit/memory-provider-restore.test.tsx` — which store, and what is published    |     8 |
+| `synthetic/g013-export-handoff.test.ts` — G-013, over the whole library         |    54 |
+| `synthetic/export-honesty.test.ts` — D-091 applied to the document              |    88 |
+| `unit/architecture-guards.test.ts` — the literal scanner and its self-tests     |    +2 |
+| `unit/routing.test.ts` — Data resolves in every build                           |    +1 |
+
+Browser: `tests/browser/data.spec.ts`, 25 tests × 3 viewports = 75 new, on top of
+the 312 already there — all unchanged, all still green.
+
+## Gate checklist (section 52, and G-013)
+
+| Requirement                                                                                     | Status                                                                                                                                                                     |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| G-013 — selected sections are present                                                           | Pass — asserted per section, per scenario, over the whole library; and a chosen section with nothing to report says so rather than rendering an empty heading              |
+| G-013 — the Private section can be included                                                     | Pass — off by default, never swept in by **Select all**, never remembered, stated either way in the header and in the prompt                                               |
+| G-013 — the handoff prompt is embedded                                                          | Pass — it leads the document, and is separately copyable                                                                                                                   |
+| G-013 — the prompt says what to keep / change / remove / not change                             | Pass — all four, plus every other part section 52 lists, held as data rather than as prose                                                                                 |
+| Export composer: section selection, select all, clear, remembered last selection                | Pass                                                                                                                                                                       |
+| Export carries app/engine version, current data range, current selected domains                 | Pass — and the domains are read off the records in the document rather than chosen separately (D-094)                                                                      |
+| Handoff prompt: app-tuning review when diagnostics are included                                 | Pass — conditional on the composed document, not on a flag beside it                                                                                                       |
+| Full backup: complete, private domain included, schema version, app version, integrity metadata | Pass                                                                                                                                                                       |
+| Backup: no silent omission                                                                      | Pass — unreadable rows and unrecognised fields both survive a round trip, asserted over every scenario in the library                                                      |
+| Restore: validate before apply                                                                  | Pass — five refusal stages, each with a sentence the owner can act on                                                                                                      |
+| Restore: preview                                                                                | Pass — what is coming in, what is being replaced, the span, the areas, whether the private area is in the file, and the fingerprint                                        |
+| Restore: atomic apply                                                                           | Pass — one `replaceAll` transaction; the write happens once, and a test asserts it happens once                                                                            |
+| Restore: post-apply verification                                                                | Pass — read back and fingerprinted, then read again from a **reopened** database                                                                                           |
+| Restore: rollback on failure                                                                    | Pass — including the case where the rollback itself fails, which gets its own sentence                                                                                     |
+| Restore: no false success                                                                       | Pass — every failure path asserted, including a store that reports success and writes nothing                                                                              |
+| Restore: same-file retry after a failure                                                        | Pass — proved at the reader, at the transaction and in the browser                                                                                                         |
+| Restore: mobile tested                                                                          | Pass — the whole flow driven by touch on a Galaxy-class Android context against the deployed build                                                                         |
+| Export remains reliable on a phone                                                              | Pass — every artefact is also rendered into a selectable field, so a refused clipboard is not the end of it                                                                |
+| Data/restore accessible during degraded-state tests (G-012)                                     | Pass — a row the parser cannot read is written straight into the owner's database; Data still opens, the backup still carries the damage, and it still reads back complete |
+| CI green: privacy scan, format, lint, typecheck, unit, browser, build                           | Pass                                                                                                                                                                       |
+| `npm run verify` passes from a clean checkout                                                   | Pass                                                                                                                                                                       |
+| Preview deploys automatically, deployed SHA equals checkpoint SHA                               | Pass                                                                                                                                                                       |
+| Independent QA (required from Phase 5 on, D-077)                                                | **Outstanding**                                                                                                                                                            |
+
+## What changed
+
+### `src/domain/checksum.ts` — a fingerprint that works everywhere
+
+SHA-256, written out rather than reached for through `crypto.subtle`, because
+that API is asynchronous and absent or partial in several of the environments
+this code runs in — and a restore whose guarantee depended on where it ran would
+not be a guarantee. Proved against published vectors and against Node's own
+implementation at every block-boundary length, including the two off-by-one
+lengths where the padding needs a whole extra block. The first version got one
+of them wrong, and the test is why that is a sentence in this report rather than
+a defect in somebody's backup.
+
+**What it proves and what it does not** is stated in the file and in D-095: it
+catches damage, and it cannot prove authorship. Authenticated validation needs a
+key, and there is nowhere on a device to keep one an attacker holding the device
+could not also read. Deferred deliberately rather than dressed up.
+
+### `src/memory/backup.ts` — the envelope, and what it refuses
+
+A `SnapshotWire` inside an envelope rather than a second serialisation, because
+`snapshotToWire` already carries malformed rows and `recordToWire` already
+carries unrecognised fields — and a second writer is a second place for a field
+to be forgotten.
+
+The envelope adds what a restore has to know **before** it writes: which build
+wrote the file, when, and what it should contain. The fingerprint is over
+meaning rather than bytes — canonical record order, sorted keys — so a file that
+was re-indented in transit is accepted and a file with one record altered is
+refused. Five refusal stages, because the owner's next move differs by stage:
+look for another copy, update the app, or check he opened the right file.
+
+### `src/memory/restore.ts` — the six things section 29 asks for, in order
+
+Five of the six only ever run when something has already gone wrong, which on a
+real IndexedDB means they would essentially never be exercised. So the store in
+`unit/restore.test.ts` is a fake whose failures the **test** chooses: a write
+that throws, a read that throws, a write that reports success and keeps the old
+contents, and a rollback that fails on top of a failure.
+
+**What is atomic, and by which mechanism, is stated rather than implied.** The
+write is one transaction. The _restore_ is larger than the write and is atomic
+by a compensating action — the old history is read out and held first, and
+written back if anything after that point fails. That distinction has a
+consequence the owner is owed: if the rollback write itself fails he is left with
+a store holding neither history intact, and `rollbackVerified` exists so that
+sentence can be said out loud instead of being softened into "restore failed".
+
+### `src/features/export/` — the composer and the prompt
+
+The prompt's twelve required parts are **data**, not prose, so a rewording
+cannot drop one and the G-013 regression asserts the parts rather than remembered
+sentences.
+
+The composer reads the situation, the decision and the insights report — the same
+objects Now, Insights and Timeline render — and computes nothing of its own. An
+export that did its own arithmetic would be a second brain with no surface, and
+the first time it disagreed with Now nobody would find out. The guard is
+structural: `compose.ts` cannot reach the generator, the filter, the evaluator,
+the arbiter, the advisor, the learning index or the association module.
+
+D-091 governs the document as much as the screens, and `export-honesty.test.ts`
+holds it: no figure without the quantity it counts, an abstention written down
+rather than omitted, no causal wording anywhere, and the source named on every
+document over every scenario in the library.
+
+### `src/features/data/` — Data, behind More
+
+Three panels, deliberately three. Everything produced is also rendered into a
+selectable field, because a clipboard can be refused and a download can be lost,
+and a person reading text can always get it out — which is what "export remains
+reliable on phone" means in practice.
+
+### `src/features/memory/` — where a backup reads from, and where a restore writes
+
+`ownerSnapshot()` is deliberately not `snapshot`: a backup is of his own records
+whatever is on screen. A restore does not run at all while a fixture is loaded.
+Both are D-091's eighth invariant applied to the two operations where getting it
+wrong cannot be undone by pressing something again (D-093).
+
+After a successful restore the provider publishes the whole visible context in
+one continuation and **returns the clock** — R5-B1's shape, one surface over. A
+restored history read under a clock the laboratory moved to February would hide
+every entry dated after it, which on this screen would read as the restore having
+lost half his life.
+
+## One defect found, and it was in the harness rather than in the product
+
+**DEF-0059.** Two of the standing copy guards — D-089's causal-language sweep and
+section 51's per-cent sweep — found string literals with a regex, and a regex
+cannot pair quotes. The pairing held until a file contained an **empty** literal:
+`''` was too short to match, the scan resumed at its closing quote, and from
+there every quote paired with the wrong partner. The contents of every literal
+after that point fell into a gap nothing looked at.
+
+It was found because the export composer's own honesty suite flagged a sentence
+that `architecture-guards.test.ts` had passed on the same file, minutes apart.
+The rules were right; the rules had stopped being applied. `stringLiterals` now
+walks the source with the scanner that already had to understand quoting in order
+to strip comments, and two self-tests build the exact defeating shape and assert
+that the walker sees what the regex missed.
+
+The honest reading is in the ledger: a guard passing is now evidence, and was not
+before.
+
+## Five findings from reading the screen, and none from an assertion
+
+The Android gate came back clean on the first deployed checkpoint, so I read the
+Data screen on the phone context instead. It was wrong in three places, and none
+of them was ever going to fail a test: **a test expecting "1 entries" is exactly
+as green as one expecting "1 entry".**
+
+1. **"1 entries", and "1 records".** A count printed beside a plural noun,
+   everywhere a count appears — the export header, the backup panel, both sides
+   of the restore preview, and the line the restore prints afterwards.
+   `src/domain/counts.ts` now takes both words, because English plurals are
+   irregular often enough that a rule would be wrong somewhere and silently
+   wrong everywhere else.
+2. **A machine timestamp on an owner surface.** "Written
+   2026-08-23T06:04:04.513Z". Section 36 puts technical detail behind
+   inspection; a backup's date is now read in the zone the app is currently
+   using, so it agrees with every other date on screen including under time
+   travel.
+3. **A sixty-four character hash on a 360px screen.** The owner's question of a
+   fingerprint is "is this the same file as the other one", which twelve
+   characters answer. The full digests are still printed in full where two of
+   them actually have to be compared — in the refusal that says a file has been
+   changed.
+
+Then a second reading, on a history holding exactly one record, found two more:
+
+4. **"1 entry came back exactly as the backup holds them."** The count agreed
+   with its noun and then disagreed with its pronoun. Rewritten so there is no
+   pronoun to disagree.
+5. **"read back all 1 records identically"** — the line the restore prints after
+   reopening the database. The first sweep never reached it, because it only ran
+   before anything had been restored.
+
+## And a hole that appeared twice, on two layers
+
+Both times the same shape: **a sweep that could not fire.**
+
+The document-level count sweep passed over every scenario in the library and
+proved nothing, because **no scenario holds exactly one record** — and a count
+only disagrees with its noun when the count is one. The browser sweep had the
+identical hole with a two-record seed, and it was found the only way it could
+be: by reintroducing the defect to check the sweep bit, and watching it not.
+
+Both now construct a one-of-something history of their own. That is Phase 6's
+lesson arriving on a new surface — coverage that cannot observe the thing it
+claims to prove reads as evidence either way — and it is worth saying that the
+lesson did not transfer on its own. It had to be found again.
+
+**A third, smaller one, worth naming for QA's benefit.** `npx playwright test`
+serves a **prebuilt** `dist` and never builds — `npm run test:browser` is the
+script that builds first. A reintroduction made in `src/` and checked with a
+bare `playwright test` therefore tests the previous bytes and passes, which is
+how finding 2's proof escaped before it was caught. Every browser reintroduction
+below was rebuilt before it was run.
+
+## Fifteen reintroductions, fifteen caught
+
+Section 42 asks for a regression that fails when the defect is put back. Each of
+these was put back, run, and reverted.
+
+| Reintroduced                                                         | Caught by                                        |
+| -------------------------------------------------------------------- | ------------------------------------------------ |
+| **Select all** sweeps in the private section                         | `g013-export-handoff.test.ts`                    |
+| The restore trusts the write instead of checking what landed         | `restore.test.ts`                                |
+| A failed write is not rolled back                                    | `restore.test.ts`                                |
+| The backup reader skips the fingerprint                              | `corrupt-backup.test.ts`                         |
+| A backup drops the rows it could not read                            | `backup-round-trip.test.ts`                      |
+| The restore writes to whichever store is on screen                   | `memory-provider-restore.test.tsx`               |
+| The restore leaves the laboratory's clock in place                   | `memory-provider-restore.test.tsx`               |
+| The document stops saying whose history it is                        | `export-honesty.test.ts`                         |
+| A section with nothing to report renders an empty heading            | `g013-export-handoff.test.ts` — **escaped once** |
+| The prompt drops "what not to change"                                | `g013-export-handoff.test.ts`                    |
+| The literal scanner goes back to pairing quotes with a regex         | `architecture-guards.test.ts`                    |
+| A count is printed without agreeing with its noun                    | `export-honesty.test.ts` — **escaped once**      |
+| A raw machine timestamp goes back on the surface                     | `data.spec.ts` — **escaped once**                |
+| The browser seed stops reaching the running app                      | `data.spec.ts`                                   |
+| A count of one against a plural noun, on the line the restore prints | `data.spec.ts` — **escaped once**                |
+
+**The four that escaped, and what was wrong with each assertion.** The
+empty-heading test looked for the next non-blank line after a heading and found
+the _following section's_ prose; it now looks only as far as the next heading,
+and is proved both ways — a builder that returns nothing is covered by the
+fallback and passes, and the same builder with the fallback removed fails. The
+two count sweeps could not fire, for the reason above. The timestamp sweep read
+only the panel that does not carry the file's own date.
+
+## Deliberately not built, with reasons
+
+- **Authenticated / tamper validation.** Section 29 keeps it separate from
+  structural validation, and this build ships structural validation and
+  integrity, not authorship. The reason is in D-095 and it is not implementation
+  cost: there is nowhere on a device to keep a key that an attacker with the
+  device could not also read.
+- **Migrations.** `MIGRATIONS` is still empty because schema 1 is the first
+  canonical schema. The runner is exercised by the refusal path — a file from a
+  schema with no migration is refused rather than guessed at — and a migrated
+  file's fingerprint is allowed to differ, with the reason stated in the code.
+- **Selective restore.** Restore is whole-store, as section 29 describes.
+  Restoring one domain over a live history is a merge, and a merge needs
+  conflict semantics this phase has no requirement for.
+- **A way to override a refused file.** A "restore anyway" control would make
+  every guarantee above optional. If a real damaged-file case ever needs one, it
+  needs its own owner decision.
+- **A download the owner can find again from inside the app.** The file goes
+  where the browser puts it; there is no library of past backups. Section 29
+  does not ask for one and a list of files the app cannot actually see would be
+  a claim it could not keep.
+- **Legacy import.** Section 30 and Phase 8.
+
+## Open items
+
+- **`guide-resume.test.ts`, still recorded as resolved-unreproduced.** Named in
+  Phase 6 and unchanged here. It did not fail in any run during this phase.
+- **One transport-level abort, on an earlier run of the full browser suite.**
+  `qa-lab.spec.ts` → "relabels the same history when the timezone changes"
+  failed once at mobile-small with `net::ERR_ABORTED; maybe frame was
+detached?` on `page.goto` — the `vite preview` connection-dropping that
+  `playwright.config.ts` documents in its own comment. The spec passed 23/23 on
+  an immediate focused re-run, and the two later full runs at `91bf40f` and
+  `322c00b` were both 387/387 clean. Disclosed rather than dropped.
+- **`npx playwright test` serves a prebuilt `dist`.** Not a defect, and worth
+  knowing before testing a source change: `npm run test:browser` is the script
+  that builds first. This cost one reintroduction a false pass before it was
+  noticed.
+
+## Decisions made
+
+- **D-093** — a backup is of the owner's own store, and a restore only ever runs
+  on his own history.
+- **D-094** — an export is chosen by section; the domains in it are reported, not
+  chosen; the private section is never swept in and never remembered.
+- **D-095** — integrity is a content fingerprint; authenticated validation is
+  deferred, and says so.
+- **D-096** — Data is a destination of its own, reached from More.
+
+Defects closed here, both found by the builder before QA: **DEF-0059**, the
+literal scanner; **DEF-0060**, a count printed beside a plural noun, and the
+two sweeps that could not fire on it.
+
+## Next
+
+Independent QA, in a **new Codex conversation**, cold-use first (D-090). The
+complete prompt is in [`NEXT_PROMPT.md`](NEXT_PROMPT.md).
 
 ---
 

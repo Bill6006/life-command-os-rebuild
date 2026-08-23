@@ -2553,3 +2553,136 @@ It does not shorten what gets written to the MD files — the full prompt still
 goes there in full. It does not let a builder mark its own phase GREEN, and it
 does not let a builder write the QA report or QA write product code (D-077,
 D-090). A launcher is how a handoff ends, not what a handoff is.
+
+---
+
+## D-093 — A backup is of the owner's own store, and a restore only ever runs on his own history
+
+**Phase:** 7 · **Status:** Active
+
+Two operations, one rule, and it is D-091's eighth invariant applied to the two
+places where getting it wrong cannot be undone by pressing something again.
+
+**A backup reads the owner's store, whatever is on screen.** Not the active
+one. The laboratory is inspectable from every surface — that is the point of it
+— so a backup taken while a fixture is loaded would be a backup of an invented
+life, filed under his name, and discovered six months later on the evening he
+needed the real one. `MemoryContextValue.ownerSnapshot()` exists for exactly
+this and is deliberately not `snapshot`.
+
+**A restore does not run at all while a fixture is on screen.** It replaces his
+only copy of his own history, and the one thing that must not be in doubt at
+that moment is which history is about to be replaced. Putting the laboratory
+away is one press and it is the press the shell already offers, so the cost is
+a tap; the alternative was a screen where the notice says "this is a test
+history, not yours" directly above a button that replaces yours.
+
+**Why not simply restore into the owner's store and switch to it.** That was
+the first design and it is worse in a specific way: it makes a restore
+_implicitly_ empty the laboratory, so one press does two destructive things,
+and the second is invisible in the preview the owner just read. A refusal that
+names its own remedy is smaller and it is honest.
+
+**What the refusal is called.** `RestoreStage` carries `not-attempted`
+alongside the stages that mean something was read or written. "The app declined
+to start" and "the app started and put everything back" are different sentences
+to somebody deciding what to do next, and collapsing them into "restore failed"
+is the failure mode section 29 calls a false report.
+
+---
+
+## D-094 — An export is chosen by section; the domains in it are reported, not chosen
+
+**Phase:** 7 · **Status:** Active
+
+Canonical plan section 52 asks for "section selection" and, separately, for the
+document to carry "current selected domains". Those can be read as two
+controls. They are one control and one **report**.
+
+**The unit of choice is a section.** A domain-by-domain chooser lets the owner
+build a document that contradicts itself — the learned relationships kept, the
+history they were learned from dropped — and an assistant reading it has no way
+to tell that a claim's evidence was removed from under it. A section is a
+coherent thing to include or leave out: what the app reasons from, what it has
+worked out, what it has been told, what it knows it does not know.
+
+**The domains are then read off the records actually in the document.** That
+satisfies "current selected domains" with something checkable instead of a
+second control that could disagree with the contents.
+
+### The private section, and the two things that are not allowed to touch it
+
+Section 11 pulls both ways at once: private detail should not appear on
+ordinary surfaces unasked, and it must never be technically impossible to
+export. So the section exists, and:
+
+- **Select all does not reach it.** A control labelled "select all" is not the
+  owner deciding to share the most sensitive thing the app holds. `inSelectAll`
+  is a field on the registry with exactly one `false` in it, and the exception
+  is the reason the field exists.
+- **It is never remembered.** Every other section is a preference; that one is
+  a decision, and a decision made once on one evening should not silently apply
+  to every export afterwards. It starts off each time.
+- **The document says which way round it is, either way.** Silence would leave
+  a reader unable to tell a life with nothing private recorded from a document
+  with that part taken out, so both the header and the prompt state it.
+
+### And the source, always
+
+The header names whose history was composed, and a document built from a
+fixture says outright that it is not a real person's record. Same rule as the
+notice in the app shell, one artefact further out — and this artefact is the
+one that leaves the device.
+
+---
+
+## D-095 — Integrity is a content fingerprint; authenticated validation is deferred, and says so
+
+**Phase:** 7 · **Status:** Active
+
+Section 29 asks for "integrity metadata" and separately notes that
+"authenticated/tamper validation and structural validation are separate
+concerns". This build ships two of those three and names the third as absent
+rather than letting a checksum stand in for it.
+
+**Structural validation** is `snapshotFromWire` — the same reader the QA
+laboratory uses, so a row that cannot be read becomes an inspectable malformed
+row rather than an exception.
+
+**Integrity** is a SHA-256 over the canonically ordered, key-sorted contents.
+It catches a file truncated by a failed download, mangled by an editor, or
+corrupted in storage, and it survives reformatting and key reordering — a
+restore should refuse a damaged file and accept a re-indented one.
+
+**Authenticated validation is not built, and cannot honestly be.** The
+algorithm is public, so anyone editing the contents can recompute the
+fingerprint; it proves the file is intact, never that this app wrote it. A real
+tamper check needs a key, and there is nowhere on a device to keep one that an
+attacker holding the device could not also read. Recording it as a deliberate
+deferral is worth more than a checksum wearing a signature's name.
+
+`sha256Hex` is written out rather than reached for through `crypto.subtle`,
+because that API is asynchronous and absent or partial in several environments
+this code runs in — and a restore whose guarantee depended on where it ran
+would not be a guarantee. It is proved against published vectors and against
+Node's own implementation across every block-boundary length.
+
+---
+
+## D-096 — Data is a destination of its own, reached from More
+
+**Phase:** 7 · **Status:** Active
+
+Section 5 fixes four primary destinations and the bottom bar still holds
+exactly those four. Data joins More and QA as a secondary destination with its
+own route rather than becoming a panel inside More.
+
+**Why a route.** G-012 requires Data and restore to stay reachable while the
+app is in a degraded state, and a route resolves from a typed address and a
+bookmark — where a panel three scrolls down another screen depends on that
+screen rendering first. It also carries a whole export composer, a backup and a
+restore, which is more than a panel's worth of surface.
+
+**Why not a fifth tab.** For the reason section 5 gives and Phase 1 already
+learned once: a secondary surface promoted for convenience is how four primary
+destinations quietly become five.

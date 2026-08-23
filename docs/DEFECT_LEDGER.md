@@ -39,6 +39,37 @@ None.
 
 ## Fixed
 
+### DEF-0060 — a count printed beside a plural noun, and two sweeps that could not fire on it
+
+- Status: Fixed
+- Severity: Major — owner-facing copy on the surface that handles his only copy of his own history, and the reason it survived is more interesting than the wording
+- Found in: Phase 7 / `cc221bd`, and the second half in `91bf40f`
+- Found by: the builder's own owner-style read-through of the deployed Preview on an Android context, **after** the automated Android gate had come back clean
+- Class: **a fact about a screen that no assertion is shaped to notice.** `expect(row).toContainText('1 entries')` is exactly as green as `'1 entry'`. Everything in this class shares that property — a plural, a pronoun, a raw timestamp, a sixty-four character hash on a phone — and none of it fails a test unless somebody writes the test _about the wording itself_.
+- Reproduction, on the deployed build with one record in the owner's store: Data reads "Record covers: 2026-08-22 to 2026-08-22, 1 entries"; the restore preview reads "It will restore 1 entries"; the line after a restore reads "1 entry came back exactly as the backup holds them" and "read back all 1 records identically". Also "Written 2026-08-23T06:04:04.513Z" and a full digest on a 360px row.
+- Root cause: counts interpolated straight into a sentence, and two values rendered in their wire form rather than in the owner's.
+- Fix: `src/domain/counts.ts` — `countOf(count, one, many)`, taking both words rather than deriving a plural. A backup's moment is read through `localDateTimeAt` in the zone the app is currently using, so it agrees with every other date on screen including under time travel. The fingerprint shows twelve characters; the full digests still appear, in full, in the refusal where two of them have to be compared.
+- Regression: `tests/synthetic/export-honesty.test.ts` → "the document reads as English" over every scenario, plus "says '1 entry' on a history that holds exactly one"; `tests/browser/data.spec.ts` → "agrees with itself about how many entries there are" and "shows no raw machine timestamp on the surface"; and three checks in `scripts/android-gate.mjs`.
+- **The half worth recording: the first two sweeps could not fire.** No scenario in the library holds exactly one record, and the browser seed wrote two — and a count only disagrees with its noun when the count is one. Both sweeps passed over everything and proved nothing. It was found by reintroducing the defect to check the sweep bit, and watching it not. Both now construct a one-of-something history of their own.
+- **A third, smaller one, named for whoever tests this next.** `npx playwright test` serves a prebuilt `dist` and never builds; `npm run test:browser` is the script that builds first. A reintroduction made in `src/` and checked with a bare `playwright test` tests the previous bytes and passes.
+- Siblings: swept. Every count on an owner surface in this phase's code goes through `countOf`; `MemoryProvider`'s storage-check sentences were repaired in the same pass even though the QA laboratory is the only place two of them appear.
+- Fixed in: `91bf40f` and `322c00b`
+
+### DEF-0059 — two standing copy guards silently stopped reading a file part-way through
+
+- Status: Fixed
+- Severity: Major — not a defect in the product, a defect in the thing that proves the product. Two of the guards holding D-089 and section 51 were covering less than they claimed, and passing.
+- Found in: Phase 7 / this checkpoint
+- Found by: the builder, while writing the export composer's own honesty suite — the new test flagged a sentence that `architecture-guards.test.ts` had just passed
+- Class: **a scan that cannot pair quotes.** Both sweeps found string literals with `/'([^']{4,})'|`[^`]{4,}`/g`, and a regex has no idea which quote opens and which closes. The pairing holds until a file contains an **empty** literal: `''` is shorter than the four characters the pattern needed, so it was skipped, the scan resumed at its _closing_ quote, and from there every subsequent quote paired with the wrong partner. The contents of every literal after that point fell into a gap nothing looked at.
+- Reproduction: `src/features/export/compose.ts` contains `'…not claims about cause.'` — a literal in a `const lines = [ … ]` array a few entries after an `''`. `/causes?/i` matches it, and `it('cannot say one thing caused another, on any surface')` passed. Replicating the guard's own extraction over the file returns **zero** literals containing the word, while the file plainly contains it.
+- Root cause: the extraction, not the rules. Both rules were correct and neither was being applied to the text it was written for.
+- Fix: `stringLiterals(text)` walks the source with the same scanner that already strips comments — which had to understand quoting to do its job — and returns each literal's contents. The causal sweep and the per-cent sweep both read from it now.
+- Regression: `tests/unit/architecture-guards.test.ts` → "reads every literal in a file, including the ones after an empty one" builds the exact defeating shape, asserts the walker finds the offending sentence, and asserts the old regex pairing does **not** — so the guard's own coverage is now a thing that fails rather than a thing that is assumed. "keeps a comment out of the literals, and a literal out of the comments" holds the other half. Reintroduced by reverting `stringLiterals` to the regex: caught.
+- **What it had been hiding.** One sentence, in code written the same day, which is the only reason it was found at all. Every file the guards have covered since Phase 2 has been re-swept by the repaired scanner and nothing else surfaced — but the honest reading is that a guard passing is now evidence and was not before.
+- Siblings: swept. The other sweeps in that file read `readCode` for structure (imports, identifiers, handler counts) rather than for literal contents, so the pairing bug could not reach them. The deferral-claim sweep reads whole-file prose with the comments stripped, which has no pairing to get wrong.
+- Fixed in: this checkpoint
+
 ### DEF-0058 — the laboratory's clock came back with the owner's records, and hid the newer ones
 
 - Status: Fixed
