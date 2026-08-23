@@ -88,6 +88,68 @@ function readCode(file: string): string {
   return codeOnly(readFileSync(file, 'utf8'))
 }
 
+/**
+ * Every string literal in a file, as its contents.
+ *
+ * This exists because the sweeps below used to find literals with
+ * `/'([^']{4,})'/g`, and a regex cannot pair quotes. The pairing survives right
+ * up until a file contains an **empty** literal: `''` is shorter than the four
+ * characters the pattern required, so it was skipped, the scan resumed at its
+ * closing quote, and from there every subsequent quote was paired with the
+ * wrong partner — opening to closing became closing to opening. The contents
+ * of every literal after that point fell into a gap the sweep never looked at.
+ *
+ * It was found in Phase 7 by the export composer, whose first line of
+ * owner-facing prose after an `''` said the word "cause" and passed the causal
+ * guard. Nothing was wrong with the rule; the rule had silently stopped
+ * reading the file. A guard that quietly covers less than it claims is worse
+ * than no guard, because the passing result is read as evidence.
+ *
+ * So the literals are walked rather than matched, by the same scanner that
+ * strips comments — which already had to understand quoting to do its job.
+ */
+function stringLiterals(text: string): readonly string[] {
+  const found: string[] = []
+  let index = 0
+  while (index < text.length) {
+    const two = text.slice(index, index + 2)
+    if (two === '//') {
+      const end = text.indexOf('\n', index)
+      index = end === -1 ? text.length : end
+      continue
+    }
+    if (two === '/*') {
+      const end = text.indexOf('*/', index + 2)
+      index = end === -1 ? text.length : end + 2
+      continue
+    }
+    const quote = text[index] ?? ''
+    if (quote === "'" || quote === '"' || quote === '`') {
+      index += 1
+      let content = ''
+      while (index < text.length) {
+        const inner = text[index] ?? ''
+        index += 1
+        if (inner === '\\') {
+          content += inner + (text[index] ?? '')
+          index += 1
+          continue
+        }
+        if (inner === quote) break
+        content += inner
+      }
+      found.push(content)
+      continue
+    }
+    index += 1
+  }
+  return found
+}
+
+function literalsOf(file: string): readonly string[] {
+  return stringLiterals(readFileSync(file, 'utf8'))
+}
+
 const MEANING_LAYER = [
   ...sourceFiles('src/domain'),
   ...sourceFiles('src/memory'),
@@ -124,6 +186,32 @@ describe('the guards themselves', () => {
   it('is actually looking at files', () => {
     expect(MEANING_LAYER.length).toBeGreaterThan(10)
     expect(SYNTHETIC.length).toBeGreaterThan(0)
+  })
+
+  it('reads every literal in a file, including the ones after an empty one', () => {
+    /*
+     * The exact shape that defeated the old regex pairing. `''` is skipped by
+     * a pattern needing four characters, the scan resumes at its closing
+     * quote, and from there opening quotes pair with closing ones — so the
+     * sentence below was never scanned at all.
+     */
+    const source = [
+      'const lines = [',
+      "  'a heading',",
+      "  '',",
+      "  'this sentence says the app improves your sleep',",
+      ']',
+    ].join('\n')
+
+    expect(stringLiterals(source)).toContain('this sentence says the app improves your sleep')
+    // And the pairing a regex would have produced, for contrast: nothing.
+    const byRegex = [...source.matchAll(/'([^']{4,})'/g)].map((match) => match[1])
+    expect(byRegex).not.toContain('this sentence says the app improves your sleep')
+  })
+
+  it('keeps a comment out of the literals, and a literal out of the comments', () => {
+    const source = ["// a comment mentioning 'improves'", "const x = 'improves'"].join('\n')
+    expect(stringLiterals(source)).toEqual(['improves'])
   })
 })
 
@@ -393,7 +481,15 @@ describe('development scaffolding does not become the product — DEF-0007', () 
    * construction. So the phase now lives in one constant, and only the two
    * surfaces that legitimately report on the build may mention it.
    */
-  const MAY_MENTION_PHASES = ['src/features/more/', 'src/features/qa/']
+  /*
+   * The export composer joins the list in Phase 7, and for the same reason the
+   * other two are on it: a review export has to tell the assistant reading it
+   * how complete the app it is describing actually is, and "current app/engine
+   * version" is one of the things canonical plan section 52 requires the
+   * document to carry. It reads the number from `REBUILD_PHASE` like the other
+   * two, which the second guard below still holds it to.
+   */
+  const MAY_MENTION_PHASES = ['src/features/more/', 'src/features/qa/', 'src/features/export/']
 
   it('mentions a phase on no primary destination', () => {
     const offenders: string[] = []
@@ -473,7 +569,6 @@ describe('development scaffolding does not become the product — DEF-0007', () 
    * forgetting.
    */
   const STILL_TRUE: readonly { readonly near: string; readonly because: string }[] = [
-    { near: 'Exports, backup and restore are not built yet', because: 'Phase 7' },
     {
       near: 'not built into a production release',
       because: 'the QA surface really is preview-only',
@@ -543,12 +638,14 @@ describe('development scaffolding does not become the product — DEF-0007', () 
     // Direct and deliberately unsubtle: this is the one line a human has to
     // remember to bump, and the whole point is that forgetting fails loudly
     // rather than silently, the way DEF-0031's stale "Phase 4" did.
-    expect(REBUILD_PHASE.number).toBe(6)
-    expect(REBUILD_PHASE.title).toBe('Timeline and Insights')
+    expect(REBUILD_PHASE.number).toBe(7)
+    expect(REBUILD_PHASE.title).toBe('AI exports, backup and restore')
     expect(REBUILD_PHASE.summary).not.toMatch(/domain pages? behind life are next/i)
     // QA-B1's own lesson, one phase on: the sentence describing what the build
     // does may not still be describing the phase before it.
     expect(REBUILD_PHASE.summary).not.toMatch(/timeline and insights are next/i)
+    expect(REBUILD_PHASE.summary).not.toMatch(/exports?[^.]*(?:is|are) next/i)
+    expect(REBUILD_PHASE.summary).not.toMatch(/backup[^.]*(?:is|are) next/i)
   })
 
   it('denies no capability the kernel demonstrably has', () => {
@@ -625,6 +722,38 @@ describe('development scaffolding does not become the product — DEF-0007', () 
           /\bno insights\b/i,
           /\binsights is not built\b/i,
         ],
+      },
+      {
+        /*
+         * Phase 7, and absolute for the same reason the two above are.
+         *
+         * The sentence "Exports, backup and restore are not built yet" shipped
+         * on More for six phases and was true every time — right up until the
+         * checkpoint that made it false, which is exactly the moment nobody
+         * re-reads a sentence that has always been correct. Its entry in
+         * STILL_TRUE has been removed, and this replaces it from the other
+         * side: once these exist, no wording anywhere may say they do not, and
+         * no acknowledgement can excuse it.
+         */
+        what: 'composes an export and puts a backup back',
+        provenBy: {
+          file: 'src/memory/restore.ts',
+          symbol: 'export async function restoreInto',
+        },
+        denials: [
+          /exports?,? backup and restore are not built/i,
+          /\bno backup\b/i,
+          /\bcannot be (?:exported|backed up|restored)\b/i,
+          /\b(?:export|backup|restore)s? (?:is|are) next\b/i,
+        ],
+      },
+      {
+        what: 'lets a review export be composed from chosen sections',
+        provenBy: {
+          file: 'src/features/export/compose.ts',
+          symbol: 'export function composeExport',
+        },
+        denials: [/\bno (?:review )?export\b/i, /\bexport is not built\b/i],
       },
       {
         // QA-B1. Absolute rather than acknowledgeable on purpose: unlike
@@ -744,9 +873,9 @@ describe('the owner is not asked to do the app’s thinking — D-089', () => {
     for (const file of sources) {
       const path = repoPath(file)
       // Only string literals: a comment explaining what the file may not say is
-      // exactly the thing a naive scan would trip on.
-      for (const match of readCode(file).matchAll(/'([^']{4,})'|`([^`]{4,})`/g)) {
-        const text = match[1] ?? match[2] ?? ''
+      // exactly the thing a naive scan would trip on. Walked rather than
+      // matched — see `stringLiterals` for what the regex used to miss.
+      for (const text of literalsOf(file)) {
         for (const pattern of causal) {
           if (pattern.test(text)) offenders.push(`${path}: “${text.slice(0, 80)}”`)
         }
@@ -813,8 +942,10 @@ describe('a figure never reaches a screen without what it measures', () => {
 
       const code = readCode(file)
       // A literal per-cent sign in owner-facing text, or the arithmetic that
-      // produces one. Both are how a bare figure gets onto a screen.
-      if (/'[^']*%[^']*'|"[^"]*%[^"]*"|`[^`]*%[^`]*`/.test(code)) {
+      // produces one. Both are how a bare figure gets onto a screen. The sign
+      // is looked for in the walked literals rather than by a pattern over the
+      // whole file, for the reason `stringLiterals` records.
+      if (literalsOf(file).some((text) => text.includes('%'))) {
         offenders.push(`${path} prints a per-cent sign`)
       }
       if (/\*\s*100\b|\bpercent\b/i.test(code)) {

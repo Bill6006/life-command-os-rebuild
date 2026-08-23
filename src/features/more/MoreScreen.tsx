@@ -58,11 +58,16 @@ export function MoreScreen({ freshness }: { freshness: BuildFreshness }) {
         <Rows>
           <Row label="Stored where" value="This device, in a browser database" />
           <Row label="Preview data" value="Synthetic only" />
-          <Row label="Leaves your device" value="Nothing" />
+          <Row label="Leaves your device" value="Only what you export or back up yourself" />
         </Rows>
+        <p>
+          <a className="qa-link" href={hashForDestination('data')}>
+            Exports, backup and restore
+          </a>
+        </p>
         <p className="note">
           Preview and production keep separate databases, so nothing loaded here can reach a real
-          history. Exports, backup and restore are not built yet.
+          history. A backup is taken from your own records whichever history is on screen.
         </p>
       </Panel>
 

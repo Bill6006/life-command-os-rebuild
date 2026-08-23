@@ -13,6 +13,13 @@ import { derivedOutcomeRecords } from '../../intelligence/derived'
 import { nextOutcomeDueAt } from '../../intelligence/outcomes'
 import { indexedDbAvailable, openIndexedDbStore } from '../../memory/indexedDbStore'
 import { createMemoryStore } from '../../memory/memoryStore'
+import { fingerprint } from '../../memory/backup'
+import {
+  notAttempted,
+  restoreInto,
+  type RestoreOutcome,
+  type RestorePlan,
+} from '../../memory/restore'
 import {
   snapshotFromJson,
   snapshotToJson,
@@ -324,6 +331,120 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     }
   }, [clock, projection])
 
+  /**
+   * His own records, read from his own store, whatever is on screen.
+   *
+   * See `ownerSnapshot` in `memoryContext.ts` for why this cannot be the
+   * `snapshot` state.
+   */
+  const ownerSnapshot = useCallback(async (): Promise<StoreSnapshot> => {
+    const owner = stores.current.owner
+    if (owner === undefined) throw new Error('The store is still opening.')
+    return await owner.snapshot()
+  }, [])
+
+  /*
+   * Putting a backup back (canonical plan section 29).
+   *
+   * Three things happen here beyond `restoreInto`, and each is the provider's
+   * job rather than the memory layer's.
+   *
+   * **It writes to the owner's store and to nothing else.** Not "the active
+   * store" — D-091's eighth invariant, and a restore is the one operation
+   * where getting it wrong is unrecoverable rather than confusing.
+   *
+   * **It publishes the whole visible context together** (R5-B1). A restored
+   * history read under a clock the QA laboratory moved would hide every record
+   * dated after that instant — DEF-0058's exact symptom, on a surface where it
+   * would read as "the restore lost half my life". A restore says nothing
+   * about what time it is, so the real clock is what it is read under, and the
+   * snapshot and the clock are published in one continuation so React renders
+   * them in a single pass.
+   *
+   * **It then reopens the database and reads it again.** `restoreInto` already
+   * verified through the open connection, which proves the write landed in the
+   * store; this proves it landed on disk, which is the claim a backup is for.
+   */
+  const restoreOwner = useCallback(
+    async (plan: RestorePlan): Promise<RestoreOutcome> => {
+      const owner = stores.current.owner
+      if (owner === undefined) return notAttempted('The store is still opening. Try again.')
+      /*
+       * Checked before a job is claimed, so a declined restore does not make
+       * work already in flight stale. Nothing is read and nothing is written.
+       */
+      if (projection.source !== 'owner') {
+        return notAttempted(
+          'A test history is on screen. Put it away first, so there is no doubt whose history is being replaced.',
+        )
+      }
+      const job = projection.begin('owner')
+
+      setBusy(true)
+      setError(undefined)
+      setStorageCheck(undefined)
+      try {
+        const outcome = await restoreInto(owner, plan)
+        if (!outcome.ok) {
+          // The store holds the old history again, and the screen must show
+          // that rather than the picture it had before the attempt.
+          const back = await owner.snapshot()
+          if (projection.show('owner', job)) setSnapshot(back)
+          return outcome
+        }
+
+        if (projection.show('owner', job)) {
+          setSource('owner')
+          setSnapshot(outcome.snapshot)
+          setNow(clock.now())
+          setZone(clock.zone())
+          setWeekStartsOn(DEFAULT_WEEK_START)
+          setTravelled(false)
+          setIssues([])
+          setLoadedLabel(undefined)
+        }
+
+        /*
+         * And once more, through a connection that did not exist when the
+         * write happened.
+         *
+         * `restoreInto` read the store back and matched the fingerprint, which
+         * proves the transaction committed. This proves the bytes survive the
+         * database being closed and opened — the thing a backup actually
+         * promises, and the thing a browser under storage pressure is entitled
+         * to break. It runs after the screen has already been given the
+         * restored history, so a slow reopen never leaves the owner looking at
+         * the old one.
+         */
+        stores.current.owner?.close()
+        stores.current.laboratory?.close()
+        const reopenedOwner = await openStore(OWNER_DB)
+        const reopenedLaboratory = await openStore(LABORATORY_DB)
+        stores.current = { owner: reopenedOwner, laboratory: reopenedLaboratory }
+        setBackend(reopenedOwner.backend)
+        setDurable(reopenedOwner.durable)
+        const fromDisk = await reopenedOwner.snapshot()
+        const same = fingerprint(fromDisk) === plan.expected
+        if (job.mayPublish()) {
+          setSnapshot(fromDisk)
+          setStorageCheck({
+            ok: same,
+            detail: same
+              ? `reopened the database and read back all ${fromDisk.records.length} records identically`
+              : 'what came back after reopening the database is not what was restored',
+          })
+        }
+        return outcome
+      } catch (caught) {
+        if (job.isCurrent()) setError(describe(caught))
+        return notAttempted(describe(caught))
+      } finally {
+        if (job.isCurrent()) setBusy(false)
+      }
+    },
+    [clock, projection],
+  )
+
   const verifyStorage = useCallback(async () => {
     const job = projection.beginHere()
     setBusy(true)
@@ -460,6 +581,9 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     clear,
     verifyStorage,
     documentJson: () => snapshotToJson(snapshot, now),
+    ownerSnapshot,
+    canRestore: source === 'owner',
+    restoreOwner,
     now,
     zone,
     weekStartsOn,

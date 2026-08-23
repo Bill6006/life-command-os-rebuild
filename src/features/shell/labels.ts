@@ -7,5 +7,6 @@ export const DESTINATION_LABELS: Record<Destination, string> = {
   timeline: 'Timeline',
   insights: 'Insights',
   more: 'More',
+  data: 'Data',
   qa: 'QA',
 }

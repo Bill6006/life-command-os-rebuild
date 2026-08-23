@@ -1,0 +1,193 @@
+/* Data — exports, backup and restore.
+ *
+ * An owner surface, so ordinary spacing and ordinary type. The two things it
+ * has that other screens do not are long machine text (a whole export, a whole
+ * backup) and one genuinely destructive button, and both are handled here:
+ * text scrolls inside its own field rather than pushing the page sideways, and
+ * the destructive control looks like what it is.
+ */
+
+.data-sections {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.data-section {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  /* A comfortable target for a thumb, not a mouse (section 37). */
+  min-height: 2.75rem;
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+}
+
+.data-section:hover {
+  border-color: var(--line);
+}
+
+.data-section--private {
+  border-style: dashed;
+}
+
+.data-section input {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.15rem;
+}
+
+.data-section__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.data-section__title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.data-section__summary {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.data-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.data-actions button {
+  padding: var(--space-2) var(--space-4);
+  min-height: 2.75rem;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+}
+
+.data-actions button:hover:not(:disabled) {
+  border-color: var(--accent-edge);
+}
+
+.data-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* The one control on this screen that cannot be undone by pressing it again. */
+.data-actions button.data-danger {
+  font-weight: var(--weight-semibold);
+  color: var(--caution);
+  background: rgba(255, 199, 90, 0.1);
+  border-color: rgba(255, 199, 90, 0.34);
+}
+
+.data-private {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
+
+.data-private--on {
+  color: var(--text-primary);
+  border: 1px solid var(--accent-edge);
+}
+
+.data-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.data-field input[type='file'] {
+  padding: var(--space-3);
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.data-text {
+  width: 100%;
+  min-height: 10rem;
+  padding: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+  /* Long machine text scrolls inside the field. The page never moves. */
+  overflow: auto;
+  white-space: pre;
+  resize: vertical;
+  background: var(--surface-1);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+}
+
+.data-text--input {
+  color: var(--text-primary);
+}
+
+.data-ok,
+.data-warning {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  border-radius: var(--radius-sm);
+}
+
+.data-ok {
+  color: var(--positive);
+  background: rgba(70, 209, 155, 0.1);
+  border: 1px solid rgba(70, 209, 155, 0.24);
+}
+
+.data-warning {
+  color: var(--caution);
+  background: rgba(255, 199, 90, 0.1);
+  border: 1px solid rgba(255, 199, 90, 0.24);
+}
+
+.data-plan,
+.data-outcome,
+.data-refusal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.data-detail {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.data-detail pre {
+  padding: var(--space-3);
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--surface-1);
+  border-radius: var(--radius-sm);
+}

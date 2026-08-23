@@ -71,8 +71,8 @@ describe('primary navigation shape', () => {
     expect(DESTINATIONS).toHaveLength(4)
   })
 
-  it('keeps More and QA reachable without giving either a slot in the bar', () => {
-    expect(SECONDARY_DESTINATIONS).toEqual(['more', 'qa'])
+  it('keeps More, Data and QA reachable without giving any of them a slot in the bar', () => {
+    expect(SECONDARY_DESTINATIONS).toEqual(['more', 'data', 'qa'])
     for (const secondary of SECONDARY_DESTINATIONS) {
       expect(DESTINATIONS as readonly string[]).not.toContain(secondary)
       expect(ALL_DESTINATIONS as readonly string[]).toContain(secondary)
@@ -84,6 +84,14 @@ describe('primary navigation shape', () => {
     for (const secondary of SECONDARY_DESTINATIONS) {
       expect(destinationFromHash(hashForDestination(secondary))).toBe(secondary)
     }
+  })
+
+  it('resolves Data in every build, including production', () => {
+    // Section 29 and G-012: backup and restore have to stay reachable, and a
+    // route that resolves from a typed hash is reachable when the screen it is
+    // normally reached from is having trouble.
+    expect(destinationFromHash('#/data')).toBe('data')
+    expect(isReachable('data')).toBe(true)
   })
 
   it('resolves the QA route in a non-production build', () => {

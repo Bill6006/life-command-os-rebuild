@@ -21,10 +21,16 @@ export const DESTINATIONS = PRIMARY_DESTINATIONS
 /**
  * Reachable, but not worth a permanent slot.
  *
- * More is a header entry; QA is reached from inside More. Neither takes a
- * place on a phone's navigation bar.
+ * More is a header entry; Data and QA are reached from inside More. None of
+ * them takes a place on a phone's navigation bar.
+ *
+ * Data is deliberately a destination of its own rather than a panel inside
+ * More. It carries a whole export composer, a backup and a restore, and a
+ * restore has to stay reachable when the rest of the app is struggling
+ * (G-012) — a route that resolves on its own is reachable from a typed hash
+ * and a bookmark, where a panel three scrolls down another screen is not.
  */
-export const SECONDARY_DESTINATIONS = ['more', 'qa'] as const
+export const SECONDARY_DESTINATIONS = ['more', 'data', 'qa'] as const
 
 export const ALL_DESTINATIONS = [...PRIMARY_DESTINATIONS, ...SECONDARY_DESTINATIONS] as const
 

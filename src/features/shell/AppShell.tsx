@@ -1,4 +1,5 @@
 import { lazy, useEffect } from 'react'
+import { DataScreen } from '../data/DataScreen'
 import { DomainPage } from '../life/DomainPage'
 import { pageBySlug } from '../life/domainPages'
 import { InsightsScreen } from '../insights/InsightsScreen'
@@ -46,7 +47,7 @@ function TopBar({
   current: Destination
   onNavigate: (destination: Destination) => void
 }) {
-  const inSecondary = current === 'more' || current === 'qa'
+  const inSecondary = current === 'more' || current === 'data' || current === 'qa'
 
   return (
     <div className="topbar">
@@ -168,6 +169,8 @@ function screenFor(destination: Destination, freshness: BuildFreshness) {
       return <InsightsScreen />
     case 'more':
       return <MoreScreen freshness={freshness} />
+    case 'data':
+      return <DataScreen />
     case 'qa':
       return (
         <LazyScreen label="the QA laboratory">

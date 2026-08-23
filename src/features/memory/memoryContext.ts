@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react'
 import type { CanonicalRecord } from '../../domain/records'
 import type { Instant, TimeZoneId, WeekStartDay } from '../../domain/time'
 import type { ValidationIssue } from '../../domain/validation'
+import type { RestoreOutcome, RestorePlan } from '../../memory/restore'
 import type { StoreBackend, StoreSnapshot } from '../../memory/store'
 import type { MemoryView } from '../../memory/view'
 import type { HistorySource } from './projection'
@@ -67,6 +68,41 @@ export interface MemoryContextValue {
   clear(): Promise<void>
   verifyStorage(): Promise<void>
   documentJson(): string
+
+  /**
+   * The owner's own store, read fresh from disk (canonical plan section 29).
+   *
+   * Deliberately **not** `snapshot`. `snapshot` is whatever history is on
+   * screen, which while a fixture is loaded is the laboratory's — and a backup
+   * of a synthetic life, filed under the owner's name and restored six months
+   * later, is D-091's eighth invariant with the worst possible consequence. A
+   * backup is of his own records, always, whatever he happens to be looking
+   * at. It is read through the store rather than taken from React state for
+   * the same reason `verifyStorage` reopens: a backup should be of what is
+   * actually kept.
+   */
+  ownerSnapshot(): Promise<StoreSnapshot>
+
+  /**
+   * Whether a restore may run right now.
+   *
+   * False while a test history is on screen. A restore replaces the owner's
+   * only copy of his own history, and the one thing that must never be in
+   * doubt at that moment is which history is about to be replaced. Putting the
+   * laboratory away is one press, and it is the same press the shell already
+   * offers.
+   */
+  readonly canRestore: boolean
+
+  /**
+   * Apply a checked plan to the owner's store, verify it, and roll back if it
+   * did not land.
+   *
+   * Takes a plan rather than a document: validation and the preview happen
+   * before this is called, so by the time anything is written the owner has
+   * already seen what he is about to do.
+   */
+  restoreOwner(plan: RestorePlan): Promise<RestoreOutcome>
 
   readonly now: Instant
   readonly zone: TimeZoneId
