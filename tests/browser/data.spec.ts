@@ -36,11 +36,11 @@ async function openData(page: Page) {
  * The rows go in as **wire** objects, which is exactly what the store holds,
  * so they are parsed on the way out by the same reader everything else uses.
  */
-async function seedOwnerHistory(page: Page) {
+async function seedOwnerHistory(page: Page, howMany: 1 | 2 = 2) {
   await page.goto(APP)
   await expect(page.getByRole('heading', { level: 1, name: 'Now' })).toBeVisible()
 
-  await page.evaluate(async () => {
+  await page.evaluate(async (count: number) => {
     const at = new Date(Date.now() - 3_600_000).toISOString()
     const row = (id: string, text: string) => ({
       id,
@@ -67,12 +67,12 @@ async function seedOwnerHistory(page: Page) {
       const transaction = db.transaction(['records'], 'readwrite')
       const store = transaction.objectStore('records')
       store.put(row('01JQWNBRWSER00000000000000', 'the kitchen counter, again'))
-      store.put(row('01JQWNBRWSER0000000000000A', 'a quiet Sunday evening'))
+      if (count > 1) store.put(row('01JQWNBRWSER0000000000000A', 'a quiet Sunday evening'))
       transaction.oncomplete = () => resolve()
       transaction.onerror = () => reject(transaction.error)
     })
     db.close()
-  })
+  }, howMany)
 
   /*
    * And now let the app read it.
@@ -88,6 +88,15 @@ async function seedOwnerHistory(page: Page) {
   await page.reload()
   await expect(page.getByRole('heading', { level: 1, name: 'Now' })).toBeVisible()
 }
+
+/**
+ * A count of one against a plural noun.
+ *
+ * The nouns are named rather than guessed at: a rule over every word
+ * ending in s would fire on "1 was" and be turned off within a week.
+ */
+const DISAGREEMENT =
+  /\b1 (?:entries|records|entities|rows|days|occasions|pairs|things|unreadable rows)\b/
 
 function sectionBox(page: Page, id: string) {
   return page.getByTestId(`section-${id}`)
@@ -242,18 +251,48 @@ test.describe('the export describes the history that is actually there', () => {
   })
 
   test('agrees with itself about how many entries there are', async ({ page }) => {
-    // "1 entries" survived every automated check on this phase and was found by
-    // reading the screen. This is the assertion that would have found it.
-    await seedOwnerHistory(page)
+    /*
+     * "1 entries" survived every automated check on this phase and was found by
+     * reading the screen. Then a second reading found "all 1 records" in the
+     * line the restore prints afterwards — a panel this sweep did not reach,
+     * because it only ran before anything had been restored. So it now walks
+     * the whole flow, and names the nouns rather than two of them.
+     */
+    /*
+     * **Exactly one record**, and that is the whole test.
+     *
+     * With two, "2 entries" is correct English and this sweep can never fire —
+     * which is precisely what happened: a reintroduction of "all N records"
+     * passed here, because N was two. A count only disagrees with its noun
+     * when the count is one.
+     */
+    await seedOwnerHistory(page, 1)
     await openData(page)
 
-    const text = await page.getByTestId('export-text').inputValue()
-    const screen = await page.locator('.screen').innerText()
-    for (const source of [text, screen]) {
-      expect(source).not.toMatch(/\b1 entries\b/)
-      expect(source).not.toMatch(/\b1 records\b/)
-      expect(source).not.toMatch(/\(s\)/)
+    const readEverything = async () => [
+      await page.getByTestId('export-text').inputValue(),
+      await page.locator('.screen').innerText(),
+    ]
+
+    const check = async (when: string) => {
+      for (const source of await readEverything()) {
+        expect(source, when).not.toMatch(DISAGREEMENT)
+        expect(source, when).not.toContain('(s)')
+      }
     }
+
+    await check('before a backup')
+
+    await page.getByRole('button', { name: 'Take a backup' }).click()
+    await expect(page.getByTestId('backup-text')).toBeVisible()
+    await page.getByTestId('restore-paste').fill(await page.getByTestId('backup-text').inputValue())
+    await page.getByTestId('restore-check').click()
+    await expect(page.getByTestId('restore-plan')).toBeVisible()
+    await check('with a file checked')
+
+    await page.getByTestId('restore-apply').click()
+    await expect(page.getByTestId('restore-done')).toBeVisible()
+    await check('after a restore')
   })
 
   test('shows no raw machine timestamp on the surface', async ({ page }) => {
@@ -364,9 +403,9 @@ test.describe('putting a backup back', () => {
     await page.getByTestId('restore-check').click()
     await page.getByTestId('restore-apply').click()
 
-    await expect(page.getByTestId('restore-done')).toContainText('Restored, and checked')
+    await expect(page.getByTestId('restore-done')).toContainText('Restored and checked')
     await expect(page.getByTestId('restore-done')).toContainText(
-      `${held} ${held === 1 ? 'entry' : 'entries'} came back`,
+      `the store now holds ${held} ${held === 1 ? 'entry' : 'entries'}`,
     )
     await expect(page.getByTestId('restore-storage-check')).toContainText('reopened the database')
 

@@ -34,6 +34,10 @@ const ANDROID = {
     'Mozilla/5.0 (Linux; Android 14; SM-S921B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36',
 }
 
+/** A count of one against a plural noun. The nouns are named, not guessed. */
+const DISAGREEMENT =
+  /\b1 (?:entries|records|entities|rows|days|occasions|pairs|things|unreadable rows)\b/
+
 const findings = []
 const notes = []
 
@@ -148,7 +152,7 @@ async function main() {
   )
   check(
     'counts agree with their nouns',
-    !/\b1 (?:entries|records|days|occasions|pairs)\b/.test(onScreen) && !onScreen.includes('(s)'),
+    !DISAGREEMENT.test(onScreen) && !onScreen.includes('(s)'),
     'a count and its noun disagree',
   )
   check(
@@ -208,11 +212,11 @@ async function main() {
   const afterRestore = await page.locator('.screen').innerText()
   check(
     'the restore result reads as English',
-    !/\b1 entries\b/.test(afterRestore) && !afterRestore.includes('(s)'),
+    !DISAGREEMENT.test(afterRestore) && !afterRestore.includes('(s)'),
     'a count and its noun disagree after the restore',
   )
   const done = await page.getByTestId('restore-done').innerText()
-  check('the restore reports what it verified', done.includes('Restored, and checked'))
+  check('the restore reports what it verified', done.includes('Restored and checked'))
   const storage = await page.getByTestId('restore-storage-check').innerText()
   check('and that it read the database again afterwards', storage.includes('reopened'))
 

@@ -610,9 +610,9 @@ export function DataScreen() {
         {outcome === undefined ? null : outcome.ok ? (
           <div className="data-outcome" data-testid="restore-done">
             <p className="data-ok">
-              Restored, and checked:{' '}
-              {countOf(outcome.verification.counts.records, 'entry', 'entries')} came back exactly
-              as the backup holds them.
+              Restored and checked: the store now holds{' '}
+              {countOf(outcome.verification.counts.records, 'entry', 'entries')}, exactly as the
+              backup does.
             </p>
             <p className="note">
               {countOf(outcome.replaced.records, 'entry', 'entries')}{' '}

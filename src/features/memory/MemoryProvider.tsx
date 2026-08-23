@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { countOf } from '../../domain/counts'
 import type { CanonicalRecord } from '../../domain/records'
 import {
   instant,
@@ -430,7 +431,7 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
           setStorageCheck({
             ok: same,
             detail: same
-              ? `reopened the database and read back all ${fromDisk.records.length} records identically`
+              ? `reopened the database and read back ${countOf(fromDisk.records.length, 'record', 'records')}, identical`
               : 'what came back after reopening the database is not what was restored',
           })
         }
@@ -467,8 +468,8 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
       setStorageCheck({
         ok: same,
         detail: same
-          ? `${fromDisk.records.length} records and ${fromDisk.entities.length} entities came back identical`
-          : `what came back differs — ${fromDisk.records.length} records against ${snapshot.records.length} in memory`,
+          ? `${countOf(fromDisk.records.length, 'record', 'records')} and ${countOf(fromDisk.entities.length, 'entity', 'entities')} came back identical`
+          : `what came back differs — ${countOf(fromDisk.records.length, 'record', 'records')} against ${snapshot.records.length} in memory`,
       })
     } catch (caught) {
       if (job.isCurrent()) setStorageCheck({ ok: false, detail: describe(caught) })
