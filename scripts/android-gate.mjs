@@ -76,6 +76,11 @@ async function seedOwnerHistory(page) {
     })
     db.close()
   })
+
+  // And let the app read it: the provider opened before these rows existed,
+  // and a hash change is not a reload.
+  await page.reload()
+  await page.waitForSelector('h1')
 }
 
 async function main() {
@@ -104,8 +109,6 @@ async function main() {
   await seedOwnerHistory(page)
 
   // ---- Data is reachable the way an owner would reach it --------------------
-  await page.goto(BASE)
-  await page.waitForSelector('h1')
   await page.locator('.topbar').getByRole('button', { name: 'More' }).tap()
   await page.getByRole('link', { name: 'Exports, backup and restore' }).tap()
   await page.waitForSelector('h1:has-text("Data")')
@@ -135,6 +138,24 @@ async function main() {
     (await page.getByTestId('private-state').innerText()).includes('included'),
   )
   await page.getByTestId('section-private').tap()
+
+  // ---- The screen agrees with itself, in words -----------------------------
+  const onScreen = await page.locator('.screen').innerText()
+  check(
+    'the record on screen is the one in the store',
+    !onScreen.includes('nothing recorded'),
+    'the header says the history is empty while the store holds records',
+  )
+  check(
+    'counts agree with their nouns',
+    !/\b1 (?:entries|records|days|occasions|pairs)\b/.test(onScreen) && !onScreen.includes('(s)'),
+    'a count and its noun disagree',
+  )
+  check(
+    'no raw machine timestamp on the surface',
+    !/\d{4}-\d{2}-\d{2}T\d{2}:/.test(onScreen),
+    'an ISO timestamp is on an owner surface',
+  )
 
   // ---- Every control is a real target --------------------------------------
   const targets = page.locator('.data-actions button, .data-section')
@@ -184,6 +205,12 @@ async function main() {
 
   await page.getByTestId('restore-apply').tap()
   await page.waitForSelector('[data-testid="restore-done"]')
+  const afterRestore = await page.locator('.screen').innerText()
+  check(
+    'the restore result reads as English',
+    !/\b1 entries\b/.test(afterRestore) && !afterRestore.includes('(s)'),
+    'a count and its noun disagree after the restore',
+  )
   const done = await page.getByTestId('restore-done').innerText()
   check('the restore reports what it verified', done.includes('Restored, and checked'))
   const storage = await page.getByTestId('restore-storage-check').innerText()

@@ -1,3 +1,4 @@
+import { countOf } from '../../domain/counts'
 import type { LifeDomainId } from '../../domain/domains'
 import { FULL_EXPORT, type DisplayPolicy } from '../../domain/privacy'
 import type { CanonicalRecord } from '../../domain/records'
@@ -153,7 +154,7 @@ function overviewSection(request: ExportRequest, header: ExportHeader): readonly
     bullet(
       header.firstDay === undefined
         ? 'Record covers: nothing — this history is empty'
-        : `Record covers: ${header.firstDay} to ${header.lastDay}, ${header.records} entries`,
+        : `Record covers: ${header.firstDay} to ${header.lastDay}, ${countOf(header.records, 'entry', 'entries')}`,
     ),
     bullet(
       header.domains.length === 0
@@ -289,7 +290,7 @@ function coverageSection(request: ExportRequest): readonly string[] {
     const heard =
       domain.daysSinceHeard === undefined
         ? 'nothing heard at all'
-        : `last heard ${domain.daysSinceHeard} day(s) ago`
+        : `last heard ${countOf(domain.daysSinceHeard, 'day', 'days')} ago`
     lines.push(
       bullet(
         `${domain.label} — ${domain.status}, evidence ${domain.strength}; ${heard}. ${domain.summary}`,
@@ -336,12 +337,12 @@ function learningSection(request: ExportRequest): readonly string[] {
     }
     if (association.confounded > 0) {
       lines.push(
-        `  - ${association.confounded} pair(s) set aside because something else recorded fell in between.`,
+        `  - ${countOf(association.confounded, 'pair', 'pairs')} set aside because something else recorded fell in between.`,
       )
     }
     if (association.unknownExposure > 0) {
       lines.push(
-        `  - ${association.unknownExposure} occasion(s) the record cannot place either way. These count toward neither side.`,
+        `  - ${countOf(association.unknownExposure, 'occasion', 'occasions')} the record cannot place either way. These count toward neither side.`,
       )
     }
     if (association.disagree) {
@@ -379,7 +380,7 @@ function insightsSection(request: ExportRequest): readonly string[] {
     }
     if (insight.evidence.window !== undefined) {
       lines.push(
-        `  - Over ${insight.evidence.window.from} to ${insight.evidence.window.to}, ${insight.evidence.comparable} comparable occasion(s).`,
+        `  - Over ${insight.evidence.window.from} to ${insight.evidence.window.to}, ${countOf(insight.evidence.comparable, 'comparable occasion', 'comparable occasions')}.`,
       )
     }
   }
@@ -387,7 +388,11 @@ function insightsSection(request: ExportRequest): readonly string[] {
   if (insights.gathering.length > 0) {
     lines.push('', 'Still being gathered — the app has looked and there is not enough behind it:')
     for (const line of insights.gathering) {
-      lines.push(bullet(`${line.subject}: ${line.occasions} occasion(s) so far. ${line.needs}`))
+      lines.push(
+        bullet(
+          `${line.subject}: ${countOf(line.occasions, 'occasion', 'occasions')} so far. ${line.needs}`,
+        ),
+      )
     }
   }
 
@@ -400,7 +405,7 @@ function historySection(request: ExportRequest): readonly string[] {
   if (timeline.days.length === 0) return [NOTHING_HERE]
 
   lines.push(
-    `The most recent ${timeline.shown} of ${timeline.total} entries, newest first. Detail from the private domain is withheld here whether or not the private section is included; the private section is where it appears in full.`,
+    `The most recent ${timeline.shown} of ${countOf(timeline.total, 'entry', 'entries')}, newest first. Detail from the private domain is withheld here whether or not the private section is included; the private section is where it appears in full.`,
     '',
   )
 
@@ -481,7 +486,7 @@ function diagnosticsSection(request: ExportRequest): readonly string[] {
     bullet(`Build: ${app.commitSha} (${app.target}), built ${app.buildTime}`),
     bullet(`Architecture used for this decision: ${decision.architecture}`),
     bullet(
-      `Store: ${snapshot.records.length} records, ${snapshot.entities.length} entities, ${snapshot.malformed.length} unreadable rows, schema ${snapshot.schemaVersion}`,
+      `Store: ${countOf(snapshot.records.length, 'record', 'records')}, ${countOf(snapshot.entities.length, 'entity', 'entities')}, ${countOf(snapshot.malformed.length, 'unreadable row', 'unreadable rows')}, schema ${snapshot.schemaVersion}`,
     ),
     bullet(`Records still standing after corrections: ${situation.view.summary.effective}`),
     bullet(`Replaced or withdrawn: ${situation.view.summary.displaced}`),

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Panel, Row, Rows, Screen } from '../../components/ui'
 import { coreDomains } from '../../domain/domains'
-import { instantToIso } from '../../domain/time'
+import { countOf } from '../../domain/counts'
+import { localDateTimeAt, type TimeZoneId } from '../../domain/time'
 import { decide } from '../../intelligence/engine'
 import { insightsFor } from '../../intelligence/insights'
 import { assembleSituation } from '../../intelligence/situation'
@@ -54,6 +55,34 @@ import './DataScreen.css'
 
 const JSON_TYPE = 'application/json'
 const TEXT_TYPE = 'text/markdown'
+
+/**
+ * A moment, in the owner's own terms.
+ *
+ * Not the ISO string. A backup's `createdAt` is an instant on the wire and
+ * "2026-08-23T06:04:04.513Z" on a phone screen is developer vocabulary, which
+ * section 36 puts behind inspection rather than on the surface. Read in the
+ * zone the app is currently using rather than the browser's, so it agrees with
+ * every other date on screen — including under time travel.
+ */
+function momentIn(iso: string, zone: TimeZoneId): string {
+  const at = Date.parse(iso)
+  if (Number.isNaN(at)) return iso
+  const local = localDateTimeAt(at as Parameters<typeof localDateTimeAt>[0], zone)
+  return `${local.dayId} at ${local.timeOfDay}`
+}
+
+/**
+ * Enough of a fingerprint to tell two files apart, and no more.
+ *
+ * The whole digest is sixty-four characters and is what the refusal detail
+ * prints when two of them actually have to be compared. On the preview the
+ * owner's question is only "is this the same file as the other one", and a
+ * short prefix answers it without filling a phone screen with hex.
+ */
+function shortFingerprint(value: string): string {
+  return `${value.slice(0, 12)}…`
+}
 
 type Notice = { readonly tone: 'ok' | 'warn'; readonly text: string } | undefined
 
@@ -153,7 +182,7 @@ export function DataScreen() {
         json,
         filename: backupFilename(now, zone, runningBuild.commitShort),
         counts: countsOf(snapshot),
-        takenAt: instantToIso(now),
+        takenAt: momentIn(new Date(now).toISOString(), zone),
       })
     } catch (error) {
       setBackupNotice({
@@ -290,7 +319,7 @@ export function DataScreen() {
             value={
               composed.header.firstDay === undefined
                 ? 'nothing recorded'
-                : `${composed.header.firstDay} to ${composed.header.lastDay}, ${composed.header.records} entries`
+                : `${composed.header.firstDay} to ${composed.header.lastDay}, ${countOf(composed.header.records, 'entry', 'entries')}`
             }
           />
           <Row
@@ -417,7 +446,7 @@ export function DataScreen() {
               <Row label="Entries" value={String(backup.counts.records)} />
               <Row label="Things it knows about" value={String(backup.counts.entities)} />
               <Row label="Rows it could not read" value={String(backup.counts.malformed)} />
-              <Row label="Taken" value={backup.takenAt} mono />
+              <Row label="Taken" value={backup.takenAt} />
               <Row label="Filename" value={backup.filename} mono />
             </Rows>
             <textarea
@@ -521,7 +550,7 @@ export function DataScreen() {
               That backup reads correctly and holds everything it says it holds.
             </p>
             <Rows>
-              <Row label="Written" value={plan.summary.createdAt} mono />
+              <Row label="Written" value={momentIn(plan.summary.createdAt, zone)} />
               <Row
                 label="By build"
                 value={`${plan.summary.app.commitShort} · ${plan.summary.app.target}`}
@@ -551,13 +580,13 @@ export function DataScreen() {
               />
               <Row
                 label="It will restore"
-                value={`${plan.incoming.records} entries, ${plan.incoming.entities} things it knows about, ${plan.incoming.malformed} unreadable rows`}
+                value={`${countOf(plan.incoming.records, 'entry', 'entries')}, ${countOf(plan.incoming.entities, 'thing it knows about', 'things it knows about')}, ${countOf(plan.incoming.malformed, 'unreadable row', 'unreadable rows')}`}
               />
               <Row
                 label="It will replace"
-                value={`${plan.current.records} entries, ${plan.current.entities} things it knows about, ${plan.current.malformed} unreadable rows`}
+                value={`${countOf(plan.current.records, 'entry', 'entries')}, ${countOf(plan.current.entities, 'thing it knows about', 'things it knows about')}, ${countOf(plan.current.malformed, 'unreadable row', 'unreadable rows')}`}
               />
-              <Row label="Fingerprint" value={plan.expected} mono />
+              <Row label="Fingerprint" value={shortFingerprint(plan.expected)} mono />
             </Rows>
             {plan.summary.migrationsApplied.length === 0 ? null : (
               <p className="note">
@@ -581,12 +610,14 @@ export function DataScreen() {
         {outcome === undefined ? null : outcome.ok ? (
           <div className="data-outcome" data-testid="restore-done">
             <p className="data-ok">
-              Restored, and checked: {outcome.verification.counts.records} entries came back exactly
+              Restored, and checked:{' '}
+              {countOf(outcome.verification.counts.records, 'entry', 'entries')} came back exactly
               as the backup holds them.
             </p>
             <p className="note">
-              {outcome.replaced.records} entries were replaced. The fingerprint the app read back
-              matches the one in the file.
+              {countOf(outcome.replaced.records, 'entry', 'entries')}{' '}
+              {outcome.replaced.records === 1 ? 'was' : 'were'} replaced. The fingerprint the app
+              read back matches the one in the file.
             </p>
           </div>
         ) : (

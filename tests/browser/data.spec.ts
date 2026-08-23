@@ -73,6 +73,20 @@ async function seedOwnerHistory(page: Page) {
     })
     db.close()
   })
+
+  /*
+   * And now let the app read it.
+   *
+   * Without this the seed is invisible to everything except a fresh read of
+   * the store: the provider opened before the rows existed, and a `goto` that
+   * only changes the hash is not a reload. The backup panel still worked —
+   * `ownerSnapshot()` re-reads — so the gap was silent, and the export header
+   * was being asserted against an empty history the whole time. Phase 6's
+   * lesson, on a new surface: coverage that cannot observe the thing it claims
+   * to prove reads as evidence either way.
+   */
+  await page.reload()
+  await expect(page.getByRole('heading', { level: 1, name: 'Now' })).toBeVisible()
 }
 
 function sectionBox(page: Page, id: string) {
@@ -210,6 +224,60 @@ test.describe('composing a review export', () => {
   })
 })
 
+test.describe('the export describes the history that is actually there', () => {
+  test('reports the span and the areas of the owner’s own record', async ({ page }) => {
+    // The assertion the seed reload exists for. Without it this passed against
+    // an empty history and said nothing at all.
+    await seedOwnerHistory(page)
+    await openData(page)
+
+    const covers = page.locator('.rows__row', { hasText: 'Record covers' }).first().locator('dd')
+    await expect(covers).not.toHaveText('nothing recorded')
+    await expect(covers).toContainText('entries')
+
+    const areas = page.locator('.rows__row', { hasText: 'Life areas in it' }).first().locator('dd')
+    await expect(areas).toHaveText('Home & Environment')
+
+    await expect(page.getByTestId('export-text')).toContainText('Life areas with entries: home')
+  })
+
+  test('agrees with itself about how many entries there are', async ({ page }) => {
+    // "1 entries" survived every automated check on this phase and was found by
+    // reading the screen. This is the assertion that would have found it.
+    await seedOwnerHistory(page)
+    await openData(page)
+
+    const text = await page.getByTestId('export-text').inputValue()
+    const screen = await page.locator('.screen').innerText()
+    for (const source of [text, screen]) {
+      expect(source).not.toMatch(/\b1 entries\b/)
+      expect(source).not.toMatch(/\b1 records\b/)
+      expect(source).not.toMatch(/\(s\)/)
+    }
+  })
+
+  test('shows no raw machine timestamp on the surface', async ({ page }) => {
+    // Section 36 — technical detail belongs behind inspection, and an ISO
+    // string with milliseconds on it is technical detail.
+    await seedOwnerHistory(page)
+    await openData(page)
+    await page.getByRole('button', { name: 'Take a backup' }).click()
+    await expect(page.getByTestId('backup-text')).toBeVisible()
+
+    // And the restore preview, which is where the *file's* own timestamp is
+    // rendered. Sweeping only the backup panel left that row unread, which is
+    // how a reintroduction of the raw ISO string escaped this test once.
+    await page.getByTestId('restore-paste').fill(await page.getByTestId('backup-text').inputValue())
+    await page.getByTestId('restore-check').click()
+    await expect(page.getByTestId('restore-plan')).toBeVisible()
+
+    const rows = await page.locator('.rows__row').allInnerTexts()
+    for (const row of rows) {
+      expect(row, `a raw timestamp on screen: ${row}`).not.toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:/)
+    }
+  })
+})
+
 test.describe('taking a backup', () => {
   test('holds the owner’s own records, with a fingerprint and a filename', async ({ page }) => {
     await seedOwnerHistory(page)
@@ -297,7 +365,9 @@ test.describe('putting a backup back', () => {
     await page.getByTestId('restore-apply').click()
 
     await expect(page.getByTestId('restore-done')).toContainText('Restored, and checked')
-    await expect(page.getByTestId('restore-done')).toContainText(`${held} entries came back`)
+    await expect(page.getByTestId('restore-done')).toContainText(
+      `${held} ${held === 1 ? 'entry' : 'entries'} came back`,
+    )
     await expect(page.getByTestId('restore-storage-check')).toContainText('reopened the database')
 
     // And Timeline is reading the restored history, without anything reloading.

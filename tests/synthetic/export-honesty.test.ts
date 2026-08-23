@@ -4,8 +4,16 @@ import { describe, expect, it } from 'vitest'
 import { SELECT_ALL, type ExportSectionId } from '../../src/features/export/sections'
 import type { HistorySource } from '../../src/features/memory/projection'
 import { SCENARIOS } from '../../src/synthetic/scenarios'
+import { coreDomains } from '../../src/domain/domains'
+import { instant, timeZone } from '../../src/domain/time'
 import { decide } from '../../src/intelligence/engine'
-import { composeFor, contextFor } from './exportHarness'
+import { insightsFor } from '../../src/intelligence/insights'
+import { assembleSituation } from '../../src/intelligence/situation'
+import { snapshotFromWire } from '../../src/memory/snapshot'
+import { buildView } from '../../src/memory/view'
+import { assembleTimeline } from '../../src/features/timeline/timelineEntries'
+import { composeExport } from '../../src/features/export/compose'
+import { composeFor, contextFor, TEST_APP } from './exportHarness'
 
 /**
  * D-091, applied to a document rather than to a screen.
@@ -60,6 +68,62 @@ describe('a figure never reaches the document without what it measures', () => {
       // Whatever follows the dash has to name what is being counted.
       expect(line.split('—')[1]?.trim().length ?? 0).toBeGreaterThan(8)
     }
+  })
+})
+
+describe('the document reads as English', () => {
+  /*
+   * "1 entries" is what this is for. It survived the whole automated gate on
+   * this phase — an assertion expecting `1 entries` is exactly as green as one
+   * expecting `1 entry` — and was found by reading the screen on a phone.
+   * Section 61's copy rules are only worth anything if something checks them.
+   */
+  const DISAGREEMENTS = [
+    /\b1 entries\b/,
+    /\b1 records\b/,
+    /\b1 entities\b/,
+    /\b1 occasions\b/,
+    /\b1 comparable occasions\b/,
+    /\b1 pairs\b/,
+    /\b1 days\b/,
+    /\b1 unreadable rows\b/,
+  ]
+
+  for (const { id, text } of EVERYTHING) {
+    it(`agrees a count with its noun on ${id}`, () => {
+      for (const pattern of DISAGREEMENTS) {
+        expect(pattern.test(text), `${id}: ${pattern.source}`).toBe(false)
+      }
+    })
+  }
+
+  it('never falls back to the "(s)" that hides the question', () => {
+    // A developer surface may write "3 pair(s)". A document a person reads may
+    // not — it is the shape of a sentence nobody decided how to word.
+    for (const { id, text } of EVERYTHING) {
+      expect(text.includes('(s)'), `${id} writes a count as "(s)"`).toBe(false)
+    }
+  })
+
+  it('says "1 entry" on a history that holds exactly one', () => {
+    /*
+     * Built here rather than taken from the library, and that is the whole
+     * point: **no scenario in the library holds exactly one record**, so every
+     * sweep above passes over the header without ever reading a one. The
+     * defect this test exists for lived in that gap — a phone showed "1
+     * entries" while a full green suite said nothing.
+     */
+    const composed = composeOneRecord()
+    expect(composed.header.records).toBe(1)
+    expect(composed.text).toContain('1 entry')
+    expect(composed.text).not.toContain('1 entries')
+  })
+
+  it('is exercised against a history that actually holds one of something', () => {
+    // The assertions above are worth nothing if no scenario ever produces a
+    // count of one. This is what makes them a test rather than a hope.
+    const withOne = EVERYTHING.filter(({ text }) => /\b1 [a-z]/.test(text))
+    expect(withOne.length, 'no scenario produces a count of one').toBeGreaterThan(0)
   })
 })
 
@@ -211,3 +275,57 @@ describe('the header describes the document rather than promising something abou
     }
   })
 })
+
+/**
+ * One record, and nothing else.
+ *
+ * Composed the long way — through the same parser, view, situation and
+ * composer the app uses — so what it proves is what the owner would read.
+ */
+function composeOneRecord() {
+  const zone = timeZone('America/Denver')
+  const at = instant(Date.parse('2026-04-30T21:00:00Z'))
+  const wire = {
+    format: 'life-command-os/canonical',
+    schemaVersion: 1,
+    exportedAt: '2026-04-30T21:00:00.000Z',
+    records: [
+      {
+        id: '01JQWN0NE3NTRY000000000000',
+        schemaVersion: 1,
+        kind: 'observation',
+        occurredAt: '2026-04-30T20:00:00.000Z',
+        recordedAt: '2026-04-30T20:00:00.000Z',
+        zone: 'America/Denver',
+        domains: ['home'],
+        entities: [],
+        privacy: 'normal',
+        provenance: { source: 'owner', writtenBy: 'a test' },
+        concept: 'home.friction',
+        value: { type: 'text', value: 'the kitchen counter, again' },
+        method: 'self-report',
+      },
+    ],
+    entities: [],
+    malformed: [],
+  }
+
+  const loaded = snapshotFromWire(wire)
+  expect(loaded.loaded, 'the one-record document should load').toBe(true)
+  expect(loaded.snapshot.records).toHaveLength(1)
+
+  const moment = { now: at, zone, weekStartsOn: 1 as const }
+  const view = buildView(loaded.snapshot, moment)
+  const situation = assembleSituation(view, { ...moment, domains: coreDomains })
+
+  return composeExport({
+    sections: SELECT_ALL,
+    situation,
+    decision: decide(view, moment),
+    insights: insightsFor(situation),
+    timeline: assembleTimeline(situation),
+    source: 'owner',
+    app: TEST_APP,
+    at,
+  })
+}
