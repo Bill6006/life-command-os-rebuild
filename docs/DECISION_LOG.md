@@ -2686,3 +2686,58 @@ restore, which is more than a panel's worth of surface.
 **Why not a fifth tab.** For the reason section 5 gives and Phase 1 already
 learned once: a secondary surface promoted for convenience is how four primary
 destinations quietly become five.
+
+---
+
+## D-097 — A handoff never asserts literal SHA equality against a commit a later push has already superseded
+
+**Phase:** 7 (QA-07-001 repair) · **Status:** Active — **owner decision, governs every future handoff in every direction**
+
+This repository's CI redeploys the Preview on **every** push to `main`,
+including a documentation-only one, and `build-info.json` always reports the
+SHA of whatever commit was actually pushed (section 33's own mechanism,
+working exactly as designed). A "pin the checkpoint" commit that writes prose
+naming an earlier product commit as "the deployed checkpoint, confirmed live"
+is therefore self-contradicting the moment it is pushed: pushing it is what
+moves the deployed SHA past the value it names.
+
+Phase 7's own QA handoff asserted exactly that contradiction — "confirm
+`build-info.json` reports `322c00b`; if it does not, stop" — and independent
+QA correctly stopped, at the mandatory precondition, before any product
+behaviour was tested (QA-07-001, DEF-0061). The mismatch was real and the stop
+was right. The defect was upstream of it: the assertion should never have been
+written as literal string equality against a commit already superseded by the
+one making the assertion.
+
+**What actually matters is bundle equivalence, not SHA equality.** A docs-only
+commit changes nothing the browser downloads. Phases 1 through 6 relied on
+exactly this reasoning informally — "the closing SHA… `git diff X..HEAD
+--name-only` shows only `docs/`, so the deployed product code **is** the
+checkpoint's" — without ever writing it down as a rule or making it checkable.
+Phase 7 is the first time the informal version was dropped in favour of a
+literal precondition, and it is the first time it broke.
+
+**The rule, from here:** a handoff, a QA report, or a retest prompt may name a
+**product checkpoint** — the last commit that changed anything the build
+emits — for audit purposes, and may separately report the **deployed SHA** —
+whatever `build-info.json` reports live. It must never instruct the reader to
+block on the two being the same string. Where equivalence needs to be
+established, it is established by showing the diff between them touches
+nothing bundle-relevant, not by asserting they match.
+
+**Made checkable rather than remembered.** `scripts/checkpoint-equivalence.mjs
+<product-sha>` runs `git diff --name-only` between the named product commit
+and the current ref and fails if anything under `src/`, `public/`, or the
+handful of build-input files at the repository root changed; it passes and
+prints what did change otherwise. It knows nothing about `docs/`, `scripts/`,
+`tests/` or `.github/` because none of them can alter one byte of `dist/`, and
+it fails safe on anything it has not been taught about rather than assuming
+irrelevance.
+
+**Consequence for every future "pin the checkpoint" commit:** run the script
+before writing the checkpoint section, and write what it printed rather than
+asserting a match from memory. `qa/README.md`'s "checkpoint SHA tested" /
+"deployed SHA tested" pair already asks for both values reported separately;
+this decision is what stops the gap between them being read as a failure
+instead of the ordinary consequence of a docs commit landing between the
+build and the QA read of it.

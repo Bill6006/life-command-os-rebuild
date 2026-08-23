@@ -39,6 +39,21 @@ None.
 
 ## Fixed
 
+### DEF-0061 (QA-07-001) — a QA handoff asserted literal SHA equality against a commit its own push had already superseded
+
+- Status: Fixed
+- Severity: Blocker — independent QA correctly refused to test any product behaviour and returned FAIL; zero acceptance testing of Phase 7 occurred on the first QA attempt
+- Found in: Phase 7 / `66eeab3`
+- Found by: **independent Codex QA**, at the mandatory deployed-checkpoint preflight, before reading any other repository document (D-090 step 1)
+- Class: **a handoff asserting a fact its own act of writing it makes false.** This repository's CI redeploys on every push to `main`, including a documentation-only one, so `build-info.json` always reports whatever commit was actually pushed last. `docs/NEXT_PROMPT.md` for Phase 7 was written into commit `66eeab3` and named `322c00b` — an earlier, already-superseded commit — as "the deployed checkpoint," and told QA to stop if `build-info.json` did not report it. It never could: pushing that very sentence is what moved the deployed SHA to `66eeab3`.
+- Reproduction: open `https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json` after `66eeab3` deployed. `commitSha` reads `66eeab3...`, not `322c00b`. Compare against `docs/NEXT_PROMPT.md`'s CHECKPOINT section in that same commit, which requires `322c00b`.
+- Root cause: not the mismatch — the mismatch is the ordinary, correct consequence of a docs-only commit landing between a build and a later read of it. The defect is asserting literal SHA equality as a blocking precondition at all, rather than asserting the thing actually true and actually needed: that nothing the deployed bundle contains had changed.
+- Fix: `scripts/checkpoint-equivalence.mjs <product-sha>` checks bundle equivalence directly — `git diff --name-only` between the named product commit and the current ref, failing if anything under `src/`, `public/`, or the build-input files at the repository root changed. `docs/NEXT_PROMPT.md`'s checkpoint section is rewritten to report the product checkpoint and the live deployed SHA as two separately-named things, backed by this script's output, rather than asserting they are the same string.
+- Regression: the script itself, run against the real history (`node scripts/checkpoint-equivalence.mjs 322c00b` from `66eeab3` and later commits) — passes, reporting the four documentation files that actually changed. Reintroduced by committing a one-line change to a `src/` file and rerunning: the script fails and names the file. Reverted; the same command against the untouched history passes again.
+- **What this is not.** Not a claim that Phase 7's product behaviour is verified — QA had not yet tested any of it when this stopped it. That testing is the retest this repair hands back to the same Codex QA conversation.
+- Siblings: **every prior phase's "Pin the Round N checkpoint" commit relied on the same reasoning this defect broke, informally and unchecked.** None of them are being retroactively rewritten — their QA rounds already passed against those deployments — but D-097 makes the reasoning durable and checkable for every phase and round from here.
+- Fixed in: this checkpoint
+
 ### DEF-0060 — a count printed beside a plural noun, and two sweeps that could not fire on it
 
 - Status: Fixed

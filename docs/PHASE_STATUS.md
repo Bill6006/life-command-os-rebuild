@@ -24,10 +24,13 @@ reopens Phase 4 or any completed phase.
 
 # Phase 7 — AI exports + backup/restore
 
-**Status: YELLOW — READY FOR INDEPENDENT QA.**
+**Status: YELLOW — READY FOR INDEPENDENT RETEST.**
 
-Per D-077 this checkpoint does not self-certify. Independent QA is Codex
-(D-090), in a **new** conversation, cold-use first.
+Per D-077 this checkpoint does not self-certify. Independent QA's first run
+returned FAIL at the mandatory deployed-checkpoint preflight — a defect in the
+handoff, not in Phase 7's product code (DEF-0061, below) — and this status
+covers its repair. The retest goes to the **same** Codex conversation
+(D-090's retest routing), not a new one.
 
 Nothing in this area existed before this checkpoint: `MoreScreen.tsx` said so in
 as many words, and that sentence was one of the acknowledged deferrals in the
@@ -367,14 +370,60 @@ detached?` on `page.goto` — the `vite preview` connection-dropping that
 - **D-095** — integrity is a content fingerprint; authenticated validation is
   deferred, and says so.
 - **D-096** — Data is a destination of its own, reached from More.
+- **D-097** — a handoff never asserts literal SHA equality against a commit a
+  later push has already superseded; bundle equivalence is checked, not
+  claimed.
 
-Defects closed here, both found by the builder before QA: **DEF-0059**, the
-literal scanner; **DEF-0060**, a count printed beside a plural noun, and the
-two sweeps that could not fire on it.
+Defects closed here: **DEF-0059**, the literal scanner, found by the builder
+before QA; **DEF-0060**, a count printed beside a plural noun and the two
+sweeps that could not fire on it, found by the builder before QA;
+**DEF-0061**, the checkpoint-equivalence defect above, found by independent
+QA at the mandatory preflight.
+
+## Independent QA, round 1 — FAIL at the checkpoint preflight
+
+Codex opened the deployed Preview and, per D-090's first step, checked the
+assigned checkpoint before reading anything else. `preview/build-info.json`
+reported `66eeab3`, not the `322c00b` the handoff named — because pushing that
+very handoff's commit is what moved the deployed SHA past the value it wrote
+down. QA stopped exactly as instructed and returned FAIL, having tested only
+the sealed cold-use opening screen. Full report: `docs/qa/PHASE_07_QA_HANDOFF.md`.
+
+No Phase 7 product behaviour was accepted or rejected by this run. The repair
+below does not touch application code.
+
+## The repair — DEF-0061, and D-097
+
+The class of mistake: a handoff asserting the deployed SHA equals a named
+product commit, when this repository redeploys on every push including a
+documentation-only one and therefore the deployed SHA is never that commit
+again once anything is pushed after it. Phases 1 through 6 avoided this
+informally — "the closing SHA… `git diff X..HEAD --name-only` shows only
+`docs/`" — without ever writing the reasoning down or making it checkable.
+Phase 7's first handoff asserted literal string equality instead, and broke
+the first time a docs commit followed a product commit under it.
+
+**D-097** makes the informal reasoning a standing rule: a handoff names the
+product checkpoint and separately reports the live deployed SHA, and never
+instructs a reader to block on the two matching as strings. **DEF-0061** is
+the defect this phase's first handoff committed against that rule, closed by
+`scripts/checkpoint-equivalence.mjs` — a read-only `git diff` between a named
+product commit and the current ref, failing if anything under `src/`,
+`public/`, or the build-input files at the repository root changed. Run
+against `322c00b..HEAD`: four documentation files, nothing bundle-relevant.
+Reintroduced by committing a one-line change to a `src/` file: the script
+fails and names it, then passes again once reverted.
+
+`docs/NEXT_PROMPT.md`'s CHECKPOINT section is rewritten to the sound pattern —
+product checkpoint named once and never re-asserted as a literal match; the
+deployed SHA read live; equivalence established by the script's output rather
+than by string comparison.
 
 ## Next
 
-Independent QA, in a **new Codex conversation**, cold-use first (D-090). The
+Independent QA retest, in the **same** Codex conversation that returned the
+checkpoint FAIL (D-090's retest routing). No Phase 7 product acceptance
+testing has happened yet, so the work ahead is the full first pass. The
 complete prompt is in [`NEXT_PROMPT.md`](NEXT_PROMPT.md).
 
 ---
