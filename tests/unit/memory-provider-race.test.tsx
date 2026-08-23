@@ -4,8 +4,18 @@
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+/*
+ * React only treats `act` as real when this is set. Without it every render
+ * here prints "the current testing environment is not configured to support
+ * act(...)", which QA reported — and a warning that noisy makes the assertions
+ * around it harder to trust than they should be.
+ */
+;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 import type { CanonicalRecord } from '../../src/domain/records'
+import type { Instant, TimeZoneId, WeekStartDay } from '../../src/domain/time'
 import type { AppendResult, CanonicalStore, StoreSnapshot } from '../../src/memory/store'
+import type { MemoryView } from '../../src/memory/view'
 
 /**
  * R4-B1 — the provider actually asks before it publishes.
@@ -89,13 +99,13 @@ vi.mock('../../src/memory/indexedDbStore', () => ({
   },
 }))
 
-function record(id: string, text: string): CanonicalRecord {
+function record(id: string, text: string, at = 1_777_000_000_000): CanonicalRecord {
   return {
     id,
     schemaVersion: 1,
     kind: 'observation',
-    occurredAt: 1_777_000_000_000,
-    recordedAt: 1_777_000_000_000,
+    occurredAt: at,
+    recordedAt: at,
     zone: 'America/Denver',
     domains: ['home'],
     entities: [],
@@ -110,20 +120,42 @@ function record(id: string, text: string): CanonicalRecord {
 const HIS = record('01JQWNSEED0000000000000000', 'weekly review on Sunday')
 const FIXTURE = record('01JQWNFIXTURE00000000000AA', 'invented evening')
 
+/**
+ * The owner's own record, dated **after** any fixture clock (R5-B1).
+ *
+ * QA named the hole this fills. Every earlier test here sat the owner's row one
+ * day *before* the fixture's clock, so no assertion could ever notice a record
+ * being hidden for not having happened yet — the tests proved the store
+ * boundary and were blind to the temporal half of the same screen.
+ */
+const HIS_AUGUST = record('01JQWNAUGUST00000000000AA', 'august owner entry', 1_787_249_400_000)
+
+/** A fixture clock set in the past, as the scenario library's are. */
+const FEBRUARY = 1_771_189_200_000 as Instant
+
 let root: Root | undefined
 let container: HTMLDivElement | undefined
 let seen: {
   snapshot: StoreSnapshot
   source: string
+  /** The whole visible context, because the store is only half of it (R5-B1). */
+  view: MemoryView
+  now: Instant
+  zone: TimeZoneId
+  weekStartsOn: WeekStartDay
+  travelled: boolean
   append: (r: CanonicalRecord[]) => void
   clear: () => void
+  travelTo: (at: Instant) => void
+  setZone: (zone: TimeZoneId) => void
+  setWeekStartsOn: (day: WeekStartDay) => void
 }
 
 beforeEach(() => {
   gate.hold = undefined
   held.release = undefined
   stores.clear()
-  stores.set('owner', fakeStore('owner', [HIS]))
+  stores.set('owner', fakeStore('owner', [HIS, HIS_AUGUST]))
   stores.set('laboratory', fakeStore(':laboratory', [FIXTURE]))
 })
 
@@ -143,8 +175,16 @@ async function mount() {
     seen = {
       snapshot: memory.snapshot,
       source: memory.source,
+      view: memory.view,
+      now: memory.now,
+      zone: memory.zone,
+      weekStartsOn: memory.weekStartsOn,
+      travelled: memory.travelled,
       append: (r) => void memory.append(r),
       clear: () => void memory.clear(),
+      travelTo: (at) => memory.travelTo(at),
+      setZone: (z) => memory.setZone(z),
+      setWeekStartsOn: (d) => memory.setWeekStartsOn(d),
     }
     return null
   }
@@ -198,7 +238,7 @@ describe('the provider consults the rule before it publishes', () => {
       await Promise.resolve()
     })
     expect(seen.source).toBe('owner')
-    expect(seen.snapshot.records.map((r) => r.id)).toEqual([HIS.id])
+    expect(seen.snapshot.records.map((r) => r.id)).toEqual([HIS.id, HIS_AUGUST.id])
 
     // Now the laboratory read lands. It read an emptied store.
     await act(async () => {
@@ -211,7 +251,62 @@ describe('the provider consults the rule before it publishes', () => {
     expect(
       seen.snapshot.records.map((r) => r.id),
       'the stale laboratory read reached the screen and blanked his history',
-    ).toEqual([HIS.id])
+    ).toEqual([HIS.id, HIS_AUGUST.id])
+  })
+
+  it('gives back his clock as well as his records', () => {
+    /*
+     * R5-B1, and the case the earlier tests here could not see.
+     *
+     * Loading a scenario sets the zone, the week start and the moment — the
+     * library's fixtures are set in the past. Returning used to give back the
+     * store and leave all three behind, so his August records were evaluated
+     * against a February clock, had not happened yet, and vanished. The notice
+     * was gone by then, so the screen was asserting that an empty history was
+     * his.
+     *
+     * The owner's record here is dated **after** the fixture clock, which is
+     * the whole point: with it dated before, as every earlier test had it, this
+     * defect is invisible.
+     */
+    return (async () => {
+      await mount()
+      expect(seen.source).toBe('laboratory')
+      const hisZone = seen.zone
+
+      // The laboratory takes the clock back to February, as a scenario does.
+      await act(async () => {
+        seen.setZone('Europe/London' as TimeZoneId)
+        seen.setWeekStartsOn(7)
+        seen.travelTo(FEBRUARY)
+        await Promise.resolve()
+      })
+      expect(seen.travelled).toBe(true)
+
+      // His August record is genuinely in the store, and genuinely in the
+      // future from where the laboratory's clock is standing.
+      expect(
+        seen.view.history.effective.some((r) => r.id === HIS_AUGUST.id),
+        'the fixture view should not contain his records at all',
+      ).toBe(false)
+
+      await act(async () => {
+        seen.clear()
+        await Promise.resolve()
+        await Promise.resolve()
+      })
+
+      expect(seen.source).toBe('owner')
+      expect(seen.travelled, 'the laboratory clock survived the return').toBe(false)
+      expect(seen.now, 'the return left the clock in February').toBeGreaterThan(FEBRUARY)
+      expect(seen.weekStartsOn, 'the fixture week start survived the return').toBe(1)
+      expect(seen.zone, 'the fixture zone survived the return').toBe(hisZone)
+      expect(seen.snapshot.records.map((r) => r.id)).toContain(HIS_AUGUST.id)
+      expect(
+        seen.view.history.effective.some((r) => r.id === HIS_AUGUST.id),
+        'his August record is in the store and not on the screen — the defect exactly',
+      ).toBe(true)
+    })()
   })
 
   it('does not let a return that was overtaken publish over the newer work', () => {

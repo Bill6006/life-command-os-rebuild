@@ -315,8 +315,15 @@ test.describe('the laboratory and the owner keep separate histories', () => {
         id: '01JQWNSEED0000000000000000',
         schemaVersion: 1,
         kind: 'observation',
-        occurredAt: '2026-05-01T18:00:00.000Z',
-        recordedAt: '2026-05-01T18:00:00.000Z',
+        /*
+         * Deliberately **later than every scenario clock** (R5-B1). This row
+         * used to be dated 1 May against a 2 May fixture, one day earlier, so
+         * no assertion here could notice a record being hidden for not having
+         * happened yet: the coverage proved the store boundary and was blind
+         * to the temporal half of the same screen.
+         */
+        occurredAt: '2026-08-20T18:00:00.000Z',
+        recordedAt: '2026-08-20T18:00:00.000Z',
         zone: 'America/Denver',
         domains: ['home'],
         entities: [],
@@ -425,6 +432,39 @@ test.describe('the laboratory and the owner keep separate histories', () => {
       await expect(page.locator('.lab-notice')).toHaveCount(0)
     })
   }
+
+  test('gives back his clock as well as his records, after answering the fixture', async ({
+    page,
+  }) => {
+    /*
+     * R5-B1's own reproduction, both halves of it.
+     *
+     * A scenario sets the zone, the week start and the moment, and the library
+     * is full of fixtures set in the past. Answering one and then returning is
+     * the sequence the owner actually performs, and it is the one that used to
+     * leave his August records evaluated against a June clock — invisible, with
+     * the notice already gone.
+     */
+    await seedHisOwnHistory(page)
+    await openQa(page)
+    await loadScenario(page, 'One answer, and a lot of silence')
+
+    // Answer the fixture's live question, so there is a real write against it.
+    await page.goto(`${APP}#/now`)
+    const option = page.locator('.now-option').first()
+    if (await option.isVisible()) await option.click()
+
+    await page.locator('.lab-notice').getByRole('button', { name: 'Show mine' }).click()
+
+    await page.goto(`${APP}#/timeline`)
+    await expect(page.getByText(HIS_OWN)).toBeVisible()
+    await page.waitForTimeout(1500)
+    await expect(page.getByText(HIS_OWN), 'his August record is hidden as future').toBeVisible()
+
+    // And the clock came back with the records.
+    await page.goto(`${APP}#/qa`)
+    await expect(page.getByText(/2026-06-15/)).toHaveCount(0)
+  })
 
   test('a load still in flight cannot pull him back into the laboratory', async ({ page }) => {
     /*

@@ -22,7 +22,58 @@ reopens Phase 4 or any completed phase.
 
 # Phase 6 — Timeline + Insights
 
-**Status: YELLOW — ROUND 4 REPAIRED, AWAITING CODEX RETEST.**
+**Status: YELLOW — ROUND 5 REPAIRED, AWAITING CODEX RETEST.**
+
+Codex's Round 5 retest confirmed the Round 4 store race repaired and the two
+databases holding, and returned **FAIL** on one blocker: **R5-B1**, the
+laboratory's clock surviving the return. Repaired here as DEF-0058. Full report
+at [`qa/PHASE_06_QA_HANDOFF.md`](qa/PHASE_06_QA_HANDOFF.md) under "Round 5 —
+Codex retest".
+
+**Round 4 solved half a projection.** Only the newest work may publish the
+source and the snapshot — that held. But what a reader sees is
+`buildView(snapshot, { now, zone, weekStartsOn })`, and a scenario sets all
+three of those before it loads anything. The return gave back the store and
+left the clock behind, so a February fixture followed by **Empty the
+laboratory** left every raw owner record in Storage and none of them on
+Timeline: they are dated after February and had not happened yet. The notice was
+gone by then, so the screen was asserting that an empty history was his.
+
+The return now publishes **one coherent context** — owner source, owner
+snapshot, system clock, system zone, default week start, `travelled` false — in
+a single continuation. Restored rather than remembered, because nothing outside
+the laboratory can change those; if that ever changes, it becomes a stash, and
+the comment and the test both say so.
+
+**QA also named a hole in the builder's own coverage, and it was real.** Every
+Round 4 return test seeded the owner's row at 1 May and loaded a fixture clocked
+2 May — one day later — so no assertion could ever observe a record hidden for
+being in the future. The tests proved the store boundary and were blind to the
+temporal half of the same screen. The seed is now dated August, after every
+scenario clock, and the guard bites. The provider tests also ran without
+`IS_REACT_ACT_ENVIRONMENT`, printing an `act(...)` warning on every render;
+fixed, because a warning that noisy makes the assertions around it harder to
+trust.
+
+**Nine reintroductions across Rounds 4 and 5, nine caught** — and one escaped
+first time, because the test never asserted the zone came back.
+
+**One thing left open and reported rather than buried.** During this repair the
+full unit suite failed once on `guide-resume.test.ts` → "never re-asks something
+already answered", a test that is pure and clock-free and that I did not touch.
+It did not recur in four subsequent full runs or three focused ones, and the
+failing run was on a loaded machine. I could not reproduce it, so I cannot say
+it is nothing — it is named here and in the Codex handoff rather than left to be
+found again.
+
+**Every Round 5 PASS preserved**: the two databases, fixture inspectability,
+fixture-scoped writes, reload and notice behaviour, R3-B2, R3-B3, the seven
+semantic invariants, QA-A1, section 51, DEF-0034–DEF-0044, the exact-three-verb
+decision and every explicit deferral.
+
+---
+
+**Round 4 status, superseded by the above: YELLOW — ROUND 4 REPAIRED, AWAITING CODEX RETEST.**
 
 Codex's Round 4 retest confirmed R3-B2 and R3-B3 repaired and the two databases
 holding — the owner's bytes survived everything — and returned **FAIL** on one
@@ -380,8 +431,8 @@ failure, and lint is the cheaper half.
 
 |                      |                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Product checkpoint   | `28d2efc` — the Round 4 repair every result below was measured against, and the one Codex should retest                                                                                                                                                                                                                                                                                                                                                                    |
-| Earlier checkpoints  | `8680642` — the Round 3 repair Codex Round 4 tested; `481c3a7` — the seven-blocker repair; `36c75ef` — the QA-A1 repair                                                                                                                                                                                                                                                                                                                                                    |
+| Product checkpoint   | the Round 5 repair, pinned in the closing commit below                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Earlier checkpoints  | `28d2efc` — the Round 4 repair Codex Round 5 tested; `8680642` — Round 3; `481c3a7` — the seven-blocker repair                                                                                                                                                                                                                                                                                                                                                             |
 | Closing SHA          | current `main` HEAD — documentation only past `28d2efc`, no product code                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Deployed Preview SHA | the closing SHA. Every push redeploys, so this is a rule rather than a frozen number: `git diff 28d2efc..HEAD --name-only` shows only `docs/`. `28d2efc` itself was deployed and both return paths were driven by hand on it — an interrupted load followed by Empty the laboratory, and Show mine after a fully loaded fixture. His record was on Timeline immediately and still there after two and a half seconds; no empty history, no fixture left behind, no notice. |
 | Do they match?       | Yes, by construction — D-004, and asserted live in CI                                                                                                                                                                                                                                                                                                                                                                                                                      |
@@ -390,20 +441,20 @@ failure, and lint is the cheaper half.
 
 ## Verification
 
-| Gate                                      | Result                                                                                                                                                                                                                                                                                                                                                            |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Privacy scan                              | Clean, 163 tracked files                                                                                                                                                                                                                                                                                                                                          |
-| Format (Prettier)                         | Pass                                                                                                                                                                                                                                                                                                                                                              |
-| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                                                                                                                                                                                                                                                  |
-| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                                                                                                                                                                                                                                                    |
-| Unit / contract / synthetic / adversarial | 779 passed / 779, 45 files (in plain Node, no DOM)                                                                                                                                                                                                                                                                                                                |
-| Browser tests (Playwright)                | 309 passed / 309 — 103 tests × 360, 430, 1280px                                                                                                                                                                                                                                                                                                                   |
-| Production build                          | Pass                                                                                                                                                                                                                                                                                                                                                              |
-| `npm run verify` from a clean checkout    | Pass                                                                                                                                                                                                                                                                                                                                                              |
-| Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand                                                                                                                                                                                                                                                                                                                        |
-| Reintroduction pass                       | 19 for the phase, 12 for QA-A1, 17 for the audit's seven, 4 for Codex Round 3, **5 for Codex Round 4**; all 57 caught                                                                                                                                                                                                                                             |
-| Builder's own Android-style gate          | Pass — against the deployed checkpoint; no findings                                                                                                                                                                                                                                                                                                               |
-| Independent QA                            | **Round 1 PASS withdrawn on QA-A1; round 2 repaired; seven blockers found by Codex cold-use audit, repaired here. Codex Round 3 confirmed those seven and returned FAIL on three siblings, repaired here. Codex Round 4 confirmed R3-B2/R3-B3 and the storage split, and failed on the return projection, repaired here. Awaiting Codex Round 5 retest (D-090).** |
+| Gate                                      | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy scan                              | Clean, 163 tracked files                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Format (Prettier)                         | Pass                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Unit / contract / synthetic / adversarial | 780 passed / 780, 45 files (in plain Node, no DOM)                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Browser tests (Playwright)                | 312 passed / 312 — 104 tests × 360, 430, 1280px                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Production build                          | Pass                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `npm run verify` from a clean checkout    | Pass                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Deployed SHA matches checkpoint           | Asserted live in CI, and confirmed by hand                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Reintroduction pass                       | 19 for the phase, 12 for QA-A1, 17 for the audit's seven, 4 for Codex Round 3, 5 for Codex Round 4, **9 across Rounds 4 and 5**; all 61 caught                                                                                                                                                                                                                                                                                                                                  |
+| Builder's own Android-style gate          | Pass — against the deployed checkpoint; no findings                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Independent QA                            | **Round 1 PASS withdrawn on QA-A1; round 2 repaired; seven blockers found by Codex cold-use audit, repaired here. Codex Round 3 confirmed those seven and returned FAIL on three siblings, repaired here. Codex Round 4 confirmed R3-B2/R3-B3 and the storage split, and failed on the return projection, repaired here. Codex Round 5 confirmed the store race repaired and failed on the temporal half of the return, repaired here. Awaiting Codex Round 6 retest (D-090).** |
 
 ### Where the 700 sit
 

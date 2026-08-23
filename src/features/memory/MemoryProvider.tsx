@@ -288,12 +288,32 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
       const his = await owner.snapshot()
       if (!projection.show('owner', job)) return
       /*
-       * Published together, in one continuation, so React renders the source
-       * and the history it belongs to in the same pass. A reader never sees
-       * the owner's word over the laboratory's records or the reverse.
+       * The whole visible context, published together in one continuation, so
+       * React renders it in a single pass.
+       *
+       * **What a reader sees is not the store alone (R5-B1).** It is
+       * `buildView(snapshot, { now, zone, weekStartsOn })` — so the clock is
+       * half of it, and returning his records under the laboratory's clock is
+       * not returning his history. Loading a scenario sets the zone, the week
+       * start and the moment; this used to give back the store and leave all
+       * three behind, so a February fixture followed by a return showed his
+       * August records as things that had not happened yet. Timeline said
+       * "Nothing here yet" with the notice gone, which is the screen asserting
+       * that an empty history is his.
+       *
+       * The owner's frame is the real one — the system clock, the system zone,
+       * the default week start, not travelled. It is restored rather than
+       * remembered because nothing outside the laboratory can change it: the
+       * clock, zone and week-start controls are QA's. If that ever stops being
+       * true, this becomes a stash taken when the laboratory takes over, and
+       * the test below is what will say so.
        */
       setSource('owner')
       setSnapshot(his)
+      setNow(clock.now())
+      setZone(clock.zone())
+      setWeekStartsOn(DEFAULT_WEEK_START)
+      setTravelled(false)
       setIssues([])
       setLoadedLabel(undefined)
       setStorageCheck(undefined)
@@ -302,7 +322,7 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     } finally {
       if (job.isCurrent()) setBusy(false)
     }
-  }, [projection])
+  }, [clock, projection])
 
   const verifyStorage = useCallback(async () => {
     const job = projection.beginHere()

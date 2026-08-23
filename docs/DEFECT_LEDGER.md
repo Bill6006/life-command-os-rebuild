@@ -39,6 +39,23 @@ None.
 
 ## Fixed
 
+### DEF-0058 — the laboratory's clock came back with the owner's records, and hid the newer ones
+
+- Status: Fixed
+- Severity: Blocker — both return controls could present a valid owner history as empty or partial, with the notice already gone
+- Found in: Phase 6 / `28d2efc`
+- Found by: **independent Codex QA, Round 5** (R5-B1), on the deployed build
+- Class: **half a projection.** DEF-0057 established that only the newest work may publish the source and the snapshot. What a reader actually sees is `buildView(snapshot, { now, zone, weekStartsOn })` — so the clock is the other half, and returning his records under the laboratory's clock is not returning his history.
+- Reproduction, both paths, on the deployed build: load _Two ordinary weeks_ (clock 2026-02-15) and press **Empty the laboratory** — QA's Storage block still lists every raw owner record while Timeline shows none of them, because they are dated after February. Load _One answer, and a lot of silence_ (clock 2026-06-15), answer its energy question, press **Show mine** — his August records are gone. A reload restores both, by restoring real time.
+- Root cause: a scenario button calls `setZone`, `setWeekStartsOn` and `travelTo` before `loadDocument`. `clear()` restored the source and the snapshot and none of the three, so the owner's records were evaluated against the fixture's instant and correctly excluded as not yet having happened.
+- Fix: the return publishes **one coherent context** — owner source, owner snapshot, the system clock, the system zone, the default week start, and `travelled` false — in a single continuation, so React renders it in one pass.
+- **Restored rather than remembered, and the comment says why.** Nothing outside the laboratory can change the clock, the zone or the week start; those controls are QA's. If that ever stops being true this becomes a stash taken when the laboratory takes over, and the test named below is what will say so.
+- Regression: `tests/unit/memory-provider-race.test.tsx` → "gives back his clock as well as his records" drives the provider at a controlled clock and asserts the **view**, not only the store. `tests/browser/qa-lab.spec.ts` → "gives back his clock as well as his records, after answering the fixture" performs the owner's actual sequence. Nine reintroductions across Rounds 4 and 5, all nine caught.
+- **The coverage hole QA named, and it was real.** Every Round 4 return test seeded the owner's row at 2026-05-01 and loaded a fixture clocked 2026-05-02 — one day later — so no assertion could observe a record hidden for not having happened yet. The tests proved the store boundary and were blind to the temporal half of the same screen. The seed is now dated August, after every scenario clock, and the guard bites.
+- Also fixed: the provider tests ran without `IS_REACT_ACT_ENVIRONMENT`, so every render printed an `act(...)` warning. A warning that noisy makes the assertions around it harder to trust.
+- Siblings: swept. `apply` deliberately does not restore anything — entering is the laboratory's to define — and `verifyStorage` and `append` do not touch the frame.
+- Fixed in: this checkpoint
+
 ### DEF-0057 — the return from the laboratory published an empty history, and said nothing of his had changed
 
 - Status: Fixed

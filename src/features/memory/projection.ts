@@ -26,6 +26,18 @@
  * letting it land in a store that is about to be cleared anyway — but it
  * publishes nothing: not a snapshot, not `busy`, not an error, not the source.
  *
+ * ## What this rule does *not* cover, and where the rest lives
+ *
+ * Source and snapshot are two thirds of what a reader sees. The third is the
+ * moment — `buildView(snapshot, { now, zone, weekStartsOn })` — and time can
+ * contradict the other two: returning the owner's records under the
+ * laboratory's clock showed his August entries as things that had not happened
+ * yet, on a screen with the notice already gone (DEF-0058). Restoring the
+ * owner's frame belongs to the operation that gives the screen back, in
+ * `MemoryProvider.clear()`, because it is the frame rather than the arbitration
+ * that changes. This file decides *whether* work may publish; it does not
+ * decide what a coherent context is.
+ *
  * ## Why this is not inside the provider
  *
  * Because a rule about interleaving cannot be tested by hoping two things
