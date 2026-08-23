@@ -1,130 +1,126 @@
 # Next prompt
 
-Canonical plan section 43, and the independent-QA protocol in
-[`qa/README.md`](qa/README.md). Independent QA is Codex (D-090); Claude builds.
-Every handoff ends with the model, the level, the conversation and a short
-copyable launcher (D-092) — the detail lives here, in the repository.
+Canonical plan section 43, and section 52 for the phase itself. Independent QA
+is Codex (D-090); Claude builds. Every handoff ends with the model, the level,
+the conversation and a short copyable launcher (D-092) — the detail lives here,
+in the repository.
 
-**Phase 6 is YELLOW — ROUND 5 REPAIRED, AWAITING CODEX RETEST.** Codex's Round
-5 retest confirmed the Round 4 store race repaired and failed the phase on
-**R5-B1**: the laboratory's clock, zone and week start survived the return, so
-owner records later than the fixture instant read as future and disappeared
-until reload. Repaired.
+**Phase 6 is GREEN.** Six rounds, closed on independent Codex QA PASS (Round
+6). Full record in [`PHASE_STATUS.md`](PHASE_STATUS.md) under "Phase 6 —
+Timeline + Insights"; the nine standing semantic and storage invariants are
+D-091; the QA protocol is D-090; the handoff-launcher rule is D-092, all in
+[`DECISION_LOG.md`](DECISION_LOG.md).
 
-Builder account in [`PHASE_STATUS.md`](PHASE_STATUS.md); the defect is DEF-0058
-in [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md); the decisions are D-090, D-091 and
-D-092 in [`DECISION_LOG.md`](DECISION_LOG.md).
+**Phase 7 — AI exports + backup/restore (canonical plan section 52) is next.**
+Nothing in this area is built: `MoreScreen.tsx` currently says so directly —
+"Exports, backup and restore are not built yet." `documentJson()` already
+exists on the memory context (`src/features/memory/memoryContext.ts`) and
+round-trips a `StoreSnapshot` through `snapshotToJson`/`snapshotFromWire`; it
+is the QA laboratory's load/save path today, and the phase's job is to give the
+owner the same fidelity, deliberately, with a UI in front of it.
 
 ---
 
 ## NEXT ACTION
 
-- **System:** **Codex**
-- **Model:** GPT-5.1-Codex-class — the current Codex coding/review model, or its
-  nearest equivalent if it has been renamed
-- **Reasoning level:** **Medium**
-- **Conversation:** **SAME — the Codex conversation that ran Rounds 3, 4 and 5.**
-- **Why this model:** reproducing two concrete deployed sequences and judging a
-  repair against acceptance criteria it wrote itself.
-- **Why this level:** Medium. The boundary is located and written down; this is
-  verification rather than open root-cause search. Reach higher only if
-  something new appears, and say so.
-- **Why the same conversation:** `qa/README.md`'s conversation rule — a retest
-  returns to the conversation that ran the original test.
+- **System:** **Claude**
+- **Model:** Opus-class (Claude Opus 5, or the current strongest Claude coding
+  model if renamed)
+- **Intelligence level:** **High**
+- **Conversation:** **NEW** — a phase boundary, not a continuation of the Phase
+  6 repair conversation's context.
+- **Why this model:** a full backup/restore has to be transactional and
+  verified on a real phone (the phase's own gate), and the AI handoff prompt
+  composer has to describe the app's own state honestly to an entirely
+  different assistant reading it cold — both are cross-system reasoning tasks
+  D-080 reserves Opus-class for.
+- **Why this level:** High. The shape of the work is bounded by section 52, but
+  correctness here is unusually unforgiving — a restore that silently loses or
+  duplicates data is the worst possible failure mode for an app whose entire
+  premise is being a trustworthy record of a life.
+- **Why a new conversation:** Phase 6 is closed and its repair context (six
+  rounds of laboratory-storage races) is not needed to reason about export
+  composition or restore atomicity, and carrying it forward would waste
+  context on an unrelated problem.
+- **Attach/reference:** `src/features/memory/store.ts` (`CanonicalStore`,
+  `replaceAll`), `src/memory/indexedDbStore.ts`, `src/memory/snapshot.ts`
+  (`snapshotToJson`, `snapshotFromWire`), `src/features/memory/MemoryProvider.tsx`
+  (D-091's storage-boundary reasoning — a restore is the same "whole visible
+  context, published together" problem the last three rounds just closed), and
+  `src/features/more/MoreScreen.tsx`.
 
 ---
 
 ## COPY/PASTE PROMPT
 
 ```text
-Phase 6's Round 5 repair is ready for your retest. This is the same Codex QA
-conversation that ran Rounds 3, 4 and 5 — you have your own reproductions of
-R5-B1 and the acceptance criteria you set for it.
+Begin Phase 7 — AI exports + backup/restore. Repository:
 
-Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
-Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
 
-Your report is docs/qa/PHASE_06_QA_HANDOFF.md. Update it in place with a
-"Round 6 — Codex retest" section. It is the only file you may write, and you
-may not change application or product code. Your Round 5 report was committed
-exactly as you wrote it.
+Read docs/CANONICAL_REBUILD_PLAN.md section 52 in full, and
+docs/PHASE_STATUS.md's Phase 6 entry for the storage-boundary reasoning you
+will be extending rather than re-deriving. Do not ask the owner to paste
+either file; you have the paths.
 
-START WITH THE APP.
+WHERE THIS PHASE STARTS
 
-Record something of your own at a normal Now, dated today. Then run both of
-your Round 5 reproductions on the deployed build:
+Nothing in this area is built. src/features/more/MoreScreen.tsx says so
+directly. What already exists and is yours to build on:
 
-  1. Load "One answer, and a lot of silence" (June clock), answer its energy
-     question, and immediately press Show mine.
-  2. From the recovered owner, load "Two ordinary weeks" (February clock) and
-     immediately press Empty the laboratory.
+- MemoryContextValue.documentJson() (src/features/memory/memoryContext.ts)
+  round-trips the active store through snapshotToJson/snapshotFromWire. The QA
+  laboratory already uses this path to load and inspect fixtures.
+- CanonicalStore.replaceAll() (src/memory/store.ts,
+  src/memory/indexedDbStore.ts) is the transactional whole-store write a
+  restore needs — replaceAll already clears every object store and writes the
+  new one inside a single IndexedDB transaction.
+- The two-database owner/laboratory split and the D-091 projection rule in
+  MemoryProvider.tsx are the reasoning to extend, not reinvent: a restore that
+  publishes a snapshot without also publishing a coherent read of it (clock,
+  zone, week start) is the exact defect class DEF-0057 and DEF-0058 just
+  closed, one surface over.
 
-After each, your acceptance criteria are the ones to judge against: owner
-source, owner snapshot, real/system time, owner/system zone, owner week-start
-interpretation and travelled = false, observable together, without a reload. An
-owner record later than the fixture clock must be visible immediately and after
-pending work settles. No fixture row, clock or notice may remain.
+WHAT SECTION 52 ASKS FOR
 
-Then judge the whole class rather than the two sequences: a scenario loaded
-after another scenario; time-travelling inside the laboratory and then
-returning; returning while an answer is still being written; and whether
-anything else that is part of the visible context is still left behind.
+An AI export composer: section selection, select-all, clear, a remembered last
+selection, Private/Sexual Health available for deliberate inclusion, an
+embedded handoff prompt, a Copy Prompt action, current app/engine version,
+current data range, current selected domains.
 
-WHAT THE BUILDER CHANGED, AND WHAT TO BE SCEPTICAL OF
+An AI handoff prompt with a fixed shape: source-of-truth instruction,
+current-state review, main limiter, an app-tuning review when diagnostics are
+included, what is working, what is drifting, what to change, what to
+remove/simplify, what NOT to change, next practical actions, an uncertainty
+rule, and a instruction to ask only necessary questions.
 
-MemoryProvider.clear() now publishes the whole context in one continuation. The
-frame is restored to system defaults rather than remembered from before the
-laboratory took over — the reasoning is in the code, and the argument is that
-nothing outside QA can change the clock, zone or week start. Check that
-argument; if it is wrong, the fix is a stash and the comment says so.
+A full backup/restore: complete, transactional, verified, with rollback, and
+tested on a real phone.
 
-projection.ts is unchanged in behaviour and now states what it does not cover.
+The gate: G-013 passes; the private section can be intentionally included;
+export stays reliable on a phone; restore exactness is proven; Data/restore
+stays accessible during degraded-state tests. Look up G-013's exact wording in
+the plan rather than assuming it.
 
-You were right about the coverage. The Round 4 return tests seeded the owner's
-row one day BEFORE the fixture clock, so they could not observe suppression.
-The seed is now dated August, after every scenario clock, and
-tests/unit/memory-provider-race.test.tsx asserts the rendered view at a
-controlled clock rather than only the store. The act() environment warnings are
-fixed. Nine reintroductions across Rounds 4 and 5 were run and all nine caught;
-one escaped first time because the test never asserted the zone came back.
+HOW TO PROCEED
 
-ONE THING REPORTED RATHER THAN BURIED
+Follow section 43's protocol. Where the plan is ambiguous or leaves a design
+choice open, propose the choice and the reasoning rather than guessing
+silently, and flag anything that needs the owner's explicit decision rather
+than assuming it — this phase writes to the owner's only copy of his own data,
+so an assumption that turns out wrong is not a cosmetic bug.
 
-During this repair the full unit suite failed once on
-tests/synthetic/guide-resume.test.ts, "never re-asks something already
-answered". That test is pure and clock-free and the builder did not touch it. It
-did not recur in four subsequent full runs or three focused runs, and the
-failing run was on a heavily loaded machine. It could not be reproduced, so it
-cannot be called nothing. If you can provoke it, it is worth a finding.
+Build, verify with the full builder gate (unit, contract, synthetic, browser,
+clean-checkout npm run verify, privacy scan, CI, a real Android-style pass
+against the deployed Preview — restore in particular needs to be exercised on
+the actual device class the gate targets, not only in Playwright), deploy, and
+reach YELLOW — READY FOR INDEPENDENT QA. Do not self-certify (D-077): a
+builder conversation may not mark its own phase GREEN.
 
-ALSO CONFIRM NOTHING YOU PASSED HAS REGRESSED
-
-The two databases, fixture inspectability, fixture-scoped writes, reload and
-notice behaviour, R3-B2, R3-B3, the seven semantic invariants, QA-A1, section
-51, DEF-0034 to DEF-0044, the exact-three-verb decision, and every explicit
-deferral. Full-suite duplication only on a concrete trigger.
-
-THE CHECKPOINT
-
-The product checkpoint is in docs/PHASE_STATUS.md's build identity table. The
-Preview serves the current main HEAD and every push redeploys, so
-build-info.json will normally report a docs commit rather than the checkpoint.
-Verify with `git diff <checkpoint>..HEAD --name-only`, which must list nothing
-outside docs/.
-
-HOW THIS ENDS
-
-Update docs/qa/PHASE_06_QA_HANDOFF.md with the retest record and an overall
-PASS or FAIL. End your response with the model, the reasoning level, the
-conversation instruction, and a short copyable launcher naming the exact file
-the next conversation must read — a Claude model where the next step is the
-builder's (D-092). Write the complete prompt into the report file rather than
-into the response.
-
-On PASS the next step is CURRENT — the Claude builder conversation — for the
-GREEN closeout. On FAIL it is CURRENT for another repair round, and Phase 6
-stays YELLOW.
-
-Do not ask the owner to paste anything — you have the paths.
+End with D-092's model, level, conversation and a short copyable launcher
+addressed to Codex for independent QA — cold-use first, per D-090's seven-step
+order in qa/README.md — so the owner does not need another turn to obtain the
+next prompt.
 ```
+
+<!-- LCO_COMPLETE -->

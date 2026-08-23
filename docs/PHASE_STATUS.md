@@ -22,7 +22,81 @@ reopens Phase 4 or any completed phase.
 
 # Phase 6 — Timeline + Insights
 
-**Status: YELLOW — ROUND 5 REPAIRED, AWAITING CODEX RETEST.**
+**Status: GREEN — independent QA passed.**
+
+Six rounds. Round 1 passed section 51's gate item by item and was then
+**withdrawn** — QA-A1: the app was asking the owner to perform the causal
+analysis it exists to learn, and rendering his answers as percentages that
+read as measurements (D-089). Round 1a's repair fixed that, and an independent
+Codex cold-use audit then found five further ways the same claim-wider-than-
+its-evidence failure recurred one layer down: pooled under a verb rather than
+scoped to an action, read across a whole record rather than the context that
+disagreed with it, silence counted as absence, "nothing else happened" said
+from a check of one record kind, and no way for the owner to correct a
+conclusion that was the app's own (D-091). Rounds 3 through 5 each found and
+closed one more sibling in the QA laboratory's storage boundary: the
+laboratory sharing a database with the owner and destroying his real history
+on load (DEF-0054); a correction's action identity surviving the key but not
+the sentence Timeline rendered it into (DEF-0055); a store-level publish race
+that could show an empty owner history after a valid return (DEF-0057); and
+the laboratory's clock, zone and week start surviving that same return and
+hiding owner records dated after a fixture's instant (DEF-0058). Round 6 found
+nothing new.
+
+Per D-077, this checkpoint did not self-certify at any round. Independent QA
+is Codex from Round 3 onward (D-090) — cold-use first, claim-to-evidence
+second, targeted acceptance third — and every FAIL routed back to this same
+builder conversation for repair before the next retest. **Nineteen semantic
+regressions in `observed-relationships.test.ts`, sixty-one reintroductions
+across the seven rounds of repair, all sixty-one caught.**
+
+**The last three rounds were one defect class, not three unrelated bugs.**
+"Only the newest work may publish" (DEF-0057) solved the store half of what a
+reader sees; "restore the whole visible context, not only the store"
+(DEF-0058) solved the other half, because `buildView(snapshot, { now, zone,
+weekStartsOn })` reads all three. Both were found only because Round 4's own
+regression coverage seeded the owner's row one day _before_ the fixture clock
+it was tested against — a hole Codex named explicitly, and one this repair
+would not have found on its own. The seed is dated after every scenario clock
+now, and the deterministic coverage for it lives in
+`tests/unit/memory-provider-race.test.tsx`, which drives the provider with
+fake stores whose reads the _test_ holds open — because a race cannot be
+proven by a browser test hoping two things overlap. Round 4's own regression
+failed three-for-three focused and passed three-hundred-for-three-hundred in
+the full suite on identical code; that non-determinism was the finding, and
+the rule that fixes it now lives outside the component, in
+`src/features/memory/projection.ts`, where it is testable as a sequence rather
+than as a hope.
+
+**D-090 and D-091 are the standing outcome.** Independent QA is permanently
+Codex, cold-use first (seven-step order in `qa/README.md`); nine semantic
+invariants — action identity, negative exposure, context, confounding,
+correctability, tracked-state meaning, historical order, the QA/owner storage
+boundary, and the temporal half of a returned projection — are codified rather
+than left to be rediscovered per phase. **D-092** closes the phase alongside
+them: every handoff, in both directions, ends with a model, a level, a
+conversation instruction and a short copyable launcher, so the owner is never
+left assembling the next prompt out of a report.
+
+**One thing disclosed rather than buried, and it is closed.** A single unit-
+suite failure on `guide-resume.test.ts` — a pure, clock-free test the Round 5
+repair never touched — appeared once on a loaded machine and did not recur
+across four full runs and three focused runs during the repair, nor across
+Round 6's own three independent focused runs (39/39). Named in `PHASE_STATUS.md`
+and in every handoff since; Codex could not reproduce it either. Recorded as
+resolved-unreproduced rather than silently dropped.
+
+**Final verification, this checkpoint.** Unit / contract / synthetic /
+adversarial: 780/780 across 45 files. Browser: 312/312 across three projects.
+Clean-checkout `npm run verify`: pass. Lint, format, typecheck, privacy scan:
+clean. CI: green on every push from Round 3 onward. Deployed Preview SHA
+matches the approved checkpoint at every round, verified independently against
+`build-info.json` and against the running app.
+
+Owner approval: **independent QA (Codex), Round 6, PASS** — the gate D-077
+substitutes for self-certification at this phase.
+
+**Round 5 status, superseded by the above: YELLOW — ROUND 5 REPAIRED, AWAITING CODEX RETEST.**
 
 Codex's Round 5 retest confirmed the Round 4 store race repaired and the two
 databases holding, and returned **FAIL** on one blocker: **R5-B1**, the
@@ -657,9 +731,10 @@ sections 20 and 51 as owner-approved amendments under section 1.
 
 ## Next
 
-**Independent QA** (D-077), in a **new** conversation, against this deployed
-checkpoint. Report path `docs/qa/PHASE_06_QA_HANDOFF.md`. See
-[`NEXT_PROMPT.md`](NEXT_PROMPT.md) for the complete prompt.
+Phase 6 is closed. See [`NEXT_PROMPT.md`](NEXT_PROMPT.md) for the Phase 7
+handoff, and the closeout block at the top of this entry for the full record —
+this "Independent QA, new conversation" pointer belongs to Round 1a and is kept
+as history rather than edited to look as if it always said what happened later.
 
 ---
 
