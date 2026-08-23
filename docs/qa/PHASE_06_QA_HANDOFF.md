@@ -1,12 +1,216 @@
 # Phase 6 QA handoff — Timeline + Insights
 
-> **STATUS: FAIL — ROUND 5 CODEX RETEST. REPAIR REQUIRED.**
+> **STATUS: PASS — ROUND 6 CODEX RETEST. READY FOR GREEN CLOSEOUT.**
 >
-> Round 4's two-store snapshot race is repaired, but the return still does not
-> restore the owner's temporal context. A past fixture's clock remains active
-> after **Show mine** or **Empty the laboratory**, so newer owner records are
-> treated as future and disappear until reload. Phase 6 remains **YELLOW — QA
-> FAIL / REPAIR REQUIRED**. Do not perform the GREEN closeout or begin Phase 7.
+> The Round 5 repair restores the complete owner context through both return
+> controls: owner source and snapshot, real/system time and zone, the default
+> owner week start, and `travelled = false` become observable together without
+> reload. Records later than every fixture clock remain visible immediately and
+> after pending work settles. Phase 6 remains YELLOW only until the original
+> Claude builder conversation performs the formal GREEN closeout.
+
+---
+
+# Round 6 — Codex retest
+
+## Verdict and identity
+
+**Overall verdict: PASS.** R5-B1 no longer reproduces through either return
+control, including the answer-then-return interleaving that exposed the prior
+repair. The complete visible context returns as one owner view, not merely as
+the correct bytes under the wrong clock. The broader scenario-switch,
+time-travel, reload and leftover-context checks also pass. No new blocking or
+non-blocking finding was found.
+
+| | Retest evidence |
+|---|---|
+| Product checkpoint | `ce4087a` — "Round 5: his clock comes back with his records" |
+| `main` HEAD tested | `f6cb8026933ccc2ba9f538a92e81c13103b3e075` |
+| Deployed Preview | `f6cb8026933ccc2ba9f538a92e81c13103b3e075`, read live from More → This build on the Preview |
+| Checkpoint match | **PASS** — `git diff ce4087a..HEAD --name-only` lists only `docs/PHASE_STATUS.md` |
+| Repository state before this report | Clean |
+
+## Mobile configuration and owner baseline
+
+The deployed Preview was started before repair-diff inspection and exercised
+at 412×915 in the Codex in-app browser with real clicks, scrolling and rendered
+mobile layout. The browser surface does not expose Android UA/DPR emulation, so
+this is described as an Android-sized interaction pass rather than a physical-
+device claim. The focused Playwright evidence below additionally ran the QA lab
+at the repository's mobile-small, mobile-large and desktop projects.
+
+At normal system Now on 22 August 2026, answering **Plenty** wrote a new owner
+`Current energy: 4 of 5` observation dated Today. Timeline showed it with the
+existing owner history before any fixture was loaded. QA reported eight raw
+owner records and the effective Timeline reported six entries; that owner
+baseline remained unchanged after every fixture return.
+
+The live evidence was captured as a rendered screenshot and accessibility/DOM
+snapshots during the run. No screenshot file was added because this handoff
+permits writing only this report. Stable evidence references are the deployed
+`#/now`, `#/timeline`, `#/qa`, More → This build, and the focused test files and
+counts below.
+
+## R5-B1 exact reproductions
+
+### 1 — June fixture, answer, immediately Show mine
+
+**PASS.** *One answer, and a lot of silence* loaded at owner-local
+`2026-06-15 07:00`, America/Denver, Monday week start. Now showed the fixture
+energy question. After answering **Plenty**, **Show mine** was pressed
+immediately.
+
+- Immediately after the return, the laboratory notice and fixture clock were
+  absent and Timeline showed the owner Today group, `Current energy: 4 of 5`
+  and all six effective owner entries.
+- After 2.4 seconds, the same six-entry owner Timeline remained visible. No
+  fixture row or notice reappeared.
+- Reopening QA without reloading showed system owner-local time on 22 August,
+  America/New_York, Monday (ISO), and no travelled clock. The June instant and
+  America/Denver fixture frame were gone.
+
+### 2 — February fixture, immediately Empty the laboratory
+
+**PASS.** From the recovered owner, *Two ordinary weeks* loaded at owner-local
+`2026-02-15 21:00`, America/Denver, Monday week start. **Empty the laboratory**
+was pressed immediately.
+
+- Timeline was opened in the same interaction continuation. It immediately
+  showed Today, the owner energy entry and all six effective owner entries.
+- The identical owner Timeline remained after 2.4 seconds.
+- The notice, all fixture entries and the February clock were absent. QA again
+  showed the owner database's eight raw records under current system time,
+  America/New_York and Monday (ISO).
+
+This directly closes the prior false empty/partial-history claim: the owner
+record is later than both fixture clocks and is visible before and after pending
+work settles, without reload.
+
+## Whole-class result
+
+| Flow | Result | Independent evidence |
+|---|---|---|
+| Scenario after scenario | **PASS** | Loading the June scenario and then *Two ordinary weeks* published the second scenario's February frame and records; the first scenario did not leak into the visible context. |
+| Time travel, then return | **PASS** | Inside the chained fixture, QA changed the zone to Europe/London, week start to Sunday and advanced one local day. Returning from a visible **Show mine** control removed the test notice and restored owner Now immediately and after 1.8 seconds; QA then showed current system time, America/New_York and Monday. |
+| Return while an answer is being written | **PASS** | The exact June answer-then-immediate-return sequence above stayed on the owner view after settlement. Focused browser coverage also deterministically holds the competing work open and passes. |
+| Visible-context cleanup | **PASS** | A damaged-file fixture survived reload with its test-history notice, proving fixture persistence and provenance. Emptying it restored the owner records and cleared fixture notice, unreadable-row state, fixture clock, label and temporal settings without reload. |
+| Owner/fixture storage and write scope | **PASS** | Fixture answers never entered the owner Timeline; the owner baseline remained intact. Two target-stable IndexedDB stores remain in source, and the focused browser suite verifies storage reopen, reload, no-localStorage and owner/fixture isolation. |
+
+One automation-method note is not a product finding: while QA was scrolled deep
+to the timezone controls, asking the browser driver to click the off-screen
+sticky **Show mine** locator hit the fixed **More** control instead. A screenshot
+made the off-screen geometry explicit. Repeating the user-visible path from Now
+clicked the rendered **Show mine** control and passed immediately. No product
+state changed during the mistaken hit, and the result was not counted as a
+failed return.
+
+## Architecture and coverage judgement
+
+The repaired boundary matches the observed behavior. `MemoryProvider.clear()`
+uses the existing newest-work/source guard, reads the owner snapshot, and then
+publishes source, snapshot, system `now`, system `zone`, default week start,
+`travelled = false`, issues, loaded label and storage-check cleanup in one React
+continuation. `projection.ts` correctly remains an arbitration rule rather than
+claiming to own temporal state.
+
+The builder's restore-to-system-default argument holds in the current product:
+repository search finds `travelTo`, `setZone` and `setWeekStartsOn` changes only
+on the QA surface; ordinary Now can only return the clock to system time. There
+is therefore no owner-set temporal frame to stash today. The code comment
+correctly says that if a non-QA owner control is introduced, the boundary must
+become a stash and the provider/view regression is the place that should fail.
+
+The coverage hole named in Round 5 is closed. Browser seed history is dated 20
+August, later than every scenario clock. The provider regression feeds the
+snapshot through the rendered `MemoryView` at a controlled February instant and
+asserts source, records, time, zone, week start and travelled state after clear.
+The React act-environment warning is fixed; none appeared in the focused run.
+
+## Preserved Phase 6 gate and automated evidence
+
+No diff after product checkpoint `ce4087a` touches application or test code.
+Source review and the focused gates preserve the two databases, fixture
+inspectability, fixture-scoped writes, reload/notice behavior, R3-B2, R3-B3,
+the seven semantic invariants, QA-A1, section 51, DEF-0034–DEF-0044, the
+exact-three-verb decision and every explicit deferral recorded in Round 5.
+
+Focused verification performed by this retest:
+
+- Provider/view, projection, architecture and semantic guards: **71/71 passed**
+  across five files, with no React `act()` warning.
+- `tests/browser/qa-lab.spec.ts`: **69/69 passed** across mobile-small,
+  mobile-large and desktop, including both return controls, the future-dated
+  owner row, answer-then-return and held-load race.
+- The disclosed `guide-resume.test.ts` case: **three consecutive focused runs
+  passed, 39/39 assertions total**. The reported one-off failure could not be
+  reproduced.
+
+No full-suite duplication was run. The deployed behavior matched the repair,
+the checkpoint identity was documentation-only past product code, the focused
+regressions were deterministic, and the reported flake did not reproduce;
+`qa/README.md` therefore provides no concrete trigger for duplicating the
+builder's full green gate.
+
+## Recommended next action
+
+- **Model:** **Claude Sonnet 5** (or the current Sonnet-class equivalent if it
+  has been renamed). Formal GREEN closeout is documentation and handoff work;
+  an Opus-class repair model is no longer warranted.
+- **Intelligence level:** **High.** The work is bounded but must preserve a long
+  phase record, checkpoint identity, deferrals and the next-phase handoff.
+- **Conversation:** **CURRENT — the original Claude Phase 6 builder
+  conversation.** That conversation owns the governing phase documents and
+  performs the formal closeout after independent QA PASS.
+
+## Ready-to-paste next prompt
+
+```text
+Phase 6 Round 6 independent Codex retest is PASS. Return to the CURRENT Claude
+Phase 6 builder conversation for formal GREEN closeout.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+QA report: docs/qa/PHASE_06_QA_HANDOFF.md
+Product checkpoint QA passed: ce4087a
+Deployed docs-only HEAD QA tested: f6cb8026933ccc2ba9f538a92e81c13103b3e075
+
+Read docs/qa/PHASE_06_QA_HANDOFF.md in full, beginning with "Round 6 — Codex
+retest". Confirm the tested product checkpoint and deployed SHA, then perform
+the canonical plan section 43 formal GREEN closeout. Do not edit or rewrite the
+Codex QA report.
+
+Round 6 independently reproduced both R5-B1 paths and passed them: the June
+fixture was answered and immediately returned through Show mine; the February
+fixture was immediately returned through Empty the laboratory. Owner source,
+snapshot, real/system time, system zone, Monday week start and travelled=false
+were observable together without reload, and the future-dated owner record was
+visible immediately and after pending work settled. Scenario chaining,
+time-travel then return, return during an answer write, reload/provenance and
+visible-context cleanup also passed. Targeted provider/projection/semantic
+tests passed 71/71, QA-lab browser tests passed 69/69, and the reported guide-
+resume flake passed three focused runs (39/39). There was no concrete trigger
+for full-suite duplication.
+
+For the closeout:
+
+1. Mark Phase 6 GREEN with approved product checkpoint ce4087a and record the
+   QA-tested deployed SHA f6cb8026933ccc2ba9f538a92e81c13103b3e075.
+2. Update docs/PHASE_STATUS.md, docs/DEFECT_LEDGER.md (including DEF-0058's
+   final status), docs/DECISION_LOG.md only if a genuine new decision is
+   required, and docs/NEXT_PROMPT.md for the next canonical action.
+3. Preserve every explicit deferral and the complete historical Phase 6 QA
+   record. Do not edit docs/qa/PHASE_06_QA_HANDOFF.md.
+4. Make no product-code change during this formal closeout and do not begin
+   Phase 7 implementation. Any closing commit must remain documentation-only
+   past ce4087a; verify that with git diff.
+5. Commit and deploy the documentation closeout as the repository workflow
+   requires, verify the deployed build identity, and provide the complete next
+   Phase 7 handoff in docs/NEXT_PROMPT.md.
+6. End with D-092's model, level, conversation and short launcher so the owner
+   does not need another turn to obtain the next prompt.
+
+Do not ask the owner to paste any file; you have the repository paths.
+```
 
 ---
 
