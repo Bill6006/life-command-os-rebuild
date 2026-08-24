@@ -94,6 +94,19 @@ export function ImportPanel() {
   )
 
   const read = useCallback(async () => {
+    /*
+     * The envelope comes from the stage rather than from re-reading the text.
+     *
+     * This button only exists once a file has been identified, so the envelope
+     * that was recognised is already here — and using it means the preview
+     * describes the file that was actually read. Re-parsing would be a second
+     * copy of one fact, which is how a preview ends up describing a different
+     * file from the one it is a preview of, and would need a throw for a case
+     * that cannot happen.
+     */
+    if (stage.kind !== 'identified' || !stage.detection.ok) return
+    const preview = previewOf(stage.detection.envelope)
+
     setBusy(true)
     setOutcome(undefined)
     try {
@@ -107,14 +120,14 @@ export function ImportPanel() {
         zone: memory.ownerMoment().zone,
         legacyFormat: legacyFormatLabel(opened.backup),
       })
-      setStage({ kind: 'planned', plan, preview: previewOf(identifyEnvelope(text)) })
+      setStage({ kind: 'planned', plan, preview })
     } finally {
       // Held for one read and no longer. Nothing else on this screen, and
       // nothing in any record it writes, ever sees it again.
       setPassphrase('')
       setBusy(false)
     }
-  }, [memory, passphrase, text])
+  }, [memory, passphrase, stage, text])
 
   const bring = useCallback(async () => {
     if (stage.kind !== 'planned') return
@@ -328,23 +341,6 @@ export function ImportPanel() {
       )}
     </Panel>
   )
-}
-
-/**
- * The envelope again, for the preview.
- *
- * `identify` already parsed it once and the result is in the stage, but the
- * planned stage no longer holds the detection. Re-identifying is cheap, and it
- * is a great deal safer than threading a second copy of the envelope through
- * the state — two copies of one fact is how a preview ends up describing a
- * different file from the one that was read.
- */
-function identifyEnvelope(text: string) {
-  const detected = identify(text)
-  if (!detected.ok) {
-    throw new Error('the file stopped being recognisable between reading it and reporting on it')
-  }
-  return detected.envelope
 }
 
 function ImportReport({ plan, preview }: { plan: ImportPlan; preview: LegacyPreview }) {

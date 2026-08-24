@@ -22,6 +22,281 @@ reopens Phase 4 or any completed phase.
 
 ---
 
+# Phase 8 — Legacy migration
+
+**Status: YELLOW — READY FOR INDEPENDENT QA.**
+
+Per D-077 this checkpoint does not self-certify. Independent QA runs in a fresh
+Codex conversation and writes [`qa/PHASE_08_QA_HANDOFF.md`](qa/PHASE_08_QA_HANDOFF.md)
+before anything becomes GREEN.
+
+## What this phase is actually about
+
+Section 53 lists thirteen things to build and most of them are bounded: detect,
+quarantine, inventory, preview, dry run, snapshot, apply atomically, verify,
+roll back, do not duplicate, keep provenance. Phase 7 already built the second
+half of that list and this phase reuses it rather than rewriting it.
+
+**The phase is the mapping**, and section 30's critical rule is the whole of it
+in one sentence: _do not contort the new architecture to make legacy mapping
+easier._ That rule is about pressure, and the pressure arrives one plausible
+mapping at a time. Every one of the previous generation's twenty-eight record
+families is a place where something nearly fits.
+
+Five families map. Five observation attributes out of sixty-four map. The rest
+are archived verbatim or, where section 59 names them, left out entirely — and
+every single one carries a written reason that the import report shows the owner.
+
+That ratio is the result rather than an embarrassment. The bulk of a recorded
+life is readings, and the five attributes that map carry the readings whose
+construct, scale and direction are the same on both sides.
+
+## Build identity
+
+Reported to D-097's pattern. The product checkpoint and the deployed SHA are two
+different facts, and the relationship between them is **checked**, not stated.
+
+|                    |                                                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Product checkpoint | `77fb34a` — the last commit that changed anything the build emits, and the build every result below was measured against |
+| Closing SHA        | current `main` HEAD. Documentation only past the checkpoint                                                              |
+| Deployed SHA       | read live from `preview/build-info.json`. It is whatever was pushed last and is **not expected** to equal the checkpoint |
+| Bundle equivalence | `node scripts/checkpoint-equivalence.mjs 77fb34a` — see the QA handoff for the run                                       |
+| Stable Preview URL | https://bill6006.github.io/life-command-os-rebuild/preview/                                                              |
+| Live proof         | `preview/build-info.json`, and the equivalence script above                                                              |
+
+## Verification
+
+| Gate                                      | Result                                                                                                                             |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy scan                              | Clean, 191 tracked files                                                                                                           |
+| Format (Prettier)                         | Pass                                                                                                                               |
+| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                   |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                     |
+| Unit / contract / synthetic / adversarial | 1163 passed / 1163, 56 files (in plain Node, no DOM)                                                                               |
+| Browser tests (Playwright)                | 441 passed / 441 — 147 tests × 360, 430, 1280px                                                                                    |
+| Production build                          | Pass                                                                                                                               |
+| `npm run verify` from a clean checkout    | Pass — cloned fresh at `77fb34a`, `npm ci`, 1163/1163                                                                              |
+| Deployed build is the checkpoint's        | By `scripts/checkpoint-equivalence.mjs`, not by string comparison (D-097)                                                          |
+| Reintroduction pass                       | **9 across the phase, 8 caught on the first attempt** — the ninth is DEF-0067, and it is the reason the count is reported this way |
+| Builder's own Android-style gate          | `scripts/android-gate.mjs` against the deployed checkpoint, now including the whole import flow by touch                           |
+| Independent QA                            | **Outstanding**                                                                                                                    |
+
+Phase 7 ended at 1059 unit-layer tests across 52 files. The 104 new ones are four
+new suites plus the architecture guards.
+
+| Suite                                                                           | Tests |
+| ------------------------------------------------------------------------------- | ----: |
+| `contract/legacy-import.test.ts` — a real encrypted file, translated end to end |    25 |
+| `synthetic/legacy-inert.test.ts` — five evenings decided with and without it    |    40 |
+| `unit/legacy-mapping.test.ts` — the registry held to its own claims             |    17 |
+| `adversarial/legacy-hostile.test.ts` — damaged, wrong, and actively lying files |    16 |
+| `unit/architecture-guards.test.ts` — the wall around `src/legacy/`              |    +6 |
+
+Browser: `tests/browser/legacy-import.spec.ts`, 12 tests × 3 viewports = 36 new,
+on top of the 405 already there — all unchanged, all still green.
+
+## Gate checklist (section 53)
+
+| Requirement                                                    | Status                                                                                                                                                             |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Legacy detector                                                | Pass — four verdicts, each with a reason. Including this app's **own** backup, whose format marker differs from the old one by a single character                  |
+| Quarantined parser                                             | Pass — `src/legacy/format.ts` is behind a wall five architecture guards enforce; nothing below the UI can import it                                                |
+| Mapping inventory                                              | Pass — every family, every count, every reason, shown to the owner before anything is written                                                                      |
+| Explicit semantic mappings                                     | Pass — five families and five attributes, each with the argument for it; and `DECLINED_ATTRIBUTES` carries the argument against, for the near-fits                 |
+| Raw preservation for uncertain fields                          | Pass — a mapped row keeps every field this app did not consume, named by exclusion; an unmapped row is kept whole                                                  |
+| Preview / dry run                                              | Pass — and they are **one object**. `planImport` builds every record that would be written and then does not write it, so there is no second path to disagree with |
+| Snapshot                                                       | Pass — `restoreInto` holds the current history before it writes                                                                                                    |
+| Atomic apply                                                   | Pass — one `replaceAll` transaction carrying records and entities together                                                                                         |
+| Verify                                                         | Pass — read back and fingerprinted, then read again from a **reopened** database, through the same ladder a restore uses (D-099)                                   |
+| Rollback                                                       | Pass — including the case where the rollback itself fails, which gets its own sentence                                                                             |
+| Idempotency                                                    | Pass — ids are derived from the old record ids, so a second pass recognises its own work exactly; asserted through the plan, through the store, and in the browser |
+| Duplicate detection                                            | Pass — exact rather than heuristic. Two rows are the same row when the old app said so, not when they look alike                                                   |
+| Provenance                                                     | Pass — `legacy-import`, the **mapping rules version** rather than "the importer", and the old record id                                                            |
+| Gate: does not change the recommendation engine architecture   | Pass — nothing in `src/intelligence/` was touched, and a guard forbids it importing the reader                                                                     |
+| Gate: ambiguous mappings remain explicit                       | Pass — four dispositions, and silence is not one of them                                                                                                           |
+| Gate: imported raw records cannot silently drive decisions     | Pass — five scenarios × two opposite pulls, decided identically down to the dimensions and the score                                                               |
+| Gate: current behaviour is correct with no legacy data present | Pass — every other suite in the repository runs with none, and none of them changed                                                                                |
+| CI green                                                       | See the QA handoff                                                                                                                                                 |
+| Independent QA (D-077)                                         | **Outstanding**                                                                                                                                                    |
+
+## The mapping, and where the judgement went
+
+### The one that most looked like it should map
+
+A `move-preference` with the stance `forbidden` is section 4.3 in one record:
+the owner told the old app never to suggest something. Losing it looks like the
+worst thing this phase could do. Bringing it across would have been worse.
+
+It is keyed on `engineCandidateId` — `home:make-the-change` — which is the **old
+generator's** identity for a move. This app's vetoes match on an entity
+reference and its candidates have entirely different ids, so an imported veto
+matches nothing. It would sit in his history saying a move is forbidden while
+the engine could never act on it. **An inert veto is worse than no veto, because
+it looks kept.**
+
+Two ways to make it fire and both are the contortion: reshape this app's
+candidate identities to match the old catalogue, which is section 59's first
+exclusion arriving through the back door; or widen the veto to the domain the
+old id was prefixed with, which would forbid every move in an area of his life
+because he once declined one move in it.
+
+So it is archived, and the report **names the moves** he will have to say again.
+It reads the chain rather than every record: a `forbidden` he later `restored`
+is not standing, and handing that back would be worse than losing it because he
+would very likely re-state it. D-103.
+
+### Where a near-fit was available and refused
+
+- **Mood, stress, confidence, overwhelm.** Four constructs. This app's
+  `emotionalState` is one undivided dimension and an open question for the owner
+  (D-091 invariant 6). Pouring four scales into it is the wellness score he
+  rules out.
+- **Physical and mental energy.** The old app split them _because_ averaging
+  them loses what would have chosen between them. Mapping both onto one energy
+  concept performs that averaging after the fact.
+- **Financial pressure.** The old model says on its own face that it is not a
+  measure of how much money there is. This app's cash buffer is a quantity.
+- **Loneliness.** Not social energy. It can be high in a full house, and the two
+  run in opposite directions.
+- **Bedtime and wake time.** Deriving hours slept from them would be this app
+  computing a reading the old one never took and presenting it as one he
+  recorded.
+- **Available minutes.** This app's own registry declines to track usable time
+  as a trend — it is noise with a timestamp. Importing years of it adds rows and
+  no understanding.
+- **An expired goal.** Neither "abandoned" nor "paused" is true of a window that
+  simply passed. There is no word here for it, so the row is archived rather
+  than given the nearest one.
+- **"Unsure."** A real first-hand report that the owner looked and could not
+  say. There is no value here that means it, and a text reading of "Unsure"
+  would put an answer where he put an absence. Caught through both doors — the
+  old value kind, and the literal choice label.
+
+### The whole decision-episode chain, archived together
+
+`recommendation` is excluded by section 59 — the old move catalogue does not
+return as product truth. `execution` and `outcome` are _about_ a recommendation,
+and `learned-belief` and the effect evaluations are learned over it. Importing
+the recommendation would make the old catalogue the object of every relationship
+this app learns (D-091 invariant 1); importing the evidence without it would
+attach evidence to nothing. One decision, applied to the chain as a chain.
+
+## The passphrase, which is not a choice
+
+The old application has exactly one complete data-out path and it is encrypted
+with no plaintext branch — `encrypted: z.literal(true)` in its own schema. Its
+AI export is a readable markdown summary that says on its face it is lossy and
+not for recovery, so it is not a migration source.
+
+That leaves implementing a compatible reader, or changing the old application to
+write something else. **D-001 forbids the second absolutely.** So the passphrase
+is the only door, and the app says so rather than offering a choice that does
+not exist. D-102.
+
+The reader is standard Web Crypto at whatever parameters the file declares, with
+the old application's pipe-joined canonicalisation of the crypto metadata
+reproduced byte for byte as additional authenticated data — pinned by a test
+that states the exact string, because reordering those eight fields would make
+every backup he has undecryptable and would present as a wrong passphrase rather
+than as a code change.
+
+Decrypt only. There is no encryptor in `src/legacy/` and a guard keeps one out.
+
+## Three defects, all found by making a test fail on purpose
+
+Full entries in [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
+
+**DEF-0065 — every import would have verified false and rolled itself back.**
+`snapshotToWire` serialises in the order it is given and a store returns records
+sorted, so an unsorted merge fingerprinted differently coming out than going in.
+The verification correctly reported that what was written is not what the file
+holds, and correctly undid it — every time. Found by the first end-to-end run
+through a real store; the plan-only assertions passed throughout.
+
+**DEF-0066 — a re-import offered to rewrite the store to change nothing.**
+Records were filtered against the store and entities were not, so a second pass
+produced an empty append list and a full list of subjects. The report said
+everything was already present and the button beside it said "Bring it across".
+
+**DEF-0067 — a guard that could never fire, and an assertion comparing nothing
+to nothing.** The wall-clock guard over `src/legacy/` held a literal `0x08` byte
+where `\b` was meant, so it passed with a `Date.now()` sitting in `plan.ts`. And
+`legacy-inert.test.ts` compared `evaluation?.evidence` on both sides of a
+property that does not exist. This is the failure Phase 7 shipped three of, and
+the handoff's instruction to prove every regression by reintroduction is the only
+reason it was found.
+
+## Nine reintroductions
+
+Each new guard and each new claim was proved by putting the defect back and
+watching the test fail.
+
+| Reintroduced                                      | Caught by                                              |
+| ------------------------------------------------- | ------------------------------------------------------ |
+| a legacy type imported into `src/domain/`         | `lets nothing below the UI know the old format exists` |
+| a feature importing `src/legacy/mapping` directly | `keeps the quarantined shapes ... inside the importer` |
+| a store opened inside `src/legacy/detect.ts`      | `reaches no store of its own`                          |
+| an encryptor added to `src/legacy/crypto.ts`      | `never writes a legacy file, only reads one`           |
+| `Date.now()` in `src/legacy/plan.ts`              | `reads no wall clock` — **only after DEF-0067's fix**  |
+| archive rows replaced with real observations      | all four assertions, on all five scenarios, one pull   |
+| entities collected without checking the store     | `recognises its own work exactly`                      |
+| an unsorted merged snapshot                       | `is idempotent through the store`                      |
+| a store that drops the last record on write       | `puts the history back and says the import did not`    |
+
+The sixth is the one worth reading twice. Its first fixture set energy to its
+best and soreness to its worst, and on the scenario that was already about being
+depleted the two cancelled — so three of that scenario's four assertions could
+not have failed and read as evidence anyway. It now runs every scenario against
+two opposite pulls, and `running-on-empty` was **removed** from the list because
+neither pull moved it.
+
+## Open items and questions for the owner
+
+Three, and none of them blocks QA.
+
+1. **The generation before the previous one.** The single-HTML app's export
+   (`v297-phase68`) is recognised by shape and refused with a sentence saying
+   what it is. This build does not read it: mapping it would mean a second
+   complete set of claims about a second data model, and the previous generation
+   built its own importer for that format so anything brought across then is
+   already inside its records. **If the owner has a v297 export whose contents
+   never reached the old app, that is a decision to reopen.**
+2. **`life-context-change` is `undecided`.** "Moved house", "custody changed" —
+   real history, and a narrative event rather than a fact about a concept.
+   Inventing a concept to hold free text is the contortion section 30 forbids,
+   so it is archived and flagged. Which of these should become durable context
+   here, and against what, is the owner's to say.
+3. **`skill-claim`, `faith-anchor` and `milestone-observation` are archived.**
+   Each is real and each would have to assert something the original refused to:
+   a skill claim explicitly carries no assertion of truth; a faith anchor is a
+   standing statement and the nearest concept here is a reading of the last
+   week; a milestone answer is meaningless without which checklist and which
+   revision, and this app has no checklist registry. Preserved in full, and
+   waiting on a decision rather than on code.
+
+## Deliberately not built, with reasons
+
+- **No import from the QA laboratory.** An import writes to the owner's store
+  and nothing else, and the panel refuses while a test history is on screen —
+  the same rule and the same words a restore uses (D-091 invariant 8).
+- **No partial import.** Sections cannot be chosen. A choice would mean a second
+  set of decisions about the same file made under less information than the
+  registry had, and re-running the file later is already a no-op for what came
+  across.
+- **No undo button.** An import adds rows and never rewrites one, so the way
+  back is a backup taken beforehand — which is one panel up on the same screen.
+  A dedicated undo would be a second write path with the same risks as the first
+  and none of its scrutiny.
+
+## Next
+
+Independent QA (Codex), fresh conversation, per D-090. Then the GREEN closeout
+in this builder conversation, and Phase 9 — visual coherence, motion and mobile
+refinement (canonical plan section 54).
+
+---
+
 # Phase 7 — AI exports + backup/restore
 
 **Status: GREEN — independent QA passed.**
