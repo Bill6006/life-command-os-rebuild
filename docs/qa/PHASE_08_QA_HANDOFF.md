@@ -1009,3 +1009,226 @@ handoff exactly as written.
 
 Do not ask me to paste the file contents.
 ```
+
+---
+
+# Retest repair — second retest handoff
+
+Appended by the builder conversation, below QA's retest, so the finding and the
+response to it stay side by side. QA updates this same file.
+
+## The finding was right, and the diagnosis was exact
+
+The round-1 repair threaded origin through `DescribedRecord`, which is the shape
+for **showing** a record. Every surface that lists entries was fixed; every
+surface that states a **conclusion drawn from** them was not. QA named all four
+and reproduced each.
+
+That is one class, not four omissions, and it is now closed at the layer where
+the fact lives rather than at each screen.
+
+## What changed
+
+### The fact the intelligence layer was not computing
+
+`DomainCoverage.source` already existed and answers *"where did the newest
+evidence come from"*. That is the right question for reliability and the wrong
+one for disclosure: an area with one recent entry of his own on top of a decade
+of imports would read as entirely his, and the reverse would read as entirely
+imported.
+
+So the whole body is carried alongside it:
+
+| Where | Field | What it holds |
+| --- | --- | --- |
+| `DomainCoverage` | `sources` | every distinct origin heard about the area |
+| `ConceptCoverage` | `sources` | every distinct origin behind that concept |
+| `Insight` | `sources` | every distinct origin behind that card |
+
+`sources` and `source` are deliberately separate fields with separate jobs.
+
+`Insight.sources` is filled **centrally**, from what each card cites, so a card
+written next year discloses correctly without its author knowing this rule
+exists. Coverage cards set it themselves and say why beside the code: their
+evidence lines name concepts rather than records, and an area whose only record
+is a goal — QA's exact reproduction — has no concept evidence at all.
+
+### The word
+
+`originOfSources` is the only place the word is chosen, and it is the same
+module the entry-level rule uses, so the two cannot drift into saying different
+things about the same origin. One source and not the owner's, or nothing.
+
+### The surfaces
+
+| Surface | Now discloses |
+| --- | --- |
+| Life overview | a badge on the area's line |
+| Insights card | a badge beside the eyebrow, on the headline rather than only inside the evidence |
+| Export — What the app is saying now | `· Imported` per considered fact |
+| Export — Direction, goals and commitments | per active goal |
+| Export — How well each area is understood | per area |
+| Export — What has been worked out | per insight |
+
+## The lesson this round is really about
+
+QA named the round-1 repair's own test as the reason the gap went unnoticed:
+`imported-origin.test.ts` was headed **"every surface tells them apart"** and
+asserted the four record-shaped surfaces and none of the four aggregate ones.
+
+That is the defect the round-1 report had found in somebody else's test —
+a title broader than its body — committed by the repair for it. Written down as
+D-108's closing note.
+
+Both blocks are now named for what they hold: "every surface that shows an
+entry" and "every surface that states a conclusion".
+
+**And the first version of the new fixture could not fire.** It gave Career an
+imported observation as well as the goal, so the coverage card's evidence lines
+resolved and the assertion passed even with the area-level origin removed. It
+was found by the reintroduction pass rather than by review, and the fixture now
+matches QA's reproduction exactly: one goal and nothing else.
+
+
+### And one the gate counted but could not read
+
+DEF-0072, found by reading the deployed screens after the gate had passed 56
+checks including "an Insights card drawn from it says so too".
+
+The card's eyebrow read **`OUT OF DATEIMPORTED`**. The badge was nested in an
+eyebrow carrying `text-transform: uppercase` and 0.1em tracking and had
+inherited both — and it had been defined separately in five stylesheets, so
+there was nowhere to say "not that" once. One class now, in the shared sheet,
+resetting the properties a parent can impose, with a guard that fails the build
+if a surface starts styling its own or points its markup at a private class.
+
+Then the same reading found that the badge was separated from the text before it
+by `margin-left` and nothing else, so the Life overview rendered "…may come up
+on Now.Imported" as one word. A margin separates a badge for the eye and for
+nothing else — not read aloud, not copied out, not in any assertion over text.
+Every badge has a real space now, held by a test that asserts the rendered text
+rather than the style.
+
+Present and legible are two claims, and only the first can be counted.
+
+## Verification of this checkpoint
+
+| Gate | Result |
+| --- | --- |
+| Privacy scan | Clean, 211 tracked files |
+| Format, lint, typecheck | Pass, 0 warnings, 0 errors |
+| Unit / contract / synthetic / adversarial | 1193 / 1193, 57 files |
+| Browser (Playwright) | 459 / 459 — 3 viewports |
+| Builder's Android-style gate on the deployed build | Clean, including the Life overview and an Insights card |
+| Reintroduction | Five aggregate probes, five caught: the area sources fail three assertions, the card's sources one, and each of the three export sections one. Plus three for the badge — restyling it on a surface, pointing a surface at its own class, and removing the space before it |
+
+**The same transient as last round**, reported rather than fixed: one test per
+full local browser run fails with `page.goto: net::ERR_ABORTED`, on a different
+test each time, always at navigation. CI retries and is green; each spec passes
+alone. Unchanged from the note in the previous handoff.
+
+## What has not changed
+
+QA-08-002 and both non-blocking findings stay repaired and their tests stay in
+place. Raw-archive inertness, atomic apply with verification through a reopened
+database, rollback, exact idempotency, privacy handling including absent-privacy
+failing closed, the architecture wall, and the laboratory/owner store separation
+are all untouched. The four open questions for the owner are unchanged.
+
+## Second retest — next action
+
+- **System:** **Codex** — the **same** QA conversation
+- **Model:** the model the previous rounds ran on, unchanged
+- **Reasoning level:** **High**
+- **Conversation:** **SAME** — still one unresolved defect loop
+- **Report path:** `docs/qa/PHASE_08_QA_HANDOFF.md`
+
+## COPY/PASTE PROMPT
+
+```text
+Retest Phase 8 of the Life Command OS rebuild again. You returned FAIL twice;
+this is the repair for the aggregate half of QA-08-001.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Repaired product checkpoint: d433079
+Deployed Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
+
+Read the deployed SHA from preview/build-info.json; it is not expected to equal
+the checkpoint (D-097). To check bundle equivalence:
+
+  node scripts/checkpoint-equivalence.mjs d433079 --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Your `--ref <full-sha>` fallback for the local certificate-chain error still
+applies.
+
+Read docs/qa/PHASE_08_QA_HANDOFF.md in full, including "Retest repair" below
+your retest. Update this same report file in place.
+
+WHAT TO RETEST
+
+The four surfaces you named, using your own `primary` fixture and passphrase:
+
+- Life's overview for an area heard about only through an import;
+- an Insights coverage card for the same area, its headline as well as its
+  disclosed evidence;
+- the export's "What the app is saying now", "Direction, goals and
+  commitments", "How well each area is understood", and "What has been worked
+  out".
+
+WORTH PRESSING ON, BECAUSE THE REPAIR CLAIMS MORE THAN YOU ASKED FOR
+
+- An area with **one** entry of the owner's own in it must go back to carrying
+  nothing, however much imported history sits under it. One record is enough.
+- A conclusion resting on a mix must say nothing, on every one of those
+  surfaces, not only on the domain page.
+- Every insight kind now declares its sources, not only coverage cards. A
+  trajectory or an association card drawn entirely from imported evidence
+  should disclose it; one drawn from his own should not.
+- `ConceptCoverage.sources` exists as well as `DomainCoverage.sources`. Check
+  that a concept whose readings are all imported, inside an area that is
+  otherwise his, behaves the way you would expect a reader to want.
+- Device and derived origins should behave identically at these surfaces, since
+  the class was widened to every origin that is not the owner.
+
+AND THE THING YOU FOUND LAST TIME, APPLIED TO THIS REPAIR
+
+You found that the previous repair's test claimed every surface and covered
+half. Judge the new tests the same way: `tests/synthetic/imported-origin.test.ts`
+now has two blocks with narrower titles, and each aggregate assertion was proved
+by reintroduction. Check whether the titles are honest and whether anything
+claimed is not actually held.
+
+Everything you have already confirmed repaired — QA-08-002, QA-08-N1, QA-08-N2 —
+and every round-1 pass should still hold.
+
+Do not repair application or product code. You may update only this report and
+narrowly scoped QA evidence artifacts. Do not modify anything at
+D:\Code\AI Coding Agents\Codax\Life App (owner decision D-001).
+
+End with D-082 and D-092: the complete ready-to-paste next prompt written into
+this file, and a short standalone launcher. On PASS it goes to the CURRENT
+builder conversation for the formal GREEN closeout; on FAIL, for another repair
+round. Do not wait to be asked for it.
+```
+
+---
+
+**Model:** Codex, the model the previous rounds ran on
+**Reasoning level:** High
+**Conversation:** SAME Codex QA conversation
+
+```text
+Retest the Life Command OS rebuild's Phase 8 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_08_QA_HANDOFF.md in full and execute the second retest
+handoff exactly as written.
+
+Do not ask me to paste the file contents.
+```
+
+<!-- LCO_COMPLETE -->
