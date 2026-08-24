@@ -24,11 +24,13 @@ reopens Phase 4 or any completed phase.
 
 # Phase 8 — Legacy migration
 
-**Status: YELLOW — READY FOR INDEPENDENT QA.**
+**Status: YELLOW — READY FOR INDEPENDENT QA RETEST.**
 
-Per D-077 this checkpoint does not self-certify. Independent QA runs in a fresh
-Codex conversation and writes [`qa/PHASE_08_QA_HANDOFF.md`](qa/PHASE_08_QA_HANDOFF.md)
-before anything becomes GREEN.
+Round 1 returned **FAIL** on two blocking semantic defects, both now repaired
+under section 42 as whole classes. Per D-077 this checkpoint does not
+self-certify, and a repair does not either: the retest goes to the **same**
+Codex conversation, whose report is
+[`qa/PHASE_08_QA_HANDOFF.md`](qa/PHASE_08_QA_HANDOFF.md).
 
 ## What this phase is actually about
 
@@ -68,20 +70,20 @@ different facts, and the relationship between them is **checked**, not stated.
 
 ## Verification
 
-| Gate                                      | Result                                                                                                                                 |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Privacy scan                              | Clean, 191 tracked files                                                                                                               |
-| Format (Prettier)                         | Pass                                                                                                                                   |
-| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                       |
-| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                         |
-| Unit / contract / synthetic / adversarial | 1163 passed / 1163, 56 files (in plain Node, no DOM)                                                                                   |
-| Browser tests (Playwright)                | 441 passed / 441 — 147 tests × 360, 430, 1280px                                                                                        |
-| Production build                          | Pass                                                                                                                                   |
-| `npm run verify` from a clean checkout    | Pass — cloned fresh at `77fb34a`, `npm ci`, 1163/1163                                                                                  |
-| Deployed build is the checkpoint's        | By `scripts/checkpoint-equivalence.mjs`, not by string comparison (D-097)                                                              |
-| Reintroduction pass                       | **12 across the phase, 11 caught on the first attempt** — the twelfth is DEF-0067, and it is the reason the count is reported this way |
-| Builder's own Android-style gate          | `scripts/android-gate.mjs` against the deployed checkpoint, now including the whole import flow by touch                               |
-| Independent QA                            | **Outstanding**                                                                                                                        |
+| Gate                                      | Result                                                                                                                                   |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy scan                              | Clean, 191 tracked files                                                                                                                 |
+| Format (Prettier)                         | Pass                                                                                                                                     |
+| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                         |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                           |
+| Unit / contract / synthetic / adversarial | 1163 passed / 1163, 56 files (in plain Node, no DOM)                                                                                     |
+| Browser tests (Playwright)                | 441 passed / 441 — 147 tests × 360, 430, 1280px                                                                                          |
+| Production build                          | Pass                                                                                                                                     |
+| `npm run verify` from a clean checkout    | Pass — cloned fresh at `77fb34a`, `npm ci`, 1163/1163                                                                                    |
+| Deployed build is the checkpoint's        | By `scripts/checkpoint-equivalence.mjs`, not by string comparison (D-097)                                                                |
+| Reintroduction pass                       | **18 across the phase, 17 caught on the first attempt** — the exception is DEF-0067, and it is the reason the count is reported this way |
+| Builder's own Android-style gate          | `scripts/android-gate.mjs` against the deployed checkpoint, now including the whole import flow by touch                                 |
+| Independent QA                            | **Outstanding**                                                                                                                          |
 
 Phase 7 ended at 1059 unit-layer tests across 52 files. The 104 new ones are four
 new suites plus the architecture guards.
@@ -258,7 +260,7 @@ place it was first broken is not a rule. The title is now
 also a heading in the document he hands to an assistant, where "you" would read
 as the assistant.
 
-## Four defects, three found by making a test fail on purpose
+## Six defects before QA and after it
 
 Full entries in [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
 
@@ -282,7 +284,7 @@ property that does not exist. This is the failure Phase 7 shipped three of, and
 the handoff's instruction to prove every regression by reintroduction is the only
 reason it was found.
 
-## Twelve reintroductions
+## Eighteen reintroductions
 
 Each new guard and each new claim was proved by putting the defect back and
 watching the test fail.
@@ -305,6 +307,115 @@ depleted the two cancelled — so three of that scenario's four assertions could
 not have failed and read as evidence anyway. It now runs every scenario against
 two opposite pulls, and `running-on-empty` was **removed** from the list because
 neither pull moved it.
+
+## Independent QA, round 1 — FAIL on two blocking semantic defects
+
+Codex tested checkpoint `b593a49` against deployed build `a057783`, confirmed
+bundle equivalence, ran a sealed cold owner-use pass before reading anything in
+the repository, and returned **FAIL**. Full report:
+[`qa/PHASE_08_QA_HANDOFF.md`](qa/PHASE_08_QA_HANDOFF.md).
+
+Everything the phase claimed mechanically held. Detection, quarantine,
+inventory, preview, atomic apply, verification through a reopened database,
+rollback, exact idempotency, privacy handling and the 44-check Android gate all
+passed, and the raw-archive inertness claim held under a deliberate attempt to
+break it — two archive rows shaped like current-energy and sleep-quality
+readings, at recent times, and Now did not move.
+
+**Both failures were semantic, and both were wider than they were reported.**
+
+### QA-08-001 — an imported reading was indistinguishable from one he typed
+
+The record layer was right the whole time. `evidenceSourceOf` returned
+`legacy-import`, the store kept it, and a backup taken immediately after the
+import carried it on every row. **The presentation layer never asked.**
+
+`describeRecord` returned a kind, a sentence and a withheld flag, and every
+surface rendered those three. So the reported defect — "mapped legacy imports
+lose their origin" — was the visible corner of a wider one: **no entry on any
+list surface said where it came from.** A device reading and a derived one were
+silent in exactly the same way, and D-014 asks for all of them.
+
+The repair is one function with one vocabulary, rendered by every surface that
+shows an entry or a belief resting on one: Timeline, a domain page's entries,
+its readings, its goals, the evidence behind a figure, and the export. His own
+entries carry nothing, and a test holds that half too — a build that marked
+every row would satisfy a weaker test and would teach him to stop reading the
+badge. A mixed basis says nothing, because a badge over a belief that is half
+his would be a claim wider than its evidence. D-106.
+
+The knowledge state does not substitute for it. An imported reading resolves as
+`inferred` — this app did not watch it happen — and the export duly labelled
+one `(inferred)`. That reads as the app having concluded something, when he
+reported it, in the old app, two years ago. Both facts belong on the row.
+
+### QA-08-002 — a later backup turned unchanged rows into conflicts
+
+`legacyFormatLabel` returned `life-command-os.backup@<the backup's createdAt>`,
+and that string is stored in every archived row. Conflict detection
+fingerprinted the whole canonical record, so taking a **new** backup of the same
+append-first history changed every archived row while its legacy payload was
+byte-identical. QA generated a second backup with one row edited and got seven
+conflicts. The honest answer is one.
+
+Taking a later backup is the ordinary way an old history gains rows, so this
+was the normal path rather than an edge case.
+
+Fixing the label alone would have left the class. Two more members were live
+and unreported: the **mapping rules version**, so revising a rule would have
+made every previously imported row a conflict; and the **device's timezone**, so
+importing the same file after travelling would have done the same. The
+comparison now asks what the old file says, with everything this build stamped
+on the row taken back off, each exclusion named beside its reason. D-107.
+
+A revised rule is now reported as a re-reading in its own words — not a
+conflict, which blames his old history for a change in this app, and not
+silence, which hides a real difference in what the app believes his history
+means.
+
+### The false green QA found underneath it
+
+`tests/contract/legacy-import.test.ts` carried a test titled "every imported
+record says it was imported, **wherever it surfaces**". It asserted
+`provenance.source` and rendered nothing. Anybody auditing the suite for that
+claim would have found it, ticked it and moved on.
+
+That is the lesson worth keeping: a test's title is a claim, and where the title
+is broader than the body, the body is what is true and the title is what gets
+believed. It is retitled to what it proves, and the claim it used to make is
+now held by `tests/synthetic/imported-origin.test.ts`, which renders every one
+of those surfaces.
+
+QA also named the browser test "adds the history, reads it back, and shows it
+without a reload", which checked only that Timeline was not empty — true of a
+build rendering imported readings as native, which is exactly what it was doing.
+
+### Both non-blocking findings addressed
+
+- **QA-08-N1** — the report was headed "What this would do" over counts that
+  classify the _file_, so an exact re-import said it would bring six entries
+  across directly above "there is nothing new to write". The heading is now
+  "What is in that file", and what this run would do is one line at the bottom
+  that says it on its own.
+- **QA-08-N2** — the wrong-passphrase panel said "Nothing has been changed"
+  inside the sentence and "Nothing was changed." again underneath. Said once
+  now, and the browser test asserts the count rather than one exact phrasing —
+  the old assertion named the duplicate and would have held it in place.
+
+### Ten reintroductions for round 1, ten caught
+
+| Reintroduced                                                 | Caught by                                      |
+| ------------------------------------------------------------ | ---------------------------------------------- |
+| `originOf` returning nothing                                 | all eight surface assertions                   |
+| origin dropped from Timeline alone                           | two                                            |
+| origin dropped from the domain page alone                    | one                                            |
+| origin dropped from the export alone                         | one                                            |
+| the per-file archive label, with the whole-record comparison | all five conflict tests, plus two pre-existing |
+| the whole-record comparison alone                            | the revised-rules test                         |
+
+The per-surface probes matter as much as the whole one: a fix applied in a
+shared function and then dropped by one consumer is the shape this defect had
+in the first place.
 
 ## Open items and questions for the owner
 
@@ -363,9 +474,11 @@ Four, and none of them blocks QA.
 
 ## Next
 
-Independent QA (Codex), fresh conversation, per D-090. Then the GREEN closeout
-in this builder conversation, and Phase 9 — visual coherence, motion and mobile
-refinement (canonical plan section 54).
+**Retest by the same Codex QA conversation**, per section 43's defect loop — a
+retest after a builder repair goes to the conversation that found the defects,
+not to a fresh one. Then the GREEN closeout in this builder conversation, and
+Phase 9 — visual coherence, motion and mobile refinement (canonical plan
+section 54).
 
 ---
 

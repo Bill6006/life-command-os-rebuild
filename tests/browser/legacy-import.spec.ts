@@ -474,6 +474,41 @@ test.describe('bringing it across', () => {
     }
   })
 
+  test('the counts describe the file, and the claim never outruns them', async ({ page }) => {
+    /*
+     * Both halves found by reading the deployed screen after the QA repair, and
+     * both introduced by that repair.
+     *
+     * The heading became "What is in that file", and one of the rows under it
+     * was still counting what this run would write — so a second run of the
+     * same file reported zero readings in a file that plainly holds two. And
+     * the closing line said "everything in that file is already here" whenever
+     * there was nothing to append, including when an entry had come back saying
+     * something different, which is exactly when it is false.
+     */
+    await openData(page)
+    const file = await legacyFile(page, PASSPHRASE)
+    await readIt(page, file)
+
+    const report = page.getByTestId('import-report')
+    const readable = await report
+      .locator('.rows__row', { hasText: 'this app can read' })
+      .innerText()
+    const firstCount = readable.replace(/\D+/g, '')
+    expect(Number(firstCount)).toBeGreaterThan(0)
+
+    await page.getByTestId('import-apply').click()
+    await expect(page.getByTestId('import-outcome')).toContainText('Brought')
+
+    // The same file again: the file has not changed, so neither has the count.
+    await readIt(page, file)
+    const after = await report.locator('.rows__row', { hasText: 'this app can read' }).innerText()
+    expect(after.replace(/\D+/g, '')).toBe(firstCount)
+    await expect(page.getByTestId('import-would-do')).toContainText(
+      'everything in that file is already here',
+    )
+  })
+
   test('never shows a count of one against a plural noun', async ({ page }) => {
     await openData(page)
     const file = await legacyFile(page, PASSPHRASE)

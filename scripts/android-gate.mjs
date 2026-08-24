@@ -241,16 +241,28 @@ async function main() {
   // decrypted a moment later by the same implementation, at the parameters the
   // old application used. A desktop viewport would prove none of that, and a
   // hard-coded blob would prove only that one blob can be read.
+  /*
+   * One base moment for every file this gate builds.
+   *
+   * The row dates have to be **identical** across two builds, or the second
+   * file is a genuinely different file and the later-backup checks below prove
+   * nothing about the product. Recomputing them from `Date.now()` inside each
+   * evaluate made every row differ by the milliseconds between the two calls,
+   * which is a defect in this harness that reads exactly like the defect it is
+   * checking for.
+   */
+  const baseMoment = Date.now()
+
   const buildLegacy = async (secret, createdAtDays, energyOrdinal) =>
     page.evaluate(
-      async ({ secret, createdAtDays, energyOrdinal }) => {
+      async ({ secret, createdAtDays, energyOrdinal, baseMoment }) => {
         const b64 = (bytes) => {
           let binary = ''
           for (const byte of bytes) binary += String.fromCharCode(byte)
           return btoa(binary)
         }
         const at = (days) =>
-          new Date(Date.now() - days * 86400000).toISOString().replace(/\.\d+Z$/, '.000Z')
+          new Date(baseMoment - days * 86400000).toISOString().replace(/\.\d+Z$/, '.000Z')
         const row = (id, type, occurredAt, extra) => ({
           recordId: id,
           recordType: type,
@@ -358,7 +370,7 @@ async function main() {
           ciphertextBase64: b64(new Uint8Array(ciphertext)),
         })
       },
-      { secret, createdAtDays, energyOrdinal },
+      { secret, createdAtDays, energyOrdinal, baseMoment },
     )
 
   const legacy = await buildLegacy('the one from the old phone', 1, 4)
@@ -381,7 +393,18 @@ async function main() {
   await page.waitForSelector('[data-testid="import-refusal"]')
   const wrong = await page.getByTestId('import-refusal').innerText()
   check('a wrong passphrase is refused in plain words', wrong.includes('did not work'))
-  check('and the refusal says nothing was changed', wrong.includes('Nothing was changed'))
+  /*
+   * Said once (QA-08-N2). It used to appear in the sentence and again in a
+   * standing note underneath, in two slightly different wordings, which reads
+   * as two separate reassurances. Counted rather than matched on one phrasing,
+   * because the old check named the duplicate and would have held it in place.
+   */
+  const reassurance = wrong.match(/nothing (?:has been|was) changed/gi) ?? []
+  check(
+    'and says nothing was changed, once',
+    reassurance.length === 1,
+    `said ${String(reassurance.length)} times`,
+  )
 
   await page.getByTestId('import-identify').tap()
   await page.waitForSelector('[data-testid="import-recognised"]')

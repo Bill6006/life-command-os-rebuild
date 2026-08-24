@@ -356,7 +356,20 @@ export function ImportPanel() {
 }
 
 function ImportReport({ plan, preview }: { plan: ImportPlan; preview: LegacyPreview }) {
-  const mapped = plan.toAppend.length - plan.archived
+  /*
+   * Counted from the **file**, under a heading that says so.
+   *
+   * `mapped` was `toAppend.length - archived`, which is a count of what this
+   * run would write — so on a second run of the same file it read zero, under
+   * a heading promising to describe what is in the file. The file still holds
+   * exactly the readings and goals it held a minute earlier; they are simply
+   * already here, which the row below says in its own words.
+   *
+   * The inventory counts rows that produced a canonical record regardless of
+   * whether the store already had them, which is the file property this row
+   * claims to be.
+   */
+  const mapped = plan.inventory.families.reduce((total, family) => total + family.mapped, 0)
   const brought = plan.toAppend.length
 
   return (
@@ -500,10 +513,21 @@ function ImportReport({ plan, preview }: { plan: ImportPlan; preview: LegacyPrev
         </Rows>
       </details>
 
+      {/*
+       * What this run would do, in one sentence, and never more than is true.
+       *
+       * "Everything in that file is already here" was printed whenever there
+       * was nothing to append — including when an entry had come back saying
+       * something different, which is precisely the case where it is false.
+       * Nothing new is written either way; that is not the same claim as
+       * everything being accounted for.
+       */}
       <p className="note" data-testid="import-would-do">
-        {brought === 0
-          ? 'Nothing has been written yet, and there is nothing new to write — everything in that file is already here.'
-          : `Nothing has been written yet. Pressing the button below adds ${countOf(brought, 'entry', 'entries')} to your history.`}
+        {brought > 0
+          ? `Nothing has been written yet. Pressing the button below adds ${countOf(brought, 'entry', 'entries')} to your history.`
+          : plan.conflicts.length > 0
+            ? `Nothing has been written yet, and there is nothing new to write — apart from the ${countOf(plan.conflicts.length, 'entry', 'entries')} above, everything in that file is already here.`
+            : 'Nothing has been written yet, and there is nothing new to write — everything in that file is already here.'}
       </p>
     </div>
   )
