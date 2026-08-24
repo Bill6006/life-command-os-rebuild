@@ -24,24 +24,30 @@ reopens Phase 4 or any completed phase.
 
 # Phase 7 — AI exports + backup/restore
 
-**Status: YELLOW — ROUND 4 REPAIRED, AWAITING CODEX RETEST.**
+**Status: GREEN — independent QA passed.**
 
-Per D-077 this checkpoint does not self-certify. Four QA rounds so far, and
-only two of them reached the product. Round 1 returned FAIL at the
-deployed-checkpoint preflight (DEF-0061, a defect in the handoff). Round 2 was
-the first full product pass and returned FAIL on seven product findings plus
-one in this file, all repaired (DEF-0062). Round 3 returned FAIL at the
-checkpoint gate again, on a handoff pushed before its own deploy had landed and
-a checker that described that as eight bundle differences (DEF-0063). The
-retest goes to the **same** Codex conversation.
+Five rounds, closed on independent Codex QA PASS (Round 5). Per D-077 this
+checkpoint did not self-certify at any round, and QA does not mark a phase
+GREEN either — it recommends, and this closeout is the builder's.
 
-Round 4 reached the product on a deployment that carried the repair, passed
-all eight round-2 findings, accepted both judgement calls on their reasoning,
-and found one new blocking defect (DEF-0064, QA-07-010) — repaired here.
+**Only three of the five rounds reached the product.**
+Rounds 1 and 3 stopped at the checkpoint gate without testing anything, both
+times on a defect in the handoff rather than in the product (DEF-0061,
+DEF-0063). Round 2 was the first full product pass and returned eight findings.
+Round 4 confirmed all eight repaired and found one more (DEF-0064). Round 5
+confirmed that repair, accepted the regression's shape, and found nothing new.
 
-**Two of the four rounds were lost to the checkpoint contract rather than to
-the product.** Both are closed, and the second closed the step the first left
-open.
+**Two rounds lost to the checkpoint contract is the phase's own lesson**, and
+both halves are closed: a handoff may not assert literal SHA equality against a
+commit its own push supersedes (D-097), and a checkpoint is named only after
+its deploy has landed, confirmed against the live SHA rather than a green CI
+workflow (D-097's amendment). The checker distinguishes "this deployment
+predates the checkpoint" from "something bundle-relevant differs", because a
+`git diff` is direction-blind and the first version of that message cost a
+whole round.
+
+Owner approval: **independent QA (Codex), Round 5, PASS** — the gate D-077
+substitutes for self-certification at this phase.
 
 Nothing in this area existed before this checkpoint: `MoreScreen.tsx` said so in
 as many words, and that sentence was one of the acknowledged deferrals in the
@@ -85,21 +91,21 @@ facts, and the relationship between them is **checked**, not stated.
 
 ## Verification
 
-| Gate                                      | Result                                                                                                                                                                                                                  |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Privacy scan                              | Clean, 188 tracked files                                                                                                                                                                                                |
-| Format (Prettier)                         | Pass                                                                                                                                                                                                                    |
-| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                                                                                                        |
-| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                                                                                                          |
-| Unit / contract / synthetic / adversarial | 1059 passed / 1059, 52 files (in plain Node, no DOM)                                                                                                                                                                    |
-| Browser tests (Playwright)                | 405 passed / 405 — 135 tests × 360, 430, 1280px                                                                                                                                                                         |
-| Production build                          | Pass                                                                                                                                                                                                                    |
-| `npm run verify` from a clean checkout    | Pass — cloned fresh at `e9979ef`, `npm ci`, 1059/1059                                                                                                                                                                   |
-| Deployed build is the checkpoint's        | Pass — by `scripts/checkpoint-equivalence.mjs`, not by string comparison (D-097)                                                                                                                                        |
-| Reintroduction pass                       | **29 across the phase, 29 caught** — 15 before QA, 12 for round 2, 2 for round 4. Six escaped on a first attempt; each of those six assertions is stronger for it                                                       |
-| Builder's own Android-style gate          | Pass — `scripts/android-gate.mjs` against the deployed checkpoint: 27 checks, touch, Android UA, device pixel ratio 3, 360×780                                                                                          |
-| Owner-style read-through of the screen    | **Five findings, all repaired** — none of them from a failing assertion; see below                                                                                                                                      |
-| Independent QA                            | **Rounds 1 and 3 FAIL at the checkpoint gate, both repaired. Round 2 FAIL on eight findings, all repaired and all passed at round 4. Round 4 FAIL on one new blocking defect, repaired here. Awaiting round 5 retest.** |
+| Gate                                      | Result                                                                                                                                                                                                 |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Privacy scan                              | Clean, 188 tracked files                                                                                                                                                                               |
+| Format (Prettier)                         | Pass                                                                                                                                                                                                   |
+| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                                                                                       |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                                                                                         |
+| Unit / contract / synthetic / adversarial | 1059 passed / 1059, 52 files (in plain Node, no DOM)                                                                                                                                                   |
+| Browser tests (Playwright)                | 405 passed / 405 — 135 tests × 360, 430, 1280px                                                                                                                                                        |
+| Production build                          | Pass                                                                                                                                                                                                   |
+| `npm run verify` from a clean checkout    | Pass — cloned fresh at `e9979ef`, `npm ci`, 1059/1059                                                                                                                                                  |
+| Deployed build is the checkpoint's        | Pass — by `scripts/checkpoint-equivalence.mjs`, not by string comparison (D-097)                                                                                                                       |
+| Reintroduction pass                       | **29 across the phase, 29 caught** — 15 before QA, 12 for Round 2's findings, 2 for Round 4's. Six escaped on a first attempt; each of those six assertions is stronger for it                         |
+| Builder's own Android-style gate          | Pass — `scripts/android-gate.mjs` against the deployed checkpoint: 27 checks, touch, Android UA, device pixel ratio 3, 360×780                                                                         |
+| Owner-style read-through of the screen    | **Five findings, all repaired** — none of them from a failing assertion; see below                                                                                                                     |
+| Independent QA                            | **PASS — Codex, Round 5.** Rounds 1 and 3 failed at the checkpoint gate; Round 2 returned eight findings, all repaired and all passed at Round 4; Round 4 returned one, repaired and passed at Round 5 |
 
 Phase 6 ended at 780 unit-layer tests across 45 files. The 220 new ones are seven
 new suites plus growth in the sweeps that walk the whole scenario library.
@@ -697,11 +703,67 @@ per-member fix would — and **all four fail both times**, including the three
 pixel tests. That is the coverage QA said was missing, in the only form that
 holds it.
 
+## Independent QA, round 5 — PASS
+
+QA retested QA-07-010 on the deployed build by the route that found it: the
+app's own freshness request answered with a different valid SHA, real content
+scrolled behind the header, on Data, on Timeline, and with both notices stacked
+at the Restore panel. In all three the sticky group's box stayed at `y = 0`,
+its computed backing is opaque `rgb(20, 23, 31)`, and the header's SHA-256 at
+rest and over content is **identical**. The stale-build member keeps its orange
+tint over that backing and reads "A newer build is deployed (fffffff)."
+
+**156 focused browser executions passed** across both phone profiles and
+desktop — the twelve runs of the four sticky-header tests, all 81 Data
+executions, and the shell routing, build-identity, navigation and overflow
+checks the CSS change could touch.
+
+**The regression's shape was accepted**, which is the part that mattered: QA's
+Round 4 finding included a claim about testing, not only about the product, and
+it judged the answer rather than the symptom. It also closed a harness
+ambiguity I had not thought about — that a locator screenshot might scroll
+itself into view — by asserting the group was still pinned at `y = 0` before
+each capture, and by cross-checking the header crops against full-viewport
+screenshots.
+
+Nothing new was found. QA's own words: "No automated test gave false confidence
+in this round."
+
+## What five rounds actually produced
+
+Worth separating, because the count flatters the product and the shape does
+not.
+
+**One round found product defects.** Round 2's eight, of which five shared a
+single shape — _a claim that is true somewhere in the artefact and false where
+it is read_. A synthetic export that opened by claiming the owner's life and
+corrected it under a later heading. An exclusion that covered the private
+entries and not whether there were any. A header describing the store while the
+sentence beneath it described the document. A green restore success with its own
+contradiction printed underneath. A sentence that ended twice.
+
+**One round found a defect no assertion could.** Round 4's sticky layer, found
+by looking at a screenshot after four geometry checks had passed — the controls
+did not overlap, the words did.
+
+**Two rounds found nothing because they could not start.** Both were mine, and
+both are now structural rather than remembered.
+
+## Deliberately left as future test hardening
+
+QA named one automation gap with no defect behind it: the unconfirmed-restore
+tests prove the outcome semantics without rendering the owner-facing
+third-state copy. Round 4 inspected that copy directly and found nothing wrong
+with it, and QA's Round 5 judgement is that this is "future test hardening if
+desired, not Phase 7 acceptance work". Recorded here rather than built, because
+inventing coverage for a surface independent QA found no defect in is not a
+repair — and because a phase is closed on its gate, not on everything anyone
+could still write.
+
 ## Next
 
-Independent QA retest, in the **same** Codex conversation (D-090's retest
-routing). A narrow visual retest of QA-07-010 plus the round-4 passes the fix
-could disturb. The complete prompt is in [`NEXT_PROMPT.md`](NEXT_PROMPT.md).
+**Phase 8 — Legacy migration (canonical plan section 53).** A **new** builder
+conversation. The complete prompt is in [`NEXT_PROMPT.md`](NEXT_PROMPT.md).
 
 ---
 

@@ -1131,4 +1131,208 @@ unchanged deferrals, model, level, conversation and the D-092 launcher. Do not
 make the owner ask for the retest prompt.
 ```
 
+## Round 5 — Codex retest (2026-08-24)
+
+### Overall result: PASS
+
+Phase 7's repaired product passes independent QA. QA-07-010 is resolved on the
+deployed Preview, the regression holds the visual/compositing class that Round
+4 named, and every affected Round 4 pass remains green. No new defect was
+found. Phase 7 is ready for the CURRENT original Claude builder conversation
+to perform the formal GREEN closeout; QA does not mark it GREEN itself.
+
+### Checkpoint and deployed identity
+
+- **Product checkpoint tested:** `e9979ef`
+- **Deployed SHA tested:** `b151ec866ebb717f777be2274eced51992d3f5f4`
+- **Preview build time:** `2026-08-24T04:34:20.977Z`
+- **Stable URL:** `https://bill6006.github.io/life-command-os-rebuild/preview/`
+
+The direct `--deployed` invocation again reached the documented local Node
+certificate-chain failure before reading the manifest. QA used the handoff's
+supported fallback: read the cache-busted live manifest through the system
+trust store, then run:
+
+```text
+node scripts/checkpoint-equivalence.mjs e9979ef --ref b151ec866ebb717f777be2274eced51992d3f5f4
+```
+
+Result: exit 0. The five files after `e9979ef` are documentation-only. Live
+`b151ec8` contains and is bundle-equivalent to the product checkpoint.
+
+### Android/mobile configuration
+
+- Chromium in isolated disposable contexts
+- viewport `360 × 780`; screen `360 × 800`
+- device pixel ratio `3`
+- touch and mobile mode enabled
+- Android 14 / Pixel 7 mobile user agent
+- locale `en-US`; timezone `America/New_York`
+- deployed Preview, not a local server
+
+The app's real freshness request was answered with a complete valid manifest
+carrying a different SHA, which is the state a genuinely stale tab receives.
+No product code or owner browser data was modified.
+
+### Verification executed
+
+The focused rebuilt browser command covered `sticky-header.spec.ts`,
+`data.spec.ts`, and `shell.spec.ts`: **156 passed** across the small phone,
+large phone and desktop profiles. This includes:
+
+- all twelve executions of the three at-rest-versus-scrolled pixel comparisons
+  and the opaque-group structural assertion;
+- all 81 Data executions, including Show mine from the Restore scroll
+  position, target sizes, horizontal containment, destructive-control
+  separation, backup/restore and G-012 reachability;
+- all affected shell routing, build identity, navigation and overflow checks.
+
+QA then independently reproduced the deployed Android cases that found Round
+4's defect:
+
+| Case | At-rest header SHA-256 | Over-content header SHA-256 | Result |
+| --- | --- | --- | --- |
+| Data, build notice alone, scroll 1500 | `21f9e7f2ab7d914d589d2be77b1e79d998663f34019895d4a052bb205893e92b` | identical | **PASS** |
+| Data Restore, build + laboratory notices, scroll 2796 | `a1d734477dc8680b19667fd7a9615abf3077d680d969b458a353d2c5de6f5801` | identical | **PASS** |
+| Timeline, build + laboratory notices, scroll 1200 | `4dfef925363be7204acd1d7beea52e6aa1f11a896d201bbb68b945f7eae85659` | identical | **PASS** |
+
+In every case the sticky group's live box remained at `x: 0, y: 0`; its
+computed backing is opaque `rgb(20, 23, 31)`. The stale-build member retains its
+orange translucent tint over that backing and reads “A newer build is deployed
+(fffffff).” Page words do not show through. Horizontal overflow is zero.
+
+### QA-07-010 retest
+
+**PASS.** The property is correctly owned by `.shell__top`, not repeated on
+individual notices. Data text, Restore copy and Timeline entries can scroll
+under the group without changing one header pixel. At rest, the preview bar,
+orange build tint and laboratory notice keep their prior hierarchy and colours;
+the fix introduces no opaque block that erases the member distinctions.
+
+The regression shape is accepted. Its three image comparisons express the
+visible claim Round 4 required, and the structural assertion keeps the opaque
+group reason explicit. The live retest also asserted the group remained pinned
+before taking locator screenshots, closing the possible harness ambiguity that
+a locator might scroll itself into view. The boxes stayed at `y = 0`, and full
+viewport screenshots agree with the header crops.
+
+### Affected Round 4 passes
+
+**PASS:** Show mine retains a 44px target and receives the real touch from the
+Restore scroll position; removing the laboratory notice leaves the build
+warning in place; controls remain separated; no horizontal overflow; bottom
+navigation does not cover content; the destructive restore control remains
+separated from the check action; Preview identity and current-build behavior
+remain correct.
+
+Nothing in the shell-only CSS repair can change export, privacy, backup or
+restore semantics. The complete affected Data suite nevertheless passed, and
+the Round 4 acceptance of QA-07-002 through QA-07-009 stands unchanged.
+
+### Evidence
+
+- `test-results/phase07-qa-round5/android-round5.mjs`
+- `test-results/phase07-qa-round5/data-rest-header.png`
+- `test-results/phase07-qa-round5/data-over-content-header.png`
+- `test-results/phase07-qa-round5/stacked-rest-header.png`
+- `test-results/phase07-qa-round5/stacked-over-content-header.png`
+- `test-results/phase07-qa-round5/timeline-rest-header.png`
+- `test-results/phase07-qa-round5/timeline-over-content-header.png`
+- corresponding `*-viewport.png` files for whole-screen visual inspection
+
+The evidence script and images are narrowly scoped QA artifacts. The contexts
+are disposable and do not touch the owner's browser state.
+
+### Automation judgment
+
+No automated test gave false confidence in this round. The new pixel tests
+would detect the exact page-content bleed geometry could not see, and D-100's
+opaque-backing assertion holds the architectural reason. QA's independent
+hashes and screenshot review agree with them.
+
+Round 4 noted that unconfirmed-restore tests prove outcome semantics without
+rendering the owner-facing third-state copy. That remains a legitimate optional
+coverage improvement, but it is not worth reopening or delaying this passing
+CSS-only retest: the production copy was inspected in Round 4, no defect was
+found, and the outcome/storage branches are directly covered. Record it as
+future test hardening if desired, not as Phase 7 acceptance work.
+
+### Deferred and disclosed items
+
+Confirmed unchanged: authenticated/tamper validation remains deferred (D-095);
+migrations remain empty; selective restore, override of a refused file, a
+past-backup library and legacy import remain unbuilt; DEF-0059 through DEF-0064
+remain recorded closed; `guide-resume.test.ts` remains
+resolved-unreproduced; bare `npx playwright test` still serves prebuilt `dist`,
+while `npm run test:browser` builds first.
+
+### Recommendation
+
+**PASS.** Return to the **CURRENT original Claude Phase 7 builder conversation**
+for formal GREEN closeout. It should confirm tested product checkpoint
+`e9979ef`, deployed bundle-equivalent SHA `b151ec8`, and this Round 5 PASS;
+update the governing builder-owned status and closeout records; preserve every
+deferral; and write the complete next-phase handoff. Do not change the
+QA-owned report.
+
+- **Recommended model:** current strongest Opus-class Claude coding model,
+  because the current builder owns formal closeout, release provenance, and
+  the next-phase handoff.
+- **Recommended intelligence level:** High, because closeout must reconcile
+  five QA rounds and preserve exact checkpoint/deferred state without reopening
+  passed product work.
+- **Conversation:** CURRENT — original Phase 7 Claude builder conversation,
+  because an unresolved phase returns there for formal GREEN closeout after QA
+  PASS.
+
+## ROUND 5 NEXT CLAUDE ACTION
+
+- **Model:** current strongest Opus-class Claude coding model
+- **Intelligence level:** High
+- **Conversation:** CURRENT — original Phase 7 Claude builder conversation
+- **Attach/reference:** `docs/qa/PHASE_07_QA_HANDOFF.md`, especially “Round 5
+  — Codex retest”
+
+## ROUND 5 COPY/PASTE PROMPT
+
+```text
+Phase 7 independent QA Round 5 returned PASS. Perform the formal GREEN
+closeout in the CURRENT original Claude Phase 7 builder conversation.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_07_QA_HANDOFF.md in full before acting, especially “Round 5
+— Codex retest.” Do not edit that QA-owned report.
+
+Confirm these QA facts:
+
+- tested product checkpoint: e9979ef;
+- live deployed SHA: b151ec866ebb717f777be2274eced51992d3f5f4;
+- the live SHA contains and is bundle-equivalent to e9979ef;
+- QA-07-010 passes on Data, Timeline and stacked Restore notices with identical
+  at-rest/over-content header pixels and an opaque group backing;
+- all 156 focused browser executions passed across both phone profiles and
+  desktop;
+- QA-07-002 through QA-07-009 and every Round 4 preserved boundary remain
+  accepted;
+- no new defect was found and the independent result is PASS.
+
+Perform the formal Phase 7 GREEN closeout under the canonical plan and D-077.
+Update the builder-owned phase status, decision/defect records and governing
+handoff documents as required. Preserve D-095 and every other disclosed
+deferral: migrations, selective restore, refused-file override, past-backup
+library, legacy import, and the resolved-unreproduced guide-resume test. The
+unconfirmed-restore DOM assertion is optional future test hardening, not a
+Phase 7 blocker; do not reopen passed product work solely for it.
+
+Do not start implementation of the next phase in this closeout turn. Identify
+the next phase, recommend its model and intelligence level, state the correct
+CURRENT/NEW conversation routing, and write its complete ready-to-paste prompt
+to docs/NEXT_PROMPT.md. Include the approved checkpoint, closing/deployed SHA,
+verification results, QA report path, unchanged open/deferred items, model,
+level, conversation, and the D-092 launcher. Do not make the owner ask for the
+next handoff.
+```
+
 <!-- LCO_COMPLETE -->
