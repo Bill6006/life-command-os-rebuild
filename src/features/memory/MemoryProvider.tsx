@@ -18,6 +18,7 @@ import { fingerprint } from '../../memory/backup'
 import {
   notAttempted,
   restoreInto,
+  unconfirmed,
   type RestoreOutcome,
   type RestorePlan,
 } from '../../memory/restore'
@@ -120,6 +121,13 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
    * requires.
    */
   const stores = useRef<{ owner?: CanonicalStore; laboratory?: CanonicalStore }>({})
+  /**
+   * Whether the restore currently running has already written the backup.
+   *
+   * A ref rather than state: nothing renders from it, and it has to be
+   * readable from the `catch` of the operation that set it (QA-07-007).
+   */
+  const applied = useRef(false)
   const [source, setSource] = useState<HistorySource>('owner')
   const clock = useMemo(() => systemClock(), [])
 
@@ -366,6 +374,9 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
    * verified through the open connection, which proves the write landed in the
    * store; this proves it landed on disk, which is the claim a backup is for.
    */
+  /** The real clock, for artefacts about his own records (QA-07-005). */
+  const ownerMoment = useCallback(() => ({ at: clock.now(), zone: clock.zone() }), [clock])
+
   const restoreOwner = useCallback(
     async (plan: RestorePlan): Promise<RestoreOutcome> => {
       const owner = stores.current.owner
@@ -394,6 +405,8 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
           return outcome
         }
 
+        applied.current = true
+
         if (projection.show('owner', job)) {
           setSource('owner')
           setSnapshot(outcome.snapshot)
@@ -413,9 +426,24 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
          * proves the transaction committed. This proves the bytes survive the
          * database being closed and opened — the thing a backup actually
          * promises, and the thing a browser under storage pressure is entitled
-         * to break. It runs after the screen has already been given the
-         * restored history, so a slow reopen never leaves the owner looking at
-         * the old one.
+         * to break.
+         *
+         * **It is part of the result, not a footnote under it (QA-07-007).**
+         * This used to return `outcome` — the success from two steps earlier —
+         * whatever happened here, and merely set a `storageCheck` line beside
+         * it. Force the reopen to fail and the screen said, in green, that the
+         * store now held the backup exactly, with "what came back after
+         * reopening the database is not what was restored" printed underneath:
+         * two contradictory claims about one operation, the confident one
+         * first. Section 29 forbids a false success and does not stop
+         * forbidding it because a caveat follows.
+         *
+         * Three ways it can fail, and all three get the same answer: the
+         * reopen threw, the reopen fell back to an in-memory store (which
+         * reads as an empty history and is not his disk at all), or the
+         * reopened contents do not match. None is rolled back — see the
+         * `confirm` stage in `restore.ts` for why undoing here would be worse
+         * than saying so.
          */
         stores.current.owner?.close()
         stores.current.laboratory?.close()
@@ -424,22 +452,67 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
         stores.current = { owner: reopenedOwner, laboratory: reopenedLaboratory }
         setBackend(reopenedOwner.backend)
         setDurable(reopenedOwner.durable)
+
+        /*
+         * A fallback store is not evidence about the owner's disk.
+         *
+         * `openStore` degrades to memory when IndexedDB will not open, and an
+         * empty in-memory store fingerprints as an empty history — which would
+         * read here as "the restore lost everything", and would be published
+         * to the screen as his.
+         */
+        if (!reopenedOwner.durable && owner.durable) {
+          if (job.mayPublish()) {
+            setStorageCheck({
+              ok: false,
+              detail: 'the database would not reopen, so what is on disk could not be read back',
+            })
+          }
+          return unconfirmed(
+            'The restore was written and checked, and then the database would not reopen — so the app cannot confirm what is on disk. Nothing was undone.',
+            'the reopened store fell back to memory; the restored history was verified once through the original connection',
+          )
+        }
+
         const fromDisk = await reopenedOwner.snapshot()
-        const same = fingerprint(fromDisk) === plan.expected
+        if (fingerprint(fromDisk) !== plan.expected) {
+          if (job.mayPublish()) {
+            setStorageCheck({
+              ok: false,
+              detail: 'what came back after reopening the database is not what was restored',
+            })
+          }
+          return unconfirmed(
+            'The restore was written and checked, and then reading the database again gave something else. Nothing was undone, and you should look before restoring anything over it.',
+            `expected ${plan.expected}, reopened ${fingerprint(fromDisk)}`,
+          )
+        }
+
         if (job.mayPublish()) {
           setSnapshot(fromDisk)
           setStorageCheck({
-            ok: same,
-            detail: same
-              ? `reopened the database and read back ${countOf(fromDisk.records.length, 'record', 'records')}, identical`
-              : 'what came back after reopening the database is not what was restored',
+            ok: true,
+            detail: `reopened the database and read back ${countOf(fromDisk.records.length, 'record', 'records')}, identical`,
           })
         }
         return outcome
       } catch (caught) {
         if (job.isCurrent()) setError(describe(caught))
-        return notAttempted(describe(caught))
+        /*
+         * Which of the two honest answers this is depends on whether the
+         * write had already landed. `applied` is set the moment `restoreInto`
+         * returns a success, so a throw from the reopen path can no longer be
+         * reported as "nothing was attempted" — which is what it used to say,
+         * and is the opposite of what happened.
+         */
+        return applied.current
+          ? unconfirmed(
+              'The restore was written and checked, and then the app could not read the database again. Nothing was undone.',
+              describe(caught),
+            )
+          : notAttempted(describe(caught))
       } finally {
+        applied.current = false
         if (job.isCurrent()) setBusy(false)
       }
     },
@@ -583,6 +656,7 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     verifyStorage,
     documentJson: () => snapshotToJson(snapshot, now),
     ownerSnapshot,
+    ownerMoment,
     canRestore: source === 'owner',
     restoreOwner,
     now,

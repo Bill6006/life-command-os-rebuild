@@ -149,7 +149,11 @@ describe('G-013 — the handoff prompt is embedded', () => {
 })
 
 describe('G-013 — the prompt says what to keep, change, remove and not change', () => {
-  const prompt = handoffPrompt({ diagnosticsIncluded: false, privateIncluded: false })
+  const prompt = handoffPrompt({
+    source: 'owner',
+    diagnosticsIncluded: false,
+    privateIncluded: false,
+  })
 
   it('asks for all four', () => {
     expect(prompt).toContain('## What is working')
@@ -186,7 +190,11 @@ describe('G-013 — the prompt says what to keep, change, remove and not change'
     expect(tuning?.onlyWithDiagnostics).toBe(true)
     expect(prompt).not.toContain(`## ${tuning?.heading}`)
 
-    const withDiagnostics = handoffPrompt({ diagnosticsIncluded: true, privateIncluded: false })
+    const withDiagnostics = handoffPrompt({
+      source: 'owner',
+      diagnosticsIncluded: true,
+      privateIncluded: false,
+    })
     expect(withDiagnostics).toContain(`## ${tuning?.heading}`)
   })
 
@@ -213,8 +221,16 @@ describe('G-013 — the prompt says what to keep, change, remove and not change'
   })
 
   it('tells the reader which way round the private section is, either way', () => {
-    const without = handoffPrompt({ diagnosticsIncluded: false, privateIncluded: false })
-    const included = handoffPrompt({ diagnosticsIncluded: false, privateIncluded: true })
+    const without = handoffPrompt({
+      source: 'owner',
+      diagnosticsIncluded: false,
+      privateIncluded: false,
+    })
+    const included = handoffPrompt({
+      source: 'owner',
+      diagnosticsIncluded: false,
+      privateIncluded: true,
+    })
     expect(without).toMatch(/leaves out the Private/i)
     expect(included).toMatch(/includes the Private/i)
     // And the absent case says what the absence means, so an assistant does

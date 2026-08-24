@@ -190,9 +190,27 @@ export function AppShell() {
 
   return (
     <div className="shell">
-      <TopBar current={destination} onNavigate={navigate} />
-      <StaleBuildNotice freshness={freshness} />
-      <LaboratoryNotice />
+      {/*
+        One sticky thing, not three (QA-07-006).
+
+        The bar and both notices were each `position: sticky; top: 0`, which
+        means that once the page scrolls they all occupy the same coordinate
+        and the highest z-index wins. On Data the laboratory notice's **Show
+        mine** ended up underneath the More button: the refusal in the Restore
+        panel named it as the way out, and a real touch tap at that scroll
+        position went to More instead. Only scrolling all the way back to the
+        top made the named remedy reachable.
+
+        Sticking the group rather than its members is what makes them stack.
+        There are no magic offsets to keep in step with the bar's height, and a
+        notice added later inherits the behaviour instead of having to
+        rediscover it.
+      */}
+      <div className="shell__top">
+        <TopBar current={destination} onNavigate={navigate} />
+        <StaleBuildNotice freshness={freshness} />
+        <LaboratoryNotice />
+      </div>
 
       {/* Re-keying on the destination restarts the entry transition, which is
           what makes a tab change read as a change rather than a repaint. */}

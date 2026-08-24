@@ -1,3 +1,5 @@
+import type { HistorySource } from '../memory/projection'
+
 /**
  * The handoff prompt (canonical plan section 52).
  *
@@ -139,6 +141,20 @@ export const HANDOFF_PARTS: readonly HandoffPart[] = [
 ]
 
 export interface HandoffPromptOptions {
+  /**
+   * Whose history this document describes.
+   *
+   * The prompt's **first sentence** is an identity claim, and it was written
+   * once for the owner and used for both (QA-07-002): a synthetic export
+   * opened with "you are reviewing one person's own record of his life… he is
+   * the owner of everything below", and only disclosed that it was an invented
+   * history further down, under a heading. A later correction does not repair
+   * an instruction already given — an assistant reading in order has already
+   * been told whose life it is by then, and the two statements cannot both be
+   * true. D-091's eighth invariant applies to the first line of the artefact,
+   * not only to a section of it.
+   */
+  readonly source: HistorySource
   readonly diagnosticsIncluded: boolean
   readonly privateIncluded: boolean
 }
@@ -157,7 +173,9 @@ export function handoffPartsFor(options: HandoffPromptOptions): readonly Handoff
  */
 export function handoffPrompt(options: HandoffPromptOptions): string {
   const lines: string[] = [
-    'You are reviewing one person’s own record of his life, exported from an app he uses to keep it. He is the owner of everything below and has chosen to show it to you.',
+    options.source === 'laboratory'
+      ? '**This is not a real person.** What follows was composed from a synthetic test history — an invented life loaded into this app’s QA laboratory to exercise it. Review it as an exercise, say so in your answer, and do not address it as though it were somebody’s own record.'
+      : 'You are reviewing one person’s own record of his life, exported from an app he uses to keep it. He is the owner of everything below and has chosen to show it to you.',
     '',
     'Work through the headings below in order, and use them as your headings so the answer comes back in the same shape.',
     '',
@@ -177,7 +195,7 @@ export function handoffPrompt(options: HandoffPromptOptions): string {
   lines.push(
     options.privateIncluded
       ? 'One more thing: this export includes the Private / Sexual Health section, deliberately. Treat it as ordinary health information, discuss it as directly as anything else here, and do not moralise about it.'
-      : 'One more thing: this export leaves out the Private / Sexual Health section. Nothing from that area is below, so read its absence as a choice about this document rather than as an empty part of his life.',
+      : 'One more thing: this export leaves out the Private / Sexual Health section — the entries, and also whether there are any. Nothing below says anything about that area in either direction. Read the silence as a choice about this document, not as an empty part of his life, and do not reason from it.',
   )
 
   return `${lines.join('\n').trimEnd()}\n`

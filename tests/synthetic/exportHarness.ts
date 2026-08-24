@@ -1,5 +1,11 @@
 import { coreDomains } from '../../src/domain/domains'
-import type { Instant, TimeZoneId, WeekStartDay } from '../../src/domain/time'
+import {
+  instant,
+  timeZone,
+  type Instant,
+  type TimeZoneId,
+  type WeekStartDay,
+} from '../../src/domain/time'
 import { decide } from '../../src/intelligence/engine'
 import { insightsFor } from '../../src/intelligence/insights'
 import { assembleSituation, type Situation } from '../../src/intelligence/situation'
@@ -24,6 +30,10 @@ import { loadScenario, type LoadedScenario } from './harness'
  * running beside it — a test that makes another test fail is worse than a slow
  * one, because the failure lands somewhere nobody will look for it.
  */
+
+/** When the test documents are composed, and where. Never a scenario's clock. */
+export const COMPOSED_AT = instant(Date.parse('2026-08-23T18:00:00Z'))
+export const COMPOSED_ZONE = timeZone('America/Denver')
 
 export const TEST_APP: ExportApp = {
   commitShort: 'abc1234',
@@ -82,7 +92,8 @@ export function composeFor(
     timeline: assembleTimeline(situation),
     source,
     app: TEST_APP,
-    at: loaded.scenario.now,
+    // A fixed real moment, so a scenario's own clock never dates the document.
+    composedAt: { at: COMPOSED_AT, zone: COMPOSED_ZONE },
   })
   composed.set(key, result)
   return result

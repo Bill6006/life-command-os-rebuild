@@ -1,10 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { coreDomains, DOMAIN } from '../../src/domain/domains'
+import { discreetPlaceholder } from '../../src/domain/privacy'
+import { localDayIdAt } from '../../src/domain/time'
 import { SELECT_ALL, type ExportSectionId } from '../../src/features/export/sections'
 import type { HistorySource } from '../../src/features/memory/projection'
 import { SCENARIOS } from '../../src/synthetic/scenarios'
-import { coreDomains } from '../../src/domain/domains'
 import { instant, timeZone } from '../../src/domain/time'
 import { decide } from '../../src/intelligence/engine'
 import { insightsFor } from '../../src/intelligence/insights'
@@ -13,7 +15,7 @@ import { snapshotFromWire } from '../../src/memory/snapshot'
 import { buildView } from '../../src/memory/view'
 import { assembleTimeline } from '../../src/features/timeline/timelineEntries'
 import { composeExport } from '../../src/features/export/compose'
-import { composeFor, contextFor, TEST_APP } from './exportHarness'
+import { COMPOSED_AT, COMPOSED_ZONE, composeFor, contextFor, TEST_APP } from './exportHarness'
 
 /**
  * D-091, applied to a document rather than to a screen.
@@ -42,6 +44,9 @@ function compose(
 ) {
   return composeFor(scenarioId, sections, source)
 }
+
+/** A line break, named, because a literal one inside a generated patch does not survive. */
+const NEWLINE = String.fromCharCode(10)
 
 const EVERY_SECTION: readonly ExportSectionId[] = [...SELECT_ALL, 'private']
 
@@ -124,6 +129,215 @@ describe('the document reads as English', () => {
     // count of one. This is what makes them a test rather than a hope.
     const withOne = EVERYTHING.filter(({ text }) => /\b1 [a-z]/.test(text))
     expect(withOne.length, 'no scenario produces a count of one').toBeGreaterThan(0)
+  })
+})
+
+describe('QA-07-002 — the first line says whose life this is', () => {
+  /*
+   * The document's opening sentence is an identity claim, and it was written
+   * once for the owner and reused for both. A synthetic export opened with
+   * "you are reviewing one person's own record of his life… he is the owner of
+   * everything below" and disclosed that it was invented only further down,
+   * under a heading nobody has reached yet.
+   *
+   * The old assertion — that "not a real person" appears *somewhere* — passed
+   * on exactly that document. Where the claim appears is the finding.
+   */
+  function firstClaim(text: string): string {
+    const line = text.split('\n').find((entry) => entry.trim() !== '' && !entry.startsWith('#'))
+    expect(line, 'the document should open with something').toBeDefined()
+    return line ?? ''
+  }
+
+  it('opens a synthetic export by saying it is not a real person', () => {
+    const text = compose('quiet-fortnight', SELECT_ALL, 'laboratory').text
+    expect(firstClaim(text)).toContain('not a real person')
+  })
+
+  it('never claims ownership of a synthetic life, anywhere', () => {
+    const text = compose('quiet-fortnight', SELECT_ALL, 'laboratory').text
+    expect(text).not.toContain('He is the owner of everything below')
+    expect(text).not.toMatch(/reviewing one person’s own record of his life/)
+  })
+
+  it('discloses the synthetic source before anything else it says', () => {
+    // Order is the whole point: a later correction does not repair an
+    // instruction already given.
+    const text = compose('quiet-fortnight', SELECT_ALL, 'laboratory').text
+    const disclosure = text.indexOf('not a real person')
+    const anythingElse = text.indexOf('Work through the headings below')
+    expect(disclosure).toBeGreaterThan(-1)
+    expect(disclosure).toBeLessThan(anythingElse)
+  })
+
+  it('still opens an owner export as the owner’s own record', () => {
+    const text = compose('quiet-fortnight', SELECT_ALL, 'owner').text
+    expect(firstClaim(text)).toContain('own record of his life')
+    expect(text).not.toContain('not a real person')
+  })
+
+  for (const { id } of EVERYTHING) {
+    it(`opens coherently on ${id}, both ways round`, () => {
+      expect(firstClaim(compose(id, SELECT_ALL, 'laboratory').text)).toContain('not a real person')
+      expect(firstClaim(compose(id, SELECT_ALL, 'owner').text)).not.toContain('not a real person')
+    })
+  }
+})
+
+describe('QA-07-003 — leaving the private area out leaves out that it exists', () => {
+  /*
+   * `quiet-fortnight` holds one private record. With the private section off,
+   * the document said "Nothing from that area is below" and then reported the
+   * area as current, moderately evidenced and last heard three days ago — which
+   * is the participation fact a private record's discretion exists to protect,
+   * disclosed under an explicit promise not to.
+   *
+   * Detail was never the whole of it. Whether there is anything there at all is
+   * the part that leaks.
+   */
+  /*
+   * The area's names, **and the placeholder that stands in for a withheld
+   * entry**.
+   *
+   * The list started as the first three and let a reintroduction through: a
+   * dated Timeline row reading "Noted: Private entry" names no domain and
+   * discloses the whole of what the exclusion protects — that there is
+   * something there, and when. A placeholder is not a redaction if its
+   * presence is the fact.
+   */
+  const PRIVATE_WORDS = [
+    /Private \/ Sexual Health/,
+    /private-health/,
+    /private \/ sexual health/i,
+    new RegExp(discreetPlaceholder('private')),
+  ]
+
+  it('names the private area nowhere in the document when it is left out', () => {
+    const composed = compose('quiet-fortnight', SELECT_ALL)
+    expect(composed.header.privateIncluded).toBe(false)
+
+    /*
+     * Saying "this area is left out" is not a leak — it is the disclosure that
+     * stops the silence reading as an empty life. Everything else is.
+     */
+    const declaring =
+      /leaves out|left out|whether anything has been recorded|whether there are any/i
+    const leaks = composed.text
+      .split(NEWLINE)
+      .filter((line) => !declaring.test(line))
+      .filter((line) => PRIVATE_WORDS.some((pattern) => pattern.test(line)))
+
+    expect(leaks, 'the private area is named outside its own exclusion notice').toEqual([])
+  })
+
+  it('keeps the private area out of the header’s life areas', () => {
+    const composed = compose('quiet-fortnight', SELECT_ALL)
+    expect(composed.header.domains).not.toContain(DOMAIN.privateHealth)
+  })
+
+  it('states that the exclusion covers whether anything is recorded there', () => {
+    // Otherwise the silence reads as an empty area rather than a withheld one.
+    const composed = compose('quiet-fortnight', SELECT_ALL)
+    expect(composed.text).toMatch(/including whether anything has been recorded in it/i)
+    expect(composed.prompt).toMatch(/and also whether there are any/i)
+  })
+
+  it('names it, in full, once it is deliberately included', () => {
+    const composed = compose('quiet-fortnight', [...SELECT_ALL, 'private'])
+    expect(composed.header.privateIncluded).toBe(true)
+    expect(composed.header.domains).toContain(DOMAIN.privateHealth)
+    expect(composed.text).toContain('## Private / Sexual Health')
+    // And the coverage row comes back, because it is no longer withheld.
+    expect(composed.text).toMatch(/Private \/ Sexual Health — /)
+  })
+})
+
+describe('QA-07-004 — the header describes the document, not the store', () => {
+  it('reports nothing at all when nothing is chosen', () => {
+    /*
+     * The reported contradiction: "No sections were chosen, so this document
+     * contains nothing about the owner" printed directly under a row saying
+     * the record covered nineteen entries across four life areas. Both were
+     * composed from the same object and only one was about the document.
+     */
+    const composed = compose('quiet-fortnight', [])
+    expect(composed.header.records).toBe(0)
+    expect(composed.header.domains).toEqual([])
+    expect(composed.header.firstDay).toBeUndefined()
+    expect(composed.text).toContain('No sections were chosen')
+    /*
+     * And no section body claims a life area, because there is no section body
+     * at all. Checked over what the sections rendered rather than over the
+     * whole file: the prompt and the About block legitimately name the private
+     * area in order to say it was left out, and saying so is the disclosure,
+     * not the leak.
+     */
+    expect(composed.text).not.toContain('Life areas with entries:')
+    expect(composed.text).not.toContain('## Where things stand')
+  })
+
+  it('narrows to the sections that were chosen', () => {
+    const everything = compose('quiet-fortnight', SELECT_ALL)
+    const narrow = compose('quiet-fortnight', ['corrections'])
+    expect(narrow.header.records).toBeLessThan(everything.header.records)
+  })
+
+  it('widens back out when a section that summarises everything is chosen', () => {
+    // Coverage, learning, insights and diagnostics really are computed over the
+    // whole record, so they honestly put the whole record in scope.
+    const narrow = compose('quiet-fortnight', ['corrections'])
+    const wide = compose('quiet-fortnight', ['corrections', 'coverage'])
+    expect(wide.header.records).toBeGreaterThan(narrow.header.records)
+  })
+
+  it('never counts a record the document is not allowed to mention', () => {
+    const withPrivate = compose('quiet-fortnight', [...SELECT_ALL, 'private'])
+    const without = compose('quiet-fortnight', SELECT_ALL)
+    expect(withPrivate.header.records).toBeGreaterThan(without.header.records)
+  })
+})
+
+describe('QA-07-005 — a document is dated when it was composed', () => {
+  it('uses the composing moment rather than the history’s own clock', () => {
+    /*
+     * A scenario sets the clock to whatever evening it is about. "Composed on"
+     * is a fact about now, and reading it off the situation produced an August
+     * artefact stamped February — the class this shares with the backup
+     * filename QA found.
+     */
+    const composed = compose('quiet-fortnight', SELECT_ALL)
+    const scenarioDay = localDayIdAt(contextFor('quiet-fortnight').moment.now, COMPOSED_ZONE)
+    expect(composed.header.composedAt).toBe(localDayIdAt(COMPOSED_AT, COMPOSED_ZONE))
+    expect(composed.header.composedAt).not.toBe(scenarioDay)
+  })
+})
+
+describe('QA-07-008 — a sentence ends once', () => {
+  const DOUBLED = /[.!?][.!?]/
+
+  for (const { id, text } of EVERYTHING) {
+    it(`ends every sentence once on ${id}`, () => {
+      const offenders = text
+        .split('\n')
+        // Markdown rules and the ellipsis a shortened fingerprint ends in are
+        // not sentences.
+        .filter((line) => !line.startsWith('---'))
+        .filter((line) => DOUBLED.test(line))
+      expect(offenders, `${id} doubles a terminator`).toEqual([])
+    })
+  }
+
+  it('is exercised against a headline that already carries its own full stop', () => {
+    // The reported case: an app-written headline joined to a fragment this
+    // file wrote. Without a history that produces one, the sweep above proves
+    // nothing about the join.
+    const noAction = EVERYTHING.filter(({ text }) =>
+      text.includes('The app is suggesting nothing right now'),
+    )
+    expect(noAction.length, 'no scenario produces a no-action sentence').toBeGreaterThan(0)
+    for (const { id, text } of noAction) {
+      expect(text, `${id}`).not.toMatch(/right now: [^\n]*\.\./)
+    }
   })
 })
 
@@ -326,6 +540,6 @@ function composeOneRecord() {
     timeline: assembleTimeline(situation),
     source: 'owner',
     app: TEST_APP,
-    at,
+    composedAt: { at: COMPOSED_AT, zone: COMPOSED_ZONE },
   })
 }

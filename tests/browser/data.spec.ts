@@ -460,6 +460,97 @@ test.describe('putting a backup back', () => {
 
     await expect(page.getByTestId('restore-blocked')).toContainText('Show mine')
   })
+
+  test('the way out it names can actually be pressed, from where it is named', async ({ page }) => {
+    /*
+     * QA-07-006. The refusal says to press **Show mine** at the top of the app,
+     * and at the scroll position where the refusal is legible that control was
+     * underneath the More button: the bar and both notices were each
+     * `position: sticky; top: 0`, so once the page scrolled they occupied the
+     * same coordinate and the higher z-index took the tap. The notice was
+     * visible the whole time, which is why every existing assertion passed —
+     * `toBeVisible` and `toContainText` cannot tell a button from a picture of
+     * one.
+     *
+     * So this scrolls to the refusal first, taps without scrolling back, and
+     * asserts the laboratory is actually put away.
+     */
+    await seedOwnerHistory(page)
+
+    await page.goto(`${APP}#/qa`)
+    await page.getByRole('button', { name: /Two ordinary weeks/ }).click()
+    await expect(page.locator('.qa-scenario--active')).toContainText('Two ordinary weeks')
+
+    await page.locator('.topbar').getByRole('button', { name: 'More' }).click()
+    await page.getByRole('link', { name: 'Exports, backup and restore' }).click()
+
+    const refusal = page.getByTestId('restore-blocked')
+    await refusal.scrollIntoViewIfNeeded()
+    await expect(refusal).toBeVisible()
+
+    // Nothing may be covering it where it is being read.
+    const showMine = page.getByRole('button', { name: 'Show mine' })
+    const more = page.locator('.topbar__more')
+    const notice = await showMine.boundingBox()
+    const bar = await more.boundingBox()
+    const overlaps =
+      notice !== null &&
+      bar !== null &&
+      notice.x < bar.x + bar.width &&
+      bar.x < notice.x + notice.width &&
+      notice.y < bar.y + bar.height &&
+      bar.y < notice.y + notice.height
+    expect(overlaps, 'the way out is underneath the More button').toBe(false)
+
+    // And the press works from here, with no scrolling of its own.
+    await showMine.click({ timeout: 5_000 })
+    await expect(page.getByTestId('restore-blocked')).toHaveCount(0)
+    await expect(page.getByTestId('data-laboratory-notice')).toHaveCount(0)
+  })
+
+  test('a backup taken under a test history still carries the real date', async ({ page }) => {
+    /*
+     * QA-07-005. The records came from the owner store, correctly, and every
+     * date attached to them came from the laboratory: a backup taken in August
+     * with a February fixture loaded was stamped, filed and previewed as
+     * February. Correct contents under a date that would send him to the wrong
+     * file on the day it mattered.
+     */
+    await seedOwnerHistory(page)
+
+    await page.goto(`${APP}#/qa`)
+    await page.getByRole('button', { name: /Two ordinary weeks/ }).click()
+    await expect(page.locator('.qa-scenario--active')).toContainText('Two ordinary weeks')
+
+    await page.locator('.topbar').getByRole('button', { name: 'More' }).click()
+    await page.getByRole('link', { name: 'Exports, backup and restore' }).click()
+    await page.getByRole('button', { name: 'Take a backup' }).click()
+    await expect(page.getByTestId('backup-text')).toBeVisible()
+
+    const parsed = JSON.parse(await page.getByTestId('backup-text').inputValue()) as {
+      createdAt: string
+    }
+    expect(parsed.createdAt.slice(0, 10)).not.toBe('2026-02-15')
+    expect(Math.abs(Date.parse(parsed.createdAt) - Date.now())).toBeLessThan(5 * 60_000)
+
+    const filename = await page
+      .locator('.rows__row', { hasText: 'Filename' })
+      .first()
+      .locator('dd')
+      .innerText()
+
+    /*
+     * Checked against the fixture rather than against today's date. The
+     * filename is dated in the owner's own zone and the test runner's clock is
+     * UTC, so a comparison with `toISOString()` disagrees for a few hours every
+     * night — which is a defect in the assertion, not in the app, and one this
+     * test hit on its first run.
+     */
+    expect(filename, 'the filename carries the laboratory clock').not.toContain('2026-02')
+    const dated = /(\d{4}-\d{2}-\d{2})/.exec(filename)?.[1]
+    expect(dated).toBeDefined()
+    expect(Math.abs(Date.parse(`${dated}T12:00:00Z`) - Date.now())).toBeLessThan(36 * 3_600_000)
+  })
 })
 
 test.describe('when the store underneath is damaged — G-012', () => {

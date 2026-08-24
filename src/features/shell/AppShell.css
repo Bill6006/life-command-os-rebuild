@@ -9,10 +9,14 @@
  * a primary destination on the right (plan section 5). Low profile: a phone
  * screen is mostly for the decision, not for chrome.
  */
-.topbar {
+/* The whole header group sticks as one; its members do not stick apart. */
+.shell__top {
   position: sticky;
   top: 0;
   z-index: 20;
+}
+
+.topbar {
   display: flex;
   gap: var(--space-3);
   align-items: center;
@@ -98,9 +102,6 @@
  * showing stale code.
  */
 .build-notice {
-  position: sticky;
-  top: 0;
-  z-index: 19;
   display: flex;
   gap: var(--space-3);
   align-items: center;
@@ -140,9 +141,6 @@
  * not read as the same interruption.
  */
 .lab-notice {
-  position: sticky;
-  top: 0;
-  z-index: 19;
   display: flex;
   gap: var(--space-3);
   align-items: center;

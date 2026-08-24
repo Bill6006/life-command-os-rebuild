@@ -1,8 +1,8 @@
 import { countOf } from '../../domain/counts'
-import type { LifeDomainId } from '../../domain/domains'
+import { DOMAIN, type LifeDomainId } from '../../domain/domains'
 import { FULL_EXPORT, type DisplayPolicy } from '../../domain/privacy'
 import type { CanonicalRecord } from '../../domain/records'
-import { localDayIdAt, type Instant, type LocalDayId } from '../../domain/time'
+import { localDayIdAt, type Instant, type LocalDayId, type TimeZoneId } from '../../domain/time'
 import type { Decision } from '../../intelligence/engine'
 import type { InsightsReport } from '../../intelligence/insights'
 import type { Situation } from '../../intelligence/situation'
@@ -56,7 +56,15 @@ export interface ExportRequest {
   readonly timeline: TimelineData
   readonly source: HistorySource
   readonly app: ExportApp
-  readonly at: Instant
+  /**
+   * When this document is being composed, and in whose terms.
+   *
+   * Deliberately its own field rather than reused from the situation's clock.
+   * The situation's clock is the history's — a synthetic scenario sets it to
+   * whatever evening it is about — and "composed on" is a fact about now
+   * (QA-07-005).
+   */
+  readonly composedAt: { readonly at: Instant; readonly zone: TimeZoneId }
 }
 
 /** Which build composed the document. Reported, never guessed. */
@@ -96,6 +104,20 @@ function heading(text: string): string {
   return `## ${text}`
 }
 
+/**
+ * One sentence, ending in exactly one full stop.
+ *
+ * `noAction.headline` is already a sentence and already carries its own
+ * terminator, so appending one produced "Nothing to suggest just yet.." in a
+ * document that leaves the device (QA-07-008). Anything composed by joining a
+ * fragment the app wrote to a fragment this file wrote has the same hazard,
+ * and the answer is to make the join ask rather than assume.
+ */
+function sentence(text: string): string {
+  const trimmed = text.trim()
+  return /[.!?…]$/.test(trimmed) ? trimmed : `${trimmed}.`
+}
+
 function bullet(text: string): string {
   return `- ${text}`
 }
@@ -129,6 +151,101 @@ function domainsOf(records: readonly CanonicalRecord[]): readonly LifeDomainId[]
   const seen = new Set<LifeDomainId>()
   for (const record of records) for (const domain of record.domains) seen.add(domain)
   return [...seen].sort()
+}
+
+/**
+ * Which records the chosen sections actually draw on (QA-07-004).
+ *
+ * The header used to describe the whole stored history regardless of what was
+ * selected, which produced a document that said "No sections were chosen, so
+ * this contains nothing about the owner" directly under a row reporting
+ * nineteen entries across four life areas. Both sentences were composed from
+ * the same object and only one of them was about the document.
+ *
+ * The rule is deliberately coarse, because a precise provenance set would be a
+ * second thing to keep in step with the sections themselves:
+ *
+ * - Sections that **summarise the whole record** — coverage, what has been
+ *   observed, what has been worked out, diagnostics — put the whole record in
+ *   scope, because that is honestly what they are computed over.
+ * - The narrower sections contribute their own records.
+ * - Nothing at all is in scope when nothing is chosen.
+ *
+ * And then privacy is applied to the result rather than to each section
+ * separately (QA-07-003): unless the private section was deliberately chosen,
+ * no private record is in scope, so no private record can reach the range, the
+ * count, or the list of life areas. A document that says the private area is
+ * left out may not name it in the header two lines later.
+ */
+const SUMMARISES_EVERYTHING: readonly ExportSectionId[] = [
+  'coverage',
+  'learning',
+  'insights',
+  'diagnostics',
+]
+
+export function recordsInScope(
+  request: ExportRequest,
+  chosen: readonly ExportSectionId[],
+): readonly CanonicalRecord[] {
+  const all = request.situation.view.history.effective
+  const includesPrivate = chosen.includes('private')
+  const allowed = (record: CanonicalRecord): boolean =>
+    includesPrivate || record.privacy !== 'private'
+
+  if (chosen.length === 0) return []
+  if (chosen.some((id) => SUMMARISES_EVERYTHING.includes(id))) return all.filter(allowed)
+
+  const wanted = new Set<CanonicalRecord>()
+  for (const record of all) {
+    if (!allowed(record)) continue
+    if (
+      chosen.includes('now') &&
+      request.situation.considered.some((fact) => fact.sources.includes(record.id))
+    ) {
+      wanted.add(record)
+      continue
+    }
+    if (
+      chosen.includes('direction') &&
+      (record.kind === 'goal' || record.kind === 'commitment' || record.kind === 'decision')
+    ) {
+      wanted.add(record)
+      continue
+    }
+    if (
+      chosen.includes('corrections') &&
+      (record.kind === 'correction' || record.kind === 'belief-correction')
+    ) {
+      wanted.add(record)
+      continue
+    }
+    if (chosen.includes('private') && record.privacy === 'private') {
+      wanted.add(record)
+      continue
+    }
+    if (
+      chosen.includes('history') &&
+      request.timeline.days.some((day) => day.entries.some((entry) => entry.id === record.id))
+    ) {
+      wanted.add(record)
+    }
+  }
+  return [...wanted]
+}
+
+/**
+ * Whether a life area may be named in this document at all.
+ *
+ * Section 11 makes discretion a display decision, and this is the display
+ * decision one level up from a row: with the private section left out, the
+ * document withholds not only the private entries but the fact that there are
+ * any. Reporting "Private / Sexual Health — current, last heard 3 days ago"
+ * under a header saying the area is left out discloses participation, which is
+ * the part of a private record that is sensitive even when its detail is not.
+ */
+function mayName(domain: LifeDomainId, header: ExportHeader): boolean {
+  return header.privateIncluded || domain !== DOMAIN.privateHealth
 }
 
 function describeContext(situation: Situation, policy: DisplayPolicy): DescribeContext {
@@ -183,7 +300,7 @@ function nowSection(request: ExportRequest): readonly string[] {
 
   if (decision.explanation === undefined) {
     lines.push(
-      `The app is suggesting nothing right now: ${decision.noAction?.headline ?? 'no move stood out'}.`,
+      `The app is suggesting nothing right now: ${sentence(decision.noAction?.headline ?? 'no move stood out')}`,
       decision.noAction?.detail ?? '',
     )
   } else {
@@ -280,13 +397,18 @@ function directionSection(request: ExportRequest): readonly string[] {
   return lines
 }
 
-function coverageSection(request: ExportRequest): readonly string[] {
+function coverageSection(request: ExportRequest, header: ExportHeader): readonly string[] {
   const { situation } = request
   const lines = [
     'How well the app currently understands each area. This is about the record, not about the life: “out of date” means nothing has come in lately, and is a gap in what the app has been told.',
     '',
   ]
-  for (const domain of situation.coverage.domains) {
+  // The private area is named here only if it was deliberately included. Its
+  // status, freshness and evidence strength are all facts about whether there
+  // are private entries, which is the thing the exclusion exists to withhold.
+  for (const domain of situation.coverage.domains.filter((entry) =>
+    mayName(entry.domain, header),
+  )) {
     const heard =
       domain.daysSinceHeard === undefined
         ? 'nothing heard at all'
@@ -297,7 +419,13 @@ function coverageSection(request: ExportRequest): readonly string[] {
       ),
     )
   }
-  if (situation.coverage.domains.length === 0) lines.push(NOTHING_HERE)
+  if (lines.length === 2) lines.push(NOTHING_HERE)
+  if (!header.privateIncluded) {
+    lines.push(
+      '',
+      'One area is missing from the list above on purpose: Private / Sexual Health was left out of this document, so nothing is said about it here — including whether anything has been recorded in it.',
+    )
+  }
   return lines
 }
 
@@ -399,17 +527,48 @@ function insightsSection(request: ExportRequest): readonly string[] {
   return lines
 }
 
-function historySection(request: ExportRequest): readonly string[] {
+function historySection(request: ExportRequest, header: ExportHeader): readonly string[] {
   const { timeline } = request
   const lines: string[] = []
-  if (timeline.days.length === 0) return [NOTHING_HERE]
 
+  /*
+   * A withheld row is still a row (QA-07-003, one layer down).
+   *
+   * Timeline keeps the private entry and replaces its detail with a
+   * placeholder, and on **his own screen** that is right: dropping it would
+   * tell him his history is thinner than it is, and he already knows what is
+   * in it. In a document that leaves the device saying nothing from that area
+   * is below, a dated line reading "Noted: Private entry" says there is
+   * something there and when — which is the participation fact the exclusion
+   * exists to withhold, disclosed under a promise not to.
+   *
+   * So here, and only here, the row goes as well as the detail. Nothing is
+   * being hidden from the reader by doing it: the document states plainly
+   * that the area was left out, and that statement is what makes the silence
+   * readable instead of misleading.
+   */
+  const days = header.privateIncluded
+    ? timeline.days
+    : timeline.days
+        .map((day) => ({
+          ...day,
+          entries: day.entries.filter(
+            (entry) => entry.domain !== DOMAIN.privateHealth && !entry.withheld,
+          ),
+        }))
+        .filter((day) => day.entries.length > 0)
+
+  if (days.length === 0) return [NOTHING_HERE]
+
+  const shown = days.reduce((total, day) => total + day.entries.length, 0)
   lines.push(
-    `The most recent ${timeline.shown} of ${countOf(timeline.total, 'entry', 'entries')}, newest first. Detail from the private domain is withheld here whether or not the private section is included; the private section is where it appears in full.`,
+    header.privateIncluded
+      ? `The most recent ${countOf(shown, 'entry', 'entries')}, newest first. Detail from the private domain reads as a placeholder here; the private section below is where it appears in full.`
+      : `The most recent ${countOf(shown, 'entry', 'entries')}, newest first, with the private area left out as stated above.`,
     '',
   )
 
-  for (const day of timeline.days) {
+  for (const day of days) {
     lines.push(`**${day.label}** (${day.dayId})`)
     for (const entry of day.entries) {
       lines.push(bullet(`${entry.tag}: ${entry.text}`))
@@ -549,11 +708,21 @@ const BUILDERS: Record<
 
 export function composeExport(request: ExportRequest): ComposedExport {
   const chosen = orderSelection(request.sections)
-  const records = request.situation.view.history.effective
+  /*
+   * What this document draws on, not what the store happens to hold.
+   *
+   * See `recordsInScope`. Everything in the header below is a fact about the
+   * document the owner is about to hand somebody, so all of it is computed
+   * from the scope rather than from the whole history.
+   */
+  const records = recordsInScope(request, chosen)
   const range = dayRange(records)
 
   const header: ExportHeader = {
-    composedAt: localDayIdAt(request.at, request.situation.zone),
+    // The real moment this was composed, in the owner's real zone — a fact
+    // about the act of composing, not about the history being described, so a
+    // laboratory clock does not date it (QA-07-005's class).
+    composedAt: localDayIdAt(request.composedAt.at, request.composedAt.zone),
     source: request.source,
     app: request.app,
     firstDay: range.first,
@@ -566,6 +735,7 @@ export function composeExport(request: ExportRequest): ComposedExport {
   }
 
   const prompt = handoffPrompt({
+    source: request.source,
     diagnosticsIncluded: header.diagnosticsIncluded,
     privateIncluded: header.privateIncluded,
   })

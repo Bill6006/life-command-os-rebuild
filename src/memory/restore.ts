@@ -53,6 +53,18 @@ export type RestoreStage =
   | 'apply'
   /** Reading the store back to see what actually landed. */
   | 'verify'
+  /**
+   * Reading it again from a connection that did not exist when it was written.
+   *
+   * The last thing a backup actually promises, and the one stage where a
+   * failure must **not** be rolled back. By the time this runs the write has
+   * committed and been read back and fingerprinted, so the restored history is
+   * very probably on disk — QA proved it was — and undoing it would destroy a
+   * good restore on the strength of a database that would not reopen. So this
+   * stage reports an honest *unconfirmed* result instead: applied, verified
+   * once, not confirmed after reopening, and not undone.
+   */
+  | 'confirm'
 
 export interface RestoreVerification {
   readonly expected: string
@@ -74,6 +86,16 @@ export type RestoreOutcome =
       readonly stage: RestoreStage
       readonly problem: string
       readonly detail: string | undefined
+      /**
+       * True when the backup's contents were written and verified at least
+       * once before something later went wrong.
+       *
+       * The difference between "your history is untouched" and "the restore
+       * happened and the app cannot confirm it" is the whole reason this field
+       * exists. Section 29 forbids a false success; it equally forbids a
+       * failure report that talks somebody out of a restore that worked.
+       */
+      readonly applied: boolean
       /** True when the previous history was written back. */
       readonly rolledBack: boolean
       /**
@@ -90,6 +112,28 @@ function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
+/**
+ * Applied and verified once, and not confirmable afterwards.
+ *
+ * Deliberately **not** rolled back, and the reason is in the `confirm` stage's
+ * own note: the write committed and matched its fingerprint before this ran,
+ * so undoing it would trade a restore that probably worked for one that
+ * certainly did not happen. The owner is told exactly that, and told not to
+ * run it again until he has looked.
+ */
+export function unconfirmed(problem: string, detail: string | undefined): RestoreOutcome {
+  return {
+    ok: false,
+    stage: 'confirm',
+    problem,
+    detail,
+    applied: true,
+    rolledBack: false,
+    rollbackVerified: false,
+    rollbackDetail: undefined,
+  }
+}
+
 /** A restore that was declined before anything was read or written. */
 export function notAttempted(problem: string): RestoreOutcome {
   return {
@@ -97,6 +141,7 @@ export function notAttempted(problem: string): RestoreOutcome {
     stage: 'not-attempted',
     problem,
     detail: undefined,
+    applied: false,
     rolledBack: false,
     rollbackVerified: false,
     rollbackDetail: undefined,
@@ -159,6 +204,7 @@ export async function restoreInto(
       stage: 'hold-current',
       problem: 'Your current history could not be read, so nothing was changed.',
       detail: describe(caught),
+      applied: false,
       rolledBack: false,
       rollbackVerified: false,
       rollbackDetail: undefined,
@@ -191,6 +237,7 @@ export async function restoreInto(
     return {
       ok: false,
       stage: 'apply',
+      applied: false,
       problem: back.verified
         ? 'The restore could not be written, and your history is exactly as it was.'
         : 'The restore could not be written, and putting your history back did not complete.',
@@ -209,6 +256,7 @@ export async function restoreInto(
     return {
       ok: false,
       stage: 'verify',
+      applied: true,
       problem: back.verified
         ? 'The restore could not be checked, so it was undone and your history is as it was.'
         : 'The restore could not be checked, and putting your history back did not complete.',
@@ -225,6 +273,7 @@ export async function restoreInto(
     return {
       ok: false,
       stage: 'verify',
+      applied: true,
       problem: back.verified
         ? 'What was written is not what the backup holds, so it was undone and your history is as it was.'
         : 'What was written is not what the backup holds, and putting your history back did not complete.',

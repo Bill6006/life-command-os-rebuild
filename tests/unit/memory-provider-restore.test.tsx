@@ -77,7 +77,21 @@ const BACKED_UP = [
 /** A fixture clock in the past, as every scenario in the library has. */
 const FEBRUARY = 1_771_189_200_000 as Instant
 
-const failures: { ownerReplaceAll?: boolean } = {}
+/**
+ * What the test wants to go wrong.
+ *
+ * `reopen` is the interesting one and it has three settings, because the
+ * post-restore confirmation can fail three ways and they used to be one
+ * silent success (QA-07-007): the open throws, the open degrades to an
+ * in-memory store, or the reopened database holds something else.
+ */
+const failures: {
+  ownerReplaceAll?: boolean
+  reopen?: 'throw' | 'memory' | 'different' | 'read-throws'
+} = {}
+
+/** How many times a store has been opened, so a *re*open can be told apart. */
+let opens = 0
 const stores = new Map<string, CanonicalStore>()
 
 function fakeStore(which: 'owner' | 'laboratory', initial: readonly CanonicalRecord[]) {
@@ -123,6 +137,40 @@ vi.mock('../../src/memory/indexedDbStore', () => ({
   indexedDbAvailable: () => true,
   openIndexedDbStore: ({ name }: { name: string }) => {
     const key = name.endsWith(':laboratory') ? 'laboratory' : 'owner'
+    opens += 1
+    /*
+     * The first two opens are the provider mounting. Anything after that is
+     * the reopen a restore does to prove the bytes are on disk, which is the
+     * one this file needs to be able to break.
+     */
+    const reopening = opens > 2
+    if (reopening && key === 'owner') {
+      if (failures.reopen === 'throw') throw new Error('the database would not reopen')
+      if (failures.reopen === 'memory') {
+        // What `openStore` really does when IndexedDB refuses: it degrades,
+        // silently, to a store that is not his disk and reads as empty.
+        return Promise.reject(new Error('IndexedDB is not available'))
+      }
+      if (failures.reopen === 'different') {
+        return Promise.resolve(fakeStore('owner', [HIS_TODAY]))
+      }
+      if (failures.reopen === 'read-throws') {
+        /*
+         * The one shape that reaches the operation's outer `catch`.
+         *
+         * A reopen that *throws* never gets there — `openStore` catches
+         * everything and degrades to memory — so a reintroduction of the
+         * "report it as never attempted" bug escaped a test that only
+         * forced the open to fail. What reaches the catch is the reopened
+         * store refusing to be read.
+         */
+        const unreadable = fakeStore('owner', BACKED_UP)
+        return Promise.resolve({
+          ...unreadable,
+          snapshot: () => Promise.reject(new Error('the reopened database would not be read')),
+        })
+      }
+    }
     const found = stores.get(key)
     if (found === undefined) throw new Error(`no fake store for ${key}`)
     return Promise.resolve(found)
@@ -163,6 +211,7 @@ let seen: {
   canRestore: boolean
   storageCheck: { ok: boolean; detail: string } | undefined
   ownerSnapshot: () => Promise<StoreSnapshot>
+  ownerMoment: () => { at: Instant; zone: TimeZoneId }
   restoreOwner: (plan: RestorePlan) => Promise<RestoreOutcome>
   loadDocument: (json: string, label?: string) => Promise<void>
   travelTo: (at: Instant) => void
@@ -170,6 +219,8 @@ let seen: {
 
 beforeEach(() => {
   delete failures.ownerReplaceAll
+  delete failures.reopen
+  opens = 0
   stores.clear()
   stores.set('owner', fakeStore('owner', [HIS_TODAY]))
   stores.set('laboratory', fakeStore('laboratory', []))
@@ -199,6 +250,7 @@ async function mount() {
       canRestore: memory.canRestore,
       storageCheck: memory.storageCheck,
       ownerSnapshot: () => memory.ownerSnapshot(),
+      ownerMoment: () => memory.ownerMoment(),
       restoreOwner: (plan) => memory.restoreOwner(plan),
       loadDocument: (json, label) => memory.loadDocument(json, label),
       travelTo: (at) => memory.travelTo(at),
@@ -397,5 +449,179 @@ describe('a restore that fails', () => {
     ).toEqual([HIS_TODAY.id])
     expect(seen.source).toBe('owner')
     expect(seen.snapshot.records.map((r) => r.id)).toEqual([HIS_TODAY.id])
+  })
+})
+
+describe('QA-07-007 — the reopen is part of the result, not a footnote under it', () => {
+  /*
+   * The reported state: force the post-restore reopen to fail and the screen
+   * said, in green, that the store now held the backup exactly — with "what
+   * came back after reopening the database is not what was restored" printed
+   * underneath. Two contradictory claims about one operation, the confident
+   * one first, and no rollback.
+   *
+   * Three ways the confirmation can fail and all three are the same answer:
+   * applied, verified once, not confirmed, not undone. Undoing here would be
+   * worse than saying so — the write committed and matched its fingerprint
+   * before this ran, so a rollback would trade a restore that probably worked
+   * for one that certainly did not happen.
+   */
+
+  it('does not report success when the database will not reopen', async () => {
+    await mount()
+    const plan = planFor(BACKED_UP, await seen.ownerSnapshot())
+
+    failures.reopen = 'throw'
+    let outcome: RestoreOutcome | undefined
+    await act(async () => {
+      outcome = await seen.restoreOwner(plan)
+    })
+
+    expect(outcome?.ok, 'a restore it cannot confirm is not a success').toBe(false)
+    if (outcome === undefined || outcome.ok) return
+    expect(outcome.stage).toBe('confirm')
+    expect(outcome.applied, 'the write did happen and the owner must be told so').toBe(true)
+    expect(outcome.rolledBack).toBe(false)
+    expect(outcome.problem).toMatch(/nothing was undone/i)
+  })
+
+  it('does not report success when the reopened store is a memory fallback', async () => {
+    /*
+     * The exact shape QA reproduced. `openStore` degrades to memory rather than
+     * throwing, and an empty in-memory store fingerprints as an empty history —
+     * so without this the app compares the backup against nothing, calls it a
+     * mismatch, and still returns the success from two steps earlier.
+     */
+    await mount()
+    const plan = planFor(BACKED_UP, await seen.ownerSnapshot())
+
+    failures.reopen = 'memory'
+    let outcome: RestoreOutcome | undefined
+    await act(async () => {
+      outcome = await seen.restoreOwner(plan)
+    })
+
+    expect(outcome?.ok).toBe(false)
+    if (outcome === undefined || outcome.ok) return
+    expect(outcome.stage).toBe('confirm')
+    expect(outcome.applied).toBe(true)
+    expect(seen.storageCheck?.ok).toBe(false)
+  })
+
+  it('never publishes a fallback store’s empty history as his', async () => {
+    // The second half of the same defect: an empty memory store reaching the
+    // screen would read as "the restore lost everything".
+    await mount()
+    const plan = planFor(BACKED_UP, await seen.ownerSnapshot())
+
+    failures.reopen = 'memory'
+    await act(async () => {
+      await seen.restoreOwner(plan)
+    })
+
+    expect(seen.snapshot.records.map((record) => record.id)).toEqual(
+      BACKED_UP.map((record) => record.id),
+    )
+  })
+
+  it('does not report success when the reopened database holds something else', async () => {
+    await mount()
+    const plan = planFor(BACKED_UP, await seen.ownerSnapshot())
+
+    failures.reopen = 'different'
+    let outcome: RestoreOutcome | undefined
+    await act(async () => {
+      outcome = await seen.restoreOwner(plan)
+    })
+
+    expect(outcome?.ok).toBe(false)
+    if (outcome === undefined || outcome.ok) return
+    expect(outcome.stage).toBe('confirm')
+    expect(outcome.applied).toBe(true)
+    expect(outcome.detail).toContain(plan.expected)
+  })
+
+  it('never calls an applied restore "never attempted", even when the read throws', async () => {
+    /*
+     * The outer `catch` used to return `notAttempted`, which is the exact
+     * opposite of what happened: the backup had been written and verified,
+     * and the owner was told nothing had been.
+     */
+    await mount()
+    const plan = planFor(BACKED_UP, await seen.ownerSnapshot())
+
+    failures.reopen = 'read-throws'
+    let outcome: RestoreOutcome | undefined
+    await act(async () => {
+      outcome = await seen.restoreOwner(plan)
+    })
+
+    expect(outcome?.ok).toBe(false)
+    if (outcome === undefined || outcome.ok) return
+    expect(outcome.stage, 'an applied restore is not a restore that never started').toBe('confirm')
+    expect(outcome.applied).toBe(true)
+    // And the bytes really are there, which is why it may not be undone.
+    expect(
+      ownerStore()
+        .contents()
+        .map((record) => record.id),
+    ).toEqual(BACKED_UP.map((record) => record.id))
+  })
+
+  it('leaves the restored history on disk rather than undoing it', async () => {
+    // Applied and unconfirmable is not applied and wrong. The bytes stay.
+    await mount()
+    const plan = planFor(BACKED_UP, await seen.ownerSnapshot())
+
+    failures.reopen = 'throw'
+    await act(async () => {
+      await seen.restoreOwner(plan)
+    })
+
+    expect(
+      ownerStore()
+        .contents()
+        .map((record) => record.id),
+    ).toEqual(BACKED_UP.map((record) => record.id))
+  })
+
+  it('still reports plain success when the reopen works', async () => {
+    // The guard above is worth nothing if it fires on the ordinary path.
+    await mount()
+    const plan = planFor(BACKED_UP, await seen.ownerSnapshot())
+
+    let outcome: RestoreOutcome | undefined
+    await act(async () => {
+      outcome = await seen.restoreOwner(plan)
+    })
+
+    expect(outcome?.ok).toBe(true)
+    expect(seen.storageCheck?.ok).toBe(true)
+  })
+})
+
+describe('QA-07-005 — an artefact about his records carries his own clock', () => {
+  it('gives the real moment, not the one the screen is being read under', async () => {
+    /*
+     * A backup taken in August while a February fixture was loaded was stamped,
+     * filed and previewed as February. The records were correctly his; every
+     * date attached to them was the laboratory's.
+     */
+    await mount()
+    act(() => seen.travelTo(FEBRUARY))
+    expect(seen.now).toBe(FEBRUARY)
+
+    const moment = seen.ownerMoment()
+
+    expect(moment.at, 'the backup clock followed the laboratory').not.toBe(FEBRUARY)
+    expect(moment.at).toBeGreaterThan(FEBRUARY)
+  })
+
+  it('gives the real moment while a fixture is actually on screen', async () => {
+    await mount()
+    await loadFixture()
+    expect(seen.source).toBe('laboratory')
+
+    expect(seen.ownerMoment().at).toBeGreaterThan(FEBRUARY)
   })
 })

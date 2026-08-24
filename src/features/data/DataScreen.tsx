@@ -139,9 +139,11 @@ export function DataScreen() {
         phaseTitle: REBUILD_PHASE.title,
         phaseSummary: REBUILD_PHASE.summary,
       },
-      at: now,
+      // When this was composed is a fact about now, in his own zone — not
+      // about the history being described (QA-07-005's class).
+      composedAt: memory.ownerMoment(),
     })
-  }, [view, moment, selection, source, now])
+  }, [view, moment, selection, source, memory])
 
   const toggle = (id: ExportSectionId) => {
     setExportNotice(undefined)
@@ -168,6 +170,16 @@ export function DataScreen() {
     setBackupNotice(undefined)
     try {
       const snapshot: StoreSnapshot = await memory.ownerSnapshot()
+      /*
+       * His records, and his clock (QA-07-005).
+       *
+       * `now` and `zone` are what the screen is being read under, and a
+       * loaded scenario sets both. Taking the records from the owner store
+       * and the moment from the laboratory produced an August backup filed,
+       * stamped and previewed as February — correct contents under a date
+       * that would send him to the wrong file when it mattered.
+       */
+      const moment = memory.ownerMoment()
       const json = backupToJson(snapshot, {
         app: {
           commitSha: runningBuild.commitSha,
@@ -176,13 +188,13 @@ export function DataScreen() {
           target: runningBuild.target,
           buildTime: runningBuild.buildTime,
         },
-        createdAt: now,
+        createdAt: moment.at,
       })
       setBackup({
         json,
-        filename: backupFilename(now, zone, runningBuild.commitShort),
+        filename: backupFilename(moment.at, moment.zone, runningBuild.commitShort),
         counts: countsOf(snapshot),
-        takenAt: momentIn(new Date(now).toISOString(), zone),
+        takenAt: momentIn(new Date(moment.at).toISOString(), moment.zone),
       })
     } catch (error) {
       setBackupNotice({
@@ -190,7 +202,7 @@ export function DataScreen() {
         text: `Your history could not be read, so nothing was written — ${error instanceof Error ? error.message : String(error)}`,
       })
     }
-  }, [memory, now, zone])
+  }, [memory])
 
   const check = useCallback(
     async (text: string) => {
@@ -621,16 +633,31 @@ export function DataScreen() {
             </p>
           </div>
         ) : (
-          <div className="data-outcome" data-testid="restore-failed">
+          <div
+            className="data-outcome"
+            data-testid={outcome.stage === 'confirm' ? 'restore-unconfirmed' : 'restore-failed'}
+          >
             <p className="data-warning">{outcome.problem}</p>
             <p className="note">
-              {outcome.stage === 'not-attempted'
-                ? 'Nothing was read and nothing was written.'
-                : outcome.rolledBack && outcome.rollbackVerified
-                  ? 'Your history was put back and checked. Nothing has been lost, and you can try the same file again.'
-                  : outcome.rolledBack
-                    ? 'Your history was written back, but the check on it did not pass. Do not close this screen — take a backup now before doing anything else.'
-                    : 'Your history could not be written back. Do not close this screen — take a backup now before doing anything else.'}
+              {outcome.stage === 'confirm'
+                ? /*
+                   * Applied, verified once, and not confirmable afterwards.
+                   *
+                   * Deliberately its own sentence rather than either of the
+                   * two above. "Nothing was lost" would be a guess, and
+                   * "nothing was written" would be false — the backup is
+                   * very probably on disk and the app simply cannot see it.
+                   * Telling him to restore again would be the one instruction
+                   * that could actually cost him something.
+                   */
+                  'The backup was written and checked once, so it is probably there. What the app cannot do is read the database again to confirm it. Close the app and open it again to see what is actually stored — and do not restore anything else over this until you have.'
+                : outcome.stage === 'not-attempted'
+                  ? 'Nothing was read and nothing was written.'
+                  : outcome.rolledBack && outcome.rollbackVerified
+                    ? 'Your history was put back and checked. Nothing has been lost, and you can try the same file again.'
+                    : outcome.rolledBack
+                      ? 'Your history was written back, but the check on it did not pass. Do not close this screen — take a backup now before doing anything else.'
+                      : 'Your history could not be written back. Do not close this screen — take a backup now before doing anything else.'}
             </p>
             {outcome.detail === undefined ? null : (
               <details className="data-detail">

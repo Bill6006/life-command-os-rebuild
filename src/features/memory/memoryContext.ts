@@ -84,6 +84,21 @@ export interface MemoryContextValue {
   ownerSnapshot(): Promise<StoreSnapshot>
 
   /**
+   * The real moment, for an artefact about the owner's own records.
+   *
+   * Deliberately not `now` and `zone`, for the same reason `ownerSnapshot` is
+   * not `snapshot`: those are the clock the **screen** is being read under, and
+   * loading a synthetic scenario sets them to whatever evening that scenario is
+   * about. A backup taken in August while a February fixture was on screen was
+   * stamped, filed and previewed as February (QA-07-005) — the records were
+   * correctly his, and every date attached to them was the laboratory's.
+   *
+   * A backup's own moment is a fact about when it was taken, so it comes from
+   * the system clock, always, whatever is being displayed.
+   */
+  ownerMoment(): { readonly at: Instant; readonly zone: TimeZoneId }
+
+  /**
    * Whether a restore may run right now.
    *
    * False while a test history is on screen. A restore replaces the owner's
