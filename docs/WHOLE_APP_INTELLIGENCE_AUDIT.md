@@ -8,22 +8,33 @@
 all 18 synthetic scenarios, and time travel across five blocks, two week boundaries, five
 timezones and a DST change — before any implementation was read. Those first impressions are
 cited throughout as **S1-x**. The implementation, the canonical plan, the decision log, the
-defect ledger and the four independent QA handoffs were read afterwards. `npm run test` was
-run: **57 files, 1,199 tests, all passing.**
+defect ledger and the four independent QA handoffs were read afterwards, and adversarial
+histories were constructed through the QA document loader to provoke specific failures.
+`npm run test` was run: **57 files, 1,199 tests, all passing** — and every finding below is
+still present in that green build.
 
 **This document changes no product code.** It is an audit.
 
-**Two passes.** The first read the core decision path, the plan's product and intelligence
-sections, and a sample of the decision log and defect ledger. A second pass then read what the
-first had sampled — `docs/ARCHITECTURE_BOUNDARIES.md` in full, canonical plan sections 6, 7 and
-8, all 72 defect-ledger entries by title with the relevant dozen in full, the concept registry
-enumerated field by field, and the Phase 5–7 QA handoffs. That pass produced **four new findings
-(section J)** and **corrected five existing ones** — most importantly AUD-0011, whose first
-draft proposed giving emotional state a numeric scale, which is a design DEF-0056 explicitly
-rejected. Where a recommendation contradicts a standing decision it now says so and argues the
-case; where the first draft was simply wrong it has been rewritten rather than annotated. A
-short list of things investigated and found **not** to be defects is at the end of section 3,
-because a reviewer will otherwise go looking for them.
+**Four passes, and the later ones changed the earlier ones.** The first read the core decision
+path and the plan's product and intelligence sections, and sampled the rest. The second read what
+the first had sampled — `docs/ARCHITECTURE_BOUNDARIES.md` in full, canonical plan sections 6, 7
+and 8, all 72 defect-ledger entries by title with the relevant dozen in full, the concept registry
+enumerated field by field, the Phase 5–7 QA handoffs — and produced section **J**. The third read
+the modules the first had only grepped and swept every declared record-payload field against its
+consumers, producing section **K**. The fourth built adversarial histories through the QA document
+loader to provoke the failures section 4.10 asks for, producing section **L**.
+
+**Three corrections are worth naming, because a reviewer should know which way the audit moved.**
+AUD-0011's first draft proposed giving emotional state a numeric scale — a design DEF-0056
+explicitly rejected, in writing, with the reason ("one number standing in for all four is the
+wellness score the owner rules out"). It is now owner-blocked and raised as a question. Faith and
+the custody arrangement were counted as defects and are not; both are declared non-decisional and
+both moved to the do-not-change list. AUD-0010 and AUD-0021 were written assuming a goal horizon
+had to be added to the schema; AUD-0046 found it already there, plumbed end to end and read by
+nothing. Where a recommendation contradicts a standing decision it says so and argues the case.
+Where an earlier draft was simply wrong it has been rewritten rather than annotated. A list of
+things investigated and found **not** to be defects is at the end of section 3, because a reviewer
+will otherwise go looking for them.
 
 ---
 
@@ -46,12 +57,19 @@ differ. In every case the repository was trusted and the current implementation 
 | (unstated) | The guide's whole question vocabulary is **6 questions** (`src/intelligence/questions.ts:43`), capped at **3 per owner-local day** (`guide.ts:49`). |
 | (unstated) | The evaluator has **18** dimensions (`evaluate.ts:32`), not the 20 listed in plan section 19. |
 | (unstated) | The string `tonight` or `evening` appears **113 times across 29 source files**. |
+| (unstated) | **20** canonical record kinds. **Five of them are read, enforced or projected and constructed by nothing in the product** — `preference`, `constraint`, `correction`, `relationship-event`, `decision` (AUD-0050). |
+| (unstated) | `GoalRecord.targetWindow` exists, parses, serialises and reaches `ActiveGoal` — and no decision reads it and no surface writes it (AUD-0046). |
+| (unstated) | The physical-health domain has exactly one possible subject, `A_WALK`, hardcoded in the generator, with no route for the owner to add another (AUD-0045). |
 
 Two claims in the brief that turned out **not** to be defects, and are recorded here so they
 are not re-raised: the `follow-through` / `direct-result` / `observed-change` dimensions show
 `×0` in the trace not because they are disabled but because a dimension with nothing to say
 correctly carries no weight (D-048); and "Something else" is **not** treated as a plain
-refusal — `episode.wantedAnother` down-weights it (`learning.ts:861`).
+refusal — `episode.wantedAnother` down-weights it (`learning.ts:861`). One line in the row above
+also needs a correction to itself: the brief's fourth row said emotional, faith, private and
+direction are absent from `candidates.ts`, and section J narrows that — faith and the custody
+arrangement are **declared non-decisional** and are not defects; emotional state is declared
+material and unreachable, which is.
 
 ---
 
@@ -65,25 +83,33 @@ evidence panel is honest.
 
 It is also, at this moment, an **evening app with a whole-life vocabulary bolted on**.
 
-Three structural facts explain almost every finding below:
+Four structural facts explain almost every finding below.
 
 1. **The moment is a block, and the block is assumed to be the evening.** The situation
    summariser is block-aware; the limiter, the buttons, the question options, the learning
    labels, the evidence panel and the explanation templates are not. Below noon the app is
-   not merely mis-worded — it has *no recovery move in existence* and can tell a man who is
-   nine hours short of sleep to study.
-2. **Four of eleven domains are write-only.** `emotionalState`, `faithPractice`,
-   `privatePattern` and `custodyArrangement` are stored, shown on their pages, counted by
-   coverage — and read by nothing in `src/intelligence/`. They cannot influence a decision,
-   and because `mattersToOwner` reads importance off history they also cannot become stale,
-   so nothing ever asks about them either.
+   not merely mis-worded — it has *no recovery move in existence*, and it will name a
+   nine-hour sleep debt as what is in the way and then prescribe a study session.
+2. **The record layer is one generation ahead of the surfaces, and nothing fails when a
+   value has no consumer.** Five record kinds are read, enforced or projected and written by
+   nothing (AUD-0050) — including `preference`, whose veto path is complete, cites section 4.3
+   by name, and is unreachable. A goal's target window is parsed, serialised and carried to the
+   situation and read by no decision (AUD-0046). A whole relationship graph with a quality
+   signal on every interaction is built and read only by the QA laboratory (AUD-0047). Emotional
+   state is declared material to a decision and reaches none (AUD-0011, AUD-0041). Each of these
+   is invisible because everything around it is correct.
 3. **There is no strategy object.** Every recommendation is computed from scratch. Nothing
    connects yesterday to today, nothing sequences, nothing recognises that an approach is
    failing, and `arbitrate()` cannot see what it said an hour ago. Nine consecutive evenings
    with his daughter produce the same nine sentences.
+4. **The claim about his daughter is the least carefully made claim in the product.** Every
+   other statement carries a confidence, a sample count, a comparison group or a refusal to
+   speak below a threshold. The growth suggestion carries none, filters the failures out of its
+   own evidence, and then describes what is left as an unbroken run (AUD-0048, AUD-0049).
 
-The single most important consequence for the owner: **the app has the least to say at the
-moments that matter most** — the morning, and the three evenings a month his daughter is away.
+**Two consequences for the owner.** The app has the least to say at the moments that matter
+most — the morning, and the three evenings a month his daughter is away. And the one thing it
+says with complete confidence and no evidence behind it is a claim about his four-year-old.
 
 ---
 
@@ -1396,7 +1422,7 @@ pipeline stages.
 | **Title** | "A walk" is the only movement the app can ever suggest, and there is no route by which the owner could add another |
 | **Type** | **INTELLIGENCE** |
 | **Current behaviour** | `healthCandidates` hardcodes its subject: `subject: A_WALK, object: A_WALK` (`candidates.ts:503-505`). `A_WALK` is one of exactly four entities in `STANDING_ENTITIES` (`vocabulary.ts:32-63`) — sleep, winding down, a walk, easing off — which are "the few things the engine is allowed to name by itself" under D-021. The generator has no branch that reads an owner-supplied routine. The entity kind `'routine'` is declared in `domain/entities.ts:30` and appears **nowhere in `src/features/`**: no surface creates one, and the legacy mapper does not produce one. |
-| **Problem** | The entire Health & Physical Capacity domain has one verb and one object, so every owner, on every good day, forever, gets *"Move for 25 minutes: a walk."* If he swims, cycles, lifts, runs or plays five-a-side, the app cannot suggest it and he cannot tell it. This is section 64's failure in its purest available form — not two different people receiving the same wording by accident, but a domain that is structurally incapable of producing a second sentence. It also quietly caps `association.ts`: the observed relationship it can discover about movement is a relationship about walking, because walking is all there is. |
+| **Problem** | The entire Health & Physical Capacity domain has one verb and one object, so every owner, on every good day, forever, gets *"Move for 25 minutes: a walk."* If he swims, cycles, lifts, runs or plays five-a-side, the app cannot suggest it and he cannot tell it. This is section 64's failure in its purest available form — not two different people receiving the same wording by accident, but a domain that is structurally incapable of producing a second sentence. It also caps what the domain can represent: the standard adult recommendation is 150–300 minutes of moderate aerobic activity a week **and** muscle-strengthening on two or more days (Bull et al., WHO 2020 guidelines, *BJSM* 54:1451–1462), and a vocabulary consisting of one walk cannot express the second half of that at all. That is a general prior about adults, not a target to hold him to — section 22 forbids the score and section 4.4 forbids the failure framing — but a whole-life health model should at least be *able* to name the thing. It also quietly caps `association.ts`: the observed relationship it can discover about movement is a relationship about walking, because walking is all there is. |
 | **Owner-facing example** | Across all eighteen scenarios and every block, the health domain produced exactly one recommendation string: *"Move for 25 minutes: a walk."* (with "Get some movement in: a walk." as the no-duration variant in the template table). The Health & Recovery page offers "Current energy" and "Soreness or pain" to correct and nothing to name. |
 | **Evidence** | `src/intelligence/candidates.ts:494-515`; `src/intelligence/vocabulary.ts:32-63`; `src/domain/recommendation.ts:215-219` (both `move` templates); `grep -rn "'routine'" src/features/` → no matches. Live sweep of all eighteen scenarios. |
 | **Likely root cause** | D-021 is right and is not the problem: the engine must not invent the owner's life. The gap is the other half of that rule — the owner has no way to *supply* a routine, so the engine's placeholder became the permanent answer. Career, home, social, fatherhood and money all read the owner's own entities (`firstOfKind`); health alone does not. |
@@ -1550,6 +1576,48 @@ recorded there.
 | **Priority** | **P1** |
 | **Timing** | **BEFORE PHASE 9 (Phase 8.5)** for the veto — it belongs in the same change as AUD-0023, which is already rebuilding the decline flow, and Phase 9 will otherwise style an action row that is missing an action. Retraction can wait for **PHASE 10**. |
 
+### L.4 — AUD-0051
+
+| Field | Detail |
+| --- | --- |
+| **ID** | AUD-0051 |
+| **Title** | Recommendations name what to do and almost never when or where, which is the one wording change with a large evidence base behind it |
+| **Type** | **INTELLIGENCE** |
+| **Current behaviour** | Every action template in `recommendation.ts:150-226` names a verb, an object and sometimes a duration: *"Spend 15 minutes clearing the kitchen."* *"Move for 25 minutes: a walk."* *"Spend 10 minutes recalling subnetting before you reopen your notes."* *"Spend the next 30 minutes with Adaya, phone away."* Two carry a weak cue — "before you reopen your notes" and "the next" — and the rest carry none. Nothing names a moment, a trigger, or a place. |
+| **Problem** | This is the gap between a recommendation and a plan the owner will actually execute, and it is the best-evidenced single lever available to the product. Adding an if-then plan — specifying **when, where and how**, contingent on a cue — to an existing goal has a mean effect on goal attainment of *d* = 0.65 across 94 independent studies and over 8,000 participants, and the effect is larger when the plan genuinely has the contingent format rather than being a restatement of the intention (Gollwitzer & Sheeran, *Advances in Experimental Social Psychology* 38:69–119, 2006; the scope has since been re-examined over 642 tests). The app is producing the intention half and stopping. It is also the concrete version of the brief's "not concrete enough to start": *"Spend 15 minutes clearing the kitchen"* is unambiguous about the action and silent about the moment, and the moment is where the plan fails. |
+| **Owner-facing example** | Wednesday 19:00, Adaya present: *"Spend 15 minutes clearing the kitchen. / The kitchen table is buried again — and it costs you the start of every evening."* Compare what the same decision could say once the cue is available: *"When Adaya's in bed tonight, give the kitchen table fifteen minutes."* Same move, same evidence, same length. The app already holds the block, and once AUD-0004 lands it will hold bedtime. |
+| **Evidence** | `src/domain/recommendation.ts:150-226` (every action template); recommendation strings captured across all eighteen scenarios and five blocks in Stage 1 — none names a cue or a place beyond the two noted above. Research as cited. **Kept separate, per section 68:** the *d* = 0.65 is a population effect on goal attainment in general, not a claim about this owner; nothing in his record says if-then plans work for him, and the app must not imply it does. What the combination supports is a *wording* change with a good prior, whose effect on him is then observable through the same follow-through machinery the app already has. |
+| **Likely root cause** | The templates were written to satisfy section 3's "never lose the noun" and section 4.6's "a specific ordinary sentence", and both are about the *object*. Neither says anything about the moment, so the templates name what the engine was confident of — the verb, the subject, the size — and the engine had no cue to offer anyway (AUD-0004). |
+| **Recommended behaviour** | Give the action templates an optional cue clause, filled only when the engine actually has one, and never invented. Three sources of cue exist or are coming: the day block, which the engine already has; a `commitment-window` boundary once AUD-0004 lands ("when Adaya's in bed", "before the school run"); and a just-completed move, which is the strongest cue of all and is already recorded ("after your walk"). Where no cue is available the sentence stays exactly as it is today — an invented cue would be worse than none and would breach section 22's ban on invented precision. Because `follow-through` is already a learned dimension, the app can then observe whether cued recommendations get done more often *for him*, which is the honest way to hold a general finding. |
+| **Benefit** | The cheapest change in this audit with a large, replicated effect behind it: no new record, no new question, no new screen — a clause on sentences the app is already writing. It also gives `follow-through`, currently one of the weakest-evidenced dimensions, something real to learn from. |
+| **Implementation scope** | `recommendation.ts` (an optional cue in the template parts), `explain.ts`/`situation.ts` (supply a cue where one exists), and the copy guard extended so a cue can never be rendered from an unknown. |
+| **Risks** | An invented or wrong cue is worse than none — "when Adaya's in bed" on an evening she is not there would be a serious error, and it is exactly the kind of confident-sounding wrongness section A of this audit is full of. Gate the cue on a *known* fact, never a stale or inferred one. Second: cues can become nagging in a way a bare suggestion does not, because they name a moment the owner then walks past. Keep it to one clause and let a decline clear it. |
+| **Schema / data impact** | None. |
+| **Tests required** | Assert no cue is rendered from a stale or unknown fact. Assert the uncued sentence is byte-identical to today's when no cue exists. Assert a cue naming a person's presence cannot render when `childPresent` is false or unknown. Block-sweep the cue vocabulary alongside AUD-0002's guard. |
+| **Priority** | **P2** |
+| **Timing** | **PHASE 10** — the cue vocabulary is worth building once, after AUD-0004 supplies the obligations that make the good cues available |
+
+---
+
+# 3A. External research used, and how it is kept separate
+
+Section 68 requires that what the owner's record says, what research says in general, and what
+the system would infer from combining them are never blurred. Every citation below is used in
+this audit as a **prior about people in general** that justifies a design choice — never as a
+finding about this owner. Where a recommendation depends on one, its Evidence field says which
+of the three kinds of claim it is making.
+
+| Used in | Source | What it supports here | What it does **not** support |
+| --- | --- | --- | --- |
+| AUD-0003, AUD-0009 | Van Dongen, Maislin, Mullington & Dinges, *Sleep* 26(2):117–126 (2003) | Sleep debt accumulates across nights; recovery takes more than one night; self-rated sleepiness under-reports the impairment. Justifies a morning recovery move and a multi-night framing. | Any statement about how impaired *he* is, or how many nights *he* needs. |
+| AUD-0010, AUD-0046 | Cepeda, Pashler, Vul, Wixted & Rohrer, *Psychological Bulletin* 132(3):354–380 (2006); Cepeda, Vul, Rohrer, Wixted & Pashler, *Psychological Science* 19(11):1095–1102 (2008) | Spacing beats massing; the useful gap scales with the retention interval (roughly 10–20% of it). Justifies deriving a study interval from a goal horizon. | A claim that a particular interval will work for him, or that his recall has improved. |
+| AUD-0017, AUD-0048 | Stokes & Baer, *Journal of Applied Behavior Analysis* 10(2):349–367 (1977) | Generalisation across settings, people and time must be programmed and probed, not inferred from repetition in one context. Justifies requiring setting spread before calling a child's skill settled. | Anything about Adaya specifically, and no diagnostic framing of any kind. |
+| AUD-0018 | Zubler et al., *Pediatrics* 149(3):e2021052138 (2022) — CDC *Learn the Signs. Act Early.* | A milestone is what ≥75% of children do by an age; an evidence-informed normative frame exists and is public. Justifies saying what is age-typical. | Placing Adaya on a scale, a percentile, or a rank. The audit states this as a rule to be written into the decision log **before** any code. |
+| AUD-0016 | Lebowitz et al., *JAACAP* 59(3):362–372 (2020) | Parent-directed framing that targets the parent's own accommodating behaviour was non-inferior to individual CBT for child anxiety. Justifies putting a growth move on the father rather than as a demand on the child. | Any suggestion that Adaya is anxious, or that this is a treatment. |
+| AUD-0031 | Standard decision analysis — expected value of information / expected opportunity loss | The value of a question is the expected reduction in loss, not the fraction of answers that switch the decision. Justifies the `consequential` amendment to D-036. | A claim that the app can compute a full EVPI; it cannot, and the recommendation is a narrow floor rather than the full calculation. |
+| AUD-0045 | Bull et al. (WHO 2020 guidelines), *British Journal of Sports Medicine* 54:1451–1462 | Adults need 150–300 min/week of moderate aerobic activity **and** muscle-strengthening on two or more days. Justifies the observation that a movement vocabulary of one walk cannot represent half the standard recommendation. | A target to hold him to. Section 22 forbids the score, and section 4.4 forbids the failure framing. |
+| AUD-0051 | Gollwitzer & Sheeran, *Advances in Experimental Social Psychology* 38:69–119 (2006) | Adding an if-then plan specifying when, where and how has *d* = 0.65 on goal attainment across 94 studies. Justifies a cue clause on recommendation templates. | That cued recommendations work for him — which the app's own `follow-through` dimension can go on to observe. |
+
 ---
 
 # 3. Totals
@@ -1560,10 +1628,10 @@ recorded there.
 | --- | --- | --- |
 | **P0** | **9** | AUD-0001, 0002, 0003, 0014, 0015 *(part b)*, 0028, 0031, 0036, 0048 |
 | **P1** | **22** | AUD-0005, 0008, 0011 *(parts a, b)*, 0015 *(part a)*, 0016, 0017, 0019, 0020, 0023, 0025, 0026, 0027, 0032, 0033, 0034, 0035, 0037, 0040, 0041, 0042, 0049, 0050 |
-| **P2** | **17** | AUD-0006, 0007, 0009, 0010, 0018, 0021, 0022, 0024, 0029, 0030 *(part a)*, 0038, 0039, 0043, 0044, 0045, 0046, 0047 |
+| **P2** | **18** | AUD-0006, 0007, 0009, 0010, 0018, 0021, 0022, 0024, 0029, 0030 *(part a)*, 0038, 0039, 0043, 0044, 0045, 0046, 0047, 0051 |
 | **P3** | **3** | AUD-0012, 0013, 0030 *(part b)* |
 | **Owner-blocked** | **1** | AUD-0011 *(part c)* — and AUD-0018, which is P2 and also blocked |
-| **Total** | **50** | |
+| **Total** | **51** | |
 
 AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in the total.
 
@@ -1572,7 +1640,7 @@ AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in
 | Type | Count | IDs |
 | --- | --- | --- |
 | **BUG** | **8** | 0001, 0002, 0003, 0005, 0014, 0015, 0032, 0048 |
-| **INTELLIGENCE** | **19** | 0004, 0007, 0009, 0010, 0012, 0013, 0016, 0017, 0018, 0019, 0021, 0024, 0026, 0028, 0029, 0031, 0042, 0045, 0049 |
+| **INTELLIGENCE** | **20** | 0004, 0007, 0009, 0010, 0012, 0013, 0016, 0017, 0018, 0019, 0021, 0024, 0026, 0028, 0029, 0031, 0042, 0045, 0049, 0051 |
 | **ARCHITECTURE** | **11** | 0006, 0011, 0020, 0022, 0025, 0035, 0039, 0040, 0041, 0046, 0047 |
 | **PRODUCT / UX** | **12** | 0008, 0023, 0027, 0030, 0033, 0034, 0036, 0037, 0038, 0043, 0044, 0050 |
 
@@ -1582,11 +1650,11 @@ AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in
 | --- | --- |
 | BEFORE PHASE 9 (Phase 8.5) | 22 |
 | PHASE 9 | 3 |
-| PHASE 10 | 26 |
+| PHASE 10 | 28 |
 | PHASE 11 | 2 |
 | POST-RELEASE-OPTIONAL | 1 |
 
-*(Counts exceed 50 because AUD-0011, AUD-0015, AUD-0025, AUD-0030 and AUD-0038 are split
+*(Counts exceed 51 because AUD-0011, AUD-0015, AUD-0025, AUD-0030 and AUD-0038 are split
 across phases.)*
 
 ## Findings that turned out not to be defects
@@ -1612,13 +1680,18 @@ Phase 9 is "visual coherence, motion and mobile refinement", and its review list
 this section: Phase 9 will take the app's sentences and make them look and feel settled, and
 the owner will sign off on the result on his phone.
 
-**A sentence that is factually wrong does not become right by being well set.** Nineteen
-items below are wrong facts, wrong reasons, or broken loops wearing the clothes of copy. If
-Phase 9 runs first, they get typeset, approved on a phone, and become the thing the design
-now depends on — and re-opening them afterwards means re-opening a gate the owner has already
-passed. Every one of these is a change to *what the app says is true*, not to how it looks.
+**A sentence that is factually wrong does not become right by being well set.** The
+twenty-two items below are wrong facts, wrong reasons, or broken loops wearing the clothes of
+copy. If Phase 9 runs first, they get typeset, approved on a phone, and become the thing the
+design now depends on — and re-opening them afterwards means re-opening a gate the owner has
+already passed. Every one of these is a change to *what the app says is true*, not to how it
+looks.
 
-**The nineteen, grouped by why they cannot wait.**
+**If only one of the six groups below gets done, do the daughter group.** It contains the only
+finding in this audit where the app states something false about a person, and the person is a
+four-year-old.
+
+**The twenty-two, grouped by why they cannot wait.**
 
 *The app is wrong about the time (Phase 9 would polish the wrong noun into place).*
 - **AUD-0001** — "Only about 10 minutes left tonight" at 08:40.
