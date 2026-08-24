@@ -463,3 +463,296 @@ handoff addressed to the SAME Codex QA conversation, including model, reasoning
 level, conversation instruction, exact report path, and the short D-092 launcher.
 Do not make the owner ask for the retest prompt.
 ```
+
+---
+
+# Round 1 repair — retest handoff
+
+Written by the builder conversation, appended to this report rather than
+replacing it, so the round-1 findings and the response to them stay side by
+side. QA updates this same file on retest.
+
+## What was repaired
+
+Both blockers, under canonical plan section 42, as **whole defect classes**.
+Both turned out to be wider than reported, and the repairs are correspondingly
+wider than the reproductions.
+
+### QA-08-001 → DEF-0069, and D-106
+
+The report was right about the symptom and the diagnosis. The record layer was
+correct throughout; the presentation layer never asked.
+
+The class is wider than legacy import. `describeRecord` returned a kind, a
+sentence and a withheld flag, and every surface rendered those three — so **no
+entry on any list surface said where it came from**. A device reading and a
+derived one were silent in exactly the same way. D-014 asks for all of them, so
+the repair covers all of them rather than only the origin that was reported.
+
+`src/features/history/origin.ts` is one function with one vocabulary.
+`DescribedRecord` carries it, and every surface renders it:
+
+| Surface | Carries it as |
+| --- | --- |
+| Timeline | `TimelineEntry.origin`, a badge after the sentence |
+| A domain page's "Recently" | `RecentChange.origin` |
+| A domain page's beliefs | `ConceptReading.origin`, resolved from the records under the reading |
+| A domain page's goals | `DomainGoal.origin` |
+| The evidence behind a figure | resolved at the surface from `EvidenceLine.record` |
+| The export | `· Imported` on the line, in Recent record, commitments, corrections and the private section |
+
+Three things worth checking, because each is a decision rather than a
+consequence:
+
+- **His own entries carry nothing.** A build that marked every row would
+  satisfy a naive assertion and would teach him to stop reading the badge.
+- **A mixed basis says nothing.** A belief resting on one imported reading and
+  one of his own is not an imported belief; the entries underneath say it
+  individually.
+- **The origin survives a withheld detail.** Where an entry came from is not
+  the private detail. Withholding both would make a private imported row read
+  as one he wrote.
+
+The archive row's tag moved from `Imported` to `Kept`, because the origin now
+says imported and what is distinctive about an archived row is that nothing was
+made of it.
+
+The knowledge state was **not** changed. An imported reading still resolves as
+`inferred`, because this app did not watch it happen and the reliability
+discount is section 30's second fence. The report's point stands and is
+addressed a different way: `inferred` reads as the app having concluded
+something, so the origin is now stated beside it rather than instead of it.
+
+### QA-08-002 → DEF-0070, and D-107
+
+Fixed at source and at the comparison, because fixing the reported field alone
+would have left the class.
+
+`legacyFormatLabel` now returns the format and takes no argument — there is
+nothing about a particular file that belongs in it, and a parameter kept for
+future use would be somewhere the same defect could grow back.
+
+The comparison asks what the **old file** says, with everything this build
+stamped on the row taken back off. Three exclusions, each named beside its
+reason in `legacyIdentity`:
+
+- `provenance.writtenBy` — which mapping rules read it;
+- `legacyFormat` — which file it arrived in;
+- `zone` — which clock this device was set to.
+
+Two further members of the class were live and unreported, and both are now
+covered: revising a mapping rule would have made every previously imported row
+a conflict, and importing the same file after travelling would have done the
+same.
+
+**A revised rule is now its own count.** Not a conflict, which blames his old
+history for a change in this app; not silence, which hides a real difference in
+what the app believes his history means. The panel says so in its own words and
+`ImportPlan.reinterpreted` carries it.
+
+### Both non-blocking findings
+
+- **QA-08-N1** — the heading is now "What is in that file", and what this run
+  would do is one line at the bottom saying it on its own. Reading the deployed
+  repair then found two more of the same kind, both introduced by that change:
+  one of the counts under the new heading was still counting what the run would
+  write rather than what the file holds, and the closing line said "everything
+  in that file is already here" even when an entry had come back saying
+  something different. Both fixed, both now held by a browser test.
+- **QA-08-N2** — said once. The browser test and the Android gate assert the
+  **count** rather than one exact phrasing, because the old assertions named
+  the duplicate and would have held it in place.
+
+### The false greens
+
+Both named in the report are addressed:
+
+- "every imported record says it was imported, **wherever it surfaces**" is
+  retitled to what it proves — it asserts storage and renders nothing. The
+  claim it used to make is now held by `tests/synthetic/imported-origin.test.ts`.
+- "adds the history, reads it back, and shows it without a reload" is joined by
+  "what came across is recognisably not what the owner wrote", which asserts
+  both halves on the rendered Timeline.
+
+The third and fourth — the contract test and the gate both re-reading the same
+encrypted string — are addressed by the five new conflict tests and by two new
+Android-gate checks that build a genuinely later backup.
+
+## Verification of the repaired checkpoint
+
+| Gate | Result |
+| --- | --- |
+| Privacy scan | Clean, 207 tracked files |
+| Format, lint, typecheck | Pass, 0 warnings, 0 errors |
+| Unit / contract / synthetic / adversarial | See the table in `PHASE_STATUS.md` |
+| Browser (Playwright) | 3 viewports, 360 / 430 / 1280px |
+| `npm run verify` from a clean checkout | Pass |
+| Builder's Android-style gate on the deployed build | **Clean, 52 checks** — up from 44, including a genuinely later backup both unchanged and with one row edited, and the origin marking on Timeline |
+| Reintroduction | Whole and per surface; see `PHASE_STATUS.md` |
+
+**One thing to expect, so it is not reported as a defect.** `data.spec.ts`
+intermittently fails one test per full browser run with
+`page.goto: net::ERR_ABORTED`, on `mobile-small`, on a different test each time.
+It is the transient `playwright.config.ts` already documents in its own
+comments, it predates this phase, and the spec passes clean when run alone.
+
+## What has not changed
+
+Every scenario round 1 passed, every privacy rule, the architecture wall, the
+explicit deferrals, exact idempotency, atomic verification and rollback, and
+the raw-archive inertness result. The four open questions for the owner are
+unchanged and are listed in `PHASE_STATUS.md`.
+
+## Round 1 repair — next action
+
+- **System:** **Codex** — independent QA, the **same** conversation that ran
+  round 1
+- **Model:** the model round 1 ran on, unchanged
+- **Reasoning level:** **High**
+- **Conversation:** **SAME** — section 43's defect loop. A retest after a
+  builder repair goes to the conversation that found the defects, because it
+  already holds the reproductions and the reasoning behind them; a fresh
+  conversation would have to rediscover both and would be judging the repair
+  without having seen what it repaired.
+- **Why this model and level:** the same work as round 1 at the same depth.
+  Both repairs are wider than the reproductions, so the retest is
+  claim-to-evidence auditing again rather than a mechanical recheck.
+- **Report path:** `docs/qa/PHASE_08_QA_HANDOFF.md` — this file, updated in
+  place.
+
+## COPY/PASTE PROMPT
+
+```text
+Retest Phase 8 of the Life Command OS rebuild. You ran round 1 and returned
+FAIL; this is the repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Repaired product checkpoint: d072012
+Deployed Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
+
+THE CHECKPOINT
+
+Read the deployed SHA from preview/build-info.json. It is whatever was pushed
+last and is NOT expected to equal d072012 — the push of this handoff moves it
+(D-097). To check they are bundle-equivalent:
+
+  node scripts/checkpoint-equivalence.mjs d072012 --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Your round-1 note about the local certificate-chain error still applies; the
+`--ref <full-sha>` fallback is supported. If it reports the deployed build is
+OLDER than the checkpoint, the deploy has not landed — wait and read again.
+
+WHAT TO DO
+
+Read docs/qa/PHASE_08_QA_HANDOFF.md in full, including the "Round 1 repair"
+section appended below your report. It states what was repaired, what class each
+repair was widened to, and which of your findings were addressed how.
+
+Retest the two blockers and the two non-blocking findings against the repaired
+checkpoint, and update this same report file in place.
+
+QA-08-001 — the acceptance you set: mapped imports remain recognisably imported
+on Timeline, Life, domain pages, Insights and export, while raw archive records
+remain uninterpreted and inert. Worth pressing on, because the repair claims
+more than you asked for:
+
+- his own entries must carry NOTHING. A build that marks every row would pass a
+  naive check and would be its own defect;
+- a belief resting on a mix of his own and imported evidence must carry no
+  badge, while the entries underneath still say it individually;
+- a private row must keep its origin while its detail stays withheld;
+- a device or derived reading must be marked too — the class was widened to
+  every origin that is not the owner, and that claim should be tested rather
+  than believed;
+- an archive row's tag changed from "Imported" to "Kept". Check that reads
+  correctly beside the new origin marker.
+
+QA-08-002 — the acceptance you set: a later backup of unchanged rows treats them
+as already present; one changed old row produces exactly one conflict; exact
+re-import remains a no-op. Also worth pressing on:
+
+- the class was widened to the mapping rules version and the device timezone.
+  Importing the same file with the clock set elsewhere should change nothing;
+- a revised rules version is now reported as a re-reading in its own words,
+  neither a conflict nor silence. Judge whether that sentence is honest and
+  whether it is the right thing to tell him;
+- `legacyFormatLabel` now takes no argument. Confirm nothing else carries a
+  per-file value into a stored row.
+
+QA-08-N1 — the heading is now "What is in that file" and what the run would do
+is one line at the bottom. Reading the deployed repair then found two more of
+the same shape, both introduced by that change and both since fixed: a count
+under the new heading was still counting what the run would write, and the
+closing line claimed everything in the file was already here even when an entry
+had come back saying something different. Both are worth re-reading rather than
+taking on trust.
+
+QA-08-N2 — said once now. Asserted as a count rather than as one phrasing.
+
+ALSO WORTH CHECKING
+
+Everything you passed in round 1 should still pass, in particular: raw archive
+inertness, atomic apply with verification through a reopened database, rollback,
+exact idempotency, privacy mapping including absent-privacy failing closed, the
+architecture wall, and the laboratory/owner store separation.
+
+The four false greens you named are addressed. Two tests were retitled or
+joined; the contract test and the Android gate that both re-read the same
+encrypted string are joined by five new conflict tests and two new gate checks
+that build a genuinely later backup. Judge whether the new coverage actually
+holds the claims its titles make — that was the substance of one of your
+findings and it applies to the repair as much as to what it repaired.
+
+ONE THING TO EXPECT, SO IT IS NOT REPORTED AS A DEFECT
+
+A full local browser run intermittently fails one or two tests with
+`page.goto: net::ERR_ABORTED`, on a different test each time, always at
+navigation. It is the transient playwright.config.ts documents in its own
+comments; it predates this phase; CI retries and is green; and each spec passes
+clean when run alone. It is reported here rather than fixed, because changing
+the retry policy during a repair round is a change to the test harness and
+would be the wrong thing to slip in unannounced.
+
+WHAT YOU MAY AND MAY NOT DO
+
+Do not repair application or product code. You may create or update only this
+report and narrowly scoped QA evidence artifacts.
+
+Do not modify anything at D:\Code\AI Coding Agents\Codax\Life App. Owner
+decision D-001 protects it absolutely.
+
+THE REPORT
+
+Update docs/qa/PHASE_08_QA_HANDOFF.md in place, to the same contract as round 1.
+State each round-1 finding as confirmed-repaired or still-failing with an exact
+reproduction, and anything new separately.
+
+End with D-082 and D-092: the complete ready-to-paste next prompt written into
+this file, and a short standalone launcher naming the recommended Claude model,
+the intelligence level, the conversation instruction and the exact file to read.
+On PASS the prompt goes to the CURRENT builder conversation for the formal GREEN
+closeout; on FAIL it goes there for another repair round. Do not wait to be
+asked for it.
+```
+
+---
+
+**Model:** Codex, the model round 1 ran on
+**Reasoning level:** High
+**Conversation:** SAME Codex QA conversation
+
+```text
+Retest the Life Command OS rebuild's Phase 8 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_08_QA_HANDOFF.md in full and execute the retest handoff
+exactly as written.
+
+Do not ask me to paste the file contents.
+```
+
+<!-- LCO_COMPLETE -->
