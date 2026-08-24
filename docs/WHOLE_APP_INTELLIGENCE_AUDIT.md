@@ -13,6 +13,18 @@ run: **57 files, 1,199 tests, all passing.**
 
 **This document changes no product code.** It is an audit.
 
+**Two passes.** The first read the core decision path, the plan's product and intelligence
+sections, and a sample of the decision log and defect ledger. A second pass then read what the
+first had sampled — `docs/ARCHITECTURE_BOUNDARIES.md` in full, canonical plan sections 6, 7 and
+8, all 72 defect-ledger entries by title with the relevant dozen in full, the concept registry
+enumerated field by field, and the Phase 5–7 QA handoffs. That pass produced **four new findings
+(section J)** and **corrected five existing ones** — most importantly AUD-0011, whose first
+draft proposed giving emotional state a numeric scale, which is a design DEF-0056 explicitly
+rejected. Where a recommendation contradicts a standing decision it now says so and argues the
+case; where the first draft was simply wrong it has been rewritten rather than annotated. A
+short list of things investigated and found **not** to be defects is at the end of section 3,
+because a reviewer will otherwise go looking for them.
+
 ---
 
 ## 0. Where the repository differs from the audit brief's inventory
@@ -406,21 +418,21 @@ touch daily moves through `goal-fit` matching a domain (AUD-0021).
 | Field | Detail |
 | --- | --- |
 | **ID** | AUD-0011 |
-| **Title** | Emotional health, faith, private health and the custody arrangement are write-only: stored, displayed, and unreadable by the brain |
+| **Title** | Emotional health and private health are declared to matter and cannot reach a decision |
 | **Type** | **ARCHITECTURE** |
-| **Current behaviour** | `CONCEPT.emotionalState`, `CONCEPT.faithPractice`, `CONCEPT.privatePattern` and `CONCEPT.custodyArrangement` have **zero references** in `src/intelligence/`. They are written by scenarios and by the owner, resolved into beliefs, shown on their domain pages, listed in "What the system believes", and counted by coverage. No generator reads them, `assembleSituation` does not carry them, no evaluation dimension can see them, and no explanation can cite them. |
-| **Problem** | Section 4.1 says all core life domains remain part of the intelligence model and "a domain is **not** removed from the model because a switch is off". Four of them are removed — not by a switch, by the absence of a wire. Section 11 is explicit that private evidence "may still influence whole-life reasoning when relevant" and gives two worked examples; neither is reachable. And the loop closes viciously: `mattersToOwner` (`coverage.ts:382`) reads importance off the owner's own entities, goals, directions and recorded actions — so a domain he has never entered anything about never "matters", never goes stale, never raises a coverage limiter, never produces a coverage candidate, and has no guide question. **The four domains with no generator are also the four with no route in.** |
-| **Owner-facing example** | The Emotional Health page reads *"Nothing has ever come in about emotional health. / Current emotional state — Not known yet — Add this."* If he adds it, nothing changes anywhere. On the Life screen those four sit under "NOTHING HERE YET — You have not mentioned these, and nothing is asking you to", which is true, and true forever. |
-| **Evidence** | `grep -rn "CONCEPT.emotionalState\|CONCEPT.faithPractice\|CONCEPT.privatePattern\|CONCEPT.custodyArrangement" src/` → hits only in `synthetic/scenarios.ts` and `legacy/mapping.ts`. `situation.ts:575-596`; `candidates.ts:632-644`; `coverage.ts:382-400`. Stage 1 notes **S1-O**, and the QA "Facts considered: 9" list against "What the system believes: 15". |
-| **Likely root cause** | The situation assembler is a hand-written list of nine reads. Adding a domain to the registry, giving it a page and giving it a coverage entry are all cheap; giving it a *read* and a *generator* is not, so the cheap half was done for eleven domains and the expensive half for seven. |
-| **Recommended behaviour** | Three parts, and the first is the one that matters. **(a) Carry all owner concepts into the situation.** `assembleSituation` should read the registry rather than a hard-coded list, so a concept cannot be added without being visible to the brain, and `Facts considered` becomes the true set. **(b) Give emotional state and private pattern *influence without a generator*.** Neither needs its own move: emotional state belongs in `capacity` (a low emotional state should make effortful moves fit worse and `protect` matter more), and private pattern belongs exactly where section 11 puts it — as a contributor to a bedtime/phone-boundary recommendation and to preferring connection over willpower language. That is influence without ever naming it on Now, which is also section 11's discretion rule. **(c) Give faith and direction a generator each**, or state in the decision log that they are inspect-and-record domains by design and change the Life copy so the owner is not led to expect otherwise. Silence is the wrong answer; an *honest* answer is acceptable. |
-| **Benefit** | The product's central claim — one brain, whole life — becomes true. It also removes the cold-start trap: once the concepts are read, `uncertainty` can penalise not knowing them, which gives the guide a reason to ask, which is the route in. |
-| **Implementation scope** | `situation.ts` (registry-driven reads — this is the load-bearing change), `evaluate.ts` (`capacity-fit` and `protection` read emotional state), `candidates.ts` (sleep generator reads private pattern per section 11), `coverage.ts` (`mattersToOwner` given a floor for domains the owner has declared he cares about), `explain.ts` (must **not** cite private evidence on Now — a discretion guard). |
-| **Risks** | The largest risk in this audit. Wiring private evidence into decisions without a discretion guard would put explicit detail on the Now screen, which section 11 forbids and which would be a serious breach of trust. The guard must be structural — a privacy class that `explain.ts` cannot cite — not a convention. Second risk: making four dormant domains live changes every scenario's output and could make the app noisier; introduce them as *influence only* (no new candidates) first, and measure. |
+| **Current behaviour** | `CONCEPT.emotionalState`, `CONCEPT.faithPractice`, `CONCEPT.privatePattern` and `CONCEPT.custodyArrangement` have **zero references** in `src/intelligence/`. They are written by the owner, resolved into beliefs, shown on their domain pages, listed in "What the system believes", and counted by coverage. No generator reads them, `assembleSituation` does not carry them, no dimension sees them, no explanation can cite them. **The registry's own `ask.materialToDecision` flag disagrees with itself about which of these is a defect:** `emotionalState` is **`materialToDecision: true`**; `privatePattern`, `faithPractice` and `custodyArrangement` are all **`false`**. |
+| **Problem** | Reading the registry rather than the domain list narrows this correctly, and the narrowing matters. **`faithPractice` and `custodyArrangement` are declared non-decisional and are not defects** — faith is inspect-and-record by design, and custody's actual job (never re-asking a settled arrangement, section 9) is done by record *durability* and by `childPresent`, not by the concept being read. **`emotionalState` is the real defect**: the registry says it is material to a decision and asks for it when stale, and there is no reader, no dimension and no guide question. A declaration that nothing honours is exactly DEF-0056's class. **`privatePattern` is a conflict between the plan and the registry**: section 11 says private evidence "may still influence whole-life reasoning when relevant" and gives two worked examples; the registry says `materialToDecision: false`. One of the two is wrong and neither says which. Underneath all of it, `mattersToOwner` (`coverage.ts:382`) reads importance off the owner's own entities, goals, directions and actions, so a domain he has never entered anything about never matters, never goes stale, and never gets asked about — a cold-start trap on precisely these concepts. |
+| **Owner-facing example** | The Emotional Health page reads *"Nothing has ever come in about emotional health. / Current emotional state — Not known yet — Add this."* If he adds it, nothing changes anywhere. On the Life screen it sits under "NOTHING HERE YET — You have not mentioned these, and nothing is asking you to", which is true, and true forever. |
+| **Evidence** | `grep -rn "CONCEPT.emotionalState\|CONCEPT.faithPractice\|CONCEPT.privatePattern\|CONCEPT.custodyArrangement" src/` → hits only in `synthetic/scenarios.ts` and `legacy/mapping.ts`. `src/domain/concepts.ts` (`ask` flags, enumerated); `situation.ts:575-596`; `candidates.ts:632-644`; `coverage.ts:382-400`. Stage 1 note **S1-O**, and the QA "Facts considered: 9" against "What the system believes: 15". |
+| **Likely root cause** | The situation assembler is a hand-written list of nine reads (AUD-0040). Adding a domain to the registry, giving it a page and giving it a coverage entry are all registry-driven and cheap; giving it a *read* is a code change, so the cheap half tracked eleven domains and the expensive half stopped at seven. |
+| **Recommended behaviour** | Narrower than it first appears, and deliberately so. **(a) Carry all owner concepts into the situation** — `assembleSituation` reads the registry rather than a hard-coded list, so `Facts considered` becomes the true set and a concept cannot be added without being visible to the brain. This is AUD-0040 and it is the only part that is unambiguously a fix. **(b) `privatePattern`: resolve the conflict, then wire or re-declare.** If section 11 wins, wire it exactly where section 11 puts it — as a contributor to a bedtime/phone-boundary recommendation and to preferring connection over willpower language, never named on Now. If the registry wins, amend section 11. **Do not wire it while the two documents disagree.** **(c) `emotionalState`: this is blocked on an owner decision and must not be wired first.** **DEF-0056 explicitly rejected inventing a scale for it** — "Mood, stress, confidence and motivation are four things and one number standing in for all four is the wellness score the owner rules out. Which dimensions exist here is his to say." Until he says, the honest fix is *not* to feed it into `capacity`; it is to make the registry stop claiming it is material to a decision, or to give it the one thing it can honestly have — being asked for and shown as he said it. Raised as an owner question in §7. **(d) `faithPractice` and `custodyArrangement`: leave them.** Both are correctly declared non-decisional. |
+| **Benefit** | Makes "one brain, whole life" structurally true where it can be, and stops the app claiming a participation it does not have where it cannot. |
+| **Implementation scope** | `situation.ts` (registry-driven reads — the load-bearing change, and see AUD-0040), `concepts.ts` (correct `emotionalState`'s `materialToDecision`, or record why it stays), `candidates.ts` (sleep generator reads private pattern, **only if section 11 wins**), `coverage.ts` (`mattersToOwner` given a floor for domains the owner has said he cares about), `explain.ts` (must **not** cite private evidence on Now — a structural discretion guard). |
+| **Risks** | The largest risk in this audit, and I nearly wrote a recommendation that repeats a rejected one. Two guards. **Wiring private evidence without a discretion guard would put explicit detail on Now**, which section 11 forbids and which would be a serious breach of trust; the guard must be a privacy class `explain.ts` cannot cite, not a convention. **Wiring emotional state as a number would re-introduce exactly what DEF-0056 removed** — an unverifiable declaration, and a wellness score by another name. Third, smaller: making dormant concepts live changes every scenario's output; introduce as influence only, no new candidates, and measure. |
 | **Schema / data impact** | None to records. `assembleSituation` returning a map rather than named fields is a substantial internal refactor that `trace.ts` and `QaScreen.tsx` both read. |
-| **Tests required** | A contract test: every concept in the registry appears in `Facts considered` or is explicitly listed as decision-irrelevant with a reason. A privacy guard test: no explanation string, on any surface, can be produced from a `private` concept. Adversarial: a history with a low emotional state must produce a different move from the same history with a high one. |
-| **Priority** | **P1** |
-| **Timing** | **PHASE 10** — with the *discretion guard* and the registry-driven read landing first |
+| **Tests required** | A contract test: every concept whose `ask.materialToDecision` is true is actually read by the decision path, and every concept read by it declares the flag (this is AUD-0041's guard and it is what would have caught this). A privacy guard: no explanation string, on any surface, can be produced from a `private` concept. If (b) proceeds, an adversarial test that a private pattern changes a bedtime recommendation and appears in no owner-visible sentence. **No test should assert emotional state changes a score** — that would encode the rejected design. |
+| **Priority** | **P1** for (a) and (b); **owner-blocked** for (c) |
+| **Timing** | **PHASE 10** — registry-driven read and the discretion guard first |
 
 ### B.4 — AUD-0012
 
@@ -781,8 +793,8 @@ what it chose yesterday, or an hour ago.
 | **Likely root cause** | "Shown" was correctly judged to be a recomputed state rather than a record — but recomputation loses the *history* of having been shown, and something needs that history. |
 | **Recommended behaviour** | Keep D-043 for `action-recommendation`. Add a separate, tiny, **upserted** ledger — one row per (move id, local day) holding a last-shown timestamp and a count — which is not history, never appears on Timeline, and is never read as evidence by `learning.ts`. `recent-duplication` reads it. This preserves every reason D-043 gives (no Timeline noise, no episodes nothing happened to, no learning noise) while giving the duplication check the one fact it needs. |
 | **Benefit** | Ends the most visible repetition in the product, and makes "I've suggested this three times today" available to the wording layer and to AUD-0023's escalation. |
-| **Implementation scope** | A small projection or side table in `src/memory/`, an upsert on render, `evaluate.ts` (`recentDuplication` reads it), plus an explicit exclusion in `learning.ts` and in the Timeline projection. |
-| **Risks** | The reason D-043 exists. The guard must be structural: an architecture test asserting the shown-ledger is unreachable from `learning.ts`, `insights.ts`, `association.ts` and the Timeline. Also a write-amplification concern on IndexedDB — an upsert per render is fine, an append is not. |
+| **Implementation scope** | A small projection or side table in `src/memory/`, an upsert on render, `evaluate.ts` (`recentDuplication` reads it), plus an explicit exclusion in `learning.ts` and in the Timeline projection. **The ledger must reach the engine as an argument on the `Situation`, never as a store the engine reads.** `docs/ARCHITECTURE_BOUNDARIES.md` holds `src/intelligence/` to being pure and clock-free — "the moment is an argument, so time travel reaches the engine rather than stopping at the screen that offers it" — and the same guards that ban a wall clock and `localStorage` there would catch a lookup. The surface owns the clock (D-027) and the surface hands the ledger down. |
+| **Risks** | The reason D-043 exists. The guard must be structural: an architecture test asserting the shown-ledger is unreachable from `learning.ts`, `insights.ts`, `association.ts` and the Timeline. Second: reaching for it inside the engine would breach the purity boundary above, and would do so invisibly — it is not a directory violation, so the existing guard would not fire. Third, a write-amplification concern on IndexedDB — an upsert per render is fine, an append is not. |
 | **Schema / data impact** | A new store outside the canonical record log. It must be **excluded** from backup identity and from the content fingerprint, or D-107's rule (nothing about the transport enters the identity of the thing transported) is breached in a new way. Simplest safe answer: make it derived and non-durable — rebuilt per session — which is enough for within-day repetition. |
 | **Tests required** | Assert the same move is not returned unchanged at four hours of one day. Architecture guard asserting no learning or history surface can read the ledger. Assert backup fingerprints are unaffected. |
 | **Priority** | **P1** |
@@ -820,7 +832,7 @@ fixed priority (recovery → capacity → time → coverage) and only that one i
 | **Title** | Trade-offs are resolved silently; the app never says what the choice cost |
 | **Type** | **INTELLIGENCE** |
 | **Current behaviour** | `arbitrate` selects the top score. `NowScreen` shows "Chosen over: <runner-up>" and a one-clause reason drawn from the single dimension with the largest gap ("Worth more tonight", "Fits the time you have", "Pays back more tomorrow", "Closer to what the week is about"). The `protection` dimension exists and reported `+0.00 — costs no other area anything` in every ranking observed across every scenario. |
-| **Problem** | "Worth more tonight" is a comparison, not a trade-off. The app never says *"this is the evening you were going to study, and I'm asking you to sleep instead"* — even in the scenario built to demonstrate exactly that. The brief asks whether it can recognise a trade-off and say it; it recognises one and describes it in four words drawn from whichever dimension happened to differ most. And `protection`, the dimension whose whole job is to notice that a move costs another area something, appears never to fire. |
+| **Problem** | **Canonical plan section 6 lists "relevant tradeoff" as one of ten things Now should be able to show, and it is one of three on that list that Now does not.** (The other two are "time/effort" — time is embedded in the move sentence, effort is nowhere — and "uncertainty when it matters", which is AUD-0032 and AUD-0033.) "Worth more tonight" is a comparison, not a trade-off. The app never says *"this is the evening you were going to study, and I'm asking you to sleep instead"* — even in the scenario built to demonstrate exactly that. And `protection`, the dimension whose whole job is to notice that a move costs another area something, appears never to fire. |
 | **Owner-facing example** | "Three broken nights, and a deadline": the app chooses recovery over the CCNA session in the same week the owner set "the CCNA push" as his direction, and `direction-fit` scored **−0.30 — this week is pointed at the CCNA push, and this is not that**. The screen says none of that. It says *"Take tonight as recovery — no subnetting session."* — which is good — and offers no acknowledgement that it is overruling the direction the owner set three days ago. |
 | **Evidence** | `arbitrate.ts`; `evaluate.ts` `protection`; probe rankings across all 18 scenarios (no non-zero `protection` observed); `NowScreen` "Why this one" strings. |
 | **Likely root cause** | The reason clause is generated from the largest single dimension gap, which is a summary of *why it won*, not of *what it cost*. The information is present — a negative `direction-fit`, a negative `protection` — and never surfaces. |
@@ -874,13 +886,13 @@ The failure is that it does not reach the recommendation (AUD-0027).
 | **Problem** | Section 4.6 — a specific ordinary sentence beats an elegant generic one — and the specific sentence already exists, one layer down. The owner is given "There is enough in the tank for a walk, and the evening suits it" when the app could say "walks have left you with more in the tank eleven times out of fourteen". Worse: the app knows he has refused this exact suggestion **fourteen times in situations like this one** and says nothing about it while suggesting it again. |
 | **Owner-facing example** | "Two months of readings, and nothing graded", Saturday 18:10. Now: *"Move for 25 minutes: a walk. / There is enough in the tank for a walk, and the evening suits it."* The probe for the same instant carries both sentences above. Insights carries the association properly — the app is capable of the sentence, on a different screen. |
 | **Evidence** | Probe ranking captured live; `explain.ts:280-318` (`good-conditions` branch); `insights.ts` state-association card; D-031 ("an explanation may only cite evidence the decision leaned on"). Stage 1 note **S1-L**. |
-| **Likely root cause** | `whyNow()` switches on `semantics.whyNow.trigger` and never consults the winning *dimensions*. The candidate's trigger was set at generation time, before anything was scored, so the explanation can only ever say why the move was *proposed*, not why it *won*. |
-| **Recommended behaviour** | Where a dimension contributed materially and rests on the owner's own record — `observed-change`, `owner-preference`, a learned belief — prefer its note over the trigger template. D-031 permits this outright: these are exactly the evidence the decision leaned on. And when refusals are the largest negative and the move still wins, say it: *"You've passed on this a lot. I still think it's the right call tonight — but say so if it isn't."* |
+| **Likely root cause** | `whyNow()` switches on `semantics.whyNow.trigger` and never consults the winning *dimensions*. The candidate's trigger is set at generation time, before anything is scored, so the explanation can only ever say why the move was *proposed*, not why it *won*. |
+| **Recommended behaviour** | Where a dimension contributed materially and rests on the owner's own record — `observed-change`, a learned belief — prefer its note over the trigger template. **This requires widening a Blocker fix and I am saying so rather than assuming it.** DEF-0006 ("the explanation rationalised the winner") was fixed by the rule that *the reason may only cite a concept in the winning candidate's `leansOn`*, and D-031 states it as "an explanation may only cite evidence the decision leaned on". The association case is already legal — `observed-change` for a walk rests on `energy`, which **is** in that move's `leansOn`. The refusal case is **not**: a refusal history is not a concept and is not in `leansOn`, so surfacing "you've passed on this a lot" needs the rule widened from *concepts in `leansOn`* to *concepts in `leansOn`, plus dimensions that materially moved the score*. That is a deliberate amendment to a fix for a Blocker; it should be recorded as one, and the DEF-0006 regression (`tests/synthetic/no-hidden-genericity.test.ts`) must be shown still to bite afterwards. If the owner would rather not widen it, ship the association half only — it is the larger benefit and needs no rule change. |
 | **Benefit** | Moves the app's most personal, best-evidenced language from the diagnostics screen to the screen the owner reads, at no cost in new computation. |
-| **Implementation scope** | `explain.ts` (rank dimension notes against the trigger template), possibly a `phrase` field alongside each dimension's `note` so trace copy and owner copy can differ in register. |
-| **Risks** | Dimension notes are written for a diagnostics reader ("+0.50 — …across the record") and would need owner-register rewrites; shipping them raw would breach section 61's ban on confidence math. The refusal sentence is the riskiest copy in the audit — it must not read as the app arguing with him. |
+| **Implementation scope** | `explain.ts` (rank qualifying dimension notes against the trigger template), and a `phrase` field alongside each dimension's `note` so trace copy and owner copy differ in register — **DEF-0040 is the precedent and the warning**: `ConsideredFact.reading` was written for the inspector, reused verbatim on the evidence panel, and shipped "not known — never-observed" to the owner. Do not reuse `note`. |
+| **Risks** | Dimension notes are written for a diagnostics reader ("+0.50 — …across the record"); shipping them raw would repeat DEF-0040 and breach section 61's ban on confidence math. The refusal sentence is the riskiest copy in the audit — it must not read as the app arguing with him, and it is the half that also needs the D-031 amendment, so it is the half to drop if either is in doubt. |
 | **Schema / data impact** | None. |
-| **Tests required** | Assert the association-backed explanation appears on Now in the observed-evenings scenario. Copy guards: no percentages, no dimension names, no scores in owner text. Assert D-031 still holds — no cited evidence the decision did not lean on. |
+| **Tests required** | Assert the association-backed explanation appears on Now in the observed-evenings scenario. Extend `tests/synthetic/decision-evidence.test.ts` (the D-091 home for this class) rather than adding a parallel suite. Copy guards written as *what the copy may not claim* rather than as exact strings: no percentages, no dimension names, no inspector vocabulary. Re-run the DEF-0006 regression and prove it still fails on reintroduction after the rule is widened. |
 | **Priority** | **P1** |
 | **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
 
@@ -894,8 +906,8 @@ The failure is that it does not reach the recommendation (AUD-0027).
 | **Current behaviour** | `summarise()` (`learning.ts:552-570`) bands the learned value: ≥0.6 → "has worked"; ≤0.3 → "has not done much"; between → **"has made little difference"**. That line renders beside the recommendation. The recommendation itself and its explanation are unchanged by the band. The `constraint-active` explanation appends a fixed causal clause: ``${detail} — and it costs you the start of every evening`` (`explain.ts:274`). |
 | **Problem** | Two things. **(a)** The learned finding and the justification contradict each other on screen: the app says the move has made little difference and simultaneously asserts the friction "costs you the start of every evening". The second is a canned string with no evidence behind it — the app has never measured what the kitchen costs him — and after twelve occasions it has evidence pointing the other way. **(b)** Section 64's test: two materially different histories, one month and nine months, produce **byte-identical** recommendation and explanation. Personalisation shows up in one line underneath and nowhere in the substance. *(Note: the numbers are not internally inconsistent — the middle band is the correct label for a learned value near 0.5, and the belief moving 0.40 → 0.50 on middling evidence is right. The defect is that the label and the justification are both rendered and disagree.)* |
 | **Owner-facing example** | "A month of what actually worked" (2026-02-19 19:30) and "Nine months of evenings" (2026-11-14 19:30). Both: *"RESET A SPACE — Spend 15 minutes clearing the kitchen. / The kitchen table is buried again — and it costs you the start of every evening. / Why this one: Pays back more tomorrow."* The only difference, one line below: *"Reset a space has **worked several times** in situations like tonight"* vs *"Reset a space has **made little difference** in situations like tonight"*. |
-| **Evidence** | Both scenarios captured verbatim, live. `learning.ts:552-570`; `explain.ts:266-277`. Stage 1 note **S1-D**. |
-| **Likely root cause** | The learned belief moves `now`/`tomorrow` inside the score and is rendered as a separate advisory line; it never reaches `whyNow()`. And the causal clause is a constant, so it cannot be falsified by evidence. |
+| **Evidence** | Both scenarios captured verbatim, live. `learning.ts:552-570`; `explain.ts:266-277`. Stage 1 note **S1-D**. **This is the fourth instance of a class already fixed three times** — DEF-0022, DEF-0033 and DEF-0039, all "two lines of one screen, each individually true, that a reader has no way to reconcile". DEF-0039 is the same scenario and the same "made little difference" line, reconciled against the *tally* in the evidence panel. It did not touch the *explanation*, so the pair the owner reads first is still unreconciled. |
+| **Likely root cause** | The learned belief moves `now`/`tomorrow` inside the score and is rendered as a separate advisory line; it never reaches `whyNow()`. And the causal clause is a constant, so it cannot be falsified by evidence. The class survives because each fix reconciled one *pair* rather than establishing that no two owner-visible lines about one move may be irreconcilable. |
 | **Recommended behaviour** | **(a)** Delete the unfounded causal clause or make it conditional on evidence. If the record shows the friction preceded slow evenings, say that associatively; if it does not, say only what is known: *"The kitchen table is buried again."* Section 68 and D-066/D-089 forbid causal language where only association exists, and this clause is causal about the owner's own evenings with nothing behind it. **(b)** When the learned band is "little difference" or worse, the explanation must acknowledge it — *"The kitchen table is buried again. This hasn't shifted much lately, but it's the cheapest thing here."* — which is honest and still recommends the move. |
 | **Benefit** | Closes the clearest section-64 failure in the product and removes an unfounded causal claim about the owner's life. |
 | **Implementation scope** | `explain.ts` (`constraint-active` branch, and a learned-band clause across branches), `learning.ts` (expose the band to `explain`). |
@@ -992,7 +1004,7 @@ his daughter is away. See AUD-0034.
 | **Title** | An inferred, coin-flip energy reading is spoken as a settled fact |
 | **Type** | **BUG** |
 | **Current behaviour** | `explain.ts:305` renders ``There is enough in the tank for ${object}, and the ${hour} suits it.`` whenever `capacity.energy` is *usable* — which includes `inferred` state. The belief store simultaneously reports the same value as *"2 of 5 · inferred, 50%"*. |
-| **Problem** | Section 18's guardrail — "turn low confidence into confident language" — is listed as a thing a *model* must not do, and the deterministic layer does it. Two of five is the second-lowest energy on the scale, the confidence is 0.50, and the sentence is a flat assertion with no hedge. Section 3 requires the app to recognise uncertainty and not invent precision. |
+| **Problem** | Section 18's guardrail — never "turn low confidence into confident language" — is listed as a thing a *model* must not do, and the deterministic layer does it. Two of five is the second-lowest energy on the scale, the confidence is 0.50, and the sentence is a flat assertion with no hedge. Section 3 requires the app to recognise uncertainty and not invent precision, and **section 6 lists "uncertainty when it matters" among the ten things Now should be able to show**. |
 | **Owner-facing example** | Default preview history, Monday 15:05: *"Move for 25 minutes: a walk. / There is enough in the tank for a walk, and the afternoon suits it."* Behind "See evidence": *"Current energy: 2 of 5"*. In the QA belief list: *"Current energy — 2 of 5 · inferred, 50%"*. |
 | **Evidence** | `explain.ts:296-310`; live capture of all three strings at one instant. Stage 1 note **S1-E**. |
 | **Likely root cause** | `isUsable()` collapses `known` and `inferred` for the purposes of phrasing. `Knowledge` carries four states precisely so they can be told apart (D-014) and the explanation layer does not read the state. |
@@ -1255,6 +1267,78 @@ typed 113 times. Almost every P0 in this audit is a consequence of it not being 
 | **Timing** | **PHASE 10** — it is the enabler for AUD-0011 and should land first |
 ---
 
+## J. Found in the completion pass
+
+These four came from the documents and surfaces the first pass sampled rather than read —
+`docs/ARCHITECTURE_BOUNDARIES.md`, canonical plan sections 6, 7 and 8, the full defect ledger,
+and the Phase 5–7 QA handoffs. Three of them are defect *classes* already fixed elsewhere and
+never swept across; the fourth is a plan requirement no surface meets.
+
+### J.1 — AUD-0041
+
+| Field | Detail |
+| --- | --- |
+| **ID** | AUD-0041 |
+| **Title** | `ask.materialToDecision` is an unverifiable declaration, and it is wrong in four of fifteen cases |
+| **Type** | **ARCHITECTURE** |
+| **Current behaviour** | Every concept in the registry carries `ask: { materialToDecision, askWhenStale }`. Nothing checks the first against what the decision path actually reads. Enumerating the registry against `situation.ts` and the generators: `emotionalState` is **`true` and is read by nothing**; `cashBuffer`, `socialEnergy` and `homeFriction` are **`false` and all three decide** — `cashBuffer` gates the money generator, `socialEnergy` gates the social generator outright, `homeFriction` gates the home generator and supplies the `constraint-active` explanation. Four of fifteen declarations are false, in both directions. |
+| **Problem** | This is **DEF-0056's exact class, in the sibling field DEF-0056 did not sweep**. That defect was an *unverifiable declaration*: `tracked` was a boolean asserting a concept could be learned from, nothing checked that the machinery could read its values, and `emotionalState` carried it while its readings were free text. The fix made `tracked` name *how* a reading becomes a number, so the claim became checkable and `tests/unit/registries.test.ts` fails the build on a mismatch. `materialToDecision` sits three lines away in the same interface, makes the same shape of claim about the same concepts, and is still a bare boolean nobody checks. The consequence is not cosmetic: `materialToDecision` is what the coverage engine and the guide read to decide whether a gap is worth pursuing, so a false declaration in either direction misdirects the one mechanism that is supposed to notice a domain going quiet. |
+| **Owner-facing example** | The Emotional Health page invites him to add his current emotional state; the registry says that reading is material to a decision and should be asked for when stale; no question exists, no reader exists, and the Life screen says *"nothing is asking you to"*. The app has three positions on one concept and shows him the two that contradict. |
+| **Evidence** | `src/domain/concepts.ts` (`ConceptDefinition.ask`, and the fifteen definitions — enumerated in full during this audit); `situation.ts:575-596`; `candidates.ts:432-437` (socialEnergy gate), `:402-410` (homeFriction gate), `:518-523` (cashBuffer); `docs/DEFECT_LEDGER.md` **DEF-0056**; `docs/DECISION_LOG.md` **D-091 invariant 6**. |
+| **Likely root cause** | DEF-0056 was found by independent QA checking a builder claim against the code rather than against the registry, and its repair was scoped to the field that had failed. The ledger records a sibling sweep — "the other six tracked concepts all declare shapes the path reads" — which swept *within* `tracked` and not *across* to the neighbouring claim of the same kind. |
+| **Recommended behaviour** | Make the claim checkable, exactly as DEF-0056 did for `tracked`. A registry test walks every concept and asserts `materialToDecision === true` if and only if the concept is reachable by the decision path — read by `assembleSituation`, gating a generator, or read by a dimension. Then fix the four: correct the three that decide, and for `emotionalState` either give it a reader or stop claiming it has one (AUD-0011c, owner-blocked). Once AUD-0040 makes the situation registry-driven, this test becomes close to free. |
+| **Benefit** | Closes the last unverifiable declaration in the registry, and turns AUD-0011 from something an auditor has to find by grepping into something the build fails on. |
+| **Implementation scope** | `tests/unit/registries.test.ts` (one `describe`, in the home D-091's table already assigns to registry invariants), `concepts.ts` (three corrections), and one decision-log entry recording that `materialToDecision` is now enforced. |
+| **Risks** | Correcting `homeFriction` and `socialEnergy` to `materialToDecision: true` changes what the coverage engine and the guide consider worth pursuing, which will move scenario outputs — genuinely, and in the right direction, but it is a behaviour change riding on what looks like a metadata fix. Land it with the scenario diffs reviewed rather than as a rubber-stamp. |
+| **Schema / data impact** | None to records. A registry field's meaning is tightened, not its shape. |
+| **Tests required** | The registry guard above, **proved by reintroduction** — flip one concept's flag and watch the build fail — per the standing rule that a guard is not a guard until its own defect has been caught. Assert the guard reads the real decision path rather than a hand-maintained list, or it becomes the same unverifiable claim one level up. |
+| **Priority** | **P1** |
+| **Timing** | **PHASE 10** (with AUD-0040, which makes it cheap) |
+
+### J.2 — AUD-0042
+
+| Field | Detail |
+| --- | --- |
+| **ID** | AUD-0042 |
+| **Title** | The observe-first path reaches three verbs of fifteen, so most of what the app "learned" is a tally of the owner's own opinions |
+| **Type** | **INTELLIGENCE** |
+| **Current behaviour** | `derived.ts` — the module that closes an outcome loop from a reading the owner already gave, rather than asking him to grade it — is gated by three conditions (`derived.ts:169-171`): `profile.measures === CONCEPT.sleepHours`, `profile.outcome.when === 'next-morning'`, and the profile lists `effect`. Only `protect-sleep`, `recover` and `wind-down` pass. `readingAwaitedBy` (`outcomes.ts:558-561`) carries the same `next-morning` condition, so the guide will not ask for a post-move state reading for anything else either. For the remaining twelve verbs, the `effect` belief in `learning.ts` can only be built from answers the owner tapped. |
+| **Problem** | D-089 — the owner's own decision — says the *system* performs the causal inference and "never ask the owner for the causal relationship the system exists to learn". The repair that decision produced was `association.ts`, which is excellent and genuinely observed. But it was added *beside* the existing path rather than replacing it: `association.ts` feeds one dimension (`observed-change`) and one insight card (`state-association`), while `learning.ts`'s per-verb effect beliefs — which move `now` and `tomorrow` and therefore move every ranking — still come from the owner's judgements for twelve of fifteen verbs. **The walk is the clearest case and the app already has what it needs**: `move`'s profile declares `measures: CONCEPT.energy`, so it says which state dimension it speaks to; it carries `outcome: SOON`, so it fails the `next-morning` gate; and energy readings are exactly what `association.ts` successfully uses on the same history. The observed path and the opinion path are looking at the same evidence and only one of them is allowed to close the loop. |
+| **Owner-facing example** | "Two months of readings, and nothing graded" is the scenario built to prove the observed path works, and it does — Insights says *"Current energy has more often been higher after a walk than without one. Higher afterwards on 11 of 14 occasions with a walk and 4 of 14 without."* On the same history, the walk's learned `Worth tonight` reads **0.50 → 0.50 (unchanged)** with **"Comparable results: none"**, because no `effect` outcome was ever recorded for it. The app has fourteen observed pairs and its per-verb belief about walks has learned nothing. |
+| **Evidence** | `src/intelligence/derived.ts:166-175`; `src/intelligence/outcomes.ts:555-571`; `src/intelligence/moves.ts:233` (`move` declares `measures: CONCEPT.energy`, `outcome: SOON`); live probe from the observed-evenings scenario showing `move — nothing earned yet / Comparable results: none` beside a working association. `docs/qa/PHASE_06_QA_HANDOFF.md` "Evidence 2 — the observe-first path exists and is gated to one concept" documents the same gates and the same count; this audit confirms both are unchanged in the current build. |
+| **Likely root cause** | The `next-morning` gate is doing two jobs. It is genuinely right that a *sleep* outcome must be read the following morning (D-064 sets four conditions for it). It was then reused as the gate for the whole observe-first mechanism, so "this outcome is judged in the morning" and "this outcome can be observed rather than asked" became the same condition — and they are not. A same-block outcome can be observed too; it just needs a reading taken afterwards in the same block. |
+| **Recommended behaviour** | Separate the two conditions. Keep D-064's four conditions for the sleep case exactly as they are, and add a same-block sibling: where a profile declares `measures` and a reading of that concept exists inside the outcome window *after* the move, derive the `effect` outcome from the pair rather than asking. That reaches `move` (energy), `reset-space` (home friction), `reach-out` and `start-conversation` (social energy) with no new concept and no new owner input. Where no reading exists, the current question stays — D-089's fourth preference, asking for current subjective state, is legitimate and should not be removed. And keep the provenance visible: a derived effect must remain distinguishable from a tapped one on every surface, which D-067 and the existing evidence-mix line already do. |
+| **Benefit** | The app's per-verb beliefs — the ones that actually move rankings — start being built from what happened rather than from what he said about what happened, for four more verbs, using readings he is already giving. It is also the honest completion of D-089 rather than a second path beside it. |
+| **Implementation scope** | `derived.ts` (a same-block derivation beside the morning one), `outcomes.ts` (`readingAwaitedBy` loses the `next-morning` condition and gains a window check), the reliability table (a derived same-block reading is worth less than a morning one and should say so). |
+| **Risks** | The real one: a same-block reading is closer in time to the move and therefore more likely to be confounded by it in ways a morning reading is not — he may report higher energy *because* he just did the thing, which is mood rather than effect. That is an argument for a lower reliability weight and for keeping `association.ts`'s comparison-group discipline as the place strong claims are made, not for skipping the derivation. Second risk: deriving more outcomes changes twelve verbs' learned beliefs at once; stage it one verb at a time with the scenario diffs read. |
+| **Schema / data impact** | None. Derived outcome records already exist, are stamped with what they are about (D-065), and carry provenance. |
+| **Tests required** | Assert a walk followed by an energy reading in the same block produces a derived `effect` outcome and that the belief moves. Assert the derived record is distinguishable from an owner answer on every surface that shows evidence mix. Assert D-064's four sleep conditions are untouched. Extend `tests/synthetic/observed-relationships.test.ts`, which D-091's table already names as the home for these invariants. |
+| **Priority** | **P1** |
+| **Timing** | **PHASE 10** |
+
+### J.3 — AUD-0043
+
+| Field | Detail |
+| --- | --- |
+| **ID** | AUD-0043 |
+| **Title** | No domain page answers "what is the app currently learning?" |
+| **Type** | **PRODUCT / UX** |
+| **Current behaviour** | Canonical plan section 7 lists eight questions a domain page should answer. Seven are answered: what the app understands ("What the app currently believes"), what changed recently ("Recently"), what goals matter (goals panel), what is stale or uncertain ("How this stands"), what the owner can correct ("Not right?"), and what manual update he can make ("Add this"); evidence support is partial (an "Imported" badge, no evidence link). **The eighth — "What is the app currently learning?" — is answered on no page.** |
+| **Problem** | It is the question the domain pages are best placed to answer and the only one they skip, and the material already exists: `situation.learning` holds per-verb beliefs with their evidence counts, and Insights renders a "Still gathering" panel globally. A father opening the Fatherhood page sees what the app believes and not what it is in the middle of working out about his daughter — which is exactly the thing he would want to correct early, while it is still forming. |
+| **Owner-facing example** | Fatherhood page, "Three times running": it shows *"Child with the owner — yes"*, *"Custody arrangement — full custody"* and six lines of recent occasions. It does not say that the app is three occasions into deciding whether Adaya has settled a skill — the one thing actually in progress there. He can only find that on Now, beside an unrelated recommendation, or on Insights among everything else. |
+| **Evidence** | Canonical plan section 7, "Domain page purpose"; all ten domain pages visited in Stage 1; `src/features/life/domainPages.ts` (reads coverage, goals, concept readings and recent history — not `situation.learning`); `src/features/insights/InsightsScreen.tsx:140` ("Still gathering"). |
+| **Likely root cause** | `domainPages.ts` is deliberately a thin feature-local grouping of an already-assembled `Situation` (`ARCHITECTURE_BOUNDARIES.md` is explicit that it decides nothing), and the four things it groups were fixed when the pages were built in Phase 5. `insights.ts` arrived in Phase 6 and its output was given its own destination rather than being fed back into the pages. |
+| **Recommended behaviour** | Add one panel per domain page — "What the app is working out here" — filtered from the same `situation.learning` and the same gathering list Insights already builds, scoped to that domain. No new computation, no second reading (which the coverage precedent forbids for good reason: two computations over one history eventually disagree, and the owner cannot tell which screen is lying). Where nothing is being worked out, say so plainly rather than rendering an empty panel — DEF-0013 is the precedent. |
+| **Benefit** | Completes section 7's stated purpose, and puts a forming belief in front of the owner where he is already inspecting that area, which is where he is most likely to correct it. |
+| **Implementation scope** | `domainPages.ts` (one more grouping, from `situation.learning`), the domain page component, and a shared read with `InsightsScreen` so the two cannot diverge. |
+| **Risks** | Domain pages are meant to be dull and low-maintenance (section 7, D-075's lesson about the Life overview becoming homework). A learning panel that fires on every domain every day would undo that — show it only where something is genuinely in progress, and never as a task. |
+| **Schema / data impact** | None. |
+| **Tests required** | Assert the panel's content is derived from the same object Insights reads, never recomputed (the coverage precedent). Assert it is absent, not empty, when nothing is being worked out. Assert the Fatherhood page shows the in-progress growth area in the growth-evidence scenario. |
+| **Priority** | **P2** |
+| **Timing** | **PHASE 9** — it is a page-composition change and Phase 9 reviews empty states and hierarchy |
+
+---
+
 # 3. Totals
 
 ## By priority
@@ -1262,34 +1346,45 @@ typed 113 times. Almost every P0 in this audit is a consequence of it not being 
 | Priority | Count | IDs |
 | --- | --- | --- |
 | **P0** | **8** | AUD-0001, 0002, 0003, 0014, 0015 *(part b)*, 0028, 0031, 0036 |
-| **P1** | **17** | AUD-0005, 0008, 0011, 0015 *(part a)*, 0016, 0017, 0019, 0020, 0023, 0025, 0026, 0027, 0032, 0033, 0034, 0035, 0037, 0040 |
-| **P2** | **12** | AUD-0006, 0007, 0009, 0010, 0018, 0021, 0022, 0024, 0029, 0030 *(part a)*, 0038, 0039 |
+| **P1** | **20** | AUD-0005, 0008, 0011 *(parts a, b)*, 0015 *(part a)*, 0016, 0017, 0019, 0020, 0023, 0025, 0026, 0027, 0032, 0033, 0034, 0035, 0037, 0040, 0041, 0042 |
+| **P2** | **13** | AUD-0006, 0007, 0009, 0010, 0018, 0021, 0022, 0024, 0029, 0030 *(part a)*, 0038, 0039, 0043 |
 | **P3** | **3** | AUD-0012, 0013, 0030 *(part b)* |
-| **Total** | **40** | |
+| **Owner-blocked** | **1** | AUD-0011 *(part c)* — and AUD-0018, which is P2 and also blocked |
+| **Total** | **43** | |
 
-AUD-0015 and AUD-0030 each split across two bands; they are counted once in the total and
-appear in both rows.
+AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in the total.
 
 ## By type
 
 | Type | Count | IDs |
 | --- | --- | --- |
 | **BUG** | **7** | 0001, 0002, 0003, 0005, 0014, 0015, 0032 |
-| **INTELLIGENCE** | **16** | 0004, 0007, 0009, 0010, 0012, 0013, 0016, 0017, 0018, 0019, 0021, 0024, 0026, 0028, 0029, 0031 |
-| **ARCHITECTURE** | **8** | 0006, 0011, 0020, 0022, 0025, 0035, 0039, 0040 |
-| **PRODUCT / UX** | **9** | 0008, 0023, 0027, 0030, 0033, 0034, 0036, 0037, 0038 |
+| **INTELLIGENCE** | **17** | 0004, 0007, 0009, 0010, 0012, 0013, 0016, 0017, 0018, 0019, 0021, 0024, 0026, 0028, 0029, 0031, 0042 |
+| **ARCHITECTURE** | **9** | 0006, 0011, 0020, 0022, 0025, 0035, 0039, 0040, 0041 |
+| **PRODUCT / UX** | **10** | 0008, 0023, 0027, 0030, 0033, 0034, 0036, 0037, 0038, 0043 |
 
 ## By timing
 
 | Timing | Count |
 | --- | --- |
 | BEFORE PHASE 9 (Phase 8.5) | 19 |
-| PHASE 9 | 1 |
-| PHASE 10 | 20 |
+| PHASE 9 | 2 |
+| PHASE 10 | 23 |
 | PHASE 11 | 2 |
 | POST-RELEASE-OPTIONAL | 1 |
 
-*(Counts exceed 40 because AUD-0015, AUD-0025, AUD-0030 and AUD-0038 are split across phases.)*
+*(Counts exceed 43 because AUD-0011, AUD-0015, AUD-0025, AUD-0030 and AUD-0038 are split
+across phases.)*
+
+## Findings that turned out not to be defects
+
+Recorded because a reviewer will otherwise look for them. Each was investigated and dropped:
+the three zero-weight dimensions in the trace (correct per D-048), "Something else" treated as
+a decline (down-weighted, `learning.ts:861`), the always-drawn lifecycle buttons (D-052), the
+shared health/sleep page (D-078), identical hybrid and deterministic output (D-024), the Life
+overview showing three groups rather than section 7's six states (D-075), `faithPractice` and
+`custodyArrangement` being unread (both correctly declared non-decisional), and the Insights
+card kinds (all eleven of section 27's types are implemented).
 
 ---
 
@@ -1426,16 +1521,25 @@ placement and a duration's phrasing are exactly Phase 9's business.
 35. **AUD-0007** — `dayOfWeek` and `load` in `DecisionContext`. *Independent.*
 36. **AUD-0030 (a)** — say what the archive costs, on the import screen. *Independent.*
 37. **AUD-0038 (c)** — group same-statement imported goals in the review. *Independent.*
+38. **AUD-0041** — make `materialToDecision` checkable, and fix the four wrong declarations.
+    *Depends on 20; it is near-free once the situation is registry-driven, and it is the guard
+    that would have caught AUD-0011 without an audit.*
+39. **AUD-0042** — a same-block sibling to the observe-first derivation. *Independent of the
+    above, but it changes twelve verbs' learned beliefs, so it must land **before** 38 in
+    Stage 6 and be staged one verb at a time.*
+
+**— Phase 9's second item, AUD-0043 (the "what the app is working out here" panel), lands with
+Phase 9 rather than here.**
 
 ## Stage 6 — re-cut the instrument, once, last
 
-38. **AUD-0035** — the three older dimensions abstain; re-derive `WORTH_DOING` and
+40. **AUD-0035** — the three older dimensions abstain; re-derive `WORTH_DOING` and
     `CLOSE_ENOUGH_TO_MENTION`; **re-run section 18's tournament**. *Must come after every
-    change that adds or alters a dimension — 24 (thread-fit), 34 (trajectory-fit), 21
-    (capacity reading emotional state). Cutting the instrument three times would waste two
-    tournaments and produce two sets of unstable baselines.*
-39. **AUD-0039** — `MAX_NUDGE` relative to the ranked spread; widen the tournament rubric.
-    *Must be in the same change as 38.*
+    change that adds or alters a dimension or moves a learned belief — 24 (thread-fit), 34
+    (trajectory-fit), 39 (AUD-0042 moves twelve verbs' beliefs). Cutting the instrument three
+    times would waste two tournaments and produce two sets of unstable baselines.*
+41. **AUD-0039** — `MAX_NUDGE` relative to the ranked spread; widen the tournament rubric.
+    *Must be in the same change as 40.*
 
 ## Stage 7 — Phase 11 and beyond
 
@@ -1528,7 +1632,30 @@ stated more plainly; it does not ask for a single family to be force-fitted.
 statement's words.** `translate.ts:604-632`. Two goals worded identically a year apart are two
 goals. AUD-0038(c) proposes a *review-time question*, never automatic text-based merging.
 
-**16. The QA laboratory itself.** The probe — facts with their state and purpose, every
+**16. `emotionalState` is deliberately not `tracked`, and no scale was invented for it.**
+DEF-0056 found it declared tracked while its readings are free text, and the repair explicitly
+refused the obvious fix: "Mood, stress, confidence and motivation are four different things,
+and one number standing in for all four is the wellness score the owner rules out. Which
+dimensions exist here is his to say." **Do not give emotional state a scale to make AUD-0011
+implementable.** That is the wellness score arriving through the back door, and the audit's own
+first draft nearly proposed it.
+
+**17. `faithPractice` and `custodyArrangement` are unread by the intelligence layer, and both
+are correct.** Both declare `materialToDecision: false`. Faith is inspect-and-record by design.
+Custody's real job — never re-asking a settled arrangement (section 9, G-002) — is done by
+record durability and by `childPresent`, not by the concept being read into a decision. Do not
+"fix" either by wiring it in.
+
+**18. The Life overview groups rather than listing one row per domain.** It shows three groups,
+not section 7's six candidate states. That is **D-075**, a fix for DEF-0026: one row per domain
+followed the data structure rather than the owner's question and produced two and a half phone
+screens with seven identical lines. The states in section 7 are "possible", not required.
+
+**19. `derived.ts` reaching only sleep is half-right and must stay half-right.** AUD-0042 asks
+for a same-block *sibling*. **D-064's four conditions for the morning sleep reading are not
+what is being changed** and must survive the change intact.
+
+**20. The QA laboratory itself.** The probe — facts with their state and purpose, every
 candidate with its reason, what was ruled out and why, the full dimension breakdown with
 notes, the learned beliefs with their evidence ids and provenance, and the counterfactual
 "what would change the answer" panel — is an exceptional diagnostic surface and it is how
@@ -1594,7 +1721,32 @@ changes that. Recorded here only so the answer is visible alongside the rest: AU
 recommends improving the tournament rubric *whether or not* inference is ever wired in,
 because the current rubric cannot detect the difference this audit is about.
 
-**Q7. Should Now carry a second sentence?**
+**Q7. Which emotional dimensions exist?**
+This is already an open question in the codebase — `concepts.ts` records it verbatim beside
+`emotionalState`, and DEF-0056 left it open on purpose (D-091 invariant 6). It is raised here
+because **AUD-0011 is blocked on it**: emotional health is declared material to a decision and
+cannot reach one, and the only ways to resolve that are to answer this or to stop claiming it.
+*Options.* **(a)** Name two or three dimensions he would actually answer — the literature
+treats mood, stress/tension and motivation as distinct, and one scale for all three is the
+wellness score section 22 rules out. **(b)** Keep it free text, and change the registry to stop
+claiming it is material to a decision — honest, and emotional health stays an inspect-and-record
+domain like faith. **(c)** Leave it as it is.
+*Implication:* (c) is the current state and it is the one position that is definitely wrong,
+because the app is making a claim it cannot honour. (b) costs nothing and is honest. (a) is the
+only route to emotional state ever influencing a recommendation.
+
+**Q8. Does section 11 or the registry win on private evidence?**
+Section 11 says private evidence "may still influence whole-life reasoning when relevant" and
+gives two worked examples. `concepts.ts` declares `privatePattern` as `materialToDecision:
+false`. They contradict each other and have since the concept was defined.
+*Options.* **(a)** Section 11 wins — wire it, behind a structural discretion guard that makes
+it impossible for an explanation to cite it. **(b)** The registry wins — amend section 11 so
+the private domain is explicitly inspect-and-record.
+*Implication:* (a) is the more useful app and carries the audit's single largest trust risk;
+(b) is safe and makes a first-class domain permanently inert. **AUD-0011(b) should not be built
+until this is answered.**
+
+**Q9. Should Now carry a second sentence?**
 AUD-0022 (compatible moves) and AUD-0026 (the cost clause) each add a clause to the
 recommendation. Together they could produce three clauses.
 *Options.* **(a)** Hard cap at one appended clause of either kind, ever. **(b)** Allow two.
