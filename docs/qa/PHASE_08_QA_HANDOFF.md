@@ -1715,4 +1715,351 @@ exactly as written.
 Do not ask me to paste the file contents.
 ```
 
+# Third independent QA retest — PASS
+
+## Overall result
+
+**PASS — Phase 8 is ready for formal GREEN closeout.**
+
+QA-08-003 and QA-08-004 are repaired. The replacements assert the values their
+titles claim, their enumerations are honest, both named fault reintroductions
+fail the intended regressions, and the newly exposed `life-season` product gap
+is fixed at both the intelligence and deployed presentation layers. No new
+defect was found.
+
+Independent QA does not mark the phase GREEN. Per D-077, return this PASS to the
+**CURRENT original Claude Phase 8 builder conversation** for the formal
+closeout.
+
+| Item | Tested value |
+| --- | --- |
+| Repaired product checkpoint | `1fc41cfd5691bf01e879225af4169d585068c2eb` |
+| Deployed SHA during the direct life-season check | `1fc41cfd5691bf01e879225af4169d585068c2eb` |
+| Later deployed handoff SHA used by the Android gate | `0eb920bfb0ddd9fd02c5ba7210a71b9322545c17` |
+| Bundle relationship | PASS — only `docs/NEXT_PROMPT.md`, `docs/PHASE_STATUS.md`, and this report differ; none is bundle-relevant |
+| Preview | `https://bill6006.github.io/life-command-os-rebuild/preview/` |
+| QA date | 2026-08-24, America/New_York |
+| Overall | **PASS** |
+
+The deployed URL initially identified the exact product checkpoint while the
+three direct `life-season` histories were exercised. It advanced during this
+retest to the later docs-only handoff commit. D-097's full-SHA fallback then
+reported:
+
+```text
+3 file(s) changed between 1fc41cf and 0eb920b..., none of them bundle-relevant
+Bundle-equivalent: the deployed build at 0eb920b... serves the same bytes as 1fc41cf.
+```
+
+## QA-08-003 — confirmed repaired
+
+The durable block headed **“every insight kind the library produces declares
+its origin”** now holds the claim it makes.
+
+- The exact scenario-produced set is nine kinds:
+  `context-effect`, `coverage-gap`, `emerging-change`, `life-season`,
+  `move-effectiveness`, `repeated-friction`, `stable-strength`,
+  `state-association`, and `trajectory`.
+- The test asserts that the set it actually sees equals that named list for
+  each of owner, imported, device, and derived histories. A tenth produced kind
+  therefore fails the enumeration instead of reducing coverage silently.
+- `contradiction` and `stale-assumption` are real constructors and the other two
+  members of `InsightKind`, but no current `SCENARIOS` history produces them.
+  The exact-set assertion proves that statement against the whole library; it
+  does not pretend they are impossible engine states.
+- Every produced card must carry exactly the rewritten source; there is no
+  `sources.length > 0` guard. The resolved owner-facing value is asserted for
+  every kind under all four origins: silent for owner, `Imported`, `Measured`,
+  and `Worked out` respectively.
+- The negative case selects an owner row from records the card actually cites,
+  then requires both `owner` and `legacy-import` to be present before accepting
+  a silent resolution. It genuinely exercised five kinds:
+  `stable-strength`, `emerging-change`, `context-effect`, `repeated-friction`,
+  and `move-effectiveness`.
+
+The retained QA probe at
+`docs/qa/evidence/phase08-origin-aggregate-probe.ts` was tightened in this round:
+its old guard was removed, it now asserts the exact nine-kind set under every
+origin, and it directly holds the evidence-line-free `life-season` path.
+
+**Independent reintroduction:** replacing the final `withSources(...)` mapping
+in `insightsFor` with the bare insight made **5 of 20** focused tests fail: all
+four origin rows and the mixed-origin negative. The product change was then
+reverted before any passing gate was run.
+
+## QA-08-004 — confirmed repaired
+
+The regression **“marks the insight summaries — the fourth aggregate section”**
+finds the exact `## What has been worked out` heading and slices only until the
+next level-two heading. It therefore cannot borrow an imported marker from the
+three already-covered export sections.
+
+Its comparison begins with the same `SNAP` and maps only the records'
+`provenance` from imported to owner before rebuilding the view and situation.
+The imported document contains the Career insight and `· Imported`; the
+owner-flipped document contains the same Career insight and no imported marker.
+The paired assertion would fail a build that marked everything as well as one
+that marked nothing.
+
+**Independent reintroduction:** removing only the `fromSources(...)` wrapper in
+`insightsSection` failed that isolated test with the expected unmarked Career
+line. The product change was then reverted before the passing gates.
+
+## The `life-season` product gap — confirmed repaired directly
+
+### Intelligence layer
+
+The strengthened QA probe uses one built `long-run` document for all three
+comparisons, so the only change is provenance:
+
+| Basis | `life-season.sources` | Resolved badge |
+| --- | --- | --- |
+| Imported arrangement and earlier history | `['legacy-import']` | `Imported` |
+| Owner arrangement and earlier history | `['owner']` | none |
+| Owner/imported mixture across the arrangement and rows it counts | `['legacy-import', 'owner']` | none |
+
+The same no-guard sweep found no empty `sources` array on any other card the
+scenario library produces.
+
+### Deployed Preview
+
+QA took a complete backup of the existing eight-record Preview store, then put
+three checked six-record native backups through the deployed Restore flow. Each
+held five dated sleep rows before a durable custody arrangement, with the
+histories differing only in provenance.
+
+- Imported-only showed `A different season`, the sentence `Full custody has
+  been standing since 1 July.`, and an `Imported` badge.
+- Owner-only showed the identical card with no badge.
+- Mixed — owner earlier rows and imported durable arrangement — showed the
+  identical card with no badge.
+
+Every restore was verified through a reopened database. The original Preview
+backup was restored at the end and the app reported:
+
+```text
+Restored and checked: the store now holds 8 entries, exactly as the backup does.
+reopened the database and read back 8 records, identical
+```
+
+## Full verification
+
+| Gate | Result |
+| --- | --- |
+| Targeted repaired suite | 20 / 20 |
+| Strengthened independent evidence probe | Pass — nine kinds × four origins; five generic mixed kinds; direct imported/owner/mixed life-season |
+| Format, lint, typecheck | Pass, 0 warnings, 0 errors |
+| Unit / contract / synthetic / adversarial | 1199 / 1199, 57 files |
+| Production build | Pass |
+| Browser (Playwright) | 459 / 459 — 153 each at 360, 430, and 1280 px; no retry or `ERR_ABORTED` |
+| Android-style deployed gate | Clean, 56 checks against deployed `0eb920b` |
+| Checkpoint equivalence | Pass — deployed `0eb920b` is bundle-equivalent to product checkpoint `1fc41cf` |
+| Reintroduction: remove `withSources` | Five focused failures |
+| Reintroduction: remove fourth-section `fromSources` | One isolated focused failure |
+
+The Android process first hit the same local `unable to verify the first
+certificate` condition as the deployed equivalence helper. It was rerun with
+TLS verification disabled for that process only; it then read deployed SHA
+`0eb920bfb0ddd9fd02c5ba7210a71b9322545c17` and completed all 56 assertions.
+
+Every previously accepted Phase 8 behavior remains green: QA-08-001 on entry
+and aggregate surfaces, QA-08-002's identity comparison, QA-08-N1 and N2,
+raw-archive inertness, atomic apply and reopened-database verification,
+rollback, exact idempotency, privacy handling, the legacy architecture wall,
+and laboratory/owner store separation. The four owner questions and the three
+deliberate non-features recorded in `PHASE_STATUS.md` remain unchanged. The
+protected previous-generation tree was not touched.
+
+## Recommendation
+
+Return to the **CURRENT original Claude Phase 8 builder conversation** for the
+formal GREEN closeout. Confirm product checkpoint `1fc41cf`, deployed
+bundle-equivalent SHA `0eb920b`, and this independent PASS; update the
+builder-owned phase status, decision/defect records, and governing handoff; keep
+the four owner questions explicit; and write the complete Phase 9 handoff. Do
+not alter this QA-owned verdict and do not begin Phase 9 implementation during
+the closeout.
+
+## D-082 / D-092 — next Claude action
+
+- **System:** Claude Code
+- **Model:** current strongest Opus-class Claude coding model (or nearest
+  current equivalent)
+- **Intelligence level:** **Max** — the closeout must reconcile four QA failures,
+  the repaired product checkpoint, the later bundle-equivalent deployment, the
+  mechanical D-108 regression rule, and the unchanged owner decisions without
+  reopening accepted work.
+- **Conversation:** **CURRENT — original Phase 8 Claude builder conversation**
+- **Report path:** `docs/qa/PHASE_08_QA_HANDOFF.md`
+
+## COPY/PASTE PROMPT
+
+```text
+Phase 8 independent QA's third retest returned PASS. Perform the formal GREEN
+closeout in the CURRENT original Claude Phase 8 builder conversation.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_08_QA_HANDOFF.md in full before acting, especially “Third
+independent QA retest — PASS.” Do not edit that QA-owned report.
+
+Confirm these QA facts:
+
+- tested product checkpoint: 1fc41cfd5691bf01e879225af4169d585068c2eb;
+- later live deployed SHA: 0eb920bfb0ddd9fd02c5ba7210a71b9322545c17;
+- the later deployment differs only in three documentation files and is
+  bundle-equivalent to the product checkpoint under D-097;
+- QA-08-003 and QA-08-004 are confirmed repaired, including independent fault
+  reintroductions: removing withSources fails five tests and removing the
+  insightsSection fromSources wrapper fails the isolated fourth-section test;
+- the scenario library produces the exact nine enumerated insight kinds under
+  owner, imported, device, and derived origins, with no produced card carrying
+  an empty source list; contradiction and stale-assumption remain constructors
+  but are not produced by any current golden scenario;
+- life-season provenance passes at the intelligence layer and on the deployed
+  Preview: imported-only is marked, owner-only is not, and a genuinely mixed
+  arrangement/history is not;
+- npm run verify passed with 1199/1199 tests across 57 files and a production
+  build; Playwright passed 459/459 across three viewports; the deployed Android
+  gate passed 56/56;
+- all earlier Phase 8 findings and accepted boundaries remain repaired, no new
+  defect was found, the Preview owner store was restored exactly, and the
+  independent result is PASS.
+
+Perform the formal Phase 8 GREEN closeout under the canonical plan and D-077.
+Update builder-owned PHASE_STATUS, decision/defect records, and governing
+handoff documents as required. Preserve the four open owner questions exactly:
+the v297 ancestor export decision; life-context-change mapping; the
+load-bearing literal NUL in derived ids; and the archived skill-claim,
+faith-anchor, and milestone-observation families. Preserve the deliberate
+non-features: no QA-laboratory import, no partial import, and no undo button.
+Do not reopen passed product work merely to add more coverage.
+
+Do not start Phase 9 implementation in this closeout turn. Identify Phase 9 —
+visual coherence, motion and mobile refinement, canonical plan section 54 —
+recommend its Claude model and intelligence level, state the correct
+CURRENT/NEW conversation routing, and write its complete ready-to-paste prompt
+to docs/NEXT_PROMPT.md. Include the approved product checkpoint, closing and
+deployed SHA relationship, verification results, QA report path, unchanged
+open/deferred items, model, level, conversation, and the D-092 launcher. Do not
+make the owner ask for the next handoff.
+```
+
+---
+
+**Model:** current strongest Opus-class Claude coding model (or nearest current
+equivalent)
+**Intelligence level:** Max
+**Conversation:** CURRENT original Phase 8 Claude builder conversation
+
+```text
+Close Phase 8 of the Life Command OS rebuild GREEN after independent QA PASS.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_08_QA_HANDOFF.md in full and execute the “Third independent
+QA retest — PASS” closeout handoff exactly as written.
+
+Do not ask me to paste the file contents.
+```
+
+---
+
+# Phase 8 — GREEN closeout
+
+Written by the original Claude Phase 8 builder conversation, below QA's verdict
+and without touching it, which is the same arrangement every round of this
+report has used. QA passed the phase; QA did not close it, and says so itself
+(D-077).
+
+## The PASS was confirmed here, not just read
+
+A verdict that is only quoted is a verdict nobody checked. Every fact the PASS
+rests on was re-established in this conversation, on a clean tree:
+
+| Confirmed                                                 | Result                                                                            |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Deployed SHA                                              | `0eb920bfb0ddd9fd02c5ba7210a71b9322545c17`, read live from `preview/build-info.json` |
+| Equivalence to the tested checkpoint `1fc41cf`            | Pass — three documentation files differ, none bundle-relevant                     |
+| Format, lint, privacy scan                                | Pass; 212 tracked files                                                           |
+| Typecheck, unit layer, production build                   | 0 errors; 1199 / 1199 across 57 files; build passes                               |
+| `npm run verify` from a clean checkout                    | Pass — cloned fresh at `0eb920b`, `npm ci`, 1199 / 1199 and a build               |
+| Browser (Playwright)                                      | 458 / 459 and one known transient, below                                          |
+| Android-style gate on the deployed build                  | Clean, 56 checks                                                                  |
+| Reintroduction: remove `withSources`                      | Five focused failures                                                             |
+| Reintroduction: remove the fourth section's `fromSources`  | One isolated focused failure                                                      |
+
+Both reintroductions were reproduced here independently of QA's account of them
+and produced exactly the counts QA reported. The working tree was restored and
+re-verified afterwards.
+
+**The one browser failure is the transient this phase has reported since round
+1**, and it is reported rather than retried past: `page.goto: net::ERR_ABORTED`
+at navigation, on a different spec each run — `qa-lab` this time, which passes
+69 / 69 in isolation. That is the documented characteristic. It is a local
+dev-server navigation flake that predates Phase 8, CI retries and is green, and
+it is **not** a Phase 8 defect. It is carried into Phase 9's handoff as an open
+item rather than closed by assertion.
+
+One correction to the process, not the verdict: a first run of the local gate
+here reported a spurious `TS6133: 'withSources' is declared but its value is
+never read`. That was this conversation's own fault — a background gate reached
+the build step while the file was temporarily mutated for a reintroduction. The
+gate was re-run on a clean tree and passed. Noted because a build error in a
+closeout log that goes unexplained is exactly the kind of thing a later reader
+would be right to distrust.
+
+## What is now true
+
+**Phase 8 — Legacy migration is GREEN.** Approved product checkpoint `1fc41cf`,
+served by deployed `0eb920b` under D-097. `PHASE_STATUS.md`, `DECISION_LOG.md`
+and `DEFECT_LEDGER.md` are updated; the eight Phase 8 defect entries that read
+"the checkpoint that closes Phase 8" now name it.
+
+## What carries forward untouched
+
+The **four owner questions** — the v297 ancestor export; `life-context-change`
+mapping; the load-bearing literal NUL in derived record ids; and the archived
+`skill-claim`, `faith-anchor` and `milestone-observation` families. None was
+answered here. They are the owner's to decide and they are repeated in the
+Phase 9 handoff.
+
+The **three deliberate non-features** — no import from the QA laboratory, no
+partial import, no undo button — each confirmed deliberate by QA rather than
+found missing.
+
+No passed product work was reopened to add coverage, and no Phase 9
+implementation was begun.
+
+## What this phase is actually a record of
+
+The automated gates were green at YELLOW, and independent QA then found five
+defects across three FAIL rounds. Two were product defects a person could see
+and no assertion could. **Three were verification defects** — tests whose titles
+claimed more than their bodies held — and that class occurred three times, twice
+inside a repair for the rule against it.
+
+D-108 stopped being a sentence about care and became four mechanical checks
+because being told the rule three times did not work. What finally closed it was
+not the fourth writing: it was somebody else running the checks. QA reproduced
+both reintroductions itself and audited the nine-kind enumeration for honesty
+rather than for internal consistency — which is the argument for D-077 restated
+at the level of a single assertion.
+
+The gap that hid behind the weakest of those assertions is why the class
+matters. A `life-season` card cited no evidence at all, so a season standing
+entirely on imported history disclosed nothing, and a guard reading
+`if (sources.length > 0)` meant "skip the case where the defect lives". Removing
+the guard found a real thing wrong with the product.
+
+## Next
+
+**Phase 9 — visual coherence, motion and mobile refinement** (canonical plan
+section 54), in a **NEW** Claude builder conversation, at **Max**. Its gate is
+owner physical-phone approval after an independent Codex QA round. The complete
+ready-to-paste prompt and the D-092 launcher are in
+[`../NEXT_PROMPT.md`](../NEXT_PROMPT.md).
+
 <!-- LCO_COMPLETE -->

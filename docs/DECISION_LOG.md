@@ -3314,3 +3314,25 @@ mechanical, and it is now the standing rule for any assertion of this shape:
    the state the defect produces. QA's own probe carried that guard, and it hid
    a real product gap — a `life-season` card that cites no evidence lines and
    therefore disclosed nothing at all. Removing the guard found it.
+
+### The fourth round, and what actually closed it
+
+Independent QA passed the phase on the round after these four checks were
+written, and it passed them the only way that means anything: it reproduced both
+named reintroductions itself rather than reading the account of them, and it
+audited the enumeration for honesty — asking whether the nine named kinds really
+are what the library produces and whether the two absent ones really are
+unreachable, rather than whether the list was internally consistent.
+
+That is the check the rule was missing. An enumeration written by the same
+conversation that wrote the code it enumerates is a claim about that code by its
+author. **What made these four checks binding was somebody else running them**,
+which is the whole argument for D-077 restated at the level of a single
+assertion.
+
+Three phases have now produced the same finding in different clothes: green
+gates are evidence about the gates. Phase 4 found it with a phone, Phase 7 found
+it by reading a screen, and Phase 8 found it by reading the tests. The rule
+generalises past origin badges — **any** sweep in this repository whose title
+begins "every" is subject to the four checks above, and the closing note is that
+being told a rule is not the same as the rule being enforced.

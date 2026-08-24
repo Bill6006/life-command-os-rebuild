@@ -16,6 +16,18 @@ const EXPECTED = {
 
 type ProbeSource = keyof typeof EXPECTED
 
+const PRODUCED = [
+  'context-effect',
+  'coverage-gap',
+  'emerging-change',
+  'life-season',
+  'move-effectiveness',
+  'repeated-friction',
+  'stable-strength',
+  'state-association',
+  'trajectory',
+] as const
+
 function rewritten(
   document: SnapshotWire,
   source: ProbeSource,
@@ -78,12 +90,18 @@ for (const source of Object.keys(EXPECTED) as ProbeSource[]) {
 
     for (const insight of insightsFor(situation).insights) {
       counts[source][insight.kind] = (counts[source][insight.kind] ?? 0) + 1
-      if (insight.sources.length > 0) {
-        assert.deepEqual(insight.sources, [source], `${scenario.id}: insight ${insight.id}`)
-        assert.equal(originOfSources(insight.sources)?.label, EXPECTED[source])
-      }
+      assert.deepEqual(insight.sources, [source], `${scenario.id}: insight ${insight.id}`)
+      assert.equal(originOfSources(insight.sources)?.label, EXPECTED[source])
     }
   }
+}
+
+for (const source of Object.keys(EXPECTED) as ProbeSource[]) {
+  assert.deepEqual(
+    Object.keys(counts[source]).sort(),
+    [...PRODUCED],
+    `${source}: scenario-produced insight kinds changed`,
+  )
 }
 
 for (const source of ['legacy-import', 'device', 'derived'] as const) {
@@ -93,6 +111,58 @@ for (const source of ['legacy-import', 'device', 'derived'] as const) {
     `${source}: no association card was exercised`,
   )
 }
+
+// A life-season card has no evidence lines: it quotes the durable arrangement
+// and counts the rows before it. Exercise that special source path directly,
+// including a genuinely mixed basis that the evidence-line loop below cannot
+// construct for this kind.
+const longRun = SCENARIOS.find((scenario) => scenario.id === 'long-run')
+assert.ok(longRun, 'the long-run scenario should exist')
+const longRunDocument = longRun.build()
+
+function reportFor(document: SnapshotWire) {
+  const loaded = snapshotFromWire(document)
+  assert.equal(loaded.loaded, true, 'rewritten long-run snapshot did not load')
+  const view = buildView(loaded.snapshot, { now: longRun.now, zone: longRun.zone })
+  const situation = assembleSituation(view, {
+    now: longRun.now,
+    zone: longRun.zone,
+    weekStartsOn: 1,
+    domains: coreDomains,
+  })
+  return insightsFor(situation)
+}
+
+const importedSeason = reportFor(rewritten(longRunDocument, 'legacy-import')).insights.find(
+  (insight) => insight.kind === 'life-season',
+)
+assert.ok(importedSeason, 'long-run should produce an imported life-season card')
+assert.deepEqual(importedSeason.sources, ['legacy-import'])
+assert.equal(originOfSources(importedSeason.sources)?.label, 'Imported')
+
+const ownerReport = reportFor(rewritten(longRunDocument, 'owner'))
+const ownerSeason = ownerReport.insights.find((insight) => insight.kind === 'life-season')
+assert.ok(
+  ownerSeason,
+  `long-run should produce an owner life-season card; got ${ownerReport.insights
+    .map((insight) => `${insight.kind}:${insight.id}`)
+    .join(', ')}`,
+)
+assert.equal(ownerSeason.id, importedSeason.id, 'owner and imported runs should produce one season')
+assert.deepEqual(ownerSeason.sources, ['owner'])
+assert.equal(originOfSources(ownerSeason.sources), undefined)
+
+const seasonRecord = importedSeason.id.replace(/^season:/, '')
+const mixedSeason = reportFor(
+  rewritten(longRunDocument, 'legacy-import', seasonRecord),
+).insights.find((insight) => insight.id === importedSeason.id)
+assert.ok(mixedSeason, 'long-run should produce the same mixed life-season card')
+assert.ok(mixedSeason.sources.includes('owner'), 'mixed season should include the owner context')
+assert.ok(
+  mixedSeason.sources.includes('legacy-import'),
+  'mixed season should include imported earlier history',
+)
+assert.equal(originOfSources(mixedSeason.sources), undefined)
 
 const mixedKinds: Record<string, number> = {}
 for (const scenario of SCENARIOS) {
@@ -142,4 +212,18 @@ assert.ok(
   `too few mixed-source insight kinds were exercised: ${JSON.stringify(mixedKinds)}`,
 )
 
-process.stdout.write(`${JSON.stringify({ counts, mixedKinds }, null, 2)}\n`)
+process.stdout.write(
+  `${JSON.stringify(
+    {
+      counts,
+      mixedKinds,
+      lifeSeason: {
+        imported: importedSeason.sources,
+        owner: ownerSeason.sources,
+        mixed: mixedSeason.sources,
+      },
+    },
+    null,
+    2,
+  )}\n`,
+)

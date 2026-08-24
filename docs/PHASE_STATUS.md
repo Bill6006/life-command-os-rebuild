@@ -24,17 +24,20 @@ reopens Phase 4 or any completed phase.
 
 # Phase 8 — Legacy migration
 
-**Status: YELLOW — READY FOR A THIRD INDEPENDENT QA RETEST.**
+**Status: GREEN — CLOSED after independent QA PASS.**
 
-Three QA rounds, all **FAIL**, everything repaired under section 42. Round 1
-found two blocking semantic defects; the retest confirmed one repaired and found
-the other half done — the conclusions drawn from records had been missed while
-the records themselves were fixed. The second retest confirmed the product
-correct and failed the **regressions**: two of them claimed more than they
-asserted, and one of those was hiding a real gap. Per D-077 this checkpoint does
-not self-certify, and a repair does not either: the second retest goes to the
-**same** Codex conversation, whose report is
-[`qa/PHASE_08_QA_HANDOFF.md`](qa/PHASE_08_QA_HANDOFF.md).
+Four QA rounds: **FAIL, FAIL, FAIL, PASS.** Round 1 found two blocking semantic
+defects. The retest confirmed one repaired and found the other half done — the
+conclusions drawn from records had been missed while the records themselves were
+fixed. The second retest confirmed the product correct and failed the
+**regressions**: two of them claimed more than they asserted, and one of those
+was hiding a real product gap. The third retest passed, having independently
+reproduced both named fault reintroductions and checked the newly exposed
+`life-season` gap on the deployed build.
+
+The report is [`qa/PHASE_08_QA_HANDOFF.md`](qa/PHASE_08_QA_HANDOFF.md). Per
+D-077 the QA conversation returned its PASS here for closeout and did not mark
+the phase itself.
 
 ## What this phase is actually about
 
@@ -62,46 +65,56 @@ construct, scale and direction are the same on both sides.
 Reported to D-097's pattern. The product checkpoint and the deployed SHA are two
 different facts, and the relationship between them is **checked**, not stated.
 
-|                    |                                                                                                                                               |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Product checkpoint | `b593a49` — the last commit that changed anything the build emits, and the build every result below was measured against                      |
-| Earlier this phase | `77fb34a`, the first complete build; `2d2d70e`, the one the read-through was done against and DEF-0068 found on; `ffd943e`, DEF-0068's repair |
-| Closing SHA        | current `main` HEAD. Documentation only past the checkpoint                                                                                   |
-| Deployed SHA       | read live from `preview/build-info.json`. It is whatever was pushed last and is **not expected** to equal the checkpoint                      |
-| Bundle equivalence | `node scripts/checkpoint-equivalence.mjs b593a49 --deployed <build-info-url>` — passes                                                        |
-| Stable Preview URL | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                   |
-| Live proof         | `preview/build-info.json`, and the equivalence script above                                                                                   |
+|                    |                                                                                                                                                                                                        |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Product checkpoint | `1fc41cf` — the last commit that changed anything the build emits, the QA-tested build, and the build every result below was measured against                                                          |
+| Earlier this phase | `77fb34a`, the first complete build; `2d2d70e`, the read-through build DEF-0068 was found on; `ffd943e`, its repair; `b593a49` at YELLOW; `d433079` and `1fc41cf`, the three QA repair rounds          |
+| Deployed SHA       | `0eb920b`, read live from `preview/build-info.json` — the SHA QA tested against. It is whatever was pushed last and is **not expected** to equal the checkpoint                                        |
+| Bundle equivalence | `node scripts/checkpoint-equivalence.mjs 1fc41cf --deployed <build-info-url>` — **passes**: three documentation files differ, none of them bundle-relevant, so `0eb920b` serves the checkpoint's bytes |
+| Closing SHA        | current `main` HEAD. Documentation only past the checkpoint, and the same equivalence check holds across it                                                                                            |
+| Stable Preview URL | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                                                            |
+| Live proof         | `preview/build-info.json`, and the equivalence script above                                                                                                                                            |
 
 ## Verification
 
-| Gate                                      | Result                                                                                                                                                               |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Privacy scan                              | Clean, 191 tracked files                                                                                                                                             |
-| Format (Prettier)                         | Pass                                                                                                                                                                 |
-| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                                                     |
-| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                                                       |
-| Unit / contract / synthetic / adversarial | 1163 passed / 1163, 56 files (in plain Node, no DOM)                                                                                                                 |
-| Browser tests (Playwright)                | 441 passed / 441 — 147 tests × 360, 430, 1280px                                                                                                                      |
-| Production build                          | Pass                                                                                                                                                                 |
-| `npm run verify` from a clean checkout    | Pass — cloned fresh at `77fb34a`, `npm ci`, 1163/1163                                                                                                                |
-| Deployed build is the checkpoint's        | By `scripts/checkpoint-equivalence.mjs`, not by string comparison (D-097)                                                                                            |
-| Reintroduction pass                       | **25 across the phase, 23 caught on the first attempt** — the two exceptions, DEF-0067 and this round's first fixture, are the reason the count is reported this way |
-| Builder's own Android-style gate          | `scripts/android-gate.mjs` against the deployed checkpoint, now including the whole import flow by touch                                                             |
-| Independent QA                            | **Outstanding**                                                                                                                                                      |
+| Gate                                      | Result                                                                                                                                                                                                                                                                             |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy scan                              | Clean, 212 tracked files                                                                                                                                                                                                                                                           |
+| Format (Prettier)                         | Pass                                                                                                                                                                                                                                                                               |
+| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                                                                                                                                                                   |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                                                                                                                                                                     |
+| Unit / contract / synthetic / adversarial | 1199 passed / 1199, 57 files (in plain Node, no DOM)                                                                                                                                                                                                                               |
+| Browser tests (Playwright)                | 459 passed / 459 — 153 tests × 360, 430, 1280px                                                                                                                                                                                                                                    |
+| Production build                          | Pass                                                                                                                                                                                                                                                                               |
+| `npm run verify` from a clean checkout    | Pass — cloned fresh at the deployed `0eb920b`, `npm ci`, 1199/1199                                                                                                                                                                                                                 |
+| Deployed build is the checkpoint's        | By `scripts/checkpoint-equivalence.mjs`, not by string comparison (D-097)                                                                                                                                                                                                          |
+| Reintroduction pass                       | **46 across the phase** — 25 before QA and 21 more across the three repair rounds. 23 of the first 25 were caught on the first attempt; the two exceptions, DEF-0067 and the round-2 fixture, are why the count is reported this way. Independent QA reproduced two of them itself |
+| Builder's own Android-style gate          | `scripts/android-gate.mjs` against the deployed build — 56 checks clean, including the whole import flow by touch                                                                                                                                                                  |
+| Independent QA                            | **PASS** on the fourth round, by a separate Codex conversation, against deployed `0eb920b` (D-077)                                                                                                                                                                                 |
 
-Phase 7 ended at 1059 unit-layer tests across 52 files. The 104 new ones are four
-new suites plus the architecture guards.
+Phase 7 ended at 1059 unit-layer tests across 52 files. The 140 new ones are five
+new suites plus the architecture guards — 104 of them at YELLOW, and 36 more
+written across the three QA repair rounds.
 
-| Suite                                                                           | Tests |
-| ------------------------------------------------------------------------------- | ----: |
-| `contract/legacy-import.test.ts` — a real encrypted file, translated end to end |    25 |
-| `synthetic/legacy-inert.test.ts` — five evenings decided with and without it    |    40 |
-| `unit/legacy-mapping.test.ts` — the registry held to its own claims             |    17 |
-| `adversarial/legacy-hostile.test.ts` — damaged, wrong, and actively lying files |    16 |
-| `unit/architecture-guards.test.ts` — the wall around `src/legacy/`              |    +6 |
+| Suite                                                                             | Tests |
+| --------------------------------------------------------------------------------- | ----: |
+| `contract/legacy-import.test.ts` — a real encrypted file, translated end to end   |    25 |
+| `synthetic/legacy-inert.test.ts` — five evenings decided with and without it      |    40 |
+| `unit/legacy-mapping.test.ts` — the registry held to its own claims               |    17 |
+| `adversarial/legacy-hostile.test.ts` — damaged, wrong, and actively lying files   |    16 |
+| `unit/architecture-guards.test.ts` — the wall around `src/legacy/`                |    +6 |
+| `synthetic/imported-origin.test.ts` — where an entry, and a conclusion, came from |    20 |
+
+The last of those is the QA rounds' suite and did not exist at YELLOW. It holds
+three blocks: every surface that **shows an entry**, every surface that **states
+a conclusion**, and every insight kind the library produces, enumerated by name
+across four origins. The architecture guards grew to 46 over the same rounds —
+the invisible-character sweep and the single-badge-definition guard are both
+there.
 
 Browser: `tests/browser/legacy-import.spec.ts`, 13 tests × 3 viewports = 39 new,
-on top of the 405 already there — all unchanged, all still green.
+on top of the 405 already there, and 15 more across the QA rounds — all
+unchanged, all still green.
 
 ## Gate checklist (section 53)
 
@@ -124,8 +137,8 @@ on top of the 405 already there — all unchanged, all still green.
 | Gate: ambiguous mappings remain explicit                       | Pass — four dispositions, and silence is not one of them                                                                                                           |
 | Gate: imported raw records cannot silently drive decisions     | Pass — five scenarios × two opposite pulls, decided identically down to the dimensions and the score                                                               |
 | Gate: current behaviour is correct with no legacy data present | Pass — every other suite in the repository runs with none, and none of them changed                                                                                |
-| CI green                                                       | See the QA handoff                                                                                                                                                 |
-| Independent QA (D-077)                                         | **Outstanding**                                                                                                                                                    |
+| CI green                                                       | Pass — and confirmed independently by QA at the tested checkpoint                                                                                                  |
+| Independent QA (D-077)                                         | **Pass** — four rounds, three FAIL and repaired under section 42, the fourth PASS                                                                                  |
 
 ## The mapping, and where the judgement went
 
@@ -528,9 +541,94 @@ Proved by reintroduction: removing `withSources` fails five; removing
 `fromSources` from `insightsSection` fails one; removing the `life-season`
 sources fails four.
 
+## Independent QA, third retest — PASS
+
+QA retested product checkpoint `1fc41cf` through deployed `0eb920b`, confirmed
+bundle-equivalent by the script rather than by string comparison, and returned
+**PASS**. No new defect was found.
+
+It did not take the repair's word for either reintroduction. It removed
+`withSources` itself and saw five focused failures; it removed the `fromSources`
+wrapper from `insightsSection` itself and saw the isolated fourth-section test
+fail. It checked the enumeration was honest — that the nine named kinds really
+are what the scenario library produces, and that `contradiction` and
+`stale-assumption` really are unreachable from any current scenario — and that
+the mixed case is genuinely mixed rather than arranged.
+
+And it tested the product gap the weak assertion had been hiding, on the
+deployed build rather than only at the intelligence layer: a `life-season` card
+over imported history carries `Imported`, over the owner's own carries nothing,
+and over a genuine mixture carries nothing. It restored the Preview's original
+eight-record owner history exactly afterwards.
+
+| Gate                                                      | Independent result                                    |
+| --------------------------------------------------------- | ----------------------------------------------------- |
+| Format, lint, typecheck                                   | Pass, 0 warnings, 0 errors                            |
+| Unit / contract / synthetic / adversarial                 | 1199 / 1199 across 57 files                           |
+| Production build                                          | Pass                                                  |
+| Browser (Playwright)                                      | 459 / 459 — 153 each at 360, 430 and 1280px, no retry |
+| Android-style gate on the deployed build                  | Clean, 56 checks against `0eb920b`                    |
+| Checkpoint equivalence                                    | Pass — `0eb920b` serves `1fc41cf`'s bytes             |
+| Reintroduction: remove `withSources`                      | Five focused failures                                 |
+| Reintroduction: remove the fourth section's `fromSources` | One isolated focused failure                          |
+
+Every previously accepted behaviour still holds: QA-08-001 on entry and
+aggregate surfaces, QA-08-002's identity comparison, QA-08-N1 and N2,
+raw-archive inertness, atomic apply and reopened-database verification,
+rollback, exact idempotency, privacy handling, the legacy architecture wall, and
+the laboratory/owner store separation. The protected previous-generation tree
+was not touched (D-001).
+
+## GREEN closeout
+
+Confirmed in this builder conversation before anything was marked, because a
+PASS that is only read is not a PASS that is checked. Re-run here on a clean
+tree:
+
+| Confirmed                                | Result                                                                                                 |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Deployed SHA                             | `0eb920bfb0ddd9fd02c5ba7210a71b9322545c17`, read live from `preview/build-info.json`                   |
+| Equivalence to the tested checkpoint     | Pass — three documentation files differ from `1fc41cf`, none bundle-relevant                           |
+| Format, lint, privacy scan               | Pass; 212 tracked files                                                                                |
+| Typecheck, unit layer, production build  | 0 errors; 1199 / 1199 across 57 files; build passes                                                    |
+| `npm run verify` from a clean checkout   | Pass — cloned fresh at `0eb920b`, `npm ci`, 1199 / 1199 and a build                                    |
+| Browser (Playwright)                     | 458 / 459 and one known transient — see below                                                          |
+| Android-style gate on the deployed build | Clean, 56 checks                                                                                       |
+| Reintroduction, reproduced here          | Removing `withSources` fails five; removing the fourth section's `fromSources` fails one, in isolation |
+
+**The one browser failure is the transient this phase has reported since round
+1**, and it is reported again rather than quietly retried: `page.goto:
+net::ERR_ABORTED` at navigation, on a different spec each run — `qa-lab` this
+time. The affected spec passes 69 / 69 when run alone, which is the documented
+characteristic. It is a local dev-server navigation flake that predates Phase 8,
+CI retries and is green, and it is **not** a Phase 8 defect. It stays on the
+list of things to fix rather than being closed by assertion.
+
+### What this phase is actually a record of
+
+Four rounds, and the arithmetic is worth stating plainly: the automated gates
+were green at YELLOW, and independent QA then found **five defects** across
+three FAIL rounds. Two were product defects a person could see and no assertion
+could. Three were **verification** defects — tests whose titles claimed more
+than their bodies held.
+
+That last class occurred three times, twice inside a repair for the rule against
+it. D-108 stopped being a sentence about care and became four mechanical checks
+because being told it three times did not work. And the fourth round found the
+rule finally holding: the enumerations are honest, the assertions carry values
+rather than containers, and the reintroductions fail what their titles name.
+
+The gap that hid behind the weakest of those assertions — a `life-season` card
+citing no evidence at all, so a season standing on imported history disclosed
+nothing — is the reason the class matters. A guard that reads as caution meant
+"skip the case where the defect lives", and it took removing the guard to find a
+real thing wrong with the product.
+
 ## Open items and questions for the owner
 
-Four, and none of them blocks QA.
+Four. None of them blocked QA, all four were confirmed unchanged by the PASS,
+and **all four survive the GREEN closeout untouched** — they are the owner's to
+answer, not a phase's to close.
 
 1. **The generation before the previous one.** The single-HTML app's export
    (`v297-phase68`) is recognised by shape and refused with a sentence saying
@@ -571,6 +669,8 @@ Four, and none of them blocks QA.
 
 ## Deliberately not built, with reasons
 
+Three, each confirmed as deliberate by independent QA rather than found missing.
+
 - **No import from the QA laboratory.** An import writes to the owner's store
   and nothing else, and the panel refuses while a test history is on screen —
   the same rule and the same words a restore uses (D-091 invariant 8).
@@ -585,11 +685,16 @@ Four, and none of them blocks QA.
 
 ## Next
 
-**Third retest by the same Codex QA conversation**, per section 43's defect loop — a
-retest after a builder repair goes to the conversation that found the defects,
-not to a fresh one. Then the GREEN closeout in this builder conversation, and
-Phase 9 — visual coherence, motion and mobile refinement (canonical plan
-section 54).
+**Phase 9 — visual coherence, motion and mobile refinement** (canonical plan
+section 54), in a **new** builder conversation: the defect loop that kept Phase 8
+in one conversation is closed, and a new phase starts fresh. The ready-to-paste
+handoff is in [`NEXT_PROMPT.md`](NEXT_PROMPT.md).
+
+Phase 8 carries one thing forward beyond the four owner questions: the
+`net::ERR_ABORTED` browser transient, which has been reported in every round of
+this phase and fixed in none of them. It is a local navigation flake rather than
+a product defect, and it has now survived long enough to be worth a deliberate
+look rather than another paragraph.
 
 ---
 

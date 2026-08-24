@@ -93,7 +93,14 @@ None.
   those histories are rich enough to produce nine kinds of card, and a fixture
   per kind would be nine things that resemble the product rather than nine
   histories it actually reasons about.
-- Fixed in: the checkpoint that closes Phase 8
+- Confirmed by: **independent Codex QA, third retest — PASS.** It did not accept
+  either reintroduction on report: it removed `withSources` itself and saw five
+  focused failures, removed the `fromSources` wrapper itself and saw the
+  isolated fourth-section test fail, and checked that the nine-kind enumeration
+  is honest rather than convenient. It verified the `life-season` sibling on the
+  deployed build in all three states — imported marked, owner unmarked, mixed
+  unmarked.
+- Fixed in: `1fc41cf`, the checkpoint that closes Phase 8
 
 ### DEF-0072 — one badge, five stylesheets, and an eyebrow that shouted through it
 
@@ -144,7 +151,7 @@ None.
   counted it. Present and legible are two claims, and only the first can be
   counted — the same distinction as "on the screen" versus "distinguishable on
   the screen" from the round-1 repair, one layer in.
-- Fixed in: the checkpoint that closes Phase 8
+- Fixed in: Phase 8, carried in the closing product checkpoint `1fc41cf`
 
 ### DEF-0071 (QA-08-001, retest) — a conclusion drawn entirely from imported history did not say so
 
@@ -199,7 +206,7 @@ learning for 3 months` with no cue. Same on the Insights card and in four
   coverage card's evidence lines resolved and the assertion passed even with the
   area-level origin removed. It could not fire. The fixture now matches QA's:
   one goal and nothing else, which is what makes the card depend on the area.
-- Fixed in: the checkpoint that closes Phase 8
+- Fixed in: Phase 8, carried in the closing product checkpoint `1fc41cf`
 
 ### DEF-0070 (QA-08-002) — a new backup's own timestamp turned unchanged rows into conflicts
 
@@ -247,7 +254,7 @@ learning for 3 months` with no cue. Same on the Insights card and in four
   it differently; calling that "now says something different" blames his old
   history for a change in this app, and calling it "already present" hides a
   real difference in what the app believes his history means.
-- Fixed in: the checkpoint that closes Phase 8
+- Fixed in: Phase 8, carried in the closing product checkpoint `1fc41cf`
 
 ### DEF-0069 (QA-08-001) — nothing on any surface said where an entry came from
 
@@ -297,7 +304,7 @@ learning for 3 months` with no cue. Same on the Insights card and in four
   surfaces**" which asserted `provenance.source` and rendered nothing. Anybody
   auditing the suite for that claim would have found it and ticked it. It is
   retitled to what it proves.
-- Fixed in: the checkpoint that closes Phase 8
+- Fixed in: Phase 8, carried in the closing product checkpoint `1fc41cf`
 
 ### DEF-0068 — the import report read the audit trail out to the owner
 
@@ -351,7 +358,7 @@ learning for 3 months` with no cue. Same on the Insights card and in four
   assertion was asked. One browser test in this very file already asserted
   `toContainText('move catalogue')`, which is an assertion **that the developer
   wording is on screen**. It was green throughout.
-- Fixed in: the checkpoint that closes Phase 8
+- Fixed in: Phase 8, carried in the closing product checkpoint `1fc41cf`
 
 ### DEF-0067 — a guard that could never fire, and an assertion that compared nothing to nothing
 
@@ -413,7 +420,7 @@ learning for 3 months` with no cue. Same on the Insights card and in four
   and the vacuous comparison was replaced with the dimensions and the score —
   the numbers a legacy row would nudge without flipping the ranking, which is
   the shape the assertion was supposed to catch.
-- Fixed in: the checkpoint that closes Phase 8
+- Fixed in: Phase 8, carried in the closing product checkpoint `1fc41cf`
 
 ### DEF-0066 — a re-import reported that everything was already there and offered to do it again
 
@@ -446,7 +453,7 @@ learning for 3 months` with no cue. Same on the Insights card and in four
   halves meet and it prefers what the store holds.
 - Note on the fix: D-104 records the general form — what counts as "nothing to
   do" is one predicate consulted by both callers, not one check written twice.
-- Fixed in: the checkpoint that closes Phase 8
+- Fixed in: Phase 8, carried in the closing product checkpoint `1fc41cf`
 
 ### DEF-0065 — every import would have verified false and rolled itself back
 
@@ -477,7 +484,7 @@ learning for 3 months` with no cue. Same on the Insights card and in four
 - Note on the fix: sorting is independently correct rather than a workaround —
   D-091's seventh invariant, and appending imported rows to the end of the
   record list would put a decade-old reading after last night's.
-- Fixed in: the checkpoint that closes Phase 8
+- Fixed in: Phase 8, carried in the closing product checkpoint `1fc41cf`
 
 ### DEF-0064 (QA-07-010) — a sticky layer was a window, and rectangles could not see it
 
