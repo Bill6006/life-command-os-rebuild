@@ -65,7 +65,7 @@ function AreaOrigin({ coverage }: { coverage: DomainCoverage }) {
   const origin = originOfSources(coverage.sources)
   if (origin === undefined) return null
   return (
-    <span className="life-origin" data-testid="life-origin" title={origin.detail}>
+    <span className="origin-badge" data-testid="life-origin" title={origin.detail}>
       {origin.label}
     </span>
   )

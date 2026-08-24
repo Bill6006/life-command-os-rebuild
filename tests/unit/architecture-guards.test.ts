@@ -231,6 +231,77 @@ describe('the guards themselves', () => {
  * Nothing renders them. So they are swept for directly, over every source file,
  * rather than being watched for in the one place they last appeared.
  */
+/**
+ * One badge, one appearance, one definition (D-106, D-108).
+ *
+ * Where an entry or a conclusion came from is one fact, and it shows on five
+ * surfaces. It was styled separately in each of their stylesheets, and the
+ * copies drifted the moment they existed: on an Insights card the badge sat
+ * beside an eyebrow carrying `text-transform: uppercase` and inherited it,
+ * rendering "OUT OF DATEIMPORTED" as one run of capitals.
+ *
+ * A badge that means the same thing everywhere has to look the same
+ * everywhere, or the owner learns it five times. So there is one class, and
+ * this fails the build if a surface starts styling its own.
+ */
+describe('the origin badge is defined once', () => {
+  const SURFACE_CLASSES = [
+    'tl-entry__origin',
+    'domain-origin',
+    'life-origin',
+    'in-origin',
+    'ev-origin',
+  ]
+
+  function stylesheets(): readonly string[] {
+    const out: string[] = []
+    const walk = (dir: string): void => {
+      for (const name of readdirSync(dir)) {
+        const full = join(dir, name)
+        if (statSync(full).isDirectory()) walk(full)
+        else if (name.endsWith('.css')) out.push(full)
+      }
+    }
+    walk(join(ROOT, 'src'))
+    return out
+  }
+
+  it('is looking at the stylesheets', () => {
+    expect(stylesheets().length).toBeGreaterThan(5)
+  })
+
+  it('exists, in the shared sheet', () => {
+    const shared = readFileSync(join(ROOT, 'src/styles/base.css'), 'utf8')
+    expect(shared).toContain('.origin-badge')
+    // The properties a parent surface can impose are reset explicitly, which is
+    // the whole reason one definition is enough.
+    expect(shared).toMatch(/text-transform:\s*none/)
+    expect(shared).toMatch(/letter-spacing:\s*normal/)
+  })
+
+  it('is styled by no surface of its own', () => {
+    const offenders: string[] = []
+    for (const file of stylesheets()) {
+      const text = readFileSync(file, 'utf8')
+      for (const cls of SURFACE_CLASSES) {
+        if (text.includes(`.${cls}`)) offenders.push(`${repoPath(file)} styles .${cls}`)
+      }
+      if (repoPath(file) !== 'src/styles/base.css' && text.includes('.origin-badge')) {
+        offenders.push(`${repoPath(file)} restyles .origin-badge`)
+      }
+    }
+    expect(offenders, 'one badge, defined once').toEqual([])
+  })
+
+  it('is the class every surface actually renders', () => {
+    const rendering = FEATURES.filter((file) => /data-testid="[a-z-]*origin"/.test(readCode(file)))
+    expect(rendering.length, 'surfaces should render the badge').toBeGreaterThan(3)
+    for (const file of rendering) {
+      expect(readCode(file), repoPath(file)).toContain('className="origin-badge"')
+    }
+  })
+})
+
 describe('nothing in the source is invisible', () => {
   /**
    * The one control character this repository deliberately contains.

@@ -109,7 +109,7 @@ export function EvidenceLines({
             <li key={line.record}>
               {line.text}
               {origin === undefined ? null : (
-                <span className="ev-origin" data-testid="ev-origin" title={origin.detail}>
+                <span className="origin-badge" data-testid="ev-origin" title={origin.detail}>
                   {origin.label}
                 </span>
               )}

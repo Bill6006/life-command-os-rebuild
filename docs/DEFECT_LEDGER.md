@@ -39,6 +39,44 @@ None.
 
 ## Fixed
 
+### DEF-0072 — one badge, five stylesheets, and an eyebrow that shouted through it
+
+- Status: Fixed
+- Severity: Major — the badge is how the owner tells his own history from
+  migrated history, and on one surface it did not read as a badge at all
+- Found in: Phase 8 / `606197e`
+- Found by: **the builder, by reading the deployed Life and Insights screens**
+  after the Android gate had passed 56 checks including "an Insights card drawn
+  from it says so too"
+- Class: **one appearance defined in five places.** The origin badge shows on
+  Timeline, a domain page, the Life overview, an Insights card and an evidence
+  line, and each surface's stylesheet carried its own copy of the same
+  declarations. The copies drifted immediately: on the Insights card the badge
+  was nested inside an eyebrow carrying `text-transform: uppercase` and
+  `letter-spacing: 0.1em`, inherited both, and rendered as
+  `OUT OF DATEIMPORTED` — a wide-tracked run of capitals that reads as part of
+  the eyebrow rather than as a separate thing.
+- Reproduction: import a legacy backup whose only Career record is a goal, then
+  open Insights. The card's eyebrow reads `OUT OF DATEIMPORTED`.
+- Root cause: the badge inherited what its parent imposed, because nothing said
+  otherwise, and there was no single definition where "otherwise" could be said
+  once.
+- Regression: `tests/unit/architecture-guards.test.ts`, "the origin badge is
+  defined once" — the shared class exists and resets the properties a parent can
+  impose; no surface stylesheet styles its own; and every surface that renders
+  the badge renders the shared class. Proved by reintroduction in both
+  directions: adding `.in-origin` back to a surface sheet fails, and pointing a
+  surface's markup at its own class fails.
+- Siblings: all five were the same defect and all five now use one class. The
+  Insights badge also moved **out** of the eyebrow, because resetting the
+  inherited properties fixes the symptom and the two are still different kinds
+  of thing about the card.
+- Note on how it was found: the gate asserted the badge was _present_ and
+  counted it. Present and legible are two claims, and only the first can be
+  counted — the same distinction as "on the screen" versus "distinguishable on
+  the screen" from the round-1 repair, one layer in.
+- Fixed in: the checkpoint that closes Phase 8
+
 ### DEF-0071 (QA-08-001, retest) — a conclusion drawn entirely from imported history did not say so
 
 - Status: Fixed

@@ -194,14 +194,23 @@ function InsightCard({
 
   return (
     <section className="in-card" data-kind={insight.kind} data-testid={`insight-${insight.kind}`}>
-      <span className="in-card__eyebrow">
-        {insight.eyebrow}
+      {/*
+       * Beside the eyebrow rather than inside it.
+       *
+       * The eyebrow carries `text-transform: uppercase` and wide tracking, and
+       * a badge nested in it inherited both — rendering "OUT OF DATEIMPORTED"
+       * as one run of capitals. The badge resets those properties itself now,
+       * and it also sits outside, because the two are different things saying
+       * different kinds of thing about the card.
+       */}
+      <p className="in-card__meta">
+        <span className="in-card__eyebrow">{insight.eyebrow}</span>
         {origin === undefined ? null : (
-          <span className="in-origin" data-testid="insight-origin" title={origin.detail}>
+          <span className="origin-badge" data-testid="insight-origin" title={origin.detail}>
             {origin.label}
           </span>
         )}
-      </span>
+      </p>
       <h2 className="in-card__headline">{insight.headline}</h2>
       <p className="in-card__detail">{insight.detail}</p>
 

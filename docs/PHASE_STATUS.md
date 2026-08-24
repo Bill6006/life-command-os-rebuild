@@ -24,12 +24,14 @@ reopens Phase 4 or any completed phase.
 
 # Phase 8 — Legacy migration
 
-**Status: YELLOW — READY FOR INDEPENDENT QA RETEST.**
+**Status: YELLOW — READY FOR A SECOND INDEPENDENT QA RETEST.**
 
-Round 1 returned **FAIL** on two blocking semantic defects, both now repaired
-under section 42 as whole classes. Per D-077 this checkpoint does not
-self-certify, and a repair does not either: the retest goes to the **same**
-Codex conversation, whose report is
+Two QA rounds, both **FAIL**, both repaired under section 42 as whole classes.
+Round 1 found two blocking semantic defects; the retest confirmed one repaired
+and found the other only half done — the conclusions drawn from records had been
+missed while the records themselves were fixed. Per D-077 this checkpoint does
+not self-certify, and a repair does not either: the second retest goes to the
+**same** Codex conversation, whose report is
 [`qa/PHASE_08_QA_HANDOFF.md`](qa/PHASE_08_QA_HANDOFF.md).
 
 ## What this phase is actually about
@@ -70,20 +72,20 @@ different facts, and the relationship between them is **checked**, not stated.
 
 ## Verification
 
-| Gate                                      | Result                                                                                                                                   |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Privacy scan                              | Clean, 191 tracked files                                                                                                                 |
-| Format (Prettier)                         | Pass                                                                                                                                     |
-| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                         |
-| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                           |
-| Unit / contract / synthetic / adversarial | 1163 passed / 1163, 56 files (in plain Node, no DOM)                                                                                     |
-| Browser tests (Playwright)                | 441 passed / 441 — 147 tests × 360, 430, 1280px                                                                                          |
-| Production build                          | Pass                                                                                                                                     |
-| `npm run verify` from a clean checkout    | Pass — cloned fresh at `77fb34a`, `npm ci`, 1163/1163                                                                                    |
-| Deployed build is the checkpoint's        | By `scripts/checkpoint-equivalence.mjs`, not by string comparison (D-097)                                                                |
-| Reintroduction pass                       | **18 across the phase, 17 caught on the first attempt** — the exception is DEF-0067, and it is the reason the count is reported this way |
-| Builder's own Android-style gate          | `scripts/android-gate.mjs` against the deployed checkpoint, now including the whole import flow by touch                                 |
-| Independent QA                            | **Outstanding**                                                                                                                          |
+| Gate                                      | Result                                                                                                                                                               |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy scan                              | Clean, 191 tracked files                                                                                                                                             |
+| Format (Prettier)                         | Pass                                                                                                                                                                 |
+| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                                                     |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                                                       |
+| Unit / contract / synthetic / adversarial | 1163 passed / 1163, 56 files (in plain Node, no DOM)                                                                                                                 |
+| Browser tests (Playwright)                | 441 passed / 441 — 147 tests × 360, 430, 1280px                                                                                                                      |
+| Production build                          | Pass                                                                                                                                                                 |
+| `npm run verify` from a clean checkout    | Pass — cloned fresh at `77fb34a`, `npm ci`, 1163/1163                                                                                                                |
+| Deployed build is the checkpoint's        | By `scripts/checkpoint-equivalence.mjs`, not by string comparison (D-097)                                                                                            |
+| Reintroduction pass                       | **25 across the phase, 23 caught on the first attempt** — the two exceptions, DEF-0067 and this round's first fixture, are the reason the count is reported this way |
+| Builder's own Android-style gate          | `scripts/android-gate.mjs` against the deployed checkpoint, now including the whole import flow by touch                                                             |
+| Independent QA                            | **Outstanding**                                                                                                                                                      |
 
 Phase 7 ended at 1059 unit-layer tests across 52 files. The 104 new ones are four
 new suites plus the architecture guards.
@@ -260,7 +262,7 @@ place it was first broken is not a rule. The title is now
 also a heading in the document he hands to an assistant, where "you" would read
 as the assistant.
 
-## Six defects before QA and after it
+## Eight defects, three of them found by reading the screen
 
 Full entries in [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
 
@@ -284,7 +286,7 @@ property that does not exist. This is the failure Phase 7 shipped three of, and
 the handoff's instruction to prove every regression by reintroduction is the only
 reason it was found.
 
-## Eighteen reintroductions
+## Twenty-five reintroductions
 
 Each new guard and each new claim was proved by putting the defect back and
 watching the test fail.
@@ -417,6 +419,60 @@ The per-surface probes matter as much as the whole one: a fix applied in a
 shared function and then dropped by one consumer is the shape this defect had
 in the first place.
 
+## Independent QA, retest — FAIL on the aggregate half, repaired
+
+QA retested `d072012` and confirmed **QA-08-002 and both non-blocking findings
+repaired**. QA-08-001 was **still failing**, and the diagnosis was exact.
+
+The round-1 repair threaded origin through `DescribedRecord`, which is the shape
+for **showing** a record. Every surface that lists entries was fixed; every
+surface that states a **conclusion drawn from** them was not — Life's overview,
+an Insights coverage card, and four sections of the review export. Each was true
+and each read as though the owner had gone quiet about an area he had never
+mentioned to this app at all.
+
+The fact the intelligence layer was not computing is the whole repair.
+`DomainCoverage.source` answers "where did the newest evidence come from",
+which is right for reliability and wrong for disclosure: an area with one recent
+entry of his own on top of a decade of imports would have read as entirely his.
+So `sources` carries the whole body alongside it, on `DomainCoverage`,
+`ConceptCoverage` and `Insight` — and `originOfSources` is the one place the
+word is chosen, shared with the entry-level rule so the two cannot drift.
+D-108.
+
+`Insight.sources` is filled centrally from what each card cites, so a card
+written next year discloses correctly without its author knowing the rule
+exists. Coverage cards set it themselves, because their evidence lines name
+concepts rather than records — which is exactly QA's reproduction: an area whose
+only record is a goal has no concept evidence at all.
+
+### The lesson this round is really about
+
+The round-1 report found a test whose title claimed more than its body held, and
+that was written down as a rule. **The repair for it then shipped the same
+defect**: a test headed "every surface tells them apart", asserting the four
+record-shaped surfaces and none of the four aggregate ones. QA named that title
+as the reason the gap went unnoticed.
+
+Both blocks are now named for what they hold. And the first version of the new
+fixture could not fire either — it gave Career an imported _observation_ as well
+as the goal, so the coverage card's evidence lines resolved and the assertion
+passed with the area-level origin removed. Found by the reintroduction pass
+rather than by review.
+
+### And one the gate counted but could not read
+
+DEF-0072. The Android gate passed 56 checks including "an Insights card drawn
+from it says so too", and the card's eyebrow read **`OUT OF DATEIMPORTED`** — the
+badge was nested in an eyebrow carrying `text-transform: uppercase` and had
+inherited it. The badge had been defined separately in five stylesheets, so
+there was nowhere to say "not that" once.
+
+One class now, in the shared sheet, resetting the properties a parent can
+impose, with an architecture guard that fails the build if a surface starts
+styling its own. Present and legible are two claims and only the first can be
+counted.
+
 ## Open items and questions for the owner
 
 Four, and none of them blocks QA.
@@ -474,7 +530,7 @@ Four, and none of them blocks QA.
 
 ## Next
 
-**Retest by the same Codex QA conversation**, per section 43's defect loop — a
+**Second retest by the same Codex QA conversation**, per section 43's defect loop — a
 retest after a builder repair goes to the conversation that found the defects,
 not to a fresh one. Then the GREEN closeout in this builder conversation, and
 Phase 9 — visual coherence, motion and mobile refinement (canonical plan

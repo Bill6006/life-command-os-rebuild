@@ -247,7 +247,7 @@ export function DomainPage({ page }: { page: LifePage }) {
                 {goal.statement}
                 {goal.origin === undefined ? null : (
                   <span
-                    className="domain-origin"
+                    className="origin-badge"
                     data-testid="domain-origin"
                     title={goal.origin.detail}
                   >
@@ -287,7 +287,7 @@ export function DomainPage({ page }: { page: LifePage }) {
                   {change.text}
                   {change.origin === undefined ? null : (
                     <span
-                      className="domain-origin"
+                      className="origin-badge"
                       data-testid="domain-origin"
                       title={change.origin.detail}
                     >
@@ -437,7 +437,7 @@ function ConceptRow({
         {reading.text}
         {reading.outOfDate ? ' — out of date' : ''}
         {reading.origin === undefined ? null : (
-          <span className="domain-origin" data-testid="domain-origin" title={reading.origin.detail}>
+          <span className="origin-badge" data-testid="domain-origin" title={reading.origin.detail}>
             {reading.origin.label}
           </span>
         )}

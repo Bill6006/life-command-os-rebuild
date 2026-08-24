@@ -97,7 +97,7 @@ export function TimelineScreen() {
                       {entry.text}
                       {entry.origin === undefined ? null : (
                         <span
-                          className="tl-entry__origin"
+                          className="origin-badge"
                           data-testid="tl-origin"
                           title={entry.origin.detail}
                         >
