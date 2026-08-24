@@ -1465,18 +1465,84 @@ rather than a re-architecture. It is worth knowing which way round that is.
 
 ---
 
+## L. Adversarial review — scenarios constructed to provoke a failure
+
+Section 4.10 of the brief asks for these to be actively hunted rather than noticed. Histories
+were built through the QA laboratory's document loader to provoke each category. Most of the
+categories were already met by findings above; the two below are what the constructed histories
+added, and the first is the most serious single defect in this audit.
+
+**Categories already evidenced elsewhere:** all tests pass and the behaviour is still stupid
+(1,199 green against §A); information exists and cannot be reached (six seams, §4.9, plus
+AUD-0046 and AUD-0047); two subsystems disagree (AUD-0001, AUD-0028, AUD-0037); overconfidence
+(AUD-0032, AUD-0033); should abstain and does not (AUD-0031); fails to ask a decision-changing
+question (AUD-0031); time and context wrong (§A); a domain in a silo (AUD-0011); too generic to
+act on (AUD-0045); long-term strategy absent (AUD-0020); progress measured poorly (AUD-0021); a
+workflow conceptually wrong (AUD-0023); a simpler design would be smarter (AUD-0035).
+
+**One category could not be provoked, and the reason is a design strength.** *An unnecessary
+question* appears to be structurally impossible: `guide.ts` decides whether to ask by re-running
+the entire pipeline under every possible answer and comparing where they land, so a question
+that cannot change the recommendation cannot be selected. The failure mode here is the opposite
+one — not asking when it should (AUD-0031). This belongs on the do-not-change list and is
+recorded there.
+
+### L.1 — AUD-0048
+
+| Field | Detail |
+| --- | --- |
+| **ID** | AUD-0048 |
+| **Title** | "Three times running" is asserted about a child from three non-consecutive occasions, with the failures filtered out and the most recent one a failure |
+| **Type** | **BUG** |
+| **Current behaviour** | `growthSuggestions` (`growth.ts:133-176`) walks a skill's episodes and builds `cleared` by **discarding** every occasion that is not `completed` with `resultReached >= GROWTH_CLEARLY` (0.9). Partial occasions are dropped by `continue`; nothing counts them, and nothing records that they happened. The headline is then written from the length of that filtered list: `` `${who} has handled ${skill.label} ${cleared.length} times running.` `` The word **running** asserts consecutiveness that the filter has just destroyed, and the proposed statement is `` `${who} handles ${skill.label} independently now.` `` |
+| **Problem** | Three separate failures in one sentence. **It is factually false** — "running" means consecutively, and the occasions need not be consecutive or even adjacent. **It hides the disconfirming evidence entirely** — a child who manages a thing three times in ten is described identically to one who manages it three times in three. **It can be contradicted by the most recent occasion** — the run can end on a failure and the sentence does not change. And it is the app making a claim about a four-year-old's development, offered for the owner to accept with one tap, on the surface he trusts most. This is also DEF-0022 / DEF-0033 / DEF-0039's class a fifth time: the Fatherhood page displays the alternating record while Now asserts the unbroken run, and the reader has no way to reconcile them. |
+| **Owner-facing example** | **Constructed and reproduced live on the deployed build.** A history with six occasions of "ordering her own food", alternating: all the way (6 June), **part of the way (9 June)**, all the way (13 June), **part of the way (16 June)**, all the way (20 June), **part of the way (23 June)**. Three of six, never twice in a row, and the most recent occasion needed help. At the same instant, on two screens: <br>**Now** — *"Adaya has handled ordering her own food **3 times running**. Worth calling that settled?"* → [Yes, she has got this] [Not yet] <br>**Fatherhood / Adaya, "Recently"** — *"How far ordering her own food got: **part of the way**." · "How far ordering her own food got: all the way." · "How far ordering her own food got: **part of the way**." · "How far ordering her own food got: all the way."* <br>If he taps "Yes, she has got this", the app records *"She handles ordering her own food independently now."* |
+| **Evidence** | `src/intelligence/growth.ts:140-146` (the filter), `:169` (the headline), `:171` (the statement); `src/intelligence/outcomes.ts:527-533` (`resultReached`); `GROWTH_CLEARLY = 0.9` at `growth.ts:41`. Constructed history loaded through the QA document loader on build `0eb920b`; both screens captured verbatim above. |
+| **Likely root cause** | `GROWTH_OCCASIONS = 3` and D-070 are about *how much evidence is enough*, and the copy was written as though the filter that counts it also ordered it. Nothing checks adjacency because nothing needed to until a history contained a failure — and **no scenario in the library contains a failed or partial growth occasion**, so this has never been seen. It is AUD-0008's blind spot arriving in the one domain where being wrong matters most. |
+| **Recommended behaviour** | Three parts, and the first is a one-line fix. **(a) Stop claiming consecutiveness.** Say what is true: *"Adaya has ordered for herself on her own three times out of the last six."* **(b) Count the failures.** They are evidence, and discarding them is what lets a 50% rate read as mastery; a skill should not be proposed as settled while the disconfirming occasions are a material share, and the threshold for that is a number worth writing into the decision log rather than picking here. **(c) Weight recency.** A run that ends on a partial is not a run that ended; the most recent occasion should be able to hold the suggestion back on its own. All three are inside `growth.ts` and none touches D-070's rule that a growth change is proposed and never applied. |
+| **Benefit** | Removes a false statement about a child from the product, and makes the growth model able to tell "emerging" from "settled" — which is the gap AUD-0017 is about, reached by the cheapest possible route. |
+| **Implementation scope** | `growth.ts` — retain the full occasion list rather than only `cleared`, change the headline and the sufficiency test, and add a recency condition. No new record, no new field, no surface change beyond the sentence. |
+| **Risks** | Counting failures makes the suggestion fire less often, which will read as a regression against D-070's "three occasions" until the reason is written down; record it as an amendment to D-070 rather than a change to it. Take care that "three out of six" does not itself become a score about her — section 4.4 — which is why (a)'s wording names occasions rather than a rate, and why nothing here should ever render a percentage about the child. |
+| **Schema / data impact** | None. Every occasion is already recorded with its result; the model is discarding what it already has. |
+| **Tests required** | The exact reproduction above, as a regression: six alternating occasions must not produce a "times running" claim. Assert a genuine unbroken run of three still produces the suggestion. Assert a run ending on a partial does not. Assert no owner-visible sentence about the child claims consecutiveness that the underlying occasions do not support — written as a rule about what the copy may not claim, per the standing test rule, not as an exact string. Add a scenario to the library containing a failed growth occasion (AUD-0008). |
+| **Priority** | **P0** |
+| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+
+### L.2 — AUD-0049
+
+| Field | Detail |
+| --- | --- |
+| **ID** | AUD-0049 |
+| **Title** | The growth suggestion's confidence is a count of successes, so it cannot be shaken by evidence against |
+| **Type** | **INTELLIGENCE** |
+| **Current behaviour** | The suggestion has no confidence at all. It is present or absent, decided by `cleared.length >= 3` and by whether the owner has answered since (`answeredSince`). There is no equivalent of the `Confidence` object that every other claim in the app carries, no evidence-mix line of the kind Insights renders for every belief, and no way for a contrary occasion to weaken it rather than either removing it or leaving it untouched. |
+| **Problem** | Everywhere else, the app is careful about this. A learned belief carries `pull` and a sample count. An association states its comparison group and refuses to speak below `MIN_PAIRS`. An insight card carries "Too early to say", "Worth noticing", "Fairly consistent", "Very consistent". A limiter carries `certainty`. The claim about the owner's daughter's development — the highest-stakes claim in the product — carries nothing, and is offered as a binary. **AUD-0048 is what that permits**; this is the reason it was possible. Section 3 requires the app to recognise uncertainty and not invent precision, and section 9's rule that a growth change must not be invented from one event is enforced only as a count. |
+| **Owner-facing example** | *"Adaya has handled ordering her own food 3 times running. Worth calling that settled?"* — with [Yes, she has got this] and [Not yet]. Compare the same build's Insights on a comparable body of evidence: *"Worth noticing · 5 occasions, 3 of which went the other way."* The app knows how to say this. It says it about clearing the kitchen and not about his daughter. |
+| **Evidence** | `src/intelligence/growth.ts:159-175` (the whole suggestion, no confidence field); `GrowthSuggestion` interface at `:56-66`; contrast `insights.ts` `confidenceFrom(...)` used on every card, `situation.ts` `Limiter.certainty`, `association.ts` `MIN_PAIRS`. |
+| **Likely root cause** | `GrowthSuggestion` was designed as a prompt rather than as a claim, because D-070 correctly established that it never *applies* anything — the owner decides. But a prompt that states a fact is still stating a fact, and the confidence machinery that governs every other stated fact was not extended to it. |
+| **Recommended behaviour** | Give `GrowthSuggestion` the same two things every other claim has: a confidence derived from the occasions **including the ones that went the other way**, and one line of evidence mix in the owner's words — *"Six times she's had the chance; three she managed on her own. The last one she needed a hand."* Keep the two buttons; the owner's judgement is still the thing that decides. Where the evidence is thin or mixed, the honest form is a different question — *"worth trying somewhere new before we call it?"* (AUD-0017) — rather than a weaker version of the same one. |
+| **Benefit** | Brings the app's highest-stakes claim up to the standard it already holds itself to everywhere else, and makes AUD-0048's class unreachable rather than fixed once. |
+| **Implementation scope** | `growth.ts` (`GrowthSuggestion` gains confidence and an occasion summary), the Now surface's growth panel (one line), and the reuse of `confidenceFrom` so the vocabulary matches the rest of the product. |
+| **Risks** | A confidence label attached to a statement about a child is close to a score about a child, which section 4.4 and section 22 both forbid. The line must describe *occasions*, never her — "three of six times" is about events, "60%" is about her — and a copy guard should enforce the difference. |
+| **Schema / data impact** | None. |
+| **Tests required** | Assert the suggestion carries a confidence and an occasion summary that names the occasions that went the other way. Assert no percentage, rank, score or scale about the child reaches any surface. Assert mixed evidence produces the different question rather than the same one hedged. |
+| **Priority** | **P1** |
+| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** — it is the sentence AUD-0048 rewrites, and rewriting it twice is worse than once |
+
+---
+
 # 3. Totals
 
 ## By priority
 
 | Priority | Count | IDs |
 | --- | --- | --- |
-| **P0** | **8** | AUD-0001, 0002, 0003, 0014, 0015 *(part b)*, 0028, 0031, 0036 |
-| **P1** | **20** | AUD-0005, 0008, 0011 *(parts a, b)*, 0015 *(part a)*, 0016, 0017, 0019, 0020, 0023, 0025, 0026, 0027, 0032, 0033, 0034, 0035, 0037, 0040, 0041, 0042 |
+| **P0** | **9** | AUD-0001, 0002, 0003, 0014, 0015 *(part b)*, 0028, 0031, 0036, 0048 |
+| **P1** | **21** | AUD-0005, 0008, 0011 *(parts a, b)*, 0015 *(part a)*, 0016, 0017, 0019, 0020, 0023, 0025, 0026, 0027, 0032, 0033, 0034, 0035, 0037, 0040, 0041, 0042, 0049 |
 | **P2** | **17** | AUD-0006, 0007, 0009, 0010, 0018, 0021, 0022, 0024, 0029, 0030 *(part a)*, 0038, 0039, 0043, 0044, 0045, 0046, 0047 |
 | **P3** | **3** | AUD-0012, 0013, 0030 *(part b)* |
 | **Owner-blocked** | **1** | AUD-0011 *(part c)* — and AUD-0018, which is P2 and also blocked |
-| **Total** | **47** | |
+| **Total** | **49** | |
 
 AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in the total.
 
@@ -1484,8 +1550,8 @@ AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in
 
 | Type | Count | IDs |
 | --- | --- | --- |
-| **BUG** | **7** | 0001, 0002, 0003, 0005, 0014, 0015, 0032 |
-| **INTELLIGENCE** | **18** | 0004, 0007, 0009, 0010, 0012, 0013, 0016, 0017, 0018, 0019, 0021, 0024, 0026, 0028, 0029, 0031, 0042, 0045 |
+| **BUG** | **8** | 0001, 0002, 0003, 0005, 0014, 0015, 0032, 0048 |
+| **INTELLIGENCE** | **19** | 0004, 0007, 0009, 0010, 0012, 0013, 0016, 0017, 0018, 0019, 0021, 0024, 0026, 0028, 0029, 0031, 0042, 0045, 0049 |
 | **ARCHITECTURE** | **11** | 0006, 0011, 0020, 0022, 0025, 0035, 0039, 0040, 0041, 0046, 0047 |
 | **PRODUCT / UX** | **11** | 0008, 0023, 0027, 0030, 0033, 0034, 0036, 0037, 0038, 0043, 0044 |
 
@@ -1493,13 +1559,13 @@ AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in
 
 | Timing | Count |
 | --- | --- |
-| BEFORE PHASE 9 (Phase 8.5) | 19 |
+| BEFORE PHASE 9 (Phase 8.5) | 21 |
 | PHASE 9 | 3 |
 | PHASE 10 | 26 |
 | PHASE 11 | 2 |
 | POST-RELEASE-OPTIONAL | 1 |
 
-*(Counts exceed 47 because AUD-0011, AUD-0015, AUD-0025, AUD-0030 and AUD-0038 are split
+*(Counts exceed 49 because AUD-0011, AUD-0015, AUD-0025, AUD-0030 and AUD-0038 are split
 across phases.)*
 
 ## Findings that turned out not to be defects
@@ -1547,6 +1613,8 @@ passed. Every one of these is a change to *what the app says is true*, not to ho
 - **AUD-0033** — presents a 0.002 margin exactly like a clear win.
 
 *It is wrong about his daughter (the highest-trust content in the product).*
+- **AUD-0048** — **"three times running" asserted from three non-consecutive occasions with the failures filtered out and the most recent one a failure.** A false statement about a four-year-old, offered for one-tap acceptance. The most serious single defect in this audit.
+- **AUD-0049** — the growth suggestion carries no confidence and no evidence mix, which is what made AUD-0048 possible.
 - **AUD-0014** — a decline is recorded as practice.
 - **AUD-0015 (b)** — "Ordering her own food is here and there are about 120 minutes."
 - **AUD-0016** — the reason for a developmental challenge is the age of the app's records.
@@ -1591,6 +1659,10 @@ Dependencies are real and a few of these will produce wrong results if taken out
 
 ## Stage 2 — Adaya (order matters; two of these share a root)
 
+6a. **AUD-0048** — stop claiming consecutiveness, count the occasions that went the other way,
+    let the most recent one hold the suggestion back. *No dependencies. Do it first.*
+6b. **AUD-0049** — give the suggestion a confidence and an evidence-mix line. *Must be in the
+    same change as 6a — it rewrites the same sentence, and rewriting it twice is worse.*
 7. **AUD-0014** — a decline is not practice. *Must precede 8b and 9; both are downstream of
    the same reset.*
 8. **AUD-0015 (b)** — template keyed on subject kind, plus the guard. *Depends on 7.*
@@ -1785,7 +1857,14 @@ screens with seven identical lines. The states in section 7 are "possible", not 
 for a same-block *sibling*. **D-064's four conditions for the morning sleep reading are not
 what is being changed** and must survive the change intact.
 
-**20. The QA laboratory itself.** The probe — facts with their state and purpose, every
+**20. The guide cannot ask a pointless question, and this is structural.** `guide.ts` decides
+whether to ask by re-running the whole `decide()` pipeline under every possible answer and
+comparing where they land, so a question that could not change the recommendation cannot be
+selected. Constructed adversarial histories could not provoke one. AUD-0031 argues the threshold
+is wrong in one direction — it will not ask when it should — and explicitly does **not** ask for
+this mechanism to be replaced with anything cheaper.
+
+**21. The QA laboratory itself.** The probe — facts with their state and purpose, every
 candidate with its reason, what was ruled out and why, the full dimension breakdown with
 notes, the learned beliefs with their evidence ids and provenance, and the counterfactual
 "what would change the answer" panel — is an exceptional diagnostic surface and it is how
@@ -1905,7 +1984,7 @@ two-week correction into a re-architecture and delay Phase 9 for no visual benef
 | **8.5.0 The instrument** | AUD-0008 | Two morning scenarios and a one-press block sweep. Everything after this is verified with it, and the sweep is what proves the temporal class is actually gone. |
 | **8.5.1 The horizon** | AUD-0002 → 0001, 0036; AUD-0005 | One shared vocabulary; the limiter, the buttons, the question options and the evidence panel stop asserting the evening; sleep stays valid for the day it describes. |
 | **8.5.2 The morning has an answer** | AUD-0003 | A morning recovery verb, and the invariant that a named limiter always has a candidate in every block. The single most valuable fix in the audit. |
-| **8.5.3 Adaya** | AUD-0014 → 0015(b), 0016; AUD-0037 | A decline stops counting as practice; the nonsense sentence goes; the reason for a growth opportunity stops being the age of the app's records; the two contradicting counters are reconciled. |
+| **8.5.3 Adaya** | AUD-0048 → 0049; AUD-0014 → 0015(b), 0016; AUD-0037 | The app stops claiming an unbroken run it does not have, and starts counting the occasions that went the other way; the suggestion gains the confidence every other claim in the product carries; a decline stops counting as practice; the nonsense sentence goes; the reason for a growth opportunity stops being the age of the app's records; the two contradicting counters are reconciled. **This is the step to do first if only one gets done.** |
 | **8.5.4 Honest sentences** | AUD-0032, 0028, 0027, 0026, 0033 | Inferences are spoken as inferences; the unfounded causal claim goes; the app's own best evidence reaches Now; trade-offs and near-ties are said out loud. |
 | **8.5.5 Interaction** | AUD-0025(session), 0023, 0034, 0031 | No repeating itself within a day; declines escalate to a question and then stop; the situation line survives every no-action state; the guide asks about pain before prescribing exertion. |
 
