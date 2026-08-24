@@ -15,6 +15,8 @@ still present in that green build.
 
 **This document changes no product code.** It is an audit.
 
+**Four passes and an adjudication.** The passes are described below; the adjudication that followed an independent review is **section 0A**, and it changed the phasing, three research claims and eleven recommendations.
+
 **Four passes, and the later ones changed the earlier ones.** The first read the core decision
 path and the plan's product and intelligence sections, and sampled the rest. The second read what
 the first had sampled — `docs/ARCHITECTURE_BOUNDARIES.md` in full, canonical plan sections 6, 7
@@ -35,6 +37,91 @@ nothing. Where a recommendation contradicts a standing decision it says so and a
 Where an earlier draft was simply wrong it has been rewritten rather than annotated. A list of
 things investigated and found **not** to be defects is at the end of section 3, because a reviewer
 will otherwise go looking for them.
+
+---
+
+## 0A. Independent-review adjudication — what changed after this audit was first written
+
+This audit was reviewed independently after the 51 findings were complete. The review checked
+four findings against the repository (AUD-0003, 0046, 0048, 0050), found them well-founded, and
+then challenged what should be *done* with the conclusions. The owner adjudicated. This section
+records what changed and why, so a builder or QA conversation reading the audit later understands
+why the plan looks the way it does.
+
+**Nothing was withdrawn.** No finding was shown to be wrong. What changed was phasing, three
+research claims, and several recommendations that were looser than the evidence under them.
+
+### The audit's own structural error
+
+**All 28 "PHASE 10" timing assignments were wrong.** Canonical plan section 55 defines Phase 10 as
+*Performance, PWA, reliability* — its build list is startup, caching, service-worker behaviour,
+offline shell, long-history performance, restore progress. Nothing about intelligence. Phase 11 is
+adversarial hardening; Phase 12 is release. Routing threads, commitment windows, the registry-driven
+situation and the score re-cut to Phase 10 would have put the entire structural intelligence
+programme *after* the visual gate and *immediately before* release hardening, inside a phase
+reserved for reliability. The review caught it; the audit was wrong; every timing cell is corrected.
+
+**A second error followed from it:** the canonical plan has **no phase at all** for post-Phase-9
+intelligence work, and the first draft concealed that gap by mislabelling it. Section 8 now names
+that phase explicitly and leaves it unnumbered pending the owner's decision.
+
+### The phase architecture that replaced it
+
+Phase 81 → **Phase 82 (new)** → Phase 9 → one later intelligence phase with two gated packages →
+canonical Phases 10, 11, 12 unchanged. Phase 82 exists because nine findings create or change a
+control, a surface, or the shape of a recommendation that Phase 9 must design and the owner must
+approve on his phone. See section 5.
+
+**Three findings failed that test on re-examination and left Phase 82** — AUD-0040, AUD-0045 and
+AUD-0047. The reasoning is in section 7. Removing AUD-0040 had a second benefit: Phase 82 now
+creates no new privacy exposure at all.
+
+### Research claims corrected
+
+- **Lebowitz et al. (2020) removed from AUD-0016 and replaced.** That trial tested SPACE in
+  children aged **7–14 with primary anxiety disorders**. It cannot carry a claim about a
+  preschooler's ordinary developmental tasks. Replaced with **Wood, Bruner & Ross (1976)** on
+  scaffolding and **Grolnick & Ryan (1989)** on autonomy support — both about ordinary
+  development, both describing something the *father* does, and scaffolding is additionally the
+  construct AUD-0017's help-level records.
+- **The CDC role in AUD-0018 narrowed sharply.** CDC's own materials state the milestone
+  checklists are "not a substitute for standardized, validated developmental screening tools",
+  are not validated screening tools, and cannot diagnose. Decisively, **"ordering her own food"
+  is not a CDC milestone at all** — there is no norm to consult for the custom skills this app
+  holds. Norms may be cited only for skills the source itself covers, and never to grade her.
+- Van Dongen, Cepeda, Stokes & Baer, Gollwitzer & Sheeran, Bull/WHO and the EVPI framing were
+  re-examined and kept unchanged; each was already correctly bounded.
+
+### Recommendations corrected
+
+| Finding | What changed |
+| --- | --- |
+| **AUD-0003** | The recommended wording invented a "tomorrow" the app has no model of — the same confident wrongness section A is about, inside the audit's own fix. Replaced with the invariant plus wording that uses only present facts. |
+| **AUD-0048** | "Three times out of the last six" is a ratio, and a ratio repeated weekly is a report card. Replaced with narrative wording. **Counts of occasions stay; rates and grades go.** |
+| **AUD-0049** | The Implementation scope said to reuse `confidenceFrom`, which produces "Worth noticing"/"Fairly consistent" — a grade with a friendly face when attached to a sentence about a four-year-old. Confidence is now **internal only**; the owner reads ordinary evidence. |
+| **AUD-0046** | Raised **P2 → P1**. It is not merely an unused field: `goal-behind` is raised whenever a goal exists and carries `urgency 0.4`, so the engine already asserts behind-ness it cannot measure. |
+| **AUD-0045** | Per-object `size`/`demand` promoted from a risk to a **precondition**. It makes this a scoring-model change, not a UI change, which is why it is not pre-Phase-9 work. |
+| **AUD-0004** | `commitment-window` gains **provenance** and recurrence from the start, so a trusted schedule source later is an adapter rather than a redesign. |
+| **AUD-0020** | The first version is **bounded to three concrete thread types with no generic creation UI** — a strategic skeleton, not a project-management subsystem. |
+| **AUD-0040** | The structural discretion guard is **its** precondition, not AUD-0011's, and **Q8 blocks it**. Verified: `createFactReader.read()` puts each concept's rendered value onto `situation.factsConsidered` the moment it is read. |
+| **AUD-0047** | `quality` may **only suppress, never rank**; one strained interaction may not be generalised to the relationship; the supported claim must be written down before wiring. |
+| **AUD-0017** | The help level is named as the scaffolding construct rather than an invention. |
+| **AUD-0011, AUD-0018** | Owner-question dependencies corrected — see below. |
+
+### Owner-question dependencies corrected
+
+The first draft said Q1 and Q8 blocked Phase 82. Both were wrong: **AUD-0018 is not in Phase 82**,
+so Q1 blocks only AUD-0018; and **AUD-0040 is not in Phase 82**, so Q8 blocks the Reach package
+rather than any pre-Phase-9 work. Q2, Q3, D-070 and Q5 were answered by the owner and are recorded
+as settled decisions in section 11.
+
+### One thing the review proposed that was deliberately not adopted in full
+
+The review listed fourteen candidates for Phase 82. Taking all fourteen would have made it a
+second mega-phase — spaced study, cue clauses, trajectory influence, `materialToDecision` — none
+of which changes a control or a surface, and all of which would delay the visual phase for work
+Phase 9 does not need. **The discipline is the test, not the enthusiasm:** six work packages, nine
+findings.
 
 ---
 
@@ -154,7 +241,7 @@ That belief lives in `Situation.block`, and it is correct. The problem is how fe
 | **Schema / data impact** | None. |
 | **Tests required** | A block-sweep regression: for every `DayBlock`, assert no owner-visible string produced by `assembleSituation` contains "tonight" or "evening" unless the block is `evening` or `late-night`. Assert the exact reproduction above. |
 | **Priority** | **P0** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9 |
 
 ### A.2 — AUD-0002
 
@@ -175,7 +262,7 @@ That belief lives in `Situation.block`, and it is correct. The problem is how fe
 | **Schema / data impact** | None. The stored concept id `career.usable-time-tonight` is a separate problem (AUD-0006) and should not be renamed as part of this — renaming a concept id is a migration. |
 | **Tests required** | One guard, run over every scenario × every `DayBlock`: no owner-visible string may contain "tonight", "this evening" or "the evening" when the block is not evening or late-night. Assert the 07:30 question-option reproduction. Extend the existing copy guard (`tests/unit/insights-copy.test.ts` style) rather than adding a parallel one. |
 | **Priority** | **P0** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9 |
 
 ### A.3 — AUD-0003
 
@@ -189,14 +276,14 @@ That belief lives in `Situation.block`, and it is correct. The problem is how fe
 | **Owner-facing example** | "Three broken nights, and a deadline", clock at **10:00 Tuesday**. Now, verbatim: *"Tuesday morning, 9 hours short on sleep."* / **"RECALL PRACTICE — Spend 10 minutes recalling subnetting before you reopen your notes."** / *"Subnetting went badly yesterday — the /26 boundaries went wrong twice. This week is about the CCNA push."* / *"What is in the way — About 9 hours short of rest over the last few nights."* The probe for the same instant: `Moves considered: 3` — all three career; `Ruled out: 2` — both `too-strained — too much to ask of tonight`. At 06:30 the same history gives the same career move. At 14:00 the recovery move appears and wins at 0.334 against 0.198. |
 | **Evidence** | `src/intelligence/candidates.ts:199`; `src/intelligence/moves.ts:181-231`; `docs/DEFECT_LEDGER.md` DEF-0016 (class and sweep bounds). Live reproduction above; Stage 1 note **S1-J**. |
 | **Likely root cause** | The early return at `candidates.ts:199` is honest about the verb table — there is no morning-shaped recovery verb, so proposing one would only be refused. The defect is that nothing was put in its place, and the arbiter is left choosing among effortful moves while the limiter says rest. |
-| **Recommended behaviour** | Add a morning-shaped recovery verb — working name `lighten-the-day` — that suits `early-morning` and `morning` and refuses the rest, mirroring `ease-off`. Its content is well supported: after chronic restriction, deficits accumulate and recovery takes several unrestricted nights, and self-rated sleepiness under-reports the impairment (Van Dongen et al., *Sleep* 26(2):117–126, 2003). So the honest morning move is not "sleep more now" — it is *don't put the hard thing in today, and protect tonight*: "Keep today light — move the subnetting session to tomorrow and get to bed early." Additionally, make the general rule explicit and testable: **when the engine can name a limiter, at least one candidate must address it, in every block.** |
+| **Recommended behaviour** | Add a morning-shaped recovery verb — working name `lighten-the-day` — that suits `early-morning` and `morning` and refuses the rest, mirroring `ease-off`. **Lead with the invariant, not the sentence: when recovery or capacity is the dominant limiter, a recovery-compatible option must exist in every relevant day block, and it must be worded only from what the app actually knows.** The content of a morning recovery move is well supported: after chronic restriction, deficits accumulate and recovery takes several unrestricted nights, and self-rated sleepiness under-reports the impairment (Van Dongen et al., *Sleep* 26(2):117–126, 2003). So the honest morning move is not "sleep more now" — it is *don't put the hard thing in today*. **It must not defer anything to "tomorrow":** the app has no model of what is coming (AUD-0004), so naming tomorrow would be the same confident wrongness this whole section is about. Wording that uses only present facts: *"Nine hours down. Keep today light — this is not the day for the lab."* Deferral becomes available later, through `hold` (AUD-0024), once AUD-0004 supplies a real later block. |
 | **Benefit** | The app stops arguing with itself on exactly the mornings it is most needed, and G-005 becomes true for the whole day rather than for the half of it that was tested. |
 | **Implementation scope** | `recommendation.ts` (one verb + templates), `moves.ts` (one profile), `candidates.ts` (replace the early return with the block-appropriate verb, as DEF-0016 did for the afternoon), `explain.ts` (a `deficit` branch that reads in the morning). |
 | **Risks** | A new verb changes what the engine can suggest — the same reason DEF-0016 was deferred out of Phase 2. It needs its own outcome aspects and an outcome window; judging "did you keep today light?" belongs the following morning, not in twenty minutes. There is a modest risk of it out-competing genuinely fine mornings; gate it on `strain !== 'none'` exactly as the existing sleep generator does. |
 | **Schema / data impact** | One new `ActionVerb` value. `ACTION_VERBS` is a closed union stamped into stored `action-recommendation` records, so this is an additive schema change with no migration, but old records must keep parsing. |
 | **Tests required** | Extend `tests/synthetic/recovery-has-somewhere-to-go.test.ts` to sweep **midnight to midnight** rather than noon to midnight. Add the invariant: for every scenario × block, if `situation.limiter` is `recovery` or `capacity`, at least one candidate's domain matches the limiter's domain. Assert the 10:00 reproduction flips. |
 | **Priority** | **P0** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9 |
 
 ### A.4 — AUD-0004
 
@@ -210,14 +297,14 @@ That belief lives in `Situation.block`, and it is correct. The problem is how fe
 | **Owner-facing example** | "A week pointed at the house", Wednesday 2026-09-16, Adaya present. At 06:30, 10:00, 14:00 and 19:00 the app returned the *identical* sentence: *"Spend 15 minutes clearing the kitchen. / The kitchen table is buried again — and it costs you the start of every evening. This week is about a calmer house."* At 06:30, before the school run, the reason given for clearing the kitchen is what it costs him in the evening. |
 | **Evidence** | `src/domain/time.ts:421-443`; `evaluate.ts` `contextFit`; `recommendation.ts:20-36` (`hold` present, ungenerated); Stage 1 note **S1-C**. Canonical plan section 16 asks for reasoning across "current moment; current block; today; recent days…" — only the block exists. |
 | **Likely root cause** | The time architecture (plan section 15) models *identity* — instants, local days, local weeks, freshness windows — thoroughly and correctly. It does not model *commitments*. There is no `obligation` record kind and no recurring-rhythm concept, so nothing downstream can reason about them. |
-| **Recommended behaviour** | Two additions, in this order. **(a) A `commitment-window` record** — a named obligation with a local-day/time span and an optional recurrence (weekdays, school term). Seed it from two questions the owner would answer once ("What time does Adaya's school day start and end?", "What are your working hours?"). The situation then carries `minutesUntilNextObligation` alongside `usableMinutes`, and `time-fit` and `opportunity-cost` read it. **(b) Make `hold` reachable**: when the best candidate's `context-fit` is materially higher in a later block today, the arbiter may return `hold` with the block named — *"Not now. This lands better after she's in bed."* That is the concrete answer to "does it ever say 'not this, because something better is coming later'". |
+| **Recommended behaviour** | Two additions, in this order. **(a) A `commitment-window` record** — a named obligation with a local-day/time span, an optional recurrence (weekdays, school term), and a **provenance**. The provenance matters now even though only one source exists now: owner-entered, recurring, and later calendar-derived commitments should be the same shape at different reliabilities, so that adding a trusted schedule source later is an adapter rather than a redesign of the brain. Manual and local-first must work entirely on its own; the structure simply avoids painting into a second corner. Seed it from two questions the owner would answer once ("What time does Adaya's school day start and end?", "What are your working hours?"). The situation then carries `minutesUntilNextObligation` alongside `usableMinutes`, and `time-fit` and `opportunity-cost` read it. **(b) Make `hold` reachable**: when the best candidate's `context-fit` is materially higher in a later block today, the arbiter may return `hold` with the block named — *"Not now. This lands better after she's in bed."* That is the concrete answer to "does it ever say 'not this, because something better is coming later'". |
 | **Benefit** | The app stops treating a five-hour morning as one undifferentiated moment, and gains the one thing that most separates a person who knows you from a scheduler: knowing when *not* to ask. |
 | **Implementation scope** | `src/domain/records.ts` (new record kind), `concepts.ts`, `situation.ts` (assemble the next obligation), `evaluate.ts` (`time-fit`, `opportunity-cost`), `arbitrate.ts` (a defer path), `questions.ts` (two durable questions), a Life surface to correct them. Substantial — this is the largest single item in the audit. |
 | **Risks** | Two real ones. It adds input burden, which section 4.5 constrains — mitigated by asking twice, durably, and never re-asking (the same shape as custody, which already works). And a deferral path is a new way for the app to say nothing; it must be bounded so "hold" cannot become the app's default answer. Gate it on a material `context-fit` gap and a named later block. |
 | **Schema / data impact** | New `commitment-window` record kind; new concepts for school hours and working hours; backup/restore and the legacy mapper need the new kind; export sections need it. |
 | **Tests required** | Adversarial: a school-morning history where the same move is right at 10:00 and wrong at 07:15. A `hold` test asserting the deferral names a real later block and that `hold` cannot win when no later block scores higher. Contract test that a `commitment-window` survives backup → restore. |
 | **Priority** | **P1** |
-| **Timing** | **PHASE 10** (too large for 8.5; AUD-0003 and AUD-0001 are the parts that cannot wait) |
+| **Timing** | **PHASE 82** — work package 2. It is also what makes AUD-0024 reachable. |
 
 ### A.5 — AUD-0005
 
@@ -238,7 +325,7 @@ That belief lives in `Situation.block`, and it is correct. The problem is how fe
 | **Schema / data impact** | No stored-record change; the horizon lives in the registry, not in records. |
 | **Tests required** | Per-concept validity tests: a sleep reading taken at 22:00 is `known` at 09:00 the next day and `stale` after the next night's reading exists or after the following night has passed. A usable-time reading is `stale` in the next block. Assert the 06:30 → 10:00 reproduction no longer drops the sleep fact. |
 | **Priority** | **P1** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** — AUD-0003 depends on the morning keeping its sleep fact |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9. AUD-0003 depends on the morning keeping its sleep fact. |
 
 ### A.6 — AUD-0006
 
@@ -259,7 +346,7 @@ That belief lives in `Situation.block`, and it is correct. The problem is how fe
 | **Schema / data impact** | New concept id; alias table for the old one; backup/restore must round-trip both; the export "How well each area is understood" section changes which area it reports the fact under. |
 | **Tests required** | A migration test: a backup written before the change restores with both ids resolving to one belief. A contract test that no surface shows the same fact twice. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 10** |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 1, Reach** |
 
 ### A.7 — AUD-0007
 
@@ -280,7 +367,7 @@ That belief lives in `Situation.block`, and it is correct. The problem is how fe
 | **Schema / data impact** | `DecisionContext` gains two optional fields; existing records keep parsing and compare as unknown on them. |
 | **Tests required** | Assert a Tuesday evening ranks a past Tuesday above a past Saturday, all else equal. Assert a record written before the change contributes with the new features treated as unknown rather than as agreement. Assert comparable-set sizes do not fall in the nine-month history. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 10** |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 2, Validity** |
 
 ### A.8 — AUD-0008
 
@@ -301,7 +388,7 @@ That belief lives in `Situation.block`, and it is correct. The problem is how fe
 | **Schema / data impact** | None. Scenario fixtures are built from the existing canonical record kinds and are never written to a production store (preview and production keep separate databases). No new record kind, no concept, no migration. |
 | **Tests required** | A guard asserting the library covers every `DayBlock` with at least one history that produces a move. |
 | **Priority** | **P1** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** — it is how the rest of 8.5 gets verified |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9. It is how the rest of Phase 81 gets verified, so it goes first. |
 ---
 
 ## B. Every domain, interrogated
@@ -416,7 +503,7 @@ touch daily moves through `goal-fit` matching a domain (AUD-0021).
 | **Schema / data impact** | Depends on AUD-0020's plan record. |
 | **Tests required** | A three-bad-nights history swept across four consecutive evenings, asserting the sentence changes each night and that a decline on night one prevents night two's reference to a run. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 10** |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 2, Validity** — depends on threads (AUD-0020, Phase 82) |
 
 ### B.2 — AUD-0010
 
@@ -437,7 +524,7 @@ touch daily moves through `goal-fit` matching a domain (AUD-0021).
 | **Schema / data impact** | **None** — `GoalRecord.targetWindow` already exists, parses and round-trips (AUD-0046). A per-topic last-practised projection is derivable from episodes. |
 | **Tests required** | Assert the same topic is not re-offered inside its interval and that the explanation names the gap. Assert a deliberately paused topic does not raise a coverage limiter. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 10** |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 2, Validity** — depends on the goal horizon (AUD-0046, Phase 82) |
 
 ### B.3 — AUD-0011
 
@@ -458,7 +545,7 @@ touch daily moves through `goal-fit` matching a domain (AUD-0021).
 | **Schema / data impact** | None to records. `assembleSituation` returning a map rather than named fields is a substantial internal refactor that `trace.ts` and `QaScreen.tsx` both read. |
 | **Tests required** | A contract test: every concept whose `ask.materialToDecision` is true is actually read by the decision path, and every concept read by it declares the flag (this is AUD-0041's guard and it is what would have caught this). A privacy guard: no explanation string, on any surface, can be produced from a `private` concept. If (b) proceeds, an adversarial test that a private pattern changes a bedtime recommendation and appears in no owner-visible sentence. **No test should assert emotional state changes a score** — that would encode the rejected design. |
 | **Priority** | **P1** for (a) and (b); **owner-blocked** for (c) |
-| **Timing** | **PHASE 10** — registry-driven read and the discretion guard first |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 1, Reach** — behind AUD-0040 and its discretion guard. Part (c) is owner-blocked on Q7. |
 
 ### B.4 — AUD-0012
 
@@ -479,7 +566,7 @@ touch daily moves through `goal-fit` matching a domain (AUD-0021).
 | **Schema / data impact** | Reuse `financial-goal`; optional due date. |
 | **Tests required** | A money scenario asserting a specific named item is recommended and that nothing is recommended when no item exists. |
 | **Priority** | **P3** |
-| **Timing** | **PHASE 11** |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 1, Reach** |
 
 ### B.5 — AUD-0013
 
@@ -500,7 +587,7 @@ touch daily moves through `goal-fit` matching a domain (AUD-0021).
 | **Schema / data impact** | None; person entities and records already carry what is needed. |
 | **Tests required** | Assert unknown social energy produces a low-cost candidate and known-low produces none. Assert no person is named without a contact record behind them. |
 | **Priority** | **P3** |
-| **Timing** | **PHASE 11** |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 1, Reach** |
 ---
 
 ## C. Fatherhood and Adaya
@@ -575,7 +662,7 @@ having aged, and the candidate's trigger flips from `opportunity-window` to `sta
 | **Schema / data impact** | None. |
 | **Tests required** | Decline a growth opportunity and assert `daysSincePractice` is unchanged and the trigger stays `stale-evidence`. Assert a completed occasion does reset it. |
 | **Priority** | **P0** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9 |
 
 ### C.2 — AUD-0015
 
@@ -596,7 +683,7 @@ having aged, and the candidate's trigger flips from `opportunity-window` to `sta
 | **Schema / data impact** | `SemanticEntity` for `development-skill` gains an optional stage; the `domain-update` record already exists and can carry it as structured data alongside its summary. Backup/restore and the legacy mapper need the field. |
 | **Tests required** | Confirm mastery, then assert the growth candidate is absent for the interval and returns as a maintenance probe with different wording. A template guard over every `(verb, trigger)` pair asserting the subject kind matches the sentence shape. |
 | **Priority** | **P0** for (b), **P1** for (a) |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** for (b); **PHASE 10** for (a) |
+| **Timing** | **PHASE 81** for (b). **PHASE 82** work package 5 for (a). |
 
 ### C.3 — AUD-0016
 
@@ -610,14 +697,14 @@ having aged, and the candidate's trigger flips from `opportunity-window` to `sta
 | **Owner-facing example** | Verbatim from Now: *"GROWTH OPPORTUNITY — Give Adaya a chance at ordering her own food today. / **Nothing has come in about ordering her own food for a while.**"* |
 | **Evidence** | `candidates.ts:378-396`; `explain.ts:319`; `evaluate.ts` `TRIGGER_URGENCY['stale-evidence']`. Reproduced live. Stage 1 note **S1-H**. |
 | **Likely root cause** | The growth candidate was given `stale-evidence` because it was the only reachable trigger that expressed "it has been a while", and the trigger then supplied both the urgency and the sentence. |
-| **Recommended behaviour** | Separate the coverage reason from the owner-facing reason. Coverage may continue to *raise* the candidate; the sentence should name the opportunity, not the record: *"You're heading out — that's a chance for her to order for herself."* Where nothing about the moment supports it, the honest move is not to propose it. And per section 4.4, the framing should sit on the parent, not on the child: the best-evidenced parent-directed approach to a child's independence targets the *parent's* accommodating behaviour rather than placing demands on the child, and was non-inferior to individual CBT in a randomised trial (Lebowitz et al., *JAACAP* 59(3):362–372, 2020). *"Let her answer the waiter"* is a move the app can ask **him** to make; *"Give Adaya a chance"* asks him to test her. |
+| **Recommended behaviour** | Separate the coverage reason from the owner-facing reason. Coverage may continue to *raise* the candidate; the sentence should name the opportunity, not the record: *"You're heading out — that's a chance for her to order for herself."* Where nothing about the moment supports it, the honest move is not to propose it. And per section 4.4, the framing should sit on the parent, not on the child. The applicable evidence is about ordinary development rather than clinical treatment: **scaffolding** — the adult provides assistance pitched slightly ahead of the child's current competence and transfers responsibility for each component as she masters it (Wood, Bruner & Ross, *Journal of Child Psychology and Psychiatry* 17(2):89–100, 1976) — and **autonomy support**, encouraging self-initiation and independent problem-solving and giving choice rather than applying pressure (Grolnick & Ryan, *Journal of Personality and Social Psychology* 57(2):143–154, 1989). Both describe something the *father* does. *"Let her answer when the waiter asks"* is a move the app can ask **him** to make; *"Give Adaya a chance at ordering her own food"* asks him to test her. |
 | **Benefit** | The app stops saying the quiet part out loud because the quiet part is wrong, and its one developmental move gets a reason a father would recognise. |
 | **Implementation scope** | `candidates.ts` (a distinct trigger or a separate `proposedBecause` for growth), `explain.ts` (a growth branch), `recommendation.ts` (action template phrasing). |
 | **Risks** | Rewording without fixing AUD-0014 would hide the staleness rather than fix it. Order matters: AUD-0014, then this. |
 | **Schema / data impact** | None. |
 | **Tests required** | Assert no owner-visible growth sentence references the app's own record age. Assert the growth candidate is not raised when nothing about the moment supports it. |
 | **Priority** | **P1** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** — it is one sentence about his daughter and Phase 9 would polish it in place |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9. It is one sentence about his daughter, and Phase 9 would polish it in place. |
 
 ### C.4 — AUD-0017
 
@@ -631,14 +718,14 @@ having aged, and the candidate's trigger flips from `opportunity-window` to `sta
 | **Owner-facing example** | Fatherhood page, "Three times running": three entries, *"How far ordering her own food got: all the way"*, three weeks apart, and nothing else — no place, no who was there, no how much prompting. From that, Now offers to record that she handles it independently. |
 | **Evidence** | `growth.ts:132-176`; `outcomes.ts` `RESULT_STEPS = 2` (result is a coarse ordinal); the Fatherhood page's "Recently" list. Stage 1 note **S1-H**. |
 | **Likely root cause** | `OutcomeRecord.observation` is a single `FactValue`. There is no place to put "where" or "with whom", so the occasion cannot carry them. |
-| **Recommended behaviour** | Two changes, both small at the point of entry. **(a)** Let a growth occasion carry a coarse **setting** (a place entity if one is known, otherwise "somewhere new" / "somewhere familiar") and **how much help** (three levels: on her own / a small prompt / needed me). One extra tap, and section 4.5's burden test is met because it is the tap that makes the whole model mean something. **(b)** Require the three occasions to span **at least two distinct settings** before the app offers "settled", and reword the offer to match what it knows: *"She's ordered for herself three times now — twice somewhere new. Call that settled?"* Where they are all one setting, say so instead: *"Three times, all at the same place. Worth trying somewhere new before we call it."* — which is a genuinely useful suggestion rather than a hedge. |
+| **Recommended behaviour** | Two changes, both small at the point of entry. **(a)** Let a growth occasion carry a coarse **setting** (a place entity if one is known, otherwise "somewhere new" / "somewhere familiar") and **how much help** (three levels: on her own / a small prompt / needed me). The help level is not an invention: **it is the scaffolding construct itself** — the adult's assistance varies with the child's competence and responsibility transfers as components are mastered (Wood, Bruner & Ross, 1976) — so recording it is recording the thing that actually changes as she develops. One extra tap, and section 4.5's burden test is met because it is the tap that makes the whole model mean something. **(b)** Require the three occasions to span **at least two distinct settings** before the app offers "settled", and reword the offer to match what it knows: *"She's ordered for herself three times now — twice somewhere new. Call that settled?"* Where they are all one setting, say so instead: *"Three times, all at the same place. Worth trying somewhere new before we call it."* — which is a genuinely useful suggestion rather than a hedge. |
 | **Benefit** | The app's one claim about a child's development becomes proportionate to its evidence, and partial occasions stop being invisible — which is what lets it later distinguish an off day from a regression. |
 | **Implementation scope** | `outcomes.ts` (a second aspect or a structured result for the growth verb), `growth.ts` (the criterion and the wording), the Now outcome flow (one extra tap), `DomainPage.tsx` (show the setting in "Recently"). |
 | **Risks** | Adds input burden to the one flow where the owner is most likely to be mid-restaurant. Keep it to one tap, make it skippable, and treat a skipped setting as unknown, never as "familiar". Raising the bar also means the suggestion fires less often, which is correct but will feel like a regression against D-070's three-occasion rule — this **amends** D-070 (three occasions plus setting spread) rather than replacing it, and should be recorded as such. |
 | **Schema / data impact** | Growth occasions gain optional structured fields; existing occasions compare as unknown-setting and must not be back-filled. |
 | **Tests required** | Three same-setting occasions produce the "try somewhere new" wording and not the settled offer; three across two settings produce the settled offer. Existing single-value occasions still parse and still count toward three. |
 | **Priority** | **P1** |
-| **Timing** | **PHASE 10** |
+| **Timing** | **PHASE 82** — work package 5, and the load-bearing half of it: the extra tap makes the outcome answer a two-step flow, which is an interaction Phase 9 must design. |
 
 ### C.5 — AUD-0018
 
@@ -652,14 +739,14 @@ having aged, and the candidate's trigger flips from `opportunity-window` to `sta
 | **Owner-facing example** | On the empty history, the page header asserts *"Fatherhood / Adaya"* while the belief list reads *"Child with the owner — Not known yet"*. The app is confident enough about her name to put it in a heading and does not know she exists. |
 | **Evidence** | `features/life/domainPages.ts` (heading), `domain/concepts.ts` (no age concept), `growth.ts` (no age reference). Stage 1 note **S1-H**. |
 | **Likely root cause** | Section 9 specifies the growth *loop* — opportunity, outcome, evidence, proposal, owner confirmation — and never specifies a *reference frame* for it, so `growth.ts` was built as a counter over occasions rather than as a judgement about a child of a particular age. Nothing in the concept registry or the person entity has a place to put a birth date, so the age could not have been used even if the model had wanted it. Section 22's ban on scores also, reasonably, discouraged anything numeric about her — and that discouragement appears to have taken the normative frame out along with the score. |
-| **Recommended behaviour** | Add a durable birth date to the child's person entity — one question, asked once, never re-asked, exactly like custody. Then use it for two things and no more: **(a)** to state what is age-typical when the app proposes or settles a growth area, drawn from a public normative reference such as the CDC *Learn the Signs. Act Early.* checklists, whose milestones are defined as what ≥75% of children do by an age (Zubler et al., *Pediatrics* 149(3), 2022); **(b)** to refuse to propose a growth area that is not yet age-typical. Keep the three kinds of statement rigorously separate on screen: what his own record says about Adaya; what is typical in general; and what the app concludes from putting them together. Never render a population figure as a fact about her, and never score her against it. |
+| **Recommended behaviour** | Add a durable birth date to the child's person entity — one question, asked once, never re-asked, exactly like custody. Then the architecture is **age-aware + context-aware + evidence-aware + optionally norm-informed, and never normatively grading the child.** The normative half must be bounded much more tightly than an earlier draft of this audit proposed. CDC's own materials state that the milestone checklists are "not a substitute for standardized, validated developmental screening tools", are not validated screening tools, and cannot be used to diagnose a developmental disability — and, decisively, **"ordering her own food" is not a CDC milestone at all**. There is no norm to consult for the custom skills this app actually holds. So: norms may be cited **only for skills the source itself covers**, and only to say what is typical at an age. They may never be applied to an owner-defined skill, and the app may never refuse or grade a custom skill on normative grounds. Age itself remains useful without any norm — for wording, for what is plausible to propose, and for the owner's own sense of where she is. Keep the three kinds of statement rigorously separate on screen: what his own record says about Adaya; what is typical in general; and what the app concludes from putting them together. Never render a population figure as a fact about her, and never score her against it. |
 | **Benefit** | The app stops being able to frame an ordinary four-year-old as behind, and gains the ability to say the most reassuring sentence a parenting product can say — that this is normal. |
 | **Implementation scope** | Person entity gains an optional birth date; one durable question; a small static normative table with citations; `growth.ts` reads both. |
 | **Risks** | The largest ethical risk in the audit. A normative table is a short step from a percentile, and a percentile about a child is exactly what section 22 and section 4.4 forbid. The rule must be written into the decision log before the code: **the app may say what is typical; it may never say where she sits.** Also: norms are population statements and the owner's daughter is one child — the copy must carry that, not bury it. |
 | **Schema / data impact** | Optional birth date on a person entity (privacy class `child-family-sensitive`); a static reference table in `src/domain/`. |
 | **Tests required** | A copy guard: no owner-visible string may place the child on a scale, percentile, rank or score. Assert a not-yet-age-typical skill is not proposed. Assert the three statement kinds are visually and textually distinct. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 10** — and only after the decision-log rule above is written |
+| **Timing** | **OWNER-BLOCKED on Q1.** Lands in the later intelligence phase once answered, and only after the decision-log rule above is written. |
 
 ### C.6 — AUD-0019
 
@@ -680,7 +767,7 @@ having aged, and the candidate's trigger flips from `opportunity-window` to `sta
 | **Schema / data impact** | None. |
 | **Tests required** | The twelve-evening sweep as a regression: assert the three absent evenings produce a move, and assert the nine present evenings do not all produce the identical string. A copy guard on the absence wording. |
 | **Priority** | **P1** |
-| **Timing** | **PHASE 10** |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 2, Validity** — depends on the durable shown-ledger (AUD-0025) and on threads (AUD-0020) |
 ---
 
 ## D. Moves, strategy and orchestration
@@ -712,14 +799,14 @@ what it chose yesterday, or an hour ago.
 | **Owner-facing example** | "The same week, properly slept": *"Go back over subnetting — the part you keep missing"* on Tuesday, Saturday and Sunday, unchanged, with the topic still un-reviewed six days later. Nothing says "this is the third time I've suggested this", nothing escalates, nothing gives up. |
 | **Evidence** | `arbitrate.ts:76-116` (full signature and body); `grep` for prerequisite/sequence/plan across `src/intelligence/` returns only doc comments; live sweeps. Stage 1 notes **S1-C**, **S1-F**, **S1-I**. |
 | **Likely root cause** | Plan section 17.1's pipeline is a *single-decision* pipeline: resolve facts → assemble → cover → direction → generate → filter → evaluate → arbitrate → explain → learn. There is no step for "maintain a course", and no record kind that could hold one. Weekly direction is the nearest thing and it is a single entity reference with a category, not a plan. |
-| **Recommended behaviour** | Add the smallest structure that buys most of this: a **`thread`** — a named, owner-visible, abandonable course of action over days or weeks, carrying a subject, a domain, an intent, a small ordered set of expected moves, a start, and a state (`running` / `paused` / `done` / `abandoned`). Threads do not decide; they are one more input to the existing pipeline: a candidate belonging to a running thread gains a `thread-fit` dimension, and `explain.ts` gains one clause — *"Third of four. Two to go."* Three threads would cover most of the value: a **recovery run** (AUD-0009), a **study schedule** (AUD-0010), and a **growth ladder** (AUD-0015a). Crucially a thread must be visible on the Life surface and cancellable in one tap; a hidden plan is worse than no plan. |
+| **Recommended behaviour** | Add the smallest structure that buys most of this: a **`thread`** — a named, owner-visible, abandonable course of action over days or weeks, carrying a subject, a domain, an intent, a small ordered set of expected moves, a start, and a state (`running` / `paused` / `done` / `abandoned`). Threads do not decide; they are one more input to the existing pipeline: a candidate belonging to a running thread gains a `thread-fit` dimension, and `explain.ts` gains one clause — *"Third of four. Two to go."* **The first version is bounded to exactly three concrete thread types and has no generic thread-creation UI**: a **recovery run** (AUD-0009), a **study schedule** (AUD-0010), and a **growth ladder** (AUD-0015a). This is a strategic skeleton, not a project-management subsystem, and the bound is what keeps it one. Crucially a thread must be visible on the Life surface and cancellable in one tap; a hidden plan is worse than no plan. |
 | **Benefit** | The single highest-leverage change in this audit. It converts six separate findings into one structure, and it is what makes the app feel like something running alongside his life rather than something answering a question. |
 | **Implementation scope** | New `thread` record kind and projection; `situation.ts` carries running threads; `evaluate.ts` gains one dimension; `explain.ts` gains one clause; `arbitrate.ts` unchanged (threads influence the score, they never bypass the arbiter — section 17.2 must hold); a Life surface to see and stop them; export and backup coverage. |
 | **Risks** | Serious, and worth naming. A plan that outlives its usefulness becomes nagging, and this app's whole personality depends on not nagging. Mitigations: a thread must expire on its own; any decline of a thread move must be able to end the thread; `thread-fit` must be weighted below `bottleneck-fit` so a thread can never beat what is actually in the way; and the Now screen must always show which thread a move belongs to, so it is never a hidden reason. Second risk: this is the change most likely to require re-running section 18's tournament, because it adds a dimension. |
 | **Schema / data impact** | New record kind; new projection; backup/restore, export sections, and the legacy mapper all need it (legacy `commitment` maps near it — worth checking whether an archived family becomes mappable). |
 | **Tests required** | A thread survives backup → restore. A thread move never outranks a recovery limiter. Declining a thread move ends or pauses the thread. A four-evening sweep asserting the explanation changes across the run. An architecture guard asserting nothing outside `arbitrate.ts` selects a move because a thread said so. |
 | **Priority** | **P1** |
-| **Timing** | **PHASE 10** |
+| **Timing** | **PHASE 82** — work package 3. The strongest member: it creates the new persistent owner-visible object. |
 
 ### D.2 — AUD-0021
 
@@ -740,7 +827,7 @@ what it chose yesterday, or an hour ago.
 | **Schema / data impact** | `targetWindow` needs no change (AUD-0046). Parts are one additive field on `GoalRecord`; existing goals unaffected. |
 | **Tests required** | A goal with no parts behaves exactly as today. A goal with parts changes `goal-fit` and produces a trajectory card. Assert no percentage about the owner reaches any surface. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 10** (after AUD-0020; a thread is the natural carrier for goal parts) |
+| **Timing** | **PHASE 82** — work package 1, after AUD-0046 |
 
 ### D.3 — AUD-0022
 
@@ -761,7 +848,7 @@ what it chose yesterday, or an hour ago.
 | **Schema / data impact** | None if the clause creates no second episode. |
 | **Tests required** | Assert at most one appended clause ever. Assert the secondary never creates an episode or an outcome question. Assert an empty compatibility table reproduces today's behaviour exactly. An architecture guard that a table entry without a `because` fails the build (mirroring `ActionFamily`). |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 10** |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 2, Validity** |
 
 ### D.4 — AUD-0023
 
@@ -782,7 +869,7 @@ what it chose yesterday, or an hour ago.
 | **Schema / data impact** | None — declines are already recorded. |
 | **Tests required** | A decline sweep asserting no move is offered twice in a block, that a question appears after the second refusal, that the app stops after the third, and that the situation line is present in every no-action state. |
 | **Priority** | **P1** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** — the jam and the missing situation line are both plainly broken, and Phase 9 will style these states |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9. The jam and the missing situation line are both plainly broken, and Phase 9 will style these states. |
 
 ### D.5 — AUD-0024
 
@@ -803,7 +890,7 @@ what it chose yesterday, or an hour ago.
 | **Schema / data impact** | None — the verb already exists in the stored union. |
 | **Tests required** | Assert `hold` names a real later block, that it cannot be returned when no later block scores higher, and that a held move is actually offered in that block. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 10** (blocked on AUD-0004) |
+| **Timing** | **PHASE 82** — work package 4, after AUD-0004. It is a fifth Now state. |
 
 ### D.6 — AUD-0025
 
@@ -824,7 +911,7 @@ what it chose yesterday, or an hour ago.
 | **Schema / data impact** | A new store outside the canonical record log. It must be **excluded** from backup identity and from the content fingerprint, or D-107's rule (nothing about the transport enters the identity of the thing transported) is breached in a new way. Simplest safe answer: make it derived and non-durable — rebuilt per session — which is enough for within-day repetition. |
 | **Tests required** | Assert the same move is not returned unchanged at four hours of one day. Architecture guard asserting no learning or history surface can read the ledger. Assert backup fingerprints are unaffected. |
 | **Priority** | **P1** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** — session-scoped version only; the durable version can wait |
+| **Timing** | **PHASE 81** for the session-scoped ledger. **LATER INTELLIGENCE PHASE — package 2, Validity** for the durable version. |
 
 ---
 
@@ -869,7 +956,7 @@ fixed priority (recovery → capacity → time → coverage) and only that one i
 | **Schema / data impact** | None. |
 | **Tests required** | Assert the cost clause appears when `direction-fit` is negative and the move still wins, and never otherwise. A copy guard against apologetic phrasing. |
 | **Priority** | **P1** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9 |
 ---
 
 ## F. Learning, memory and history
@@ -920,7 +1007,7 @@ The failure is that it does not reach the recommendation (AUD-0027).
 | **Schema / data impact** | None. |
 | **Tests required** | Assert the association-backed explanation appears on Now in the observed-evenings scenario. Extend `tests/synthetic/decision-evidence.test.ts` (the D-091 home for this class) rather than adding a parallel suite. Copy guards written as *what the copy may not claim* rather than as exact strings: no percentages, no dimension names, no inspector vocabulary. Re-run the DEF-0006 regression and prove it still fails on reintroduction after the rule is widened. |
 | **Priority** | **P1** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9 |
 
 ### F.2 — AUD-0028
 
@@ -941,7 +1028,7 @@ The failure is that it does not reach the recommendation (AUD-0027).
 | **Schema / data impact** | None. |
 | **Tests required** | A section-64 regression: the one-month and nine-month histories must produce *materially different* explanation text at the same block. A copy guard forbidding causal constructions ("costs you", "makes you", "leads to") in explanation templates. |
 | **Priority** | **P0** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9 |
 
 ### F.3 — AUD-0029
 
@@ -962,7 +1049,7 @@ The failure is that it does not reach the recommendation (AUD-0027).
 | **Schema / data impact** | None. |
 | **Tests required** | Byte-identical insight cards before and after the extraction. Assert a downward trajectory in a domain changes the chosen move in an otherwise-identical history. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 10** |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 2, Validity** |
 
 ### F.4 — AUD-0030
 
@@ -983,7 +1070,7 @@ The failure is that it does not reach the recommendation (AUD-0027).
 | **Schema / data impact** | (b) needs a historical-episode record kind or an extension to the episode projection, plus a `MAPPING_RULES_VERSION` bump. |
 | **Tests required** | (a) A copy assertion that the report states the consequence, not only the count. (b) Quarantine tests extended: a historical episode may reach `learning.ts` and may not reach anything else; its reliability is strictly below an owner answer; removing it reverts the belief. |
 | **Priority** | **P2** for (a), **P3** for (b) |
-| **Timing** | **PHASE 10** for (a); **POST-RELEASE-OPTIONAL** for (b), pending an owner decision |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 2, Validity** for (a). **POST-RELEASE-OPTIONAL** for (b), owner-blocked on Q4. |
 
 ---
 
@@ -1020,7 +1107,7 @@ his daughter is away. See AUD-0034.
 | **Schema / data impact** | A registry flag; no record change. |
 | **Tests required** | Assert the soreness question is asked in the default history before a `move` is recommended. Assert D-036's existing regression still passes for non-consequential concepts. Assert questions-per-day across the library does not exceed the cap. |
 | **Priority** | **P0** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9 |
 
 ### G.2 — AUD-0032
 
@@ -1041,7 +1128,7 @@ his daughter is away. See AUD-0034.
 | **Schema / data impact** | None. |
 | **Tests required** | Assert an inferred low-confidence energy produces hedged phrasing and a known reading does not. A copy guard that no flat assertion is generated from a sub-threshold inference. |
 | **Priority** | **P1** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9 |
 
 ### G.3 — AUD-0033
 
@@ -1062,7 +1149,7 @@ his daughter is away. See AUD-0034.
 | **Schema / data impact** | None. |
 | **Tests required** | Assert the clause appears at a 0.002 margin and not at a wide one. Assert the single-candidate case does not render as a comparison. |
 | **Priority** | **P1** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9 |
 
 ### G.4 — AUD-0034
 
@@ -1083,7 +1170,7 @@ his daughter is away. See AUD-0034.
 | **Schema / data impact** | None. |
 | **Tests required** | Assert the rich-but-empty case produces the new wording and the thin case the old. Assert the situation line is present in all four no-action states. |
 | **Priority** | **P1** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9 |
 ---
 
 ## H. Wording, explanation and interface
@@ -1125,14 +1212,14 @@ is right. The Life page's per-domain refresh pair ("I've been keeping on top of 
 | **Owner-facing example** | "Nine months of evenings", Saturday 19:30, four candidates. `bottleneck-fit +0.00`, `direction-fit +0.00`, `goal-fit +0.00` on all four. Winner 0.137, runner-up 0.135. The owner is shown a confident recommendation decided by two thousandths, on an evening where the three heaviest dimensions had nothing to say. |
 | **Evidence** | `src/intelligence/evaluate.ts:75-95` (WEIGHTS), `:212-224` (`directionFit` returns 0 at full weight), `:227-259` (`goalFit` likewise); `arbitrate.ts:41-44`; `docs/DECISION_LOG.md` **D-048**; live rankings from four scenarios. |
 | **Likely root cause** | Exactly as D-048 records: `follow-through` was given the abstain-with-zero-weight treatment when it was added, and the older dimensions were left alone because re-cutting them changes every score. |
-| **Recommended behaviour** | Apply D-048's own principle to the three older dimensions — a dimension with nothing to say carries no weight — and, because that re-cuts the instrument, **re-run section 18's tournament on the golden profiles at the same time**, which is what D-048 says the change requires. Then re-derive `WORTH_DOING` and `CLOSE_ENOUGH_TO_MENTION` on the new scale rather than carrying the old constants across, and consider making the closeness threshold relative to the ranked spread. **This is the "phase that can" — Phase 8.5 or 10 — and this audit is the argument for making it that phase.** |
+| **Recommended behaviour** | Apply D-048's own principle to the three older dimensions — a dimension with nothing to say carries no weight — and, because that re-cuts the instrument, **re-run section 18's tournament on the golden profiles at the same time**, which is what D-048 says the change requires. Then re-derive `WORTH_DOING` and `CLOSE_ENOUGH_TO_MENTION` on the new scale rather than carrying the old constants across, and consider making the closeness threshold relative to the ranked spread. **This is the "phase that can" — Phase 82, work package 6 — and this audit is the argument for making it that phase.** |
 | **Benefit** | Decisions stop being decided by rounding on ordinary evenings; the no-action bar stops depending on how much context happens to exist; and the closeness signal (AUD-0033) becomes meaningful. |
 | **Implementation scope** | `evaluate.ts` (three dimensions abstain), `arbitrate.ts` (re-derived constants), `tests/synthetic/intelligence-tournament.test.ts` re-run, and every scenario's expected output re-verified. |
 | **Risks** | The highest-blast-radius change in the audit. Every learned belief, every scenario expectation and every golden profile moves. It must be done once, deliberately, with the tournament re-run in the same change — and it should be the *last* scoring change in the sequence, after any new dimension (AUD-0020, AUD-0029) has landed, so the instrument is cut once rather than three times. |
 | **Schema / data impact** | None to records. Stored `action-recommendation` records carry no score. |
 | **Tests required** | The full tournament, re-run and re-baselined. A guard that every dimension returning `value: 0` for an "unknown/absent" reason also returns `weight: 0`. Assert `WORTH_DOING` behaviour is stable across a directed and an undirected evening with otherwise identical facts. |
 | **Priority** | **P1** |
-| **Timing** | **PHASE 10** — and it must be sequenced last among scoring changes |
+| **Timing** | **PHASE 82** — work package 6, and absolutely last. Phase 82 adds `thread-fit`, so this is the completion of AUD-0020 rather than an independent item. |
 
 ### H.2 — AUD-0036
 
@@ -1153,7 +1240,7 @@ is right. The Life page's per-domain refresh pair ("I've been keeping on top of 
 | **Schema / data impact** | None. |
 | **Tests required** | Covered by AUD-0002's block sweep. |
 | **Priority** | **P0** (part of AUD-0002) |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9 |
 
 ### H.3 — AUD-0037
 
@@ -1174,7 +1261,7 @@ is right. The Life page's per-domain refresh pair ("I've been keeping on top of 
 | **Schema / data impact** | None. |
 | **Tests required** | Assert the two screens never present different sufficiency claims about one skill at one instant. |
 | **Priority** | **P1** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9 |
 
 ### H.4 — AUD-0038
 
@@ -1195,7 +1282,7 @@ is right. The Life page's per-domain refresh pair ("I've been keeping on top of 
 | **Schema / data impact** | (c) a merge would need a supersede record, not an edit. |
 | **Tests required** | (a) Assert the controls appear and write the same records as the Life page. (b) Formatter unit tests. (c) Assert the review groups same-statement goals and that declining the merge writes exactly what today's import writes. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 9** for (a) and (b) — they are genuinely copy and layout, which is Phase 9's job; **PHASE 10** for (c) |
+| **Timing** | **PHASE 9** for (a) and (b) — genuinely copy and layout. **LATER INTELLIGENCE PHASE — package 2, Validity** for (c). |
 
 ---
 
@@ -1269,7 +1356,7 @@ typed 113 times. Almost every P0 in this audit is a consequence of it not being 
 | **Schema / data impact** | None. |
 | **Tests required** | Assert `MAX_NUDGE` cannot reverse a ranking whose gap exceeds the stated fraction of the spread. Re-run the tournament under the widened rubric. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 10** (with AUD-0035) |
+| **Timing** | **PHASE 82** — work package 6, in the same change as AUD-0035 |
 
 ### I.2 — AUD-0040
 
@@ -1286,11 +1373,11 @@ typed 113 times. Almost every P0 in this audit is a consequence of it not being 
 | **Recommended behaviour** | Make the situation's fact set **registry-driven**: `Situation` carries a map keyed by `ConceptId` alongside the named convenience fields the hot paths use, and every read goes through it so nothing can decide from a fact the trace does not list. Then add an architecture guard: **no module outside `situation.ts` may call `view.facts` directly.** That single guard would have prevented the `cashBuffer` shortcut and makes AUD-0011 a registry change rather than a refactor. |
 | **Benefit** | Makes "one brain, whole life" structurally true rather than dependent on someone remembering to add a line, and makes the trace complete by construction. |
 | **Implementation scope** | `situation.ts` (map plus named fields), `trace.ts`, `QaScreen.tsx`, `candidates.ts` (route `cashBuffer` through the situation), `tests/unit/architecture-guards.test.ts` (one new guard). |
-| **Risks** | Touching `Situation` touches everything. Do it as a pure addition — keep every existing named field, add the map, migrate readers one at a time — so no behaviour changes in the same commit as the structure. |
+| **Risks** | **This change is what creates the private-data exposure, and the structural discretion guard is its precondition rather than AUD-0011's.** `createFactReader.read()` (`situation.ts:236-262`) puts each concept's *rendered value string* onto `situation.factsConsidered` the moment it is read, carrying its privacy class. Today `privatePattern` never lands there because nothing reads it; a registry-driven read puts it in every decision's fact list. So AUD-0040 must ship with a guard that makes it structurally impossible for an explanation or an evidence panel to render a `private` reading — and Q8 must be answered before this lands, not before AUD-0011. Second risk: touching `Situation` touches everything, so do it as a pure addition — keep every existing named field, add the map, migrate readers one at a time — and change no behaviour in the same commit as the structure. |
 | **Schema / data impact** | None. |
 | **Tests required** | The new architecture guard. Assert `Facts considered` equals the set of concepts any dimension or generator actually read. Assert behaviour is byte-identical across the whole scenario library after the extraction. |
 | **Priority** | **P1** |
-| **Timing** | **PHASE 10** — it is the enabler for AUD-0011 and should land first |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 1, Reach** — **first in that package, and it must ship with the structural discretion guard.** See the Risks field. |
 ---
 
 ## J. Found in the completion pass
@@ -1334,7 +1421,7 @@ by any history in the library, which is AUD-0008's point again.
 | **Schema / data impact** | None to records. A registry field's meaning is tightened, not its shape. |
 | **Tests required** | The registry guard above, **proved by reintroduction** — flip one concept's flag and watch the build fail — per the standing rule that a guard is not a guard until its own defect has been caught. Assert the guard reads the real decision path rather than a hand-maintained list, or it becomes the same unverifiable claim one level up. |
 | **Priority** | **P1** |
-| **Timing** | **PHASE 10** (with AUD-0040, which makes it cheap) |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 1, Reach** — with AUD-0040, which makes it cheap |
 
 ### J.2 — AUD-0042
 
@@ -1355,7 +1442,7 @@ by any history in the library, which is AUD-0008's point again.
 | **Schema / data impact** | None. Derived outcome records already exist, are stamped with what they are about (D-065), and carry provenance. |
 | **Tests required** | Assert a walk followed by an energy reading in the same block produces a derived `effect` outcome and that the belief moves. Assert the derived record is distinguishable from an owner answer on every surface that shows evidence mix. Assert D-064's four sleep conditions are untouched. Extend `tests/synthetic/observed-relationships.test.ts`, which D-091's table already names as the home for these invariants. |
 | **Priority** | **P1** |
-| **Timing** | **PHASE 10** |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 2, Validity** |
 
 ### J.3 — AUD-0043
 
@@ -1376,7 +1463,7 @@ by any history in the library, which is AUD-0008's point again.
 | **Schema / data impact** | None. |
 | **Tests required** | Assert the panel's content is derived from the same object Insights reads, never recomputed (the coverage precedent). Assert it is absent, not empty, when nothing is being worked out. Assert the Fatherhood page shows the in-progress growth area in the growth-evidence scenario. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 9** — it is a page-composition change and Phase 9 reviews empty states and hierarchy |
+| **Timing** | **PHASE 9** — a page-composition change, and Phase 9 reviews empty states and hierarchy |
 
 ### J.4 — AUD-0044
 
@@ -1397,7 +1484,7 @@ by any history in the library, which is AUD-0008's point again.
 | **Schema / data impact** | None. |
 | **Tests required** | Assert that above the grouping threshold exactly one stale-belief card renders and that it names every verb it covers. Assert a single stale belief still renders as today. Write it as a rule about what the screen may not do — repeat one template N times — rather than as an exact string, per the standing test rule. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 9** — it is card composition and density, which is Phase 9's business, and Phase 9 is where a stack of four identical cards would otherwise be styled rather than removed |
+| **Timing** | **PHASE 9** — card composition and density, which is Phase 9's business; Phase 9 would otherwise style the stack rather than remove it |
 
 ---
 
@@ -1428,12 +1515,12 @@ pipeline stages.
 | **Likely root cause** | D-021 is right and is not the problem: the engine must not invent the owner's life. The gap is the other half of that rule — the owner has no way to *supply* a routine, so the engine's placeholder became the permanent answer. Career, home, social, fatherhood and money all read the owner's own entities (`firstOfKind`); health alone does not. |
 | **Recommended behaviour** | Give `healthCandidates` the same shape as every other generator: prefer an owner-named `routine` entity in the health domain, and fall back to `A_WALK` only when none exists. Add one route to create one — the Health page already has an "Add this" affordance for concepts and needs the equivalent for a routine. Nothing else changes: the verb, the profile, the priors and the constraint filter all already work on whatever object they are handed. |
 | **Benefit** | Turns the domain with the most one-note output into one that says the owner's own word, at the cost of one branch and one input. It is also the smallest available fix for a section-64 failure anywhere in the product. |
-| **Implementation scope** | `candidates.ts` (one `firstOfKind` branch with a fallback), a routine-creation control on the Health & Recovery page, and a per-routine `size`/`demand` default since `moves.ts` currently carries one profile for the `move` verb rather than per object. |
+| **Implementation scope** | **Larger than it first appears, and the precondition is the bulk of it.** `profileFor(verb)` must become keyed on `(verb, object)` before a second routine can safely participate: the profile supplies `size`, `demand` and `friction`, which the constraint filter reads for `no-time` and `too-strained` and the evaluator reads for `friction`, `time-fit`, `opportunity-cost` and `capacity-fit`. A 25-minute walk and a 90-minute gym session sharing one profile would make all six wrong. **That is a scoring-model change, not a UI change**, and it is why this is not pre-Phase-9 work. Only then: `candidates.ts` (one `firstOfKind` branch with a fallback) and a routine-creation control on the Health & Recovery page — which is an instance of the "Add this" affordance Phase 9 can design generically, for an entity rather than a fact. |
 | **Risks** | The move profile is keyed on verb, so a 25-minute walk and a 90-minute gym session would share `size`, `friction` and `demand` — which would make the constraint filter's `no-time` and `too-strained` checks wrong for the heavier one. Either capture a rough size when the routine is created, or restrict the first version to routines the owner sizes himself. Do **not** widen `ACTION_FAMILIES` to pool them (see risks below). |
 | **Schema / data impact** | None to records — `routine` is already a declared entity kind and already serialises. |
 | **Tests required** | Assert an owner-named routine displaces "a walk" as the subject and that the sentence names it. Assert the fallback is unchanged when none exists. Assert two routines produce two separately-scoped learned beliefs and two separately-scoped associations — which is the invariant the next paragraph is about. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 10** |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 1, Reach** — **after** per-object size and demand, which is a precondition rather than a risk. See Implementation scope. |
 
 **One thing this finding reveals that is worth stating separately.** Three modules are already
 hardened against an owner having two movement routines, and the product cannot produce one.
@@ -1455,7 +1542,7 @@ rather than a re-architecture. It is worth knowing which way round that is.
 | **Title** | A goal's target window exists in the schema, is parsed, serialised and carried to the situation — and no decision reads it, and no surface writes it |
 | **Type** | **ARCHITECTURE** |
 | **Current behaviour** | `GoalRecord` declares `readonly targetWindow?: DueWindow` (`records.ts:210`). `wire.ts` reads it in (`:372`) and writes it out (`:778-780`). `direction.ts` declares it on `ActiveGoal` (`:77`) and assigns it (`:170`). A repository-wide sweep finds **no other reference**: not in `evaluate.ts`, not in `candidates.ts`, not in `explain.ts`, not in `insights.ts`, and not anywhere in `src/features/` — so nothing reads it and no owner surface can set it. |
-| **Problem** | This is the single field that would make the app's best sentence true. *"Pass the CCNA before the winter — and subnetting is the weak part"* names a deadline the app cannot see. With `targetWindow` read, the career generator gets a retention interval for spacing (AUD-0010), `goalFit` gets a notion of whether a goal is running out of time, and the `goal-behind` trigger — which the career generator currently raises whenever a goal merely exists — gets something that actually measures behind. Without it, a long-range goal is a string that adds 0.6 to same-domain moves. |
+| **Problem** | **It is not merely an unused field: the engine is already asserting behind-ness it cannot measure, and paying urgency for it.** `candidates.ts:313` and `:325` raise the `goal-behind` trigger whenever a career goal merely exists, `:533` raises it for money whenever the cash buffer is known, and `evaluate.ts:123` gives that trigger `urgency 0.4` — so every career recommendation carries an urgency premium justified by a claim nothing checks. There is even an owner-facing template for it, `recommendation.ts:232`, *"X is behind where you wanted."* That string is **not** reachable on a primary surface — `describe.ts:311` renders only `rendered.sentence`, so the fallback reason reaches the QA screen only — and it is reported that way rather than inflated. The unbacked urgency is in every ranking regardless. Beyond that, this is the single field that would make the app's best sentence true. *"Pass the CCNA before the winter — and subnetting is the weak part"* names a deadline the app cannot see. With `targetWindow` read, the career generator gets a retention interval for spacing (AUD-0010), `goalFit` gets a notion of whether a goal is running out of time, and the `goal-behind` trigger — which the career generator currently raises whenever a goal merely exists — gets something that actually measures behind. Without it, a long-range goal is a string that adds 0.6 to same-domain moves. |
 | **Owner-facing example** | Career page: *"Finish a meaningful certification"* with "Done" and "No longer this" and no date. On Now: *"Pass the CCNA before the winter — and subnetting is the weak part."* The clause "before the winter" is the owner's own words inside a statement string; the app has a typed field for exactly that fact, empty, two layers down. |
 | **Evidence** | `src/domain/records.ts:210`; `src/domain/wire.ts:372`, `:778-780`; `src/intelligence/direction.ts:77`, `:170`; systematic field-vs-consumer sweep over every declared record payload field (`targetWindow`: 2 references in `intelligence/`, both the declaration and the assignment; 0 in `features/`). |
 | **Likely root cause** | The field was added with the record schema in Phase 1, when the record layer was built ahead of the consumers, and the consumer never arrived. `DueWindow` machinery exists and is used elsewhere, so nothing ever failed. |
@@ -1465,8 +1552,8 @@ rather than a re-architecture. It is worth knowing which way round that is.
 | **Risks** | A visible deadline on a personal goal is a different object from a private intention, and section 4.4 forbids framing a missed one as failure. The copy must be able to say a goal is close to its date without saying he is behind on his life. Keep it optional and keep an absent horizon silent. |
 | **Schema / data impact** | **None.** The field, its parser, its serialiser and its round-trip already exist. |
 | **Tests required** | Assert a goal with a horizon changes `goal-fit` and a goal without one behaves exactly as today. Assert `goal-behind` cannot be raised without something measuring behind. Assert backup → restore preserves a horizon (the wire path already does; assert it, since nothing currently exercises it). |
-| **Priority** | **P2** |
-| **Timing** | **PHASE 10** — and it should land **before** AUD-0010 and AUD-0021, which both depend on it |
+| **Priority** | **P1** |
+| **Timing** | **PHASE 82** — work package 1, first. AUD-0021 and AUD-0010 both depend on it. |
 
 ### K.3 — AUD-0047
 
@@ -1480,14 +1567,14 @@ rather than a re-architecture. It is worth knowing which way round that is.
 | **Owner-facing example** | "Nine months of evenings" contains a real relationship: Insights says *"You say reaching out to your sister gets all the way there about half the time."* The app has her as an entity, has the events, and has how each went. It cannot say *"you haven't spoken to your sister since October"* — the projection holds the date and no surface asks it. |
 | **Evidence** | `src/domain/records.ts:381-386`; `src/memory/projections.ts:234-243`; `grep -rn "view.relationships" src/` → three lines, all `QaScreen.tsx`; `src/intelligence/association.ts:196` (confounding only); `src/intelligence/coverage.ts:412` (importance only); `src/features/history/describe.ts:364` (`nature` as a Timeline line). |
 | **Likely root cause** | The projection was built in Phase 1 with the memory layer, and the QA laboratory was the first surface that needed to show that projections work. The social generator arrived in Phase 2 reading a concept rather than a projection, because `situation.ts` carries concepts and not projections — the same hand-written-assembler seam as AUD-0040. |
-| **Recommended behaviour** | Carry the relationship projection onto the `Situation` and give the social generator a second branch: where a person entity's most recent event is old by that relationship's own standard, propose `reach-out` naming them, with the last contact as the reason — *"You haven't spoken to your sister since October."* Use `quality` only to choose between `reach-out` and leaving it alone, never to rank people, and never to say anything evaluative about a person on screen. Combined with AUD-0013's three-state gate this turns the social domain from "confirms an appetite he reported" into the one thing it could genuinely notice. |
+| **Recommended behaviour** | Carry the relationship projection onto the `Situation` and give the social generator a second branch: where a person entity's most recent event is old by that relationship's own standard, propose `reach-out` naming them, with the last contact as the reason — *"You haven't spoken to your sister since October."* Use `quality` **only to suppress, never to rank**: it may hold a suggestion back, and it may never order people, label anyone as good or bad for the owner, or put an evaluation of a named person on any screen. Two further constraints. **One strained interaction does not make a strained relationship** — a single event may not be generalised to the relationship, and the claim the record actually supports has to be written down before anything is wired. And note why `quality` cannot simply be left unused: recency alone would have the app nudge him toward someone he has deliberately stepped back from, and `quality` is the field that prevents that. Combined with AUD-0013's three-state gate this turns the social domain from "confirms an appetite he reported" into the one thing it could genuinely notice. |
 | **Benefit** | The single largest unrealised capability in the product measured against work already done: the data structure, the record kind, the parser and the projection all exist and are correct. |
 | **Implementation scope** | `situation.ts` (carry the projection — AUD-0040 makes this the natural place), `candidates.ts` (one social branch), `explain.ts` (a last-contact reason), and a decision-log entry on what `quality` may and may not be used for. |
 | **Risks** | The highest interpersonal risk in the audit. A recommendation naming a real person, on stale or wrong data, is embarrassing in a way most defects are not — require a real event record, never infer one, and never suggest contact on the strength of `quality` alone. Storing and acting on a judgement about how an interaction with a named person went also deserves the same discretion the private domain gets; it must never appear on Timeline as an evaluation of that person. |
 | **Schema / data impact** | None. The record kind, its fields, its wire format and its projection already exist and round-trip. |
 | **Tests required** | Assert no person is named without a relationship-event record behind them. Assert `quality` never reaches an owner-visible sentence about a person. Assert the social branch is silent when the only evidence is old or absent. Extend `tests/synthetic/observed-relationships.test.ts`, which D-091's table already names as the home for identity and correctability invariants. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 10** (with AUD-0040 and AUD-0013) |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 1, Reach** — with AUD-0040 and AUD-0013, and only after its discretion rule is written |
 
 ---
 
@@ -1525,14 +1612,14 @@ recorded there.
 | **Owner-facing example** | **Constructed and reproduced live on the deployed build.** A history with six occasions of "ordering her own food", alternating: all the way (6 June), **part of the way (9 June)**, all the way (13 June), **part of the way (16 June)**, all the way (20 June), **part of the way (23 June)**. Three of six, never twice in a row, and the most recent occasion needed help. At the same instant, on two screens: <br>**Now** — *"Adaya has handled ordering her own food **3 times running**. Worth calling that settled?"* → [Yes, she has got this] [Not yet] <br>**Fatherhood / Adaya, "Recently"** — *"How far ordering her own food got: **part of the way**." · "How far ordering her own food got: all the way." · "How far ordering her own food got: **part of the way**." · "How far ordering her own food got: all the way."* <br>If he taps "Yes, she has got this", the app records *"She handles ordering her own food independently now."* |
 | **Evidence** | `src/intelligence/growth.ts:140-146` (the filter), `:169` (the headline), `:171` (the statement); `src/intelligence/outcomes.ts:527-533` (`resultReached`); `GROWTH_CLEARLY = 0.9` at `growth.ts:41`. Constructed history loaded through the QA document loader on build `0eb920b`; both screens captured verbatim above. |
 | **Likely root cause** | `GROWTH_OCCASIONS = 3` and D-070 are about *how much evidence is enough*, and the copy was written as though the filter that counts it also ordered it. Nothing checks adjacency because nothing needed to until a history contained a failure — and **no scenario in the library contains a failed or partial growth occasion**, so this has never been seen. It is AUD-0008's blind spot arriving in the one domain where being wrong matters most. |
-| **Recommended behaviour** | Three parts, and the first is a one-line fix. **(a) Stop claiming consecutiveness.** Say what is true: *"Adaya has ordered for herself on her own three times out of the last six."* **(b) Count the failures.** They are evidence, and discarding them is what lets a 50% rate read as mastery; a skill should not be proposed as settled while the disconfirming occasions are a material share, and the threshold for that is a number worth writing into the decision log rather than picking here. **(c) Weight recency.** A run that ends on a partial is not a run that ended; the most recent occasion should be able to hold the suggestion back on its own. All three are inside `growth.ts` and none touches D-070's rule that a growth change is proposed and never applied. |
+| **Recommended behaviour** | Three parts, and the first is a one-line fix. **(a) Stop claiming consecutiveness, and say it as a narrative rather than a ratio.** *"She's ordered for herself on her own three times. Last time she still needed a hand."* The count stays — "three times" is a fact about events and the owner cannot judge "worth calling that settled?" without it. What goes is the denominator-as-rate construction: **counts of occasions, never rates or grades about her.** A ratio repeated week after week becomes a report card whatever the intent. **(b) Count the failures.** They are evidence, and discarding them is what lets a 50% rate read as mastery; a skill should not be proposed as settled while the disconfirming occasions are a material share, and the threshold for that is a number worth writing into the decision log rather than picking here. **(c) Weight recency.** A run that ends on a partial is not a run that ended; the most recent occasion should be able to hold the suggestion back on its own. All three are inside `growth.ts` and none touches D-070's rule that a growth change is proposed and never applied. |
 | **Benefit** | Removes a false statement about a child from the product, and makes the growth model able to tell "emerging" from "settled" — which is the gap AUD-0017 is about, reached by the cheapest possible route. |
 | **Implementation scope** | `growth.ts` — retain the full occasion list rather than only `cleared`, change the headline and the sufficiency test, and add a recency condition. No new record, no new field, no surface change beyond the sentence. |
 | **Risks** | Counting failures makes the suggestion fire less often, which will read as a regression against D-070's "three occasions" until the reason is written down; record it as an amendment to D-070 rather than a change to it. Take care that "three out of six" does not itself become a score about her — section 4.4 — which is why (a)'s wording names occasions rather than a rate, and why nothing here should ever render a percentage about the child. |
 | **Schema / data impact** | None. Every occasion is already recorded with its result; the model is discarding what it already has. |
 | **Tests required** | The exact reproduction above, as a regression: six alternating occasions must not produce a "times running" claim. Assert a genuine unbroken run of three still produces the suggestion. Assert a run ending on a partial does not. Assert no owner-visible sentence about the child claims consecutiveness that the underlying occasions do not support — written as a rule about what the copy may not claim, per the standing test rule, not as an exact string. Add a scenario to the library containing a failed growth occasion (AUD-0008). |
 | **Priority** | **P0** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9. Step 81.3, which is the step to do first if only one gets done. |
 
 ### L.2 — AUD-0049
 
@@ -1546,14 +1633,14 @@ recorded there.
 | **Owner-facing example** | *"Adaya has handled ordering her own food 3 times running. Worth calling that settled?"* — with [Yes, she has got this] and [Not yet]. Compare the same build's Insights on a comparable body of evidence: *"Worth noticing · 5 occasions, 3 of which went the other way."* The app knows how to say this. It says it about clearing the kitchen and not about his daughter. |
 | **Evidence** | `src/intelligence/growth.ts:159-175` (the whole suggestion, no confidence field); `GrowthSuggestion` interface at `:56-66`; contrast `insights.ts` `confidenceFrom(...)` used on every card, `situation.ts` `Limiter.certainty`, `association.ts` `MIN_PAIRS`. |
 | **Likely root cause** | `GrowthSuggestion` was designed as a prompt rather than as a claim, because D-070 correctly established that it never *applies* anything — the owner decides. But a prompt that states a fact is still stating a fact, and the confidence machinery that governs every other stated fact was not extended to it. |
-| **Recommended behaviour** | Give `GrowthSuggestion` the same two things every other claim has: a confidence derived from the occasions **including the ones that went the other way**, and one line of evidence mix in the owner's words — *"Six times she's had the chance; three she managed on her own. The last one she needed a hand."* Keep the two buttons; the owner's judgement is still the thing that decides. Where the evidence is thin or mixed, the honest form is a different question — *"worth trying somewhere new before we call it?"* (AUD-0017) — rather than a weaker version of the same one. |
+| **Recommended behaviour** | Give `GrowthSuggestion` an **internal** confidence derived from the occasions **including the ones that went the other way**, and expose **ordinary evidence rather than a confidence label**. The internal quantity governs sufficiency and never renders. What the owner reads is one line of evidence in his own words — *"Six times she's had the chance; three she managed on her own. The last one she needed a hand."* Keep the two buttons; the owner's judgement is still the thing that decides. Where the evidence is thin or mixed, the honest form is a different question — *"worth trying somewhere new before we call it?"* (AUD-0017) — rather than a weaker version of the same one. |
 | **Benefit** | Brings the app's highest-stakes claim up to the standard it already holds itself to everywhere else, and makes AUD-0048's class unreachable rather than fixed once. |
-| **Implementation scope** | `growth.ts` (`GrowthSuggestion` gains confidence and an occasion summary), the Now surface's growth panel (one line), and the reuse of `confidenceFrom` so the vocabulary matches the rest of the product. |
-| **Risks** | A confidence label attached to a statement about a child is close to a score about a child, which section 4.4 and section 22 both forbid. The line must describe *occasions*, never her — "three of six times" is about events, "60%" is about her — and a copy guard should enforce the difference. |
+| **Implementation scope** | `growth.ts` (`GrowthSuggestion` gains an internal confidence and an occasion summary) and the Now surface's growth panel (one line). **Do not reuse `confidenceFrom`.** It produces "Too early to say", "Worth noticing", "Fairly consistent", "Very consistent" — badges that are right for a move and are a grade with a friendly face when attached to a sentence about a four-year-old. This is the one place in the product where the shared confidence vocabulary must **not** be reused. |
+| **Risks** | A confidence label attached to a statement about a child is a score about a child, which section 4.4 and section 22 both forbid — which is why the label is dropped rather than softened. The line must describe *occasions*, never her, and a copy guard must enforce it: **no percentage, rank, grade, scale or performance score about Adaya, anywhere.** The opposite failure is real too and the guard must not cause it — stripping the counts entirely would leave the owner unable to judge a sufficiency claim about his own daughter. Counts of occasions stay. |
 | **Schema / data impact** | None. |
 | **Tests required** | Assert the suggestion carries a confidence and an occasion summary that names the occasions that went the other way. Assert no percentage, rank, score or scale about the child reaches any surface. Assert mixed evidence produces the different question rather than the same one hedged. |
 | **Priority** | **P1** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** — it is the sentence AUD-0048 rewrites, and rewriting it twice is worse than once |
+| **Timing** | **PHASE 81** — correctness and truthfulness, before Phase 9. It rewrites the sentence AUD-0048 rewrites, and rewriting it twice is worse than once. |
 
 ### L.3 — AUD-0050
 
@@ -1574,7 +1661,7 @@ recorded there.
 | **Schema / data impact** | None. All five kinds already exist, parse, serialise, round-trip through backup and restore, and are rendered. |
 | **Tests required** | Assert a written `forbids` preference removes the move from the ranking with reason `forbidden`, and that the area still appears in coverage and on Life (section 4.1). Assert the veto is listed and liftable. Assert a `correction` retraction removes the entry from belief while leaving the original record in history. Extend `tests/contract/` for the round-trip of a preference and a constraint, which nothing currently exercises outside fixtures. |
 | **Priority** | **P1** |
-| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** for the veto — it belongs in the same change as AUD-0023, which is already rebuilding the decline flow, and Phase 9 will otherwise style an action row that is missing an action. Retraction can wait for **PHASE 10**. |
+| **Timing** | **PHASE 81** for the veto — same change as AUD-0023. **LATER INTELLIGENCE PHASE — package 1, Reach** for retraction. |
 
 ### L.4 — AUD-0051
 
@@ -1595,28 +1682,7 @@ recorded there.
 | **Schema / data impact** | None. |
 | **Tests required** | Assert no cue is rendered from a stale or unknown fact. Assert the uncued sentence is byte-identical to today's when no cue exists. Assert a cue naming a person's presence cannot render when `childPresent` is false or unknown. Block-sweep the cue vocabulary alongside AUD-0002's guard. |
 | **Priority** | **P2** |
-| **Timing** | **PHASE 10** — the cue vocabulary is worth building once, after AUD-0004 supplies the obligations that make the good cues available |
-
----
-
-# 3A. External research used, and how it is kept separate
-
-Section 68 requires that what the owner's record says, what research says in general, and what
-the system would infer from combining them are never blurred. Every citation below is used in
-this audit as a **prior about people in general** that justifies a design choice — never as a
-finding about this owner. Where a recommendation depends on one, its Evidence field says which
-of the three kinds of claim it is making.
-
-| Used in | Source | What it supports here | What it does **not** support |
-| --- | --- | --- | --- |
-| AUD-0003, AUD-0009 | Van Dongen, Maislin, Mullington & Dinges, *Sleep* 26(2):117–126 (2003) | Sleep debt accumulates across nights; recovery takes more than one night; self-rated sleepiness under-reports the impairment. Justifies a morning recovery move and a multi-night framing. | Any statement about how impaired *he* is, or how many nights *he* needs. |
-| AUD-0010, AUD-0046 | Cepeda, Pashler, Vul, Wixted & Rohrer, *Psychological Bulletin* 132(3):354–380 (2006); Cepeda, Vul, Rohrer, Wixted & Pashler, *Psychological Science* 19(11):1095–1102 (2008) | Spacing beats massing; the useful gap scales with the retention interval (roughly 10–20% of it). Justifies deriving a study interval from a goal horizon. | A claim that a particular interval will work for him, or that his recall has improved. |
-| AUD-0017, AUD-0048 | Stokes & Baer, *Journal of Applied Behavior Analysis* 10(2):349–367 (1977) | Generalisation across settings, people and time must be programmed and probed, not inferred from repetition in one context. Justifies requiring setting spread before calling a child's skill settled. | Anything about Adaya specifically, and no diagnostic framing of any kind. |
-| AUD-0018 | Zubler et al., *Pediatrics* 149(3):e2021052138 (2022) — CDC *Learn the Signs. Act Early.* | A milestone is what ≥75% of children do by an age; an evidence-informed normative frame exists and is public. Justifies saying what is age-typical. | Placing Adaya on a scale, a percentile, or a rank. The audit states this as a rule to be written into the decision log **before** any code. |
-| AUD-0016 | Lebowitz et al., *JAACAP* 59(3):362–372 (2020) | Parent-directed framing that targets the parent's own accommodating behaviour was non-inferior to individual CBT for child anxiety. Justifies putting a growth move on the father rather than as a demand on the child. | Any suggestion that Adaya is anxious, or that this is a treatment. |
-| AUD-0031 | Standard decision analysis — expected value of information / expected opportunity loss | The value of a question is the expected reduction in loss, not the fraction of answers that switch the decision. Justifies the `consequential` amendment to D-036. | A claim that the app can compute a full EVPI; it cannot, and the recommendation is a narrow floor rather than the full calculation. |
-| AUD-0045 | Bull et al. (WHO 2020 guidelines), *British Journal of Sports Medicine* 54:1451–1462 | Adults need 150–300 min/week of moderate aerobic activity **and** muscle-strengthening on two or more days. Justifies the observation that a movement vocabulary of one walk cannot represent half the standard recommendation. | A target to hold him to. Section 22 forbids the score, and section 4.4 forbids the failure framing. |
-| AUD-0051 | Gollwitzer & Sheeran, *Advances in Experimental Social Psychology* 38:69–119 (2006) | Adding an if-then plan specifying when, where and how has *d* = 0.65 on goal attainment across 94 studies. Justifies a cue clause on recommendation templates. | That cued recommendations work for him — which the app's own `follow-through` dimension can go on to observe. |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 2, Validity** — depends on AUD-0004 (Phase 82) supplying real cues |
 
 ---
 
@@ -1627,15 +1693,15 @@ of the three kinds of claim it is making.
 | Priority | Count | IDs |
 | --- | --- | --- |
 | **P0** | **9** | AUD-0001, 0002, 0003, 0014, 0015 *(part b)*, 0028, 0031, 0036, 0048 |
-| **P1** | **22** | AUD-0004, 0005, 0008, 0011 *(parts a, b)*, 0015 *(part a)*, 0016, 0017, 0019, 0020, 0023, 0025, 0026, 0027, 0032, 0033, 0034, 0035, 0037, 0040, 0041, 0042, 0049, 0050 |
-| **P2** | **18** | AUD-0006, 0007, 0009, 0010, 0018, 0021, 0022, 0024, 0029, 0030 *(part a)*, 0038, 0039, 0043, 0044, 0045, 0046, 0047, 0051 |
+| **P1** | **23** | AUD-0004, 0005, 0008, 0011 *(parts a, b)*, 0015 *(part a)*, 0016, 0017, 0019, 0020, 0023, 0025, 0026, 0027, 0032, 0033, 0034, 0035, 0037, 0040, 0041, 0042, 0046, 0049, 0050 |
+| **P2** | **17** | AUD-0006, 0007, 0009, 0010, 0018, 0021, 0022, 0024, 0029, 0030 *(part a)*, 0038, 0039, 0043, 0044, 0045, 0047, 0051 |
 | **P3** | **2** | AUD-0012, 0013, and AUD-0030 *(part b)* |
-| **Owner-blocked** | **1** | AUD-0011 *(part c)* — and AUD-0018, which is P2 and also blocked |
 | **Total** | **51** | |
 
 Each band's count is the number of findings whose **primary** priority is that band, so they sum
 to 51. AUD-0011, AUD-0015 and AUD-0030 split across bands and appear in two rows each without
-being counted twice.
+being counted twice. **AUD-0046 was raised from P2 to P1** during the independent-review
+adjudication — see the record at the top.
 
 ## By type
 
@@ -1646,18 +1712,21 @@ being counted twice.
 | **ARCHITECTURE** | **11** | 0006, 0011, 0020, 0022, 0025, 0035, 0039, 0040, 0041, 0046, 0047 |
 | **PRODUCT / UX** | **12** | 0008, 0023, 0027, 0030, 0033, 0034, 0036, 0037, 0038, 0043, 0044, 0050 |
 
-## By timing
+## By phase
 
-| Timing | Count |
-| --- | --- |
-| BEFORE PHASE 9 (Phase 8.5) | 22 |
-| PHASE 9 | 3 |
-| PHASE 10 | 28 |
-| PHASE 11 | 2 |
-| POST-RELEASE-OPTIONAL | 1 |
+| Phase | Findings | Count |
+| --- | --- | --- |
+| **Phase 81** — correctness and truthfulness | 0001, 0002, 0003, 0005, 0008, 0014, 0015 *(b)*, 0016, 0023, 0025 *(session)*, 0026, 0027, 0028, 0031, 0032, 0033, 0034, 0036, 0037, 0048, 0049, 0050 *(veto)* | **22** |
+| **Phase 82** — structural intelligence skeleton | 0004, 0015 *(a)*, 0017, 0020, 0021, 0024, 0035, 0039, 0046 | **9** |
+| **Phase 9** — visual coherence | 0038 *(a, b)*, 0043, 0044 | **3** |
+| **Later intelligence — package 1, Reach** | 0006, 0011, 0012, 0013, 0040, 0041, 0045, 0047, 0050 *(retraction)* | **9** |
+| **Later intelligence — package 2, Validity** | 0007, 0009, 0010, 0019, 0022, 0025 *(durable)*, 0029, 0030 *(a)*, 0038 *(c)*, 0042, 0051 | **11** |
+| **Owner-blocked / optional** | 0018 *(Q1)*, 0030 *(b)* *(Q4, post-release-optional)* | **2** |
 
-*(Counts exceed 51 because AUD-0011, AUD-0015, AUD-0025, AUD-0030 and AUD-0038 are split
-across phases.)*
+Every one of the 51 findings appears exactly once as a primary assignment. Six findings are
+split across phases — AUD-0011, 0015, 0025, 0030, 0038, 0050 — and appear in both rows they
+belong to. Canonical Phase 10 (performance, PWA, reliability), Phase 11 (adversarial hardening)
+and Phase 12 (release) carry **no** findings from this audit and are unchanged.
 
 ## Findings that turned out not to be defects
 
@@ -1670,30 +1739,93 @@ overview showing three groups rather than section 7's six states (D-075), `faith
 kinds (all eleven of section 27's types are implemented, ten of them driven onto the screen),
 `contradiction` never appearing (correctly subordinated by design, `insights.ts:2131`), the
 trajectory card's gate (already moved from `standing` to `tracked` by the D-089 repair, so
-energy, soreness, sleep quality and social energy *can* trend), and week-start handling (correct
-in all three settings).
+energy, soreness, sleep quality and social energy *can* trend), week-start handling (correct in
+all three settings), the "a suggestion here" fallback on Timeline (the correct D-018 behaviour
+when a subject will not resolve), and `TRIGGER_REASONS`' "is behind where you wanted" string
+(real, but unreachable on a primary owner surface — `describe.ts:311` renders only the
+sentence).
 
 ---
 
-# 4. What must land before Phase 9, and why
+# 4. External research used, and how it is kept separate
 
-Phase 9 is "visual coherence, motion and mobile refinement", and its review list includes
-**copy**. Its gate is **owner physical-phone approval**. That combination is the reason for
-this section: Phase 9 will take the app's sentences and make them look and feel settled, and
-the owner will sign off on the result on his phone.
+Section 68 requires that what the owner's record says, what research says in general, and what
+the system would infer from combining them are never blurred. Every citation below is used in
+this audit as a **prior about people in general** that justifies a design choice — never as a
+finding about this owner. Where a recommendation depends on one, its Evidence field says which
+of the three kinds of claim it is making.
 
-**A sentence that is factually wrong does not become right by being well set.** The
-twenty-two items below are wrong facts, wrong reasons, or broken loops wearing the clothes of
-copy. If Phase 9 runs first, they get typeset, approved on a phone, and become the thing the
-design now depends on — and re-opening them afterwards means re-opening a gate the owner has
-already passed. Every one of these is a change to *what the app says is true*, not to how it
-looks.
+| Used in | Source | What it supports here | What it does **not** support |
+| --- | --- | --- | --- |
+| AUD-0003, AUD-0009 | Van Dongen, Maislin, Mullington & Dinges, *Sleep* 26(2):117–126 (2003) | Sleep debt accumulates across nights; recovery takes more than one night; self-rated sleepiness under-reports the impairment. Justifies a morning recovery move and a multi-night framing. | Any statement about how impaired *he* is, or how many nights *he* needs. |
+| AUD-0010, AUD-0046 | Cepeda, Pashler, Vul, Wixted & Rohrer, *Psychological Bulletin* 132(3):354–380 (2006); Cepeda, Vul, Rohrer, Wixted & Pashler, *Psychological Science* 19(11):1095–1102 (2008) | Spacing beats massing; the useful gap scales with the retention interval (roughly 10–20% of it). Justifies deriving a study interval from a goal horizon. | A claim that a particular interval will work for him, or that his recall has improved. |
+| AUD-0017, AUD-0048 | Stokes & Baer, *Journal of Applied Behavior Analysis* 10(2):349–367 (1977) | Generalisation across settings, people and time must be programmed and probed, not inferred from repetition in one context. Justifies requiring setting spread before calling a child's skill settled. | Anything about Adaya specifically, and no diagnostic framing of any kind. |
+| AUD-0018 | Zubler et al., *Pediatrics* 149(3):e2021052138 (2022) — CDC *Learn the Signs. Act Early.* | A milestone is what ≥75% of children do by an age. Justifies saying what is typical **for skills this source actually covers**. | Anything about a skill the source does not cover — and it does not cover "ordering her own food" or any other owner-defined skill. CDC's own materials say the checklists are "not a substitute for standardized, validated developmental screening tools", are not validated screening tools, and cannot diagnose. So: never a standard, never a screen, never a diagnosis, and never a scale, percentile or rank for Adaya. Narrowed after independent review. |
+| AUD-0016, AUD-0017 | Wood, Bruner & Ross, *Journal of Child Psychology and Psychiatry* 17(2):89–100 (1976); Grolnick & Ryan, *Journal of Personality and Social Psychology* 57(2):143–154 (1989) | Scaffolding — the adult's help is pitched slightly ahead of current competence and responsibility transfers as components are mastered — and autonomy support: encouraging self-initiation and choice rather than pressure. Both describe something the *father* does, which justifies framing the move on him; and scaffolding is the construct AUD-0017's help-level records. | Any developmental judgement about Adaya, and any claim that these are treatments. **Replaced Lebowitz et al. (2020) after independent review**: that trial studied SPACE in children aged 7–14 with primary anxiety disorders, which cannot carry a claim about a preschooler's ordinary developmental tasks. |
+| AUD-0031 | Standard decision analysis — expected value of information / expected opportunity loss | The value of a question is the expected reduction in loss, not the fraction of answers that switch the decision. Justifies the `consequential` amendment to D-036. | A claim that the app can compute a full EVPI; it cannot, and the recommendation is a narrow floor rather than the full calculation. |
+| AUD-0045 | Bull et al. (WHO 2020 guidelines), *British Journal of Sports Medicine* 54:1451–1462 | Adults need 150–300 min/week of moderate aerobic activity **and** muscle-strengthening on two or more days. Justifies the observation that a movement vocabulary of one walk cannot represent half the standard recommendation. | A target to hold him to. Section 22 forbids the score, and section 4.4 forbids the failure framing. |
+| AUD-0051 | Gollwitzer & Sheeran, *Advances in Experimental Social Psychology* 38:69–119 (2006) | Adding an if-then plan specifying when, where and how has *d* = 0.65 on goal attainment across 94 studies. Justifies a cue clause on recommendation templates. | That cued recommendations work for him — which the app's own `follow-through` dimension can go on to observe. |
+---
 
-**If only one of the six groups below gets done, do the daughter group.** It contains the only
-finding in this audit where the app states something false about a person, and the person is a
+# 5. The approved phase architecture
+
+The owner approved this sequence after the independent review. It replaces the audit's first
+draft, which routed all structural intelligence work to "Phase 10" — a phase the canonical plan
+reserves for performance, PWA and reliability (section 55). That was the audit's own structural
+error and it is corrected throughout.
+
+```
+Phase 81   Correctness and truthfulness        22 findings, 6 steps
+              ↓
+Phase 82   Structural intelligence skeleton     9 findings, 6 work packages
+              ↓
+Phase 9    Visual coherence, motion, mobile     canonical, + 3 findings
+              ↓
+Later      Intelligence: Reach, then Validity  20 findings, one phase, two gates
+              ↓
+Phase 10   Performance, PWA, reliability        canonical, unchanged, no findings
+              ↓
+Phase 11   Independent adversarial hardening    canonical, unchanged, no findings
+              ↓
+Phase 12   Release                              canonical, unchanged
+```
+
+**Phase numbering.** The product calls the first two initiatives Phase 81 and Phase 82; the
+external orchestrator routes on integers and a separate orchestration conversation has
+established an explicit routing field for this. Builder, QA, repair and retest rounds all stay
+under the same routing number — **QA rounds do not get new phase numbers**. The later
+intelligence phase is deliberately **not numbered yet**, and the canonical phases are **not
+renumbered**. That is a decision for when the implementation plan is approved.
+
+**The test that decided Phase 81 versus Phase 82.** Not importance. One question: *does this
+create or change a control, a surface, or the shape of a recommendation that Phase 9 must design
+and the owner must approve on his phone?* Phase 82 exists because approving an information
+architecture that lacks a thread indicator, a commitments surface, a growth stage, a goal date
+and a fifth Now state would mean re-opening a passed phone gate to add them. Three findings —
+AUD-0040, AUD-0045 and AUD-0047 — were in an earlier draft of Phase 82 and **failed that test on
+re-examination**; they are in the later phase. See the adjudication record at the top.
+
+---
+
+# 6. Phase 81 — correctness and truthfulness
+
+**Name.** *The app is wrong about the time, and about his daughter.*
+
+**Why a phase and not a backlog.** Twenty-two items, one theme, one gate. They are the findings
+where the app states something untrue on a screen the owner reads, or where the interface is
+missing an action the plan promises. Phase 9 is "visual coherence, motion and mobile refinement",
+its review list includes **copy**, and its gate is **owner physical-phone approval**. Phase 9 will
+typeset these screens and take them to that gate; anything not fixed first becomes settled design,
+and re-opening it afterwards means re-opening a gate the owner has already passed.
+
+**A sentence that is factually wrong does not become right by being well set.** Every one of these
+is a change to *what the app says is true*, not to how it looks.
+
+**If only one of the six groups gets done, do the daughter group.** It contains the only finding
+in this audit where the app states something false about a person, and the person is a
 four-year-old.
 
-**The twenty-two, grouped by why they cannot wait.**
+## The twenty-two, grouped by why they cannot wait
 
 *The app is wrong about the time (Phase 9 would polish the wrong noun into place).*
 - **AUD-0001** — "Only about 10 minutes left tonight" at 08:40.
@@ -1702,14 +1834,14 @@ four-year-old.
 - **AUD-0005** — sleep going stale mid-morning; AUD-0003 depends on it.
 
 *The app gives advice that contradicts what it just said (a design pass cannot see this).*
-- **AUD-0003** — nine hours short of rest at 10:00, and it prescribes a study session. **The single most important item in this audit.**
+- **AUD-0003** — nine hours short of rest at 10:00, and it prescribes a study session.
 - **AUD-0028** — recommends a move while stating it has made little difference, and asserts an unfounded causal claim.
 - **AUD-0031** — will not ask about pain before recommending exertion.
 - **AUD-0032** — speaks a 50%-confidence inference as settled fact.
 - **AUD-0033** — presents a 0.002 margin exactly like a clear win.
 
 *It is wrong about his daughter (the highest-trust content in the product).*
-- **AUD-0048** — **"three times running" asserted from three non-consecutive occasions with the failures filtered out and the most recent one a failure.** A false statement about a four-year-old, offered for one-tap acceptance. The most serious single defect in this audit.
+- **AUD-0048** — "three times running" asserted from three non-consecutive occasions with the failures filtered out and the most recent one a failure. A false statement about a four-year-old, offered for one-tap acceptance. **The most serious single defect in this audit.**
 - **AUD-0049** — the growth suggestion carries no confidence and no evidence mix, which is what made AUD-0048 possible.
 - **AUD-0014** — a decline is recorded as practice.
 - **AUD-0015 (b)** — "Ordering her own food is here and there are about 120 minutes."
@@ -1718,7 +1850,7 @@ four-year-old.
 
 *Interaction states Phase 9 will style, which are currently broken rather than unstyled.*
 - **AUD-0023** — the decline loop jams, and the situation line disappears.
-- **AUD-0050 (the veto half)** — section 4.3 promises the owner can forbid a recommendation family; the enforcement is complete and no control reaches it. It belongs in the same change as AUD-0023, and Phase 9 would otherwise style an action row that is missing an action.
+- **AUD-0050 (the veto half)** — section 4.3 promises the owner can forbid a recommendation family; the enforcement is complete and no control reaches it.
 - **AUD-0034** — "Nothing to suggest just yet" at 07:00 and on the evenings she is away.
 - **AUD-0025** *(session-scoped part only)* — the same sentence at four hours of one day.
 
@@ -1729,128 +1861,203 @@ four-year-old.
 *The instrument that has to verify all of the above.*
 - **AUD-0008** — two morning scenarios and a block-sweep control. **Do this first.**
 
-Everything else genuinely belongs after the visual pass, or is large enough that starting it
-now would delay Phase 9 without improving it.
+## Sequence
+
+| Step | Items | Delivers |
+| --- | --- | --- |
+| **81.0 The instrument** | AUD-0008 | Two morning scenarios and a one-press block sweep. Everything after this is verified with it, and the sweep is what proves the temporal class is actually gone. |
+| **81.1 The horizon** | AUD-0002 → 0001, 0036; AUD-0005 | One shared vocabulary; the limiter, the buttons, the question options and the evidence panel stop asserting the evening; sleep stays valid for the day it describes. |
+| **81.2 The morning has an answer** | AUD-0003 | A recovery-compatible option in every block, worded only from what is known. The invariant, not a sentence about tomorrow. |
+| **81.3 Adaya** | AUD-0048 → 0049; AUD-0014 → 0015(b), 0016; AUD-0037 | The app stops claiming an unbroken run it does not have and starts counting the occasions that went the other way; the suggestion gains internal confidence and ordinary evidence, with no badge about the child; a decline stops counting as practice; the nonsense sentence goes; the growth reason stops being the age of the app's records; the two contradicting counters are reconciled. **The step to do first if only one gets done.** |
+| **81.4 Honest sentences** | AUD-0032, 0028, 0027, 0026, 0033 | Inferences are spoken as inferences; the unfounded causal claim goes; the app's own best evidence reaches Now; trade-offs and near-ties are said out loud. |
+| **81.5 Interaction** | AUD-0025(session), 0023, 0050(veto), 0034, 0031 | No repeating itself within a day; declines escalate to a question, then stop, and can finally end in a veto; the situation line survives every no-action state; the guide asks about pain before prescribing exertion. |
+
+## Gate
+
+The block sweep from 81.0 across every scenario at five blocks, plus the independent QA protocol
+(D-077 / D-090 — QA runs in Codex, cold, and audits meaning before it duplicates gates). Four
+acceptance items, all four of which currently fail:
+
+1. **No owner-visible string asserts the evening outside the evening**, at any block, in any scenario.
+2. **A named limiter always has a candidate that addresses it**, in every block.
+3. **No sentence about the child claims consecutiveness the occasions do not support**, no percentage, rank, grade or score about her reaches any surface, and the suggestion states how many occasions went the other way.
+4. **The owner can stop a recommendation family**, and find and lift that veto afterwards.
+
+The library must also gain a history with a failed growth occasion and a history set in the
+morning with something to decide. Without those two fixtures, items 2 and 3 cannot be tested —
+which is how they survived 1,199 green assertions.
+
+## Decision-log entries that must be written before the code
+
+Three, and all three are now approved by the owner:
+
+- **Q2 / section 61** — amend the canonical "situations like tonight" example so the plan treats that wording as horizon-aware. The plan sits above the code in the authority order, so this precedes AUD-0002.
+- **Q3 / D-036** — the narrow `consequential` exception. Approved, and approved *narrow*: it is not a general licence to ask more.
+- **D-070** — the growth sufficiency amendment. The exact revised rule goes in the log before `growth.ts` is touched, with no new child-performance percentage threshold introduced to implement it.
+
+Recorded but not blocking: AUD-0027's second half would widen the DEF-0006 rule from "concepts in
+`leansOn`" to "concepts in `leansOn`, plus dimensions that materially moved the score". That is a
+builder decision-log entry; the DEF-0006 regression must be shown still to bite afterwards.
+---
+
+# 7. Phase 82 — the structural intelligence skeleton
+
+**Purpose.** Build the minimum structural intelligence skeleton that Phase 9 must design around.
+**Not** "everything useful that adds a control." Membership is decided by one test and nothing
+else: *would Phase 9 approve the wrong product structure if this landed afterwards?*
+
+**Exactly 6 work packages containing 9 AUD findings.** The distinction matters because two
+packages bundle two findings each, and an earlier draft of this section said "nine items" while
+listing ten packages — a discrepancy the independent review caught.
+
+| # | Work package | Findings | Why Phase 9 needs it |
+| --- | --- | --- | --- |
+| **1** | **Goal horizon and parts** | AUD-0046, AUD-0021 | Turns a goal from a statement-plus-status into a tracked objective: a date control and a parts list change what the Career page *is*. AUD-0046 is in as AUD-0021's prerequisite and to correct the unbacked `goal-behind` urgency, not on its own UI merit. |
+| **2** | **Commitment windows** | AUD-0004 | A new Life surface for obligations, carrying provenance and recurrence from the start. It is also the only thing that makes package 4 reachable. |
+| **3** | **Threads** | AUD-0020 | The new persistent owner-visible object: an indicator on the Now card, a list and a stop control on Life, an explanation clause. The strongest member. Bounded to three concrete thread types with no generic creation UI. |
+| **4** | **Deferral** | AUD-0024 | A fifth Now state. Phase 9 designs the no-action states; four then five means designing them twice. |
+| **5** | **Growth state and occasion context** | AUD-0015 *(a)*, AUD-0017 | AUD-0017 is the load-bearing half — the extra tap makes the outcome answer a **two-step flow**, an interaction change rather than a label. AUD-0015(a) rides with it because both change the growth model's data shape, and splitting them means touching one flow twice. |
+| **6** | **Re-cut and re-run** | AUD-0035, AUD-0039 | Package 3 adds `thread-fit`. Adding a dimension without re-cutting is D-048's wart made worse, so this is the completion of package 3 rather than an independent item — and the frequency of the no-action states Phase 9 designs against is currently distorted by the inert-dimension problem. |
+
+## Dependencies
+
+Only three are hard:
+
+- **AUD-0046 → AUD-0021**, inside package 1: `goalFit` must read the horizon before parts build on it.
+- **Package 2 → package 4**: `hold` cannot name a later block until commitment windows exist.
+- **Package 3 → package 6**: `thread-fit` is the dimension the instrument is being cut around, so the re-cut must follow it.
+
+Packages 1 and 5 have no dependency on anything else in Phase 82 and may float.
+
+**Recommended execution order: 1 → 2 → 3 → 4 → 5 → 6**, with package 6 absolutely last.
+
+## What Phase 82 deliberately excludes, and why
+
+Three findings were in an earlier draft of this section and failed the test on re-examination.
+
+- **AUD-0040** (registry-driven situation) was in as an enabler. Nothing else in Phase 82 needs
+  it: `targetWindow` reaches decisions through `direction.ts`/`ActiveGoal` rather than the concept
+  map, `commitment-window` is a record kind rather than a concept, and the growth stage lives on
+  the entity. Its only dependents — AUD-0011, 0041, 0047 — are all in the later phase. Removing it
+  has a second benefit: **Phase 82 now creates no new privacy exposure at all**, because the
+  registry-driven read that would surface `privatePattern` moves out with it.
+- **AUD-0045** (owner-defined routines) creates a control that is an instance of the "Add this"
+  affordance Phase 9 can design generically, for an entity rather than a fact. And its own
+  precondition — per-object `size` and `demand` — makes it a **scoring-model change**, not a
+  visual one.
+- **AUD-0047** (relationship graph) produces a new *sentence* from an existing shape, not a new
+  shape. The social generator already names a place; a variant naming a person has the same card
+  anatomy, the same five buttons, no new control, and no new discretion affordance. Domain pages
+  already accommodate lists.
+
+## Gate
+
+Phase 82 has no owner-visible falsehood to fix, so its gate is structural rather than
+truthfulness-based:
+
+1. **A thread never bypasses the arbiter** — architecture-guard test, section 17.2.
+2. **A dominant limiter overrides a thread** — `thread-fit` weighted below `bottleneck-fit`, asserted directly.
+3. **A thread can be stopped in one tap, expires on its own, and explains why it is active.**
+4. **`hold` names a real later block and cannot be returned when no later block scores higher.**
+5. **The tournament is re-run and re-baselined on the re-cut instrument** (AUD-0035, AUD-0039), with `MAX_NUDGE` expressed relative to the ranked spread.
+6. **No percentage, rank, grade or score about the child** survives package 5 — the Phase 81 copy guard must still bite.
 
 ---
 
-# 5. Recommended implementation order
+# 8. The later intelligence phase — Reach, then Validity
 
-Dependencies are real and a few of these will produce wrong results if taken out of order.
+Not numbered yet, and the canonical phases are not renumbered. It sits **between Phase 9 and
+canonical Phase 10**, and it is **one phase with two internally gated packages** rather than two
+phases — because the plan already supports multi-round phases with distinct acceptance items, and
+inserting two whole phases before reliability work that release is gated on lengthens the road to
+Phase 12 for no structural gain.
 
-## Stage 0 — the instrument (do this before anything else)
+**The two packages have genuinely different failure modes, which is why they are separately
+gated.**
 
-1. **AUD-0008** — two morning scenarios and a block-sweep control in the QA laboratory.
-   *No dependencies. Everything after this is verified with it.* QA-surface only, so it can
-   land while the rest is still being scoped.
+## Package 1 — Reach: what the brain can see
 
-## Stage 1 — the temporal class (one change, made once)
+**9 findings:** AUD-0040, AUD-0011, AUD-0041, AUD-0047, AUD-0045, AUD-0012, AUD-0013, AUD-0006,
+AUD-0050 *(retraction half)*.
 
-2. **AUD-0002** — the shared horizon vocabulary in `vocabulary.ts`. *Must come before 0001
-   and 0036, or the word gets fixed in three places with three definitions.*
-3. **AUD-0001** — thread the block into `findLimiter`. *Depends on 2.*
-4. **AUD-0036** — the evidence panel. *Depends on 2.*
-5. **AUD-0005** — per-concept validity windows. *Independent of 2–4, but must precede 6.*
-6. **AUD-0003** — a morning recovery verb, and the invariant that a named limiter always has
-   a candidate. *Depends on 5 (the morning must keep its sleep fact) and is verified by 1.*
+Order: **AUD-0040 first, with its structural discretion guard**, because it is the change that
+places private readings into every decision's fact list. Then AUD-0041 (which becomes near-free
+once the situation is registry-driven), then AUD-0011, then the domain reach items.
 
-## Stage 2 — Adaya (order matters; two of these share a root)
+**Gate — and this is the one that differs:** a **privacy guarantee**. It must be structurally
+impossible, not merely conventional, for an explanation or an evidence panel to render a
+`private` reading. Plus a no-added-noise check: making dormant concepts live must not increase
+how often the app speaks.
 
-6a. **AUD-0048** — stop claiming consecutiveness, count the occasions that went the other way,
-    let the most recent one hold the suggestion back. *No dependencies. Do it first.*
-6b. **AUD-0049** — give the suggestion a confidence and an evidence-mix line. *Must be in the
-    same change as 6a — it rewrites the same sentence, and rewriting it twice is worse.*
-7. **AUD-0014** — a decline is not practice. *Must precede 8b and 9; both are downstream of
-   the same reset.*
-8. **AUD-0015 (b)** — template keyed on subject kind, plus the guard. *Depends on 7.*
-9. **AUD-0016** — separate the coverage reason from the owner-facing reason. *Depends on 7,
-   or it hides staleness instead of fixing it.*
-10. **AUD-0037** — exclude `growth-opportunity` from "Still gathering". *Independent.*
+**Q8 must be answered before this package starts** — before AUD-0040, not before AUD-0011.
 
-## Stage 3 — honesty on Now
+## Package 2 — Validity: what it concludes from what it sees
 
-11. **AUD-0032** — phrase from the knowledge state. *Independent.*
-12. **AUD-0028** — remove the unfounded causal clause; acknowledge a weak learned band.
-    *Independent, but do it with 13 — both touch `explain.ts`'s branch selection.*
-13. **AUD-0027** — prefer a material dimension's note over the trigger template. *Same file
-    and same mechanism as 12; doing them separately means touching `whyNow()` twice.*
-14. **AUD-0026** — the cost clause. *Depends on 13 (same plumbing: dimensions reaching the
-    explanation).*
-15. **AUD-0033** — surface the margin. *Independent of 11–14; note that its threshold is
-    provisional until AUD-0035.*
+**11 findings:** AUD-0042, AUD-0029, AUD-0007, AUD-0009, AUD-0010, AUD-0022, AUD-0025 *(durable
+ledger)*, AUD-0030 *(a)*, AUD-0038 *(c)*, AUD-0019, AUD-0051.
 
-## Stage 4 — interaction
+Reach must precede Validity: the app cannot widen what it learns over a concept it cannot read.
+Several of these also depend on Phase 82 — AUD-0009 and AUD-0019 on threads, AUD-0010 on the goal
+horizon, AUD-0051 on commitment windows.
 
-16. **AUD-0025 (session-scoped)** — the shown-ledger. *Must precede 17, which needs to know
-    what was already offered.*
-17. **AUD-0023** — no repeats in a block, ask after two refusals, stop after three, keep the
-    situation line. *Depends on 16.*
-17a. **AUD-0050 (veto)** — "stop suggesting this", written as a `preference` with `stance:
-    'forbids'`, listed and liftable on the domain page. *Must be in the same change as 17 —
-    it is the last rung of the same ladder, and building the ladder twice is worse.*
-18. **AUD-0034** — split `nothing-proposed`. *Depends on 17 for the situation-line fix.*
-19. **AUD-0031** — the `consequential` exception to D-036, and the decision-log amendment.
-    *Independent, but verify it last in 8.5 because it changes how often the guide fires
-    across every scenario.*
+**Gate:** scoring and learning correctness — every belief that moves is accounted for, the
+scenario diffs are read rather than rubber-stamped — plus the standing copy guards.
 
-**— Phase 9 runs here —** with **AUD-0038 (a)** and **(b)** folded into it, since a control's
-placement and a duration's phrasing are exactly Phase 9's business.
+**Owner-blocked, landing here once answered:** AUD-0018 (Q1). **Post-release-optional:**
+AUD-0030(b) (Q4).
+---
 
-## Stage 5 — Phase 10, structural
+# 9. Recommended implementation order across all phases
 
-20. **AUD-0040** — registry-driven situation plus the `view.facts` architecture guard.
-    *Enabler. Must precede 21.*
-21. **AUD-0011** — wire the four write-only domains, **discretion guard first**. *Depends on
-    20.*
-22. **AUD-0004** — commitment windows. *Independent of 20–21; enables 23.*
-23. **AUD-0024** — make `hold` reachable. *Depends on 22.*
-24. **AUD-0020** — threads. *Independent, but enables 25–27 and 30.*
-25. **AUD-0009** — multi-night recovery. *Depends on 24.*
-26. **AUD-0010** — spaced study. *Depends on 24 and on goal horizons from 27.*
-27. **AUD-0021** — goal horizons and parts. *Depends on 24.*
-28. **AUD-0015 (a)** — a stage on `development-skill`; maintenance probes. *Depends on 24
-    for the ladder.*
-29. **AUD-0017** — setting and help-level on a growth occasion. *Independent of 28; do them
-    together, one flow change.*
-30. **AUD-0018** — Adaya's age and the normative anchor. ***Blocked on the owner's decision
-    and on the decision-log rule being written first.***
-31. **AUD-0019** — the absent-evening opportunity signal, and varied `time-with`. *Depends on
-    16 and 24.*
-32. **AUD-0022** — compatible moves. *Depends on 24.*
-33. **AUD-0006** — re-home `usable-time-tonight` as `time.free-now`. *Depends on 22, which
-    introduces the second time quantity it needs to be distinguished from.*
-34. **AUD-0029** — trajectory-fit; extract analysis from `insights.ts`. *Independent.*
-35. **AUD-0007** — `dayOfWeek` and `load` in `DecisionContext`. *Independent.*
-36. **AUD-0030 (a)** — say what the archive costs, on the import screen. *Independent.*
-37. **AUD-0038 (c)** — group same-statement imported goals in the review. *Independent.*
-38. **AUD-0041** — make `materialToDecision` checkable, and fix the four wrong declarations.
-    *Depends on 20; it is near-free once the situation is registry-driven, and it is the guard
-    that would have caught AUD-0011 without an audit.*
-39. **AUD-0042** — a same-block sibling to the observe-first derivation. *Independent of the
-    above, but it changes twelve verbs' learned beliefs, so it must land **before** 38 in
-    Stage 6 and be staged one verb at a time.*
+Dependencies are real and several of these will produce wrong results out of order.
 
-**— Phase 9's second item, AUD-0043 (the "what the app is working out here" panel), lands with
-Phase 9 rather than here.**
+## Phase 81
 
-## Stage 6 — re-cut the instrument, once, last
+1. **AUD-0008** — the instrument. No dependencies. Everything after is verified with it.
+2. **AUD-0002** — the shared horizon vocabulary. **Before 3 and 4**, or the word gets fixed in three places with three definitions.
+3. **AUD-0001** — thread the block into `findLimiter`. Depends on 2.
+4. **AUD-0036** — the evidence panel. Depends on 2.
+5. **AUD-0005** — per-concept validity windows. **Before 6.**
+6. **AUD-0003** — a recovery-compatible option in every block. Depends on 5; verified by 1.
+7. **AUD-0048** — stop claiming consecutiveness; count the occasions that went the other way; let the most recent contrary one hold the suggestion back. **No dependencies. Do it first within the Adaya step.**
+8. **AUD-0049** — internal confidence and an evidence line. **Same change as 7** — it rewrites the same sentence.
+9. **AUD-0014** — a decline is not practice. **Before 10 and 11.**
+10. **AUD-0015 (b)** — template keyed on subject kind, plus the guard. Depends on 9.
+11. **AUD-0016** — separate the coverage reason from the owner-facing reason. Depends on 9, or it hides staleness instead of fixing it.
+12. **AUD-0037** — exclude `growth-opportunity` from "Still gathering". Independent.
+13. **AUD-0032** — phrase from the knowledge state. Independent.
+14. **AUD-0028** — remove the unfounded causal clause; acknowledge a weak learned band. **With 15** — same file, same mechanism.
+15. **AUD-0027** — prefer a material dimension's note over the trigger template.
+16. **AUD-0026** — the cost clause. Depends on 15 (same plumbing).
+17. **AUD-0033** — surface the margin. Threshold provisional until AUD-0035.
+18. **AUD-0025 (session)** — the shown-ledger, arriving as an argument. **Before 19.**
+19. **AUD-0023** — no repeats in a block; ask after two refusals; stop after three; keep the situation line. Depends on 18.
+20. **AUD-0050 (veto)** — "stop suggesting this", listed and liftable. **Same change as 19** — the last rung of the same ladder.
+21. **AUD-0034** — split `nothing-proposed`. Depends on 19.
+22. **AUD-0031** — the `consequential` exception. Verify last in Phase 81; it changes how often the guide fires across every scenario.
 
-40. **AUD-0035** — the three older dimensions abstain; re-derive `WORTH_DOING` and
-    `CLOSE_ENOUGH_TO_MENTION`; **re-run section 18's tournament**. *Must come after every
-    change that adds or alters a dimension or moves a learned belief — 24 (thread-fit), 34
-    (trajectory-fit), 39 (AUD-0042 moves twelve verbs' beliefs). Cutting the instrument three
-    times would waste two tournaments and produce two sets of unstable baselines.*
-41. **AUD-0039** — `MAX_NUDGE` relative to the ranked spread; widen the tournament rubric.
-    *Must be in the same change as 40.*
+## Phase 82
 
-## Stage 7 — Phase 11 and beyond
+23. **AUD-0046 → AUD-0021** — goal horizon, then parts.
+24. **AUD-0004** — commitment windows, with provenance and recurrence.
+25. **AUD-0020** — threads, bounded to three types.
+26. **AUD-0024** — `hold`. Depends on 24.
+27. **AUD-0015(a) + AUD-0017** — growth stage and occasion context. One flow change.
+28. **AUD-0035 + AUD-0039** — the re-cut and the tournament re-run. **Last**, after 25.
 
-40. **AUD-0012** — money gets an entry route. **AUD-0013** — social three-state gate.
-    **AUD-0030 (b)** — historical episodes from legacy, pending an owner decision.
+## Phase 9
+
+29. **AUD-0043**, **AUD-0044**, **AUD-0038 (a)** and **(b)** land with the visual phase.
+
+## Later intelligence phase
+
+30. **AUD-0040 + the discretion guard** — first in Reach. Then **AUD-0041**, **AUD-0011**, **AUD-0006**, **AUD-0012**, **AUD-0013**, **AUD-0045** *(after per-object size and demand)*, **AUD-0047** *(after its discretion rule is written)*, **AUD-0050 (retraction)**.
+31. Then Validity: **AUD-0042**, **AUD-0029**, **AUD-0007**, **AUD-0009**, **AUD-0010**, **AUD-0019**, **AUD-0022**, **AUD-0025 (durable)**, **AUD-0030 (a)**, **AUD-0038 (c)**, **AUD-0051**.
+32. **AUD-0018** whenever Q1 is answered. **AUD-0030 (b)** post-release, if ever.
 
 ---
 
-# 6. DO-NOT-CHANGE — things that look wrong but are right, and things that are working
+# 10. DO-NOT-CHANGE — things that look wrong but are right, and things that are working
 
 This section is required and it is not a formality. Several of the items below looked like
 defects during Stage 1 and turned out to be deliberate, reasoned and correct. Changing them
@@ -1972,153 +2179,122 @@ most of this audit was found. Do not simplify it.
 
 ---
 
-# 7. Unresolved questions — the owner's to decide, not mine
-
-**Q1. Should the app know Adaya's age, and hold a normative reference?**
-*Options.* **(a) No age.** The app never risks framing normal development as a gap; it also
-cannot tell an ordinary four-year-old from a real one, and every growth judgement stays
-age-blind. **(b) Age plus a public normative reference** (e.g. CDC *Learn the Signs. Act
-Early.*), used only to say what is age-typical and to refuse to propose skills that are not
-yet typical — never to place her on a scale. **(c) Age only, no norms** — enough to compute
-her age for wording, no developmental claims.
-*What each implies.* (b) is the only option that lets the app say the most reassuring thing a
-parenting product can say — *this is normal* — and it is the only one that puts a normative
-statement about children into a record about his daughter. If (b), the rule must be written
-into the decision log **before** any code: the app may say what is typical; it may never say
-where she sits. **AUD-0018 is blocked on this.**
-
-**Q2. Should section 61's target-style example be re-read?**
-The plan's own illustration of good copy is *"This has worked several times in situations like
-tonight."* AUD-0002 changes that word at ~30 call sites.
-*Options.* **(a)** Read the example as illustrating *register* only, and make the horizon
-block-aware everywhere. **(b)** Amend the example in the plan so the constitution and the code
-agree. **(c)** Leave the word as canonical and accept the app sounds like an evening app.
-*Implication:* (a) works but leaves the plan reading as though "tonight" were the target; (b)
-is a plan edit, which the authority order says is the owner's. I recommend (b) alongside (a).
-
-**Q3. Should D-036 be amended?**
-AUD-0031 argues the share rule cannot represent the cost of being wrong and proposes a narrow
-`consequential` exception for soreness and severe sleep shortfall.
-*Options.* **(a)** Amend D-036 as proposed. **(b)** Leave D-036 and accept that the app will
-recommend exertion without asking about pain. **(c)** Replace the share rule with a full
-expected-opportunity-loss calculation.
-*Implication:* (c) is the theoretically right answer and needs probabilities the app does not
-have; (a) buys most of the benefit for two concepts and one flag. I recommend (a).
-
-**Q4. Should legacy outcome and skill history become admissible evidence?**
-AUD-0030(b). Today `execution`, `outcome`, `recommendation-effect-evaluation`, `skill-claim`
-and `milestone-observation` are archived and inert.
-*Options.* **(a)** Leave them inert — the brain starts cold and every belief is built from
-this generation's own evidence, cleanly. **(b)** Admit them as *closed historical episodes* at
-a distinctly lower reliability, visibly marked, reversible.
-*Implication:* (a) is safe and throws away years of the owner's real life, including his
-daughter's recorded development. (b) risks an old decision model's assumptions leaking into
-the new one's beliefs. This is a judgement about how much he trusts the previous generation's
-records, which only he can make.
-
-**Q5. How much should the app be allowed to plan?**
-AUD-0020 proposes threads — named courses of action over days or weeks.
-*Options.* **(a)** No plans; the app answers "what now" and nothing else. **(b)** Threads, but
-only ones the owner starts. **(c)** Threads the app may propose and the owner may stop.
-*Implication:* (a) keeps the app small and permanently unable to run a certification, a
-recovery week, or a growth ladder. (c) is what makes six separate findings go away and is the
-change most likely to make the app feel like it is nagging if it is got wrong.
-
-**Q6. Should live model inference be wired in?**
-**D-025** already records this as requiring an owner decision, and nothing in this audit
-changes that. Recorded here only so the answer is visible alongside the rest: AUD-0039
-recommends improving the tournament rubric *whether or not* inference is ever wired in,
-because the current rubric cannot detect the difference this audit is about.
-
-**Q7. Which emotional dimensions exist?**
-This is already an open question in the codebase — `concepts.ts` records it verbatim beside
-`emotionalState`, and DEF-0056 left it open on purpose (D-091 invariant 6). It is raised here
-because **AUD-0011 is blocked on it**: emotional health is declared material to a decision and
-cannot reach one, and the only ways to resolve that are to answer this or to stop claiming it.
-*Options.* **(a)** Name two or three dimensions he would actually answer — the literature
-treats mood, stress/tension and motivation as distinct, and one scale for all three is the
-wellness score section 22 rules out. **(b)** Keep it free text, and change the registry to stop
-claiming it is material to a decision — honest, and emotional health stays an inspect-and-record
-domain like faith. **(c)** Leave it as it is.
-*Implication:* (c) is the current state and it is the one position that is definitely wrong,
-because the app is making a claim it cannot honour. (b) costs nothing and is honest. (a) is the
-only route to emotional state ever influencing a recommendation.
-
-**Q8. Does section 11 or the registry win on private evidence?**
-Section 11 says private evidence "may still influence whole-life reasoning when relevant" and
-gives two worked examples. `concepts.ts` declares `privatePattern` as `materialToDecision:
-false`. They contradict each other and have since the concept was defined.
-*Options.* **(a)** Section 11 wins — wire it, behind a structural discretion guard that makes
-it impossible for an explanation to cite it. **(b)** The registry wins — amend section 11 so
-the private domain is explicitly inspect-and-record.
-*Implication:* (a) is the more useful app and carries the audit's single largest trust risk;
-(b) is safe and makes a first-class domain permanently inert. **AUD-0011(b) should not be built
-until this is answered.**
-
-**Q9. Should Now carry a second sentence?**
-AUD-0022 (compatible moves) and AUD-0026 (the cost clause) each add a clause to the
-recommendation. Together they could produce three clauses.
-*Options.* **(a)** Hard cap at one appended clause of either kind, ever. **(b)** Allow two.
-*Implication:* section 6 forbids Now becoming a feed of cards, and three clauses is that
-failure arriving as prose. I recommend (a) and have written both findings assuming it.
-
 ---
 
-# 8. Proposed Phase 8.5
+# 11. Owner decisions — settled, and still open
 
-**Name.** *The app is wrong about the time, and about his daughter.*
+The audit's first draft raised nine questions. Four were answered by the owner during the
+independent-review adjudication and are now standing decisions. Five remain open, and each is
+tied to the finding it actually blocks rather than to a phase.
 
-**Why a phase and not a backlog.** Twenty-two items, one theme, one gate. They are the findings
-where the app states something untrue on a screen the owner reads, or where the interface is
-missing an action the plan promises. Phase 9 will typeset those screens and take them to a phone
-gate; anything not fixed first becomes settled design.
+## Settled
 
-**Scope — in.** The twenty-two items listed in section 4. **Scope — out.** Every structural
-change (threads, commitment windows, registry-driven situation, the score re-cut, the four
-dormant domains). Those are Phase 10, and starting one of them inside 8.5 would turn a
-two-week correction into a re-architecture and delay Phase 9 for no visual benefit.
+**Q2 — the canonical "tonight" example. APPROVED.**
+Section 61's target-style example, *"This has worked several times in situations like tonight"*,
+is amended so the governing plan treats that wording as **horizon-aware** rather than
+evening-specific. This precedes AUD-0002, because the plan sits above the code in the authority
+order and implementing against a plan example that reads the other way is exactly what section 1
+exists to prevent.
 
-**Sequence** — Stages 0 to 4 of section 5, in order.
+**Q3 — the consequential exception. APPROVED, and approved narrow.**
+D-036 is amended: the app may ask a question even when the ordinary answer-share rule would not
+trigger, *when the unknown could materially change whether the proposed action is appropriate* —
+especially soreness or pain, and severe recovery shortfall. **This is not a general licence to
+ask more.** D-036's existing regression (a one-in-four question is still not asked for ordinary
+concepts) must still pass, and questions-per-day across the library must not rise materially.
 
-| Step | Items | Delivers |
-| --- | --- | --- |
-| **8.5.0 The instrument** | AUD-0008 | Two morning scenarios and a one-press block sweep. Everything after this is verified with it, and the sweep is what proves the temporal class is actually gone. |
-| **8.5.1 The horizon** | AUD-0002 → 0001, 0036; AUD-0005 | One shared vocabulary; the limiter, the buttons, the question options and the evidence panel stop asserting the evening; sleep stays valid for the day it describes. |
-| **8.5.2 The morning has an answer** | AUD-0003 | A morning recovery verb, and the invariant that a named limiter always has a candidate in every block. The single most valuable fix in the audit. |
-| **8.5.3 Adaya** | AUD-0048 → 0049; AUD-0014 → 0015(b), 0016; AUD-0037 | The app stops claiming an unbroken run it does not have, and starts counting the occasions that went the other way; the suggestion gains the confidence every other claim in the product carries; a decline stops counting as practice; the nonsense sentence goes; the reason for a growth opportunity stops being the age of the app's records; the two contradicting counters are reconciled. **This is the step to do first if only one gets done.** |
-| **8.5.4 Honest sentences** | AUD-0032, 0028, 0027, 0026, 0033 | Inferences are spoken as inferences; the unfounded causal claim goes; the app's own best evidence reaches Now; trade-offs and near-ties are said out loud. |
-| **8.5.5 Interaction** | AUD-0025(session), 0023, 0050(veto), 0034, 0031 | No repeating itself within a day; declines escalate to a question and then stop, and can finally end in a veto; the situation line survives every no-action state; the guide asks about pain before prescribing exertion. |
+**D-070 — the growth sufficiency rule. APPROVED FOR AMENDMENT.**
+The rule may be corrected so the app considers the full relevant sequence of occasions rather
+than filtering away evidence that went the other way. The owner's requirements, recorded here
+verbatim in substance because they are the acceptance criteria for AUD-0048 and AUD-0049:
 
-**What Phase 8.5 delivers.** An app that is right about what time it is, right about what it
-knows and does not know, right about what it has learned, and right about the owner's
-daughter — verified block by block rather than evening by evening. No new domain, no new
-structure, no new screen. In the language of the canonical acceptance sentence: the same
-decisions, told truthfully, at every hour of the day.
+- a decline is not practice;
+- partial and unsuccessful occasions remain evidence;
+- never claim "running", consecutive, settled, independent or equivalent unless the underlying
+  sequence actually supports the statement;
+- the most recent contrary occasion must be capable of preventing a settled suggestion;
+- owner-facing language describes occasions rather than scoring the child;
+- no percentage, rank, grade or performance score about Adaya;
+- growth changes remain **proposed** to the owner and are never silently applied.
 
-**Gate.** The block sweep from 8.5.0 across all twenty scenarios at five blocks, plus the
-independent QA protocol (D-077 / D-090 — QA runs in Codex, cold, and audits meaning before it
-duplicates gates). Four specific acceptance items, all four of which currently fail:
+**No new arbitrary child-performance percentage threshold may be introduced to implement this.**
+The exact revised rule goes into the decision log, transparently, **before** any code changes.
 
-1. **No owner-visible string asserts the evening outside the evening**, at any block, in any
-   scenario.
-2. **A named limiter always has a candidate that addresses it**, in every block.
-3. **No sentence about the child claims consecutiveness the occasions do not support**, and the
-   growth suggestion states how many occasions went the other way.
-4. **The owner can stop a recommendation family**, and find and lift that veto afterwards.
+**Q5 — app-proposed strategic threads. APPROVED.**
+The app may propose persistent threads and the owner may stop them. Guardrails, which are
+AUD-0020's acceptance criteria:
 
-The library must also contain a history with a failed growth occasion and a history set in the
-morning with something to decide — without those two fixtures, items 2 and 3 cannot be tested,
-which is how they survived 1,199 green assertions.
+- threads never bypass the normal arbiter;
+- a dominant limiter can override a thread;
+- the owner can stop a thread easily;
+- a decline can end or weaken the thread as appropriate;
+- a thread expires or becomes inactive when its underlying goal or context is no longer valid;
+- the app must explain why a thread is active;
+- the first version stays bounded to the small concrete thread types proposed here — recovery
+  run, study schedule, growth ladder — and is not a generic project-management system.
 
-**What Phase 8.5 explicitly does not deliver.** Strategy and threads (AUD-0020), commitment
-windows (AUD-0004), the registry-driven situation (AUD-0040), the dormant concepts (AUD-0011),
-Adaya's age and the normative frame (AUD-0018, owner-blocked), setting-aware growth occasions
-(AUD-0017), spaced study and goal horizons (AUD-0010, AUD-0021, AUD-0046), a second movement
-routine (AUD-0045), the relationship graph (AUD-0047), cue clauses (AUD-0051), or the re-cut
-score and the re-run tournament (AUD-0035, AUD-0039). All are argued for above, all are Phase 10
-or later, and none is a reason to delay Phase 9.
+**Q9 — additional Now explanation. SETTLED as the standing default.**
+One additional clause maximum, of either kind (AUD-0022's compatible-move clause or AUD-0026's
+cost clause), unless later evidence gives a reason to revisit. Section 6 forbids Now becoming a
+feed of cards, and three clauses is that failure arriving as prose.
 
-**One thing 8.5 should produce besides code.** Three of its items amend a standing decision —
-AUD-0031 amends D-036, AUD-0048 amends D-070's sufficiency test, and AUD-0027's second half
-would widen the DEF-0006 rule. Each needs a decision-log entry written **before** the change,
-not after, so the next reader finds the rule from the defect and the defect from the rule.
+## Still open, each tied to what it blocks
+
+**Q1 — should the app know Adaya's age, and hold a normative reference?**
+*Blocks:* **AUD-0018 only.** It does not block Phase 82 — neither AUD-0015(a) nor AUD-0017 needs
+an age or a norm, since the stage and the occasion context are derived entirely from the owner's
+own records, and the anti-grading protection is installed in Phase 81 by AUD-0049's copy guard.
+*Options.* **(a)** No age. **(b)** Age plus a bounded normative reference, used only to say what
+is typical **for skills the source actually covers** — and CDC's checklists do not cover
+"ordering her own food" or any other owner-defined skill, and state that they are not standards,
+not validated screening tools, and cannot diagnose. **(c)** Age only, no norms.
+*Implication:* (b) is the only option that lets the app say the most reassuring thing a parenting
+product can say — that this is normal — and it is the only one that puts a normative statement
+near a record about his daughter. If (b), the rule goes into the decision log **before** any
+code: *the app may say what is typical; it may never say where she sits.*
+
+**Q4 — should legacy outcome and skill history become admissible evidence?**
+*Blocks:* **AUD-0030(b) only.**
+The adjudication replaced a binary question with a four-way provenance policy, which is the
+better frame: **(A)** objective historical episodes may enter at an explicitly lower,
+provenance-aware reliability; **(B)** owner-reported state observations already map and are
+unchanged; **(C)** owner-attributed effect judgements from the old app remain **his
+attributions** and may never become observed relationships — no imported causal judgement can
+manufacture the comparison group `association.ts` requires; **(D)** old-system conclusions
+(`learned-belief`, `trajectory`, `inferred-state`) never become canonical facts. Ambiguity stays
+ambiguity.
+
+**Q6 — should live model inference be wired in?**
+*Blocks:* any reconsideration of **D-025**, which is already an owner decision.
+Nothing in this audit changes it. AUD-0039 recommends improving the tournament rubric **whether
+or not** inference is ever wired in, because the current rubric measures what rules are already
+good at and cannot detect the difference this audit is about. Reconsider D-025 only if a model
+demonstrably produces better decisions under a stronger rubric.
+
+**Q7 — which emotional dimensions exist?**
+*Blocks:* **AUD-0011's emotional half.**
+This is already an open question in the codebase — `concepts.ts` records it beside
+`emotionalState`, and DEF-0056 left it open deliberately (D-091 invariant 6).
+*Options.* **(a)** Name two or three distinct dimensions the owner would actually answer.
+**(b)** Keep it free text and correct the registry to stop claiming it is material to a decision.
+**(c)** Leave it as it is — the current state, and the one position that is definitely wrong,
+because the app is making a claim it cannot honour.
+*The architecture already supports the right answer.* Verified: each dimension is its own
+`ConceptId` with its own `FactValue`; `tracked` is per-concept and optional, as are `standing`
+and `privacy`; and nothing anywhere aggregates across concepts. So structured optional dimensions
+and free-text context **can coexist today with no schema change** and cannot collapse into one
+another. The only thing that would collapse them is somebody adding a single `emotional.score`
+concept — which AUD-0041's guard plus a decision-log rule is what prevents. **No generic wellness
+score. Which dimensions exist is the owner's call.**
+
+**Q8 — does section 11 or the concept registry win on private evidence?**
+*Blocks:* **AUD-0040**, and therefore the whole Reach package — not AUD-0011, as an earlier draft
+said. `createFactReader.read()` (`situation.ts:236-262`) places each concept's rendered value
+string onto `situation.factsConsidered` the moment it is read. Today `privatePattern` never lands
+there because nothing reads it; a registry-driven read puts it into every decision's fact list.
+*Options.* **(a)** Section 11 wins — wire it, behind a **structural** discretion barrier that
+makes it physically impossible to render an explicit private reading on Now, Timeline or the
+evidence panel. **(b)** The registry wins — amend section 11 so the private domain is explicitly
+inspect-and-record.
+*Standard to apply:* if the structural guarantee cannot be made, **(b) is safer**. Careful copy is
+not sufficient here. Nothing should be wired while the two documents disagree.
