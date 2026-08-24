@@ -106,6 +106,20 @@ export interface ConceptCoverage {
   readonly standing: boolean
   /** Where the most recent evidence came from. Absent when there is none. */
   readonly source: ProvenanceSource | undefined
+  /**
+   * Every distinct origin behind this, not only the newest (QA-08-001 retest).
+   *
+   * `source` answers "where did the latest reading come from", which is the
+   * right question for reliability and the wrong one for disclosure. A
+   * conclusion drawn entirely from imported history should say so, and it can
+   * only say so if something knows that *all* of the evidence is imported
+   * rather than merely the most recent piece.
+   *
+   * Sources rather than record ids: the only question asked of this is whether
+   * they agree, there are at most six of them, and carrying a decade of ids to
+   * answer a yes-or-no would be a list nobody reads.
+   */
+  readonly sources: readonly ProvenanceSource[]
   readonly lastEvidenceAt: Instant | undefined
   readonly daysSince: number | undefined
   /** After how many quiet days this concept counts as neglected. */
@@ -142,6 +156,17 @@ export interface DomainCoverage {
   readonly daysSinceHeard: number | undefined
   /** Where the most recent evidence came from, whatever kind it was. */
   readonly source: ProvenanceSource | undefined
+  /**
+   * Every distinct origin behind this area. See `ConceptCoverage.sources`.
+   *
+   * Read from the area's whole evidence rather than from its concepts, because
+   * the case this exists for has no concept evidence at all: an area whose only
+   * record is an imported goal has nothing bearing a concept, and the overview
+   * still says "nothing has come in about career & learning for 3 months" — a
+   * conclusion drawn entirely from imported history, which was the still-open
+   * half of QA-08-001.
+   */
+  readonly sources: readonly ProvenanceSource[]
   readonly concepts: readonly ConceptCoverage[]
   /** The sub-area most worth refreshing. Absent when nothing is overdue. */
   readonly weakest: ConceptCoverage | undefined
@@ -249,17 +274,31 @@ interface DomainEvidence {
    * being spoken to.
    */
   readonly heardAt: ReadonlyMap<LifeDomainId, Instant>
+  /**
+   * Every distinct origin heard about an area, meaningful or momentary.
+   *
+   * Collected beside `heardAt` rather than derived from `meaningful`, because
+   * the sentence this ends up disclosing on — "nothing has come in about career
+   * & learning for 3 months" — is about the area's whole silence, and the case
+   * it exists for has no meaningful evidence at all: an area whose only record
+   * is an imported goal.
+   */
+  readonly heardSources: ReadonlyMap<LifeDomainId, ReadonlySet<ProvenanceSource>>
 }
 
 function evidenceByDomain(view: MemoryView, moment: CoverageMoment): DomainEvidence {
   const out = new Map<LifeDomainId, Evidence[]>()
   const heard = new Map<LifeDomainId, Instant>()
-  const addHeard = (domain: LifeDomainId, at: Instant): void => {
+  const heardSources = new Map<LifeDomainId, Set<ProvenanceSource>>()
+  const addHeard = (domain: LifeDomainId, at: Instant, record: CanonicalRecord): void => {
     const held = heard.get(domain)
     if (held === undefined || at > held) heard.set(domain, at)
+    const sources = heardSources.get(domain) ?? new Set<ProvenanceSource>()
+    sources.add(evidenceSourceOf(record))
+    heardSources.set(domain, sources)
   }
   const add = (domain: LifeDomainId, record: CanonicalRecord, at = record.occurredAt): void => {
-    addHeard(domain, at)
+    addHeard(domain, at, record)
     const held = out.get(domain)
     const entry: Evidence = {
       at,
@@ -300,7 +339,7 @@ function evidenceByDomain(view: MemoryView, moment: CoverageMoment): DomainEvide
         (record.validUntil === undefined || moment.now < record.validUntil)
       const at = inForce ? moment.now : record.occurredAt
       if (definition.standing === true) add(definition.domain, record, at)
-      else addHeard(definition.domain, at)
+      else addHeard(definition.domain, at, record)
       continue
     }
 
@@ -312,7 +351,17 @@ function evidenceByDomain(view: MemoryView, moment: CoverageMoment): DomainEvide
     }
   }
 
-  return { meaningful: out, heardAt: heard }
+  return { meaningful: out, heardAt: heard, heardSources }
+}
+
+/**
+ * The distinct origins in a body of evidence, in a stable order.
+ *
+ * Sorted so that two runs over the same history produce the same array, which
+ * is what lets a projection be compared rather than merely rebuilt.
+ */
+function sourcesOf(evidence: readonly Evidence[]): readonly ProvenanceSource[] {
+  return [...new Set(evidence.map((entry) => entry.source))].sort()
 }
 
 function latest(evidence: readonly Evidence[]): Evidence | undefined {
@@ -483,7 +532,7 @@ export function assembleCoverage(
   entities: EntityIndex,
   moment: CoverageMoment,
 ): CoverageState {
-  const { meaningful, heardAt } = evidenceByDomain(view, moment)
+  const { meaningful, heardAt, heardSources } = evidenceByDomain(view, moment)
   const coming = domainsWithEvidenceComing(view, moment)
   const today = localDayIdAt(moment.now, moment.zone)
 
@@ -549,6 +598,14 @@ export function assembleCoverage(
         state: knowledge?.state ?? 'unknown',
         standing: definition.standing === true,
         source,
+        sources: sourcesOf(
+          (entry?.considered ?? []).flatMap((id) => {
+            const record = view.history.byId(id)
+            return record === undefined
+              ? []
+              : [{ at: record.occurredAt, record: id, source: evidenceSourceOf(record) }]
+          }),
+        ),
         lastEvidenceAt: observedAt,
         daysSince,
         neglectedAfterDays: neglectedAfter,
@@ -617,6 +674,12 @@ export function assembleCoverage(
       daysSinceEvidence,
       daysSinceHeard,
       source: newest?.source,
+      /*
+       * Everything heard about this area, not only what counted as meaningful.
+       * The overview's sentence is about the area's silence as a whole, so the
+       * disclosure has to be about the same body of evidence the sentence is.
+       */
+      sources: [...(heardSources.get(domain.id) ?? new Set<ProvenanceSource>())].sort(),
       concepts: conceptRows,
       weakest,
       refresh: routeFor(status, standing, coming.has(domain.id), subjects.has(domain.id)),

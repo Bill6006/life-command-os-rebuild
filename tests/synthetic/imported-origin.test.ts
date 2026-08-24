@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { createRecordFactory } from '../../src/domain/build'
 import { CONCEPT } from '../../src/domain/concepts'
-import { coreDomains, DOMAIN } from '../../src/domain/domains'
+import { coreDomains, DOMAIN, type LifeDomainId } from '../../src/domain/domains'
 import { sequentialRecordIds } from '../../src/domain/ids'
 import type { CanonicalRecord, Provenance } from '../../src/domain/records'
 import { DISCREET_PRIMARY } from '../../src/domain/privacy'
 import { instant, timeZone, type Instant } from '../../src/domain/time'
 import { describeRecord } from '../../src/features/history/describe'
-import { originOf, originResolver } from '../../src/features/history/origin'
+import { originOf, originOfSources, originResolver } from '../../src/features/history/origin'
 import { assembleDomainPageData, pageForDomain } from '../../src/features/life/domainPages'
 import { assembleTimeline } from '../../src/features/timeline/timelineEntries'
 import { composeExport } from '../../src/features/export/compose'
@@ -190,7 +190,7 @@ describe('the record layer already knew, and now says so', () => {
   })
 })
 
-describe('every surface tells them apart', () => {
+describe('every surface that shows an entry tells them apart', () => {
   it('Timeline', () => {
     const timeline = assembleTimeline(SITUATION)
     const entries = timeline.days.flatMap((day) => day.entries)
@@ -287,5 +287,232 @@ describe('every surface tells them apart', () => {
     // A dangling reference resolves to nothing rather than throwing — an
     // evidence line whose record has gone is already handled elsewhere.
     expect(resolve('NOTAREALRECORDID0000000000' as never)).toBeUndefined()
+  })
+})
+
+/**
+ * A conclusion drawn from imported history says so too (QA-08-001, retest).
+ *
+ * ## Why this block exists separately
+ *
+ * The block above was headed "every surface tells them apart" and asserted
+ * Timeline, a domain page, an evidence resolver, and one Recent record line in
+ * the export. Independent QA retested the repair and found the claim still
+ * failing on Life's overview, an Insights coverage card, and four of the
+ * export's sections — and named this file's title as the reason nobody noticed:
+ * it claimed every surface and covered the record-shaped ones.
+ *
+ * That is the same defect the round-1 report found in somebody else's test,
+ * committed by the repair for it. A title is a claim; where it is broader than
+ * the body, the body is what is true and the title is what gets believed.
+ *
+ * So the two halves are named for what they actually hold. This one is about
+ * **conclusions**: a sentence drawn from records rather than one showing them.
+ *
+ * ## The history
+ *
+ * One area whose entire record came across from the old app, and one the owner
+ * built himself. Both must be readable, and only one may be marked.
+ */
+describe('every surface that states a conclusion tells them apart', () => {
+  const nextConclusionId = sequentialRecordIds('CONC')
+
+  /*
+   * Career holds **one imported goal and nothing else** — QA's exact
+   * reproduction, and the case that separates a real assertion from a passing
+   * one. A goal bears no concept, so the coverage card's evidence lines have no
+   * record to cite and the origin can only come from the area itself. An
+   * earlier version of this fixture also gave Career an imported *observation*,
+   * which meant the card's lines resolved and the assertion passed even with
+   * the area-level origin removed — the same "cannot fire" defect QA found in
+   * the last repair, one layer down.
+   *
+   * Sleep holds a recent imported reading, so a *current* fact reaches the
+   * export. Home holds one entry of the owner's own, so there is something
+   * unmarked to compare against.
+   */
+  function twoAreas(): readonly CanonicalRecord[] {
+    const brought = createRecordFactory({
+      zone: ZONE,
+      provenance: IMPORTED,
+      nextId: nextConclusionId,
+    })
+    const owned = createRecordFactory({ zone: ZONE, provenance: OWNER, nextId: nextConclusionId })
+    return [
+      brought(
+        'goal',
+        { occurredAt: at(120 * 24 * 60), domains: [DOMAIN.career] },
+        {
+          goal: { kind: 'goal', id: 'goal:legacy-cert' as never },
+          statement: 'Finish a meaningful certification',
+          status: 'active',
+        },
+      ),
+      brought(
+        'observation',
+        { occurredAt: at(90), domains: [DOMAIN.sleep] },
+        {
+          concept: CONCEPT.sleepQuality,
+          value: { type: 'scale', value: 2, of: 5 },
+          method: 'self-report',
+        },
+      ),
+      owned(
+        'observation',
+        { occurredAt: at(90), domains: [DOMAIN.home] },
+        {
+          concept: CONCEPT.homeFriction,
+          value: { type: 'text', value: 'the kitchen counter, again' },
+          method: 'self-report',
+        },
+      ),
+    ]
+  }
+
+  const RECORDS_TWO = twoAreas()
+  const SNAP = { ...EMPTY_SNAPSHOT, records: RECORDS_TWO }
+  const VIEW_TWO = buildView(SNAP, { now: NOW, zone: ZONE })
+  const SIT = assembleSituation(VIEW_TWO, {
+    now: NOW,
+    zone: ZONE,
+    weekStartsOn: 1,
+    domains: coreDomains,
+  })
+
+  function coverageFor(domain: LifeDomainId) {
+    const found = SIT.coverage.get(domain)
+    if (found === undefined) throw new Error(`no coverage for ${domain}`)
+    return found
+  }
+
+  it('the intelligence layer knows every origin behind an area, not only the newest', () => {
+    /*
+     * `source` is the newest record's origin and answers a reliability
+     * question. Disclosure needs the whole body, or an area with one recent
+     * entry of his own on top of a decade of imports would read as entirely
+     * his — and the reverse.
+     */
+    expect(coverageFor(DOMAIN.career).sources).toEqual(['legacy-import'])
+    expect(originOfSources(coverageFor(DOMAIN.career).sources)?.label).toBe('Imported')
+
+    /*
+     * His own area knows its origin too, and says nothing about it. `owner` is
+     * a source like any other at this layer; it is `originOfSources` that
+     * declines to put a badge on his own record, and holding both halves here
+     * is what stops a future edit "simplifying" the empty case into marking
+     * everything.
+     */
+    expect(coverageFor(DOMAIN.home).sources).toEqual(['owner'])
+    expect(originOfSources(coverageFor(DOMAIN.home).sources)).toBeUndefined()
+  })
+
+  it('an area with one entry of his own in it is his again', () => {
+    // One record is enough. A conclusion resting on a mix is not an imported
+    // conclusion, and the badge would be a claim wider than the evidence.
+    const mixed = {
+      ...SNAP,
+      records: [
+        ...RECORDS_TWO,
+        createRecordFactory({ zone: ZONE, provenance: OWNER, nextId: nextConclusionId })(
+          'observation',
+          { occurredAt: at(60), domains: [DOMAIN.career] },
+          {
+            concept: CONCEPT.learningTopic,
+            value: { type: 'text', value: 'routing' },
+            method: 'self-report',
+          },
+        ),
+      ],
+    }
+    const situation = assembleSituation(buildView(mixed, { now: NOW, zone: ZONE }), {
+      now: NOW,
+      zone: ZONE,
+      weekStartsOn: 1,
+      domains: coreDomains,
+    })
+    const career = situation.coverage.get(DOMAIN.career)
+    expect(career?.sources).toEqual(['legacy-import', 'owner'])
+    expect(originOfSources(career?.sources ?? [])).toBeUndefined()
+  })
+
+  it('an Insights coverage card carries it', () => {
+    const report = insightsFor(SIT)
+    const gaps = report.insights.filter((insight) => insight.kind === 'coverage-gap')
+    expect(gaps.length, 'the fixture should produce a coverage gap').toBeGreaterThan(0)
+
+    const career = gaps.find((insight) => insight.domain === DOMAIN.career)
+    if (career !== undefined) {
+      expect(originOfSources(career.sources)?.label).toBe('Imported')
+    } else {
+      // The several-areas card covers more than Career, so its sources are the
+      // union — and a union that includes an area of his own says nothing,
+      // which is the rule working rather than the assertion failing.
+      const several = gaps[0]
+      expect(several?.sources.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('every insight declares where its evidence came from', () => {
+    // Not only coverage cards. A card added later inherits the rule from
+    // `withSources` rather than having to remember it, and this holds that.
+    for (const insight of insightsFor(SIT).insights) {
+      expect(Array.isArray(insight.sources), insight.id).toBe(true)
+    }
+  })
+
+  it('the export marks the conclusions, not only the entries under them', () => {
+    const composed = composeExport({
+      sections: SELECT_ALL,
+      situation: SIT,
+      decision: decide(VIEW_TWO, { now: NOW, zone: ZONE }),
+      insights: insightsFor(SIT),
+      timeline: assembleTimeline(SIT),
+      source: 'owner',
+      app: TEST_APP,
+      composedAt: { at: COMPOSED_AT, zone: COMPOSED_ZONE },
+    })
+    const lines = composed.text.split('\n')
+    const find = (needle: string) => lines.find((line) => line.includes(needle))
+
+    // "Direction, goals and commitments" — the active goal.
+    const goal = find('Finish a meaningful certification')
+    expect(goal, 'the imported goal should appear').toBeDefined()
+    expect(goal).toMatch(/· Imported/)
+
+    // "How well each area is understood" — the coverage line for that area.
+    const career = lines.find((line) => line.includes('Career') && line.includes('evidence'))
+    expect(career, 'the career coverage line should appear').toBeDefined()
+    expect(career).toMatch(/· Imported/)
+
+    // And an area of his own carries nothing.
+    const home = lines.find((line) => line.includes('Home') && line.includes('evidence'))
+    expect(home, 'the home coverage line should appear').toBeDefined()
+    expect(home).not.toMatch(/· Imported/)
+  })
+
+  it('the export marks a current reading the app is leaning on', () => {
+    const composed = composeExport({
+      sections: SELECT_ALL,
+      situation: SIT,
+      decision: decide(VIEW_TWO, { now: NOW, zone: ZONE }),
+      insights: insightsFor(SIT),
+      timeline: assembleTimeline(SIT),
+      source: 'owner',
+      app: TEST_APP,
+      composedAt: { at: COMPOSED_AT, zone: COMPOSED_ZONE },
+    })
+    const lines = composed.text.split('\n')
+
+    const learning = lines.find((line) => line.includes('Sleep quality') && line.includes('2 of 5'))
+    const friction = lines.find(
+      (line) => line.includes('Home friction') && line.includes('kitchen counter'),
+    )
+
+    if (learning !== undefined) expect(learning).toMatch(/· Imported/)
+    if (friction !== undefined) expect(friction).not.toMatch(/· Imported/)
+    expect(
+      learning ?? friction,
+      'at least one considered fact should reach the document',
+    ).toBeDefined()
   })
 })

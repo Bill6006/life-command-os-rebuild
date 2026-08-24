@@ -12,7 +12,7 @@ import {
   EvidenceNote,
   EvidenceRate,
 } from '../evidence/EvidencePieces'
-import { originResolver, type RecordOrigin } from '../history/origin'
+import { originOfSources, originResolver, type RecordOrigin } from '../history/origin'
 import { useMemory } from '../memory/memoryContext'
 import './InsightsScreen.css'
 
@@ -180,10 +180,28 @@ function InsightCard({
   originFor: (record: RecordId) => RecordOrigin | undefined
 }) {
   const evidence = insight.evidence
+  /*
+   * Where the whole card came from, when the owner recorded none of it
+   * (QA-08-001's retest).
+   *
+   * On the headline rather than only inside the evidence, because the headline
+   * is the sentence he reads and the evidence is a disclosure he may never
+   * open. A finding drawn entirely from migrated history is a different finding
+   * from one drawn from what he did this month, and the difference belongs
+   * where the claim is.
+   */
+  const origin = originOfSources(insight.sources)
 
   return (
     <section className="in-card" data-kind={insight.kind} data-testid={`insight-${insight.kind}`}>
-      <span className="in-card__eyebrow">{insight.eyebrow}</span>
+      <span className="in-card__eyebrow">
+        {insight.eyebrow}
+        {origin === undefined ? null : (
+          <span className="in-origin" data-testid="insight-origin" title={origin.detail}>
+            {origin.label}
+          </span>
+        )}
+      </span>
       <h2 className="in-card__headline">{insight.headline}</h2>
       <p className="in-card__detail">{insight.detail}</p>
 

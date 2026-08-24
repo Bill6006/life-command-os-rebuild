@@ -98,6 +98,29 @@ export function originOfAll(records: readonly CanonicalRecord[]): RecordOrigin |
 }
 
 /**
+ * The origin behind a **conclusion**, from the distinct sources under it.
+ *
+ * The aggregate half of the same rule (QA-08-001's retest). A belief, a
+ * coverage state, an insight card and an export summary are each a sentence
+ * about a body of evidence rather than about one record, and the intelligence
+ * layer already knows which origins that body holds — `DomainCoverage.sources`,
+ * `Insight.sources`. This turns that into the word the owner reads.
+ *
+ * One source, and not the owner's, or nothing. A conclusion drawn from a mix
+ * is not an imported conclusion, and a badge over it would be a claim wider
+ * than the evidence — the same rule `originOfAll` applies to records, applied
+ * where a sentence is drawn rather than shown.
+ */
+export function originOfSources(sources: readonly ProvenanceSource[]): RecordOrigin | undefined {
+  if (sources.length !== 1) return undefined
+  const only = sources[0]
+  if (only === undefined) return undefined
+  const found = ORIGINS[only]
+  if (found === undefined) return undefined
+  return { source: only, label: found.label, detail: found.detail }
+}
+
+/**
  * Where one piece of evidence came from (QA-08-001).
  *
  * Built from the history rather than carried on `EvidenceLine`, because origin

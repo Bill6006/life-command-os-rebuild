@@ -39,6 +39,58 @@ None.
 
 ## Fixed
 
+### DEF-0071 (QA-08-001, retest) — a conclusion drawn entirely from imported history did not say so
+
+- Status: Fixed
+- Severity: Blocker — the surfaces that lost it are the ones the owner reads a
+  conclusion on, and an exported reviewer has nothing else to go on
+- Found in: Phase 8 / `d072012`
+- Found by: **independent Codex QA**, retest of the round-1 repair, by importing
+  and then reading Life, Insights and the export rather than Timeline
+- Class: **the aggregate half of DEF-0069.** The first repair threaded origin
+  through `DescribedRecord` — the shape for showing a record — and every surface
+  that renders records was fixed. Four surfaces do not render records; they
+  state a **conclusion drawn from** them:
+  - Life's overview: "Nothing has come in about career & learning for 3 months";
+  - an Insights coverage card, and the same sentence in the export;
+  - the export's current facts, active goals, coverage and insight summaries.
+
+  Each was true and each read as though the owner had gone quiet, when in fact
+  he had never said anything about the area _to this app_ and everything it knew
+  had been migrated.
+
+- Reproduction: import a legacy backup whose only Career record is a goal, then
+  open Life. The overview says `GOING QUIET / Nothing has come in about career &
+learning for 3 months` with no cue. Same on the Insights card and in four
+  export sections, while the Recent record rows underneath do carry `· Imported`.
+- Root cause: the intelligence layer already computed the origin of the newest
+  evidence (`DomainCoverage.source`) and nothing computed whether the **whole**
+  body agreed. Disclosure needs the second question; reliability needs the first.
+- Regression: `tests/synthetic/imported-origin.test.ts`, "every surface that
+  states a conclusion tells them apart" — the coverage sources at the
+  intelligence layer, an area with one entry of his own in it staying unmarked,
+  an Insights coverage card, every insight declaring its sources, and three
+  export sections. Proved by reintroduction at each: removing the area sources
+  fails three, the card's sources one, and each export section one.
+  `tests/browser/legacy-import.spec.ts` and `scripts/android-gate.mjs` both hold
+  it on Life and Insights against the deployed build.
+- Siblings: checked. `Insight.sources` is filled for **every** kind, centrally,
+  from what the card cites — so a card added later inherits the rule instead of
+  having to remember it. Coverage cards set it themselves because their evidence
+  lines name concepts rather than records.
+- Note on the false green: the round-1 repair shipped a test headed "every
+  surface tells them apart" that asserted Timeline, a domain page, an evidence
+  resolver and one Recent record line. QA named the title as the reason nobody
+  noticed the gap — **the same defect the round-1 report had found in somebody
+  else's test, committed by the repair for it.** The block is retitled to what
+  it holds, and the aggregate surfaces have their own.
+- Note on the second one, found while fixing it: the first version of the new
+  fixture gave Career an imported _observation_ as well as the goal, so the
+  coverage card's evidence lines resolved and the assertion passed even with the
+  area-level origin removed. It could not fire. The fixture now matches QA's:
+  one goal and nothing else, which is what makes the card depend on the area.
+- Fixed in: the checkpoint that closes Phase 8
+
 ### DEF-0070 (QA-08-002) — a new backup's own timestamp turned unchanged rows into conflicts
 
 - Status: Fixed

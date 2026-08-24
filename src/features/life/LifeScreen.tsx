@@ -3,6 +3,7 @@ import { Panel, Screen } from '../../components/ui'
 import type { LifeDomainId } from '../../domain/domains'
 import { assembleSituation, type DomainCoverage } from '../../intelligence/situation'
 import { hashForLifePage } from '../../platform/routing'
+import { originOfSources } from '../history/origin'
 import { useMemory } from '../memory/memoryContext'
 import { pageForDomain } from './domainPages'
 import { GROUP_ORDER, standingFor } from './standing'
@@ -47,6 +48,29 @@ import './LifeScreen.css'
  * failed on — but the link degrades to plain text rather than a dead href on
  * the strength of that guarantee alone.
  */
+/**
+ * Where everything the app has heard about this area came from (QA-08-001).
+ *
+ * The overview's line is a conclusion — "nothing has come in about career &
+ * learning for 3 months" — drawn from the area's whole record. Where that whole
+ * record came across from the old app, the sentence is true and the impression
+ * it leaves is not: it reads as the owner having gone quiet, when in fact he
+ * has never said anything about it *to this app* and everything it knows was
+ * migrated.
+ *
+ * Nothing is said where the sources disagree, which is almost always: one entry
+ * of his own is enough to make this his area again.
+ */
+function AreaOrigin({ coverage }: { coverage: DomainCoverage }) {
+  const origin = originOfSources(coverage.sources)
+  if (origin === undefined) return null
+  return (
+    <span className="life-origin" data-testid="life-origin" title={origin.detail}>
+      {origin.label}
+    </span>
+  )
+}
+
 function AreaLink({ domain, label }: { domain: LifeDomainId; label: string }) {
   const page = pageForDomain(domain)
   if (page === undefined) return <>{label}</>
@@ -158,7 +182,10 @@ export function LifeScreen() {
                         <AreaLink domain={area.coverage.domain} label={area.coverage.label} />
                       </p>
                       {area.detail === undefined ? null : (
-                        <p className="life-area__detail">{area.detail}</p>
+                        <p className="life-area__detail">
+                          {area.detail}
+                          <AreaOrigin coverage={area.coverage} />
+                        </p>
                       )}
                     </div>
                   ))

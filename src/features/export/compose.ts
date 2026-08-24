@@ -6,8 +6,10 @@ import { localDayIdAt, type Instant, type LocalDayId, type TimeZoneId } from '..
 import type { Decision } from '../../intelligence/engine'
 import type { InsightsReport } from '../../intelligence/insights'
 import type { Situation } from '../../intelligence/situation'
+import type { RecordId } from '../../domain/ids'
+import { evidenceSourceOf, type ProvenanceSource } from '../../domain/records'
 import { describeRecord, tagFor, type DescribeContext } from '../history/describe'
-import type { RecordOrigin } from '../history/origin'
+import { originOfSources, type RecordOrigin } from '../history/origin'
 import type { HistorySource } from '../memory/memoryContext'
 import type { TimelineData } from '../timeline/timelineEntries'
 import { handoffPrompt } from './handoffPrompt'
@@ -330,7 +332,12 @@ function nowSection(request: ExportRequest): readonly string[] {
     lines.push('', 'What it read to decide that:')
     for (const fact of situation.considered) {
       lines.push(
-        bullet(`${fact.label} — ${fact.reading} (${fact.state}; for ${fact.usedFor.join(', ')})`),
+        bullet(
+          fromSources(
+            `${fact.label} — ${fact.reading} (${fact.state}; for ${fact.usedFor.join(', ')})`,
+            sourcesOfRecords(situation, fact.sources),
+          ),
+        ),
       )
     }
   }
@@ -378,7 +385,14 @@ function directionSection(request: ExportRequest): readonly string[] {
   else {
     lines.push('', 'Active goals:')
     for (const goal of situation.direction.goals) {
-      lines.push(bullet(`${goal.statement} (${goal.domain})`))
+      lines.push(
+        bullet(
+          fromSources(
+            `${goal.statement} (${goal.domain})`,
+            sourcesOfRecords(situation, [goal.source]),
+          ),
+        ),
+      )
     }
   }
 
@@ -416,7 +430,10 @@ function coverageSection(request: ExportRequest, header: ExportHeader): readonly
         : `last heard ${countOf(domain.daysSinceHeard, 'day', 'days')} ago`
     lines.push(
       bullet(
-        `${domain.label} — ${domain.status}, evidence ${domain.strength}; ${heard}. ${domain.summary}`,
+        fromSources(
+          `${domain.label} — ${domain.status}, evidence ${domain.strength}; ${heard}. ${domain.summary}`,
+          domain.sources,
+        ),
       ),
     )
   }
@@ -497,7 +514,7 @@ function insightsSection(request: ExportRequest): readonly string[] {
 
   if (insights.insights.length === 0) lines.push('Nothing currently rises to a stated reading.')
   for (const insight of insights.insights) {
-    lines.push(bullet(`**${insight.eyebrow}** — ${insight.headline}`))
+    lines.push(bullet(fromSources(`**${insight.eyebrow}** — ${insight.headline}`, insight.sources)))
     lines.push(`  - ${insight.detail}`)
     if (insight.confidence !== undefined) {
       lines.push(`  - How sure: ${insight.confidence.word} — ${insight.confidence.because}`)
@@ -543,6 +560,34 @@ function insightsSection(request: ExportRequest): readonly string[] {
  */
 function withOrigin(text: string, origin: RecordOrigin | undefined): string {
   return origin === undefined ? text : `${text} · ${origin.label}`
+}
+
+/**
+ * The same suffix, for a line that states a **conclusion** rather than an entry
+ * (QA-08-001's retest).
+ *
+ * Four sections of this document are summaries — what the app currently
+ * believes, which goals are active, how well each area is understood, and what
+ * has been worked out. Each is drawn from records rather than showing them, so
+ * marking the Recent record rows underneath left the conclusions above reading
+ * as though they came from what the owner told this app. That is the half of
+ * the class the first repair missed.
+ */
+function fromSources(text: string, sources: readonly ProvenanceSource[]): string {
+  return withOrigin(text, originOfSources(sources))
+}
+
+/** The origins behind a set of records, for a conclusion that cites ids. */
+function sourcesOfRecords(
+  situation: ExportRequest['situation'],
+  ids: readonly RecordId[],
+): readonly ProvenanceSource[] {
+  const found = new Set<ProvenanceSource>()
+  for (const id of ids) {
+    const record = situation.view.history.byId(id)
+    if (record !== undefined) found.add(evidenceSourceOf(record))
+  }
+  return [...found].sort()
 }
 
 function historySection(request: ExportRequest, header: ExportHeader): readonly string[] {

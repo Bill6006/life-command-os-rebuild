@@ -18,6 +18,7 @@ import {
 } from '../domain/time'
 import type { Decision } from './engine'
 import { describeDays } from './coverage'
+import type { ProvenanceSource } from '../domain/records'
 import {
   actionScopeOf,
   applicableAssociation,
@@ -307,6 +308,20 @@ export interface Insight {
    * which is not what the word would mean and not what the evidence shows.
    */
   readonly confidence: PatternConfidence | undefined
+  /**
+   * Every distinct origin behind this card (QA-08-001 retest).
+   *
+   * A finding drawn entirely from imported history is a different finding from
+   * one drawn from what the owner recorded this month, and the card is where he
+   * reads the conclusion rather than the rows under it. Marking only the
+   * Timeline entries would satisfy the letter of "recognisably imported" and
+   * miss the surface he is actually reading.
+   *
+   * A `ProvenanceSource` rather than a word: this is the brain, and which word
+   * the owner sees is the surface's business. Empty where the card rests on
+   * nothing resolvable, which says nothing rather than claiming his.
+   */
+  readonly sources: readonly ProvenanceSource[]
   readonly evidence: PatternEvidence
   /**
    * The belief this states, so the owner has something to disagree with
@@ -1144,6 +1159,8 @@ function patternCard(
       headline: headlineFor(subject, lead),
       detail: `${capitalise(lead.measures)}: ${lead.hit} of ${lead.of}.`,
       confidence: confidenceFrom(episodes.length, againstCount),
+      // Empty: filled from what this card cites. See `withSources`.
+      sources: [],
       evidence: evidenceFor(episodes, subject, {
         reasoning: [
           `Counted over every occasion ${lowerFirst(subject)} has come up, oldest first.`,
@@ -1178,6 +1195,8 @@ function contextCard(
       headline: `${subject} goes better ${strong.label} than ${weak.label}.`,
       detail: `${capitalise(strong.rate.measures)}: ${strong.rate.hit} of ${strong.rate.of} ${strong.label}, ${weak.rate.hit} of ${weak.rate.of} ${weak.label}.`,
       confidence: confidenceFrom(strong.rate.of + weak.rate.of, weak.rate.of - weak.rate.hit),
+      // Empty: filled from what this card cites. See `withSources`.
+      sources: [],
       evidence: evidenceFor(episodes, subject, {
         strongerIn: `${capitalise(strong.label)} — ${strong.rate.hit} of ${strong.rate.of}.`,
         weakerIn: `${capitalise(weak.label)} — ${weak.rate.hit} of ${weak.rate.of}.`,
@@ -1234,6 +1253,8 @@ function changeCard(
           beforeWindow === undefined ? '' : ` up to ${describeDay(beforeWindow.to)}`
         }, then ${after.hit} of ${after.of} ${when}.`,
         confidence: confidenceFrom(episodes.length, after.of - after.hit),
+        // Empty: filled from what this card cites. See `withSources`.
+        sources: [],
         evidence: evidenceFor(episodes, subject, {
           trend: `${before.hit} of ${before.of} earlier, ${after.hit} of ${after.of} ${when}. Same question, both halves.`,
           reasoning: [
@@ -1278,6 +1299,8 @@ function contradictionCard(
         effect.against.length === 1 ? 'One did not' : `${effect.against.length} did not`
       }.`,
       confidence: confidenceFrom(effect.of, effect.against.length),
+      // Empty: filled from what this card cites. See `withSources`.
+      sources: [],
       evidence: evidenceFor(episodes, subject, {
         reasoning: [
           'One occasion going the other way is not proof that the pattern is wrong, in the same way one good occasion was never proof that it was right.',
@@ -1315,6 +1338,8 @@ function staleBeliefCard(
       headline: `What the app thinks about ${lowerFirst(subject)} is ${describeDays(days)} old.`,
       detail: `The most recent thing you said about it was ${describeDay(newest.dayId)}. It is still being used when this comes up.`,
       confidence: confidenceFrom(answered.length, 0),
+      // Empty: filled from what this card cites. See `withSources`.
+      sources: [],
       evidence: evidenceFor(answered, subject, {
         reasoning: [
           'Old evidence is not thrown away — it counts for less as it ages, and never for nothing.',
@@ -1443,6 +1468,8 @@ function associationCard(found: ObservedAssociation, situation: Situation): Buil
        * arranged not to make. How much there is, is said in `counted`.
        */
       confidence: undefined,
+      // Empty: filled from what this card cites. See `withSources`.
+      sources: [],
       evidence: {
         comparable: all.length,
         window: found.window,
@@ -1614,6 +1641,16 @@ function coverageCards(situation: Situation): readonly Built[] {
     }
   }
 
+  /*
+   * From the areas themselves, not from the lines above.
+   *
+   * A coverage card's evidence lines name concepts rather than records — a
+   * concept nobody has ever answered has no record to cite — so resolving them
+   * yields nothing. The claim the card makes is about the *areas*, and the
+   * areas already know every origin heard about them.
+   */
+  const quietSources = [...new Set(quiet.flatMap((domain) => domain.sources))].sort()
+
   const reasoning = [
     'This is the same reading Life shows, from the same computation the decision on Now was made from.',
     'How long counts as too long is set by the thing itself: three days of silence about sleep is not the same as three days of silence about money.',
@@ -1664,6 +1701,7 @@ function coverageCards(situation: Situation): readonly Built[] {
           // so no confidence word. "Very consistent" under a gap would read as
           // a judgement about how consistently he has neglected something.
           confidence: undefined,
+          sources: quietSources,
           evidence,
           belief: undefined,
         },
@@ -1691,6 +1729,7 @@ function coverageCards(situation: Situation): readonly Built[] {
         headline: `${quiet.length} areas have gone quiet — ${listed}.`,
         detail: `${worst.label} has been silent longest. Life has the full list, area by area.`,
         confidence: undefined,
+        sources: quietSources,
         evidence,
         belief: undefined,
       },
@@ -1859,6 +1898,8 @@ function trajectoryCards(situation: Situation): readonly Built[] {
         // "fairly consistent" under "you have been sleeping less lately" reads
         // as a claim about how consistent the fall is, which is not measured.
         confidence: undefined,
+        // Empty: filled from what this card cites. See `withSources`.
+        sources: [],
         evidence: {
           comparable: ordered.length,
           window: { from: first.dayId, to: last.dayId },
@@ -1938,6 +1979,8 @@ function lifeSeasonCards(situation: Situation): readonly Built[] {
         detail: `${before.length} entries here are from before that — a different season, still counted, and counting for less as they age.`,
         // Something the owner recorded, not something worked out.
         confidence: undefined,
+        // Empty: filled from what this card cites. See `withSources`.
+        sources: [],
         evidence: {
           comparable: before.length,
           window: undefined,
@@ -2140,9 +2183,39 @@ export function insightsFor(situation: Situation): InsightsReport {
   return {
     insights: built
       .sort((a, b) => b.rank - a.rank || a.insight.id.localeCompare(b.insight.id))
-      .map((entry) => entry.insight),
+      .map((entry) => withSources(entry.insight, situation)),
     gathering: gathering.sort((a, b) => b.occasions - a.occasions),
   }
+}
+
+/**
+ * Where a card's evidence came from, filled in once for every kind.
+ *
+ * Every builder would otherwise have to remember, and a card added next year
+ * would silently claim the owner's. So it is derived here from what the card
+ * already cites: the records named by its own evidence lines.
+ *
+ * A card that set `sources` itself keeps it. Coverage cards do, because their
+ * lines name concepts rather than records — see `coverageCards`.
+ *
+ * Lines whose record does not resolve contribute nothing rather than being
+ * guessed at. An unresolvable citation is not evidence of the owner's
+ * authorship; it is evidence of nothing, and the whole rule here is that a
+ * mixed or unknown basis says nothing at all.
+ */
+function withSources(insight: Insight, situation: Situation): Insight {
+  if (insight.sources.length > 0) return insight
+  const cited = [
+    ...insight.evidence.included,
+    ...insight.evidence.counterexamples,
+    ...insight.evidence.excluded,
+  ]
+  const sources = new Set<ProvenanceSource>()
+  for (const line of cited) {
+    const record = situation.view.history.byId(line.record)
+    if (record !== undefined) sources.add(evidenceSourceOf(record))
+  }
+  return { ...insight, sources: [...sources].sort() }
 }
 
 // ---------------------------------------------------------------------------

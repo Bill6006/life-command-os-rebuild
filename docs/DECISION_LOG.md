@@ -3224,3 +3224,62 @@ nothing in his history changed, and this build reads it differently from the
 build that imported it. Calling that a conflict blames his old history for a
 change in this app; calling it "already present" hides a real difference in
 what the app believes his history means.
+
+---
+
+## D-108 — A conclusion drawn from records discloses their origin, not only the records under it
+
+**Phase:** 8 (QA retest repair) · **Status:** Active — **owner-facing rule,
+governing every phase from here**
+
+D-106 said an entry the owner did not write says so wherever it is read. It was
+implemented on `DescribedRecord`, which is the shape for **showing** a record —
+so every surface that lists entries was fixed and every surface that states a
+conclusion was not.
+
+Independent QA retested and found the claim still failing on Life's overview, an
+Insights coverage card, and four sections of the review export. Each of those is
+a sentence _drawn from_ records rather than one that shows them, and each read
+as though the owner had gone quiet about an area he had in fact never mentioned
+to this app at all — everything it knew had been migrated.
+
+**The rule.** Where a conclusion rests on a body of evidence and every part of
+that body shares one non-owner origin, the conclusion says so, in the same word
+the entries use. Where the body is mixed, or is his, it says nothing — one
+record of his own is enough to make an area his again, and a badge over a mixed
+basis would be a claim wider than the evidence (D-091's first invariant).
+
+**Two questions, not one.** `DomainCoverage.source` already existed and answers
+"where did the newest evidence come from", which is the right question for
+reliability and the wrong one for disclosure. An area with one recent entry of
+his own on top of a decade of imports would read as entirely his; the reverse
+would read as entirely imported. So the whole body is carried alongside, and
+`sources` and `source` are deliberately different fields with different jobs.
+
+**The brain carries the fact, the surface carries the word.** `sources` is a
+list of `ProvenanceSource`; which word the owner reads is presentation's
+business, and `originOfSources` is the one place it is decided — the same
+function the entry-level rule uses, so the two can never drift into saying
+different things about the same origin.
+
+**A new conclusion inherits it.** `Insight.sources` is filled centrally from
+what each card cites, so a card written next year discloses correctly without
+its author having to know this rule exists. A card whose evidence cites
+something other than records — a coverage card names concepts — sets it itself,
+and says why beside the code.
+
+### The lesson this round is really about
+
+The round-1 report found a test titled "every imported record says it was
+imported, **wherever it surfaces**" that asserted storage and rendered nothing,
+and wrote down that a title is a claim.
+
+The repair for it then shipped a test titled "every surface tells them apart"
+which asserted the four record-shaped surfaces and none of the four aggregate
+ones — and QA named that title as the reason the gap went unnoticed. The lesson
+was written down and then broken by the commit that wrote it down.
+
+So: **when a title says "every", the body enumerates what "every" means, and
+each item is proved by reintroduction separately.** A sweep that covers four of
+eight is not a weaker version of the claim; it is a false one, and the passing
+result is what makes it dangerous.

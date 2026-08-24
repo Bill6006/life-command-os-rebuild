@@ -403,6 +403,36 @@ test.describe('bringing it across', () => {
     await expect(own.getByTestId('tl-origin')).toHaveCount(0)
   })
 
+  test('a conclusion drawn only from imported history says so — QA-08-001 retest', async ({
+    page,
+  }) => {
+    /*
+     * The half the first repair missed, on the surfaces it missed.
+     *
+     * Marking the Timeline row and leaving Life's overview and an Insights card
+     * unmarked satisfies "recognisably imported" only if the owner reads the
+     * rows rather than the conclusion — and the conclusion is what those two
+     * screens exist to show him.
+     */
+    await openData(page)
+    const file = await legacyFile(page, PASSPHRASE)
+    await readIt(page, file)
+    await page.getByTestId('import-apply').click()
+    await expect(page.getByTestId('import-outcome')).toContainText('Brought')
+
+    await page.locator('.nav').getByRole('button', { name: 'Life' }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Life' })).toBeVisible()
+    const areas = page.getByTestId('life-origin')
+    await expect(areas.first()).toBeVisible()
+    await expect(areas.first()).toHaveText('Imported')
+
+    await page.locator('.nav').getByRole('button', { name: 'Insights' }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Insights' })).toBeVisible()
+    const cards = page.getByTestId('insight-origin')
+    await expect(cards.first()).toBeVisible()
+    await expect(cards.first()).toHaveText('Imported')
+  })
+
   test('the export says so too, where the reader was not there', async ({ page }) => {
     await seedOwnerHistory(page)
     await openData(page)
@@ -412,7 +442,23 @@ test.describe('bringing it across', () => {
     await expect(page.getByTestId('import-outcome')).toContainText('Brought')
 
     const text = await page.getByTestId('export-text').inputValue()
-    expect(text).toMatch(/· Imported/)
+    /*
+     * Named sections rather than "somewhere in the document" — QA's own note on
+     * the first version of this test. An assertion that finds one marker
+     * anywhere passes while four whole sections carry none, which is what
+     * happened.
+     */
+    const sectionOf = (heading: string) => {
+      const start = text.indexOf(heading)
+      if (start === -1) return undefined
+      const next = text.indexOf(String.fromCharCode(10) + '## ', start + heading.length)
+      return text.slice(start, next === -1 ? undefined : next)
+    }
+    for (const heading of ['## Recent record', '## Direction, goals and commitments']) {
+      const section = sectionOf(heading)
+      expect(section, `${heading} should be in the document`).toBeDefined()
+      expect(section, `${heading} should disclose imported origin`).toMatch(/· Imported/)
+    }
     // The owner's own seeded entry appears without it.
     const ownLine = text.split('\n').find((line) => line.includes('the kitchen counter, again'))
     expect(ownLine, 'the owner’s own entry should be in the export').toBeDefined()

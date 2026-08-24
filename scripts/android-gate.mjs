@@ -512,6 +512,24 @@ async function main() {
   )
   await sideways('Timeline, with imported history')
 
+  // ---- A conclusion drawn only from imported history — QA-08-001 retest ----
+  //
+  // The half the first repair missed. Marking the Timeline row and leaving the
+  // Life overview and an Insights card unmarked satisfies "recognisably
+  // imported" only if the owner reads the rows rather than the conclusion, and
+  // the conclusion is what those two screens exist to show him.
+  await page.locator('.nav').getByRole('button', { name: 'Life' }).tap()
+  await page.waitForSelector('h1:has-text("Life")')
+  const lifeMarks = await page.getByTestId('life-origin').count()
+  check('an area heard about only through an import says so on Life', lifeMarks > 0)
+  await sideways('Life, with imported history')
+
+  await page.locator('.nav').getByRole('button', { name: 'Insights' }).tap()
+  await page.waitForSelector('h1:has-text("Insights")')
+  const cardMarks = await page.getByTestId('insight-origin').count()
+  check('and an Insights card drawn from it says so too', cardMarks > 0)
+  await sideways('Insights, with imported history')
+
   // ---- The rest of the app is still standing --------------------------------
   for (const destination of ['Now', 'Life', 'Timeline', 'Insights']) {
     await page.locator('.nav').getByRole('button', { name: destination }).tap()

@@ -755,4 +755,257 @@ exactly as written.
 Do not ask me to paste the file contents.
 ```
 
-<!-- LCO_COMPLETE -->
+# Round 1 repair — independent QA retest
+
+## Retest result
+
+**FAIL — Phase 8 remains YELLOW.**
+
+QA-08-002 and both non-blocking findings are repaired. QA-08-001 is only
+partially repaired: imported origin is now visible on record and domain-detail
+surfaces, but it still disappears when those same imported records become the
+basis of Life's overview, an Insights coverage card, and several review-export
+sections. Those were named acceptance surfaces in round 1 and in the builder's
+own retest handoff.
+
+| Item | Tested value |
+| --- | --- |
+| Repaired product checkpoint | `d072012e7eb1e04f63482f0167119ef2cad2ffc6` |
+| Deployed SHA | `d18ff2d11be7d53da83b72a3b37c6fa111c978a1` |
+| Bundle relationship | PASS — bundle-equivalent; only `docs/NEXT_PROMPT.md` and this report differ |
+| Preview | `https://bill6006.github.io/life-command-os-rebuild/preview/` |
+| QA date | 2026-08-24, America/New_York |
+| Overall | **FAIL** |
+
+The deployed SHA was read live and checked with:
+
+```text
+node scripts/checkpoint-equivalence.mjs d072012 --ref d18ff2d11be7d53da83b72a3b37c6fa111c978a1
+```
+
+It reported no bundle-relevant difference.
+
+## Round-1 finding disposition
+
+| Finding | Retest | Evidence |
+| --- | --- | --- |
+| QA-08-001 | **STILL FAILING — blocking** | Timeline, domain beliefs/recent rows/goals, private withholding, and Recent record export lines now disclose origin. Life's imported-only Career state, its Insights coverage card, and the corresponding current-fact, goal, coverage, and insight export lines do not. |
+| QA-08-002 | **CONFIRMED REPAIRED** | Exact re-import and a later unchanged backup both report 9 already present, 0 conflicts, and no write. A later backup with one changed old row reports 8 already present and exactly 1 conflict. |
+| QA-08-N1 | **CONFIRMED REPAIRED** | The heading is “What is in that file”; its 3 / 6 / 1 counts continue to describe file inventory, while one final sentence describes the run consequence honestly for new, exact-no-op, and one-conflict cases. |
+| QA-08-N2 | **CONFIRMED REPAIRED** | The wrong-passphrase refusal says the no-write consequence exactly once. |
+
+## QA-08-001 — still failing after a partial repair
+
+**Classification:** blocking; semantic provenance and auditability; continuation
+of QA-08-001, not a new defect class.
+
+### What is repaired
+
+Using the same synthetic `primary` fixture and passphrase as round 1:
+
+- apply added 9 records, reopened the database, and read back 17 identical
+  records;
+- Timeline marks the imported energy, sleep-quality, goal, private-withheld, and
+  archived rows `Imported`, while the owner's own rows carry no badge;
+- the private row reads `Kept — Private entry · Imported`, preserving origin
+  without exposing its detail;
+- archived rows read `Kept — An entry from the old app, kept exactly as written.
+  · Imported`, so kind and origin no longer repeat the same word;
+- Health's domain page marks its imported readings and recent entries, and
+  Career's domain page marks its imported goal and recent entry;
+- the default export's **Recent record** lines carry `· Imported`, while an
+  owner-written record does not;
+- the targeted synthetic tests confirm owner origin is blank, a mixed
+  owner/imported belief is blank, an imported-only belief is marked, and the
+  shared vocabulary returns `Measured` for device and `Worked out` for derived
+  records.
+
+### Exact remaining reproduction
+
+1. Start from the deployed Preview's eight-record owner history.
+2. At More → Exports, backup and restore, read and apply `primary` from
+   `docs/qa/evidence/phase08-legacy-fixtures.ts` with passphrase
+   `phase-eight-independent-qa`.
+3. Open Life. The imported career goal is the only Career & Learning record and
+   makes the overview say `GOING QUIET` / `Nothing has come in about career &
+   learning for 3 months.` No imported-origin cue is present.
+4. Open Insights. The same imported-only career history produces `Out of date —
+   Nothing has come in about career & learning for 3 months.` Opening its
+   evidence still provides no origin cue.
+5. Return to Data and inspect the default review export. The following lines are
+   derived from imported history but carry no `Imported` disclosure:
+
+```text
+## What the app is saying now
+- Current energy — 1 of 5 (inferred; for how much is left today)
+
+## Direction, goals and commitments
+- Finish a meaningful certification (career)
+
+## How well each area is understood
+- Career & Learning — stale, evidence weak; last heard 84 days ago.
+
+## What has been worked out
+- **Out of date** — Nothing has come in about career & learning for 3 months.
+```
+
+6. In that same export, continue to **Recent record**. The underlying energy,
+   sleep-quality, and goal rows do carry `· Imported`. The inconsistency proves
+   that storage and the shared record renderer are repaired while the aggregate
+   consumers are not.
+
+### Remaining defect boundary
+
+The repair propagates `origin` through `DescribedRecord`, Timeline entries,
+domain-page recent changes/readings/goals, and record-oriented export lines.
+Life's overview coverage model and Insights' coverage-card model do not carry the
+origin of the records that established their state. The export composes current
+facts, active goals, domain coverage, and insight summaries from those aggregate
+models rather than from the record-oriented description, so those sections lose
+the same information.
+
+This is the still-open part of the original cross-surface class. It matters
+because imported evidence is allowed to change current beliefs and coverage
+conclusions. Marking only the underlying Timeline row does not satisfy
+“recognisably imported wherever it surfaces” when the owner or an exported
+reviewer is reading the conclusion instead.
+
+## QA-08-002 — confirmed repaired
+
+The deployed retest produced the intended three-way distinction:
+
+- exact second run: 3 readable mappings, 6 kept, 1 excluded, 9 already present,
+  covering nothing new, and `Nothing left to bring across` disabled;
+- later backup with the same ten rows and a changed backup timestamp: the same
+  9 already present, no conflicts, and no write;
+- later backup with only `qa8-energy` changed: 8 already present and exactly
+  1 entry reported as different; the closing sentence says that apart from that
+  one entry everything is already here.
+
+The contract retest also passed the widened identity cases: changing only the
+device timezone does not create a conflict; `legacyFormatLabel()` is the stable
+`life-command-os.backup` format; and a prior mapping-rules version is counted in
+`reinterpreted`, not conflicts. The UI sentence is honest for that case: it says
+the entries came across under an earlier rules version, still say the same thing,
+and neither history nor stored rows are rewritten.
+
+## Preserved round-1 passes
+
+- Wrong passphrase refused the file and stated the no-write consequence once.
+- The primary preview showed 10 entries, 3 readable mappings, 6 kept raw, and
+  1 excluded before writing.
+- Raw-archive inertness was rechecked independently: a fixture containing two
+  recent energy/sleep-shaped archive rows added 2 records and read back 10
+  identical records, while the full Now DOM snapshot remained byte-for-byte
+  unchanged.
+- Atomic apply/read-back, exact idempotency, privacy withholding, and owner-row
+  non-marking remained intact.
+- The owner Preview history was restored after all destructive flows. Final
+  confirmation: `Restored and checked: the store now holds 8 entries, exactly
+  as the backup does`, followed by a reopened-database read of 8 identical
+  records.
+- The local full verification gate passed: 57 test files and 1,183 tests,
+  followed by a successful production build.
+- The deployed Galaxy S24-class Android-style gate passed all 52 checks with no
+  console errors or horizontal overflow.
+
+No product code or application test was modified by QA. The protected previous-
+generation tree was not touched.
+
+## Repair-round false green that remains
+
+`tests/synthetic/imported-origin.test.ts` is headed “every surface tells them
+apart”, but its export assertion selects a Recent record line, and its other
+surface assertions cover Timeline, a domain page, and an evidence-origin
+resolver. It never asserts the Life overview or an Insights coverage card, and
+it does not assert the export's current-fact, goal, coverage, or insight sections.
+
+The browser export test only asserts that some `· Imported` text exists in the
+whole export. The Android gate checks badges on Timeline and then checks only
+overflow on Life and Insights. Consequently all 1,183 local tests and all 52
+deployed Android checks pass while the named cross-surface acceptance still
+fails live.
+
+## Required second repair
+
+Keep Phase 8 **YELLOW**. Reopen DEF-0069 / QA-08-001 under canonical plan section
+42 and repair the remaining aggregate-consumer class. Preserve every confirmed
+repair and pass above. Do not begin Phase 9.
+
+The repaired behavior must make imported-only evidence recognisable when it
+drives:
+
+- a Life overview state;
+- an Insights coverage card and its disclosed evidence;
+- current facts, active goals, coverage, and insight summaries in the review
+  export.
+
+It must still leave owner-only and mixed-basis conclusions unmarked, keep private
+detail withheld, keep archive rows inert, and retain the existing origin words
+for import/device/derived records. Add regressions at these actual aggregate
+surfaces; an assertion that merely finds one imported marker somewhere in an
+export is not sufficient.
+
+## D-082 / D-092 — next action
+
+- **Model:** Claude Opus-class, strongest currently available (or nearest current
+  equivalent)
+- **Intelligence level:** **Max** — the remaining repair crosses aggregate Life,
+  Insights, and export presentation models and needs claim-to-evidence tests at
+  each actual consumer.
+- **Conversation:** **CURRENT CLAUDE BUILDER CONVERSATION** — this is the same
+  unresolved Phase 8 defect loop; the builder that made the partial repair must
+  finish it under section 42.
+- **Report path:** `docs/qa/PHASE_08_QA_HANDOFF.md`
+
+## COPY/PASTE PROMPT
+
+```text
+Continue the Phase 8 repair for the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Independent QA retested repaired product checkpoint d072012 against deployed
+build d18ff2d11be7d53da83b72a3b37c6fa111c978a1 and returned FAIL.
+
+Read docs/qa/PHASE_08_QA_HANDOFF.md in full, especially “Round 1 repair —
+independent QA retest”. Keep Phase 8 YELLOW and repair the still-failing portion
+of QA-08-001 / DEF-0069 under canonical plan section 42.
+
+Imported origin is repaired on Timeline, domain details, and Recent record export
+lines, but it is still absent when imported-only evidence drives the Life
+overview, an Insights coverage card and its evidence, and the export's current-
+fact, active-goal, coverage, and insight sections. Repair that remaining aggregate
+consumer class. Keep owner-only and mixed-basis conclusions unmarked; preserve
+private withholding, raw-archive inertness, the confirmed QA-08-002 identity
+repair, exact idempotency, atomic verification/rollback, and every other pass.
+
+Add regressions at the actual failing aggregate surfaces and prove they fail when
+the defect is reintroduced. Do not modify the QA report. Do not begin Phase 9.
+
+Deploy the repaired checkpoint, keep Phase 8 YELLOW, and append a complete retest
+handoff addressed to this SAME Codex QA conversation, including the D-092 model,
+level, conversation instruction, report path, and short launcher.
+```
+
+---
+
+**Model:** Claude Opus-class, strongest currently available (or nearest current
+equivalent)
+
+**Intelligence level:** Max
+
+**Conversation:** CURRENT Claude builder conversation
+
+```text
+Continue the Life Command OS rebuild's Phase 8 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_08_QA_HANDOFF.md in full and execute the current repair
+handoff exactly as written.
+
+Do not ask me to paste the file contents.
+```
