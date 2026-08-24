@@ -4,13 +4,12 @@ Canonical plan section 43, and section 53 for the phase itself. Independent QA
 is Codex (D-090); Claude builds. Every handoff ends with the model, the level,
 the conversation and a short copyable launcher (D-092).
 
-**Phase 8 is YELLOW — READY FOR A SECOND INDEPENDENT QA RETEST.**
+**Phase 8 is YELLOW — READY FOR A THIRD INDEPENDENT QA RETEST.**
 
-Two QA rounds, both **FAIL**, everything repaired under section 42 as whole
-classes. Round 1 found two blocking semantic defects; the retest confirmed one
-repaired and found the other only half done — the records had been fixed and the
-conclusions drawn from them had not. The phase does not self-certify and a
-repair does not either.
+Three QA rounds, all **FAIL**, everything repaired under section 42. The second
+retest confirmed the product itself correct and failed the **regressions** —
+two claimed more than they asserted, and one of those was hiding a real gap. The
+phase does not self-certify and a repair does not either.
 
 |                                          |                                            |
 | ---------------------------------------- | ------------------------------------------ |
@@ -24,7 +23,7 @@ conversation that found the defects, and the complete prompt for it is written
 into that conversation's own report:
 
 > [`qa/PHASE_08_QA_HANDOFF.md`](qa/PHASE_08_QA_HANDOFF.md) — read the
-> "Retest repair" section and the copy/paste prompt at the end of it.
+> "Second-retest repair" section and the copy/paste prompt at the end of it.
 
 This file will carry the next-phase prompt again once the retest passes and the
 GREEN closeout is written.
@@ -39,7 +38,7 @@ GREEN closeout is written.
 - **Conversation:** **SAME** — section 43's defect loop: a retest goes to the
   conversation that found the defects, because it holds the reproductions and
   the reasoning, and would otherwise be judging a repair without having seen
-  what it repaired. This is the same unresolved loop, two rounds in.
+  what it repaired. This is the same unresolved loop, three rounds in.
 - **Report path:** `docs/qa/PHASE_08_QA_HANDOFF.md`
 
 ## COPY/PASTE PROMPT
@@ -50,10 +49,8 @@ Retest the Life Command OS rebuild's Phase 8 repair.
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Read docs/qa/PHASE_08_QA_HANDOFF.md in full and execute the second retest
-handoff exactly as written.
+Read docs/qa/PHASE_08_QA_HANDOFF.md in full and execute the third retest handoff
+exactly as written.
 
 Do not ask me to paste the file contents.
 ```
-
-<!-- LCO_COMPLETE -->

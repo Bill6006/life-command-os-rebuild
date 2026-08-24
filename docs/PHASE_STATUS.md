@@ -24,12 +24,14 @@ reopens Phase 4 or any completed phase.
 
 # Phase 8 — Legacy migration
 
-**Status: YELLOW — READY FOR A SECOND INDEPENDENT QA RETEST.**
+**Status: YELLOW — READY FOR A THIRD INDEPENDENT QA RETEST.**
 
-Two QA rounds, both **FAIL**, both repaired under section 42 as whole classes.
-Round 1 found two blocking semantic defects; the retest confirmed one repaired
-and found the other only half done — the conclusions drawn from records had been
-missed while the records themselves were fixed. Per D-077 this checkpoint does
+Three QA rounds, all **FAIL**, everything repaired under section 42. Round 1
+found two blocking semantic defects; the retest confirmed one repaired and found
+the other half done — the conclusions drawn from records had been missed while
+the records themselves were fixed. The second retest confirmed the product
+correct and failed the **regressions**: two of them claimed more than they
+asserted, and one of those was hiding a real gap. Per D-077 this checkpoint does
 not self-certify, and a repair does not either: the second retest goes to the
 **same** Codex conversation, whose report is
 [`qa/PHASE_08_QA_HANDOFF.md`](qa/PHASE_08_QA_HANDOFF.md).
@@ -473,6 +475,59 @@ impose, with an architecture guard that fails the build if a surface starts
 styling its own. Present and legible are two claims and only the first can be
 counted.
 
+## Independent QA, second retest — product PASS, regression contract FAIL
+
+QA retested `d433079` and confirmed **the product repair for QA-08-001 is
+behaviourally correct** on every surface it named, with owner and mixed evidence
+correctly unmarked and the widened device/derived and non-coverage-insight
+behaviour working. It then failed the phase on the **regressions**, and it was
+right to.
+
+Two tests claimed more than they asserted:
+
+- `every insight declares where its evidence came from` asserted
+  `Array.isArray(insight.sources)`. Every constructor initialises the field to
+  `[]`, so deleting `withSources` left every value an array and the test green.
+- The repair claimed four aggregate export sections and the tests held three.
+  QA found that one in the repair's **own prose** — a table naming four
+  sections and, three lines below, a reintroduction account saying "each of the
+  three export sections one".
+
+**This is the third occurrence of the class in this phase, and the second inside
+a repair for the rule against it.** Writing "a title is a claim" down has not
+stopped it, so D-108 now carries four mechanical checks instead of the sentence:
+enumerate in the body; assert the value rather than the container; reintroduce
+what the _title_ names rather than what the assertion touches; and treat a guard
+inside an assertion as a hole.
+
+### The gap the weak assertion was hiding
+
+That last one is not abstract. QA's own probe guarded with
+`if (insight.sources.length > 0)`, which reads as caution and means _skip the
+case where the field is empty_ — exactly the state the defect produces. Removing
+it found a real product gap: a **`life-season` card cites no evidence lines at
+all**, so the central computation had nothing to resolve, and a season standing
+on an imported durable context disclosed nothing. It sets its own sources now,
+from the arrangement it quotes and the entries it counts.
+
+QA's report says "no current product-behaviour defect was observed". The guard
+is why.
+
+### The replacements
+
+Built on QA's technique — rewriting each golden scenario's provenance to one
+origin — because those histories already produce nine kinds of card, and a
+fixture per kind would be nine things that resemble the product rather than nine
+it actually reasons about. The new block enumerates those nine by name and fails
+if the set changes, asserts the word the owner would read per kind per origin,
+and asserts a mixed basis resolves to nothing across more than three kinds. The
+fourth export section has its own test isolating `## What has been worked out`,
+paired against the same history flipped to the owner's.
+
+Proved by reintroduction: removing `withSources` fails five; removing
+`fromSources` from `insightsSection` fails one; removing the `life-season`
+sources fails four.
+
 ## Open items and questions for the owner
 
 Four, and none of them blocks QA.
@@ -530,7 +585,7 @@ Four, and none of them blocks QA.
 
 ## Next
 
-**Second retest by the same Codex QA conversation**, per section 43's defect loop — a
+**Third retest by the same Codex QA conversation**, per section 43's defect loop — a
 retest after a builder repair goes to the conversation that found the defects,
 not to a fresh one. Then the GREEN closeout in this builder conversation, and
 Phase 9 — visual coherence, motion and mobile refinement (canonical plan

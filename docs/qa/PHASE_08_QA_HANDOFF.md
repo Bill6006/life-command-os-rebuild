@@ -1496,3 +1496,223 @@ handoff exactly as written.
 
 Do not ask me to paste the file contents.
 ```
+
+---
+
+# Second-retest repair — third retest handoff
+
+Appended below QA's second retest, so each finding and its response stay side by
+side. QA updates this same file.
+
+## Both findings were right, and both were mine
+
+QA-08-003 and QA-08-004 are verification defects, and the class is the one D-108
+was written about — a title that claims more than its body holds. **This is the
+third occurrence in this phase, and the second inside a repair for the rule
+against it.** Writing the rule down has not stopped it, so this round makes it
+mechanical rather than remembered; see the new closing section of D-108.
+
+## QA-08-003 — the insight regression
+
+`every insight declares where its evidence came from` asserted
+`Array.isArray(insight.sources)`. Every constructor initialises the field to
+`[]`, so deleting `withSources` left every value an array and the test green.
+
+Replaced by **"every insight kind the library produces declares its origin"**,
+built on QA's own technique — rewriting each golden scenario's provenance to one
+origin, because those histories already produce nine kinds of card and a fixture
+per kind would be nine things that *resemble* the product rather than nine it
+actually reasons about.
+
+It does the three things that would have caught the old one:
+
+1. **Enumerates.** The nine kinds are written out by name and the set of kinds
+   exercised is asserted to equal that list, so a kind that stops being produced
+   is a failure rather than quietly reduced coverage. `contradiction` and
+   `stale-assumption` are the other two `InsightKind`s and no scenario currently
+   produces one — stated in the test rather than silently omitted.
+2. **Asserts the word**, not the container: `originOfSources(...)?.label` per
+   kind per origin, across owner, imported, device and derived.
+3. **Asserts the negative.** A mixed basis resolves to nothing, across more than
+   three kinds, with the owner row chosen from what each card actually cites so
+   the mixture is real rather than arranged.
+
+The shallow check that remains is titled for what it is —
+"the coverage card is not the only kind that declares its origin".
+
+**Proved by reintroduction:** removing the `withSources` call fails five tests.
+
+### One real product gap this uncovered
+
+QA's probe guarded its assertions with `if (insight.sources.length > 0)`. That
+guard reads as caution and means *skip the case where the field is empty*, which
+is exactly the state the defect produces. Removing it found that a
+**`life-season` card carries no sources at all**: it cites no evidence lines —
+`included`, `counterexamples` and `excluded` are all empty by construction — so
+`withSources` has nothing to resolve, and a season standing on an imported
+context read as though the owner had told this app himself.
+
+It now sets its own sources, from the arrangement it quotes and the entries it
+counts, and says why beside the code. QA's report says "no current
+product-behaviour defect was observed"; the guard is why, and it is worth
+retesting directly.
+
+## QA-08-004 — the fourth export section
+
+The repair claimed four aggregate export sections and the tests held three. QA
+found the mismatch in the repair's **own prose**: a surface table naming four
+sections and, three lines below, a reintroduction account saying "each of the
+three export sections one".
+
+Added **"marks the insight summaries — the fourth aggregate section"**, which
+isolates `## What has been worked out` and asserts `· Imported` on an
+imported-only insight, paired against the same history with the origin flipped
+to the owner's — because a test that only finds the marker passes on a build
+that marks everything.
+
+The existing three-section test is retitled
+"marks current facts, goals and coverage — three of the four sections", so the
+two together enumerate four and neither claims the other's ground.
+
+**Proved by reintroduction:** removing `fromSources` from `insightsSection`
+fails it.
+
+### The wrong count in the ledger
+
+`DEF-0071`'s regression account said "three export sections". It is corrected,
+and the correction says what was wrong rather than quietly reading four now.
+
+**The line QA quoted, in the second-retest handoff above, is deliberately left
+as it was.** It is the evidence for QA-08-004 and rewriting it would leave the
+citation dangling. The record of this phase should read as what happened.
+
+## Verification of this checkpoint
+
+| Gate | Result |
+| --- | --- |
+| Privacy scan | Clean, 211 tracked files |
+| Format, lint, typecheck | Pass, 0 warnings, 0 errors |
+| Unit / contract / synthetic / adversarial | 1199 / 1199, 57 files |
+| Browser (Playwright) | 459 / 459 — 3 viewports |
+| Builder's Android-style gate on the deployed build | Clean, 56 checks |
+| Reintroduction | Removing `withSources` fails five; removing `fromSources` from `insightsSection` fails one |
+
+QA's probe is committed at `docs/qa/evidence/phase08-origin-aggregate-probe.ts`
+so its evidence survives with the phase. The durable regressions are in the
+normal gate, as the handoff asked.
+
+**The same transient**, reported rather than fixed: one test per full local
+browser run occasionally fails with `page.goto: net::ERR_ABORTED`, on a
+different test each time. It did not occur on this run. CI retries and is green;
+each spec passes alone.
+
+## What has not changed
+
+Every confirmed product repair and every previous pass. QA-08-001's behaviour on
+all four aggregate surfaces, QA-08-002's identity repair, QA-08-N1 and N2,
+raw-archive inertness, atomic apply with verification through a reopened
+database, rollback, exact idempotency, privacy handling, the architecture wall,
+and the laboratory/owner store separation. The four open questions for the owner
+are unchanged.
+
+## Third retest — next action
+
+- **System:** **Codex** — the **same** QA conversation
+- **Model:** the model the previous rounds ran on, unchanged
+- **Reasoning level:** **High**
+- **Conversation:** **SAME** — still one unresolved defect loop
+- **Report path:** `docs/qa/PHASE_08_QA_HANDOFF.md`
+
+## COPY/PASTE PROMPT
+
+```text
+Retest Phase 8 of the Life Command OS rebuild. You returned FAIL three times;
+this is the repair for QA-08-003 and QA-08-004.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Repaired product checkpoint: 1fc41cf
+Deployed Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
+
+Read the deployed SHA from preview/build-info.json; it is not expected to equal
+the checkpoint (D-097). To check bundle equivalence:
+
+  node scripts/checkpoint-equivalence.mjs 1fc41cf --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Your `--ref <full-sha>` fallback still applies.
+
+Read docs/qa/PHASE_08_QA_HANDOFF.md in full, including "Second-retest repair"
+below your second retest. Update this same report file in place.
+
+WHAT TO RETEST
+
+Both findings were verification defects, so the retest is mostly about the
+tests — judge them the way you judged the last two rounds:
+
+- "every insight kind the library produces declares its origin" now enumerates
+  nine kinds by name and asserts the set exercised equals that list. Check the
+  enumeration is honest: are those nine really what the library produces, and
+  are `contradiction` and `stale-assumption` really unreachable from any
+  scenario? If a tenth is produced, the test should fail rather than cover less.
+- It asserts `originOfSources(...)?.label` per kind per origin, and a mixed
+  basis resolving to nothing across more than three kinds. Check that the mixed
+  case is genuinely mixed rather than arranged.
+- "marks the insight summaries — the fourth aggregate section" isolates
+  `## What has been worked out`. Check the section extraction is right, and that
+  the owner-flipped comparison genuinely differs only in provenance.
+- Reproduce both named reintroductions yourself if you want them independently
+  confirmed: delete the `withSources(...)` call in `insightsFor`, and the
+  `fromSources(...)` wrapper in `insightsSection`.
+
+ONE REAL PRODUCT CHANGE THIS ROUND, WORTH TESTING DIRECTLY
+
+Removing the `sources.length > 0` guard your probe used revealed that a
+`life-season` card carried **no** sources: it cites no evidence lines at all, so
+the central computation had nothing to resolve. A season standing on an imported
+durable context therefore disclosed nothing. It now sets its own sources from
+the arrangement it quotes and the entries it counts.
+
+Worth checking on the deployed build and at the intelligence layer: a
+`life-season` card over imported history should disclose; over the owner's own
+should not; over a mix should not. `durable-custody` and `long-run` are the
+scenarios that produce one.
+
+Also worth confirming: no other insight kind cites nothing and therefore
+discloses nothing. The new enumeration should make that visible, but it is the
+kind of claim worth checking rather than believing.
+
+EVERYTHING ELSE
+
+Every product behaviour you confirmed repaired should still hold, and the local
+gate is 1199/1199 across 57 files with 459/459 browser tests.
+
+Do not repair application or product code. You may update only this report and
+narrowly scoped QA evidence artifacts. Do not modify anything at
+D:\Code\AI Coding Agents\Codax\Life App (owner decision D-001).
+
+End with D-082 and D-092: the complete ready-to-paste next prompt written into
+this file, and a short standalone launcher. On PASS it goes to the CURRENT
+builder conversation for the formal GREEN closeout; on FAIL, for another repair
+round. Do not wait to be asked for it.
+```
+
+---
+
+**Model:** Codex, the model the previous rounds ran on
+**Reasoning level:** High
+**Conversation:** SAME Codex QA conversation
+
+```text
+Retest the Life Command OS rebuild's Phase 8 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_08_QA_HANDOFF.md in full and execute the third retest handoff
+exactly as written.
+
+Do not ask me to paste the file contents.
+```
+
+<!-- LCO_COMPLETE -->
