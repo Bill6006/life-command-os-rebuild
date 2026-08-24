@@ -1,0 +1,465 @@
+# Phase 8 independent QA handoff
+
+## Result
+
+**FAIL — Phase 8 remains YELLOW.**
+
+The migration machinery is operable, atomic, privacy-preserving, and mobile-safe,
+but two blocking semantic defects remain:
+
+1. mapped legacy entries retain `legacy-import` provenance in storage while losing
+   that origin on every ordinary surface they reach;
+2. a later backup of the same old history falsely reports unchanged archived rows
+   as changed because the backup creation time is stored inside each archive row
+   and participates in conflict comparison.
+
+The first makes old readings and goals read as if they were written in this app.
+The second makes an ordinary new backup of an append-first history look edited or
+damaged. Both are directly inside the phase's acceptance claim about what an
+import says it did.
+
+| Item | Tested value |
+| --- | --- |
+| Phase | 8 — Legacy migration |
+| Product checkpoint | `b593a4989019fb7143293695b29e3ebafbeeeae8` |
+| Deployed SHA | `a05778365a93e101764abbb31f42efdc64f54c36` |
+| Bundle relationship | PASS — bundle-equivalent; only `docs/NEXT_PROMPT.md` and `docs/PHASE_STATUS.md` differ |
+| Preview | `https://bill6006.github.io/life-command-os-rebuild/preview/` |
+| QA date | 2026-08-24, America/New_York |
+| Overall | **FAIL** |
+
+The deployed SHA was read from the app's build surface. The direct Node fetch hit
+the documented local certificate-chain error, so equivalence was checked with:
+
+```text
+node scripts/checkpoint-equivalence.mjs b593a49 --ref a05778365a93e101764abbb31f42efdc64f54c36
+```
+
+It reported two changed documentation files and no bundle-relevant changes.
+
+## Sealed cold owner-use
+
+This was completed before reading the governing plan, decision log, phase status,
+architecture boundary, mapping registry, or implementation.
+
+What the deployed product appeared to claim:
+
+- Data is reached through More → Exports, backup and restore.
+- A backup from the previous version is translated where both apps mean the same
+  thing, preserved exactly where they do not, and omitted where the owner rejected
+  the old concept.
+- The passphrase is used once and not kept.
+- A full preview precedes the write.
+- An import is unavailable while a QA-laboratory history is on screen, and the
+  warning names a one-press way out: **Show mine**.
+- Backup and restore operate on the owner's records even while synthetic history
+  is visible.
+
+The named **Show mine** control worked from Data. No repository conclusion was
+used to interpret these claims during the sealed pass.
+
+## Android/mobile configuration
+
+The deployed Preview was exercised in the repository's Galaxy S24-class context:
+
+- viewport: 360 × 780 CSS pixels;
+- device scale factor: 3;
+- `isMobile: true`;
+- `hasTouch: true`;
+- Android 14 / Chrome 126 mobile user agent;
+- interaction by `tap()`;
+- deployed network build, not local `dist`.
+
+The first request inherited the local certificate-chain failure. The run was
+repeated with certificate verification disabled for that process only; the page
+still loaded the named deployed SHA and the gate completed cleanly.
+
+Result: **44 / 44 checks PASS**. Data opened by touch; all import steps worked by
+touch; controls cleared the 40 px measured minimum used by the gate; no horizontal
+overflow appeared on the import report, second run, Now, Life, Timeline, or
+Insights; no console errors appeared.
+
+This duplication was justified by concrete triggers discovered first: two builder
+claims did not match live behavior and existing tests were suspected false-green.
+
+## Governing acceptance criteria
+
+Used after the cold pass:
+
+- canonical plan section 30: detect; quarantine; inventory; explicit mapping;
+  preserve uncertain raw payload; preview/dry run; snapshot; atomic apply; verify;
+  rollback; provenance; unknown fields; duplicate prevention; raw imports inert;
+- section 30 critical rule: do not contort the new architecture to ease mapping;
+- section 53 build and gate;
+- section 59 explicit legacy exclusions;
+- D-091's eight invariants, especially synthetic/owner store separation;
+- D-101 to D-105;
+- `docs/ARCHITECTURE_BOUNDARIES.md`, `src/legacy/`;
+- `src/legacy/mapping.ts` as the mapping registry;
+- `docs/qa/README.md` and canonical plan section 43 for this report.
+
+The governing gate was evaluated as follows:
+
+| Criterion | Result | Evidence |
+| --- | --- | --- |
+| Detect legacy format | PASS | Old backup, own backup, truncated JSON, and unrelated JSON received distinct paths. |
+| Quarantined parser | PASS | Architecture inspection confirms legacy parsing remains behind `src/legacy`; no lower layer imports it. |
+| Mapping inventory | PASS | Preview accounted for 10 / 10 source rows across mapped, archived, excluded, undecided, and unknown families. |
+| Explicit semantic mappings | PASS | Five-family/five-attribute registry is narrow and reasoned; tested energy, sleep quality, mood, goal, and exclusions agreed with the registry. |
+| Raw preservation for uncertainty | PASS | Post-import backup retained raw private, child, absent-privacy, undecided, and unknown-family rows. |
+| Preview / dry run | PASS | Preview showed 3 mapped, 6 archived, 1 excluded before writing. |
+| Snapshot / atomic apply / verify / rollback boundary | PASS | Apply reopened the database and read back 17 identical records; original owner backup later restored and reopened at 8 identical records. |
+| Idempotency | PASS for the exact same file | Exact second run wrote nothing, reported 9 already present, and disabled apply. |
+| Duplicate/conflict semantics | **FAIL** | A newly created backup with one changed row falsely reported 7 conflicts because six unchanged archive rows carried a new backup timestamp. |
+| Provenance retained in canonical data | PASS | All 9 written rows carried `provenance.source: legacy-import`, rules version `legacy-map-2026-08-A`, and old record id in the note. |
+| Provenance remains visible wherever mapped entries surface | **FAIL** | Timeline, Life, domain pages, Insights, and export erase or relabel the origin. |
+| Raw archive rows cannot drive decisions | PASS | Two raw rows shaped like current-energy and sleep-quality readings were archived; Now remained byte-for-byte the same owner sentence and question. |
+| Mapped rows may participate as canonical history | PASS with disclosure failure | Recent mapped low energy and poor sleep moved Now from an unknown-capacity non-action to a low-rest non-action, consistent with D-101; the screen did not say the evidence was imported. |
+| Current behavior without legacy data | PASS in targeted regression | The safeguarded original history was restored after each destructive flow and reopened at the original 8 stored rows. |
+| Recommendation architecture unchanged | PASS | No intelligence module imports `src/legacy`; the architecture wall remains intact. |
+| Mobile/touch operability | PASS | Galaxy-class gate clean, 44 / 44. |
+
+## Scenarios and flows
+
+### PASS — recognition and refusal paths
+
+- Old encrypted backup: recognised before asking for a passphrase and described as
+  holding 10 entries using AES-GCM-256.
+- Wrong passphrase: refused without writing and without producing an import report.
+- Truncated JSON: refused as unreadable JSON without writing.
+- This app's own backup: directed to Restore rather than called unknown.
+- Synthetic-laboratory state: import disabled; **Show mine** worked from the named
+  location.
+
+The wrong-passphrase panel repeats “Nothing was changed” in both the problem and
+the standard note. That is recorded below as non-blocking copy friction.
+
+### PASS — mapping report and owner language
+
+Synthetic source inventory:
+
+- mapped: current energy, last night's sleep quality, active career goal;
+- archived: declined mood mapping, standing veto, undecided life-context change,
+  skill claim, faith anchor with no privacy field, unknown future family;
+- excluded: old recommendation;
+- privacy cases: `private-pattern`, `child`, and no privacy field.
+
+The preview reported:
+
+- 10 entries in the file;
+- 3 brought across as canonical history;
+- 6 kept exactly as written and not interpreted;
+- 1 left out on purpose;
+- the standing veto by its owner-readable name;
+- the undecided row as waiting on the owner's decision;
+- reasons for declined and unknown mappings;
+- no decision ids, plan sections, code identifiers, schema/provenance/quarantine
+  vocabulary, or third-person “the owner” language in the opened report.
+
+The copy was legible and operable in the Android context.
+
+### PASS — apply, read-back, privacy, and raw inertness
+
+- Apply wrote 9 rows and read them back.
+- The reopened database held 17 records, identical to the planned result.
+- Timeline contained 15 effective entries: six original effective entries plus
+  nine imported rows, with the private archive row represented only as “Private
+  entry.”
+- The default export contained 14 entries, correctly withholding the private row.
+- Post-import backup showed:
+  - `private-pattern` → `private`;
+  - `child` → `child-family-sensitive`;
+  - missing privacy → `sensitive`;
+  - all nine written rows stamped with `legacy-import`, mapping rules version,
+    and old record identity;
+  - raw archived payload preserved.
+- Two raw archive rows deliberately carried energy and sleep-quality-shaped
+  payloads at recent times. Now did not move or stop asking for current energy.
+
+The Preview owner history was restored after testing. Final confirmation:
+`Restored and checked: the store now holds 8 entries, exactly as the backup does`,
+followed by a reopened-database read of 8 identical records.
+
+### PASS — exact idempotency and no rewrite
+
+The identical encrypted file run a second time produced:
+
+- 0 mapped rows to append;
+- 9 already present;
+- “Nothing left to bring across”;
+- disabled apply button;
+- no store write.
+
+An altered later backup did not rewrite any record. The failure is that it falsely
+classified six unchanged archive rows as changed, not that it performed the
+rewrite.
+
+## Blocking defects
+
+### QA-08-001 — mapped imported history loses its origin on every owner surface
+
+**Classification:** blocking; semantic, behavioral, provenance, and auditability.
+
+**Acceptance expectation:** If an imported row is translated into a canonical
+observation or goal and can participate in the app, it must remain distinguishable
+from a row written in this app on Timeline, Life, its domain page, Insights, and an
+export. Preserving provenance only in a backup is not “wherever it surfaces.”
+
+**Exact reproduction:** 
+
+1. Open the deployed Preview at Data with owner history visible.
+2. Use the synthetic encrypted file generated by
+   `docs/qa/evidence/phase08-legacy-fixtures.ts`, `primary`, with passphrase
+   `phase-eight-independent-qa`.
+3. Preview, then apply.
+4. Open Timeline.
+5. Observe today's imported energy and sleep-quality rows:
+   - `Noted — Current energy: 1 of 5`
+   - `Noted — Sleep quality last night: 1 of 5`
+6. Observe the imported goal:
+   - `Goal — Goal: Finish a meaningful certification`
+7. Compare them with owner-written readings on 22 August. Nothing on Timeline
+   distinguishes the mapped imports.
+8. Open Life → Health & Recovery. “What the app currently believes” and “Recently”
+   show the imported energy and sleep quality without origin.
+9. Open Insights. The imported goal makes Career & Learning “OUT OF DATE” with no
+   indication that the area entered the record through migration.
+10. Return to Data and inspect the review export. “What the app is saying now”
+    labels current energy as `(inferred)`, not imported; Recent record prints the
+    two observations and goal identically to native history.
+11. Take a backup and inspect the same rows. Each correctly carries
+    `provenance.source: legacy-import`, rules version, and old record id.
+
+**Observed surface evidence:**
+
+```text
+Timeline
+TODAY
+08:30 Noted Current energy: 1 of 5
+08:20 Noted Sleep quality last night: 1 of 5
+...
+1 JUNE 2026
+09:00 Goal Goal: Finish a meaningful certification
+```
+
+```text
+Export — Recent record
+**Today** (2026-08-24)
+- Noted: Current energy: 1 of 5
+- Noted: Sleep quality last night: 1 of 5
+...
+- Goal: Goal: Finish a meaningful certification
+```
+
+By contrast, unmapped archive rows do show `Imported`, proving the omission is
+specific to mapped canonical kinds rather than a global inability to show origin.
+
+**Architecture evidence:** The record boundary is correct:
+`evidenceSourceOf(record)` returns `legacy-import`, and the stored records retain
+it. The presentation boundary drops it. `describeRecord` renders canonical kinds
+only by kind-specific content; `TimelineEntry` carries tag/text/domain but no
+origin; export reuses Timeline; Life and Insights collapse source into knowledge
+state or an unqualified coverage statement. This is one cross-surface defect class,
+not five unrelated strings.
+
+**Why blocking:** The report's safety claim is that the owner can see how old
+history is reinterpreted before agreeing. Once applied, mapped entries become
+indistinguishable from native entries and may drive decisions. The provenance
+exists but the owner cannot read it where the claim matters.
+
+### QA-08-002 — a new backup timestamp makes unchanged archive rows look edited
+
+**Classification:** blocking; semantic, duplicate/conflict detection, and
+auditability.
+
+**Acceptance expectation:** Two backups from the old app containing the same
+append-first source row are the same row even when the backup files were created
+at different times. If one source row changes, exactly that row is a conflict;
+transport metadata must not make every archived row look changed.
+
+**Exact reproduction:**
+
+1. Import `primary` from
+   `docs/qa/evidence/phase08-legacy-fixtures.ts` (`createdAt` 12:35).
+2. Read `changedSameIds` from the same generator (`createdAt` 12:36). It contains
+   the same ten old record ids and identical content except for `qa8-energy`, whose
+   ordinal changes from 1 to 5.
+3. Preview the second file.
+4. Observe:
+
+```text
+Already here from an earlier run  2
+7 entries in that file have already been brought across once and now say
+something different.
+```
+
+5. The apply button is correctly disabled and existing history is not rewritten.
+6. The honest result is one conflict, not seven.
+
+**Architecture evidence:** `legacyFormatLabel` is
+`life-command-os.backup@${backup.createdAt}`. `archiveOf` stores that label in every
+`imported-legacy-record`. Conflict comparison fingerprints the complete canonical
+record. Recreating the backup therefore changes all six archive records even when
+their legacy row payload is byte-identical. The two unchanged mapped observations
+and goal do not embed that file timestamp, which is why the live report says two
+already present plus seven conflicts.
+
+**Why blocking:** Taking a new backup later is the normal way an append-first old
+history gains new rows. The importer calls six unchanged rows altered or damaged,
+making the conflict report materially false and drowning the one real conflict.
+
+## Non-blocking findings
+
+### QA-08-N1 — exact re-import summary mixes inventory with consequences
+
+On an exact no-op second run, the panel is headed “What this would do” and says
+both:
+
+```text
+Kept exactly as written, not interpreted  6
+Already here from an earlier run          9
+Nothing has been written yet. There is nothing new to write.
+```
+
+The button is correctly disabled, so no behavioral risk remains. The first count
+is a classification of rows in the source file while the heading frames every row
+as a consequence of this run. Clarify the framing or the count during repair if it
+can be done without widening scope.
+
+### QA-08-N2 — wrong-passphrase refusal repeats the no-write statement
+
+The first paragraph ends “Nothing has been changed,” followed immediately by the
+standard “Nothing was changed.” note. The distinction between wrong passphrase and
+damaged file is actionable and no write occurs; this is copy friction only.
+
+## Privacy findings
+
+No privacy blocker found.
+
+- `private-pattern` failed closed to the private area and was withheld from the
+  default export.
+- `child` became child/family-sensitive.
+- absent privacy became sensitive, not normal and not private-health.
+- private Timeline detail remained hidden.
+- passphrase field disappeared after the read.
+- no real owner data was written to repository evidence.
+- the fixture generator contains synthetic rows only.
+
+## Mobile/UI findings
+
+No mobile blocker found. The real Android-style gate passed all 44 checks. The
+import report scrolled, disclosed, and applied by touch without overflow, control
+overlap, sub-40-pixel targets, console errors, raw timestamps, or singular/plural
+disagreement.
+
+## Automated tests that gave false confidence
+
+1. `tests/contract/legacy-import.test.ts`, “every imported record says it was
+   imported, wherever it surfaces,” asserts only `record.provenance.source` and
+   `evidenceSourceOf(record)`. It never renders a surface; its title is wider than
+   its evidence.
+2. `tests/browser/legacy-import.spec.ts`, “adds the history, reads it back, and
+   shows it without a reload,” checks only that Timeline is not empty. It never
+   checks origin on Timeline, Life, a domain page, Insights, or export.
+3. `tests/contract/legacy-import.test.ts`, “refuses to rewrite a record it already
+   wrote, if the file has changed,” creates both encrypted files with the fixture
+   helper's identical default `createdAt`. It proves the changed row conflict but
+   does not model the ordinary later-backup case that changes file creation time.
+4. `scripts/android-gate.mjs` and the browser idempotency test re-read the exact
+   same encrypted string. They correctly pass exact idempotency and cannot see
+   cross-backup timestamp contamination.
+5. The 44-check Android gate passed during this QA run while both blockers were
+   live. It is good evidence for mobile mechanics, not for either semantic claim.
+
+No application test or product code was modified by QA.
+
+## Evidence references
+
+- Synthetic fixture generator:
+  `docs/qa/evidence/phase08-legacy-fixtures.ts`
+- Mapping registry: `src/legacy/mapping.ts`
+- Archive source label: `src/legacy/open.ts`, `legacyFormatLabel`
+- Archive translation: `src/legacy/translate.ts`, `archiveOf`
+- Conflict comparison: `src/legacy/plan.ts`, `consider`
+- Shared Timeline/export description: `src/features/history/describe.ts` and
+  `src/features/timeline/timelineEntries.ts`
+- Existing false-green tests: `tests/contract/legacy-import.test.ts` and
+  `tests/browser/legacy-import.spec.ts`
+- Live build: `a05778365a93e101764abbb31f42efdc64f54c36`
+- Equivalence command and 44-check Android gate output captured in this QA run.
+
+## Deferred items confirmed unchanged
+
+- Production remains preview-only for this QA surface.
+- No partial import and no import undo button; a backup remains the way back.
+- `v297-phase68` is recognised and deliberately not imported.
+- `life-context-change`, `skill-claim`, `faith-anchor`, and
+  `milestone-observation` remain archived/undecided rather than forced into a
+  canonical near-fit.
+- `derivedRecordId` still uses the standing NUL-byte separator and was not changed.
+- No file under the protected previous-generation tree was modified.
+
+## Required repair scope
+
+Keep Phase 8 **YELLOW**. Repair QA-08-001 and QA-08-002 under canonical plan
+section 42 as whole defect classes. Preserve every PASS above and every explicit
+deferral. QA does not prescribe the implementation, but the repaired behavior
+must satisfy these observable outcomes:
+
+- mapped imports remain recognisably imported on Timeline, Life, domain pages,
+  Insights, and export without exposing raw archive payload as understood fact;
+- a later backup containing unchanged old rows treats those rows as already
+  present even though the backup's own creation time changed;
+- one changed old row produces one conflict;
+- exact re-import remains a no-op;
+- imported raw rows remain inert;
+- privacy handling and mobile behavior remain unchanged.
+
+For each blocker: reproduce, identify the whole class, add a regression, prove the
+regression fails when the defect is reintroduced, fix the root cause, and rerun the
+full builder gate. Deploy a repaired checkpoint, keep the phase YELLOW, and write a
+retest prompt for this **same Codex QA conversation**. Do not begin Phase 9.
+
+## Next action
+
+- **Model:** Claude Opus-class, strongest currently available (or nearest current
+  equivalent) — the repair crosses migration identity, provenance semantics, and
+  several presentation consumers.
+- **Intelligence level:** **Max** — both blockers require root-cause work across
+  boundaries rather than local copy edits.
+- **Conversation:** **CURRENT CLAUDE BUILDER CONVERSATION** — this remains the same
+  unresolved Phase 8, and the original builder must repair it under section 42.
+- **Report path:** `docs/qa/PHASE_08_QA_HANDOFF.md`
+
+## COPY/PASTE PROMPT
+
+```text
+Continue the Phase 8 repair for the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Independent QA tested product checkpoint b593a49 against deployed build
+a05778365a93e101764abbb31f42efdc64f54c36 and reported FAIL.
+
+Read docs/qa/PHASE_08_QA_HANDOFF.md in full. Keep Phase 8 YELLOW and repair every
+blocking/material finding under canonical plan section 42: reproduce it, identify
+the whole defect class, add a regression, prove the regression fails when the
+defect is reintroduced, fix the root cause, and rerun the full builder gate.
+
+In particular, repair QA-08-001 so mapped legacy records remain recognisably
+imported on Timeline, Life, domain pages, Insights, and export, while raw archive
+records remain uninterpreted and inert. Repair QA-08-002 so a newly created later
+backup does not turn unchanged archive rows into conflicts merely because the
+backup creation timestamp changed, and so changing one old row reports exactly one
+conflict. Address the two narrowly related non-blocking findings where safe.
+
+Preserve every scenario already passed, every privacy rule, the architecture wall,
+the explicit deferrals, exact idempotency, atomic verification/rollback, and the
+44-check Android result. Do not modify the QA report. Do not start Phase 9.
+
+Deploy the repaired checkpoint, keep Phase 8 YELLOW, and provide a complete retest
+handoff addressed to the SAME Codex QA conversation, including model, reasoning
+level, conversation instruction, exact report path, and the short D-092 launcher.
+Do not make the owner ask for the retest prompt.
+```

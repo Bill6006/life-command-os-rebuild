@@ -3,7 +3,7 @@ import { CONCEPT } from '../../src/domain/concepts'
 import { DOMAIN } from '../../src/domain/domains'
 import { valueIfUsable } from '../../src/domain/knowledge'
 import { evidenceSourceOf } from '../../src/domain/records'
-import { timeZone } from '../../src/domain/time'
+import { timeZone, type TimeZoneId } from '../../src/domain/time'
 import {
   applyImport,
   identify,
@@ -134,7 +134,7 @@ beforeAll(async () => {
   opened = result.backup
   plan = planImport(opened.rows, EMPTY_SNAPSHOT, {
     zone: ZONE,
-    legacyFormat: legacyFormatLabel(opened),
+    legacyFormat: legacyFormatLabel(),
   })
 })
 
@@ -331,7 +331,19 @@ describe('imported raw legacy records cannot silently drive decisions', () => {
     expect(view.facts.knowledgeFor(CONCEPT.cashBuffer).state).toBe('unknown')
   })
 
-  it('every imported record says it was imported, wherever it surfaces', () => {
+  it('every imported record carries its origin in storage', () => {
+    /*
+     * Retitled, because the old title was "…wherever it surfaces" and this
+     * test never rendered a surface (QA-08-001's own note on it). It asserted
+     * the record layer, which was correct throughout, while the presentation
+     * layer dropped the origin on Timeline, Life, Insights and the export.
+     *
+     * A title wider than its evidence is a false green with good intentions:
+     * anybody auditing the suite for that claim would have found it, ticked it,
+     * and moved on. What it actually proves is named here, and the claim it
+     * used to make is proved by `tests/synthetic/imported-origin.test.ts`,
+     * which renders every one of those surfaces.
+     */
     for (const record of plan.toAppend) {
       expect(record.provenance.source, record.id).toBe('legacy-import')
       expect(evidenceSourceOf(record), record.id).toBe('legacy-import')
@@ -350,7 +362,7 @@ describe('the same file twice changes nothing the second time', () => {
     const after = snapshotWith(EMPTY_SNAPSHOT, plan)
     const again = planImport(opened.rows, after, {
       zone: ZONE,
-      legacyFormat: legacyFormatLabel(opened),
+      legacyFormat: legacyFormatLabel(),
     })
 
     expect(again.toAppend).toHaveLength(0)
@@ -380,7 +392,7 @@ describe('the same file twice changes nothing the second time', () => {
     const current = await store.snapshot()
     const second = planImport(opened.rows, current, {
       zone: ZONE,
-      legacyFormat: legacyFormatLabel(opened),
+      legacyFormat: legacyFormatLabel(),
     })
     const applied = await applyImport(store, current, second)
     expect(applied.added).toBe(0)
@@ -401,13 +413,119 @@ describe('the same file twice changes nothing the second time', () => {
     const after = snapshotWith(EMPTY_SNAPSHOT, plan)
     const conflicting = planImport(reopened.backup.rows, after, {
       zone: ZONE,
-      legacyFormat: legacyFormatLabel(reopened.backup),
+      legacyFormat: legacyFormatLabel(),
     })
 
     // History is append-first. An import may add to it and may not rewrite it.
     expect(conflicting.conflicts).toHaveLength(1)
     expect(conflicting.conflicts[0]?.legacyType).toBe('observation')
     expect(conflicting.toAppend).toHaveLength(0)
+  })
+})
+
+describe('a later backup of the same old history is not a changed file — QA-08-002', () => {
+  /*
+   * The case the original suite could not see, and said so in its own title.
+   *
+   * "refuses to rewrite a record it already wrote, if the file has changed"
+   * built both files with the fixture's default `createdAt`, so the two backups
+   * were indistinguishable except for the row it deliberately edited. Taking a
+   * **new** backup is the ordinary way an append-first old history gains rows,
+   * and every one of these tests changes the file's creation time because that
+   * is what actually happens.
+   */
+
+  const LATER = '2026-09-01T10:00:00.000Z'
+
+  async function planFor(
+    rows: readonly Record<string, unknown>[],
+    into: StoreSnapshot,
+    options: { createdAt?: string; zone?: TimeZoneId } = {},
+  ) {
+    const file = await legacyBackupFile(rows, {
+      passphrase: PASSPHRASE,
+      ...(options.createdAt === undefined ? {} : { createdAt: options.createdAt }),
+    })
+    const opened = await openLegacyBackup(file, PASSPHRASE)
+    expect(opened.ok).toBe(true)
+    if (!opened.ok) throw new Error('fixture would not open')
+    return planImport(opened.backup.rows, into, {
+      zone: options.zone ?? ZONE,
+      legacyFormat: legacyFormatLabel(),
+    })
+  }
+
+  it('reports nothing changed when only the backup’s own timestamp moved', async () => {
+    const after = snapshotWith(EMPTY_SNAPSHOT, plan)
+    const again = await planFor(ROWS, after, { createdAt: LATER })
+
+    expect(again.conflicts).toEqual([])
+    expect(again.alreadyPresent).toBe(plan.toAppend.length)
+    expect(again.toAppend).toHaveLength(0)
+    expect(importChangesNothing(again)).toBe(true)
+  })
+
+  it('reports exactly one conflict when exactly one old row changed', async () => {
+    const after = snapshotWith(EMPTY_SNAPSHOT, plan)
+    const edited = ROWS.map((row) =>
+      row['recordId'] === 'obs-energy-1'
+        ? { ...row, value: anchoredScale('energy', 1, 'Drained') }
+        : row,
+    )
+    const again = await planFor(edited, after, { createdAt: LATER })
+
+    // One, and it is the one that changed — not seven, and not every archive
+    // row that happened to travel in a newer file.
+    expect(again.conflicts).toHaveLength(1)
+    expect(again.conflicts[0]?.legacyType).toBe('observation')
+    expect(again.toAppend).toHaveLength(0)
+  })
+
+  it('is not disturbed by importing the same file from a different timezone', async () => {
+    // Which clock this device was set to is not a fact about his old history.
+    const after = snapshotWith(EMPTY_SNAPSHOT, plan)
+    const again = await planFor(ROWS, after, {
+      createdAt: LATER,
+      zone: timeZone('Pacific/Auckland'),
+    })
+
+    expect(again.conflicts).toEqual([])
+    expect(again.alreadyPresent).toBe(plan.toAppend.length)
+  })
+
+  it('calls a revised mapping rule a re-reading rather than a changed file', async () => {
+    /*
+     * A rules revision is a real difference and belongs in the report — but it
+     * is a difference in **this app**, not in his old history. Calling it a
+     * conflict would blame the file; calling it "already present" would hide
+     * that the app now reads those rows differently.
+     */
+    const asIfOlder = snapshotWith(EMPTY_SNAPSHOT, plan).records.map((record) =>
+      record.provenance.source === 'legacy-import'
+        ? {
+            ...record,
+            provenance: { ...record.provenance, writtenBy: 'legacy-map-2026-01-A' },
+          }
+        : record,
+    )
+    const after: StoreSnapshot = {
+      ...snapshotWith(EMPTY_SNAPSHOT, plan),
+      records: asIfOlder as typeof plan.toAppend,
+    }
+
+    const again = await planFor(ROWS, after, { createdAt: LATER })
+
+    expect(again.conflicts).toEqual([])
+    expect(again.alreadyPresent).toBe(plan.toAppend.length)
+    expect(again.reinterpreted).toHaveLength(plan.toAppend.length)
+    expect(again.reinterpreted[0]?.wasVersion).toBe('legacy-map-2026-01-A')
+  })
+
+  it('keeps the archive label a format rather than a file', () => {
+    // The field's name says "format". It used to carry the backup's creation
+    // time, which is what made every new backup look like an edited one.
+    expect(legacyFormatLabel()).toBe('life-command-os.backup')
+    expect(legacyFormatLabel()).not.toMatch(/@|\d{4}-\d{2}-\d{2}/)
   })
 })
 

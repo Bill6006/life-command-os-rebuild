@@ -118,7 +118,7 @@ export function ImportPanel() {
       const current = await memory.ownerSnapshot()
       const plan = planImport(opened.backup.rows, current, {
         zone: memory.ownerMoment().zone,
-        legacyFormat: legacyFormatLabel(opened.backup),
+        legacyFormat: legacyFormatLabel(),
       })
       setStage({ kind: 'planned', plan, preview })
     } finally {
@@ -241,7 +241,19 @@ export function ImportPanel() {
       {stage.kind === 'refused' ? (
         <div className="data-refusal" data-testid="import-refusal">
           <p className="data-warning">{stage.refusal.problem}</p>
-          <p className="note">Nothing was changed.</p>
+          {/*
+           * Said once (QA-08-N2).
+           *
+           * Several refusals end with "Nothing has been changed" in the
+           * sentence itself, because that is the sentence a person reads on a
+           * screen about a destructive operation and it belongs there. The
+           * standing note underneath then said it again in slightly different
+           * words, which reads as two separate reassurances and makes a reader
+           * wonder which one is the real one.
+           */}
+          {/\bnothing (?:has been|was) changed\b/i.test(stage.refusal.problem) ? null : (
+            <p className="note">Nothing was changed.</p>
+          )}
           {stage.refusal.detail === undefined ? null : (
             <details className="data-detail">
               <summary>What exactly is wrong</summary>
@@ -349,10 +361,21 @@ function ImportReport({ plan, preview }: { plan: ImportPlan; preview: LegacyPrev
 
   return (
     <div className="data-plan" data-testid="import-report">
-      <h3>What this would do</h3>
+      {/*
+       * "What is in that file" rather than "What this would do" (QA-08-N1).
+       *
+       * The counts are a classification of the source file — how many of its
+       * entries are readings, how many are kept as written, how many are left
+       * out. On a second run of the same file every one of them is still true
+       * and none of them is a consequence of pressing anything, so the old
+       * heading had the panel saying it would bring six entries across
+       * directly above "there is nothing new to write". What this run would do
+       * is the line at the bottom, and it now says so on its own.
+       */}
+      <h3>What is in that file</h3>
       <Rows>
         <Row label="Entries in the file" value={String(plan.inventory.rows)} />
-        <Row label="Brought across as your history" value={String(Math.max(mapped, 0))} />
+        <Row label="Readings and goals this app can read" value={String(Math.max(mapped, 0))} />
         <Row label="Kept exactly as written, not interpreted" value={String(plan.archived)} />
         <Row label="Left out on purpose" value={String(plan.excluded)} />
         {plan.alreadyPresent === 0 ? null : (
@@ -377,9 +400,19 @@ function ImportReport({ plan, preview }: { plan: ImportPlan; preview: LegacyPrev
       {plan.conflicts.length === 0 ? null : (
         <p className="data-warning" data-testid="import-conflicts">
           {countOf(plan.conflicts.length, 'entry', 'entries')} in that file{' '}
-          {plan.conflicts.length === 1 ? 'has' : 'have'} already been brought across once and now
-          say something different. Your history is not rewritten by an import, so those are left
-          exactly as they are.
+          {plan.conflicts.length === 1 ? 'has' : 'have'} already been brought across once and now{' '}
+          {plan.conflicts.length === 1 ? 'says' : 'say'} something different. Your history is not
+          rewritten by an import, so {plan.conflicts.length === 1 ? 'it is' : 'those are'} left
+          exactly as {plan.conflicts.length === 1 ? 'it is' : 'they are'}.
+        </p>
+      )}
+
+      {plan.reinterpreted.length === 0 ? null : (
+        <p className="note" data-testid="import-reinterpreted">
+          {countOf(plan.reinterpreted.length, 'entry', 'entries')} in that file came across under an
+          earlier version of the rules this app reads old entries with.{' '}
+          {plan.reinterpreted.length === 1 ? 'It says' : 'They say'} the same thing as before —
+          nothing in your history has changed, and nothing is rewritten.
         </p>
       )}
 
@@ -467,8 +500,10 @@ function ImportReport({ plan, preview }: { plan: ImportPlan; preview: LegacyPrev
         </Rows>
       </details>
 
-      <p className="note">
-        Nothing has been written yet. {brought === 0 ? 'There is nothing new to write.' : ''}
+      <p className="note" data-testid="import-would-do">
+        {brought === 0
+          ? 'Nothing has been written yet, and there is nothing new to write — everything in that file is already here.'
+          : `Nothing has been written yet. Pressing the button below adds ${countOf(brought, 'entry', 'entries')} to your history.`}
       </p>
     </div>
   )

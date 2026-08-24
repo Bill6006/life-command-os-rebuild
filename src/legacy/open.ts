@@ -222,7 +222,30 @@ export async function openLegacyBackup(text: string, passphrase: string): Promis
   }
 }
 
-/** The name every archived row records as its origin. */
-export function legacyFormatLabel(backup: OpenedLegacyBackup): string {
-  return `${LEGACY_BACKUP_FORMAT}@${backup.createdAt}`
+/**
+ * The **format** every archived row records as its origin — and nothing about
+ * the file it happened to arrive in (QA-08-002).
+ *
+ * It used to be `life-command-os.backup@2026-08-24T12:35:00Z`, with the
+ * backup's own creation time appended, and that turned out to be a defect with
+ * a large blast radius. `legacyFormat` is part of an archived record's content,
+ * so it is part of that record's fingerprint, so it is what the importer
+ * compares when deciding whether a row it has seen before still says the same
+ * thing. Taking a **new** backup of the same append-first history therefore
+ * changed every archived row — and the import reported six unchanged rows as
+ * having "already been brought across once and now say something different",
+ * drowning the one row that genuinely had changed.
+ *
+ * The general rule, and it is why the parameter is now unused rather than the
+ * function deleted: **nothing about the transport may enter the identity of the
+ * thing transported.** When the file was written is a fact about the file. The
+ * row's own moment is already on the row, and which row it is is already in the
+ * derived record id.
+ *
+ * It takes no argument now, and that is the honest signature: there is nothing
+ * about a particular file that belongs in it. A parameter kept "for future
+ * use" would be a place for the same defect to grow back.
+ */
+export function legacyFormatLabel(): string {
+  return LEGACY_BACKUP_FORMAT
 }

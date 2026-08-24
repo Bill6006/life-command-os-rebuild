@@ -5,6 +5,7 @@ import { compareRecordOrder } from '../../domain/records'
 import { localDayIdAt, type Instant, type LocalDayId } from '../../domain/time'
 import type { Situation } from '../../intelligence/situation'
 import { describeRecord } from '../history/describe'
+import type { RecordOrigin } from '../history/origin'
 
 /**
  * Timeline — the chronological truth surface (canonical plan section 26).
@@ -47,6 +48,15 @@ export interface TimelineEntry {
   readonly withheld: boolean
   /** True when this row replaced an earlier one that is still in the record. */
   readonly replacedSomething: boolean
+  /**
+   * Where it came from, when the owner did not write it (QA-08-001).
+   *
+   * Undefined on his own entries. Timeline is the whole record in order and is
+   * the surface an imported reading is most likely to be read as native on, so
+   * this is not an embellishment — it is the difference between a record of
+   * his life and a record of his life with somebody else's readings in it.
+   */
+  readonly origin: RecordOrigin | undefined
 }
 
 export interface TimelineDay {
@@ -201,6 +211,7 @@ export function assembleTimeline(situation: Situation, limit = TIMELINE_PAGE): T
       domain: record.domains[0],
       withheld: described.withheld,
       replacedSomething: record.supersedes !== undefined,
+      origin: described.origin,
     })
     shown += 1
   }

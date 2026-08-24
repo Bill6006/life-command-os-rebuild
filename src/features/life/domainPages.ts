@@ -3,7 +3,12 @@ import { DOMAIN, type LifeDomainId } from '../../domain/domains'
 import type { EntityIndex } from '../../domain/entities'
 import type { RecordId } from '../../domain/ids'
 import type { DisplayPolicy } from '../../domain/privacy'
-import { matchKnowledge, type Knowledge, type KnowledgeState } from '../../domain/knowledge'
+import {
+  basisOf,
+  matchKnowledge,
+  type Knowledge,
+  type KnowledgeState,
+} from '../../domain/knowledge'
 import {
   compareRecordOrder,
   describeFactValue,
@@ -16,6 +21,7 @@ import type { ConceptId } from '../../domain/windows'
 import type { DomainCoverage, Situation } from '../../intelligence/situation'
 import { questionFor, type QuestionSpec } from '../../intelligence/questions'
 import { describeRecord } from '../history/describe'
+import { originOf, originOfAll, type RecordOrigin } from '../history/origin'
 
 /**
  * The ten baseline Life pages (canonical plan section 50, D-078).
@@ -124,6 +130,21 @@ export interface ConceptReading {
   readonly outOfDate: boolean
   /** A closed set of options to correct this with, where one is defined. */
   readonly question: QuestionSpec | undefined
+  /**
+   * Where the reading came from, when every record under it agrees
+   * (QA-08-001).
+   *
+   * The knowledge state already says whether something worked it out, and that
+   * is a different question: an imported reading resolves as `inferred`
+   * because this app did not watch it happen, which reads on screen as the app
+   * having concluded something. It did not — the owner reported it, in the old
+   * app, two years ago. Both facts belong on the row.
+   *
+   * Undefined where the basis is mixed. A badge over a belief that is half his
+   * and half imported would be a claim wider than the evidence, and the
+   * entries underneath say it individually.
+   */
+  readonly origin: RecordOrigin | undefined
 }
 
 function readingText(knowledge: Knowledge<FactValue>, entities: EntityIndex): string {
@@ -151,6 +172,15 @@ function conceptReadings(situation: Situation, domains: readonly LifeDomainId[])
       text: knowledge === undefined ? 'Not known yet.' : readingText(knowledge, situation.entities),
       outOfDate: knowledge?.state === 'stale',
       question: questionFor(definition.id),
+      origin:
+        knowledge === undefined
+          ? undefined
+          : originOfAll(
+              basisOf(knowledge).flatMap((id) => {
+                const found = situation.view.history.byId(id)
+                return found === undefined ? [] : [found]
+              }),
+            ),
     })
   }
   return out
@@ -163,6 +193,8 @@ function conceptReadings(situation: Situation, domains: readonly LifeDomainId[])
 export interface DomainGoal extends ActiveGoal {
   /** The full record, so a correction can supersede exactly what it replaces. */
   readonly record: GoalRecord | undefined
+  /** Where it came from, when the owner did not write it (QA-08-001). */
+  readonly origin: RecordOrigin | undefined
 }
 
 function goalsFor(situation: Situation, domains: readonly LifeDomainId[]): readonly DomainGoal[] {
@@ -170,7 +202,11 @@ function goalsFor(situation: Situation, domains: readonly LifeDomainId[]): reado
     .filter((goal) => domains.includes(goal.domain))
     .map((goal) => {
       const found = situation.view.history.byId(goal.source)
-      return { ...goal, record: found?.kind === 'goal' ? found : undefined }
+      return {
+        ...goal,
+        record: found?.kind === 'goal' ? found : undefined,
+        origin: found === undefined ? undefined : originOf(found),
+      }
     })
 }
 
@@ -185,6 +221,8 @@ export interface RecentChange {
   readonly id: RecordId
   readonly at: Instant
   readonly text: string
+  /** Where it came from, when the owner did not write it (QA-08-001). */
+  readonly origin: RecordOrigin | undefined
 }
 
 /**
@@ -264,7 +302,12 @@ function recentChanges(
   for (const record of sorted) {
     const described = describeRecord(record, context)
     if (described === undefined) continue
-    out.push({ id: record.id, at: record.occurredAt, text: described.text })
+    out.push({
+      id: record.id,
+      at: record.occurredAt,
+      text: described.text,
+      origin: described.origin,
+    })
     if (out.length >= limit) break
   }
   return out

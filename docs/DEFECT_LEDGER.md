@@ -39,6 +39,104 @@ None.
 
 ## Fixed
 
+### DEF-0070 (QA-08-002) — a new backup's own timestamp turned unchanged rows into conflicts
+
+- Status: Fixed
+- Severity: Blocker — taking a later backup is the ordinary way an append-first
+  old history gains rows, and doing so made the importer call six unchanged
+  entries edited or damaged
+- Found in: Phase 8 / `b593a49`
+- Found by: **independent Codex QA**, round 1, by generating a second backup of
+  the same source rows with a later `createdAt` — which no test in the
+  repository did
+- Class: **something about the transport participating in the identity of the
+  thing transported.** `legacyFormatLabel` returned
+  `life-command-os.backup@<the backup's createdAt>`, and `archiveOf` stored that
+  string in every `imported-legacy-record`'s `legacyFormat`. Conflict detection
+  fingerprinted the whole canonical record, so recreating the backup changed
+  every archived row's fingerprint while its legacy payload was byte-identical.
+  Two more members of the same class were live and unreported: the mapping
+  rules version (`provenance.writtenBy`), so revising a rule would have made
+  every previously imported row a "conflict"; and `zone`, so importing the same
+  file after travelling would have done the same.
+- Reproduction: import a legacy backup, then generate a second backup of the
+  same ten rows with one row changed and a later `createdAt`, and preview it.
+  Before the fix: `Already here from an earlier run 2` and "7 entries … now say
+  something different". The honest answer is one.
+- Root cause: two, and only fixing the reported one would have left the class.
+  The label named a file where its own field name says format; and the
+  comparison asked "is this canonical record identical" when the question is
+  "does the old file still say the same thing".
+- Regression: `tests/contract/legacy-import.test.ts`, "a later backup of the
+  same old history is not a changed file — QA-08-002" — five tests: a later
+  timestamp alone changes nothing; one changed row is exactly one conflict; a
+  different device timezone changes nothing; a revised rules version is
+  reported as a re-reading rather than a conflict; and the label carries no
+  timestamp. Proved by reintroduction: restoring the per-file label **and** the
+  whole-record comparison fails all five plus two pre-existing ones.
+  `scripts/android-gate.mjs` drives both later-backup cases on the deployed
+  build by touch.
+- Siblings: checked. `provenance.note` is derived from the legacy record id and
+  is stable; `occurredAt`, `recordedAt`, `raw`, `privacy`, `domains` and the
+  derived record id all come from the row. `legacyIdentity` names the three
+  that do not and says why for each.
+- Note on the fix: a revised mapping rule is now **its own count** rather than
+  either a conflict or silence. The file has not changed and this build reads
+  it differently; calling that "now says something different" blames his old
+  history for a change in this app, and calling it "already present" hides a
+  real difference in what the app believes his history means.
+- Fixed in: the checkpoint that closes Phase 8
+
+### DEF-0069 (QA-08-001) — nothing on any surface said where an entry came from
+
+- Status: Fixed
+- Severity: Blocker — an imported reading became indistinguishable from one the
+  owner typed this morning, on every surface he reads, and it can drive
+  decisions
+- Found in: Phase 8 / `b593a49`
+- Found by: **independent Codex QA**, round 1, by importing and then reading
+  Timeline, Life, a domain page, Insights and the export
+- Class: **wider than it was reported.** The record layer was correct
+  throughout — `evidenceSourceOf` returned `legacy-import`, the store kept it,
+  a backup carried it. The presentation layer never asked. `describeRecord`
+  returned a kind, a sentence and a withheld flag, and every surface rendered
+  those three, so **no entry on any list surface said where it came from**. A
+  device reading and a derived one were equally silent; legacy import is
+  simply the first origin that both matters enormously and actually occurs in
+  the owner's real history. D-014 asks for all of them.
+- Reproduction: import a legacy backup containing an energy reading, then open
+  Timeline. `08:30 Noted Current energy: 1 of 5` — identical in every respect
+  to a reading he entered himself. Same on the domain page, in the export's
+  Recent record, and in the evidence behind an Insights figure. A backup taken
+  immediately afterwards shows the provenance correctly on every one of those
+  rows.
+- Root cause: `DescribedRecord` had no origin field, so there was nothing for a
+  surface to render even if it had wanted to.
+- Regression: `tests/synthetic/imported-origin.test.ts` — one history holding
+  the owner's own reading and an identical imported one, walked through
+  Timeline, the domain page's readings, entries and goals, the export, and the
+  evidence resolver. Each surface must tell them apart, and **the owner's own
+  entry must carry nothing** — a build that marked every row would satisfy a
+  weaker test and would teach him to stop reading the badge. Device and derived
+  origins are held in the same file so the next one to matter cannot slip back
+  in. `tests/browser/legacy-import.spec.ts` proves it on the rendered Timeline
+  and in the composed export; `scripts/android-gate.mjs` proves it on the
+  deployed build by touch. Proved by reintroduction, whole and per surface:
+  removing `originOf` fails all eight; removing it from Timeline alone fails
+  two; from the domain page alone, one; from the export alone, one.
+- Siblings: checked. The private placeholder keeps its origin — where an entry
+  came from is not the private detail, and withholding both would make a
+  private imported row read as one he wrote on the surface least able to
+  correct it. The archive row's tag moved from "Imported" to "Kept", because
+  the origin now says imported and what is distinctive about an archived row is
+  that nothing was made of it.
+- Note on the false green: `tests/contract/legacy-import.test.ts` carried a
+  test titled "every imported record says it was imported, **wherever it
+  surfaces**" which asserted `provenance.source` and rendered nothing. Anybody
+  auditing the suite for that claim would have found it and ticked it. It is
+  retitled to what it proves.
+- Fixed in: the checkpoint that closes Phase 8
+
 ### DEF-0068 — the import report read the audit trail out to the owner
 
 - Status: Fixed

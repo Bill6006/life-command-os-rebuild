@@ -95,6 +95,15 @@ export function TimelineScreen() {
                       }
                     >
                       {entry.text}
+                      {entry.origin === undefined ? null : (
+                        <span
+                          className="tl-entry__origin"
+                          data-testid="tl-origin"
+                          title={entry.origin.detail}
+                        >
+                          {entry.origin.label}
+                        </span>
+                      )}
                       {entry.replacedSomething ? (
                         <span className="tl-entry__note"> — replaced an earlier entry</span>
                       ) : null}

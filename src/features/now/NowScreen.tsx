@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Panel, PrimarySurface, Row, Rows, Screen } from '../../components/ui'
+import type { RecordId } from '../../domain/ids'
 import type { RecommendationSemantics } from '../../domain/recommendation'
 import { localDateTimeAt, systemClock } from '../../domain/time'
 import { beliefCorrectionRecord, describeBelief } from '../../intelligence/corrections'
@@ -36,6 +37,7 @@ import {
   EvidenceNote,
   EvidenceRate,
 } from '../evidence/EvidencePieces'
+import { originResolver, type RecordOrigin } from '../history/origin'
 import { useMemory } from '../memory/memoryContext'
 import './NowScreen.css'
 
@@ -319,6 +321,7 @@ export function NowScreen() {
 
           <EvidencePanel
             decision={decision}
+            originFor={originResolver(memory.view.history)}
             open={evidenceFor === explanation.rendered.sentence}
             onToggle={() =>
               setEvidenceFor((held) =>
@@ -594,10 +597,13 @@ function EvidencePanel({
   decision,
   open,
   onToggle,
+  originFor,
 }: {
   decision: Decision
   open: boolean
   onToggle: () => void
+  /** Where each piece of evidence came from, when it was not the owner. */
+  originFor: (record: RecordId) => RecordOrigin | undefined
 }) {
   const evidence: DecisionEvidence | undefined = evidenceForDecision(decision)
   if (evidence === undefined) return null
@@ -683,6 +689,7 @@ function EvidencePanel({
           <EvidenceLines
             title="Occasions that went the other way"
             lines={evidence.counterexamples}
+            originFor={originFor}
           />
 
           <EvidenceConfidence confidence={evidence.confidence} />

@@ -1,4 +1,23 @@
 /*
+ * Where a piece of evidence came from, when the owner did not record it
+ * (QA-08-001). Same shape as Timeline's and the domain page's — one fact, one
+ * appearance, wherever it is read.
+ */
+.ev-origin {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+
+/*
  * The deeper evidence view (canonical plan sections 24, 27 and 51).
  *
  * "Do not display research machinery by default." What that means visually is

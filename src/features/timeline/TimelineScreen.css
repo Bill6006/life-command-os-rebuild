@@ -83,6 +83,32 @@
   white-space: nowrap;
 }
 
+/*
+ * Where an entry came from, when the owner did not write it (QA-08-001).
+ *
+ * Inside the text rather than beside the tag, and after the sentence rather
+ * than before it: the tag says what kind of entry this is and gets the column,
+ * and the origin qualifies what the line just said. Put in the tag column it
+ * would have to compete for a fixed width with words like "Suggested", and on
+ * a 360px screen one of the two would win by truncating the other.
+ *
+ * It carries a border rather than only a colour, so it is still legible as a
+ * separate thing to somebody who cannot distinguish the two greys.
+ */
+.tl-entry__origin {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+
 .tl-entry__text {
   font-size: var(--text-base);
   line-height: var(--leading-relaxed);

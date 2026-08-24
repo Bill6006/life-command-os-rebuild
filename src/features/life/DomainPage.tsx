@@ -243,7 +243,18 @@ export function DomainPage({ page }: { page: LifePage }) {
         <Panel title="Goals here">
           {data.goals.map((goal) => (
             <div key={goal.source} className="domain-goal">
-              <p className="domain-goal__statement">{goal.statement}</p>
+              <p className="domain-goal__statement">
+                {goal.statement}
+                {goal.origin === undefined ? null : (
+                  <span
+                    className="domain-origin"
+                    data-testid="domain-origin"
+                    title={goal.origin.detail}
+                  >
+                    {goal.origin.label}
+                  </span>
+                )}
+              </p>
               <div className="domain-goal__actions">
                 <button
                   type="button"
@@ -272,7 +283,18 @@ export function DomainPage({ page }: { page: LifePage }) {
           <ul className="domain-recent">
             {data.recentChanges.map((change: RecentChange) => (
               <li key={change.id} className="domain-recent__row">
-                <span className="domain-recent__text">{change.text}</span>
+                <span className="domain-recent__text">
+                  {change.text}
+                  {change.origin === undefined ? null : (
+                    <span
+                      className="domain-origin"
+                      data-testid="domain-origin"
+                      title={change.origin.detail}
+                    >
+                      {change.origin.label}
+                    </span>
+                  )}
+                </span>
                 <span className="domain-recent__age">
                   {describeAge(
                     Math.max(0, localDaysBetween(localDayIdAt(change.at, situation.zone), today)),
@@ -414,6 +436,11 @@ function ConceptRow({
       >
         {reading.text}
         {reading.outOfDate ? ' — out of date' : ''}
+        {reading.origin === undefined ? null : (
+          <span className="domain-origin" data-testid="domain-origin" title={reading.origin.detail}>
+            {reading.origin.label}
+          </span>
+        )}
       </p>
 
       {open ? (

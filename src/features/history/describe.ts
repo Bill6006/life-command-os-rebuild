@@ -14,6 +14,7 @@ import { describeBelief } from '../../intelligence/corrections'
 import { patternNameFor } from '../../intelligence/insights'
 import { outcomeAnswerLabel } from '../../intelligence/outcomes'
 import type { ResolvedHistory } from '../../memory/resolve'
+import { originOf, type RecordOrigin } from './origin'
 
 /**
  * One canonical record, as one line a person would recognise.
@@ -48,6 +49,16 @@ export interface DescribedRecord {
   readonly text: string
   /** True when the detail was withheld and a placeholder is standing in. */
   readonly withheld: boolean
+  /**
+   * Where it came from, when the owner did not write it himself (QA-08-001).
+   *
+   * Undefined for his own entries, which is almost all of them. Every surface
+   * that renders one of these renders this too — a line that says what
+   * happened and not where it came from is a line an imported reading and a
+   * typed one are indistinguishable on, which is the defect this field exists
+   * to close. See `origin.ts` for why the class is wider than legacy import.
+   */
+  readonly origin: RecordOrigin | undefined
 }
 
 export interface DescribeContext {
@@ -83,7 +94,16 @@ const TAGS = {
   'relationship-event': 'Together',
   'domain-update': 'Changed',
   'coverage-update': 'Reviewed',
-  'imported-legacy-record': 'Imported',
+  /*
+   * "Kept" rather than "Imported", now that the origin is its own field.
+   *
+   * The tag says what kind of entry it is and the origin says where it came
+   * from, and this row is the one place they were the same word — so it read
+   * "Imported · Imported from …" the moment origin arrived. What is distinctive
+   * about an archived legacy row is not that it was imported (a mapped
+   * observation was too) but that nothing was made of it.
+   */
+  'imported-legacy-record': 'Kept',
 } as const satisfies Record<CanonicalRecord['kind'], string>
 
 export function tagFor(kind: CanonicalRecord['kind']): string {
@@ -204,11 +224,19 @@ export function describeRecord(
 ): DescribedRecord | undefined {
   const { entities, history, concepts, policy } = context
   const tag = tagFor(record.kind)
+  const origin = originOf(record)
 
   if (!mayShowDetail(record.privacy, policy)) {
-    // The row survives; the detail does not. Dated, tagged, and unmistakably a
-    // real entry rather than a gap.
-    return { tag, text: discreetPlaceholder(record.privacy), withheld: true }
+    /*
+     * The row survives; the detail does not. Dated, tagged, and unmistakably a
+     * real entry rather than a gap.
+     *
+     * The origin survives with it. Where an entry came from is not the private
+     * detail — the detail is what it says — and withholding both would make a
+     * private imported row read as one he wrote, which is the defect this
+     * field closes, on the surface least able to correct it.
+     */
+    return { tag, text: discreetPlaceholder(record.privacy), withheld: true, origin }
   }
 
   const labelFor = (ref: Parameters<EntityIndex['labelFor']>[0]) => entities.labelFor(ref)
@@ -236,7 +264,7 @@ export function describeRecord(
   const concept = (id: ConceptId, value: FactValue): string =>
     `${concepts.definitionFor(id).label}: ${describeFactValue(value, labelFor)}`
 
-  const plain = (text: string): DescribedRecord => ({ tag, text, withheld: false })
+  const plain = (text: string): DescribedRecord => ({ tag, text, withheld: false, origin })
 
   switch (record.kind) {
     case 'observation':
@@ -255,6 +283,7 @@ export function describeRecord(
             tag: 'Temporary',
             text: `${concept(record.concept, record.value)} — for now`,
             withheld: false,
+            origin,
           }
         : plain(concept(record.concept, record.value))
     case 'constraint':
@@ -347,6 +376,6 @@ export function describeRecord(
        * unmapped legacy field on a primary surface reads as something the app
        * understands.
        */
-      return plain(`Imported from ${record.legacyFormat}`)
+      return plain('An entry from the old app, kept exactly as written.')
   }
 }

@@ -3135,3 +3135,92 @@ An assertion on developer wording is an assertion **that the developer wording
 is on screen**. `toContainText('move catalogue')` was in the browser suite
 throughout, green, holding the defect in place. When a test names a phrase, the
 phrase it names should be one the owner would recognise as addressed to him.
+
+---
+
+## D-106 — An entry the owner did not write says so, wherever it is read
+
+**Phase:** 8 (QA round 1 repair) · **Status:** Active — **owner-facing rule,
+governing every phase from here**
+
+D-014 has always required provenance to stay visible everywhere a record
+surfaces. It was true of the record layer and false of every surface: an
+imported reading, a device reading and a derived one each rendered exactly like
+one the owner had typed that morning, because `describeRecord` returned a kind,
+a sentence and a withheld flag, and there was nothing else for a surface to
+show.
+
+Independent QA found it as "mapped legacy imports lose their origin". The class
+is wider, and treating it as the reported symptom would have fixed one origin
+and left the next one to be found the same way.
+
+**The rule.** A record whose evidence source is not the owner carries a short
+word saying whose it is, and every surface that renders that record — or a
+belief resting on it — renders that word. Timeline, a domain page's entries,
+its readings, its goals, the evidence behind a figure, and the export.
+
+**The owner is the default and says nothing.** Marking his own entries would
+badge almost every row in his history and teach him to stop reading the one
+that matters. A test asserts both halves: the imported entry is marked, and his
+own is not.
+
+**A mixed basis says nothing either.** A belief resting on one imported reading
+and one of his own is not an imported belief, and a badge over it would be a
+claim wider than the evidence (D-091's first invariant). The entries underneath
+say it individually, where he can see which is which.
+
+**The origin survives a withheld detail.** Where an entry came from is not the
+private detail — the detail is what it says. Withholding both would make a
+private imported row read as one he wrote, on the surface least able to correct
+it.
+
+**The knowledge state is a different question and does not substitute.** An
+imported reading resolves as `inferred`, because this app did not watch it
+happen, and the export duly labelled one `(inferred)`. That is not "imported":
+it reads as the app having concluded something, when in fact he reported it, in
+the old app, two years ago. Both facts belong on the row.
+
+### The false green underneath it
+
+`tests/contract/legacy-import.test.ts` carried a test titled "every imported
+record says it was imported, **wherever it surfaces**". It asserted
+`provenance.source` and rendered nothing. Anybody auditing the suite for that
+claim would have found it, ticked it and moved on — which is what makes a title
+wider than its evidence worse than no test at all.
+
+A test's title is a claim. Where it is broader than what the body actually
+exercises, the body is what is true and the title is what gets believed.
+
+---
+
+## D-107 — Nothing about the transport may enter the identity of the thing transported
+
+**Phase:** 8 (QA round 1 repair) · **Status:** Active
+
+A record built from a legacy row is two things joined: what the old application
+wrote, and what this build made of it. Only the first can change without the
+file changing — so only the first may take part in deciding whether the file
+changed.
+
+The archive label carried the backup's own creation time. Taking a **new**
+backup of the same append-first history therefore rewrote every archived row's
+fingerprint, and the importer reported six unchanged rows as saying something
+different, drowning the one row that had genuinely changed. Taking a later
+backup is the ordinary way an old history gains rows, so this was not an edge
+case; it was the normal path.
+
+Fixing the label alone would have left the class. Two more members were live:
+the **mapping rules version**, so revising a rule would have made every
+previously imported row a conflict; and the **device's timezone**, so importing
+the same file after travelling would have done the same.
+
+So the comparison asks what the old file says, with everything this build
+stamped on the row taken back off — and each exclusion is named beside its
+reason rather than inferred from a list of fields.
+
+**A re-reading is not a conflict, and not silence either.** Where the rules have
+been revised since a row came across, the report says so in its own words:
+nothing in his history changed, and this build reads it differently from the
+build that imported it. Calling that a conflict blames his old history for a
+change in this app; calling it "already present" hides a real difference in
+what the app believes his history means.

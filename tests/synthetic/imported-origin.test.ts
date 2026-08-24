@@ -1,0 +1,291 @@
+import { describe, expect, it } from 'vitest'
+import { createRecordFactory } from '../../src/domain/build'
+import { CONCEPT } from '../../src/domain/concepts'
+import { coreDomains, DOMAIN } from '../../src/domain/domains'
+import { sequentialRecordIds } from '../../src/domain/ids'
+import type { CanonicalRecord, Provenance } from '../../src/domain/records'
+import { DISCREET_PRIMARY } from '../../src/domain/privacy'
+import { instant, timeZone, type Instant } from '../../src/domain/time'
+import { describeRecord } from '../../src/features/history/describe'
+import { originOf, originResolver } from '../../src/features/history/origin'
+import { assembleDomainPageData, pageForDomain } from '../../src/features/life/domainPages'
+import { assembleTimeline } from '../../src/features/timeline/timelineEntries'
+import { composeExport } from '../../src/features/export/compose'
+import { SELECT_ALL } from '../../src/features/export/sections'
+import { decide } from '../../src/intelligence/engine'
+import { insightsFor } from '../../src/intelligence/insights'
+import { assembleSituation } from '../../src/intelligence/situation'
+import { EMPTY_SNAPSHOT } from '../../src/memory/store'
+import { buildView } from '../../src/memory/view'
+import { TEST_APP, COMPOSED_AT, COMPOSED_ZONE } from './exportHarness'
+
+/**
+ * An entry the owner did not write says so, wherever it is read (QA-08-001).
+ *
+ * ## What was actually wrong
+ *
+ * Independent QA reported that a legacy row translated into a canonical
+ * observation was indistinguishable from one the owner typed today. The record
+ * layer was right throughout — `evidenceSourceOf` returned `legacy-import` and
+ * a backup carried it — and the presentation layer never asked. So the class is
+ * wider than the report: **no entry on any list surface said where it came
+ * from**, and a device reading and a derived one were equally silent.
+ *
+ * ## Why this is one test rather than five
+ *
+ * The defect was one omission with five symptoms, and five separate tests for
+ * five surfaces is five places to forget the sixth. Every surface here reads
+ * the same history — one reading the owner gave, and one identical reading that
+ * came across from the old app — and each has to tell them apart.
+ *
+ * The pairing matters as much as the marking. A test that only asserted the
+ * badge appears would pass on a build that marked *every* row, which would
+ * teach the owner to stop reading it (section 4.6) and would be its own defect.
+ */
+
+const ZONE = timeZone('America/Denver')
+const NOW = instant(Date.parse('2026-08-24T20:00:00Z'))
+const nextId = sequentialRecordIds('ORIG')
+
+const OWNER: Provenance = { source: 'owner', writtenBy: 'a test' }
+const IMPORTED: Provenance = {
+  source: 'legacy-import',
+  writtenBy: 'legacy-map-2026-08-A',
+  note: 'old record qa8-energy',
+}
+
+function at(offsetMinutes: number): Instant {
+  return instant(NOW - offsetMinutes * 60_000)
+}
+
+/**
+ * Two readings of the same concept, one hour apart, identical but for origin.
+ *
+ * Deliberately the same concept and the same shape: anything that tells them
+ * apart has to be the origin, not the wording of the value or which domain
+ * page they land on.
+ */
+function history(): readonly CanonicalRecord[] {
+  const owned = createRecordFactory({ zone: ZONE, provenance: OWNER, nextId })
+  const brought = createRecordFactory({ zone: ZONE, provenance: IMPORTED, nextId })
+
+  return [
+    owned(
+      'observation',
+      { occurredAt: at(30), domains: [DOMAIN.health] },
+      {
+        concept: CONCEPT.energy,
+        value: { type: 'scale', value: 4, of: 5 },
+        method: 'self-report',
+      },
+    ),
+    brought(
+      'observation',
+      { occurredAt: at(90), domains: [DOMAIN.health] },
+      {
+        concept: CONCEPT.energy,
+        value: { type: 'scale', value: 2, of: 5 },
+        method: 'self-report',
+      },
+    ),
+    owned(
+      'goal',
+      { occurredAt: at(6000), domains: [DOMAIN.career] },
+      {
+        goal: { kind: 'goal', id: 'goal:his-own' as never },
+        statement: 'Write this one down myself',
+        status: 'active',
+      },
+    ),
+    brought(
+      'goal',
+      { occurredAt: at(9000), domains: [DOMAIN.career] },
+      {
+        goal: { kind: 'goal', id: 'goal:legacy-one' as never },
+        statement: 'Finish a meaningful certification',
+        status: 'active',
+      },
+    ),
+    brought(
+      'imported-legacy-record',
+      { occurredAt: at(200), domains: [DOMAIN.home], privacy: 'sensitive' },
+      { legacyFormat: 'life-command-os.backup', raw: { recordType: 'learned-belief' } },
+    ),
+  ]
+}
+
+const RECORDS = history()
+const SNAPSHOT = { ...EMPTY_SNAPSHOT, records: RECORDS }
+const VIEW = buildView(SNAPSHOT, { now: NOW, zone: ZONE })
+const SITUATION = assembleSituation(VIEW, {
+  now: NOW,
+  zone: ZONE,
+  weekStartsOn: 1,
+  domains: coreDomains,
+})
+
+const ownerRecord = RECORDS[0] as CanonicalRecord
+const importedRecord = RECORDS[1] as CanonicalRecord
+
+describe('the record layer already knew, and now says so', () => {
+  it('marks what the owner did not write, and only that', () => {
+    expect(originOf(ownerRecord)).toBeUndefined()
+    expect(originOf(importedRecord)?.label).toBe('Imported')
+    expect(originOf(importedRecord)?.source).toBe('legacy-import')
+  })
+
+  it('covers every origin that is not the owner, not only imports', () => {
+    /*
+     * The reported defect was about legacy import. The class is D-014: a
+     * reading nothing about the owner produced says so. A device reading and a
+     * derived one were silent in exactly the same way, so they are held here —
+     * otherwise the next origin to matter reintroduces the defect for free.
+     */
+    const measured = createRecordFactory({ zone: ZONE, provenance: OWNER, nextId })(
+      'observation',
+      { occurredAt: at(10), domains: [DOMAIN.sleep] },
+      {
+        concept: CONCEPT.sleepHours,
+        value: { type: 'number', value: 7, unit: 'hours' },
+        method: 'device',
+      },
+    )
+    expect(originOf(measured)?.label).toBe('Measured')
+
+    const worked = createRecordFactory({ zone: ZONE, provenance: OWNER, nextId })(
+      'observation',
+      { occurredAt: at(10), domains: [DOMAIN.sleep] },
+      {
+        concept: CONCEPT.sleepHours,
+        value: { type: 'number', value: 7, unit: 'hours' },
+        method: 'derived',
+      },
+    )
+    expect(originOf(worked)?.label).toBe('Worked out')
+  })
+
+  it('keeps the origin on a row whose detail is withheld', () => {
+    /*
+     * Where an entry came from is not the private detail — the detail is what
+     * it says. Withholding both would make a private imported row read as one
+     * he wrote, on the surface least able to correct it.
+     */
+    const priv = createRecordFactory({ zone: ZONE, provenance: IMPORTED, nextId })(
+      'observation',
+      { occurredAt: at(20), domains: [DOMAIN.privateHealth], privacy: 'private' },
+      {
+        concept: CONCEPT.privatePattern,
+        value: { type: 'text', value: 'something private' },
+        method: 'self-report',
+      },
+    )
+    const described = describeRecord(priv, {
+      entities: VIEW.entities,
+      history: VIEW.history,
+      concepts: SITUATION.concepts,
+      policy: DISCREET_PRIMARY,
+    })
+    expect(described?.withheld).toBe(true)
+    expect(described?.origin?.label).toBe('Imported')
+  })
+})
+
+describe('every surface tells them apart', () => {
+  it('Timeline', () => {
+    const timeline = assembleTimeline(SITUATION)
+    const entries = timeline.days.flatMap((day) => day.entries)
+
+    const owned = entries.find((entry) => entry.id === ownerRecord.id)
+    const brought = entries.find((entry) => entry.id === importedRecord.id)
+
+    expect(owned?.origin).toBeUndefined()
+    expect(brought?.origin?.label).toBe('Imported')
+  })
+
+  it('a domain page — the reading, the entries under it, and a goal', () => {
+    const page = pageForDomain(DOMAIN.health)
+    expect(page).toBeDefined()
+    if (page === undefined) return
+    const data = assembleDomainPageData(SITUATION, page)
+
+    // The entries listed under "Recently".
+    const brought = data.recentChanges.find((change) => change.id === importedRecord.id)
+    const owned = data.recentChanges.find((change) => change.id === ownerRecord.id)
+    expect(brought?.origin?.label).toBe('Imported')
+    expect(owned?.origin).toBeUndefined()
+
+    // The belief itself. The owner's reading is the newer one, so the reading
+    // shown rests on his record and carries no badge.
+    const reading = data.readings.find((entry) => entry.concept === CONCEPT.energy)
+    expect(reading).toBeDefined()
+    expect(reading?.origin).toBeUndefined()
+
+    const career = pageForDomain(DOMAIN.career)
+    expect(career).toBeDefined()
+    if (career === undefined) return
+    const careerData = assembleDomainPageData(SITUATION, career)
+    const goals = careerData.goals
+    expect(goals.length).toBeGreaterThan(0)
+    expect(goals.some((goal) => goal.origin?.label === 'Imported')).toBe(true)
+    expect(goals.some((goal) => goal.origin === undefined)).toBe(true)
+  })
+
+  it('a belief that rests only on imported evidence says so', () => {
+    // Same history with his own reading removed: now the only thing the app
+    // knows about energy came across from the old app, and the row says it.
+    const onlyImported = {
+      ...SNAPSHOT,
+      records: RECORDS.filter((record) => record.id !== ownerRecord.id),
+    }
+    const view = buildView(onlyImported, { now: NOW, zone: ZONE })
+    const situation = assembleSituation(view, {
+      now: NOW,
+      zone: ZONE,
+      weekStartsOn: 1,
+      domains: coreDomains,
+    })
+    const page = pageForDomain(DOMAIN.health)
+    if (page === undefined) throw new Error('no health page')
+
+    const reading = assembleDomainPageData(situation, page).readings.find(
+      (entry) => entry.concept === CONCEPT.energy,
+    )
+    expect(reading?.origin?.label).toBe('Imported')
+  })
+
+  it('the export, which is read by somebody who was not there', () => {
+    const composed = composeExport({
+      sections: SELECT_ALL,
+      situation: SITUATION,
+      decision: decide(VIEW, { now: NOW, zone: ZONE }),
+      insights: insightsFor(SITUATION),
+      timeline: assembleTimeline(SITUATION),
+      source: 'owner',
+      app: TEST_APP,
+      composedAt: { at: COMPOSED_AT, zone: COMPOSED_ZONE },
+    })
+
+    /*
+     * The line for the imported reading carries the marker and the line for
+     * his own does not. Matched on the value, because the two are the same
+     * concept and only the number and the origin separate them.
+     */
+    const lines = composed.text.split('\n')
+    const importedLine = lines.find((line) => line.includes('Current energy: 2 of 5'))
+    const ownLine = lines.find((line) => line.includes('Current energy: 4 of 5'))
+
+    expect(importedLine, 'the imported reading should appear').toBeDefined()
+    expect(ownLine, 'the owner’s reading should appear').toBeDefined()
+    expect(importedLine).toMatch(/· Imported/)
+    expect(ownLine).not.toMatch(/· Imported/)
+  })
+
+  it('the evidence behind a figure', () => {
+    const resolve = originResolver(VIEW.history)
+    expect(resolve(importedRecord.id)?.label).toBe('Imported')
+    expect(resolve(ownerRecord.id)).toBeUndefined()
+    // A dangling reference resolves to nothing rather than throwing — an
+    // evidence line whose record has gone is already handled elsewhere.
+    expect(resolve('NOTAREALRECORDID0000000000' as never)).toBeUndefined()
+  })
+})

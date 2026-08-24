@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
+import type { RecordId } from '../../domain/ids'
 import type { EvidenceLine, MeasuredRate, PatternConfidence } from '../../intelligence/insights'
+import type { RecordOrigin } from '../history/origin'
 import './evidence.css'
 
 /**
@@ -68,14 +70,30 @@ export function EvidenceConfidence({ confidence }: { confidence: PatternConfiden
   )
 }
 
+/**
+ * A piece of evidence, and where it came from (QA-08-001).
+ *
+ * `originFor` is passed in rather than resolved here, because this component
+ * knows about lines and not about history — and because the caller is the one
+ * that already holds the view. It is optional so a caller with nothing to
+ * resolve against renders exactly what it used to.
+ *
+ * This is the deepest surface the fix reaches, and the one that matters most
+ * for a claim: a figure supported by evidence the owner did not record is a
+ * different figure from one supported by evidence he did, and the panel that
+ * exists to show what a number rests on is the last place that should leave it
+ * out.
+ */
 export function EvidenceLines({
   title,
   lines,
   limit = 6,
+  originFor,
 }: {
   title: string
   lines: readonly EvidenceLine[]
   limit?: number
+  originFor?: (record: RecordId) => RecordOrigin | undefined
 }) {
   if (lines.length === 0) return null
   const shown = lines.slice(0, limit)
@@ -85,9 +103,19 @@ export function EvidenceLines({
     <div className="ev-block">
       <p className="ev-block__title">{title}</p>
       <ul className="ev-list">
-        {shown.map((line) => (
-          <li key={line.record}>{line.text}</li>
-        ))}
+        {shown.map((line) => {
+          const origin = originFor?.(line.record)
+          return (
+            <li key={line.record}>
+              {line.text}
+              {origin === undefined ? null : (
+                <span className="ev-origin" data-testid="ev-origin" title={origin.detail}>
+                  {origin.label}
+                </span>
+              )}
+            </li>
+          )
+        })}
         {rest > 0 ? <li className="ev-list__more">and {rest} more</li> : null}
       </ul>
     </div>

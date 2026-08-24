@@ -241,116 +241,127 @@ async function main() {
   // decrypted a moment later by the same implementation, at the parameters the
   // old application used. A desktop viewport would prove none of that, and a
   // hard-coded blob would prove only that one blob can be read.
-  const legacy = await page.evaluate(async (secret) => {
-    const b64 = (bytes) => {
-      let binary = ''
-      for (const byte of bytes) binary += String.fromCharCode(byte)
-      return btoa(binary)
-    }
-    const at = (days) =>
-      new Date(Date.now() - days * 86400000).toISOString().replace(/\.\d+Z$/, '.000Z')
-    const row = (id, type, occurredAt, extra) => ({
-      recordId: id,
-      recordType: type,
-      schemaVersion: 1,
-      occurredAt,
-      recordedAt: occurredAt,
-      localTime: { localIso: occurredAt, timeZone: 'America/Denver', utcOffsetMinutes: -360 },
-      source: 'user-entry',
-      provenance: { method: 'direct-report' },
-      privacy: 'general',
-      ...extra,
-    })
+  const buildLegacy = async (secret, createdAtDays, energyOrdinal) =>
+    page.evaluate(
+      async ({ secret, createdAtDays, energyOrdinal }) => {
+        const b64 = (bytes) => {
+          let binary = ''
+          for (const byte of bytes) binary += String.fromCharCode(byte)
+          return btoa(binary)
+        }
+        const at = (days) =>
+          new Date(Date.now() - days * 86400000).toISOString().replace(/\.\d+Z$/, '.000Z')
+        const row = (id, type, occurredAt, extra) => ({
+          recordId: id,
+          recordType: type,
+          schemaVersion: 1,
+          occurredAt,
+          recordedAt: occurredAt,
+          localTime: { localIso: occurredAt, timeZone: 'America/Denver', utcOffsetMinutes: -360 },
+          source: 'user-entry',
+          provenance: { method: 'direct-report' },
+          privacy: 'general',
+          ...extra,
+        })
 
-    const records = [
-      row('android-1', 'observation', at(3), {
-        category: 'time-attention-capacity',
-        attribute: 'state:energy',
-        value: { kind: 'anchored-scale', scaleId: 'energy', ordinal: 4, label: 'Good' },
-      }),
-      row('android-2', 'goal', at(30), {
-        statement: 'Pass the CCNA',
-        category: 'career-work-learning',
-        state: 'active',
-        privacy: 'workplace',
-      }),
-      row('android-3', 'recommendation', at(5), { statement: 'Ten minutes of subnetting' }),
-      row('android-4', 'move-preference', at(20), {
-        engineCandidateId: 'social:message-someone',
-        moveStatement: 'Message someone you have not spoken to',
-        stance: 'forbidden',
-      }),
-    ]
+        const records = [
+          row('android-1', 'observation', at(3), {
+            category: 'time-attention-capacity',
+            attribute: 'state:energy',
+            value: {
+              kind: 'anchored-scale',
+              scaleId: 'energy',
+              ordinal: energyOrdinal,
+              label: 'Good',
+            },
+          }),
+          row('android-2', 'goal', at(30), {
+            statement: 'Pass the CCNA',
+            category: 'career-work-learning',
+            state: 'active',
+            privacy: 'workplace',
+          }),
+          row('android-3', 'recommendation', at(5), { statement: 'Ten minutes of subnetting' }),
+          row('android-4', 'move-preference', at(20), {
+            engineCandidateId: 'social:message-someone',
+            moveStatement: 'Message someone you have not spoken to',
+            stance: 'forbidden',
+          }),
+        ]
 
-    const serialised = JSON.stringify(
-      [...records].sort((a, b) => a.recordId.localeCompare(b.recordId)),
-    )
-    const digest = async (value) => {
-      const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
-      return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, '0')).join('')
-    }
-    const payload = {
-      payloadVersion: 1,
-      storageSchemaVersion: 1,
-      recordCount: records.length,
-      integrity: { algorithm: 'SHA-256', digest: await digest(serialised) },
-      records: JSON.parse(serialised),
-    }
+        const serialised = JSON.stringify(
+          [...records].sort((a, b) => a.recordId.localeCompare(b.recordId)),
+        )
+        const digest = async (value) => {
+          const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
+          return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, '0')).join('')
+        }
+        const payload = {
+          payloadVersion: 1,
+          storageSchemaVersion: 1,
+          recordCount: records.length,
+          integrity: { algorithm: 'SHA-256', digest: await digest(serialised) },
+          records: JSON.parse(serialised),
+        }
 
-    const salt = crypto.getRandomValues(new Uint8Array(16))
-    const iv = crypto.getRandomValues(new Uint8Array(12))
-    const meta = {
-      cryptoVersion: 1,
-      kdf: 'PBKDF2',
-      kdfHash: 'SHA-256',
-      iterations: 1000,
-      cipher: 'AES-GCM',
-      keyBits: 256,
-      saltBase64: b64(salt),
-      ivBase64: b64(iv),
-    }
-    const aad = new TextEncoder().encode(
-      [
-        String(meta.cryptoVersion),
-        meta.kdf,
-        meta.kdfHash,
-        String(meta.iterations),
-        meta.cipher,
-        String(meta.keyBits),
-        meta.saltBase64,
-        meta.ivBase64,
-      ].join('|'),
-    )
-    const material = await crypto.subtle.importKey(
-      'raw',
-      new TextEncoder().encode(secret),
-      'PBKDF2',
-      false,
-      ['deriveKey'],
-    )
-    const key = await crypto.subtle.deriveKey(
-      { name: 'PBKDF2', salt, iterations: meta.iterations, hash: 'SHA-256' },
-      material,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['encrypt'],
-    )
-    const ciphertext = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv, additionalData: aad },
-      key,
-      new TextEncoder().encode(JSON.stringify(payload)),
+        const salt = crypto.getRandomValues(new Uint8Array(16))
+        const iv = crypto.getRandomValues(new Uint8Array(12))
+        const meta = {
+          cryptoVersion: 1,
+          kdf: 'PBKDF2',
+          kdfHash: 'SHA-256',
+          iterations: 1000,
+          cipher: 'AES-GCM',
+          keyBits: 256,
+          saltBase64: b64(salt),
+          ivBase64: b64(iv),
+        }
+        const aad = new TextEncoder().encode(
+          [
+            String(meta.cryptoVersion),
+            meta.kdf,
+            meta.kdfHash,
+            String(meta.iterations),
+            meta.cipher,
+            String(meta.keyBits),
+            meta.saltBase64,
+            meta.ivBase64,
+          ].join('|'),
+        )
+        const material = await crypto.subtle.importKey(
+          'raw',
+          new TextEncoder().encode(secret),
+          'PBKDF2',
+          false,
+          ['deriveKey'],
+        )
+        const key = await crypto.subtle.deriveKey(
+          { name: 'PBKDF2', salt, iterations: meta.iterations, hash: 'SHA-256' },
+          material,
+          { name: 'AES-GCM', length: 256 },
+          false,
+          ['encrypt'],
+        )
+        const ciphertext = await crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv, additionalData: aad },
+          key,
+          new TextEncoder().encode(JSON.stringify(payload)),
+        )
+
+        return JSON.stringify({
+          format: 'life-command-os.backup',
+          formatVersion: 2,
+          createdAt: at(createdAtDays),
+          encrypted: true,
+          approximateRecordCount: records.length,
+          crypto: meta,
+          ciphertextBase64: b64(new Uint8Array(ciphertext)),
+        })
+      },
+      { secret, createdAtDays, energyOrdinal },
     )
 
-    return JSON.stringify({
-      format: 'life-command-os.backup',
-      formatVersion: 2,
-      createdAt: at(1),
-      encrypted: true,
-      approximateRecordCount: records.length,
-      crypto: meta,
-      ciphertextBase64: b64(new Uint8Array(ciphertext)),
-    })
-  }, 'the one from the old phone')
+  const legacy = await buildLegacy('the one from the old phone', 1, 4)
 
   await page.getByTestId('import-paste').fill(legacy)
   await page.getByTestId('import-identify').tap()
@@ -430,6 +441,53 @@ async function main() {
   check('a second run says it is already here', again.includes('Already here from an earlier run'))
   check('and offers nothing to press', await page.getByTestId('import-apply').isDisabled())
   await sideways('import, second run')
+
+  // ---- A later backup of the same old history — QA-08-002 -------------------
+  //
+  // The ordinary way an append-first old history gains rows is a new backup,
+  // and a new backup has a new creation time. That used to rewrite every
+  // archived row's fingerprint and report six unchanged rows as changed.
+  const laterSame = await buildLegacy('the one from the old phone', 0, 4)
+  await page.getByTestId('import-paste').fill(laterSame)
+  await page.getByTestId('import-identify').tap()
+  await page.waitForSelector('[data-testid="import-recognised"]')
+  await page.getByTestId('import-passphrase').fill('the one from the old phone')
+  await page.getByTestId('import-read').tap()
+  await page.waitForSelector('[data-testid="import-report"]')
+  check(
+    'a newer backup of unchanged history reports no conflicts',
+    (await page.getByTestId('import-conflicts').count()) === 0,
+  )
+  check(
+    'and still says everything is already here',
+    (await page.getByTestId('import-report').innerText()).includes(
+      'Already here from an earlier run',
+    ),
+  )
+
+  const laterChanged = await buildLegacy('the one from the old phone', 0, 1)
+  await page.getByTestId('import-paste').fill(laterChanged)
+  await page.getByTestId('import-identify').tap()
+  await page.waitForSelector('[data-testid="import-recognised"]')
+  await page.getByTestId('import-passphrase').fill('the one from the old phone')
+  await page.getByTestId('import-read').tap()
+  await page.waitForSelector('[data-testid="import-report"]')
+  const conflictText = await page.getByTestId('import-conflicts').innerText()
+  check('one changed old row reports exactly one entry', conflictText.startsWith('1 entry'))
+  check('and reads as one thing rather than several', !/\b1 entries\b/.test(conflictText))
+
+  // ---- What came across says so, where it is read — QA-08-001 ---------------
+  await page.locator('.nav').getByRole('button', { name: 'Timeline' }).tap()
+  await page.waitForSelector('h1:has-text("Timeline")')
+  const badges = await page.getByTestId('tl-origin').count()
+  const rows = await page.locator('.tl-entry').count()
+  check('imported entries are marked on Timeline', badges > 0)
+  check('and the owner’s own entries are not', rows > badges, `${rows} rows, ${badges} marked`)
+  check(
+    'the marker reads as a word rather than a code',
+    (await page.getByTestId('tl-origin').first().innerText()) === 'Imported',
+  )
+  await sideways('Timeline, with imported history')
 
   // ---- The rest of the app is still standing --------------------------------
   for (const destination of ['Now', 'Life', 'Timeline', 'Insights']) {

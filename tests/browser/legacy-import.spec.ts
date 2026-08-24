@@ -158,6 +158,56 @@ async function legacyFile(page: Page, passphrase: string): Promise<string> {
   }, passphrase)
 }
 
+/**
+ * A couple of the owner's own entries, written straight into his database.
+ *
+ * Needed here so the origin assertions have something *unmarked* to compare
+ * against: a screen where every row is imported cannot show that the marking
+ * distinguishes anything. The same helper `data.spec.ts` uses, for the reason
+ * given there — a fresh install has nothing to answer, so there is no button
+ * that creates a record.
+ */
+async function seedOwnerHistory(page: Page) {
+  await page.goto(APP)
+  await expect(page.getByRole('heading', { level: 1, name: 'Now' })).toBeVisible()
+
+  await page.evaluate(async () => {
+    const at = new Date(Date.now() - 3_600_000).toISOString()
+    const row = (id: string, text: string) => ({
+      id,
+      schemaVersion: 1,
+      kind: 'observation',
+      occurredAt: at,
+      recordedAt: at,
+      zone: 'America/Denver',
+      domains: ['home'],
+      entities: [],
+      privacy: 'normal',
+      provenance: { source: 'owner', writtenBy: 'a browser test' },
+      concept: 'home.friction',
+      value: { type: 'text', value: text },
+      method: 'self-report',
+    })
+
+    const open = indexedDB.open('life-command-os:preview')
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      open.onsuccess = () => resolve(open.result)
+      open.onerror = () => reject(open.error)
+    })
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(['records'], 'readwrite')
+      const store = transaction.objectStore('records')
+      store.put(row('01JQWNBRWSER00000000000000', 'the kitchen counter, again'))
+      transaction.oncomplete = () => resolve()
+      transaction.onerror = () => reject(transaction.error)
+    })
+    db.close()
+  })
+
+  await page.reload()
+  await expect(page.getByRole('heading', { level: 1, name: 'Now' })).toBeVisible()
+}
+
 async function readIt(page: Page, file: string, passphrase = PASSPHRASE) {
   await page.getByTestId('import-paste').fill(file)
   await page.getByTestId('import-identify').click()
@@ -217,8 +267,21 @@ test.describe('the passphrase', () => {
 
     const refusal = page.getByTestId('import-refusal')
     await expect(refusal).toContainText('did not work, or the file has been altered')
-    await expect(refusal).toContainText('Nothing was changed')
     await expect(page.getByTestId('import-report')).toHaveCount(0)
+
+    /*
+     * The sentence a person actually looks for on a screen about a destructive
+     * operation, said **once** (QA-08-N2).
+     *
+     * It used to appear twice in slightly different words — "Nothing has been
+     * changed." inside the refusal, then "Nothing was changed." underneath —
+     * which reads as two separate reassurances and invites the question of
+     * which is the real one. Asserted as a count rather than as one exact
+     * phrasing, because the old assertion named the duplicate and would have
+     * held it in place.
+     */
+    const said = (await refusal.innerText()).match(/nothing (?:has been|was) changed/gi) ?? []
+    expect(said).toHaveLength(1)
   })
 
   test('is cleared from the field after it has been used', async ({ page }) => {
@@ -296,6 +359,64 @@ test.describe('bringing it across', () => {
     await page.locator('.nav').getByRole('button', { name: 'Timeline' }).click()
     await expect(page.getByRole('heading', { level: 1, name: 'Timeline' })).toBeVisible()
     await expect(page.getByText('Nothing recorded yet')).toHaveCount(0)
+  })
+
+  test('what came across is recognisably not what the owner wrote — QA-08-001', async ({
+    page,
+  }) => {
+    /*
+     * The assertion this file was missing, and the reason the defect shipped.
+     *
+     * The test above proved Timeline was not empty after an import, which is
+     * true of a build that renders imported readings as if the owner had typed
+     * them this morning — and that is exactly what it was doing. Being on the
+     * screen and being distinguishable on the screen are two claims, and only
+     * the first was held.
+     */
+    await seedOwnerHistory(page)
+    await openData(page)
+    const file = await legacyFile(page, PASSPHRASE)
+    await readIt(page, file)
+    await page.getByTestId('import-apply').click()
+    await expect(page.getByTestId('import-outcome')).toContainText('Brought')
+
+    await page.locator('.nav').getByRole('button', { name: 'Timeline' }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Timeline' })).toBeVisible()
+
+    const marked = page.getByTestId('tl-origin')
+    await expect(marked.first()).toBeVisible()
+    await expect(marked.first()).toHaveText('Imported')
+
+    /*
+     * And his own entries carry nothing. A build that marked every row would
+     * pass the assertion above and would teach him to stop reading the badge,
+     * which is the same defect facing the other way.
+     */
+    const rows = page.locator('.tl-entry')
+    const total = await rows.count()
+    const badges = await marked.count()
+    expect(total).toBeGreaterThan(badges)
+
+    // The seeded owner entry is one of the unmarked ones.
+    const own = page.locator('.tl-entry', { hasText: 'the kitchen counter, again' })
+    await expect(own).toHaveCount(1)
+    await expect(own.getByTestId('tl-origin')).toHaveCount(0)
+  })
+
+  test('the export says so too, where the reader was not there', async ({ page }) => {
+    await seedOwnerHistory(page)
+    await openData(page)
+    const file = await legacyFile(page, PASSPHRASE)
+    await readIt(page, file)
+    await page.getByTestId('import-apply').click()
+    await expect(page.getByTestId('import-outcome')).toContainText('Brought')
+
+    const text = await page.getByTestId('export-text').inputValue()
+    expect(text).toMatch(/· Imported/)
+    // The owner's own seeded entry appears without it.
+    const ownLine = text.split('\n').find((line) => line.includes('the kitchen counter, again'))
+    expect(ownLine, 'the owner’s own entry should be in the export').toBeDefined()
+    expect(ownLine).not.toMatch(/· Imported/)
   })
 
   test('the same file twice says there is nothing left rather than doing it again', async ({

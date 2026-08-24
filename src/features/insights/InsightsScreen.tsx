@@ -4,6 +4,7 @@ import { systemClock } from '../../domain/time'
 import { beliefCorrectionRecord, describeBelief } from '../../intelligence/corrections'
 import { insightsFor, type Insight } from '../../intelligence/insights'
 import type { EntityIndex } from '../../domain/entities'
+import type { RecordId } from '../../domain/ids'
 import { assembleSituation } from '../../intelligence/situation'
 import {
   EvidenceConfidence,
@@ -11,6 +12,7 @@ import {
   EvidenceNote,
   EvidenceRate,
 } from '../evidence/EvidencePieces'
+import { originResolver, type RecordOrigin } from '../history/origin'
 import { useMemory } from '../memory/memoryContext'
 import './InsightsScreen.css'
 
@@ -125,6 +127,7 @@ export function InsightsScreen() {
             key={insight.id}
             insight={insight}
             entities={memory.view.entities}
+            originFor={originResolver(memory.view.history)}
             open={open === insight.id}
             disabled={busy}
             onToggle={() => setOpen((held) => (held === insight.id ? undefined : insight.id))}
@@ -164,6 +167,7 @@ function InsightCard({
   disabled,
   onToggle,
   onCorrect,
+  originFor,
 }: {
   insight: Insight
   /** So a correction control can name the action, not the verb (R3-B2). */
@@ -172,6 +176,8 @@ function InsightCard({
   disabled: boolean
   onToggle: () => void
   onCorrect: (belief: string) => void
+  /** Where each piece of evidence came from, when it was not the owner. */
+  originFor: (record: RecordId) => RecordOrigin | undefined
 }) {
   const evidence = insight.evidence
 
@@ -239,16 +245,19 @@ function InsightCard({
           <EvidenceLines
             title="Occasions that went the other way"
             lines={evidence.counterexamples}
+            originFor={originFor}
           />
           <EvidenceLines
             title={evidence.includedTitle ?? 'Everything counted'}
             lines={evidence.included}
             limit={8}
+            originFor={originFor}
           />
           <EvidenceLines
             title={evidence.excludedTitle ?? 'Left out'}
             lines={evidence.excluded}
             limit={8}
+            originFor={originFor}
           />
 
           <EvidenceNote title="How this was arrived at">

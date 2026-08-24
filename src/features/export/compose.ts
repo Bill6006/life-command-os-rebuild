@@ -7,6 +7,7 @@ import type { Decision } from '../../intelligence/engine'
 import type { InsightsReport } from '../../intelligence/insights'
 import type { Situation } from '../../intelligence/situation'
 import { describeRecord, tagFor, type DescribeContext } from '../history/describe'
+import type { RecordOrigin } from '../history/origin'
 import type { HistorySource } from '../memory/memoryContext'
 import type { TimelineData } from '../timeline/timelineEntries'
 import { handoffPrompt } from './handoffPrompt'
@@ -390,7 +391,7 @@ function directionSection(request: ExportRequest): readonly string[] {
     const context = describeContext(situation, FULL_EXPORT)
     for (const record of commitments) {
       const described = describeRecord(record, context)
-      if (described !== undefined) lines.push(bullet(described.text))
+      if (described !== undefined) lines.push(bullet(withOrigin(described.text, described.origin)))
     }
   }
 
@@ -527,6 +528,23 @@ function insightsSection(request: ExportRequest): readonly string[] {
   return lines
 }
 
+/**
+ * The origin, as a suffix on a line (QA-08-001).
+ *
+ * The export is the one surface where the reader is **not** the owner, so it is
+ * the surface least able to tell an imported reading from one he typed this
+ * morning — he at least remembers his own week. An assistant asked to reason
+ * about his life from this document would otherwise read a two-year-old
+ * migrated observation as something recorded today.
+ *
+ * Composed here rather than folded into `described.text`, because the text is
+ * what the entry *says* and this is where it came from; joining them would put
+ * the origin inside the sentence a correction later quotes back.
+ */
+function withOrigin(text: string, origin: RecordOrigin | undefined): string {
+  return origin === undefined ? text : `${text} · ${origin.label}`
+}
+
 function historySection(request: ExportRequest, header: ExportHeader): readonly string[] {
   const { timeline } = request
   const lines: string[] = []
@@ -571,7 +589,7 @@ function historySection(request: ExportRequest, header: ExportHeader): readonly 
   for (const day of days) {
     lines.push(`**${day.label}** (${day.dayId})`)
     for (const entry of day.entries) {
-      lines.push(bullet(`${entry.tag}: ${entry.text}`))
+      lines.push(bullet(withOrigin(`${entry.tag}: ${entry.text}`, entry.origin)))
     }
     lines.push('')
   }
@@ -604,7 +622,14 @@ function correctionsSection(request: ExportRequest): readonly string[] {
   for (const record of records) {
     const described = describeRecord(record, context)
     if (described === undefined) continue
-    lines.push(bullet(`${localDayIdAt(record.occurredAt, record.zone)} — ${described.text}`))
+    lines.push(
+      bullet(
+        withOrigin(
+          `${localDayIdAt(record.occurredAt, record.zone)} — ${described.text}`,
+          described.origin,
+        ),
+      ),
+    )
   }
   return lines
 }
@@ -629,7 +654,10 @@ function privateSection(request: ExportRequest): readonly string[] {
     if (described === undefined) continue
     lines.push(
       bullet(
-        `${localDayIdAt(record.occurredAt, record.zone)} · ${tagFor(record.kind)}: ${described.text}`,
+        withOrigin(
+          `${localDayIdAt(record.occurredAt, record.zone)} · ${tagFor(record.kind)}: ${described.text}`,
+          described.origin,
+        ),
       ),
     )
   }

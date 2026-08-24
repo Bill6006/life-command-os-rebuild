@@ -3,7 +3,8 @@ import type { LocalDayId, TimeZoneId } from '../domain/time'
 import { localDayIdAt } from '../domain/time'
 import type { MalformedRow } from '../domain/validation'
 import { sortRecords, type CanonicalRecord } from '../domain/records'
-import { recordFingerprint, type StoreSnapshot } from '../memory/store'
+import { recordToWire } from '../domain/wire'
+import { stableStringify, type StoreSnapshot } from '../memory/store'
 import { readLegacyRecord, type LegacyRecord } from './format'
 import { MOVE_PREFERENCE_NOTE, ruleFor, UNKNOWN_FAMILY_RULE, type Disposition } from './mapping'
 import { translateRecord, type MapRefusal, type TranslateOptions } from './translate'
@@ -107,6 +108,20 @@ export interface ImportPlan {
    * rather than applied — an import may add to history and may not rewrite it.
    */
   readonly conflicts: readonly { readonly id: string; readonly legacyType: string }[]
+  /**
+   * Rows already here that an **earlier revision of the mapping rules** brought
+   * across (QA-08-002).
+   *
+   * Its own count, and not a conflict. The file has not changed; this build
+   * would read it differently from the build that imported it. Reporting that
+   * as "now says something different" would blame his old history for a change
+   * in this app, and reporting it as "already present" would hide a real
+   * difference in what the app believes his history means.
+   *
+   * Nothing is rewritten either way — history is append-first, and a re-reading
+   * is not an edit.
+   */
+  readonly reinterpreted: readonly { readonly id: string; readonly wasVersion: string }[]
   readonly unkeptStances: readonly UnkeptStance[]
   /** Rows the owner has to decide about before they can mean anything. */
   readonly undecided: number
@@ -164,6 +179,61 @@ function order(record: LegacyRecord): string {
   return `${record.occurredAt ?? ''}|${record.recordedAt ?? ''}|${record.recordId}`
 }
 
+/**
+ * What an imported row actually is, with everything this build stamped on it
+ * taken back off (QA-08-002).
+ *
+ * ## The defect, and why it is a class rather than a field
+ *
+ * A record's fingerprint covers all of it, and deciding whether a row the
+ * importer has seen before "now says something different" used to compare
+ * exactly that. But a record built from a legacy row is **two things joined**:
+ * what the old application wrote, and what this build made of it. Only the
+ * first can change without the file changing.
+ *
+ * The reported symptom was one field: the archive label carried the backup's
+ * own creation time, so taking a **new** backup of the same append-first
+ * history rewrote every archived row's fingerprint, and the importer called
+ * six unchanged rows altered — drowning the one row that had genuinely
+ * changed. That field is fixed at source (`legacyFormatLabel` is now the format
+ * and nothing else), and fixing it there is not enough, because the class is:
+ *
+ * > **Nothing this build chose may take part in deciding whether the file
+ * > changed.**
+ *
+ * Three things it chooses, and each would otherwise turn a re-import into a
+ * screen of false conflicts:
+ *
+ *   - `provenance.writtenBy` — which mapping rules read the row. Revising a
+ *     rule is a real difference and is reported separately below, but it is a
+ *     difference in *this app*, not in his old history, and saying "the file
+ *     now says something different" about it would be false.
+ *   - `legacyFormat` — which file it arrived in. Belt and braces now.
+ *   - `zone` — which clock this device was set to when a row that carried no
+ *     zone of its own was read. Importing the same file after travelling is
+ *     not the file changing.
+ *
+ * Everything else in the record comes from the row: its instants, its concept,
+ * its value, its privacy, its raw payload, and the derived id that says which
+ * old row it is.
+ */
+function legacyIdentity(record: CanonicalRecord): string {
+  const wire = recordToWire(record) as Record<string, unknown>
+  const provenance = { ...(wire['provenance'] as Record<string, unknown>) }
+  provenance['writtenBy'] = '(this build)'
+  return stableStringify({
+    ...wire,
+    provenance,
+    zone: '(this device)',
+    ...(wire['legacyFormat'] === undefined ? {} : { legacyFormat: '(this format)' }),
+  })
+}
+
+/** Which mapping rules brought a stored row across, for the report below. */
+function rulesVersionOf(record: CanonicalRecord): string {
+  return record.provenance.writtenBy
+}
+
 export interface PlanOptions extends TranslateOptions {
   readonly zone: TimeZoneId
 }
@@ -181,7 +251,14 @@ export function planImport(
   current: StoreSnapshot,
   options: PlanOptions,
 ): ImportPlan {
-  const known = new Map(current.records.map((record) => [record.id, recordFingerprint(record)]))
+  /*
+   * Two indexes over the same records, because two different questions are
+   * being asked. `known` is what the old file said, with this build's own
+   * stamps removed — see `legacyIdentity`. `knownRules` is which rules read
+   * it, which is a fact about this app and is reported separately.
+   */
+  const known = new Map(current.records.map((record) => [record.id, legacyIdentity(record)]))
+  const knownRules = new Map(current.records.map((record) => [record.id, rulesVersionOf(record)]))
   /*
    * Subjects the store already holds.
    *
@@ -209,6 +286,7 @@ export function planImport(
   const toAppend: CanonicalRecord[] = []
   const entities = new Map<string, SemanticEntity>()
   const conflicts: { id: string; legacyType: string }[] = []
+  const reinterpreted: { id: string; wasVersion: string }[] = []
   let archived = 0
   let excluded = 0
   let alreadyPresent = 0
@@ -219,8 +297,15 @@ export function planImport(
   const consider = (record: CanonicalRecord, legacyType: string): void => {
     const existing = known.get(record.id)
     if (existing !== undefined) {
-      if (existing === recordFingerprint(record)) alreadyPresent += 1
-      else conflicts.push({ id: record.id, legacyType })
+      if (existing !== legacyIdentity(record)) {
+        conflicts.push({ id: record.id, legacyType })
+        return
+      }
+      alreadyPresent += 1
+      const wasVersion = knownRules.get(record.id)
+      if (wasVersion !== undefined && wasVersion !== rulesVersionOf(record)) {
+        reinterpreted.push({ id: record.id, wasVersion })
+      }
       return
     }
     toAppend.push(record)
@@ -305,6 +390,7 @@ export function planImport(
     excluded,
     alreadyPresent,
     conflicts,
+    reinterpreted,
     unkeptStances: standingStances(legacy),
     undecided,
     note: MOVE_PREFERENCE_NOTE,
