@@ -9,11 +9,35 @@
  * a primary destination on the right (plan section 5). Low profile: a phone
  * screen is mostly for the decision, not for chrome.
  */
-/* The whole header group sticks as one; its members do not stick apart. */
+/*
+ * The whole header group sticks as one; its members do not stick apart.
+ *
+ * And it is **opaque** (QA-07-010). Sticking as a group fixed the members
+ * overlapping each other; it did nothing about what is behind them. The
+ * stale-build notice is a translucent orange wash — `rgba(255, 125, 77, 0.2)`
+ * over `0.11`, no blur — which looks like a tint at the top of the page,
+ * where the only thing behind it is the page background, and becomes a
+ * window once the group starts sticking. Scrolled content was drawn straight
+ * through the words "A newer build is deployed": "What has been observed to
+ * follow what" on Data, "6.75 hours" on Timeline.
+ *
+ * That notice is the one piece of copy in the app whose whole job is to stop
+ * the owner mistaking old code for the deployed product, so a version of it
+ * he cannot read is worse than not showing it.
+ *
+ * Fixed here rather than on the notice, because the defect is not the
+ * notice's colour — it is that a sticky layer composites over whatever
+ * scrolls beneath it. One opaque backing under the group answers it for
+ * every member at once, including the next one somebody adds. The members
+ * keep their own tints, which now read against this instead of against the
+ * page, so nothing changes at the top of a document and everything changes
+ * halfway down one.
+ */
 .shell__top {
   position: sticky;
   top: 0;
   z-index: 20;
+  background: var(--ground);
 }
 
 .topbar {
@@ -22,8 +46,14 @@
   align-items: center;
   justify-content: space-between;
   padding: calc(var(--safe-top) + var(--space-2)) var(--space-4) var(--space-2);
+  /*
+   * A tint over the group's opaque backing, not a pane of glass over the
+   * page. The `backdrop-filter: blur(12px)` that used to sit here was doing
+   * the same job the group background now does, and doing it only for this
+   * one member — the notices below it had no blur at all, which is how the
+   * build notice ended up transparent to scrolled text (QA-07-010).
+   */
   background: rgba(20, 23, 31, 0.86);
-  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line-soft);
 }
 
