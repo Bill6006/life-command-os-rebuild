@@ -15,7 +15,9 @@ import { SELECT_ALL } from '../../src/features/export/sections'
 import { decide } from '../../src/intelligence/engine'
 import { insightsFor } from '../../src/intelligence/insights'
 import { assembleSituation } from '../../src/intelligence/situation'
+import { snapshotFromWire, type SnapshotWire } from '../../src/memory/snapshot'
 import { EMPTY_SNAPSHOT } from '../../src/memory/store'
+import { SCENARIOS } from '../../src/synthetic/scenarios'
 import { buildView } from '../../src/memory/view'
 import { TEST_APP, COMPOSED_AT, COMPOSED_ZONE } from './exportHarness'
 
@@ -452,15 +454,89 @@ describe('every surface that states a conclusion tells them apart', () => {
     }
   })
 
-  it('every insight declares where its evidence came from', () => {
-    // Not only coverage cards. A card added later inherits the rule from
-    // `withSources` rather than having to remember it, and this holds that.
-    for (const insight of insightsFor(SIT).insights) {
-      expect(Array.isArray(insight.sources), insight.id).toBe(true)
-    }
+  it('the coverage card is not the only kind that declares its origin', () => {
+    /*
+     * A shallow check, kept deliberately shallow and titled as such.
+     *
+     * It says the field is populated on the card this fixture produces. What
+     * "every insight kind" means is a different and much larger claim, and it
+     * is held by its own block below — over the whole scenario library, by
+     * name, with the resolved word rather than the container type.
+     *
+     * This one used to be titled "every insight declares where its evidence
+     * came from" and asserted `Array.isArray`. Every constructor initialises
+     * `sources: []`, so removing the computation that fills it left the test
+     * green. See QA-08-003.
+     */
+    const cards = insightsFor(SIT).insights
+    expect(cards.length).toBeGreaterThan(0)
+    expect(cards.some((insight) => insight.sources.length > 0)).toBe(true)
   })
 
-  it('the export marks the conclusions, not only the entries under them', () => {
+  /**
+   * One named section of the document, so an assertion can be about it.
+   *
+   * `toMatch(/· Imported/)` over the whole export passes while a whole section
+   * carries none — which is what happened: the repair claimed four aggregate
+   * sections and the tests held three, and the fourth stayed unmarked with
+   * every named regression green (QA-08-004).
+   */
+  function sectionOf(text: string, heading: string): string | undefined {
+    const start = text.indexOf(`## ${heading}`)
+    if (start === -1) return undefined
+    const next = text.indexOf('\n## ', start + heading.length)
+    return text.slice(start, next === -1 ? undefined : next)
+  }
+
+  function exportOf(situation: typeof SIT, view: typeof VIEW_TWO): string {
+    return composeExport({
+      sections: SELECT_ALL,
+      situation,
+      decision: decide(view, { now: NOW, zone: ZONE }),
+      insights: insightsFor(situation),
+      timeline: assembleTimeline(situation),
+      source: 'owner',
+      app: TEST_APP,
+      composedAt: { at: COMPOSED_AT, zone: COMPOSED_ZONE },
+    }).text
+  }
+
+  it('marks the insight summaries — the fourth aggregate section', () => {
+    /*
+     * The section the repair claimed and no test held. Career's only record is
+     * the imported goal, so its coverage card is an insight drawn entirely from
+     * migrated history, and the line that states it has to say so.
+     *
+     * Paired against the same history with the origin flipped to the owner's,
+     * because a test that only finds the marker would pass on a build that
+     * marked everything.
+     */
+    const marked = sectionOf(exportOf(SIT, VIEW_TWO), 'What has been worked out')
+    expect(marked, 'the section should be in the document').toBeDefined()
+    expect(marked).toMatch(/career/i)
+    expect(marked, 'an insight drawn only from imported history').toMatch(/· Imported/)
+
+    const asOwner = {
+      ...SNAP,
+      records: RECORDS_TWO.map((record) => ({
+        ...record,
+        provenance: { source: 'owner' as const, writtenBy: 'a test' },
+      })),
+    }
+    const ownerView = buildView(asOwner, { now: NOW, zone: ZONE })
+    const ownerSituation = assembleSituation(ownerView, {
+      now: NOW,
+      zone: ZONE,
+      weekStartsOn: 1,
+      domains: coreDomains,
+    })
+    const unmarked = sectionOf(exportOf(ownerSituation, ownerView), 'What has been worked out')
+    expect(unmarked, 'the same section on the owner’s own history').toBeDefined()
+    expect(unmarked).toMatch(/career/i)
+    expect(unmarked, 'his own history carries nothing').not.toMatch(/· Imported/)
+  })
+
+  it('marks current facts, goals and coverage — three of the four sections', () => {
     const composed = composeExport({
       sections: SELECT_ALL,
       situation: SIT,
@@ -514,5 +590,191 @@ describe('every surface that states a conclusion tells them apart', () => {
       learning ?? friction,
       'at least one considered fact should reach the document',
     ).toBeDefined()
+  })
+})
+
+/**
+ * Every insight kind the library actually produces, under every origin
+ * (QA-08-003).
+ *
+ * ## Why this is written the way it is
+ *
+ * The claim "every insight declares where its evidence came from" was made by a
+ * test asserting `Array.isArray(insight.sources)`. Every constructor
+ * initialises `sources: []`, so deleting `withSources` — the code that finds
+ * the cited records and their origins — left every value an array and the test
+ * green. A trajectory card could have lost all disclosure with the regression
+ * named for that claim still passing.
+ *
+ * That is the third time in this phase that a title has claimed more than its
+ * body held, and the second time inside a repair for the rule against it
+ * (D-108). So this block does the three things that would have caught it:
+ *
+ *   1. it **enumerates** what "every" means, by name, and fails if the set
+ *      changes — so a kind that stops being produced is a visible fact rather
+ *      than silently reduced coverage;
+ *   2. it asserts the **resolved word** the owner would read, not the shape of
+ *      the field it comes from;
+ *   3. it asserts the **negative** — a mixed basis resolves to nothing — which
+ *      is the half a build that marked everything would fail.
+ *
+ * ## The technique
+ *
+ * Independent QA wrote the probe this is built from, and it is a good idea: the
+ * scenario library already contains histories rich enough to produce nine
+ * different kinds of card, and rewriting every record's provenance to one
+ * origin turns each of them into a test of that origin. Inventing a fixture per
+ * kind would be nine fixtures that resemble the product rather than nine
+ * histories the product actually reasons about.
+ */
+describe('every insight kind the library produces declares its origin', () => {
+  /** What each origin resolves to on screen. `owner` is the silent default. */
+  const RESOLVED = {
+    owner: undefined,
+    'legacy-import': 'Imported',
+    device: 'Measured',
+    derived: 'Worked out',
+  } as const
+
+  type ProbeSource = keyof typeof RESOLVED
+
+  /**
+   * The nine kinds the scenario library actually produces.
+   *
+   * `contradiction` and `stale-assumption` are the other two `InsightKind`s and
+   * no scenario currently produces one — stated here rather than quietly
+   * omitted, because "every kind" that silently means nine of eleven is the
+   * defect this block exists for. A scenario that starts producing one is
+   * covered by the same loop and fails the enumeration below until it is added.
+   */
+  const PRODUCED: readonly string[] = [
+    'context-effect',
+    'coverage-gap',
+    'emerging-change',
+    'life-season',
+    'move-effectiveness',
+    'repeated-friction',
+    'stable-strength',
+    'state-association',
+    'trajectory',
+  ]
+
+  /**
+   * One scenario with every record's origin rewritten.
+   *
+   * `ownerRecord` leaves one row as the owner's, which is how a mixed basis is
+   * produced from a history that is otherwise all one thing.
+   */
+  function rewritten(
+    document: SnapshotWire,
+    source: ProbeSource,
+    ownerRecord?: string,
+  ): SnapshotWire {
+    const clone = structuredClone(document)
+    const records = (clone.records as readonly unknown[]).map((entry) => {
+      if (entry === null || typeof entry !== 'object') return entry
+      const record = entry as Record<string, unknown>
+      const actual = record['id'] === ownerRecord ? 'owner' : source
+      const provenance = record['provenance'] as Record<string, unknown> | undefined
+      const method =
+        record['kind'] !== 'observation'
+          ? {}
+          : actual === 'device' || actual === 'derived'
+            ? { method: actual }
+            : actual === 'owner'
+              ? { method: 'self-report' }
+              : {}
+      return { ...record, provenance: { ...provenance, source: actual }, ...method }
+    })
+    return { ...clone, records }
+  }
+
+  function situationsFor(source: ProbeSource, ownerRecord?: string) {
+    return SCENARIOS.flatMap((scenario) => {
+      const loaded = snapshotFromWire(rewritten(scenario.build(), source, ownerRecord))
+      if (!loaded.loaded) return []
+      const view = buildView(loaded.snapshot, { now: scenario.now, zone: scenario.zone })
+      return [
+        {
+          id: scenario.id,
+          situation: assembleSituation(view, {
+            now: scenario.now,
+            zone: scenario.zone,
+            weekStartsOn: 1,
+            domains: coreDomains,
+          }),
+        },
+      ]
+    })
+  }
+
+  it.each(Object.keys(RESOLVED) as ProbeSource[])(
+    'resolves every produced kind correctly for %s evidence',
+    (source) => {
+      const seen = new Map<string, Set<string | undefined>>()
+
+      for (const { id, situation } of situationsFor(source)) {
+        for (const insight of insightsFor(situation).insights) {
+          /*
+           * Every card must actually carry its origins. Guarding on
+           * `sources.length > 0` here is exactly what let the old test pass:
+           * with the computation removed the list is empty everywhere, and a
+           * guard reads that as "nothing to check".
+           */
+          expect(insight.sources, `${id}: ${insight.id}`).toEqual([source])
+          const held = seen.get(insight.kind) ?? new Set<string | undefined>()
+          held.add(originOfSources(insight.sources)?.label)
+          seen.set(insight.kind, held)
+        }
+      }
+
+      // What "every kind" means, said out loud and checked.
+      expect([...seen.keys()].sort()).toEqual([...PRODUCED])
+
+      for (const [kind, labels] of seen) {
+        expect([...labels], `${kind} under ${source}`).toEqual([RESOLVED[source]])
+      }
+    },
+  )
+
+  it('says nothing where the evidence is mixed', () => {
+    /*
+     * The negative half. A build that marked every card would satisfy the four
+     * cases above and would be its own defect — one record of the owner's own
+     * is enough to make a finding his.
+     *
+     * The owner row is chosen from what each card actually cites, so the
+     * mixture is real rather than arranged: the same card, on the same history,
+     * with one of its own cited records handed back to him.
+     */
+    const mixedKinds = new Set<string>()
+
+    for (const { situation } of situationsFor('legacy-import')) {
+      for (const insight of insightsFor(situation).insights) {
+        const cited = [
+          ...insight.evidence.included,
+          ...insight.evidence.counterexamples,
+          ...insight.evidence.excluded,
+        ]
+        const ids = [...new Set(cited.map((line) => line.record))]
+        if (ids.length < 2) continue
+
+        for (const { situation: mixedSituation } of situationsFor('legacy-import', ids[0])) {
+          const mixed = insightsFor(mixedSituation).insights.find(
+            (entry) => entry.id === insight.id,
+          )
+          if (mixed === undefined || !mixed.sources.includes('owner')) continue
+          expect(mixed.sources).toContain('legacy-import')
+          expect(originOfSources(mixed.sources), `${mixed.id} is mixed`).toBeUndefined()
+          mixedKinds.add(mixed.kind)
+        }
+      }
+    }
+
+    // Not one lucky card. The mixture has to be exercised across kinds, or a
+    // single coverage card passing would stand in for the whole claim.
+    expect(mixedKinds.size, `mixed kinds exercised: ${[...mixedKinds].join(', ')}`).toBeGreaterThan(
+      3,
+    )
   })
 })

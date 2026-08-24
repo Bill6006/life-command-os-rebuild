@@ -1979,8 +1979,20 @@ function lifeSeasonCards(situation: Situation): readonly Built[] {
         detail: `${before.length} entries here are from before that — a different season, still counted, and counting for less as they age.`,
         // Something the owner recorded, not something worked out.
         confidence: undefined,
-        // Empty: filled from what this card cites. See `withSources`.
-        sources: [],
+        /*
+         * Set here, because this card cites no evidence lines at all — its
+         * headline quotes the arrangement and its detail counts what predates
+         * it, and neither is a list. `withSources` therefore finds nothing to
+         * resolve, and a card that says nothing about its origin is a card
+         * drawn entirely from migrated history reading as though the owner had
+         * told this app himself.
+         *
+         * Both halves of the sentence, because the badge covers both: the
+         * arrangement, and the entries it is counting. A season standing on an
+         * imported context above a decade of his own entries is mixed, and
+         * mixed says nothing.
+         */
+        sources: [...new Set([record, ...before].map(evidenceSourceOf))].sort(),
         evidence: {
           comparable: before.length,
           window: undefined,

@@ -39,6 +39,62 @@ None.
 
 ## Fixed
 
+### DEF-0073 (QA-08-003, QA-08-004) — two regressions that claimed more than they asserted
+
+- Status: Fixed
+- Severity: Blocker for closeout — no product defect was visible through them,
+  which is precisely the problem: both could pass with the behaviour they are
+  named for removed
+- Found in: Phase 8 / `d433079`
+- Found by: **independent Codex QA**, second retest, by reading the regressions
+  the repair added rather than only re-running them
+- Class: **a test title that is a claim the body does not hold.** The third
+  occurrence in this phase, and the second inside a repair for the rule against
+  it (D-108).
+  - `every insight declares where its evidence came from` asserted
+    `Array.isArray(insight.sources)`. Every constructor initialises `sources:
+[]`, so deleting `withSources` — the code that actually finds the cited
+    records and resolves their origins — left every value an array and the test
+    green. A trajectory or association card could lose all disclosure with the
+    named regression passing.
+  - The repair claimed imported-origin disclosure in **four** aggregate export
+    sections and the tests held **three**. QA found the mismatch in the repair's
+    own documentation: the surface table said four, the reintroduction account
+    said "each of the three export sections one". Removing `fromSources` from
+    `insightsSection` restored the live defect on "What has been worked out"
+    with every named regression still green.
+- Reproduction: delete the `withSources(...)` call in `insightsFor`, or the
+  `fromSources(...)` wrapper in `insightsSection`, and run the suite. Before the
+  repair: green in both cases.
+- Root cause: the first assertion was written from the shape of the field rather
+  than from what the field is for; the second was an enumeration that stopped
+  one short of the claim beside it.
+- Regression: `tests/synthetic/imported-origin.test.ts`.
+  "every insight kind the library produces declares its origin" rewrites every
+  golden scenario's provenance to each of the four origins in turn, asserts each
+  card's `sources` **and the word the owner would read**, and asserts the set of
+  kinds exercised equals a list written out by name — so a kind that stops being
+  produced is a visible failure rather than quietly reduced coverage. Its
+  companion asserts a mixed basis resolves to nothing, across more than three
+  kinds. "marks the insight summaries — the fourth aggregate section" isolates
+  `## What has been worked out` and pairs an imported-only insight against the
+  same history flipped to the owner's. Both proved by reintroduction: removing
+  `withSources` fails five; removing `fromSources` from `insightsSection` fails
+  one.
+- Siblings: **one real product gap, which the weak assertion had hidden.**
+  Removing the `sources.length > 0` guard that QA's own probe used showed that a
+  `life-season` card carries no sources at all — it cites no evidence lines, so
+  `withSources` finds nothing to resolve, and a season standing on an imported
+  context read as though the owner had told this app himself. It now sets its
+  own sources from the arrangement and the entries it counts, and says why. QA
+  reported "no current product-behaviour defect was observed"; the guard is why.
+- Note on the technique: the enumeration is built from the scenario library
+  rather than from purpose-built fixtures, which is QA's idea and a good one —
+  those histories are rich enough to produce nine kinds of card, and a fixture
+  per kind would be nine things that resemble the product rather than nine
+  histories it actually reasons about.
+- Fixed in: the checkpoint that closes Phase 8
+
 ### DEF-0072 — one badge, five stylesheets, and an eyebrow that shouted through it
 
 - Status: Fixed
@@ -120,9 +176,12 @@ learning for 3 months` with no cue. Same on the Insights card and in four
 - Regression: `tests/synthetic/imported-origin.test.ts`, "every surface that
   states a conclusion tells them apart" — the coverage sources at the
   intelligence layer, an area with one entry of his own in it staying unmarked,
-  an Insights coverage card, every insight declaring its sources, and three
-  export sections. Proved by reintroduction at each: removing the area sources
-  fails three, the card's sources one, and each export section one.
+  an Insights coverage card, and the export's aggregate sections. **The first
+  version of this entry said "three export sections" while the repair claimed
+  four, and the fourth was genuinely untested** — independent QA found the
+  contradiction here rather than in the code (DEF-0073). All four are held now.
+  Proved by reintroduction at each: removing the area sources fails three, the
+  card's sources one, and each export section one.
   `tests/browser/legacy-import.spec.ts` and `scripts/android-gate.mjs` both hold
   it on Life and Insights against the deployed build.
 - Siblings: checked. `Insight.sources` is filled for **every** kind, centrally,

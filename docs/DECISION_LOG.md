@@ -3283,3 +3283,34 @@ So: **when a title says "every", the body enumerates what "every" means, and
 each item is proved by reintroduction separately.** A sweep that covers four of
 eight is not a weaker version of the claim; it is a false one, and the passing
 result is what makes it dangerous.
+
+### And it happened a third time, which is what makes the rule concrete
+
+The repair for the paragraph above shipped two more. One asserted
+`Array.isArray(insight.sources)` under the title "every insight declares where
+its evidence came from" — true of a build with the computation deleted, because
+every constructor initialises the field to `[]`. The other claimed four export
+sections and held three, and the count was wrong **in the same document that
+made the claim**: a table naming four sections, and a reintroduction account
+three lines below saying "each of the three export sections one". Independent QA
+found the second by reading the repair's own prose against itself.
+
+Writing "a title is a claim" three times has not stopped it. What stops it is
+mechanical, and it is now the standing rule for any assertion of this shape:
+
+1. **Enumerate in the body.** The list of things "every" covers is written out
+   by name and asserted to be exactly that list, so a member that stops existing
+   is a failure rather than silently reduced coverage.
+2. **Assert the value, never the container.** `Array.isArray`, `toBeDefined`,
+   `not.toBeNull` and `length >= 0` are all satisfiable by the defect. Assert
+   what the owner would read.
+3. **Reintroduce the claim, not the assertion.** Delete the code the _title_
+   names — not the line the test happens to touch — and require a failure. The
+   `Array.isArray` test would have been caught in a minute by deleting
+   `withSources`, which nobody did because the assertion beside it looked
+   related.
+4. **A guard in the assertion is a hole.** `if (sources.length > 0)` reads as
+   caution and means "skip the case where the field is empty", which is exactly
+   the state the defect produces. QA's own probe carried that guard, and it hid
+   a real product gap — a `life-season` card that cites no evidence lines and
+   therefore disclosed nothing at all. Removing the guard found it.

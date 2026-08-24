@@ -1231,4 +1231,268 @@ handoff exactly as written.
 Do not ask me to paste the file contents.
 ```
 
-<!-- LCO_COMPLETE -->
+# Retest repair — independent QA second retest
+
+## Second-retest result
+
+**FAIL — Phase 8 remains YELLOW.**
+
+The deployed product repair for QA-08-001 is behaviorally correct. Every live
+surface named in the second-retest handoff now discloses imported-only evidence,
+owner or mixed evidence remains unmarked, and the widened device/derived and
+non-coverage-insight behavior also works.
+
+The phase cannot close GREEN yet because the repair repeats the exact false-green
+class D-108 says this round exists to prevent. Two claims in the new regression
+coverage are materially wider than their assertions: one proves only that a
+field is an array, not that it contains the evidence origins it claims to hold;
+the other omits the fourth export section while the repair and handoff claim all
+four. Both defects can pass with the repaired behavior reintroduced.
+
+| Item | Tested value |
+| --- | --- |
+| Repaired product checkpoint | `d433079735c7bc7565f87f440e4673777ef8999a` |
+| Deployed product SHA | `d433079735c7bc7565f87f440e4673777ef8999a` |
+| Later deployed handoff SHA | `cd16ffc03656ec500a3e1595bbff33095520a300` |
+| Bundle relationship | PASS — the live app identifies the exact product checkpoint; the Android gate read the later docs-only deployment |
+| Preview | `https://bill6006.github.io/life-command-os-rebuild/preview/` |
+| QA date | 2026-08-24, America/New_York |
+| Product behavior | **PASS** |
+| Regression / reintroduction contract | **FAIL — closeout-blocking** |
+| Overall | **FAIL** |
+
+The live build surface reported the full product SHA. Equivalence was checked
+with:
+
+```text
+node scripts/checkpoint-equivalence.mjs d433079 --ref d433079735c7bc7565f87f440e4673777ef8999a
+```
+
+It reported no changed files.
+
+## QA-08-001 — product behavior confirmed repaired
+
+The independent `primary` fixture was applied to the deployed Preview from the
+original eight-record owner state. The preview still reported 10 source entries,
+3 readable mappings, 6 kept raw, and 1 excluded. Apply added 9, reopened the
+database, and read back 17 identical records.
+
+### The four exact aggregate reproductions now pass
+
+- **Life overview:** Career & Learning, whose only record was the imported goal,
+  showed `Imported` after the complete `Going quiet` sentence. Rendered text kept
+  a real space before the badge.
+- **Insights:** the Career coverage card showed a normally cased, normally
+  tracked `Imported` badge beside `Out of date`; expanding the evidence kept the
+  marked card and its reasoning together.
+- **Export — What the app is saying now:** `Current energy — 1 of 5 ... ·
+  Imported`.
+- **Export — Direction, goals and commitments:** `Finish a meaningful
+  certification (career) · Imported`.
+- **Export — How well each area is understood:** the Career coverage line ended
+  `· Imported`.
+- **Export — What has been worked out:** the Career `Out of date` insight ended
+  `· Imported`.
+
+The last four bullets are the four export sections named by the retest handoff;
+Recent record remained marked too.
+
+### Mixed, owner, concept, and other-origin checks
+
+One owner-written Career update was then added through the deployed domain page.
+That single row made Career mixed and immediately removed the aggregate badge on
+Life and the Career coverage line in export. The stale Insights card correctly
+disappeared because the area was now current. The imported goal itself remained
+marked in Direction and on the domain page: a mixed area did not erase the
+origin of an individual imported entry.
+
+Health supplied the concept-within-a-mixed-area case without inventing another
+fixture. The area contains owner history and therefore had no Life badge, while
+its current energy and sleep-quality concepts rest on imported readings and each
+showed `Imported` on the domain page; the considered current-energy fact remained
+marked in export.
+
+The independent evidence probe at
+`docs/qa/evidence/phase08-origin-aggregate-probe.ts` rewrote every golden scenario
+under four origin sets and exercised the intelligence layer directly:
+
+- owner-only, imported-only, device-only, and derived-only;
+- domain and concept coverage sources;
+- nine insight kinds, including five trajectory cards and a state-association
+  card per origin set;
+- five non-coverage insight kinds with mixed owner/imported evidence.
+
+Imported, measured, and worked-out conclusions resolved to the correct word;
+owner-only and mixed conclusions resolved to no badge. The probe passed.
+
+## Previously repaired findings remain repaired
+
+- The focused legacy-import browser suite passed **54 / 54** across 360, 430,
+  and 1280 px viewports. It covers QA-08-002's idempotency/refusal paths,
+  QA-08-N1, QA-08-N2, privacy, owner/list origin, aggregate presence, spacing,
+  and laboratory/owner separation.
+- The deployed Galaxy S24-class Android-style gate passed **56 / 56**, including
+  later unchanged and one-row-changed backups, Life and Insights origin badges,
+  touch targets, overflow, and console checks.
+- The full local gate passed: format, lint, typecheck, **1,193 / 1,193 tests in
+  57 files**, and a production build.
+- Raw-archive inertness, atomic apply/read-back, rollback, privacy handling,
+  exact idempotency, and the architecture boundary remain covered and unchanged.
+- The Preview owner history was restored after destructive checks. Final result:
+  `Restored and checked: the store now holds 8 entries, exactly as the backup
+  does`, followed by a reopened-database read of 8 identical records.
+
+No product or application-test code was modified by QA. The only new executable
+artifact is the narrowly scoped QA evidence probe above. The protected previous-
+generation tree was not touched.
+
+## QA-08-003 — the widened insight regression proves only that an array exists
+
+**Classification:** closeout-blocking verification defect; false green; D-108
+test-title/body mismatch. No current product-behavior defect was observed.
+
+The test is titled:
+
+```text
+every insight declares where its evidence came from
+```
+
+Its complete assertion is:
+
+```ts
+for (const insight of insightsFor(SIT).insights) {
+  expect(Array.isArray(insight.sources), insight.id).toBe(true)
+}
+```
+
+Every insight constructor initializes `sources: []`. Removing the central
+`withSources` computation — the code that actually finds the cited records and
+their origins — leaves every value an array and this test green. A trajectory or
+association card can therefore lose all imported/device/derived disclosure while
+the regression named for that claim still passes.
+
+The test also runs one small three-record situation that produces a coverage
+card, not the trajectory and association cases the second-retest handoff
+explicitly asks QA to press on. The independent probe confirms the product works
+today; it also demonstrates the missing durable assertion can be written over
+the existing golden histories.
+
+**Required regression:** exercise every produced insight kind under at least
+owner and one non-owner origin and assert the actual source values and displayed
+origin decision, not merely the container type. Explicitly include trajectory
+and state-association cards, imported/device/derived labels, and a mixed basis
+that resolves to no badge. Prove removal of `withSources` fails it.
+
+## QA-08-004 — the fourth export section has no imported-origin regression
+
+**Classification:** closeout-blocking verification defect; false green; D-108
+enumeration mismatch. No current product-behavior defect was observed.
+
+The repair claims four aggregate export consumers:
+
+1. What the app is saying now;
+2. Direction, goals and commitments;
+3. How well each area is understood;
+4. What has been worked out.
+
+The synthetic test asserts current facts, goals, and coverage. The browser test
+asserts only Recent record and Direction. A repository search finds no test that
+asserts imported origin in **What has been worked out**; the only remaining
+insight-origin assertion is the `Array.isArray` check above.
+
+This mismatch is visible in the repair documentation itself: the surface table
+names four export sections, while the reintroduction account says “each of the
+three export sections one.” Removing `fromSources(...)` from `insightsSection`
+would therefore restore the live defect on that section without failing the
+named import-origin regressions.
+
+**Required regression:** isolate `## What has been worked out` in an export with
+an imported-only insight, assert `· Imported` on that insight line, and pair it
+with an owner-only or mixed insight that carries nothing. Prove reintroducing the
+unmarked `insightsSection` line fails the assertion. Make the test title enumerate
+exactly the sections its body holds.
+
+## Required repair
+
+Keep Phase 8 **YELLOW**. Repair QA-08-003 and QA-08-004 under canonical plan
+section 42 as test/verification defects. The current product behavior should not
+need to change; if the new assertions expose a real mismatch, repair the whole
+class and report it separately.
+
+Preserve every confirmed product repair and all previous passes. Run the full
+builder gate, perform the two specific reintroductions above, deploy the resulting
+checkpoint, and append a third-retest handoff to this same report for this SAME
+Codex QA conversation. Do not begin Phase 9.
+
+## D-082 / D-092 — next action
+
+- **Model:** Claude Opus-class, strongest currently available (or nearest current
+  equivalent)
+- **Intelligence level:** **Max** — the product is correct, but the remaining
+  work is claim-to-evidence regression design across insight kinds and export
+  composition, the exact false-green class that escaped twice.
+- **Conversation:** **CURRENT CLAUDE BUILDER CONVERSATION** — this remains the
+  same unresolved Phase 8 defect loop.
+- **Report path:** `docs/qa/PHASE_08_QA_HANDOFF.md`
+
+## COPY/PASTE PROMPT
+
+```text
+Continue the Phase 8 repair for the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Independent QA retested product checkpoint d433079 and returned FAIL on the
+regression/reintroduction contract, while confirming the deployed product
+behavior itself is repaired.
+
+Read docs/qa/PHASE_08_QA_HANDOFF.md in full, especially “Retest repair —
+independent QA second retest”. Keep Phase 8 YELLOW and repair QA-08-003 and
+QA-08-004 under canonical plan section 42.
+
+QA-08-003: the test titled “every insight declares where its evidence came from”
+only asserts Array.isArray(insight.sources). Every constructor already supplies
+an empty array, so removing the central withSources computation leaves it green.
+Add a regression that asserts actual origins across produced insight kinds,
+including trajectory and state-association, owner/imported/device/derived, and a
+mixed basis that remains unmarked. Prove removing withSources fails it.
+
+QA-08-004: the repair claims imported-origin disclosure in four aggregate export
+sections, but tests cover only current facts, goals, and coverage; no test asserts
+the “What has been worked out” insight line. Add an imported-only insight plus an
+owner-only or mixed comparison, assert the section itself, and prove removing
+fromSources from insightsSection fails it.
+
+Use the independent QA probe at
+docs/qa/evidence/phase08-origin-aggregate-probe.ts as evidence or a starting
+point, but put durable product regressions in the normal test gate. Keep every
+confirmed product repair and previous pass. Do not modify the QA report. Do not
+begin Phase 9.
+
+Run the full builder gate and the two named reintroductions, deploy the repaired
+checkpoint, keep Phase 8 YELLOW, and append a complete third-retest handoff to
+this same report addressed to the SAME Codex QA conversation, with D-092 model,
+level, conversation, report path, and launcher.
+```
+
+---
+
+**Model:** Claude Opus-class, strongest currently available (or nearest current
+equivalent)
+
+**Intelligence level:** Max
+
+**Conversation:** CURRENT Claude builder conversation
+
+```text
+Continue the Life Command OS rebuild's Phase 8 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_08_QA_HANDOFF.md in full and execute the current repair
+handoff exactly as written.
+
+Do not ask me to paste the file contents.
+```
