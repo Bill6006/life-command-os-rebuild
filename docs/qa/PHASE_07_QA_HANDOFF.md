@@ -1130,3 +1130,5 @@ retest handoff for the SAME Codex QA conversation. Include exact verification,
 unchanged deferrals, model, level, conversation and the D-092 launcher. Do not
 make the owner ask for the retest prompt.
 ```
+
+<!-- LCO_COMPLETE -->
