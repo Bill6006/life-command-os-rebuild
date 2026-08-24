@@ -1627,13 +1627,15 @@ of the three kinds of claim it is making.
 | Priority | Count | IDs |
 | --- | --- | --- |
 | **P0** | **9** | AUD-0001, 0002, 0003, 0014, 0015 *(part b)*, 0028, 0031, 0036, 0048 |
-| **P1** | **22** | AUD-0005, 0008, 0011 *(parts a, b)*, 0015 *(part a)*, 0016, 0017, 0019, 0020, 0023, 0025, 0026, 0027, 0032, 0033, 0034, 0035, 0037, 0040, 0041, 0042, 0049, 0050 |
+| **P1** | **22** | AUD-0004, 0005, 0008, 0011 *(parts a, b)*, 0015 *(part a)*, 0016, 0017, 0019, 0020, 0023, 0025, 0026, 0027, 0032, 0033, 0034, 0035, 0037, 0040, 0041, 0042, 0049, 0050 |
 | **P2** | **18** | AUD-0006, 0007, 0009, 0010, 0018, 0021, 0022, 0024, 0029, 0030 *(part a)*, 0038, 0039, 0043, 0044, 0045, 0046, 0047, 0051 |
-| **P3** | **3** | AUD-0012, 0013, 0030 *(part b)* |
+| **P3** | **2** | AUD-0012, 0013, and AUD-0030 *(part b)* |
 | **Owner-blocked** | **1** | AUD-0011 *(part c)* — and AUD-0018, which is P2 and also blocked |
 | **Total** | **51** | |
 
-AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in the total.
+Each band's count is the number of findings whose **primary** priority is that band, so they sum
+to 51. AUD-0011, AUD-0015 and AUD-0030 split across bands and appear in two rows each without
+being counted twice.
 
 ## By type
 
@@ -2066,11 +2068,12 @@ failure arriving as prose. I recommend (a) and have written both findings assumi
 
 **Name.** *The app is wrong about the time, and about his daughter.*
 
-**Why a phase and not a backlog.** Nineteen items, one theme, one gate. They are the findings
-where the app states something untrue on a screen the owner reads. Phase 9 will typeset those
-screens and take them to a phone gate; anything not fixed first becomes settled design.
+**Why a phase and not a backlog.** Twenty-two items, one theme, one gate. They are the findings
+where the app states something untrue on a screen the owner reads, or where the interface is
+missing an action the plan promises. Phase 9 will typeset those screens and take them to a phone
+gate; anything not fixed first becomes settled design.
 
-**Scope — in.** The nineteen items listed in section 4. **Scope — out.** Every structural
+**Scope — in.** The twenty-two items listed in section 4. **Scope — out.** Every structural
 change (threads, commitment windows, registry-driven situation, the score re-cut, the four
 dormant domains). Those are Phase 10, and starting one of them inside 8.5 would turn a
 two-week correction into a re-architecture and delay Phase 9 for no visual benefit.
@@ -2094,10 +2097,28 @@ decisions, told truthfully, at every hour of the day.
 
 **Gate.** The block sweep from 8.5.0 across all twenty scenarios at five blocks, plus the
 independent QA protocol (D-077 / D-090 — QA runs in Codex, cold, and audits meaning before it
-duplicates gates). Two specific acceptance items, both of which currently fail: **no
-owner-visible string asserts the evening outside the evening**, and **a named limiter always
-has a candidate that addresses it**.
+duplicates gates). Four specific acceptance items, all four of which currently fail:
 
-**What Phase 8.5 explicitly does not deliver.** Strategy, plans, sequences, the four dormant
-domains, Adaya's age, spaced study, cross-domain combination, or a re-cut score. All of those
-are argued for above, all of them are Phase 10, and none of them is a reason to delay Phase 9.
+1. **No owner-visible string asserts the evening outside the evening**, at any block, in any
+   scenario.
+2. **A named limiter always has a candidate that addresses it**, in every block.
+3. **No sentence about the child claims consecutiveness the occasions do not support**, and the
+   growth suggestion states how many occasions went the other way.
+4. **The owner can stop a recommendation family**, and find and lift that veto afterwards.
+
+The library must also contain a history with a failed growth occasion and a history set in the
+morning with something to decide — without those two fixtures, items 2 and 3 cannot be tested,
+which is how they survived 1,199 green assertions.
+
+**What Phase 8.5 explicitly does not deliver.** Strategy and threads (AUD-0020), commitment
+windows (AUD-0004), the registry-driven situation (AUD-0040), the dormant concepts (AUD-0011),
+Adaya's age and the normative frame (AUD-0018, owner-blocked), setting-aware growth occasions
+(AUD-0017), spaced study and goal horizons (AUD-0010, AUD-0021, AUD-0046), a second movement
+routine (AUD-0045), the relationship graph (AUD-0047), cue clauses (AUD-0051), or the re-cut
+score and the re-run tournament (AUD-0035, AUD-0039). All are argued for above, all are Phase 10
+or later, and none is a reason to delay Phase 9.
+
+**One thing 8.5 should produce besides code.** Three of its items amend a standing decision —
+AUD-0031 amends D-036, AUD-0048 amends D-070's sufficiency test, and AUD-0027's second half
+would widen the DEF-0006 rule. Each needs a decision-log entry written **before** the change,
+not after, so the next reader finds the rule from the defect and the defect from the rule.
