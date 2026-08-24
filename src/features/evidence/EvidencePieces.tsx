@@ -107,7 +107,7 @@ export function EvidenceLines({
           const origin = originFor?.(line.record)
           return (
             <li key={line.record}>
-              {line.text}
+              {line.text}{' '}
               {origin === undefined ? null : (
                 <span className="origin-badge" data-testid="ev-origin" title={origin.detail}>
                   {origin.label}

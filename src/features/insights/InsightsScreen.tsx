@@ -204,7 +204,7 @@ function InsightCard({
        * different kinds of thing about the card.
        */}
       <p className="in-card__meta">
-        <span className="in-card__eyebrow">{insight.eyebrow}</span>
+        <span className="in-card__eyebrow">{insight.eyebrow}</span>{' '}
         {origin === undefined ? null : (
           <span className="origin-badge" data-testid="insight-origin" title={origin.detail}>
             {origin.label}

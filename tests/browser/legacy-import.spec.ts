@@ -433,6 +433,44 @@ test.describe('bringing it across', () => {
     await expect(cards.first()).toHaveText('Imported')
   })
 
+  test('the badge is separated by a space, not only by a margin', async ({ page }) => {
+    /*
+     * `margin-left` separates the badge on screen and nowhere else. Read aloud
+     * or copied out, "…may come up on Now." and "Imported" ran together as one
+     * word — and the surface this matters most on is the one whose whole job is
+     * to say the two things are different.
+     *
+     * Asserted on the rendered text rather than on the style, because a margin
+     * is exactly the thing that looks like it has solved this and has not.
+     */
+    await openData(page)
+    const file = await legacyFile(page, PASSPHRASE)
+    await readIt(page, file)
+    await page.getByTestId('import-apply').click()
+    await expect(page.getByTestId('import-outcome')).toContainText('Brought')
+
+    for (const [destination, testId] of [
+      ['Timeline', 'tl-origin'],
+      ['Life', 'life-origin'],
+      ['Insights', 'insight-origin'],
+    ] as const) {
+      await page.locator('.nav').getByRole('button', { name: destination }).click()
+      await expect(page.getByRole('heading', { level: 1, name: destination })).toBeVisible()
+      const badges = page.getByTestId(testId)
+      if ((await badges.count()) === 0) continue
+
+      const runTogether = await badges.first().evaluate((node) => {
+        const parent = node.parentElement
+        if (parent === null) return false
+        const text = parent.innerText
+        const at = text.lastIndexOf('Imported')
+        if (at <= 0) return false
+        return !/\s/.test(text.charAt(at - 1))
+      })
+      expect(runTogether, `${destination} runs the badge into the text before it`).toBe(false)
+    }
+  })
+
   test('the export says so too, where the reader was not there', async ({ page }) => {
     await seedOwnerHistory(page)
     await openData(page)

@@ -94,7 +94,7 @@ export function TimelineScreen() {
                         entry.withheld ? 'tl-entry__text tl-entry__text--held' : 'tl-entry__text'
                       }
                     >
-                      {entry.text}
+                      {entry.text}{' '}
                       {entry.origin === undefined ? null : (
                         <span
                           className="origin-badge"

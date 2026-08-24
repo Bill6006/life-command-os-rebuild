@@ -71,6 +71,19 @@ None.
   Insights badge also moved **out** of the eyebrow, because resetting the
   inherited properties fixes the symptom and the two are still different kinds
   of thing about the card.
+
+  And one more found by the same reading: the badge was separated from the text
+  before it by `margin-left` and by nothing else, so on the Life overview the
+  rendered text ran "…may come up on Now.Imported" as one word. A margin
+  separates a badge on screen and nowhere else — not read aloud, not copied
+  out, not in any assertion over text. Every badge now has a real space before
+  it, held by `tests/browser/legacy-import.spec.ts`, "the badge is separated by
+  a space, not only by a margin", which asserts the rendered text rather than
+  the style because a margin is exactly the thing that looks like it has solved
+  this and has not. Proved by reintroduction on the Life overview — the Insights
+  card is a flex row, where the browser separates the two anyway, so the probe
+  there passes either way and the honest place to prove it is where it broke.
+
 - Note on how it was found: the gate asserted the badge was _present_ and
   counted it. Present and legible are two claims, and only the first can be
   counted — the same distinction as "on the screen" versus "distinguishable on

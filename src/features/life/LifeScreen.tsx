@@ -183,8 +183,7 @@ export function LifeScreen() {
                       </p>
                       {area.detail === undefined ? null : (
                         <p className="life-area__detail">
-                          {area.detail}
-                          <AreaOrigin coverage={area.coverage} />
+                          {area.detail} <AreaOrigin coverage={area.coverage} />
                         </p>
                       )}
                     </div>

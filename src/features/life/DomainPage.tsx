@@ -244,7 +244,7 @@ export function DomainPage({ page }: { page: LifePage }) {
           {data.goals.map((goal) => (
             <div key={goal.source} className="domain-goal">
               <p className="domain-goal__statement">
-                {goal.statement}
+                {goal.statement}{' '}
                 {goal.origin === undefined ? null : (
                   <span
                     className="origin-badge"
@@ -284,7 +284,7 @@ export function DomainPage({ page }: { page: LifePage }) {
             {data.recentChanges.map((change: RecentChange) => (
               <li key={change.id} className="domain-recent__row">
                 <span className="domain-recent__text">
-                  {change.text}
+                  {change.text}{' '}
                   {change.origin === undefined ? null : (
                     <span
                       className="origin-badge"
@@ -435,7 +435,7 @@ function ConceptRow({
         }
       >
         {reading.text}
-        {reading.outOfDate ? ' — out of date' : ''}
+        {reading.outOfDate ? ' — out of date' : ''}{' '}
         {reading.origin === undefined ? null : (
           <span className="origin-badge" data-testid="domain-origin" title={reading.origin.detail}>
             {reading.origin.label}
