@@ -406,9 +406,9 @@ touch daily moves through `goal-fit` matching a domain (AUD-0021).
 | **Likely root cause** | `recent-duplication` is the only spacing-shaped dimension and it is a blunt three-day penalty over *recorded* moves (`evaluate.ts:573`), which is not a spacing model and is blind to moves he ignored (AUD-0033). |
 | **Recommended behaviour** | Give the career generator a per-topic interval derived from the goal's horizon where one exists and a conservative default otherwise, and expand it as the topic succeeds. Say it plainly: *"You went over subnetting on Tuesday. Leave it until Friday — it sticks better with a gap."* Where the retention target is unknown, do not invent one; use a fixed short ladder and say the rule is general rather than personal (section 68). Keep the claim associative: the app may say spacing generally helps recall, never that it will work for him. |
 | **Benefit** | Turns the career domain from "study something" into a schedule, which is what a certification actually needs, and it costs no new owner input. |
-| **Implementation scope** | `candidates.ts` (interval gate on `recall-practice`/`review-weak-topic`), `moves.ts` (an interval field), `explain.ts` (name the gap), `direction.ts` (read the goal horizon — goals currently carry no target date, so this needs an optional one). |
+| **Implementation scope** | `candidates.ts` (interval gate on `recall-practice`/`review-weak-topic`), `moves.ts` (an interval field), `explain.ts` (name the gap), `direction.ts` (read the goal horizon — **`GoalRecord.targetWindow` already exists and is already carried to `ActiveGoal`; see AUD-0046**, so this is a consumer, not a schema change). |
 | **Risks** | A goal horizon is new owner input; ask for it once, at goal creation, and treat its absence as unknown rather than defaulting. Over-spacing would make the career domain go quiet and then trip the coverage engine — the two must be reconciled or the app will nag about a domain it deliberately paused. |
-| **Schema / data impact** | Optional target date on `GoalRecord`; a per-topic last-practised projection (derivable from episodes, no new record needed). |
+| **Schema / data impact** | **None** — `GoalRecord.targetWindow` already exists, parses and round-trips (AUD-0046). A per-topic last-practised projection is derivable from episodes. |
 | **Tests required** | Assert the same topic is not re-offered inside its interval and that the explanation names the gap. Assert a deliberately paused topic does not raise a coverage limiter. |
 | **Priority** | **P2** |
 | **Timing** | **PHASE 10** |
@@ -467,9 +467,9 @@ touch daily moves through `goal-fit` matching a domain (AUD-0021).
 | **Owner-facing example** | "A Saturday with people in it" is the only scenario where social wins, and it is the scenario where `socialEnergy` was answered high. In every other history the domain is silent. |
 | **Evidence** | `candidates.ts:432-480`; scenario sweep; `questions.ts:106-114`. |
 | **Likely root cause** | Unknown is being read as low rather than as unknown, contrary to D-014 and G-009. |
-| **Recommended behaviour** | Distinguish the three states. Known-low: propose nothing, and say solitude is the right call if asked. Known-high: as now. **Unknown**: allow a *low-cost* social candidate — `reach-out` to a specific person the record has not seen in months — with `uncertainty` carrying the not-knowing, exactly as other generators do. That is also the app's only route to noticing a friendship going quiet, which is the most valuable thing it could do in this domain. |
+| **Recommended behaviour** | Distinguish the three states, and note that the projection this needs already exists — see **AUD-0047**. Known-low: propose nothing, and say solitude is the right call if asked. Known-high: as now. **Unknown**: allow a *low-cost* social candidate — `reach-out` to a specific person the record has not seen in months — with `uncertainty` carrying the not-knowing, exactly as other generators do. That is also the app's only route to noticing a friendship going quiet, which is the most valuable thing it could do in this domain. |
 | **Benefit** | The social domain becomes capable of surfacing something the owner does not already know, rather than agreeing with something he just typed. |
-| **Implementation scope** | `candidates.ts` (three-state gate), a "last contact" projection over person entities. |
+| **Implementation scope** | `candidates.ts` (three-state gate). **The "last contact" projection already exists** — `memory/projections.ts` builds it and only the QA laboratory reads it (AUD-0047) — so this is a consumer, not a new projection. |
 | **Risks** | Suggesting contact with a person the app has stale or wrong information about is embarrassing in a way most defects are not. Require a named person entity with a real last-contact record; never infer one. |
 | **Schema / data impact** | None; person entities and records already carry what is needed. |
 | **Tests required** | Assert unknown social energy produces a low-cost candidate and known-low produces none. Assert no person is named without a contact record behind them. |
@@ -707,11 +707,11 @@ what it chose yesterday, or an hour ago.
 | **Owner-facing example** | Career page: *"Finish a meaningful certification"* with a "Done" and a "No longer this" button and nothing else — no date, no progress, no sense of whether it is moving. On Now: *"Pass the CCNA before the winter — and subnetting is the weak part"*, which is an excellent sentence resting on no measurement of the first clause. |
 | **Evidence** | `evaluate.ts:227-259`; `direction.ts`; `candidates.ts:268-333` (`goal-behind` raised without a progress reading); the Career domain page. |
 | **Likely root cause** | Plan section 21 asks that long-range direction be definable and revisable and stops there; section 22 forbids a life score, which correctly discouraged progress *numbers* and appears to have discouraged progress *modelling* along with them. |
-| **Recommended behaviour** | Give a goal an optional horizon and an optional small set of named parts (for a certification, its topics — which already exist as `learning-topic` entities). Then `goal-fit` can read *coverage of the parts* rather than domain membership, and the app can say the thing it currently cannot: *"Four of nine topics have had a session. The exam is eleven weeks out."* That is a trajectory and a coverage statement, not a score, so section 22 holds. Only raise `goal-behind` when something actually measures behind. |
+| **Recommended behaviour** | Read the horizon the record already has (AUD-0046) and add an optional small set of named parts (for a certification, its topics — which already exist as `learning-topic` entities). Then `goal-fit` can read *coverage of the parts* rather than domain membership, and the app can say the thing it currently cannot: *"Four of nine topics have had a session. The exam is eleven weeks out."* That is a trajectory and a coverage statement, not a score, so section 22 holds. Only raise `goal-behind` when something actually measures behind. |
 | **Benefit** | Connects the long horizon to the daily move, which is the whole promise of section 21, and makes the career domain's excellent sentences true. |
 | **Implementation scope** | `GoalRecord` (optional horizon, optional parts), `direction.ts`, `evaluate.ts` (`goalFit`), `insights.ts` (a trajectory card), the Career page (see and edit parts). |
 | **Risks** | Parts are input burden and will not be filled in for most goals; the model must work with zero parts and simply say less. A "4 of 9" reading is one short step from a completion percentage, which is a score by another name — say counts, never percentages, about the owner. |
-| **Schema / data impact** | Additive fields on `GoalRecord`; existing goals unaffected. |
+| **Schema / data impact** | `targetWindow` needs no change (AUD-0046). Parts are one additive field on `GoalRecord`; existing goals unaffected. |
 | **Tests required** | A goal with no parts behaves exactly as today. A goal with parts changes `goal-fit` and produces a trajectory card. Assert no percentage about the owner reaches any surface. |
 | **Priority** | **P2** |
 | **Timing** | **PHASE 10** (after AUD-0020; a thread is the natural carrier for goal parts) |
@@ -1375,6 +1375,96 @@ by any history in the library, which is AUD-0008's point again.
 
 ---
 
+## K. Found in the Stage 3 completion pass
+
+The first pass read the core decision path — `situation`, `candidates`, `constraints`,
+`evaluate`, `arbitrate`, `explain`, `learning`, `growth`, `guide` — and grepped the rest. This
+pass read the rest: `vocabulary`, `values`, `direction`, `corrections`, `constraints` in full,
+`coverage`'s repair routes, `insights` at length, `memory/projections`, and a systematic sweep
+of every declared record-payload field against its consumers.
+
+All three findings here are the same shape, and it is the shape section 4.9 of this audit
+already named: **a value carried correctly to a place where nothing reads it.** They differ
+from the six seams listed there only in that these are in the *data model* rather than between
+pipeline stages.
+
+### K.1 — AUD-0045
+
+| Field | Detail |
+| --- | --- |
+| **ID** | AUD-0045 |
+| **Title** | "A walk" is the only movement the app can ever suggest, and there is no route by which the owner could add another |
+| **Type** | **INTELLIGENCE** |
+| **Current behaviour** | `healthCandidates` hardcodes its subject: `subject: A_WALK, object: A_WALK` (`candidates.ts:503-505`). `A_WALK` is one of exactly four entities in `STANDING_ENTITIES` (`vocabulary.ts:32-63`) — sleep, winding down, a walk, easing off — which are "the few things the engine is allowed to name by itself" under D-021. The generator has no branch that reads an owner-supplied routine. The entity kind `'routine'` is declared in `domain/entities.ts:30` and appears **nowhere in `src/features/`**: no surface creates one, and the legacy mapper does not produce one. |
+| **Problem** | The entire Health & Physical Capacity domain has one verb and one object, so every owner, on every good day, forever, gets *"Move for 25 minutes: a walk."* If he swims, cycles, lifts, runs or plays five-a-side, the app cannot suggest it and he cannot tell it. This is section 64's failure in its purest available form — not two different people receiving the same wording by accident, but a domain that is structurally incapable of producing a second sentence. It also quietly caps `association.ts`: the observed relationship it can discover about movement is a relationship about walking, because walking is all there is. |
+| **Owner-facing example** | Across all eighteen scenarios and every block, the health domain produced exactly one recommendation string: *"Move for 25 minutes: a walk."* (with "Get some movement in: a walk." as the no-duration variant in the template table). The Health & Recovery page offers "Current energy" and "Soreness or pain" to correct and nothing to name. |
+| **Evidence** | `src/intelligence/candidates.ts:494-515`; `src/intelligence/vocabulary.ts:32-63`; `src/domain/recommendation.ts:215-219` (both `move` templates); `grep -rn "'routine'" src/features/` → no matches. Live sweep of all eighteen scenarios. |
+| **Likely root cause** | D-021 is right and is not the problem: the engine must not invent the owner's life. The gap is the other half of that rule — the owner has no way to *supply* a routine, so the engine's placeholder became the permanent answer. Career, home, social, fatherhood and money all read the owner's own entities (`firstOfKind`); health alone does not. |
+| **Recommended behaviour** | Give `healthCandidates` the same shape as every other generator: prefer an owner-named `routine` entity in the health domain, and fall back to `A_WALK` only when none exists. Add one route to create one — the Health page already has an "Add this" affordance for concepts and needs the equivalent for a routine. Nothing else changes: the verb, the profile, the priors and the constraint filter all already work on whatever object they are handed. |
+| **Benefit** | Turns the domain with the most one-note output into one that says the owner's own word, at the cost of one branch and one input. It is also the smallest available fix for a section-64 failure anywhere in the product. |
+| **Implementation scope** | `candidates.ts` (one `firstOfKind` branch with a fallback), a routine-creation control on the Health & Recovery page, and a per-routine `size`/`demand` default since `moves.ts` currently carries one profile for the `move` verb rather than per object. |
+| **Risks** | The move profile is keyed on verb, so a 25-minute walk and a 90-minute gym session would share `size`, `friction` and `demand` — which would make the constraint filter's `no-time` and `too-strained` checks wrong for the heavier one. Either capture a rough size when the routine is created, or restrict the first version to routines the owner sizes himself. Do **not** widen `ACTION_FAMILIES` to pool them (see risks below). |
+| **Schema / data impact** | None to records — `routine` is already a declared entity kind and already serialises. |
+| **Tests required** | Assert an owner-named routine displaces "a walk" as the subject and that the sentence names it. Assert the fallback is unchanged when none exists. Assert two routines produce two separately-scoped learned beliefs and two separately-scoped associations — which is the invariant the next paragraph is about. |
+| **Priority** | **P2** |
+| **Timing** | **PHASE 10** |
+
+**One thing this finding reveals that is worth stating separately.** Three modules are already
+hardened against an owner having two movement routines, and the product cannot produce one.
+`association.ts:95` explains why `ACTION_FAMILIES` exists and is deliberately **empty**: "a walk
+and a bike ride are both the `move` verb, they were pooled, and the pooled result was printed as
+a finding about *a walk*" (DEF-0046, D-091). `corrections.ts:125-129` scopes a belief correction
+to `move/routine:a-walk` rather than the verb for the same reason. `describe.ts:354` names the
+same case. **"A bike ride" appears in this repository only in comments** — no scenario, no
+fixture, no entity, no creation route. The learning, correction and rendering layers are
+correctly generalised over an object space with exactly one member, and have been since the
+defect that generalised them. That is not wasted work; it means AUD-0045 is a one-branch change
+rather than a re-architecture. It is worth knowing which way round that is.
+
+### K.2 — AUD-0046
+
+| Field | Detail |
+| --- | --- |
+| **ID** | AUD-0046 |
+| **Title** | A goal's target window exists in the schema, is parsed, serialised and carried to the situation — and no decision reads it, and no surface writes it |
+| **Type** | **ARCHITECTURE** |
+| **Current behaviour** | `GoalRecord` declares `readonly targetWindow?: DueWindow` (`records.ts:210`). `wire.ts` reads it in (`:372`) and writes it out (`:778-780`). `direction.ts` declares it on `ActiveGoal` (`:77`) and assigns it (`:170`). A repository-wide sweep finds **no other reference**: not in `evaluate.ts`, not in `candidates.ts`, not in `explain.ts`, not in `insights.ts`, and not anywhere in `src/features/` — so nothing reads it and no owner surface can set it. |
+| **Problem** | This is the single field that would make the app's best sentence true. *"Pass the CCNA before the winter — and subnetting is the weak part"* names a deadline the app cannot see. With `targetWindow` read, the career generator gets a retention interval for spacing (AUD-0010), `goalFit` gets a notion of whether a goal is running out of time, and the `goal-behind` trigger — which the career generator currently raises whenever a goal merely exists — gets something that actually measures behind. Without it, a long-range goal is a string that adds 0.6 to same-domain moves. |
+| **Owner-facing example** | Career page: *"Finish a meaningful certification"* with "Done" and "No longer this" and no date. On Now: *"Pass the CCNA before the winter — and subnetting is the weak part."* The clause "before the winter" is the owner's own words inside a statement string; the app has a typed field for exactly that fact, empty, two layers down. |
+| **Evidence** | `src/domain/records.ts:210`; `src/domain/wire.ts:372`, `:778-780`; `src/intelligence/direction.ts:77`, `:170`; systematic field-vs-consumer sweep over every declared record payload field (`targetWindow`: 2 references in `intelligence/`, both the declaration and the assignment; 0 in `features/`). |
+| **Likely root cause** | The field was added with the record schema in Phase 1, when the record layer was built ahead of the consumers, and the consumer never arrived. `DueWindow` machinery exists and is used elsewhere, so nothing ever failed. |
+| **Recommended behaviour** | Read it. One optional date input where a goal is created or edited, and three consumers: `goalFit` scales with time remaining against work remaining; the career generator derives its spacing interval from it (Cepeda's ridgeline puts the useful gap at roughly 10–20% of the retention interval, so a horizon is exactly the input that method needs); and `goal-behind` becomes raisable on evidence. Where it is absent, behave precisely as today — an absent horizon must stay unknown, never a default. |
+| **Benefit** | Removes the schema-change risk from **both** AUD-0010 and AUD-0021, which were each written assuming this field had to be added. It is already there and already round-trips through backup and restore. |
+| **Implementation scope** | A date control on the goal surface, `evaluate.ts` (`goalFit`), `candidates.ts` (career spacing), `explain.ts` (may name the horizon). No schema work, no migration, no wire change. |
+| **Risks** | A visible deadline on a personal goal is a different object from a private intention, and section 4.4 forbids framing a missed one as failure. The copy must be able to say a goal is close to its date without saying he is behind on his life. Keep it optional and keep an absent horizon silent. |
+| **Schema / data impact** | **None.** The field, its parser, its serialiser and its round-trip already exist. |
+| **Tests required** | Assert a goal with a horizon changes `goal-fit` and a goal without one behaves exactly as today. Assert `goal-behind` cannot be raised without something measuring behind. Assert backup → restore preserves a horizon (the wire path already does; assert it, since nothing currently exercises it). |
+| **Priority** | **P2** |
+| **Timing** | **PHASE 10** — and it should land **before** AUD-0010 and AUD-0021, which both depend on it |
+
+### K.3 — AUD-0047
+
+| Field | Detail |
+| --- | --- |
+| **ID** | AUD-0047 |
+| **Title** | The app builds a relationship graph with a quality signal on every interaction, and only the QA laboratory reads it |
+| **Type** | **ARCHITECTURE** |
+| **Current behaviour** | `RelationshipEventRecord` carries `withEntity`, `nature`, and `quality?: 'positive' \| 'neutral' \| 'strained'` (`records.ts:381-386`). `memory/projections.ts:234-243` folds every one into a `RelationshipEvent` with its entity, nature, timestamp and quality, alongside an entity edge graph and a `dangling` list. The only consumer of `view.relationships` in the whole product is **`src/features/qa/QaScreen.tsx:683-703`**. Elsewhere the record kind is used generically: Timeline prints its `nature` as a line, a domain page lists it, `coverage.ts:412` counts it toward whether the social area matters to him, and `association.ts:196` names it a confounding kind so a pair spanning one is discarded. Nothing reads `quality`, and nothing reads the graph. |
+| **Problem** | The social domain is gated on a single self-reported scalar — `socialEnergy >= 0.6` (AUD-0013) — while the app is quietly maintaining exactly the structure that would let it say something worth hearing. It knows who he has seen, when, and whether it went well or badly, and its only social recommendation is conditional on him having already said he feels sociable. Section 10 lists "reconnect with someone" as a possible move and "which contexts make connection easier" as something the app can learn; both are reachable from this projection and neither is implemented. |
+| **Owner-facing example** | "Nine months of evenings" contains a real relationship: Insights says *"You say reaching out to your sister gets all the way there about half the time."* The app has her as an entity, has the events, and has how each went. It cannot say *"you haven't spoken to your sister since October"* — the projection holds the date and no surface asks it. |
+| **Evidence** | `src/domain/records.ts:381-386`; `src/memory/projections.ts:234-243`; `grep -rn "view.relationships" src/` → three lines, all `QaScreen.tsx`; `src/intelligence/association.ts:196` (confounding only); `src/intelligence/coverage.ts:412` (importance only); `src/features/history/describe.ts:364` (`nature` as a Timeline line). |
+| **Likely root cause** | The projection was built in Phase 1 with the memory layer, and the QA laboratory was the first surface that needed to show that projections work. The social generator arrived in Phase 2 reading a concept rather than a projection, because `situation.ts` carries concepts and not projections — the same hand-written-assembler seam as AUD-0040. |
+| **Recommended behaviour** | Carry the relationship projection onto the `Situation` and give the social generator a second branch: where a person entity's most recent event is old by that relationship's own standard, propose `reach-out` naming them, with the last contact as the reason — *"You haven't spoken to your sister since October."* Use `quality` only to choose between `reach-out` and leaving it alone, never to rank people, and never to say anything evaluative about a person on screen. Combined with AUD-0013's three-state gate this turns the social domain from "confirms an appetite he reported" into the one thing it could genuinely notice. |
+| **Benefit** | The single largest unrealised capability in the product measured against work already done: the data structure, the record kind, the parser and the projection all exist and are correct. |
+| **Implementation scope** | `situation.ts` (carry the projection — AUD-0040 makes this the natural place), `candidates.ts` (one social branch), `explain.ts` (a last-contact reason), and a decision-log entry on what `quality` may and may not be used for. |
+| **Risks** | The highest interpersonal risk in the audit. A recommendation naming a real person, on stale or wrong data, is embarrassing in a way most defects are not — require a real event record, never infer one, and never suggest contact on the strength of `quality` alone. Storing and acting on a judgement about how an interaction with a named person went also deserves the same discretion the private domain gets; it must never appear on Timeline as an evaluation of that person. |
+| **Schema / data impact** | None. The record kind, its fields, its wire format and its projection already exist and round-trip. |
+| **Tests required** | Assert no person is named without a relationship-event record behind them. Assert `quality` never reaches an owner-visible sentence about a person. Assert the social branch is silent when the only evidence is old or absent. Extend `tests/synthetic/observed-relationships.test.ts`, which D-091's table already names as the home for identity and correctability invariants. |
+| **Priority** | **P2** |
+| **Timing** | **PHASE 10** (with AUD-0040 and AUD-0013) |
+
+---
+
 # 3. Totals
 
 ## By priority
@@ -1383,10 +1473,10 @@ by any history in the library, which is AUD-0008's point again.
 | --- | --- | --- |
 | **P0** | **8** | AUD-0001, 0002, 0003, 0014, 0015 *(part b)*, 0028, 0031, 0036 |
 | **P1** | **20** | AUD-0005, 0008, 0011 *(parts a, b)*, 0015 *(part a)*, 0016, 0017, 0019, 0020, 0023, 0025, 0026, 0027, 0032, 0033, 0034, 0035, 0037, 0040, 0041, 0042 |
-| **P2** | **14** | AUD-0006, 0007, 0009, 0010, 0018, 0021, 0022, 0024, 0029, 0030 *(part a)*, 0038, 0039, 0043, 0044 |
+| **P2** | **17** | AUD-0006, 0007, 0009, 0010, 0018, 0021, 0022, 0024, 0029, 0030 *(part a)*, 0038, 0039, 0043, 0044, 0045, 0046, 0047 |
 | **P3** | **3** | AUD-0012, 0013, 0030 *(part b)* |
 | **Owner-blocked** | **1** | AUD-0011 *(part c)* — and AUD-0018, which is P2 and also blocked |
-| **Total** | **44** | |
+| **Total** | **47** | |
 
 AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in the total.
 
@@ -1395,8 +1485,8 @@ AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in
 | Type | Count | IDs |
 | --- | --- | --- |
 | **BUG** | **7** | 0001, 0002, 0003, 0005, 0014, 0015, 0032 |
-| **INTELLIGENCE** | **17** | 0004, 0007, 0009, 0010, 0012, 0013, 0016, 0017, 0018, 0019, 0021, 0024, 0026, 0028, 0029, 0031, 0042 |
-| **ARCHITECTURE** | **9** | 0006, 0011, 0020, 0022, 0025, 0035, 0039, 0040, 0041 |
+| **INTELLIGENCE** | **18** | 0004, 0007, 0009, 0010, 0012, 0013, 0016, 0017, 0018, 0019, 0021, 0024, 0026, 0028, 0029, 0031, 0042, 0045 |
+| **ARCHITECTURE** | **11** | 0006, 0011, 0020, 0022, 0025, 0035, 0039, 0040, 0041, 0046, 0047 |
 | **PRODUCT / UX** | **11** | 0008, 0023, 0027, 0030, 0033, 0034, 0036, 0037, 0038, 0043, 0044 |
 
 ## By timing
@@ -1405,11 +1495,11 @@ AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in
 | --- | --- |
 | BEFORE PHASE 9 (Phase 8.5) | 19 |
 | PHASE 9 | 3 |
-| PHASE 10 | 23 |
+| PHASE 10 | 26 |
 | PHASE 11 | 2 |
 | POST-RELEASE-OPTIONAL | 1 |
 
-*(Counts exceed 44 because AUD-0011, AUD-0015, AUD-0025, AUD-0030 and AUD-0038 are split
+*(Counts exceed 47 because AUD-0011, AUD-0015, AUD-0025, AUD-0030 and AUD-0038 are split
 across phases.)*
 
 ## Findings that turned out not to be defects
