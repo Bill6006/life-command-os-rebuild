@@ -372,7 +372,6 @@ function ImportReport({ plan, preview }: { plan: ImportPlan; preview: LegacyPrev
               : `${plan.inventory.firstDay} to ${plan.inventory.lastDay ?? plan.inventory.firstDay}`
           }
         />
-        <Row label="Made with" value={`${preview.kdf}, ${preview.cipher}`} mono />
       </Rows>
 
       {plan.conflicts.length === 0 ? null : (
@@ -447,6 +446,25 @@ function ImportReport({ plan, preview }: { plan: ImportPlan; preview: LegacyPrev
             as written.
           </p>
         )}
+      </details>
+
+      {/*
+       * The crypto parameters, behind inspection rather than in the list above.
+       *
+       * They were a "Made with" row among the counts, and they do not belong
+       * there: that list is what this would *do*, and PBKDF2-SHA-256 is not a
+       * consequence of anything. It answers neither question the owner has at
+       * that moment — is this the right file, and will it work — and section 36
+       * puts developer vocabulary behind inspection rather than on the surface.
+       * Kept, because somebody checking a file six months from now will want it.
+       */}
+      <details className="data-detail" data-testid="import-file-detail">
+        <summary>How that file was made</summary>
+        <Rows>
+          <Row label="Key" value={preview.kdf} mono />
+          <Row label="Rounds" value={String(preview.iterations)} mono />
+          <Row label="Cipher" value={preview.cipher} mono />
+        </Rows>
       </details>
 
       <p className="note">

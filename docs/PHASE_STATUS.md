@@ -58,10 +58,11 @@ different facts, and the relationship between them is **checked**, not stated.
 
 |                    |                                                                                                                          |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------ |
-| Product checkpoint | `77fb34a` — the last commit that changed anything the build emits, and the build every result below was measured against |
+| Product checkpoint | `ffd943e` — the last commit that changed anything the build emits, and the build every result below was measured against |
+| Earlier this phase | `77fb34a`, the first complete build; `2d2d70e`, the one the read-through was done against and DEF-0068 found on          |
 | Closing SHA        | current `main` HEAD. Documentation only past the checkpoint                                                              |
 | Deployed SHA       | read live from `preview/build-info.json`. It is whatever was pushed last and is **not expected** to equal the checkpoint |
-| Bundle equivalence | `node scripts/checkpoint-equivalence.mjs 77fb34a` — see the QA handoff for the run                                       |
+| Bundle equivalence | `node scripts/checkpoint-equivalence.mjs ffd943e --deployed <build-info-url>` — passes                                   |
 | Stable Preview URL | https://bill6006.github.io/life-command-os-rebuild/preview/                                                              |
 | Live proof         | `preview/build-info.json`, and the equivalence script above                                                              |
 

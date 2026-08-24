@@ -5,197 +5,265 @@ is Codex (D-090); Claude builds. Every handoff ends with the model, the level,
 the conversation and a short copyable launcher (D-092) — the detail lives here,
 in the repository.
 
-**Phase 7 is GREEN.** Five rounds, closed on independent Codex QA PASS (Round
-5). Full record in [`PHASE_STATUS.md`](PHASE_STATUS.md) under "Phase 7 — AI
-exports + backup/restore"; the QA report is
-[`qa/PHASE_07_QA_HANDOFF.md`](qa/PHASE_07_QA_HANDOFF.md).
+**Phase 8 is YELLOW — READY FOR INDEPENDENT QA.** The builder does not
+self-certify (D-077). Full record in [`PHASE_STATUS.md`](PHASE_STATUS.md) under
+"Phase 8 — Legacy migration".
 
-|                                           |                                              |
-| ----------------------------------------- | -------------------------------------------- |
-| Approved product checkpoint               | `e9979ef`                                    |
-| Closing / deployed SHA                    | `b151ec8`, bundle-equivalent, confirmed live |
-| Unit / contract / synthetic / adversarial | 1059 / 1059, 52 files                        |
-| Browser                                   | 405 / 405 — 135 tests × 360, 430, 1280px     |
-| Independent QA                            | PASS, Codex Round 5                          |
+|                                           |                                          |
+| ----------------------------------------- | ---------------------------------------- |
+| Product checkpoint                        | `ffd943e`                                |
+| Deployed SHA                              | read live; see the checkpoint note below |
+| Unit / contract / synthetic / adversarial | 1170 / 1170, 56 files                    |
+| Browser                                   | 444 / 444 — 148 tests × 360, 430, 1280px |
+| Clean-checkout `npm run verify`           | Pass                                     |
+| Android-style gate on the deployed build  | Clean, 44 checks                         |
+| Independent QA                            | **Outstanding**                          |
 
-Phase 7 added four standing decisions: **D-097** (with its amendment) on how a
-checkpoint is named and when; **D-098** on an artefact stating its identity in
-its first line and an exclusion covering metadata as well as detail; **D-099**
-on a restore's confirmation being part of its result; **D-100** on a sticky
-layer owning its own opacity, and legibility being proved with pixels.
-
-**Phase 8 — Legacy migration (canonical plan section 53) is next.**
+Phase 8 added five standing decisions: **D-101** on four dispositions and why
+silence is not one of them; **D-102** on there being one door out of the
+previous generation and it needing the passphrase; **D-103** on naming a
+standing instruction the app cannot keep rather than storing an inert one;
+**D-104** on an import being the restore transaction with different contents;
+**D-105** on a reason the owner reads and a reason that survives audit being two
+strings.
 
 ---
 
 ## NEXT ACTION
 
-- **System:** **Claude**
-- **Model:** Opus-class (Claude Opus 5, or the current strongest Claude coding
-  model if renamed)
-- **Intelligence level:** **Max**
-- **Conversation:** **NEW** — a phase boundary, and Phase 7's five QA rounds
-  are not context Phase 8 needs.
-- **Why this model and level:** this is the phase D-080 reserves Opus-class for,
-  and the one place in the whole rebuild where **Max** rather than High is the
-  honest call. It is not a bounded build against a written spec: it is a
-  semantic mapping between two data models designed years apart, where the
-  interesting decisions are all judgement about meaning — which legacy concept
-  is genuinely the same thing as a canonical one, which merely looks like it,
-  and which must be preserved verbatim rather than mapped at all. Section 30's
-  own warning is the reason: _do not contort the new architecture to make legacy
-  mapping easier_. Getting that wrong is not a bug that shows up in a test; it
-  is a life's history quietly re-interpreted.
-- **Why a new conversation:** Phase 7 is closed, and its context is five rounds
-  of export composition, restore atomicity and checkpoint provenance. None of
-  it helps with legacy mapping, and carrying it forward would spend the window
-  that mapping needs.
-- **Attach/reference:** `docs/CANONICAL_REBUILD_PLAN.md` sections 30 and 53,
-  section 59's legacy exclusions, `src/domain/records.ts`
-  (`ImportedLegacyRecord`), `tests/contract/legacy-quarantine.test.ts`,
-  `src/memory/restore.ts` (the apply/verify/rollback shape Phase 7 already
-  built), and the legacy tree named in the prompt.
+- **System:** **Codex** (independent QA — D-090)
+- **Model:** GPT-5-class Codex, the strongest currently available for reading a
+  screen critically (or the nearest current equivalent if renamed)
+- **Reasoning level:** **High**
+- **Conversation:** **NEW CODEX CONVERSATION REQUIRED FOR INDEPENDENCE**
+- **Why this model:** the phase's hardest question is semantic rather than
+  mechanical — whether what the import says it did is what it actually did to
+  the owner's history — and that needs a model that can hold a data model in
+  mind while reading ordinary sentences on a screen.
+- **Why this level:** High rather than Max because the acceptance criteria are
+  written down and the surfaces are few. The judgement calls this phase makes
+  are recorded with their reasons, so the work is auditing stated claims against
+  observed behaviour rather than deriving the mapping independently.
+- **Why a new conversation:** the reviewer must not inherit the builder's model
+  of why this is correct. This phase is almost entirely judgement about meaning,
+  which is exactly the kind of reasoning a shared context would launder.
+- **Report path:** `docs/qa/PHASE_08_QA_HANDOFF.md`
+- **Attach/reference:** nothing to attach. The prompt names every path, and
+  D-090's first step is cold use **before** reading any of them.
 
 ---
 
 ## COPY/PASTE PROMPT
 
 ```text
-Begin Phase 8 — Legacy migration. Repository:
+You are running independent QA on Phase 8 of the Life Command OS rebuild.
 
+Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Read docs/CANONICAL_REBUILD_PLAN.md sections 30 and 53 in full, and section 59
-(explicit legacy exclusions). Read docs/PHASE_STATUS.md's Phase 7 entry for the
-apply/verify/rollback reasoning you will be extending rather than re-deriving.
-Do not ask the owner to paste any of it; you have the paths.
+Product checkpoint under test: ffd943e
+Deployed Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
 
-THE LEGACY TREE, AND THE ONE RULE ABOUT IT
+THE CHECKPOINT, AND WHY IT WILL NOT MATCH THE DEPLOYED SHA
 
-The previous generation of this app lives at:
+Read the deployed SHA from preview/build-info.json. It is whatever was pushed
+last and is NOT expected to equal ffd943e — every push to main redeploys,
+including the push of this handoff. D-097: a handoff names the product
+checkpoint and separately reports the live deployed SHA, and never asserts the
+two are the same string.
 
-  D:\Code\AI Coding Agents\Codax\Life App
+To check they are bundle-equivalent, run:
 
-It is at HEAD 45091d0 with one untracked doc. **Owner decision D-001 protects
-it absolutely: it is legacy/reference only and must never be modified,
-reinitialized, force-pushed, repointed or overwritten.** Read from it. Write
-nothing to it, run nothing in it that writes, and do not run its build or its
-tests. If you need to execute anything against it, copy what you need into the
-rebuild's own scratch space first.
+  node scripts/checkpoint-equivalence.mjs ffd943e --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
 
-It holds work that exists nowhere else. Treat every file in it as evidence.
+If the fetch hits a certificate-chain error in your Node runtime, read the
+deployed SHA yourself and use `--ref <full-sha>` instead. If it reports that
+the deployed build is OLDER than the checkpoint, the deploy has not landed yet
+— wait and read it again. That is not a defect and it cost a whole QA round in
+Phase 7.
 
-WHAT IS ALREADY THERE, ON BOTH SIDES
+WORK IN THIS ORDER (D-090, docs/qa/README.md)
 
-In the rebuild:
+1. SEALED COLD OWNER-USE. Open the deployed Preview at a normal Now and use it
+   as the owner would, BEFORE reading any repository document. Record what it
+   appears to claim. Do not read the plan, the decision log or the phase status
+   until you have done this.
+2. Claim-to-evidence semantic audit: for each claim on screen, establish what
+   it actually rests on.
+3. Semantic and product correctness: does the app mean what it says, and is
+   what it says worth saying.
+4. Targeted phase acceptance, now that the meaning is understood.
+5. Targeted known-defect regression for the surfaces this phase touched.
+6. Architecture inspection where a defect suggests the boundary is wrong rather
+   than the line.
+7. Full-suite duplication ONLY on a concrete trigger — a builder claim that does
+   not match observed behaviour, a suspected false-green, or a change to the
+   test harness itself. Green builder tests are evidence; re-running them to
+   watch them go green again buys nothing.
 
-- `imported-legacy-record` already exists as a canonical record kind
-  (src/domain/records.ts) carrying `legacyFormat` and a verbatim `raw` payload.
-- tests/contract/legacy-quarantine.test.ts already proves the hard part of
-  section 30's last rule: a legacy record whose payload is a perfectly good
-  observation does not become an answer. Preserved, visible, inert. That test
-  is the floor you build on, not something to revisit.
-- src/memory/restore.ts is the transactional apply/verify/rollback Phase 7
-  built, with its stages and its no-false-success outcome type. Section 30's
-  "snapshot, atomic apply, verify, rollback" is the same shape, and it should
-  be the same code where it honestly can be.
-- src/memory/backup.ts's structural validation and content fingerprint are
-  reusable for the same reasons.
+WHAT THIS PHASE CLAIMS TO HAVE BUILT
 
-In the legacy tree, worth reading before you design anything:
+The app can read a backup written by the PREVIOUS VERSION of this app and bring
+its history across. The surface is a new panel at the bottom of Data, behind
+More → "Exports, backup and restore".
 
-- src/importers/legacy/ — detect, inventory, mapping, plan, apply, report,
-  traverse. The previous generation's own importer for the generation before
-  it. It is prior art for exactly this problem and its shape maps onto section
-  30's list almost line for line. Read it for what it learned, not to copy it.
-- src/infrastructure/backup/portableBackup.ts — the legacy portable backup.
-  **It is encrypted**: plaintext envelope, ciphertext payload, passphrase-
-  derived key (src/infrastructure/crypto/backupCrypto.ts). This is a real
-  constraint on Phase 8 and you should establish early what it means — whether
-  import goes through that file and therefore needs the owner's passphrase and
-  a compatible crypto implementation, or through some plaintext path, and
-  whether that choice is the owner's to make.
-- src/application/queries/aiExport.ts — the legacy AI export.
-- src/domain/records/ — the legacy canonical record model. This is the thing
-  you are mapping from.
+Governing documents, to be read at step 2 and not before:
 
-WHAT SECTION 53 ASKS FOR
+- docs/CANONICAL_REBUILD_PLAN.md sections 30 (legacy data strategy), 53 (this
+  phase), and 59 (explicit legacy exclusions)
+- docs/PHASE_STATUS.md, "Phase 8 — Legacy migration"
+- docs/DECISION_LOG.md, D-101 to D-105, and D-091's eight invariants
+- docs/ARCHITECTURE_BOUNDARIES.md, the `src/legacy/` section
+- src/legacy/mapping.ts — the registry, which is where the phase's judgement is
 
-A legacy detector; a quarantined parser; a mapping inventory; explicit semantic
-mappings; raw preservation for uncertain fields; preview and dry run; a
-snapshot; atomic apply; verify; rollback; idempotency; duplicate detection;
-provenance.
+SECTION 53'S GATE, WHICH IS WHAT ACCEPTANCE MEANS HERE
 
-The gate: legacy import does not change the recommendation engine
-architecture; ambiguous mappings remain explicit; imported raw legacy records
-cannot silently drive decisions; current app behaviour remains correct with no
-legacy data present.
+Build: legacy detector; quarantined parser; mapping inventory; explicit semantic
+mappings; raw preservation for uncertain fields; preview/dry run; snapshot;
+atomic apply; verify; rollback; idempotency; duplicate detection; provenance.
 
-WHERE THE JUDGEMENT IS, AND WHERE IT IS NOT
+Gate:
+- legacy import does not change the recommendation engine architecture;
+- ambiguous mappings remain explicit;
+- imported raw legacy records cannot silently drive decisions;
+- current app behaviour remains correct with no legacy data present.
 
-The mechanical half — detect, quarantine, preview, apply atomically, verify,
-roll back, do not duplicate — is bounded, and Phase 7 already built most of its
-machinery.
+Section 30's critical rule is the one to hold everything against:
 
-The half that needs Max is the mapping. Section 30's critical rule is the whole
-phase in one sentence: **do not contort the new architecture to make legacy
-mapping easier.** A legacy concept that does not map cleanly is preserved as
-archive data, not forced into a canonical shape that nearly fits. Three
-specific traps, all of them section 59's:
+  Do not contort the new architecture to make legacy mapping easier.
 
-- The old 0/1/2 life score, the old bottleneck taxonomy, the old move
-  catalogue, the old streaks and the old domain maturity UI do NOT return.
-  Legacy rows carrying them are archive, not concepts.
-- A legacy field whose meaning you are unsure of is preserved verbatim and
-  mapped to nothing. Uncertain is a state; guessing is a defect.
-- D-091's invariants govern anything imported the moment it becomes visible.
-  An imported reading that reaches a surface is a claim, and it has to carry
-  the same evidence and provenance discipline as one the owner entered today.
+If a legacy concept does not map cleanly it is preserved as historical archive
+data rather than recreated in the old model's shape.
 
-Propose the mapping decisions and the reasoning rather than guessing silently,
-and flag anything that needs the owner's explicit decision. This phase writes
-to the owner's only copy of his own history, so an assumption that turns out
-wrong is not a cosmetic bug — and unlike Phase 7's restore, the thing being
-written is a *re-interpretation* of records rather than a copy of them.
+HOW TO EXERCISE IT — YOU WILL HAVE TO MAKE A FILE
 
-CHECKPOINT AND HANDOFF DISCIPLINE — read these before your first commit
+There is no real legacy backup in this repository and there must never be one
+(section 39 — real owner data never enters it). To test the import you need to
+build an encrypted legacy file yourself. It is the previous generation's format:
 
-Phase 7 lost two of its five QA rounds to this and both are now written down:
+  {
+    "format": "life-command-os.backup",
+    "formatVersion": 2,
+    "createdAt": "<iso>",
+    "encrypted": true,
+    "approximateRecordCount": <n>,
+    "crypto": {
+      "cryptoVersion": 1, "kdf": "PBKDF2", "kdfHash": "SHA-256",
+      "iterations": <n>, "cipher": "AES-GCM", "keyBits": 256,
+      "saltBase64": "...", "ivBase64": "..."
+    },
+    "ciphertextBase64": "..."
+  }
 
-- D-097: a handoff names the product checkpoint and separately reports the
-  live deployed SHA. It never asserts the two are the same string, because
-  every push after a checkpoint — including the push of the handoff itself —
-  moves the deployed SHA forward by design.
-- D-097's amendment: a checkpoint is named only AFTER its deploy has landed,
-  confirmed by reading the live manifest — not by observing that the CI
-  workflow succeeded, because GitHub's own pages-build-deployment runs after
-  the workflow that publishes.
-- `node scripts/checkpoint-equivalence.mjs <checkpoint> --deployed <build-info-url>`
-  does both checks in one command. If the fetch hits a certificate-chain error
-  in your Node runtime, `--ref <full-sha>` with a SHA you read yourself is the
-  supported fallback.
+The plaintext inside the ciphertext is:
 
-HOW TO PROCEED
+  {
+    "payloadVersion": 1,
+    "storageSchemaVersion": 1,
+    "recordCount": <n>,
+    "integrity": { "algorithm": "SHA-256", "digest": "<sha256 hex of JSON.stringify(records)>" },
+    "records": [ ... ]
+  }
 
-Follow section 43's protocol. Build, verify with the full builder gate (unit,
-contract, synthetic, adversarial, browser, clean-checkout npm run verify,
-privacy scan, CI, and a real Android-style pass against the deployed Preview
-via scripts/android-gate.mjs), deploy, confirm the live SHA, and reach
-YELLOW — READY FOR INDEPENDENT QA. Do not self-certify (D-077).
+`records` is sorted by `recordId` before the digest is taken, and the digest is
+over `JSON.stringify(records)` — the array alone, not the whole payload. The
+crypto metadata is passed to AES-GCM as additional authenticated data, as the
+eight values joined by `|` in exactly this order: cryptoVersion, kdf, kdfHash,
+iterations, cipher, keyBits, saltBase64, ivBase64.
 
-Two things Phase 7 learned the hard way and you should not have to learn again:
+tests/contract/legacyFixture.ts and tests/browser/legacy-import.spec.ts both
+build one; either is a working reference. Use a small iteration count for speed.
 
-- `npx playwright test` serves a PREBUILT dist and never builds. Use
-  `npm run test:browser` when a source change needs testing — a reintroduction
-  checked with a bare playwright run tests the previous bytes and passes.
-- A sweep that cannot fire on the thing it was written for reads as evidence
-  either way. Phase 7 shipped three of them and found all three only by
-  reintroducing the defect and watching the test not fail. Prove every
-  regression by reintroduction, and when one passes, ask whether it *could*
-  have failed.
+A legacy record looks like this (the old envelope):
 
-End with D-092's model, level, conversation and a short copyable launcher
-addressed to Codex for independent QA — cold-use first, per D-090's seven-step
-order in qa/README.md — so the owner does not need another turn to obtain the
-next prompt.
+  {
+    "recordId": "<uuid or any stable string>",
+    "recordType": "observation",
+    "schemaVersion": 1,
+    "occurredAt": "<iso>", "recordedAt": "<iso>",
+    "localTime": { "localIso": "...", "timeZone": "America/Denver", "utcOffsetMinutes": -360 },
+    "source": "user-entry",
+    "provenance": { "method": "direct-report" },
+    "privacy": "general",
+    "category": "time-attention-capacity",
+    "attribute": "state:energy",
+    "value": { "kind": "anchored-scale", "scaleId": "energy", "ordinal": 4, "label": "Good" }
+  }
+
+The previous generation had twenty-eight record types. They are listed in
+tests/unit/legacy-mapping.test.ts. Its observed value kinds are `quantity`,
+`duration`, `count`, `state`, `note`, `anchored-scale` and `unsure`.
+
+THINGS WORTH TRYING TO DISPROVE
+
+- That what the report says would happen is what actually happens. The preview
+  and the apply are claimed to be one code path; check the counts on screen
+  against the history afterwards, and against a backup taken after the import.
+- That an imported entry can be told from one the owner wrote today, on every
+  surface it can reach — Timeline, Life, a domain page, Insights, an export.
+- That nothing imported changes a recommendation. Import readings that argue
+  hard for a different evening and see whether Now moves.
+- That the same file twice is genuinely a no-op, and that a file edited between
+  two imports does not rewrite what is already there.
+- That a wrong passphrase, a truncated file, a damaged one and this app's OWN
+  backup each get a different and actionable sentence, and that none of them
+  writes anything.
+- That an import cannot run against the owner's history while a QA-laboratory
+  scenario is on screen, and that the way out it names can be pressed from where
+  it is named.
+- That the private area is handled correctly: a legacy row classified
+  `private-pattern` or `child`, and a row carrying no `privacy` at all.
+- Whether anything on this screen reads as developer vocabulary, false
+  precision, a claim from ignorance, or a count of one against a plural noun.
+  **This is where the builder's own read-through found the phase's only blocking
+  defect**, after every gate was green — so it is worth doing slowly, with every
+  disclosure opened, rather than trusting that a sweep now covers it.
+- Whether the report is legible and operable on a 360px Android context with
+  touch, a mobile user agent and a realistic device pixel ratio — not a narrowed
+  desktop viewport.
+
+EXPLICIT DEFERRALS, CONFIRMED UNCHANGED
+
+These are stated so you can confirm they are still true rather than report them
+as new findings:
+
+- Production release remains preview-only for the QA surface.
+- No partial or section-by-section import; no undo button (the way back is a
+  backup taken beforehand, one panel up).
+- The single-page app that came BEFORE the previous version (`v297-phase68`) is
+  recognised and deliberately not imported.
+- Four legacy families are kept exactly as written and left for an owner
+  decision rather than mapped: `life-context-change`, `skill-claim`,
+  `faith-anchor` and `milestone-observation`.
+- `derivedRecordId` joins its parts on a literal NUL byte and has since Phase 3.
+  It is named in an allow-list rather than changed, because changing it moves
+  every derived id already written. It is an open item for the owner.
+
+WHAT YOU MAY AND MAY NOT DO
+
+Do not repair application or product code. You may create or update only
+docs/qa/PHASE_08_QA_HANDOFF.md and narrowly scoped QA evidence artifacts.
+
+Do not modify anything at D:\Code\AI Coding Agents\Codax\Life App. That is the
+previous generation and owner decision D-001 protects it absolutely: read-only,
+never modified, never reinitialised, never overwritten.
+
+THE REPORT
+
+Write docs/qa/PHASE_08_QA_HANDOFF.md to the contract in canonical plan section
+43 and docs/qa/README.md section 3: phase; checkpoint SHA tested; deployed SHA
+tested; Android/mobile configuration; governing acceptance criteria; scenarios
+and flows tested with PASS/FAIL each; exact reproductions for defects; semantic,
+behavioural, privacy and mobile findings; blocking versus non-blocking; evidence
+references; automated tests that gave false confidence; deferred items confirmed
+unchanged; overall PASS or FAIL.
+
+End with D-082 and D-092: the complete ready-to-paste next prompt written into
+that file, and a short standalone launcher naming the recommended Claude model,
+the intelligence level, the conversation instruction and the exact file to read.
+On FAIL that prompt goes to the CURRENT builder conversation for repair under
+section 42; on PASS it goes there for the formal GREEN closeout. Do not wait to
+be asked for it.
 ```
+
+<!-- LCO_COMPLETE -->
