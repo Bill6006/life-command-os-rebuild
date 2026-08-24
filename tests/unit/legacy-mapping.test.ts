@@ -9,7 +9,9 @@ import {
   FAMILY_RULES,
   MAPPING_RULES_VERSION,
   PRIVACY_BY_LEGACY_CLASS,
+  UNKNOWN_FAMILY_RULE,
   attributeRuleFor,
+  declinedOwnerReasonFor,
   declinedReasonFor,
   privacyForLegacyClass,
   ruleFor,
@@ -191,6 +193,92 @@ describe('attribute rules point at things that exist', () => {
         true,
       )
       expect(declinedReasonFor(cited[1] ?? ''), declined.attribute).not.toMatch(/\bSame as\b/)
+    }
+  })
+})
+
+/**
+ * The registry's audit trail and the sentence the owner reads are two jobs.
+ *
+ * They were one string, and the import report rendered it verbatim. So the
+ * screen told the owner about "D-091 invariant 6", "Section 59", "the
+ * contortion section 30 forbids", a constant named `MOVE_PREFERENCE_NOTE`, and
+ * what "the owner" had decided — about himself, in the third person. Every
+ * automated check in this repository passed on it; it was found in one pass by
+ * opening the deployed build and reading the panel.
+ *
+ * Sections 36 and 4.6: developer-facing language does not belong on an owner
+ * surface, and the app speaks to him rather than about him. The sweep below is
+ * over **every** entry rather than the ones already fixed, so the twenty-ninth
+ * rule inherits the rule instead of having to remember it.
+ */
+describe('what the owner reads is not the audit trail', () => {
+  /** Each pattern with what it is actually protecting against. */
+  const DEVELOPER_LANGUAGE: readonly { readonly pattern: RegExp; readonly what: string }[] = [
+    { pattern: /\bD-\d{3}\b/, what: 'a decision id' },
+    { pattern: /\bsections?\s+\d+/i, what: 'a plan section number' },
+    { pattern: /\b[A-Z][A-Z0-9]*_[A-Z0-9_]+\b/, what: 'an identifier from this codebase' },
+    { pattern: /\binvariant\b/i, what: 'plan vocabulary' },
+    { pattern: /\bcanonical\b/i, what: 'plan vocabulary' },
+    { pattern: /\bdefect\b/i, what: 'developer vocabulary' },
+    { pattern: /\bschema\b/i, what: 'developer vocabulary' },
+    { pattern: /\brecord type\b/i, what: 'developer vocabulary' },
+    { pattern: /\bprovenance\b/i, what: 'developer vocabulary' },
+    { pattern: /\bquarantine/i, what: 'developer vocabulary' },
+    { pattern: /\bdisposition\b/i, what: 'developer vocabulary' },
+    /*
+     * The app is talking **to** him. "The owner rules that out" on his own
+     * screen is the app discussing him with somebody else while he reads.
+     */
+    { pattern: /\bthe owner\b/i, what: 'the third person, about the person reading it' },
+    { pattern: /\bhe (?:rules|did not|would|says)\b/i, what: 'the third person' },
+  ]
+
+  /** Every string this phase can put in front of the owner. */
+  function ownerFacing(): readonly { readonly where: string; readonly text: string }[] {
+    return [
+      ...FAMILY_RULES.map((rule) => ({ where: `family ${rule.legacyType}`, text: rule.owner })),
+      { where: 'unrecognised family', text: UNKNOWN_FAMILY_RULE.owner },
+      ...DECLINED_ATTRIBUTES.map((entry) => ({
+        where: `declined ${entry.attribute}`,
+        text: entry.owner,
+      })),
+    ]
+  }
+
+  it('is checking something', () => {
+    // A sweep over an empty list passes and proves nothing.
+    expect(ownerFacing().length).toBeGreaterThan(40)
+  })
+
+  it('carries no decision id, plan section, identifier or developer word', () => {
+    const offenders: string[] = []
+    for (const { where, text } of ownerFacing()) {
+      for (const { pattern, what } of DEVELOPER_LANGUAGE) {
+        const found = pattern.exec(text)
+        if (found !== null) offenders.push(`${where}: ${what} — "${found[0]}"`)
+      }
+    }
+    expect(offenders, 'owner-facing text may not read like the audit trail').toEqual([])
+  })
+
+  it('still keeps the audit trail, and keeps it different', () => {
+    // The reasoning is not watered down to pass the sweep above — it moves.
+    for (const rule of FAMILY_RULES) {
+      expect(rule.owner, rule.legacyType).not.toBe(rule.because)
+      expect(rule.owner.length, rule.legacyType).toBeGreaterThan(40)
+    }
+    // And at least some of it genuinely cites what it rests on, or the sweep
+    // would be satisfiable by a registry that argued nothing anywhere.
+    const citing = FAMILY_RULES.filter((rule) => /\bD-\d{3}\b|\bsection \d+/i.test(rule.because))
+    expect(citing.length).toBeGreaterThan(3)
+  })
+
+  it('gives every declined attribute both, and keeps them apart', () => {
+    for (const entry of DECLINED_ATTRIBUTES) {
+      expect(declinedReasonFor(entry.attribute), entry.attribute).toBe(entry.because)
+      expect(declinedOwnerReasonFor(entry.attribute), entry.attribute).toBe(entry.owner)
+      expect(entry.owner, entry.attribute).not.toBe(entry.because)
     }
   })
 })

@@ -67,20 +67,20 @@ different facts, and the relationship between them is **checked**, not stated.
 
 ## Verification
 
-| Gate                                      | Result                                                                                                                             |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Privacy scan                              | Clean, 191 tracked files                                                                                                           |
-| Format (Prettier)                         | Pass                                                                                                                               |
-| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                   |
-| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                     |
-| Unit / contract / synthetic / adversarial | 1163 passed / 1163, 56 files (in plain Node, no DOM)                                                                               |
-| Browser tests (Playwright)                | 441 passed / 441 — 147 tests × 360, 430, 1280px                                                                                    |
-| Production build                          | Pass                                                                                                                               |
-| `npm run verify` from a clean checkout    | Pass — cloned fresh at `77fb34a`, `npm ci`, 1163/1163                                                                              |
-| Deployed build is the checkpoint's        | By `scripts/checkpoint-equivalence.mjs`, not by string comparison (D-097)                                                          |
-| Reintroduction pass                       | **9 across the phase, 8 caught on the first attempt** — the ninth is DEF-0067, and it is the reason the count is reported this way |
-| Builder's own Android-style gate          | `scripts/android-gate.mjs` against the deployed checkpoint, now including the whole import flow by touch                           |
-| Independent QA                            | **Outstanding**                                                                                                                    |
+| Gate                                      | Result                                                                                                                                 |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy scan                              | Clean, 191 tracked files                                                                                                               |
+| Format (Prettier)                         | Pass                                                                                                                                   |
+| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                       |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                         |
+| Unit / contract / synthetic / adversarial | 1163 passed / 1163, 56 files (in plain Node, no DOM)                                                                                   |
+| Browser tests (Playwright)                | 441 passed / 441 — 147 tests × 360, 430, 1280px                                                                                        |
+| Production build                          | Pass                                                                                                                                   |
+| `npm run verify` from a clean checkout    | Pass — cloned fresh at `77fb34a`, `npm ci`, 1163/1163                                                                                  |
+| Deployed build is the checkpoint's        | By `scripts/checkpoint-equivalence.mjs`, not by string comparison (D-097)                                                              |
+| Reintroduction pass                       | **12 across the phase, 11 caught on the first attempt** — the twelfth is DEF-0067, and it is the reason the count is reported this way |
+| Builder's own Android-style gate          | `scripts/android-gate.mjs` against the deployed checkpoint, now including the whole import flow by touch                               |
+| Independent QA                            | **Outstanding**                                                                                                                        |
 
 Phase 7 ended at 1059 unit-layer tests across 52 files. The 104 new ones are four
 new suites plus the architecture guards.
@@ -93,7 +93,7 @@ new suites plus the architecture guards.
 | `adversarial/legacy-hostile.test.ts` — damaged, wrong, and actively lying files |    16 |
 | `unit/architecture-guards.test.ts` — the wall around `src/legacy/`              |    +6 |
 
-Browser: `tests/browser/legacy-import.spec.ts`, 12 tests × 3 viewports = 36 new,
+Browser: `tests/browser/legacy-import.spec.ts`, 13 tests × 3 viewports = 39 new,
 on top of the 405 already there — all unchanged, all still green.
 
 ## Gate checklist (section 53)
@@ -203,7 +203,61 @@ than as a code change.
 
 Decrypt only. There is no encryptor in `src/legacy/` and a guard keeps one out.
 
-## Three defects, all found by making a test fail on purpose
+## The one that no gate could see, and one person could
+
+Every gate below was green. 1163 unit-layer tests, 441 browser tests across
+three widths, a clean-checkout verify, CI, and a 44-check Android gate driving
+the whole import flow by touch on the deployed build. Then the deployed build
+was opened and the import report was **read**, and the panel turned out to be
+reading the registry's audit trail out loud:
+
+> `move-preference` — 1 entry, kept exactly as written. The one that most looks
+> like it should map, and must not. **See MOVE_PREFERENCE_NOTE.**
+
+> `recommendation` — 1 entry, left out on purpose. **Section 59** — the old move
+> catalogue does not return as product truth.
+
+> Deliberately not brought across — 1 entry. **D-091 invariant 6 by name.**
+> Mood, stress, confidence and overwhelm are four things … the wellness score
+> **he** rules out.
+
+Every rule in the registry carries a `because` written so that a claim about
+somebody else's data model stays checkable a year later — it cites decisions,
+plan sections and the names of things in that file. The report rendered it
+verbatim. So the screen sent the owner to a constant he cannot open, quoted
+plan sections at him, used the word "defect", and discussed him in the third
+person while he was reading it.
+
+DEF-0068, and it is a blocker rather than a polish item: the report is the
+whole safeguard of this phase. It is what he reads before agreeing to write a
+re-interpretation of his history into the only copy of it.
+
+**The fix is a second field, not a rewritten one.** Every rule now carries
+`because` for whoever reads the registry and `owner` for the screen, and a test
+asserts they are different strings and that the audit trail still cites what it
+rests on — so it cannot be watered down to pass the sweep. Two regressions,
+because there are two ways in: the registry's strings, and the rendered panel,
+where a component can grow developer vocabulary in a label the registry sweep
+never looks at.
+
+One browser test in this very file already asserted
+`toContainText('move catalogue')`. That is an assertion **that the developer
+wording is on screen**, and it was green throughout.
+
+### And what that sweep then found on the screen next door
+
+Running it over the whole of Data rather than only over the new panel failed
+immediately on a Phase 7 string: the export section chooser offered
+**"Where the owner has overruled the app"** — the app discussing him in the
+third person, on his own screen, since Phase 7 went GREEN.
+
+It is fixed here rather than exempted, because a rule with a carve-out for the
+place it was first broken is not a rule. The title is now
+**"Where the app has been overruled"** — passive, because the same string is
+also a heading in the document he hands to an assistant, where "you" would read
+as the assistant.
+
+## Four defects, three found by making a test fail on purpose
 
 Full entries in [`DEFECT_LEDGER.md`](DEFECT_LEDGER.md).
 
@@ -227,7 +281,7 @@ property that does not exist. This is the failure Phase 7 shipped three of, and
 the handoff's instruction to prove every regression by reintroduction is the only
 reason it was found.
 
-## Nine reintroductions
+## Twelve reintroductions
 
 Each new guard and each new claim was proved by putting the defect back and
 watching the test fail.
@@ -253,7 +307,7 @@ neither pull moved it.
 
 ## Open items and questions for the owner
 
-Three, and none of them blocks QA.
+Four, and none of them blocks QA.
 
 1. **The generation before the previous one.** The single-HTML app's export
    (`v297-phase68`) is recognised by shape and refused with a sentence saying
@@ -267,7 +321,24 @@ Three, and none of them blocks QA.
    Inventing a concept to hold free text is the contortion section 30 forbids,
    so it is archived and flagged. Which of these should become durable context
    here, and against what, is the owner's to say.
-3. **`skill-claim`, `faith-anchor` and `milestone-observation` are archived.**
+3. **A NUL byte holds every derived record id together.** `derivedRecordId`
+   joins its parts on a literal NUL — written into the source as the byte
+   itself rather than as `\0` — and has since Phase 3. It is a perfectly sound
+   separator, precisely because it cannot occur in ordinary text, and it is
+   **load-bearing**: change it and every episode id already written moves, along
+   with every id an import has already produced.
+
+   The risk is that it is invisible. It survives git, and it survived Prettier
+   in `src`. It did **not** survive being quoted in this document: writing the
+   byte into the sentence above and running `prettier --write` replaced it with
+   U+FFFD without a word, which is exactly the failure mode — a tool rewrites
+   it, every derived id moves, and the diff shows nothing a reader would notice.
+
+   Named in the invisible-character sweep's allow-list rather than changed,
+   because changing it is a migration and not a tidy-up. **Worth a deliberate
+   decision; not this phase's to make.**
+
+4. **`skill-claim`, `faith-anchor` and `milestone-observation` are archived.**
    Each is real and each would have to assert something the original refused to:
    a skill claim explicitly carries no assertion of truth; a faith anchor is a
    standing statement and the nearest concept here is a reading of the last

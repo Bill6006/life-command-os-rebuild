@@ -39,6 +39,60 @@ None.
 
 ## Fixed
 
+### DEF-0068 — the import report read the audit trail out to the owner
+
+- Status: Fixed
+- Severity: Blocker — the report is the whole safeguard of this phase. It is
+  what the owner reads before agreeing to write a re-interpretation of his
+  history into the only copy of it, and it was written to somebody else
+- Found in: Phase 8 / `2d2d70e`
+- Found by: **the builder, by opening the deployed build and reading the
+  panel** — after 1163 unit-layer tests, 441 browser tests and a 44-check
+  Android gate had all passed on it
+- Class: **one string doing two jobs whose audiences disagree.** Every rule in
+  `src/legacy/mapping.ts` carried a single `because`, written as an audit trail
+  so that a claim about somebody else's data model stays checkable a year
+  later — it cites decisions, plan sections and the names of things in that
+  file. The import report then rendered it verbatim. Not one entry, all of
+  them: the panel told the owner about "D-091 invariant 6", "Section 59 — the
+  old move catalogue", "the contortion section 30 forbids", "the defect D-091
+  exists for", `ATTRIBUTE_RULES`, and — for the single most important row on the
+  screen — "See MOVE_PREFERENCE_NOTE", which is a constant in a file he cannot
+  open. It also discussed him in the third person while he was reading it:
+  "the wellness score he rules out", "something the owner did not", "The owner
+  decides whether these come across."
+- Reproduction: open the deployed Preview, go to Data, paste any legacy backup,
+  read it, and open "Every kind of entry in that file, and what became of it".
+  Every line is the registry's own prose.
+- Root cause: the audit trail is genuinely valuable and had to keep citing what
+  it rests on; the screen needed a sentence. Both were asked of one field, and
+  the field that already existed was the developer's.
+- Regression: two, because there are two ways in.
+  `tests/unit/legacy-mapping.test.ts` — "what the owner reads is not the audit
+  trail" sweeps **every** owner-facing string in the registry for decision ids,
+  plan section numbers, SCREAMING_CASE identifiers, plan vocabulary, developer
+  vocabulary and the third person, and separately asserts the audit trail still
+  exists, still cites, and is still a different string.
+  `tests/browser/legacy-import.spec.ts` — "speaks to the owner rather than to
+  whoever wrote it" sweeps the **rendered panel** with every disclosure opened,
+  because a component can grow developer vocabulary in a label or a heading
+  where a registry sweep never looks. Both proved by reintroduction.
+- Siblings: checked and clean. The refusal sentences built per-row in
+  `translate.ts` were in the same class and were split the same way
+  (`because` and `ownerBecause`); `MOVE_PREFERENCE_NOTE` itself is not
+  rendered; the panel's own copy, the outcome sentences and the refusal labels
+  were read and are clean. The screen sweep now holds all of it.
+- Note on the fix: the audit trail was **not** watered down to pass the sweep.
+  It moves. A test asserts each `owner` string differs from its `because`, and
+  that several `because` strings still cite a decision or a section — otherwise
+  a registry that argued nothing anywhere would satisfy the guard.
+- Note on how it was found: it is the exact shape Phase 7 recorded twice — a
+  gate that is green and a person who reads the screen and finds something no
+  assertion was asked. One browser test in this very file already asserted
+  `toContainText('move catalogue')`, which is an assertion **that the developer
+  wording is on screen**. It was green throughout.
+- Fixed in: the checkpoint that closes Phase 8
+
 ### DEF-0067 — a guard that could never fire, and an assertion that compared nothing to nothing
 
 - Status: Fixed
@@ -68,14 +122,28 @@ None.
   collapsed one level of backslash escaping, so `\\b` reached the file as a
   control character. The vacuous assertion was written from memory of the type
   rather than from the type.
-- Regression: the guards themselves, each proved by reintroduction —
+- Regression: **a direct sweep**, added after this happened a second time.
+  `tests/unit/architecture-guards.test.ts` — "nothing in the source is
+  invisible" reads every file under `src`, `tests` and `scripts` and fails on
+  any control character, with exactly one named exception: `derivedRecordId`
+  joins its parts with a NUL, which has been there since Phase 3 and is
+  load-bearing — changing that separator changes every derived record id and
+  would break the identity of every episode already written. A third test
+  fails if that allowance ever names something no longer there.
+  Plus the guards themselves, each proved by reintroduction —
   `lets nothing below the UI know the old format exists`,
   `keeps the quarantined shapes and the registry inside the importer`,
   `reaches no store of its own`, `never writes a legacy file, only reads one`
   and `reads no wall clock` all fail on their own probe. A repository-wide sweep
   for control characters in `src`, `tests`, `scripts` and `docs` is clean.
-- Siblings: checked. Every new sweep added by this phase was reintroduction-
-  tested individually, and `tests/synthetic/legacy-inert.test.ts` was rebuilt
+- Siblings: **one, and it is why the fix is a sweep rather than a repair.** The
+  same escaping collapse happened again later in the phase, in a browser spec
+  written the same way — six patterns in one `for` loop, every `\b` a
+  backspace. That one still matched, because a pattern like `/\bD-\d{3}/`
+  is merely less precise rather than inert, so it would have passed review and
+  passed CI. There is now nothing to remember: the sweep reads the bytes.
+  Every new sweep added by this phase was reintroduction-tested individually,
+  and `tests/synthetic/legacy-inert.test.ts` was rebuilt
   around the same finding — its fixture originally pulled in two directions at
   once and cancelled on the one scenario that was already depleted, so three of
   that scenario's four assertions could not have failed. It now runs each
@@ -244,7 +312,7 @@ None.
 - Found in: Phase 7 / this checkpoint
 - Found by: the builder, while writing the export composer's own honesty suite — the new test flagged a sentence that `architecture-guards.test.ts` had just passed
 - Class: **a scan that cannot pair quotes.** Both sweeps found string literals with `/'([^']{4,})'|`[^`]{4,}`/g`, and a regex has no idea which quote opens and which closes. The pairing holds until a file contains an **empty** literal: `''` is shorter than the four characters the pattern needed, so it was skipped, the scan resumed at its _closing_ quote, and from there every subsequent quote paired with the wrong partner. The contents of every literal after that point fell into a gap nothing looked at.
-- Reproduction: `src/features/export/compose.ts` contains `'…not claims about cause.'` — a literal in a `const lines = [ … ]` array a few entries after an `''`. `/causes?/i` matches it, and `it('cannot say one thing caused another, on any surface')` passed. Replicating the guard's own extraction over the file returns **zero** literals containing the word, while the file plainly contains it.
+- Reproduction: `src/features/export/compose.ts` contains `'…not claims about cause.'` — a literal in a `const lines = [ … ]` array a few entries after an `''`. `/\bcauses?\b/i` matches it, and `it('cannot say one thing caused another, on any surface')` passed. Replicating the guard's own extraction over the file returns **zero** literals containing the word, while the file plainly contains it.
 - Root cause: the extraction, not the rules. Both rules were correct and neither was being applied to the text it was written for.
 - Fix: `stringLiterals(text)` walks the source with the same scanner that already strips comments — which had to understand quoting to do its job — and returns each literal's contents. The causal sweep and the per-cent sweep both read from it now.
 - Regression: `tests/unit/architecture-guards.test.ts` → "reads every literal in a file, including the ones after an empty one" builds the exact defeating shape, asserts the walker finds the offending sentence, and asserts the old regex pairing does **not** — so the guard's own coverage is now a thing that fails rather than a thing that is assumed. "keeps a comment out of the literals, and a literal out of the comments" holds the other half. Reintroduced by reverting `stringLiterals` to the regex: caught.

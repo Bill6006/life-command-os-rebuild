@@ -42,14 +42,19 @@ export interface FamilyTally {
   readonly rows: number
   /** How many produced a canonical record. Zero for everything but `map`. */
   readonly mapped: number
+  /** The audit trail. Cites decisions and plan sections; not for the screen. */
   readonly because: string
+  /** The same decision in the owner's terms. See `FamilyRule.owner`. */
+  readonly owner: string
 }
 
 export interface RefusalTally {
   readonly refusal: MapRefusal
   readonly rows: number
-  /** One example sentence, so the count has a face. */
+  /** One example sentence, so the count has a face. The audit trail's wording. */
   readonly example: string
+  /** The same sentence in the owner's terms. This is what the screen renders. */
+  readonly owner: string
 }
 
 /**
@@ -198,7 +203,7 @@ export function planImport(
   }
 
   const tallies = new Map<string, { rule: FamilyTally; rows: number; mapped: number }>()
-  const refusals = new Map<MapRefusal, { rows: number; example: string }>()
+  const refusals = new Map<MapRefusal, { rows: number; example: string; owner: string }>()
   const unrecognisedFamilies = new Set<string>()
 
   const toAppend: CanonicalRecord[] = []
@@ -239,6 +244,7 @@ export function planImport(
         rows: 0,
         mapped: 0,
         because: effective.because,
+        owner: effective.owner,
       },
       rows: 0,
       mapped: 0,
@@ -252,6 +258,7 @@ export function planImport(
       refusals.set(translated.refusal, {
         rows: (held?.rows ?? 0) + 1,
         example: held?.example ?? translated.because,
+        owner: held?.owner ?? translated.ownerBecause,
       })
     }
 
@@ -281,7 +288,12 @@ export function planImport(
       unreadable,
       families,
       refusals: [...refusals.entries()]
-        .map(([refusal, { rows: count, example }]) => ({ refusal, rows: count, example }))
+        .map(([refusal, { rows: count, example, owner }]) => ({
+          refusal,
+          rows: count,
+          example,
+          owner,
+        }))
         .sort((a, b) => b.rows - a.rows),
       unrecognisedFamilies: [...unrecognisedFamilies].sort(),
       firstDay,

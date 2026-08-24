@@ -416,7 +416,7 @@ function ImportReport({ plan, preview }: { plan: ImportPlan; preview: LegacyPrev
             {plan.inventory.refusals.map((entry) => (
               <li key={entry.refusal}>
                 <strong>{REFUSAL_LABELS[entry.refusal]}</strong> —{' '}
-                {countOf(entry.rows, 'entry', 'entries')}. {entry.example}
+                {countOf(entry.rows, 'entry', 'entries')}. {entry.owner}
               </li>
             ))}
           </ul>
@@ -436,7 +436,7 @@ function ImportReport({ plan, preview }: { plan: ImportPlan; preview: LegacyPrev
                   : family.disposition === 'undecided'
                     ? 'kept, and waiting on your decision'
                     : 'kept exactly as written'}
-              . {family.because}
+              . {family.owner}
             </li>
           ))}
         </ul>

@@ -126,7 +126,22 @@ export const EXPORT_SECTIONS: readonly ExportSection[] = [
   },
   {
     id: 'corrections',
-    title: 'Where the owner has overruled the app',
+    /*
+     * Passive, and deliberately so.
+     *
+     * This string has two readers: the owner, who picks the section on Data,
+     * and whoever he hands the document to, where it is a heading. It said
+     * "Where **the owner** has overruled the app", which is the app discussing
+     * him in the third person on his own screen (sections 4.6 and 36) — found
+     * by the Phase 8 sweep that holds the import panel to exactly that rule,
+     * and fixed here rather than exempted, because a rule with a carve-out for
+     * the place it was first broken is not a rule.
+     *
+     * "You" would read correctly on Data and ambiguously in the document,
+     * where an assistant could reasonably take it to mean itself. Naming
+     * neither party is right for both.
+     */
+    title: 'Where the app has been overruled',
     summary: 'Conclusions rejected, and suggestions withdrawn.',
     privacy: 'normal',
     byDefault: true,

@@ -216,6 +216,101 @@ describe('the guards themselves', () => {
   })
 })
 
+/**
+ * No invisible characters in source, with one named exception (DEF-0067).
+ *
+ * A guard in this file once read `/\x08Date\.now/` because the `\b` in its
+ * pattern had been written through a layer that collapsed one backslash, and a
+ * backspace is a perfectly valid character in a JavaScript regex. It matched
+ * nothing, it passed with the defect it was written for sitting in the file,
+ * and it looked exactly like a guard that was working. The same thing then
+ * happened a second time in a browser spec written the same way, which is what
+ * makes it a class rather than a slip.
+ *
+ * A regex, a string literal and a comment all accept these bytes silently.
+ * Nothing renders them. So they are swept for directly, over every source file,
+ * rather than being watched for in the one place they last appeared.
+ */
+describe('nothing in the source is invisible', () => {
+  /**
+   * The one control character this repository deliberately contains.
+   *
+   * `derivedRecordId` joins its parts with a NUL, which is a reasonable
+   * separator for hashing precisely because it cannot occur in ordinary text.
+   * It has been there since Phase 3 and it is **load-bearing**: changing the
+   * separator changes every derived record id, which would break the identity
+   * of every episode already written and every record a legacy import has
+   * already brought across. It is named here rather than fixed.
+   */
+  const ALLOWED: readonly { readonly path: string; readonly code: number }[] = [
+    { path: 'src/domain/ids.ts', code: 0 },
+  ]
+
+  /*
+   * Documentation too, and it earned its place the first time this ran.
+   *
+   * A Phase 6 ledger entry quoted a regex with a backspace character where a
+   * word boundary was meant — the same collapse, in prose, describing a
+   * different defect of the same kind. Nothing renders it, so the entry had
+   * been wrong and unreadable-as-intended for two phases. A document that
+   * records why a pattern failed is worth exactly as much as the pattern it
+   * quotes.
+   */
+  const FILES = [
+    ...sourceFiles('src'),
+    ...sourceFiles('tests'),
+    ...readdirSync(join(ROOT, 'scripts'))
+      .filter((name) => name.endsWith('.mjs'))
+      .map((name) => join(ROOT, 'scripts', name)),
+    ...readdirSync(join(ROOT, 'docs'), { recursive: true, encoding: 'utf8' })
+      .filter((name) => name.endsWith('.md'))
+      .map((name) => join(ROOT, 'docs', name)),
+  ]
+
+  it('is looking at the whole repository', () => {
+    // A sweep over three files would pass and prove nothing.
+    expect(FILES.length).toBeGreaterThan(60)
+  })
+
+  it('holds no control character nobody meant to type', () => {
+    const offenders: string[] = []
+    for (const file of FILES) {
+      const path = repoPath(file)
+      const text = readFileSync(file, 'utf8')
+      for (let index = 0; index < text.length; index += 1) {
+        const code = text.charCodeAt(index)
+        /*
+         * U+FFFD is here for a different reason from the control characters.
+         *
+         * It is not something anybody types — it is what a decoder leaves
+         * behind when it could not read a byte, so its presence means a file
+         * has **already** been mangled by a tool that said nothing. Prettier
+         * did exactly that to a NUL quoted in a document during this phase.
+         * A repository that has silently lost a character should say so.
+         */
+        if (code === 0xfffd) {
+          offenders.push(`${path} holds U+FFFD — something already mangled it`)
+          continue
+        }
+        if (code >= 32 || code === 9 || code === 10 || code === 13) continue
+        if (ALLOWED.some((allowed) => allowed.path === path && allowed.code === code)) continue
+        const line = text.slice(0, index).split('\n').length
+        offenders.push(`${path}:${String(line)} holds U+${code.toString(16).padStart(4, '0')}`)
+      }
+    }
+    expect(offenders, 'an invisible character in source is a pattern that cannot match').toEqual([])
+  })
+
+  it('names only exceptions that are still there', () => {
+    // A stale allowance is the only way this guard can be defeated, and it
+    // should take a deliberate edit rather than forgetting.
+    for (const allowed of ALLOWED) {
+      const text = readFileSync(join(ROOT, allowed.path), 'utf8')
+      expect(text.includes(String.fromCharCode(allowed.code)), allowed.path).toBe(true)
+    }
+  })
+})
+
 describe('nothing below the UI reads the wall clock', () => {
   /** The one place a real clock is allowed to exist. */
   const CLOCK_HOME = 'src/domain/time.ts'

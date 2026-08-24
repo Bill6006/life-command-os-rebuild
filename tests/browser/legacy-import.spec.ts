@@ -269,7 +269,14 @@ test.describe('what it would do, before it does anything', () => {
     const families = page.getByTestId('import-families')
     await expect(families).toContainText('recommendation')
     await expect(families).toContainText('left out on purpose')
-    await expect(families).toContainText('move catalogue')
+    /*
+     * The owner's sentence, not the registry's. `move catalogue` was asserted
+     * here and passed while the screen was printing the audit trail at him —
+     * an assertion on developer wording is an assertion that the developer
+     * wording is on screen, which was the defect rather than the acceptance.
+     */
+    await expect(families).toContainText('the old app’s list of moves')
+    await expect(families).toContainText('that list does not come back')
   })
 })
 
@@ -307,6 +314,43 @@ test.describe('bringing it across', () => {
     )
     await expect(page.getByTestId('import-apply')).toBeDisabled()
     await expect(page.getByTestId('import-apply')).toContainText('Nothing left to bring across')
+  })
+
+  test('speaks to the owner rather than to whoever wrote it', async ({ page }) => {
+    /*
+     * The registry sweep in tests/unit/legacy-mapping.test.ts holds the strings.
+     * This holds the **screen**, which is where the defect actually appeared:
+     * every automated check passed while the report told the owner about
+     * "D-091 invariant 6", "Section 59" and a constant called
+     * MOVE_PREFERENCE_NOTE, and it was found by opening the page and reading it.
+     *
+     * A rendered panel can grow developer vocabulary from somewhere the registry
+     * sweep never looks — a label, a heading, a sentence written in the
+     * component. So both exist, and they are not the same check.
+     */
+    await openData(page)
+    const file = await legacyFile(page, PASSPHRASE)
+    await readIt(page, file)
+    // Everything behind a disclosure counts as on screen: it is one tap away,
+    // and the owner is the one who taps it.
+    await page
+      .getByTestId('import-report')
+      .locator('details')
+      .evaluateAll((nodes) => {
+        for (const node of nodes) (node as HTMLDetailsElement).open = true
+      })
+
+    const screen = (await page.locator('main').innerText()).replace(/\s+/g, ' ')
+    for (const [what, pattern] of [
+      ['a decision id', /\bD-\d{3}\b/],
+      ['a plan section number', /\bsections?\s+\d+/i],
+      ['an identifier from the codebase', /\b[A-Z][A-Z0-9]*_[A-Z0-9_]+\b/],
+      ['plan vocabulary', /\binvariant\b|\bcanonical\b/i],
+      ['developer vocabulary', /\bdefect\b|\bschema\b|\bprovenance\b|\bquarantine/i],
+      ['the third person about the reader', /\bthe owner\b/i],
+    ] as const) {
+      expect(screen, `${what} on an owner surface`).not.toMatch(pattern)
+    }
   })
 
   test('never shows a count of one against a plural noun', async ({ page }) => {

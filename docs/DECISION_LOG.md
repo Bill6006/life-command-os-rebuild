@@ -3084,3 +3084,54 @@ drift — which it did: entities were collected without checking the store, so a
 second pass over an already-imported file produced an empty append list and a
 full list of subjects, and the screen offered to bring across a file it had just
 reported as entirely already present.
+
+---
+
+## D-105 — A reason the owner reads and a reason that survives audit are two strings
+
+**Phase:** 8 · **Status:** Active — **owner-facing rule, governing every phase from here**
+
+A registry entry that decides something about the owner's life has to justify
+itself twice, to two readers who need opposite things.
+
+**The audit trail** is for whoever opens the file in a year. It cites decisions,
+plan sections and the names of things beside it, because that is what makes a
+claim about meaning checkable rather than merely confident. It must not be
+softened.
+
+**The owner's sentence** is for the person on the screen. Second person, no
+decision ids, no section numbers, no identifier from this codebase, no word that
+only means something to somebody who has read the plan.
+
+They were one field, and the import report rendered it verbatim. So the panel
+sent the owner to a constant called `MOVE_PREFERENCE_NOTE`, quoted "Section 59"
+and "D-091 invariant 6" at him, used the word "defect", and discussed him in the
+third person while he was reading it — "the wellness score **he** rules out",
+"something **the owner** did not". DEF-0068, and a blocker rather than a polish
+item: that report is the whole safeguard of a phase that writes a
+re-interpretation of his history into the only copy of it.
+
+**The rule is not "review the copy".** It is that the two audiences get two
+fields, and that both are swept:
+
+- over the **registry**, so a twenty-ninth entry inherits the rule instead of
+  having to remember it — and, in the same suite, over the audit trail, so it
+  cannot be watered down to pass. A test asserts each owner sentence differs
+  from its audit trail and that several audit trails still cite what they rest
+  on;
+- over the **rendered screen**, every disclosure opened, because a component can
+  grow developer vocabulary in a label or a heading that no registry sweep looks
+  at.
+
+Running the second sweep over the whole of Data rather than only over the new
+panel failed immediately on a Phase 7 string — the export section chooser
+offered "Where **the owner** has overruled the app". It is fixed rather than
+exempted. A rule with a carve-out for the place it was first broken is not a
+rule.
+
+### The smaller lesson beside it
+
+An assertion on developer wording is an assertion **that the developer wording
+is on screen**. `toContainText('move catalogue')` was in the browser suite
+throughout, green, holding the defect in place. When a test names a phrase, the
+phrase it names should be one the owner would recognise as addressed to him.

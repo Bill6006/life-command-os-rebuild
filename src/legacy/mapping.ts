@@ -59,8 +59,30 @@ export interface FamilyRule {
   /** The previous generation's own name for this family. */
   readonly legacyType: string
   readonly disposition: Disposition
-  /** Why, in one sentence. This is the audit trail and it appears in the report. */
+  /**
+   * Why, for whoever reads this registry. The audit trail.
+   *
+   * It cites decisions, plan sections and the names of things in this file,
+   * because that is what makes a claim about meaning checkable a year later.
+   */
   readonly because: string
+  /**
+   * The same decision, for the owner, on his screen.
+   *
+   * **A separate field because these are two different jobs, and giving both
+   * to one string was a real defect.** The audit trail was rendered verbatim
+   * in the import report, so the screen told him about "D-091 invariant 6",
+   * "Section 59", "the contortion section 30 forbids", a constant called
+   * `MOVE_PREFERENCE_NOTE`, and what "the owner" had decided — about himself,
+   * in the third person. Every automated check passed; a person reading the
+   * screen found it in one pass, which is section 36 and section 4.6 exactly.
+   *
+   * So: second person, no decision ids, no section numbers, no identifiers
+   * from this codebase, and no word that only means something to somebody who
+   * has read the plan. `tests/unit/legacy-mapping.test.ts` fails the build for
+   * any of those, over every entry rather than over the ones already fixed.
+   */
+  readonly owner: string
 }
 
 /* -------------------------------------------------------------------------- */
@@ -72,6 +94,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
 
   {
     legacyType: 'observation',
+    owner:
+      'Readings you took. They come across as readings where this app means the same thing by them, and are kept exactly as written where it does not.',
     disposition: 'map',
     because:
       'The owner reported a reading, which is the same act this app records. Only the ' +
@@ -79,6 +103,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'observation-correction',
+    owner:
+      'A correction you made to a reading. It comes across as the corrected reading, with the original still behind it in your history.',
     disposition: 'map',
     because:
       'A correction that carries a replacement value becomes a superseding observation, ' +
@@ -87,6 +113,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'north-star',
+    owner:
+      'A long-horizon statement you wrote about where you were going. It comes across as a goal, with no deadline attached to it.',
     disposition: 'map',
     because:
       'A long-horizon statement the owner wrote about where he is going. It becomes an ' +
@@ -94,6 +122,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'goal',
+    owner:
+      'A goal comes across as a goal. One whose deadline had simply passed is kept as written instead, because there is no word here for that.',
     disposition: 'map',
     because:
       'The same concept in both models. An `expired` goal is archived instead: neither ' +
@@ -102,6 +132,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'commitment',
+    owner:
+      'A commitment with a date comes across. One with no date is kept as written, so nothing puts you under a deadline you never set.',
     disposition: 'map',
     because:
       'The same concept. A commitment with no due date is archived — this app’s ' +
@@ -113,6 +145,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
 
   {
     legacyType: 'context-snapshot',
+    owner:
+      'A note of how much you had left at one moment. Kept as written — what it measured is either the old app’s own scale or a reading this app does not follow over time.',
     disposition: 'archive',
     because:
       'Every part of it is either the old engine’s taxonomy — capacity bands, protected ' +
@@ -121,6 +155,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'inferred-state',
+    owner:
+      'Something the old app worked out rather than something you told it. Kept as written; this app works things out from your own records instead of inheriting old conclusions.',
     disposition: 'archive',
     because:
       'Derived state from a retired engine. Reviving it would be importing the old ' +
@@ -128,11 +164,15 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'trajectory',
+    owner:
+      'The old app’s reading of which way something was going. Kept as written, for the same reason as anything else it concluded on its own.',
     disposition: 'archive',
     because: 'Derived. Same reason as inferred-state — this app re-derives from records.',
   },
   {
     legacyType: 'weekly-direction',
+    owner:
+      'A direction the old app proposed for a week. Kept as written — your answer to it is wrapped up inside the proposal, and lifting it out would be reading your decision off its packaging.',
     disposition: 'archive',
     because:
       'A derived proposal carrying the old engine’s confidence and reason trace. The ' +
@@ -141,11 +181,15 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'candidate-action',
+    owner:
+      'Something the old app was still considering before it chose. Kept as written; it is not something that happened.',
     disposition: 'archive',
     because: 'The old engine’s working state before it chose. Not something that happened.',
   },
   {
     legacyType: 'execution',
+    owner:
+      'Whether you did something the old app suggested. Kept as written, because the suggestion it refers to is not coming across.',
     disposition: 'archive',
     because:
       'An execution is always the execution *of* a recommendation, and the recommendation ' +
@@ -153,6 +197,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'outcome',
+    owner:
+      'What came of something the old app suggested. Kept as written, with the rest of that episode.',
     disposition: 'archive',
     because:
       'Part of the same chain: an outcome is about an execution of a recommendation. It ' +
@@ -160,6 +206,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'recommendation-effect-evaluation',
+    owner:
+      'The old app’s own view of whether its suggestions helped. Kept as written — the evidence underneath it is not coming across, so the conclusion cannot come with it.',
     disposition: 'archive',
     because:
       'The old engine’s learning over the old move catalogue. D-091 scopes a learned claim ' +
@@ -167,6 +215,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'question-answer',
+    owner:
+      'An answer you gave to one of the old app’s set questions. Kept as written — the question is what gave the answer its meaning, and the questions are not coming across.',
     disposition: 'archive',
     because:
       'The answer is the owner’s, and its meaning is the question’s prompt — which is a ' +
@@ -175,6 +225,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'learned-belief',
+    owner:
+      'Something the old app concluded about you. Kept as written; a conclusion needs the evidence under it, and that evidence is staying where it is.',
     disposition: 'archive',
     because:
       'D-091 invariant 1: a learned relationship is scoped to verb and object. The objects ' +
@@ -183,6 +235,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'guide-session',
+    owner:
+      'A record that a check-in happened. Kept as written — check-ins here are a different shape, and this app would read the old one as its own.',
     disposition: 'archive',
     because:
       'A record that a check-in ran, in the old guide’s kinds and depths. This app’s guide ' +
@@ -190,6 +244,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'skill-claim',
+    owner:
+      'What you would say out loud about a skill of yours. Kept exactly as written, because every place it could go here would turn it into a claim that it is true.',
     disposition: 'archive',
     because:
       'Explicitly not an assertion of truth — it is what the owner would say about himself. ' +
@@ -198,6 +254,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'milestone-observation',
+    owner:
+      'An answer against a developmental checklist. Kept as written, together with which list it was and which version — those are what make the answer mean anything.',
     disposition: 'archive',
     because:
       'An answer against a developmental checklist is meaningless without which list and ' +
@@ -206,6 +264,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'faith-anchor',
+    owner:
+      'Something that matters to you, and what you do about it. Kept as written; the nearest thing here is a reading of the last week, which is a different statement.',
     disposition: 'archive',
     because:
       'A standing statement of what matters. The nearest concept here is “recent faith ' +
@@ -214,6 +274,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'move-preference',
+    owner:
+      'A standing decision you made about a suggestion. Kept in your history — and if it is one this app cannot carry over as a live rule, it is named above so you can say it again.',
     disposition: 'archive',
     because: 'The one that most looks like it should map, and must not. See MOVE_PREFERENCE_NOTE.',
   },
@@ -222,6 +284,7 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
 
   {
     legacyType: 'recommendation',
+    owner: 'A suggestion from the old app’s list of moves. Left out: that list does not come back.',
     disposition: 'excluded',
     because:
       'Section 59 — the old move catalogue does not return as product truth. Importing ' +
@@ -229,26 +292,32 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'untreated-forecast',
+    owner: 'The old hundred-point forecast. Left out; it does not come back.',
     disposition: 'excluded',
     because: 'Section 59 — Forecast 100 does not return.',
   },
   {
     legacyType: 'intervention-effect-prediction',
+    owner: 'A prediction from the same forecasting machinery. Left out with the rest of it.',
     disposition: 'excluded',
     because: 'Section 59 — the same forecasting machinery, one step further in.',
   },
   {
     legacyType: 'forecast-evaluation',
+    owner: 'A check on one of those forecasts. Left out with the rest of it.',
     disposition: 'excluded',
     because: 'Section 59 — an evaluation of a forecast that does not return.',
   },
   {
     legacyType: 'question',
+    owner: 'One of the old app’s set questions. Left out: fixed questionnaires do not come back.',
     disposition: 'excluded',
     because: 'Section 59 — fixed guide questionnaires do not return.',
   },
   {
     legacyType: 'domain-preference',
+    owner:
+      'Switching an area of your life off. Left out — there is no such setting here, and every area stays part of the picture.',
     disposition: 'excluded',
     because:
       'Section 4.1 — whole-life model, no domain shutoff. This app has no state in which ' +
@@ -257,6 +326,7 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
   },
   {
     legacyType: 'surface-permission',
+    owner: 'The old privacy switches. Left out; they do not come back.',
     disposition: 'excluded',
     because: 'Section 59 — the old privacy toggle design does not return.',
   },
@@ -265,6 +335,8 @@ export const FAMILY_RULES: readonly FamilyRule[] = [
 
   {
     legacyType: 'life-context-change',
+    owner:
+      'Something that changed in your life — a move, a new job, a change at home. Kept exactly as written and waiting on you: it is a thing that happened rather than a reading of anything, and there is nowhere here it belongs yet.',
     disposition: 'undecided',
     because:
       'Real history — a move, a change in custody, a new job — with no canonical home. It ' +
@@ -323,6 +395,8 @@ export function ruleFor(legacyType: string): FamilyRule | undefined {
 export const UNKNOWN_FAMILY_RULE: FamilyRule = {
   legacyType: '(unrecognised)',
   disposition: 'archive',
+  owner:
+    'An entry this version does not recognise. Kept exactly as written and named above, so it is visible rather than quietly filed away.',
   because:
     'This build has no rule for that family. It is kept exactly as written and named in ' +
     'the report, so an unrecognised kind is visible rather than silently archived.',
@@ -441,54 +515,86 @@ export const ATTRIBUTE_RULES: readonly AttributeRule[] = [
  */
 export const DECLINED_ATTRIBUTES: readonly {
   readonly attribute: string
+  /** The audit trail. Cites decisions and sections; not for the screen. */
   readonly because: string
+  /** The same decision in the owner's terms. See `FamilyRule.owner`. */
+  readonly owner: string
 }[] = [
   {
     attribute: 'state:mood',
+    owner:
+      'Mood, stress, confidence and how overwhelmed you felt are four different things. This app keeps one, and which ones it should keep is still yours to decide — so these are kept as written rather than folded into it.',
     because:
       'D-091 invariant 6 by name. Mood, stress, confidence and overwhelm are four things, ' +
       'and this app’s emotional state is one undivided dimension that is an open question ' +
       'for the owner. Pouring four scales into it is the wellness score he rules out.',
   },
-  { attribute: 'state:stress', because: 'Same as state:mood.' },
-  { attribute: 'state:confidence', because: 'Same as state:mood.' },
-  { attribute: 'state:overwhelm', because: 'Same as state:mood.' },
+  {
+    attribute: 'state:stress',
+    owner: 'Kept as written, with mood, for the same reason.',
+    because: 'Same as state:mood.',
+  },
+  {
+    attribute: 'state:confidence',
+    owner: 'Kept as written, with mood, for the same reason.',
+    because: 'Same as state:mood.',
+  },
+  {
+    attribute: 'state:overwhelm',
+    owner: 'Kept as written, with mood, for the same reason.',
+    because: 'Same as state:mood.',
+  },
   {
     attribute: 'state:physical-energy',
+    owner:
+      'The old app kept physical and mental energy apart on purpose. Folding them into one reading here would lose exactly the difference that made them worth splitting.',
     because:
       'The old app split physical from mental energy precisely because averaging them ' +
       'loses what would have chosen between them. Mapping both onto one energy concept ' +
       'would perform that averaging after the fact.',
   },
-  { attribute: 'state:mental-energy', because: 'Same as state:physical-energy.' },
+  {
+    attribute: 'state:mental-energy',
+    owner: 'Kept as written, with physical energy, for the same reason.',
+    because: 'Same as state:physical-energy.',
+  },
   {
     attribute: 'state:loneliness',
+    owner:
+      'Not the same thing as social energy — you can be lonely in a full house, and the two run in opposite directions.',
     because:
       'Not social energy. It is a present state that can be high in a full house, and ' +
       'the two run in opposite directions.',
   },
   {
     attribute: 'state:financial-pressure',
+    owner:
+      'How much money was on your mind, which is not how much money there was. Kept as written.',
     because:
       'The old app states outright that it is not a measure of how much money there is. ' +
       'This app’s cash buffer is a quantity, and a pressure reading is not one.',
   },
   {
     attribute: 'state:pain-interference',
+    owner: 'Whether pain was in the way, which is not the same as how much of it there was.',
     because:
       'Interference, not intensity — whether it is in the way. This app’s soreness ' +
       'concept reads as presence and severity, and the two answer different questions.',
   },
   {
     attribute: 'state:readiness',
+    owner: 'The old app’s own scale for what was possible that evening. Kept as written.',
     because: 'The old capacity taxonomy, which section 59 leaves behind.',
   },
   {
     attribute: 'state:retrieval-strength',
+    owner: 'How much came back without looking it up. There is nothing here that means it yet.',
     because: 'How much came back without looking. There is no concept here for it yet.',
   },
   {
     attribute: 'context:available-minutes',
+    owner:
+      'How much time you had that evening. Kept as written — this app does not follow that over time, so bringing years of it across would add rows and nothing else.',
     because:
       'This app’s own registry declines to track usable time as a trend — it is noise ' +
       'with a timestamp, stale within hours by design. Importing years of it would add ' +
@@ -496,20 +602,29 @@ export const DECLINED_ATTRIBUTES: readonly {
   },
   {
     attribute: 'sleep:bedtime',
+    owner:
+      'A bedtime is not a length of sleep. Working one out from the other would be this app inventing a reading you never took.',
     because:
       'A bedtime is not a duration. Deriving hours slept from bedtime and wake time ' +
       'would be this app computing a reading the old one never took, and presenting it ' +
       'as something the owner recorded.',
   },
-  { attribute: 'sleep:wake-time', because: 'Same as sleep:bedtime.' },
+  {
+    attribute: 'sleep:wake-time',
+    owner: 'Kept as written, with bedtime, for the same reason.',
+    because: 'Same as sleep:bedtime.',
+  },
   {
     attribute: 'father:together',
+    owner: 'Time spent together is not the same fact as whether she was with you.',
     because:
       'Time spent together is not whether a child is present. Reading one as the other ' +
       'would answer a custody question with an evening’s activity.',
   },
   {
     attribute: 'legacy:note',
+    owner:
+      'A note the old app had itself carried forward from the app before it. Kept exactly as written.',
     because:
       'Already the old app’s own passthrough for the generation before it. Mapping it ' +
       'here would promote text that has been unmapped twice.',
@@ -522,13 +637,16 @@ export function attributeRuleFor(attribute: string): AttributeRule | undefined {
   return ATTRIBUTES_BY_NAME.get(attribute)
 }
 
-const DECLINED_BY_NAME = new Map(
-  DECLINED_ATTRIBUTES.map((entry) => [entry.attribute, entry.because]),
-)
+const DECLINED_BY_NAME = new Map(DECLINED_ATTRIBUTES.map((entry) => [entry.attribute, entry]))
 
 /** Why an attribute was not mapped, when somebody actually decided it. */
 export function declinedReasonFor(attribute: string): string | undefined {
-  return DECLINED_BY_NAME.get(attribute)
+  return DECLINED_BY_NAME.get(attribute)?.because
+}
+
+/** The same decision, in the owner's terms. See `FamilyRule.owner`. */
+export function declinedOwnerReasonFor(attribute: string): string | undefined {
+  return DECLINED_BY_NAME.get(attribute)?.owner
 }
 
 /* -------------------------------------------------------------------------- */

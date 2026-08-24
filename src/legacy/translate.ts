@@ -10,6 +10,7 @@ import { dueWindow } from '../domain/windows'
 import { isExplicitUnknown, type LegacyRecord } from './format'
 import {
   attributeRuleFor,
+  declinedOwnerReasonFor,
   declinedReasonFor,
   domainForLegacyCategory,
   privacyForLegacyClass,
@@ -148,8 +149,16 @@ export interface Translated {
   readonly archived: CanonicalRecord | undefined
   /** Set when a mappable family declined this particular row. */
   readonly refusal: MapRefusal | undefined
-  /** One sentence, for the report. */
+  /** One sentence, for whoever reads the registry. The audit trail. */
   readonly because: string
+  /**
+   * The same sentence for the owner, on his screen.
+   *
+   * Two fields for the same reason `FamilyRule` has two: the audit trail cites
+   * decisions and plan sections, and the import report printed it to him
+   * verbatim. See the note on `FamilyRule.owner`.
+   */
+  readonly ownerBecause: string
 }
 
 function readInstantOrUndefined(value: string | undefined): Instant | undefined {
@@ -297,6 +306,7 @@ export function translateRecord(record: LegacyRecord, options: TranslateOptions)
       archived: undefined,
       refusal: undefined,
       because: rule.because,
+      ownerBecause: rule.owner,
     }
   }
 
@@ -317,16 +327,24 @@ export function translateRecord(record: LegacyRecord, options: TranslateOptions)
       because:
         'The row carries no readable date, so it cannot be placed in history without ' +
         'this app inventing one.',
+      ownerBecause:
+        'There is no readable date on it, so there is nowhere in your history to put it ' +
+        'without this app inventing one.',
     }
   }
 
-  const archive = (refusal: MapRefusal | undefined, because: string): Translated => ({
+  const archive = (
+    refusal: MapRefusal | undefined,
+    because: string,
+    ownerBecause: string = rule.owner,
+  ): Translated => ({
     disposition: rule.disposition === 'undecided' ? 'undecided' : 'archive',
     mapped: [],
     entities: [],
     archived: archiveOf(record, options, at, zone, domain === undefined ? [] : [domain], privacy),
     refusal,
     because,
+    ownerBecause,
   })
 
   if (rule.disposition !== 'map') return archive(undefined, rule.because)
@@ -351,7 +369,11 @@ export function translateRecord(record: LegacyRecord, options: TranslateOptions)
     case 'observation-correction': {
       const attribute = record.raw['attribute']
       if (typeof attribute !== 'string') {
-        return archive('missing-required', 'The row names no attribute, so it reads as nothing.')
+        return archive(
+          'missing-required',
+          'The row names no attribute, so it reads as nothing.',
+          'It does not say what it was a reading of, so there is nothing to read it as.',
+        )
       }
 
       const attributeRule = attributeRuleFor(attribute)
@@ -361,8 +383,9 @@ export function translateRecord(record: LegacyRecord, options: TranslateOptions)
           ? archive(
               'attribute-not-mapped',
               `No rule covers “${attribute}”. It is kept exactly as written.`,
+              `Nothing here covers what “${attribute}” recorded, so it is kept exactly as written.`,
             )
-          : archive('attribute-declined', declined)
+          : archive('attribute-declined', declined, declinedOwnerReasonFor(attribute) ?? rule.owner)
       }
 
       const value = factValueFor(record.raw['value'], attributeRule)
@@ -374,11 +397,15 @@ export function translateRecord(record: LegacyRecord, options: TranslateOptions)
               'explicitly-unsure',
               'The owner looked and could not say. That is a report, not a reading, and ' +
                 'this app has no value that means it.',
+              'You looked and could not say. That is worth keeping and it is not a reading, ' +
+                'so it is kept exactly as written rather than turned into one.',
             )
           : archive(
               'value-shape',
               `“${attribute}” was recorded as something other than a ${attributeRule.shape}, ` +
                 'so mapping it would change what it says.',
+              `“${attribute}” was written down as something this app cannot hold, so bringing ` +
+                'it across would change what it says.',
             )
       }
 
@@ -426,13 +453,14 @@ export function translateRecord(record: LegacyRecord, options: TranslateOptions)
         archived: undefined,
         refusal: undefined,
         because: attributeRule.because,
+        ownerBecause: rule.owner,
       }
     }
 
     case 'north-star': {
       const statement = record.raw['statement']
       if (typeof statement !== 'string' || statement.trim() === '') {
-        return archive('missing-required', 'The row carries no statement.')
+        return archive('missing-required', 'The row carries no statement.', 'It says nothing.')
       }
       const subject = legacyGoalEntity(
         record.recordId,
@@ -468,6 +496,7 @@ export function translateRecord(record: LegacyRecord, options: TranslateOptions)
         archived: undefined,
         refusal: undefined,
         because: rule.because,
+        ownerBecause: rule.owner,
       }
     }
 
@@ -475,10 +504,14 @@ export function translateRecord(record: LegacyRecord, options: TranslateOptions)
       const statement = record.raw['statement']
       const state = record.raw['state']
       if (typeof statement !== 'string' || statement.trim() === '') {
-        return archive('missing-required', 'The row carries no statement.')
+        return archive('missing-required', 'The row carries no statement.', 'It says nothing.')
       }
       if (typeof state !== 'string') {
-        return archive('missing-required', 'The row carries no state.')
+        return archive(
+          'missing-required',
+          'The row carries no state.',
+          'It does not say whether it was still going.',
+        )
       }
       const status = GOAL_STATES[state]
       if (status === undefined) {
@@ -486,6 +519,8 @@ export function translateRecord(record: LegacyRecord, options: TranslateOptions)
           'no-equivalent-state',
           `This app has no word for a goal that is “${state}”. Calling it abandoned or ` +
             'paused would each say something the owner did not.',
+          'There is no word here for a goal whose deadline simply passed. Calling it ' +
+            'abandoned or paused would each say something you did not.',
         )
       }
       const home = domain ?? DOMAIN.direction
@@ -506,6 +541,7 @@ export function translateRecord(record: LegacyRecord, options: TranslateOptions)
         archived: undefined,
         refusal: undefined,
         because: rule.because,
+        ownerBecause: rule.owner,
       }
     }
 
@@ -515,13 +551,15 @@ export function translateRecord(record: LegacyRecord, options: TranslateOptions)
         typeof record.raw['dueAt'] === 'string' ? record.raw['dueAt'] : undefined,
       )
       if (typeof statement !== 'string' || statement.trim() === '') {
-        return archive('missing-required', 'The row carries no statement.')
+        return archive('missing-required', 'The row carries no statement.', 'It says nothing.')
       }
       if (dueAt === undefined) {
         return archive(
           'missing-required',
           'The commitment has no due date, and this app’s commitments have one. Inventing ' +
             'a deadline would put the owner under a promise he did not make.',
+          'It has no date on it, and commitments here have one. Making a date up would put ' +
+            'you under a deadline you never set.',
         )
       }
       const built = factory(
@@ -548,6 +586,7 @@ export function translateRecord(record: LegacyRecord, options: TranslateOptions)
         archived: undefined,
         refusal: undefined,
         because: rule.because,
+        ownerBecause: rule.owner,
       }
     }
 
