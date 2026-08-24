@@ -1529,6 +1529,27 @@ recorded there.
 | **Priority** | **P1** |
 | **Timing** | **BEFORE PHASE 9 (Phase 8.5)** — it is the sentence AUD-0048 rewrites, and rewriting it twice is worse than once |
 
+### L.3 — AUD-0050
+
+| Field | Detail |
+| --- | --- |
+| **ID** | AUD-0050 |
+| **Title** | Five record kinds are read, enforced and rendered, and no control in the product can create them — including the one section 4.3 requires |
+| **Type** | **PRODUCT / UX** |
+| **Current behaviour** | Of the twenty canonical record kinds, thirteen are constructed by an owner-reachable path (guide answers, the lifecycle buttons, outcome answers, the domain pages' correction controls, the growth answer). Two are constructed only by the legacy importer (`commitment`, `imported-legacy-record`). **Five are constructed nowhere in the product**: <br>`preference` — enforced by `vetoFor` (`constraints.ts:59-75`) and by the `owner-preference` dimension, read into `situation.preferences`, counted by `coverage.ts` toward whether an area matters, and rendered on Timeline and on domain pages. <br>`constraint` — read by `situationNotes` (`advisor.ts:185-196`), named a confounding kind by `association.ts`, carried on the situation, rendered by `describe.ts`. <br>`correction` — the kind that exists specifically for "the owner says an entry was wrong and there is nothing to put in its place" (`records.ts:343-346`), i.e. an outright retraction. Rendered and exported; never written. <br>`relationship-event` — projected in full with its `quality` (AUD-0047). <br>`decision` — read by `association.ts` and `coverage.ts`, rendered, exported. |
+| **Problem** | The most serious of the five is `preference`. **Section 4.3 is a non-negotiable product principle and it lists "explicitly forbid a recommendation family" among the things the owner can do.** The enforcement is complete and correct — `vetoFor` even handles the domain-level case with a comment citing section 4.3 by name — and there is no control anywhere that would let him exercise it. The app can be told to stop suggesting something only through a decline, which by design is *not* a veto: `owner-preference` deliberately treats a refusal as sovereignty rather than a verdict (`learning.ts:882-887`), so the move keeps coming back with a slightly lower score. That is right for a decline and it means there is no way to say "never suggest this again", which is what section 4.3 promises. `constraint` and `correction` are the same shape: real capabilities, wired end to end, unreachable. |
+| **Owner-facing example** | In "Two months of readings, and nothing graded" the probe reads *"owner-preference −0.40 — passed on 14 times before in situations like this"*, and the app recommends the walk anyway, as the only candidate. Fourteen refusals is the strongest signal the interface can carry, and the interface that would end it — "don't suggest walks" — does not exist. Separately, the import screen shows him a list under `unkeptStances` of the standing decisions from the previous app that were deliberately not brought across (`ImportPanel.tsx:432-443`) — an honest screen naming vetoes he is losing, with no way to restate a single one. |
+| **Evidence** | Systematic scan of every `build('<kind>'` construction across `src/`, by area. Constructed nowhere: `preference`, `constraint`, `correction`, `relationship-event`, `decision`. Enforcement and read paths: `constraints.ts:59-75`; `situation.ts:515-525`; `evaluate.ts` `ownerPreference`; `coverage.ts:402`, `:412`; `advisor.ts:185-196`; `association.ts:196`; `features/history/describe.ts:289`, `:297`; `features/life/domainPages.ts:248-250`. Legacy reasoning: `mapping.ts:376-379` (`MOVE_PREFERENCE_NOTE`) — old vetoes are archived because they are "keyed on the old app's move identities, which do not exist here, so importing them would leave vetoes that look active and can never fire", which is correct and completes the gap. |
+| **Likely root cause** | The record layer was built ahead of the surfaces (Phase 1), and the surfaces were built to the phase gates, which were about Now, Life, Timeline, Insights, exports and migration. No phase gate said "the owner can forbid something", so nothing was built, and nothing failed — the enforcement path is exercised by tests using synthetic fixtures, which construct these kinds directly. That is also why "Second thoughts, kept honestly" can demonstrate an entry withdrawn outright: the scenario writes a `correction` record the product itself cannot produce. |
+| **Recommended behaviour** | Two controls, and only two. **(a) A veto, on Now, behind the existing decline.** Section 4.3 distinguishes six owner actions and the interface currently offers five; the sixth belongs where the refusals happen. After a repeated decline (AUD-0023 is already changing that flow) offer *"Stop suggesting this"* — writing a `preference` with `stance: 'forbids'` scoped to the object, and a second, explicitly narrower option to forbid the whole area. Both must be visible and reversible on the relevant domain page, because a veto the owner cannot find again is worse than none. **(b) A retraction, on Timeline or the domain page.** "This never happened" writes a `correction`; the memory layer already honours it. Leave `decision` and `relationship-event` for now — `relationship-event` is AUD-0047's subject and needs its discretion question answered first, and `decision` has no owner-facing meaning yet. |
+| **Benefit** | Makes a non-negotiable principle exercisable, and gives the owner the one thing the current interface cannot express: *stop*. It also closes the loop the import screen opens, so the stances he is shown losing are ones he can restate. |
+| **Implementation scope** | `intelligence/corrections.ts` (two new record constructors, in the module already open to surfaces for exactly this reason), the Now action row (one control, behind the decline), a domain-page list of standing vetoes with a way to lift each, and Timeline's retraction control. No engine change — `vetoFor` already enforces it. |
+| **Risks** | A veto is the most permanent thing the owner can do and the easiest to do by accident on a phone; it must not sit next to "Not tonight" without a confirmation, and it must be listed and liftable somewhere obvious. A domain-level veto is close to the "domain-off switch" section 4.1 forbids — it must suppress *recommendations* while leaving the domain in the model, in coverage and on Life, and the copy must say so. |
+| **Schema / data impact** | None. All five kinds already exist, parse, serialise, round-trip through backup and restore, and are rendered. |
+| **Tests required** | Assert a written `forbids` preference removes the move from the ranking with reason `forbidden`, and that the area still appears in coverage and on Life (section 4.1). Assert the veto is listed and liftable. Assert a `correction` retraction removes the entry from belief while leaving the original record in history. Extend `tests/contract/` for the round-trip of a preference and a constraint, which nothing currently exercises outside fixtures. |
+| **Priority** | **P1** |
+| **Timing** | **BEFORE PHASE 9 (Phase 8.5)** for the veto — it belongs in the same change as AUD-0023, which is already rebuilding the decline flow, and Phase 9 will otherwise style an action row that is missing an action. Retraction can wait for **PHASE 10**. |
+
 ---
 
 # 3. Totals
@@ -1538,11 +1559,11 @@ recorded there.
 | Priority | Count | IDs |
 | --- | --- | --- |
 | **P0** | **9** | AUD-0001, 0002, 0003, 0014, 0015 *(part b)*, 0028, 0031, 0036, 0048 |
-| **P1** | **21** | AUD-0005, 0008, 0011 *(parts a, b)*, 0015 *(part a)*, 0016, 0017, 0019, 0020, 0023, 0025, 0026, 0027, 0032, 0033, 0034, 0035, 0037, 0040, 0041, 0042, 0049 |
+| **P1** | **22** | AUD-0005, 0008, 0011 *(parts a, b)*, 0015 *(part a)*, 0016, 0017, 0019, 0020, 0023, 0025, 0026, 0027, 0032, 0033, 0034, 0035, 0037, 0040, 0041, 0042, 0049, 0050 |
 | **P2** | **17** | AUD-0006, 0007, 0009, 0010, 0018, 0021, 0022, 0024, 0029, 0030 *(part a)*, 0038, 0039, 0043, 0044, 0045, 0046, 0047 |
 | **P3** | **3** | AUD-0012, 0013, 0030 *(part b)* |
 | **Owner-blocked** | **1** | AUD-0011 *(part c)* — and AUD-0018, which is P2 and also blocked |
-| **Total** | **49** | |
+| **Total** | **50** | |
 
 AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in the total.
 
@@ -1553,19 +1574,19 @@ AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in
 | **BUG** | **8** | 0001, 0002, 0003, 0005, 0014, 0015, 0032, 0048 |
 | **INTELLIGENCE** | **19** | 0004, 0007, 0009, 0010, 0012, 0013, 0016, 0017, 0018, 0019, 0021, 0024, 0026, 0028, 0029, 0031, 0042, 0045, 0049 |
 | **ARCHITECTURE** | **11** | 0006, 0011, 0020, 0022, 0025, 0035, 0039, 0040, 0041, 0046, 0047 |
-| **PRODUCT / UX** | **11** | 0008, 0023, 0027, 0030, 0033, 0034, 0036, 0037, 0038, 0043, 0044 |
+| **PRODUCT / UX** | **12** | 0008, 0023, 0027, 0030, 0033, 0034, 0036, 0037, 0038, 0043, 0044, 0050 |
 
 ## By timing
 
 | Timing | Count |
 | --- | --- |
-| BEFORE PHASE 9 (Phase 8.5) | 21 |
+| BEFORE PHASE 9 (Phase 8.5) | 22 |
 | PHASE 9 | 3 |
 | PHASE 10 | 26 |
 | PHASE 11 | 2 |
 | POST-RELEASE-OPTIONAL | 1 |
 
-*(Counts exceed 49 because AUD-0011, AUD-0015, AUD-0025, AUD-0030 and AUD-0038 are split
+*(Counts exceed 50 because AUD-0011, AUD-0015, AUD-0025, AUD-0030 and AUD-0038 are split
 across phases.)*
 
 ## Findings that turned out not to be defects
@@ -1622,6 +1643,7 @@ passed. Every one of these is a change to *what the app says is true*, not to ho
 
 *Interaction states Phase 9 will style, which are currently broken rather than unstyled.*
 - **AUD-0023** — the decline loop jams, and the situation line disappears.
+- **AUD-0050 (the veto half)** — section 4.3 promises the owner can forbid a recommendation family; the enforcement is complete and no control reaches it. It belongs in the same change as AUD-0023, and Phase 9 would otherwise style an action row that is missing an action.
 - **AUD-0034** — "Nothing to suggest just yet" at 07:00 and on the evenings she is away.
 - **AUD-0025** *(session-scoped part only)* — the same sentence at four hours of one day.
 
@@ -1688,6 +1710,9 @@ Dependencies are real and a few of these will produce wrong results if taken out
     what was already offered.*
 17. **AUD-0023** — no repeats in a block, ask after two refusals, stop after three, keep the
     situation line. *Depends on 16.*
+17a. **AUD-0050 (veto)** — "stop suggesting this", written as a `preference` with `stance:
+    'forbids'`, listed and liftable on the domain page. *Must be in the same change as 17 —
+    it is the last rung of the same ladder, and building the ladder twice is worse.*
 18. **AUD-0034** — split `nothing-proposed`. *Depends on 17 for the situation-line fix.*
 19. **AUD-0031** — the `consequential` exception to D-036, and the decision-log amendment.
     *Independent, but verify it last in 8.5 because it changes how often the guide fires
@@ -1986,7 +2011,7 @@ two-week correction into a re-architecture and delay Phase 9 for no visual benef
 | **8.5.2 The morning has an answer** | AUD-0003 | A morning recovery verb, and the invariant that a named limiter always has a candidate in every block. The single most valuable fix in the audit. |
 | **8.5.3 Adaya** | AUD-0048 → 0049; AUD-0014 → 0015(b), 0016; AUD-0037 | The app stops claiming an unbroken run it does not have, and starts counting the occasions that went the other way; the suggestion gains the confidence every other claim in the product carries; a decline stops counting as practice; the nonsense sentence goes; the reason for a growth opportunity stops being the age of the app's records; the two contradicting counters are reconciled. **This is the step to do first if only one gets done.** |
 | **8.5.4 Honest sentences** | AUD-0032, 0028, 0027, 0026, 0033 | Inferences are spoken as inferences; the unfounded causal claim goes; the app's own best evidence reaches Now; trade-offs and near-ties are said out loud. |
-| **8.5.5 Interaction** | AUD-0025(session), 0023, 0034, 0031 | No repeating itself within a day; declines escalate to a question and then stop; the situation line survives every no-action state; the guide asks about pain before prescribing exertion. |
+| **8.5.5 Interaction** | AUD-0025(session), 0023, 0050(veto), 0034, 0031 | No repeating itself within a day; declines escalate to a question and then stop, and can finally end in a veto; the situation line survives every no-action state; the guide asks about pain before prescribing exertion. |
 
 **What Phase 8.5 delivers.** An app that is right about what time it is, right about what it
 knows and does not know, right about what it has learned, and right about the owner's
