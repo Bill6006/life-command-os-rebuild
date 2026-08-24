@@ -11,7 +11,7 @@ self-certify (D-077). Full record in [`PHASE_STATUS.md`](PHASE_STATUS.md) under
 
 |                                           |                                          |
 | ----------------------------------------- | ---------------------------------------- |
-| Product checkpoint                        | `ffd943e`                                |
+| Product checkpoint                        | `b593a49`                                |
 | Deployed SHA                              | read live; see the checkpoint note below |
 | Unit / contract / synthetic / adversarial | 1170 / 1170, 56 files                    |
 | Browser                                   | 444 / 444 — 148 tests × 360, 430, 1280px |
@@ -61,20 +61,20 @@ You are running independent QA on Phase 8 of the Life Command OS rebuild.
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Product checkpoint under test: ffd943e
+Product checkpoint under test: b593a49
 Deployed Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
 
 THE CHECKPOINT, AND WHY IT WILL NOT MATCH THE DEPLOYED SHA
 
 Read the deployed SHA from preview/build-info.json. It is whatever was pushed
-last and is NOT expected to equal ffd943e — every push to main redeploys,
+last and is NOT expected to equal b593a49 — every push to main redeploys,
 including the push of this handoff. D-097: a handoff names the product
 checkpoint and separately reports the live deployed SHA, and never asserts the
 two are the same string.
 
 To check they are bundle-equivalent, run:
 
-  node scripts/checkpoint-equivalence.mjs ffd943e --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+  node scripts/checkpoint-equivalence.mjs b593a49 --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
 
 If the fetch hits a certificate-chain error in your Node runtime, read the
 deployed SHA yourself and use `--ref <full-sha>` instead. If it reports that
