@@ -1269,10 +1269,25 @@ typed 113 times. Almost every P0 in this audit is a consequence of it not being 
 
 ## J. Found in the completion pass
 
-These four came from the documents and surfaces the first pass sampled rather than read —
+These came from the documents and surfaces the first pass sampled rather than read —
 `docs/ARCHITECTURE_BOUNDARIES.md`, canonical plan sections 6, 7 and 8, the full defect ledger,
-and the Phase 5–7 QA handoffs. Three of them are defect *classes* already fixed elsewhere and
-never swept across; the fourth is a plan requirement no surface meets.
+the concept registry field by field, the Phase 5–7 QA handoffs — and from closing the two Stage 1
+gaps: the week-start control, and driving every insight card kind onto the screen. Three of the
+five are defect *classes* already fixed elsewhere and never swept across; one is a plan
+requirement no surface meets; one is a wall of identical cards.
+
+**The two Stage 1 gaps, closed.** *Week start* is **correct** and is now a do-not-change item:
+on Saturday 19 September 2026 the app reports week `2026-W38` under Monday-start with the
+direction live, `2026-W37` under Sunday-start with the direction live, and `2026-W38` under
+Saturday-start with the direction **expired** — three settings, three correct answers, including
+the one where a new week begins mid-weekend. *Insight cards*: **ten of the eleven kinds were
+driven onto the screen** — `state-association`, `stable-strength`, `repeated-friction`,
+`move-effectiveness`, `context-effect`, `emerging-change`, `stale-assumption`, `coverage-gap`,
+`trajectory`, `life-season`. The eleventh, `contradiction`, is implemented and deliberately
+subordinated: the four "what happens when you do this" cards are chosen by a `??` chain
+(`insights.ts:2131`), not by their `rank` field, and a context split or a change both *explain*
+the exceptions a contradiction merely reports. That ordering is right. It is simply never reached
+by any history in the library, which is AUD-0008's point again.
 
 ### J.1 — AUD-0041
 
@@ -1337,6 +1352,27 @@ never swept across; the fourth is a plan requirement no surface meets.
 | **Priority** | **P2** |
 | **Timing** | **PHASE 9** — it is a page-composition change and Phase 9 reviews empty states and hierarchy |
 
+### J.4 — AUD-0044
+
+| Field | Detail |
+| --- | --- |
+| **ID** | AUD-0044 |
+| **Title** | Stale-belief cards do not group, so a long absence turns Insights into a wall of the same sentence |
+| **Type** | **PRODUCT / UX** |
+| **Current behaviour** | `staleBeliefCard` (`insights.ts:1315`) is deliberately not in the four-way "one card per move" contest — it "stands beside whichever card won rather than competing", which is right, because the age of the evidence is a different question from what it says. Nothing caps how many may stand beside. One fires per verb with two or more answered episodes whose newest is `STALE_BELIEF_DAYS` (60) old, and every one uses the same template: *"What the app thinks about X is N months old. / The most recent thing you said about it was <date>. It is still being used when this comes up."* |
+| **Problem** | This is **DEF-0026's class on a new surface**. DEF-0026 was the Life overview rendering one row per domain — "two and a half phone screens, seven of the eleven lines identical. Every sentence was true; the screen was homework" — and D-075 fixed it by grouping and saying each thing once. Insights now does the same thing four cards at a time. It is more pointed than the original because **the very top of the same screen already groups correctly**: the coverage card reads *"4 areas have gone quiet — Health & Physical Capacity, Career & Learning, Social & Relationships and Home & Environment. Social & Relationships has been silent longest."* The app knows how to say this once, on the same screen, one card kind away. |
+| **Owner-facing example** | "Nine months of evenings", clock moved to 2027-02-10 (any date more than two months past the history's last outcome — which is an ordinary thing to happen after a busy quarter). Insights renders **four consecutive "GOING ON OLD EVIDENCE" cards**: *"What the app thinks about building a lab with subnetting is 5 months old."* / *"…about getting out for a walk is 3 months old."* / *"…about reaching out to your sister is 4 months old."* / *"…about clearing the kitchen is 5 months old."* Four cards, one sentence, four nouns. Directly above them the coverage card has already said the same thing once, properly. |
+| **Evidence** | `src/intelligence/insights.ts:1315-1350` (the card), `:2151-2163` (it stands beside rather than competes), `:1689`/`:1723` (the coverage card that groups). Reproduced live on the deployed build at the clock above. `docs/DEFECT_LEDGER.md` **DEF-0026**; `docs/DECISION_LOG.md` **D-075**. |
+| **Likely root cause** | D-075's lesson was recorded as a decision about the *Life overview* rather than as a rule about owner surfaces, so the fix did not travel. `staleBeliefCard` was written per-verb because the belief it is about is per-verb, and the grouping question was never asked of it — it produces one card correctly and has no view of the others. |
+| **Recommended behaviour** | Group them, exactly as the coverage card already does, and let the deeper view carry the per-verb detail. One card: *"Four things the app is still going on are two months old or more — clearing the kitchen, the lab, walks and reaching out to your sister. The kitchen is the oldest."* Where only one is stale, keep today's single-card wording, which is good. This costs no new computation and reuses a pattern that is already on the same screen. |
+| **Benefit** | Keeps the surface whose job is "what has the app worked out" from becoming the homework D-075 removed from Life, and does it before Phase 9 lays out the card stack. |
+| **Implementation scope** | `insights.ts` — collect stale-belief cards and emit one grouped card above a threshold, mirroring the coverage card's construction. No new data, no new reading. |
+| **Risks** | Grouping hides which belief is oldest unless the card names it; the coverage card solves this by naming the longest-silent one and pointing at the full list, and this should do the same. Do not group at two — a pair reads fine as a pair. |
+| **Schema / data impact** | None. |
+| **Tests required** | Assert that above the grouping threshold exactly one stale-belief card renders and that it names every verb it covers. Assert a single stale belief still renders as today. Write it as a rule about what the screen may not do — repeat one template N times — rather than as an exact string, per the standing test rule. |
+| **Priority** | **P2** |
+| **Timing** | **PHASE 9** — it is card composition and density, which is Phase 9's business, and Phase 9 is where a stack of four identical cards would otherwise be styled rather than removed |
+
 ---
 
 # 3. Totals
@@ -1347,10 +1383,10 @@ never swept across; the fourth is a plan requirement no surface meets.
 | --- | --- | --- |
 | **P0** | **8** | AUD-0001, 0002, 0003, 0014, 0015 *(part b)*, 0028, 0031, 0036 |
 | **P1** | **20** | AUD-0005, 0008, 0011 *(parts a, b)*, 0015 *(part a)*, 0016, 0017, 0019, 0020, 0023, 0025, 0026, 0027, 0032, 0033, 0034, 0035, 0037, 0040, 0041, 0042 |
-| **P2** | **13** | AUD-0006, 0007, 0009, 0010, 0018, 0021, 0022, 0024, 0029, 0030 *(part a)*, 0038, 0039, 0043 |
+| **P2** | **14** | AUD-0006, 0007, 0009, 0010, 0018, 0021, 0022, 0024, 0029, 0030 *(part a)*, 0038, 0039, 0043, 0044 |
 | **P3** | **3** | AUD-0012, 0013, 0030 *(part b)* |
 | **Owner-blocked** | **1** | AUD-0011 *(part c)* — and AUD-0018, which is P2 and also blocked |
-| **Total** | **43** | |
+| **Total** | **44** | |
 
 AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in the total.
 
@@ -1361,19 +1397,19 @@ AUD-0011, AUD-0015 and AUD-0030 each split across bands; each is counted once in
 | **BUG** | **7** | 0001, 0002, 0003, 0005, 0014, 0015, 0032 |
 | **INTELLIGENCE** | **17** | 0004, 0007, 0009, 0010, 0012, 0013, 0016, 0017, 0018, 0019, 0021, 0024, 0026, 0028, 0029, 0031, 0042 |
 | **ARCHITECTURE** | **9** | 0006, 0011, 0020, 0022, 0025, 0035, 0039, 0040, 0041 |
-| **PRODUCT / UX** | **10** | 0008, 0023, 0027, 0030, 0033, 0034, 0036, 0037, 0038, 0043 |
+| **PRODUCT / UX** | **11** | 0008, 0023, 0027, 0030, 0033, 0034, 0036, 0037, 0038, 0043, 0044 |
 
 ## By timing
 
 | Timing | Count |
 | --- | --- |
 | BEFORE PHASE 9 (Phase 8.5) | 19 |
-| PHASE 9 | 2 |
+| PHASE 9 | 3 |
 | PHASE 10 | 23 |
 | PHASE 11 | 2 |
 | POST-RELEASE-OPTIONAL | 1 |
 
-*(Counts exceed 43 because AUD-0011, AUD-0015, AUD-0025, AUD-0030 and AUD-0038 are split
+*(Counts exceed 44 because AUD-0011, AUD-0015, AUD-0025, AUD-0030 and AUD-0038 are split
 across phases.)*
 
 ## Findings that turned out not to be defects
@@ -1383,8 +1419,12 @@ the three zero-weight dimensions in the trace (correct per D-048), "Something el
 a decline (down-weighted, `learning.ts:861`), the always-drawn lifecycle buttons (D-052), the
 shared health/sleep page (D-078), identical hybrid and deterministic output (D-024), the Life
 overview showing three groups rather than section 7's six states (D-075), `faithPractice` and
-`custodyArrangement` being unread (both correctly declared non-decisional), and the Insights
-card kinds (all eleven of section 27's types are implemented).
+`custodyArrangement` being unread (both correctly declared non-decisional), the Insights card
+kinds (all eleven of section 27's types are implemented, ten of them driven onto the screen),
+`contradiction` never appearing (correctly subordinated by design, `insights.ts:2131`), the
+trajectory card's gate (already moved from `standing` to `tracked` by the D-089 repair, so
+energy, soreness, sleep quality and social energy *can* trend), and week-start handling (correct
+in all three settings).
 
 ---
 
