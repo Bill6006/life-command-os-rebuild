@@ -27,15 +27,15 @@ Phase 11   adversarial hardening · Phase 12  release
 cancelled.** It is in git history and its carried-forward content is repeated
 below. Phase 9 runs after Phase 82.
 
-|                                        |                                                                    |
-| -------------------------------------- | ------------------------------------------------------------------ |
-| Last approved product checkpoint       | `1fc41cf` — the Phase 8 QA-tested build                            |
-| Deployed SHA at audit time             | `0eb920b` — **not expected** to match a checkpoint (D-097)         |
-| Unit layer at Phase 8 close            | 1199 / 1199 across 57 files                                        |
-| Browser at Phase 8 close               | 459 / 459 — 153 each at 360, 430 and 1280px                        |
-| Governing decisions written for you    | **D-109 … D-113**, already in `DECISION_LOG.md`                    |
-| Plan amendments already made           | section 61's copy example (D-110); change-log addendum             |
-| Independent QA (D-077) for this phase  | `docs/qa/PHASE_81_QA_HANDOFF.md` (to be created by QA)             |
+|                                       |                                                            |
+| ------------------------------------- | ---------------------------------------------------------- |
+| Last approved product checkpoint      | `1fc41cf` — the Phase 8 QA-tested build                    |
+| Deployed SHA at audit time            | `0eb920b` — **not expected** to match a checkpoint (D-097) |
+| Unit layer at Phase 8 close           | 1199 / 1199 across 57 files                                |
+| Browser at Phase 8 close              | 459 / 459 — 153 each at 360, 430 and 1280px                |
+| Governing decisions written for you   | **D-109 … D-113**, already in `DECISION_LOG.md`            |
+| Plan amendments already made          | section 61's copy example (D-110); change-log addendum     |
+| Independent QA (D-077) for this phase | `docs/qa/PHASE_81_QA_HANDOFF.md` (to be created by QA)     |
 
 ---
 
@@ -48,7 +48,7 @@ below. Phase 9 runs after Phase 82.
   will fix the wording and leave the reasoning underneath it wrong, which is the exact failure
   the audit is about.
 - **Conversation:** **NEW** — Phase 8's defect loop is closed and this phase should not inherit
-  eight rounds of legacy-import reasoning. Section 43 keeps a *retest* in the conversation that
+  eight rounds of legacy-import reasoning. Section 43 keeps a _retest_ in the conversation that
   found the defects; a new phase starts fresh.
 - **Report path:** `docs/qa/PHASE_81_QA_HANDOFF.md` (to be created by QA)
 

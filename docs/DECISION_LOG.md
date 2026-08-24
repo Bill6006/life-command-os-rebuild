@@ -1513,7 +1513,7 @@ it is an answer given _after_ the evidence that raised it, so a fourth good
 occasion is genuinely new.
 
 **Amended by D-112 — the sequence, not the survivors.** The rule above counted
-three *cleared* occasions and the implementation built that list by discarding
+three _cleared_ occasions and the implementation built that list by discarding
 every occasion that went the other way, then described what remained as "3 times
 running". On a history of six occasions alternating all-the-way and
 part-of-the-way, the app told the owner his daughter had handled it three times
@@ -3380,8 +3380,8 @@ tonight" at 08:40, and a claim that a four-year-old handled something "3 times r
 handled it three times out of six with the most recent try needing help.
 
 **Why Phase 82, and why it is only nine findings.** Membership was decided by one test and
-nothing else: *does this create or change a control, a surface, or the shape of a recommendation
-that Phase 9 must design and the owner must approve on his phone?* Nine pass — threads,
+nothing else: _does this create or change a control, a surface, or the shape of a recommendation
+that Phase 9 must design and the owner must approve on his phone?_ Nine pass — threads,
 commitment windows, deferral, goal horizon and parts, growth stage and occasion context, and the
 score re-cut that completes the thread work. Three were in an earlier draft and failed the test
 on re-examination: AUD-0040, AUD-0045 and AUD-0047. Importance was explicitly **not** the test;
@@ -3438,7 +3438,7 @@ soreness or pain and for a severe recovery shortfall.
 **Why:** the share rule measures the fraction of answer values that switch the decision. The
 value of a question is the expected reduction in loss, which depends on how bad it is to be
 wrong. Those diverge exactly where it matters. On the default history the app's own probe reads
-*"3 of 4 could change the answer, and none on enough of their answers to be worth a tap"* — and
+_"3 of 4 could change the answer, and none on enough of their answers to be worth a tap"_ — and
 it then recommends a 25-minute walk to a man it has not asked about pain, because only one of
 soreness's three answers stops it. A one-in-three chance of prescribing exertion to someone who
 is quite sore is worth one tap.
@@ -3496,9 +3496,9 @@ answers are records; and it remains a watershed rather than a mute button.
 
 **Why:** the audit constructed a history of six occasions alternating all-the-way and
 part-of-the-way — three of six, never twice in a row, the most recent needing help — and the
-deployed build said *"Adaya has handled ordering her own food 3 times running. Worth calling that
-settled?"* while the Fatherhood page displayed the alternating record on the next screen. Tapping
-yes would have recorded *"She handles ordering her own food independently now."* No scenario in
+deployed build said _"Adaya has handled ordering her own food 3 times running. Worth calling that
+settled?"_ while the Fatherhood page displayed the alternating record on the next screen. Tapping
+yes would have recorded _"She handles ordering her own food independently now."_ No scenario in
 the library contains a failed growth occasion, which is why 1,199 green assertions never saw it.
 
 **Sequence:** this decision is written before `growth.ts` is touched, which is the whole point of
