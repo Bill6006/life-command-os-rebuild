@@ -39,6 +39,118 @@ None.
 
 ## Fixed
 
+### DEF-0067 — a guard that could never fire, and an assertion that compared nothing to nothing
+
+- Status: Fixed
+- Severity: Major — not a product defect, and the reason it is here is that
+  Phase 7 shipped three of this exact shape and the Phase 8 handoff is under
+  explicit instructions not to ship a fourth
+- Found in: Phase 8 / pre-checkpoint
+- Found by: the builder, by **reintroducing the defect each new guard was
+  written for** and watching whether the guard noticed — and, for the second
+  half, by `tsc` refusing a property that does not exist
+- Class: **coverage that reads as evidence in both directions.** Two distinct
+  ways in, and neither is visible in a passing run:
+  1. a pattern that cannot match. The wall-clock guard over `src/legacy/`
+     contained a literal `0x08` byte where `\b` was intended, so its regex was
+     `/^HDate\.now.../` and matched nothing. It passed with a `Date.now()`
+     sitting in `src/legacy/plan.ts`.
+  2. an assertion whose two sides are both `undefined`.
+     `tests/synthetic/legacy-inert.test.ts` compared
+     `after.evaluation?.evidence` with `before.evaluation?.evidence`, and
+     `Evaluation` has no `evidence` — so the strongest assertion in the file
+     was `expect(undefined).toEqual(undefined)`.
+- Reproduction: put `export const probeNow = Date.now()` at the end of
+  `src/legacy/plan.ts` and run `tests/unit/architecture-guards.test.ts`. Before
+  the fix: 39 passed. Add `evidence` to an `Evaluation` under an older
+  TypeScript and the second half reproduces the same way.
+- Root cause: the guard bodies were written through a shell heredoc that
+  collapsed one level of backslash escaping, so `\\b` reached the file as a
+  control character. The vacuous assertion was written from memory of the type
+  rather than from the type.
+- Regression: the guards themselves, each proved by reintroduction —
+  `lets nothing below the UI know the old format exists`,
+  `keeps the quarantined shapes and the registry inside the importer`,
+  `reaches no store of its own`, `never writes a legacy file, only reads one`
+  and `reads no wall clock` all fail on their own probe. A repository-wide sweep
+  for control characters in `src`, `tests`, `scripts` and `docs` is clean.
+- Siblings: checked. Every new sweep added by this phase was reintroduction-
+  tested individually, and `tests/synthetic/legacy-inert.test.ts` was rebuilt
+  around the same finding — its fixture originally pulled in two directions at
+  once and cancelled on the one scenario that was already depleted, so three of
+  that scenario's four assertions could not have failed. It now runs each
+  scenario against two opposite pulls, and `running-on-empty` was **removed**
+  from the list because neither pull moved it.
+- Note on the fix: the escaping was repaired rather than the pattern relaxed,
+  and the vacuous comparison was replaced with the dimensions and the score —
+  the numbers a legacy row would nudge without flipping the ranking, which is
+  the shape the assertion was supposed to catch.
+- Fixed in: the checkpoint that closes Phase 8
+
+### DEF-0066 — a re-import reported that everything was already there and offered to do it again
+
+- Status: Fixed
+- Severity: Major — the offer, if accepted, rewrites the whole store in one
+  transaction to change nothing
+- Found in: Phase 8 / pre-checkpoint
+- Found by: the browser suite, on the first run of
+  `the same file twice says there is nothing left rather than doing it again`
+- Class: **two halves of one answer filtered against different things.**
+  `planImport` filtered records against the store and collected entities without
+  filtering them at all. A second pass over an already-imported file therefore
+  produced an empty `toAppend` and a full list of subjects, so
+  `importChangesNothing` was false while the report above the button said every
+  entry was already present — two contradictory claims about one file, on one
+  screen.
+- Reproduction: import a legacy backup containing a `goal`, then read the same
+  file again. The report says "Already here from an earlier run"; the button
+  still reads "Bring it across" and is enabled.
+- Root cause: `heldEntities` did not exist. `snapshotWith` already preferred an
+  existing entity over an incoming one, which made the write harmless and the
+  _decision_ wrong — the plan is what the screen reads, and it was claiming work
+  that did not exist.
+- Regression: `tests/contract/legacy-import.test.ts` —
+  `recognises its own work exactly rather than by resemblance` now also asserts
+  `again.entities` is empty and `importChangesNothing(again)` is true. Proved by
+  reintroduction: removing the `heldEntities` check fails it.
+- Siblings: checked. `toAppend` was already filtered; malformed rows are carried
+  through untouched by design; `snapshotWith` is the only other place the two
+  halves meet and it prefers what the store holds.
+- Note on the fix: D-104 records the general form — what counts as "nothing to
+  do" is one predicate consulted by both callers, not one check written twice.
+- Fixed in: the checkpoint that closes Phase 8
+
+### DEF-0065 — every import would have verified false and rolled itself back
+
+- Status: Fixed
+- Severity: Blocker — no import could ever have succeeded
+- Found in: Phase 8 / pre-checkpoint
+- Found by: the contract suite, on the first end-to-end run through a real store
+- Class: **an order-sensitive fingerprint compared across a boundary that
+  reorders.** `snapshotToWire` serialises records in the order it is handed
+  them; a store returns them sorted. `restoreInto` fingerprints what goes in and
+  what comes back out and compares the two, so a merged snapshot built as
+  `[...current, ...incoming]` fingerprints differently from the identical
+  history read back — and the verification correctly reported that what was
+  written is not what the file holds, and correctly undid it.
+- Reproduction: import any legacy file containing more than one record into a
+  store holding anything at all. The outcome is `stage: 'verify'`,
+  `rolledBack: true`, and nothing is added.
+- Root cause: `snapshotWith` did not sort. The failure looked like a storage
+  fault and was a merge that had not been put in canonical order.
+- Regression: `tests/contract/legacy-import.test.ts` —
+  `is idempotent through the store, not only through the plan` goes through
+  `createMemoryStore` end to end rather than through the plan alone, which is
+  what made this visible at all; the earlier plan-only assertions passed
+  throughout.
+- Siblings: checked. `planRestore` for a backup file takes a snapshot that has
+  already been through `snapshotFromWire`, which sorts on the way in, so the
+  Phase 7 path was never exposed to this.
+- Note on the fix: sorting is independently correct rather than a workaround —
+  D-091's seventh invariant, and appending imported rows to the end of the
+  record list would put a decade-old reading after last night's.
+- Fixed in: the checkpoint that closes Phase 8
+
 ### DEF-0064 (QA-07-010) — a sticky layer was a window, and rectangles could not see it
 
 - Status: Fixed

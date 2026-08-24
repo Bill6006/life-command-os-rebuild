@@ -158,6 +158,7 @@ const MEANING_LAYER = [
 const SYNTHETIC = sourceFiles('src/synthetic')
 const INTELLIGENCE = sourceFiles('src/intelligence')
 const FEATURES = sourceFiles('src/features')
+const LEGACY = sourceFiles('src/legacy')
 
 describe('the guards themselves', () => {
   // A guard that cannot fail is decoration. These prove each scan bites on a
@@ -638,14 +639,18 @@ describe('development scaffolding does not become the product — DEF-0007', () 
     // Direct and deliberately unsubtle: this is the one line a human has to
     // remember to bump, and the whole point is that forgetting fails loudly
     // rather than silently, the way DEF-0031's stale "Phase 4" did.
-    expect(REBUILD_PHASE.number).toBe(7)
-    expect(REBUILD_PHASE.title).toBe('AI exports, backup and restore')
+    expect(REBUILD_PHASE.number).toBe(8)
+    expect(REBUILD_PHASE.title).toBe('Legacy migration')
     expect(REBUILD_PHASE.summary).not.toMatch(/domain pages? behind life are next/i)
     // QA-B1's own lesson, one phase on: the sentence describing what the build
     // does may not still be describing the phase before it.
     expect(REBUILD_PHASE.summary).not.toMatch(/timeline and insights are next/i)
     expect(REBUILD_PHASE.summary).not.toMatch(/exports?[^.]*(?:is|are) next/i)
     expect(REBUILD_PHASE.summary).not.toMatch(/backup[^.]*(?:is|are) next/i)
+    // And this phase's own version of it: the summary may not still be saying
+    // that bringing the old history across is something the build will do later.
+    expect(REBUILD_PHASE.summary).not.toMatch(/(?:legacy|old app)[^.]*(?:is|are) next/i)
+    expect(REBUILD_PHASE.next).not.toMatch(/old app|legacy/i)
   })
 
   it('denies no capability the kernel demonstrably has', () => {
@@ -1026,6 +1031,94 @@ describe('invented histories stay in the laboratory', () => {
     }).map(repoPath)
 
     expect(offenders, 'only the QA laboratory may import the scenario library').toEqual([])
+  })
+})
+
+/**
+ * The wall around the previous generation's shapes (canonical plan section 30).
+ *
+ * Section 30's critical rule — do not contort the new architecture to make
+ * legacy mapping easier — is a rule about *pressure*, and pressure arrives one
+ * convenience import at a time. A legacy type reaching normal runtime is the
+ * single failure that would make the whole exercise worse than not importing at
+ * all: the old application's assumptions would come back wearing this one's
+ * clothes, and nobody would be able to point at the commit where it happened.
+ *
+ * So the shapes stay behind a wall, and the wall is a test rather than a note
+ * at the top of a file.
+ */
+describe('the previous generation’s shapes stay behind the importer', () => {
+  it('is a real folder with real files in it', () => {
+    // Every guard below is a filter over this list. An empty list would make
+    // all of them pass while proving nothing — the shape of a sweep that cannot
+    // fire, which this phase is under instructions not to ship.
+    expect(LEGACY.length).toBeGreaterThan(4)
+  })
+
+  it('lets nothing below the UI know the old format exists', () => {
+    const offenders = MEANING_LAYER.filter((file) =>
+      /from '[^']*\/legacy\//.test(readCode(file)),
+    ).map(repoPath)
+    expect(offenders, 'domain, memory and intelligence may not import the legacy reader').toEqual(
+      [],
+    )
+  })
+
+  it('keeps the quarantined shapes and the registry inside the importer', () => {
+    /*
+     * The deeper of the two walls. `index.ts` is the whole public surface, and
+     * `format.ts` and `translate.ts` are not on it — a feature reaching past
+     * the entry point for `LegacyRecord` or `readValue` would be a surface
+     * holding somebody else's data model.
+     *
+     * `mapping.ts` is deliberately reachable through `index.ts` only. The
+     * import screen genuinely needs to show what the rules decided, and it
+     * needs to show it as data rather than by re-deriving it — which is the
+     * whole reason the tallies are computed in `plan.ts` and not in the panel.
+     */
+    const offenders = FEATURES.filter((file) =>
+      /from '[^']*\/legacy\/[a-z]/.test(readCode(file)),
+    ).map(repoPath)
+    expect(offenders, 'a surface imports src/legacy, not a file inside it').toEqual([])
+  })
+
+  it('reaches no store of its own', () => {
+    /*
+     * Detection and planning are run against files nobody has committed to
+     * importing, so neither may be able to write. `apply.ts` is the one file
+     * that touches a store, and it takes the handle from its caller — which is
+     * what keeps "whose history is this" a decision made one layer up, where
+     * both stores are known (D-091's eighth invariant).
+     */
+    const offenders = LEGACY.filter((file) => {
+      if (repoPath(file).endsWith('src/legacy/apply.ts')) return false
+      return /openIndexedDbStore|createMemoryStore|indexedDB/.test(readCode(file))
+    }).map(repoPath)
+    expect(offenders, 'only the apply step may know a store exists').toEqual([])
+  })
+
+  it('never writes a legacy file, only reads one', () => {
+    /*
+     * There is no encryptor in `src/legacy/`, and there should never be one:
+     * this app writes its own backup format, so an `encrypt` here would be code
+     * whose only possible future is being misused. The fixture that builds test
+     * files has its own, which is also what makes the decryptor provable
+     * against a genuinely encrypted file rather than a mock.
+     */
+    const offenders = LEGACY.filter((file) =>
+      /subtle\.encrypt|deriveKey\([^)]*\)\s*\.\s*then|\['encrypt'\]/.test(readCode(file)),
+    ).map(repoPath)
+    expect(offenders, 'the legacy reader decrypts and does not encrypt').toEqual([])
+  })
+
+  it('reads no wall clock, so an import is dated by the file and not by today', () => {
+    // An imported row's moment is when the thing happened, which is in the
+    // file. A `Date.now()` here would stamp a decade of history with the
+    // afternoon it was imported.
+    const offenders = LEGACY.filter((file) =>
+      /\bDate\.now\s*\(|new Date\s*\(\s*\)/.test(readCode(file)),
+    ).map(repoPath)
+    expect(offenders, 'an import is dated by the file').toEqual([])
   })
 })
 

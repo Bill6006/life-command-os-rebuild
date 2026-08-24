@@ -168,6 +168,38 @@ Everything here is invented. Real owner data never enters this repository
 
 _Created in Phase 1._
 
+## `src/legacy/` — the previous generation, held at arm's length
+
+Reading a backup from the old application and deciding what its entries mean
+here. No React, no DOM, no store of its own.
+
+Everything in this folder is behind a wall, and the wall is enforced rather than
+remembered (`tests/unit/architecture-guards.test.ts`):
+
+- **`src/domain/`, `src/memory/` and `src/intelligence/` may not import it.**
+  Nothing below the UI knows the old format exists.
+- **A surface imports `src/legacy`, never a file inside it.** `format.ts` and
+  `translate.ts` are not on the public surface at all; a feature reaching past
+  the entry point for `LegacyRecord` would be a screen holding somebody else's
+  data model.
+- **Only `apply.ts` may know a store exists**, and it takes the handle from its
+  caller. Detection and planning run against files nobody has committed to
+  importing, so neither may be able to write.
+- **It decrypts and never encrypts.** This app writes its own backup format; an
+  encryptor here would be code whose only possible future is being misused.
+- **It reads no wall clock.** An imported row's moment is when the thing
+  happened, which is in the file.
+
+`mapping.ts` is the phase. Everything else is machinery: read a file, decrypt
+it, count it, write it down atomically, undo it if it did not land. Read it in
+this order — `mapping.ts`, `detect.ts`, `crypto.ts`, `open.ts`, `plan.ts`,
+`translate.ts`, `apply.ts`.
+
+Real owner data never enters this repository (section 39). The fixtures are
+synthetic legacy files built by the tests, encrypted for real.
+
+_Created in Phase 8. Decisions D-101 to D-104._
+
 ## `src/platform/` — the app as a deployed thing
 
 PWA, deployment, build identity, update handling, routing.
@@ -177,7 +209,7 @@ _Exists._
 ## `tests/`
 
 - `tests/unit/` — pure domain semantics, time logic, coverage, ranking
-- `tests/contract/` — record schemas, entity references, import/export, migration, privacy
+- `tests/contract/` — record schemas, entity references, import/export, migration, privacy, legacy import
 - `tests/synthetic/` — golden intelligence scenarios (G-001 … G-014)
 - `tests/browser/` — real owner flows at phone and desktop widths
 - `tests/adversarial/` — malformed data, races, double taps, timezone, DST, long histories

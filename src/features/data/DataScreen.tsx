@@ -25,6 +25,7 @@ import {
 } from '../export/sections'
 import { useMemory } from '../memory/memoryContext'
 import { assembleTimeline } from '../timeline/timelineEntries'
+import { ImportPanel } from './ImportPanel'
 import { readRemembered, writeRemembered } from './rememberedSelection'
 import { copyText, downloadText, readFile } from './transfer'
 import './DataScreen.css'
@@ -47,6 +48,13 @@ import './DataScreen.css'
  * doing it again — and it is built as three separate presses: choose a file,
  * check it, then apply it, with the whole preview between the second and the
  * third.
+ *
+ * **An import** is the fourth, and it is a different act again (section 30). A
+ * restore puts back a copy of his own records; an import adds rows that claim
+ * to mean what the previous generation's rows meant. It lives in its own panel
+ * for that reason — the two are one press apart on one screen, and confusing
+ * them would mean either replacing a life with an old one or adding a
+ * translation of one to it.
  *
  * Everything produced here is also shown in a selectable field on the screen.
  * A copy can be refused and a download can be lost; a person reading text can
@@ -243,13 +251,13 @@ export function DataScreen() {
   return (
     <Screen
       title="Data"
-      lede="Compose a review to hand to an assistant, take a backup of everything, or put one back."
+      lede="Compose a review to hand to an assistant, take a backup of everything, put one back, or bring the old app’s history across."
     >
       {source === 'laboratory' ? (
         <p className="data-warning" data-testid="data-laboratory-notice">
           A test history is on screen, so an export composed now describes that and says so. A
-          backup still takes your own records, and restoring is unavailable until you put the test
-          history away.
+          backup still takes your own records, and restoring and importing are unavailable until you
+          put the test history away.
         </p>
       ) : null}
 
@@ -680,6 +688,8 @@ export function DataScreen() {
           </p>
         )}
       </Panel>
+
+      <ImportPanel />
     </Screen>
   )
 }

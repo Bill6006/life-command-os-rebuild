@@ -234,6 +234,203 @@ async function main() {
   await page.waitForSelector('[data-testid="restore-plan"]')
   check('the same file is accepted again after a refusal', true)
 
+  // ---- Bringing the old app's history across, by thumb ----------------------
+  //
+  // Driven on the deployed build, in a Galaxy-class context, because the whole
+  // flow depends on the page's own Web Crypto: the file is encrypted here and
+  // decrypted a moment later by the same implementation, at the parameters the
+  // old application used. A desktop viewport would prove none of that, and a
+  // hard-coded blob would prove only that one blob can be read.
+  const legacy = await page.evaluate(async (secret) => {
+    const b64 = (bytes) => {
+      let binary = ''
+      for (const byte of bytes) binary += String.fromCharCode(byte)
+      return btoa(binary)
+    }
+    const at = (days) =>
+      new Date(Date.now() - days * 86400000).toISOString().replace(/\.\d+Z$/, '.000Z')
+    const row = (id, type, occurredAt, extra) => ({
+      recordId: id,
+      recordType: type,
+      schemaVersion: 1,
+      occurredAt,
+      recordedAt: occurredAt,
+      localTime: { localIso: occurredAt, timeZone: 'America/Denver', utcOffsetMinutes: -360 },
+      source: 'user-entry',
+      provenance: { method: 'direct-report' },
+      privacy: 'general',
+      ...extra,
+    })
+
+    const records = [
+      row('android-1', 'observation', at(3), {
+        category: 'time-attention-capacity',
+        attribute: 'state:energy',
+        value: { kind: 'anchored-scale', scaleId: 'energy', ordinal: 4, label: 'Good' },
+      }),
+      row('android-2', 'goal', at(30), {
+        statement: 'Pass the CCNA',
+        category: 'career-work-learning',
+        state: 'active',
+        privacy: 'workplace',
+      }),
+      row('android-3', 'recommendation', at(5), { statement: 'Ten minutes of subnetting' }),
+      row('android-4', 'move-preference', at(20), {
+        engineCandidateId: 'social:message-someone',
+        moveStatement: 'Message someone you have not spoken to',
+        stance: 'forbidden',
+      }),
+    ]
+
+    const serialised = JSON.stringify(
+      [...records].sort((a, b) => a.recordId.localeCompare(b.recordId)),
+    )
+    const digest = async (value) => {
+      const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
+      return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, '0')).join('')
+    }
+    const payload = {
+      payloadVersion: 1,
+      storageSchemaVersion: 1,
+      recordCount: records.length,
+      integrity: { algorithm: 'SHA-256', digest: await digest(serialised) },
+      records: JSON.parse(serialised),
+    }
+
+    const salt = crypto.getRandomValues(new Uint8Array(16))
+    const iv = crypto.getRandomValues(new Uint8Array(12))
+    const meta = {
+      cryptoVersion: 1,
+      kdf: 'PBKDF2',
+      kdfHash: 'SHA-256',
+      iterations: 1000,
+      cipher: 'AES-GCM',
+      keyBits: 256,
+      saltBase64: b64(salt),
+      ivBase64: b64(iv),
+    }
+    const aad = new TextEncoder().encode(
+      [
+        String(meta.cryptoVersion),
+        meta.kdf,
+        meta.kdfHash,
+        String(meta.iterations),
+        meta.cipher,
+        String(meta.keyBits),
+        meta.saltBase64,
+        meta.ivBase64,
+      ].join('|'),
+    )
+    const material = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      'PBKDF2',
+      false,
+      ['deriveKey'],
+    )
+    const key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: meta.iterations, hash: 'SHA-256' },
+      material,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt'],
+    )
+    const ciphertext = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv, additionalData: aad },
+      key,
+      new TextEncoder().encode(JSON.stringify(payload)),
+    )
+
+    return JSON.stringify({
+      format: 'life-command-os.backup',
+      formatVersion: 2,
+      createdAt: at(1),
+      encrypted: true,
+      approximateRecordCount: records.length,
+      crypto: meta,
+      ciphertextBase64: b64(new Uint8Array(ciphertext)),
+    })
+  }, 'the one from the old phone')
+
+  await page.getByTestId('import-paste').fill(legacy)
+  await page.getByTestId('import-identify').tap()
+  await page.waitForSelector('[data-testid="import-recognised"]')
+  const recognised = await page.getByTestId('import-recognised').innerText()
+  check(
+    'an old backup is recognised before a passphrase is asked for',
+    recognised.includes('old app'),
+  )
+  check('and it says how the file was encrypted', recognised.includes('AES-GCM'))
+  await sideways('import, recognised')
+
+  // A wrong passphrase, first. Nothing should be written, and the sentence has
+  // to be one an owner can act on.
+  await page.getByTestId('import-passphrase').fill('not the one from the old phone')
+  await page.getByTestId('import-read').tap()
+  await page.waitForSelector('[data-testid="import-refusal"]')
+  const wrong = await page.getByTestId('import-refusal').innerText()
+  check('a wrong passphrase is refused in plain words', wrong.includes('did not work'))
+  check('and the refusal says nothing was changed', wrong.includes('Nothing was changed'))
+
+  await page.getByTestId('import-identify').tap()
+  await page.waitForSelector('[data-testid="import-recognised"]')
+  await page.getByTestId('import-passphrase').fill('the one from the old phone')
+  await page.getByTestId('import-read').tap()
+  await page.waitForSelector('[data-testid="import-report"]')
+
+  const report = await page.getByTestId('import-report').innerText()
+  check(
+    'the whole report appears before anything is written',
+    report.includes('Nothing has been written yet'),
+  )
+  check('it says what is deliberately left out', report.includes('Left out on purpose'))
+  check(
+    'and it names the standing decision it cannot keep',
+    (await page.getByTestId('import-unkept').innerText()).includes('Message someone'),
+  )
+  check(
+    'the passphrase field is gone once it has been used',
+    (await page.getByTestId('import-passphrase').count()) === 0,
+  )
+  await sideways('import, report')
+
+  const importTargets = page.locator('[data-testid="import-report"] ~ .data-actions button')
+  const importSizes = await importTargets.evaluateAll((nodes) =>
+    nodes.map((node) =>
+      Math.min(node.getBoundingClientRect().height, node.getBoundingClientRect().width),
+    ),
+  )
+  check(
+    'the import controls clear 44px of thumb',
+    importSizes.every((size) => size >= 40),
+    `smallest is ${Math.min(...importSizes, 999)}px`,
+  )
+
+  await page.getByTestId('import-apply').tap()
+  await page.waitForSelector('[data-testid="import-outcome"]')
+  const imported = await page.getByTestId('import-outcome').innerText()
+  check(
+    'the import reports what it brought and that it checked it',
+    imported.includes('read them back to check'),
+  )
+  check('and it says nothing about a machine timestamp', !/\d{4}-\d{2}-\d{2}T\d{2}:/.test(imported))
+  check(
+    'and the app never prints a count of one against a plural noun',
+    !/\b1 (?:entries|records|entities|rows)\b/.test(await page.locator('main').innerText()),
+  )
+
+  // The same file again. It has to say there is nothing left rather than
+  // rewriting the store to change nothing.
+  await page.getByTestId('import-identify').tap()
+  await page.waitForSelector('[data-testid="import-recognised"]')
+  await page.getByTestId('import-passphrase').fill('the one from the old phone')
+  await page.getByTestId('import-read').tap()
+  await page.waitForSelector('[data-testid="import-report"]')
+  const again = await page.getByTestId('import-report').innerText()
+  check('a second run says it is already here', again.includes('Already here from an earlier run'))
+  check('and offers nothing to press', await page.getByTestId('import-apply').isDisabled())
+  await sideways('import, second run')
+
   // ---- The rest of the app is still standing --------------------------------
   for (const destination of ['Now', 'Life', 'Timeline', 'Insights']) {
     await page.locator('.nav').getByRole('button', { name: destination }).tap()

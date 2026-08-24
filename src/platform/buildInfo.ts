@@ -53,9 +53,9 @@ export const isProduction = runningBuild.target === 'production'
  * rather than carrying its own copy of the claim.
  */
 export const REBUILD_PHASE = {
-  number: 7,
-  title: 'AI exports, backup and restore',
-  next: 'Bringing the old app’s history across',
+  number: 8,
+  title: 'Legacy migration',
+  next: 'Visual coherence, motion and mobile refinement',
   summary:
     'The app decides, explains itself, watches what happens afterwards, learns from it, and ' +
     'notices when a life area has gone quiet rather than carrying on as though a months-old ' +
@@ -65,7 +65,10 @@ export const REBUILD_PHASE = {
     'honest “not enough yet” wherever the evidence does not support one. Data composes a ' +
     'review to hand to an assistant, takes a complete backup of everything including the ' +
     'private area, and puts one back — checked before it is applied, verified afterwards, and ' +
-    'undone if it does not land.',
+    'undone if it does not land. It also reads a backup from the previous version of this app: ' +
+    'entries are translated where this app means the same thing by them, kept exactly as ' +
+    'written where it does not, and left out where you decided against the idea — with the ' +
+    'whole of that shown to you before anything is written.',
 } as const
 
 function isDeployTarget(value: unknown): value is DeployTarget {

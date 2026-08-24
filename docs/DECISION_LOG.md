@@ -2909,3 +2909,178 @@ This does not make every visual property a screenshot test. It applies where
 the claim is about compositing — a layer over other content — and it comes with
 the structural assertion beside it, so the _reason_ survives a change that
 happens to keep the images equal.
+
+---
+
+## D-101 — A legacy concept with no honest home is archived and named, never mapped to the nearest fit
+
+**Phase:** 8 · **Status:** Active
+
+Section 30's critical rule — _do not contort the new architecture to make legacy
+mapping easier_ — is a rule about pressure, and pressure arrives one plausible
+mapping at a time. Every one of the previous generation's twenty-eight record
+families is a place where something nearly fits.
+
+So the registry in `src/legacy/mapping.ts` gives every family one of four
+dispositions and a written reason, and the import report shows the count for
+each:
+
+- **`map`** — the same act in this app's vocabulary. Becomes canonical history
+  and participates in everything, because it _is_ history.
+- **`archive`** — real, kept verbatim, mapped to nothing. Becomes an
+  `imported-legacy-record`, which the Phase 1 quarantine contract already proves
+  cannot answer a question however good its payload looks.
+- **`excluded`** — section 59 says it does not return. Recognised, counted,
+  named, and **written nowhere**. The difference from `archive` matters: an
+  excluded concept is one the owner decided against, and keeping a copy in the
+  store is leaving it where a later feature can read it.
+- **`undecided`** — real history with no honest home yet. Archived, and
+  additionally flagged for the owner, because the alternative is inventing a
+  mapping he never agreed to.
+
+**Silence is not one of the four.** Mapping what is recognised and ignoring the
+rest makes "we decided against this" and "we forgot about this" the same
+outcome, and the second is a defect nobody can see.
+
+The same rule one level down. Five of the previous generation's sixty-four
+observation attributes map. The rest are archived, and the ones where a near-fit
+was genuinely available are listed in `DECLINED_ATTRIBUTES` with the argument
+against — because an attribute nobody thought about and an attribute somebody
+rejected look identical from outside a registry that only lists what it accepts.
+
+Four of those declines are D-091 invariant 6 by name: mood, stress, confidence
+and overwhelm are four constructs, and pouring them into one emotional quantity
+is the wellness score the owner rules out. Two more are the old model's own
+warnings taken seriously — physical and mental energy were split _because_
+averaging them loses what would have chosen between them, and financial pressure
+says on its face that it is not a measure of how much money there is.
+
+**Every imported record's provenance names the rules version**, not "the
+importer". A mapping rule is a claim about meaning and claims get revised;
+anything imported under one revision has to stay tellable apart from anything
+imported under the next, or a later correction silently rewrites history that was
+brought across correctly under the old rule.
+
+---
+
+## D-102 — There is one door out of the previous generation, and it needs the passphrase
+
+**Phase:** 8 · **Status:** Active — **the owner should be told this rather than asked to choose**
+
+The old application has exactly one complete data-out path: a portable backup
+that is encrypted with no plaintext branch — `encrypted: z.literal(true)` in its
+own schema. Its other export is a readable markdown summary that says on its own
+face that it is lossy and not for recovery, so it is not a migration source.
+
+That leaves two ways to read the owner's history: implement a compatible reader,
+or change the old application to write something else. **The second is
+forbidden** — D-001 protects that tree absolutely. So the passphrase is not one
+option among several; it is the only door, and saying so plainly is more useful
+than offering a choice that does not exist.
+
+The reader is a reader for a documented format and nothing more:
+PBKDF2-HMAC-SHA-256 and AES-256-GCM through Web Crypto, at whatever parameters
+the file declares, with the old application's own pipe-joined canonicalisation of
+the crypto metadata reproduced byte for byte as additional authenticated data.
+Reordering those eight fields — even into something tidier — would make every
+backup the owner has undecryptable, and would present as a wrong passphrase
+rather than as a code change. It is pinned by a test that states the exact
+string.
+
+**Decrypt only.** There is no encryptor in `src/legacy/`, and an architecture
+guard keeps one out: this app writes its own backup format, so an encryptor here
+would be code whose only possible future is being misused. The fixture that
+builds test files has its own, which is also what makes the decryptor provable
+against a genuinely encrypted file rather than against a mock that would agree
+with whatever the reader did.
+
+**The generation before the previous one is recognised and not imported.** The
+single-HTML application's export is identified by shape and refused with a
+sentence saying what it is. Two reasons, and the first is the one that matters:
+mapping it would mean a second complete set of claims about a second data model,
+derived from reading somebody else's reader for it rather than the format itself.
+The second is that the previous generation built its own importer for that
+format, so anything brought across then is already inside its records. **Whether
+the owner wants it read directly anyway is his decision to make**, not this
+build's assumption, and it is an open question in the Phase 8 handoff.
+
+---
+
+## D-103 — A standing instruction that cannot be honoured is named, not kept as an inert record
+
+**Phase:** 8 · **Status:** Active — **owner-facing rule, governing every phase from here**
+
+The previous generation's `move-preference` with the stance `forbidden` is
+section 4.3 in one record: the owner told the old app never to suggest something.
+It looks like the single most important thing this phase could carry across, and
+carrying it across would have been the worst thing this phase did.
+
+It is keyed on `engineCandidateId` — the **old generator's** candidate identity.
+This app's vetoes match on an entity reference, and its candidates have entirely
+different identities, so an imported veto matches nothing. It would sit in
+history saying a move is forbidden while the engine could never act on it.
+**An inert veto is worse than no veto, because it looks kept.**
+
+Two ways to make it fire, and both are the contortion section 30 forbids:
+reshape this app's candidate identities to match the old catalogue's, which is
+section 59's first exclusion arriving through the back door; or widen the veto to
+the domain the old id was prefixed with, which would forbid every move in an area
+of his life because he once declined one move in it.
+
+So the rule, and it is not about legacy import specifically:
+
+> Where the app cannot keep a standing instruction the owner gave it, it says
+> **which instruction**, in the owner's own words for it, at the moment the
+> shortfall is created — and keeps the original in history, so nothing is
+> destroyed by not being honoured.
+
+The import report lists the forbidden moves by name. It reads the **chain**
+rather than every record: a stance superseded by a later one for the same move is
+not standing, so a `forbidden` the owner afterwards `restored` is not handed back
+to him. Returning a rule he had already cancelled is worse than losing it,
+because he would very likely re-state it.
+
+---
+
+## D-104 — An import is the restore transaction with different contents, not a second write path
+
+**Phase:** 8 · **Status:** Active
+
+Section 30 asks an importer for snapshot, atomic apply, verify and rollback.
+`restoreInto` is already exactly that, down to the outcome type that keeps
+"nothing was written", "everything was written and checked" and "something was
+written, it was wrong, and the old history is back" as three different sentences
+rather than one boolean — and D-099's confirmation ladder sits on top of it in
+the provider.
+
+So an import is expressed as what it actually is: **the current history plus some
+records**, applied as one transaction, through the same function. The owner
+surface hands `importRestorePlan(...)` straight to `restoreOwner`, inheriting the
+whole ladder — the owner's store and no other, the snapshot and the clock
+published together, the database reopened and read back, an unconfirmed result
+rather than a false success. Reimplementing any of it for imports would have
+meant a second copy of the most carefully argued code in the repository,
+differing at first only in the wording of its errors.
+
+`append` was the obvious alternative and is not sufficient: it is all-or-nothing
+for records and cannot carry the entities an imported goal refers to in the same
+transaction. An import that wrote its records and then failed to write their
+subjects would show the owner his own history with the names taken out.
+
+**Two consequences that are not obvious, and both were defects before they were
+rules.**
+
+The merged snapshot must be in canonical order. `snapshotToWire` serialises in
+the order it is given, so the verification fingerprint is order-sensitive, and a
+store returns its records sorted — an unsorted merge going in fingerprints
+differently from the identical history coming out, and _every_ import would
+report that what was written is not what the file holds and roll itself back. It
+is independently right: D-091's seventh invariant, and appending imported rows to
+the end would put a decade-old reading after last night's.
+
+And what counts as "nothing to do" is one predicate consulted by both callers.
+Two `length === 0` checks in two files is one decision made twice and free to
+drift — which it did: entities were collected without checking the store, so a
+second pass over an already-imported file produced an empty append list and a
+full list of subjects, and the screen offered to bring across a file it had just
+reported as entirely already present.
