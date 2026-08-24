@@ -115,6 +115,16 @@ so Q1 blocks only AUD-0018; and **AUD-0040 is not in Phase 82**, so Q8 blocks th
 rather than any pre-Phase-9 work. Q2, Q3, D-070 and Q5 were answered by the owner and are recorded
 as settled decisions in section 11.
 
+### Owner decisions written into the governing documents
+
+Five decisions came out of this adjudication and are now in `DECISION_LOG.md`, with the plan's
+change log updated: **D-109** (Phase 81 and Phase 82 precede Phase 9; canonical Phase 10 keeps its
+scope), **D-110** (owner-facing copy names the horizon the owner is in; section 61's example
+corrected), **D-111** (the narrow consequential-question exception, amending D-036), **D-112** (growth
+sufficiency reads the sequence rather than the survivors, amending D-070), and **D-113** (move
+diversity and owner-defined routines as a named product outcome). All five were written **before**
+any product code changed.
+
 ### One thing the review proposed that was deliberately not adopted in full
 
 The review listed fourteen candidates for Phase 82. Taking all fourteen would have made it a
@@ -1519,8 +1529,9 @@ pipeline stages.
 | **Risks** | The move profile is keyed on verb, so a 25-minute walk and a 90-minute gym session would share `size`, `friction` and `demand` — which would make the constraint filter's `no-time` and `too-strained` checks wrong for the heavier one. Either capture a rough size when the routine is created, or restrict the first version to routines the owner sizes himself. Do **not** widen `ACTION_FAMILIES` to pool them (see risks below). |
 | **Schema / data impact** | None to records — `routine` is already a declared entity kind and already serialises. |
 | **Tests required** | Assert an owner-named routine displaces "a walk" as the subject and that the sentence names it. Assert the fallback is unchanged when none exists. Assert two routines produce two separately-scoped learned beliefs and two separately-scoped associations — which is the invariant the next paragraph is about. |
-| **Priority** | **P2** |
-| **Timing** | **LATER INTELLIGENCE PHASE — package 1, Reach** — **after** per-object size and demand, which is a precondition rather than a risk. See Implementation scope. |
+| **Owner priority** | **HIGH PRODUCT OUTCOME — D-113.** The owner has said directly that repeatedly seeing the same move, "walk 25 minutes" above all, is a product problem in its own right. This finding sits in the later phase because its safe implementation is a scoring-model change (see Implementation scope), **not because it matters less**. The goal is not artificial novelty and not more verbs: it is that the app knows more real actions he can actually take, can use owner-defined routines, keeps them semantically distinct, does not pool walking with lifting or cycling as though they had identical demand or outcomes, lets recent repetition matter, lets learned outcomes and context choose, and stops falling back to one move because a domain has only one modelled action. **Diversity is delivered by modelling more distinct routines, never by pooling them** — `ACTION_FAMILIES` stays empty (D-091, DEF-0046). |
+| **Priority** | **P2** on the audit's own bands; **raised to a named product outcome by D-113**, which governs. |
+| **Timing** | **LATER INTELLIGENCE PHASE — package 1, Reach** — **after** per-object size and demand, which is a precondition rather than a risk. See Implementation scope. Highest-priority item in that package under D-113. |
 
 **One thing this finding reveals that is worth stating separately.** Three modules are already
 hardened against an owner having two movement routines, and the product cannot produce one.
@@ -1795,7 +1806,14 @@ external orchestrator routes on integers and a separate orchestration conversati
 established an explicit routing field for this. Builder, QA, repair and retest rounds all stay
 under the same routing number — **QA rounds do not get new phase numbers**. The later
 intelligence phase is deliberately **not numbered yet**, and the canonical phases are **not
-renumbered**. That is a decision for when the implementation plan is approved.
+renumbered**.
+
+**Its permanent number does not block anything.** An earlier draft of this audit said the
+numbering had to be settled before Phase 81 could start; the owner has corrected that. The
+architecture above is approved and sufficient to begin, and the later phase can be assigned its
+routing number and name at any point before it is reached. **Canonical Phase 10 is not
+re-scoped** — that was considered and rejected, because release is gated on its reliability
+items. Recorded as **D-109**.
 
 **The test that decided Phase 81 versus Phase 82.** Not importance. One question: *does this
 create or change a control, a surface, or the shape of a recommendation that Phase 9 must design

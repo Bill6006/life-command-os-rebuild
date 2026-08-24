@@ -669,6 +669,14 @@ preferring it over an exception carved out for two-option questions.
 **What it must keep doing:** DEF-0008's job. A question that one answer in four
 would move is still not asked, and that is checked directly rather than assumed.
 
+**Amended by D-111 — a narrow consequential exception.** The share rule measures
+the fraction of answer values that switch the decision. The value of a question is
+the expected reduction in loss, and those diverge exactly where it matters: the app
+would recommend a 25-minute walk without asking about pain, because only one of
+soreness's three answers stops it. The rule now carries one exception, and D-111
+states its bounds. The share rule remains the default and this regression remains
+in force for every concept not marked `consequential`.
+
 ---
 
 ## D-037 — A guide answer records when it was written down
@@ -1503,6 +1511,16 @@ occasions. A button that records something nothing reads is D-029's mistake.
 **Why it is a watershed and not a mute button** (D-047's shape): what suppresses
 it is an answer given _after_ the evidence that raised it, so a fourth good
 occasion is genuinely new.
+
+**Amended by D-112 — the sequence, not the survivors.** The rule above counted
+three *cleared* occasions and the implementation built that list by discarding
+every occasion that went the other way, then described what remained as "3 times
+running". On a history of six occasions alternating all-the-way and
+part-of-the-way, the app told the owner his daughter had handled it three times
+running while the Fatherhood page displayed the alternating record on the next
+screen. D-112 states the corrected rule in full. **What does not change: a
+growth-stage change is still proposed and never applied, the owner still answers,
+and nothing is written until he does.**
 
 ---
 
@@ -3336,3 +3354,189 @@ it by reading a screen, and Phase 8 found it by reading the tests. The rule
 generalises past origin badges — **any** sweep in this repository whose title
 begins "every" is subject to the four checks above, and the closing note is that
 being told a rule is not the same as the rule being enforced.
+
+---
+
+## D-109 — Two initiatives precede Phase 9, and canonical Phase 10 keeps its scope
+
+**Phase:** 8 → 9 boundary · **Status:** Active — **owner decision**
+
+The rebuild sequence gains two initiatives between Phase 8 and Phase 9:
+
+- **Phase 81 — correctness and truthfulness.** 22 audit findings in 6 steps.
+- **Phase 82 — the structural intelligence skeleton.** 9 audit findings in 6 work packages.
+
+Then Phase 9 as written (section 54), then **one later intelligence phase** carrying the
+remaining 20 findings in two internally gated packages — Reach, then Validity — and then
+**canonical Phase 10, 11 and 12 unchanged**.
+
+**Why Phase 81.** `docs/WHOLE_APP_INTELLIGENCE_AUDIT.md` found 51 findings, and 22 of them are
+the app stating something untrue on a screen the owner reads, or an action the plan promises
+that the interface lacks. Phase 9's review list includes copy and its gate is owner
+physical-phone approval. A sentence that is factually wrong does not become right by being well
+set: if Phase 9 runs first, these get typeset, approved on a phone, and become the thing the
+design depends on. The two sharpest are a time limiter that reads "Only about 10 minutes left
+tonight" at 08:40, and a claim that a four-year-old handled something "3 times running" when she
+handled it three times out of six with the most recent try needing help.
+
+**Why Phase 82, and why it is only nine findings.** Membership was decided by one test and
+nothing else: *does this create or change a control, a surface, or the shape of a recommendation
+that Phase 9 must design and the owner must approve on his phone?* Nine pass — threads,
+commitment windows, deferral, goal horizon and parts, growth stage and occasion context, and the
+score re-cut that completes the thread work. Three were in an earlier draft and failed the test
+on re-examination: AUD-0040, AUD-0045 and AUD-0047. Importance was explicitly **not** the test;
+several important findings are in the later phase.
+
+**Why canonical Phase 10 is not re-scoped.** Section 55 defines it as performance, PWA and
+reliability, and release is gated on those items. The audit's first draft routed all structural
+intelligence work there, which would have put the intelligence programme after the visual gate
+and immediately before release hardening. That was the audit's own error, caught by independent
+review, and the correction is a new phase rather than a re-scoping.
+
+**Numbering.** The product calls these Phase 81 and Phase 82; the external orchestrator routes on
+integers and the handoff carries an explicit `**Phase:**` field. Builder, QA, repair and retest
+rounds all stay under the same routing number — **QA rounds do not get new phase numbers**
+(D-092, D-097). The later intelligence phase is deliberately unnumbered until it is reached, and
+that does not block Phase 81.
+
+---
+
+## D-110 — Owner-facing copy names the horizon the owner is actually in
+
+**Phase:** 81 · **Status:** Active — **owner decision**
+
+Section 61's target-style example is corrected from "situations like tonight" to "situations like
+this one", and the plan now says the horizon in that example is illustrative rather than
+canonical. Where a sentence names a horizon it reads it from the current day block.
+
+**Why:** the audit found the string `tonight` or `evening` 113 times across 29 source files, and
+reproduced the consequence on the deployed build at 08:40 on a Tuesday: the situation line read
+"Tuesday morning" and the limiter directly beneath it read "Only about 10 minutes left tonight."
+The guide offered "The evening is clear" as an answer about a morning. The evidence panel — the
+surface whose job is to be checkable — described "situations like tonight" throughout.
+
+**Why the plan had to change first.** The plan sits above the code in the authority order
+(section 1), and its own copy example blessed the word. Fixing the code against an example that
+reads the other way is the thing section 1 exists to prevent.
+
+**What this is not:** a change to any decision boundary. D-040 already separated the word for the
+hour from the boundary for the decision — the evening begins at 18:00 for every purpose the
+engine has, and only the word moves. This extends D-040 from "late afternoon" to every horizon
+word in the product.
+
+---
+
+## D-111 — A question may be asked when the answer decides whether the action is appropriate
+
+**Phase:** 81 · **Status:** Active — **owner decision**. Amends D-036.
+
+D-036's share rule — `overturns * 2 >= options` — remains the default. One narrow exception is
+added: **the app may ask a question the share rule would not trigger when the unknown could
+materially change whether the proposed action is appropriate at all**, and in particular for
+soreness or pain and for a severe recovery shortfall.
+
+**Why:** the share rule measures the fraction of answer values that switch the decision. The
+value of a question is the expected reduction in loss, which depends on how bad it is to be
+wrong. Those diverge exactly where it matters. On the default history the app's own probe reads
+*"3 of 4 could change the answer, and none on enough of their answers to be worth a tap"* — and
+it then recommends a 25-minute walk to a man it has not asked about pain, because only one of
+soreness's three answers stops it. A one-in-three chance of prescribing exertion to someone who
+is quite sore is worth one tap.
+
+**Bounds, and they are the point. The owner approved this narrow and it stays narrow.**
+
+- It applies to concepts explicitly marked `consequential` in the registry, not to any question
+  that happens to feel important.
+- It applies only when the flip is toward **less** action — no action, or an easier move. It is
+  not a licence to ask in order to justify doing more.
+- The daily cap of three questions (`QUESTIONS_PER_DAY`) is unchanged.
+- D-036's existing regression stays in force: a one-in-four question is still not asked for every
+  concept not marked consequential, and that is asserted directly rather than assumed.
+- Average questions-per-day across the scenario library must not rise materially. Section 47's
+  gate fails a phase on "too many questions", and that has not been relaxed.
+
+**What this is not:** a probability model. The app cannot honestly compute an expected
+opportunity loss and is not being asked to. This is a floor under one class of harm, not a
+calculation.
+
+---
+
+## D-112 — Growth sufficiency reads the sequence, not the survivors
+
+**Phase:** 81 · **Status:** Active — **owner decision**. Amends D-070.
+
+The revised rule, in full.
+
+**What counts as an occasion.** Every `growth-opportunity` episode about the skill that the owner
+actually attempted. A **decline or an unable-now is not practice** and must not reset the app's
+sense of when the skill was last practised.
+
+**What the evidence is.** The whole sequence of attempted occasions and how far each got —
+**not** a filtered list of the ones that went well. Partial and unsuccessful occasions remain
+evidence and are counted, displayed and reasoned about.
+
+**What may be claimed.** The app may never state or imply "running", "consecutive", "settled",
+"independent" or any equivalent unless the underlying sequence actually supports the statement.
+Where occasions alternate, it says so. **The most recent contrary occasion must be capable of
+preventing a settled suggestion on its own.**
+
+**How it is said.** Owner-facing language describes occasions rather than scoring the child.
+Counts of occasions are legitimate and necessary — the owner cannot judge a sufficiency claim
+without them. **Rates, percentages, ranks, grades, confidence badges and performance scores about
+Adaya are forbidden, anywhere in the product.** Internal confidence may exist and govern
+sufficiency; it never renders.
+
+**No new threshold.** Implementing this must **not** introduce an arbitrary child-performance
+percentage threshold. The rule is about honesty of description and about which occasions count,
+not about a new number to clear.
+
+**Unchanged from D-070, and load-bearing:** a growth-stage change is **proposed and never
+applied**. The owner confirms, rejects or corrects; nothing is written until he answers; both
+answers are records; and it remains a watershed rather than a mute button.
+
+**Why:** the audit constructed a history of six occasions alternating all-the-way and
+part-of-the-way — three of six, never twice in a row, the most recent needing help — and the
+deployed build said *"Adaya has handled ordering her own food 3 times running. Worth calling that
+settled?"* while the Fatherhood page displayed the alternating record on the next screen. Tapping
+yes would have recorded *"She handles ordering her own food independently now."* No scenario in
+the library contains a failed growth occasion, which is why 1,199 green assertions never saw it.
+
+**Sequence:** this decision is written before `growth.ts` is touched, which is the whole point of
+recording it here.
+
+---
+
+## D-113 — Move diversity and owner-defined routines are a named product outcome
+
+**Phase:** later intelligence phase, Reach package · **Status:** Active — **owner decision**
+
+The owner has stated directly that repeatedly seeing the same move — "walk 25 minutes" above all
+— is a product problem in its own right. **Move diversity and owner-defined routines are a
+high-priority outcome of the later intelligence work**, and AUD-0045 is not to be treated as a
+cosmetic nicety because it sits outside Phase 82.
+
+**What the goal is:**
+
+- the system knows more real actions the owner can actually take;
+- it can use **owner-defined** routines rather than only the four the engine names for itself;
+- different routines stay **semantically distinct**;
+- walking, lifting, cycling and active play are **not pooled** as though they had identical
+  demand or identical outcomes;
+- recent repetition matters;
+- learned outcomes and current context influence which action is proposed;
+- the app does not keep falling back to one move merely because a domain has one modelled action.
+
+**What the goal is not:** artificial novelty, and not adding random verbs to make the list longer.
+
+**Why it sits in the later phase rather than Phase 82.** Its safe implementation requires
+`profileFor(verb)` to become keyed on `(verb, object)` first: the profile supplies `size`,
+`demand` and `friction`, which the constraint filter reads for `no-time` and `too-strained` and
+the evaluator reads for `friction`, `time-fit`, `opportunity-cost` and `capacity-fit`. A
+25-minute walk and a 90-minute gym session sharing one profile would make all six wrong. That is
+a scoring-model change rather than a UI change, and it is why this is not pre-Phase-9 work — not
+because it matters less.
+
+**What is already right and must survive:** `ACTION_FAMILIES` in `association.ts` is deliberately
+empty and requires a written `because` for any entry (D-091, DEF-0046). Pooling two routines is a
+claim that the owner's own two subjects are the same thing. **Diversity is delivered by modelling
+more distinct routines, never by pooling them.**

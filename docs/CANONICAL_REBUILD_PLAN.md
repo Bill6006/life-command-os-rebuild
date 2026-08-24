@@ -43,6 +43,25 @@ D-082 and D-083 did not.
 
 **v1.2 addendum (D-083):** writing the complete next prompt into the governing MD (D-082, section 43) and then also pasting that same prompt into the chat response was solving one owner problem — never having to hunt for the next instruction — by recreating another: reading a long prompt twice. Section 43 now also requires a short, separate launcher at the end of any response that writes or updates `docs/NEXT_PROMPT.md` or a `docs/qa/PHASE_XX_QA_HANDOFF.md`, naming the model, intelligence level, conversation instruction, and a short copy/paste prompt that points at the exact file to read and execute rather than repeating it. This does not shorten what is written to either file; it does not warrant its own version number for the same reason D-082 did not.
 
+**v1.2 addendum (D-109 to D-113):** a whole-app intelligence and product audit
+(`docs/WHOLE_APP_INTELLIGENCE_AUDIT.md`, 51 findings) and the independent review
+that followed it produced five owner decisions, and one of them changes the phase
+sequence for the first time. **Two initiatives now precede Phase 9:** Phase 81,
+correctness and truthfulness, and Phase 82, the structural intelligence skeleton
+(D-109). They exist because the audit found the app stating things that are not
+true — a time limiter that says "tonight" at 08:40, a claim that a four-year-old
+did something "three times running" when she did it three times out of six — and
+because nine findings create controls, surfaces and recommendation shapes that
+Phase 9 would otherwise design without. Canonical Phase 10 keeps its scope
+(performance, PWA, reliability) unchanged; the remaining intelligence work
+becomes one later phase, sequenced after Phase 9 and before Phase 10, whose
+permanent number is assigned before it is reached. Section 61's copy example is
+corrected (D-110), D-036 gains a narrow consequential exception (D-111), D-070's
+sufficiency rule is corrected (D-112), and move diversity is named as a product
+outcome (D-113). None of this reopens a completed phase, and it does not warrant
+its own version number for the same reason D-082, D-083, D-089, D-090 and D-091
+did not.
+
 ## v1.1 change log
 
 This revision closed four implementation ambiguities before developer handoff:
@@ -3010,7 +3029,16 @@ Instead of:
 
 Prefer something closer to:
 
-> This has worked several times in situations like tonight.
+> This has worked several times in situations like this one.
+
+**The horizon in that example is illustrative, not canonical (D-110).** Earlier
+revisions wrote it as "situations like tonight", and the wording was read as the
+target rather than as the register. It is the register that is the target: short,
+ordinary, specific, no confidence arithmetic. **Owner-facing copy must name the
+horizon the owner is actually in.** "Tonight" is correct in the evening and wrong
+at nine in the morning, and the app said it at nine in the morning for a long
+time because its own constitution appeared to bless the word. Where a sentence
+names a horizon, it reads it from the current day block rather than assuming one.
 
 Instead of:
 
