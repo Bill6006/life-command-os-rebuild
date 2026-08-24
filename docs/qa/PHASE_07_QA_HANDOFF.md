@@ -696,4 +696,178 @@ verification results, open/deferred items, model, level, conversation and the
 D-092 launcher. Do not make the owner ask for the retest prompt.
 ```
 
-<!-- LCO_COMPLETE -->
+## Round 3 — Codex retest (2026-08-23)
+
+### Overall result: FAIL — deployed-checkpoint precondition
+
+Phase 7 remains **YELLOW**. Round 3 stopped at the checkpoint gate exactly as
+the builder handoff requires. The repaired product checkpoint is not the bundle
+currently deployed at Preview, so this run did not certify the repair and did
+not proceed into the requested regression matrix.
+
+### Checkpoint identity and equivalence
+
+- **Product checkpoint requested:** `3a8e8b6`
+- **Deployed SHA read live from `preview/build-info.json`:** `3fc1dde68bf4907fae9b9ce6c99334fd8cd7451a`
+- **Repository HEAD inspected:** `5405eb4df8320adb896b7f6fcb222fea9dc1a413`
+- **Relationship:** deployed `3fc1dde` is the parent-side, pre-repair commit;
+  `3a8e8b6` is not its ancestor. The repair commit is newer than the deployed
+  build, rather than an older product checkpoint followed by docs-only commits.
+
+The handoff says to run the supplied checker from the deployed ref and stop if
+it reports bundle-relevant differences. The equivalent read-only invocation
+from the current checkout was:
+
+```text
+node scripts/checkpoint-equivalence.mjs 3a8e8b6 --ref 3fc1dde
+```
+
+It exited 1 and identified these bundle-relevant differences:
+
+```text
+src/features/data/DataScreen.tsx
+src/features/export/compose.ts
+src/features/export/handoffPrompt.ts
+src/features/memory/MemoryProvider.tsx
+src/features/memory/memoryContext.ts
+src/features/shell/AppShell.css
+src/features/shell/AppShell.tsx
+src/memory/restore.ts
+```
+
+The check initially run against local `HEAD` passed, but that is not evidence
+about the live deployment: `HEAD` is newer than the product checkpoint and its
+intervening changes are documentation-only, while the live SHA is older than
+the product checkpoint and lacks the eight repaired source files above. The
+live-ref check is the one the checkpoint contract requires.
+
+### Deployed-product corroboration
+
+Before the ancestry error was resolved, QA opened the deployed Preview and read
+the document from its first line. It showed the same pre-repair signatures the
+source comparison predicts:
+
+- a synthetic export opened with “You are reviewing one person’s own record of
+  his life” and “He is the owner of everything below” before later identifying
+  itself as a synthetic test history (QA-07-002);
+- with Private left out, the header still listed Private / Sexual Health under
+  “Life areas in it” (QA-07-003);
+- the no-action sentence still ended in doubled punctuation (QA-07-008).
+
+These observations corroborate the failed gate; they are not a substitute for
+the required cold Android Round 3 matrix and do not assess whether the local
+repairs are correct.
+
+### Acceptance, scenarios, and evidence status
+
+- **Checkpoint gate:** FAIL — blocking precondition.
+- **QA-07-002 through QA-07-009 repaired-product retest:** NOT RUN — the
+  repaired bundle is not deployed.
+- **Ordinary selection/header scope:** NOT RUN.
+- **Private exclusion without non-private over-reach:** NOT RUN.
+- **Post-reopen throw, memory fallback, and different-content outcomes:** NOT
+  RUN.
+- **Successful restore and field-by-field backup exactness regressions:** NOT
+  RUN.
+- **Android touch, sticky header group, laboratory notice, and build notice:**
+  NOT RUN.
+- **Real-phone copy from the first line:** NOT RUN.
+- **New evidence artifacts:** none. The precondition is fully reproducible from
+  the live build manifest and Git history; no QA-only script was needed.
+
+The Android configuration and evidence from Round 2 remain recorded above but
+cannot be carried forward as Round 3 evidence for a bundle that was never
+deployed. No automated suite was rerun after the blocking gate, because the
+handoff explicitly says to stop. The automated confidence gap in this round is
+deployment provenance: green local tests cannot certify browser bytes that
+predate the repair.
+
+### Findings and deferrals
+
+No new semantic, behavioral/storage, privacy, or mobile/UI product finding is
+opened. The blocker is release provenance: Preview serves the pre-repair
+product. QA-07-002 through QA-07-009 therefore remain unverified on the
+deployed surface rather than reopened against the local source.
+
+The disclosed deferrals remain unchanged: authenticated/tamper validation
+(D-095), migrations, selective restore, override of a refused file, a
+past-backup library, and legacy import. DEF-0059 through DEF-0062 and the
+resolved-unreproduced `guide-resume.test.ts` status were not altered by this
+run.
+
+### Recommendation
+
+Return to the **CURRENT original Claude Phase 7 builder conversation**. Keep
+Phase 7 YELLOW. Diagnose why Preview still reports and serves `3fc1dde`, deploy
+the repaired checkpoint (or a later commit proved bundle-equivalent to
+`3a8e8b6`), and verify the live SHA and live-ref equivalence before handing it
+back to this **same Codex QA conversation**. Do not mark GREEN or start Phase 8.
+
+- **Recommended model:** current strongest Opus-class Claude coding model,
+  because the next task owns the repository deployment and release provenance.
+- **Recommended intelligence level:** Max, because it must distinguish Git,
+  CI/deploy, manifest, and served-bundle state without disturbing the repaired
+  source.
+- **Conversation:** CURRENT — original Phase 7 Claude builder conversation,
+  because this is deployment completion for the unresolved phase; this Codex
+  conversation remains the independent retester.
+
+## ROUND 3 NEXT CLAUDE ACTION
+
+- **Model:** current strongest Opus-class Claude coding model
+- **Intelligence level:** Max
+- **Conversation:** CURRENT — original Phase 7 Claude builder conversation
+- **Attach/reference:** `docs/qa/PHASE_07_QA_HANDOFF.md`, especially “Round 3
+  — Codex retest”
+
+## ROUND 3 COPY/PASTE PROMPT
+
+```text
+Phase 7 independent QA Round 3 returned FAIL at the deployed-checkpoint
+precondition. The repaired product was not deployed, so QA correctly stopped
+before certifying it.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You are the CURRENT original Claude builder conversation for unresolved Phase
+7. Read docs/qa/PHASE_07_QA_HANDOFF.md in full before acting, including the
+Round 3 section. Keep Phase 7 YELLOW. Do not start Phase 8 and do not mark Phase
+7 GREEN. Do not edit docs/qa/PHASE_07_QA_HANDOFF.md; QA owns it.
+
+The required repaired product checkpoint is 3a8e8b6. On 2026-08-23, live
+preview/build-info.json reported 3fc1dde68bf4907fae9b9ce6c99334fd8cd7451a.
+That deployed commit predates the repair. This exact live-ref check exited 1:
+
+  node scripts/checkpoint-equivalence.mjs 3a8e8b6 --ref 3fc1dde
+
+It found bundle-relevant differences in DataScreen.tsx, compose.ts,
+handoffPrompt.ts, MemoryProvider.tsx, memoryContext.ts, AppShell.css,
+AppShell.tsx, and restore.ts. The deployed UI also exhibited the old synthetic
+owner claim, private-area metadata disclosure, and doubled punctuation.
+
+Diagnose the deployment path and deploy the repaired product checkpoint, or a
+later commit whose emitted bundle is proved equivalent to 3a8e8b6. Preserve the
+current repaired source and all flows Round 2 passed. Do not turn this into a
+new implementation round unless deployment diagnosis proves a source change is
+actually required.
+
+After deployment:
+
+1. Fetch preview/build-info.json live with a cache buster and record its full
+   commit SHA.
+2. Run scripts/checkpoint-equivalence.mjs from that deployed ref, or pass the
+   exact live ref with --ref, and prove there are no bundle-relevant differences
+   from 3a8e8b6.
+3. Confirm the served application bytes contain the repaired first-line
+   synthetic identity, selected-document/private metadata behavior, honest
+   unconfirmed-restore state, owner-clock backup behavior, and grouped sticky
+   header.
+4. Keep Phase 7 YELLOW and write the complete Round 4 retest handoff for the
+   SAME Codex QA conversation. Include the exact live SHA, equivalence output,
+   verification results, unchanged deferrals, model, level, conversation, and
+   D-092 launcher.
+
+Do not make the owner ask for the retest prompt, do not edit QA's report, and
+do not claim deployment from local HEAD alone.
+```

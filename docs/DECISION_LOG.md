@@ -2734,6 +2734,25 @@ prints what did change otherwise. It knows nothing about `docs/`, `scripts/`,
 it fails safe on anything it has not been taught about rather than assuming
 irrelevance.
 
+### Amendment, after QA round 3 (DEF-0063)
+
+D-097 said how to _report_ a checkpoint and not **when it may be named**. A
+handoff naming `3a8e8b6` was written and pushed before that commit's deploy had
+landed, so it was true about the repository and false about the live site at the
+moment QA read it — and a second whole QA round produced no product testing.
+
+Two things close it. The checker distinguishes "the deployed build is older and
+does not contain the checkpoint yet" from "something bundle-relevant differs",
+because a diff is direction-blind and the first message QA got pointed at the
+wrong problem entirely. And the builder must read the **live deployed SHA**
+after CI completes — not merely observe that the CI workflow succeeded, because
+GitHub's own `pages-build-deployment` runs afterwards — and confirm the
+checkpoint is an ancestor of it, before writing a handoff that names it.
+
+`node scripts/checkpoint-equivalence.mjs <checkpoint> --deployed <build-info-url>`
+does both in one command. **Naming a checkpoint is something done after a
+deploy, not before one.**
+
 **Consequence for every future "pin the checkpoint" commit:** run the script
 before writing the checkpoint section, and write what it printed rather than
 asserting a match from memory. `qa/README.md`'s "checkpoint SHA tested" /

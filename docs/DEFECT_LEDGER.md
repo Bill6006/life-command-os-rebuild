@@ -39,6 +39,21 @@ None.
 
 ## Fixed
 
+### DEF-0063 (QA round 3) — a handoff named a checkpoint whose deploy had not landed, and the checker could not say so
+
+- Status: Fixed
+- Severity: Blocker — a second whole QA round produced no product testing
+- Found in: Phase 7 / `5405eb4`
+- Found by: **independent Codex QA**, round 3, at the checkpoint gate
+- Class: **a gate that is right to fail and wrong about why.** Two distinct situations produce a non-empty diff between a named checkpoint and a deployed ref: the deployment is _newer_ and something bundle-relevant genuinely changed, or the deployment is _older_ and simply does not contain the checkpoint yet. `git diff` cannot tell them apart, and the script only diffed.
+- Reproduction: with Preview serving `3fc1dde` and the handoff naming `3a8e8b6`, run `node scripts/checkpoint-equivalence.mjs 3a8e8b6 --ref 3fc1dde`. It exits 1 and lists eight files under `src/` as "bundle-relevant differences" — which reads as a repair that touched things it should not have. The truth was that the deployed build predated the repair by two commits and the answer was to wait for the Pages deploy.
+- Root cause, two of them, and the process one matters more. **The script** reported a direction-blind diff. **The handoff** named `3a8e8b6` as the checkpoint and was pushed before that commit's deploy had landed, so the document was true about the repository and false about the live site at the moment QA read it. The builder confirmed the CI _workflow_ succeeded and did not confirm the _bytes_ — and GitHub's own `pages-build-deployment` runs after the workflow that pushes to `gh-pages`.
+- Fix: `contains()` — `git merge-base --is-ancestor` — runs before the diff and reports a ref that predates the checkpoint as its own outcome, in words that name the remedy: the deploy has not landed, wait and read the deployed SHA again, nothing here says the checkpoint is wrong. And `--deployed <build-info-url>` reads the live SHA itself, so the check is one command rather than a value copied out of a browser tab.
+- Regression: the script, run both ways against the real history. `--ref 3fc1dde` (the exact invocation QA ran) now exits 1 with the ancestry message rather than a file list; `--deployed` against the live Preview exits 0. Both are in the round-3 record in `PHASE_STATUS.md`.
+- **What was not wrong.** Nothing in the repair. The live build at `5405eb4` was confirmed by hand afterwards to carry every round-2 fix — the first line of a synthetic export, the absent ownership claim, the single full stop, and Private gone from the header's life areas. QA's round-3 stop was correct in every respect except the conclusion it was pushed toward by a misleading message.
+- Siblings: swept. D-097 gains the missing step — the builder reads the **live deployed SHA** after CI completes and confirms the checkpoint is an ancestor of it before writing a handoff that names it. Naming a checkpoint is now something done after a deploy, not before one.
+- Fixed in: this checkpoint
+
 ### DEF-0062 (QA-07-002 … QA-07-009) — eight things the green suites could not see
 
 - Status: Fixed

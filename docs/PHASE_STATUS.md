@@ -24,13 +24,20 @@ reopens Phase 4 or any completed phase.
 
 # Phase 7 — AI exports + backup/restore
 
-**Status: YELLOW — ROUND 2 REPAIRED, AWAITING CODEX RETEST.**
+**Status: YELLOW — AWAITING CODEX RETEST.**
 
-Per D-077 this checkpoint does not self-certify. Two QA rounds so far. Round 1
-returned FAIL at the deployed-checkpoint preflight — a defect in the handoff
-rather than in the product (DEF-0061). Round 2 was the first full product pass
-and returned FAIL on seven product findings and one in this file; all eight are
-repaired here (DEF-0062). The retest goes to the **same** Codex conversation.
+Per D-077 this checkpoint does not self-certify. Three QA rounds so far, and
+only one of them reached the product. Round 1 returned FAIL at the
+deployed-checkpoint preflight (DEF-0061, a defect in the handoff). Round 2 was
+the first full product pass and returned FAIL on seven product findings plus
+one in this file, all repaired (DEF-0062). Round 3 returned FAIL at the
+checkpoint gate again, on a handoff pushed before its own deploy had landed and
+a checker that described that as eight bundle differences (DEF-0063). The
+retest goes to the **same** Codex conversation.
+
+**Two of the three rounds were lost to the checkpoint contract rather than to
+the product.** Both are closed, and the second closed the step the first left
+open.
 
 Nothing in this area existed before this checkpoint: `MoreScreen.tsx` said so in
 as many words, and that sentence was one of the acknowledged deferrals in the
@@ -383,13 +390,16 @@ detached?` on `page.goto` — the `vite preview` connection-dropping that
   detail.
 - **D-099** — a restore's post-reopen confirmation is part of its result, and a
   confirmation that fails is reported without being rolled back.
+- **D-097, amended** — a checkpoint is named only after its deploy has landed,
+  confirmed against the live SHA rather than against a green CI workflow.
 
 Defects closed here: **DEF-0059**, the literal scanner, found by the builder
 before QA; **DEF-0060**, a count printed beside a plural noun and the two
 sweeps that could not fire on it, found by the builder before QA;
 **DEF-0061**, the checkpoint-equivalence defect, found by independent QA at
-the mandatory preflight; **DEF-0062**, the eight round-2 findings above, found
-by independent QA's first full product pass.
+the mandatory preflight; **DEF-0062**, the eight round-2 findings, found by independent QA's first full
+product pass; **DEF-0063**, a checkpoint named before its deploy landed and a
+checker that could not say so, found by independent QA at the round-3 gate.
 
 ## Independent QA, round 1 — FAIL at the checkpoint preflight
 
@@ -576,11 +586,55 @@ which is the only shape that gets there.
 Both are fixed and both are now proved by reintroduction rather than by
 reasoning.
 
+## Independent QA, round 3 — FAIL at the checkpoint gate, and nothing wrong with the repair
+
+QA stopped at the checkpoint gate again, correctly, and this time the fault was
+entirely in the handoff and the tool it pointed at (DEF-0063).
+
+`docs/NEXT_PROMPT.md` named `3a8e8b6` and was pushed **before that commit's
+deploy had landed**. Preview was still serving `3fc1dde`, two commits older.
+The document was true about the repository and false about the live site at the
+moment QA read it.
+
+Worse, the checker pointed QA at the wrong problem. `git diff` is
+direction-blind, so running it between the checkpoint and an older deployment
+listed eight files under `src/` as "bundle-relevant differences" — which reads
+as a repair that touched things it should not have. QA had to work out by hand
+that `3a8e8b6` was simply not an ancestor of the deployed SHA. **A gate that is
+right to fail and wrong about why costs a whole round, and this one did.**
+
+**Nothing in the round-2 repair was wrong.** The live build at `5405eb4` was
+read by hand afterwards, in an Android context, and carries every fix: the
+first line of a synthetic export says it is not a real person, the ownership
+claim is gone, the no-action sentence ends once, and Private / Sexual Health no
+longer appears under the header's life areas.
+
+### The repair
+
+`contains()` — `git merge-base --is-ancestor` — runs before the diff, so a ref
+that predates the checkpoint is reported as its own outcome in words that name
+the remedy: the deploy has not landed, wait and read the deployed SHA again,
+nothing here says the checkpoint is wrong. And `--deployed <build-info-url>`
+reads the live SHA itself, so the check is one command rather than a value
+copied out of a browser tab.
+
+Proved both ways against the real history: QA's exact invocation
+(`--ref 3fc1dde`) now exits 1 with the ancestry message; `--deployed` against
+the live Preview exits 0.
+
+D-097 gains the step it was missing. It said how to _report_ a checkpoint and
+not **when one may be named**: the builder reads the live deployed SHA after CI
+completes — not merely that the CI workflow succeeded, because GitHub's own
+`pages-build-deployment` runs afterwards — and confirms the checkpoint is an
+ancestor of it before writing a handoff that names it. **Naming a checkpoint is
+something done after a deploy, not before one.**
+
 ## Next
 
 Independent QA retest, in the **same** Codex conversation (D-090's retest
-routing). Round 2's passes stand and need re-confirming against the repairs;
-the eight findings above need targeted retest. The complete prompt is in
+routing). Round 2's eight findings still need their targeted retest against a
+deployment that actually carries them, and round 2's passes need re-confirming
+against the repairs. The complete prompt is in
 [`NEXT_PROMPT.md`](NEXT_PROMPT.md).
 
 ---

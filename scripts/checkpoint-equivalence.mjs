@@ -26,10 +26,25 @@
  * the same bytes.
  *
  *   node scripts/checkpoint-equivalence.mjs <product-sha> [--ref HEAD]
+ *   node scripts/checkpoint-equivalence.mjs <product-sha> --deployed <build-info-url>
  *
  * Exits 0 and prints what changed (documentation, test and tooling paths
  * only) when the bundle is unchanged; exits 1 and names the offending paths
  * otherwise.
+ *
+ * ## Two ways to fail, and they are not the same problem (DEF-0063)
+ *
+ * The first version of this only diffed, and a diff cannot tell **which
+ * direction** the two commits sit in. When independent QA ran it against a
+ * Preview whose deploy had not landed yet, it printed eight source files as
+ * "bundle-relevant differences" — which reads as a repair that changed things
+ * it should not have, when the truth was that the deployed build simply
+ * predated the checkpoint and the answer was to wait ninety seconds.
+ *
+ * A misleading gate costs a whole QA round, and this one did. So ancestry is
+ * checked first and reported as its own outcome: if the checkpoint is not an
+ * ancestor of the ref, the deployed build is **older** than the thing being
+ * claimed, and no amount of diffing is the right thing to say about it.
  */
 import { execFileSync } from 'node:child_process'
 
@@ -40,7 +55,36 @@ if (productSha === undefined) {
 }
 
 const refFlagIndex = rest.indexOf('--ref')
-const ref = refFlagIndex === -1 ? 'HEAD' : (rest[refFlagIndex + 1] ?? 'HEAD')
+const deployedFlagIndex = rest.indexOf('--deployed')
+
+/**
+ * The SHA the deployed site is actually serving.
+ *
+ * Here so the check can be one command rather than a copy of a value from a
+ * browser tab — the step most likely to be skipped is the one that needs a
+ * second window.
+ */
+async function deployedSha(url) {
+  const response = await fetch(`${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`, {
+    cache: 'no-store',
+    headers: { 'cache-control': 'no-cache' },
+  })
+  if (!response.ok) throw new Error(`${url} returned ${response.status}`)
+  const info = await response.json()
+  if (typeof info.commitSha !== 'string') throw new Error(`${url} carries no commitSha`)
+  return info.commitSha
+}
+
+let ref = refFlagIndex === -1 ? 'HEAD' : (rest[refFlagIndex + 1] ?? 'HEAD')
+if (deployedFlagIndex !== -1) {
+  const url = rest[deployedFlagIndex + 1]
+  if (url === undefined) {
+    console.error('--deployed needs the URL of a build-info.json')
+    process.exit(2)
+  }
+  ref = await deployedSha(url)
+  console.log(`Deployed SHA read live from ${url}: ${ref}\n`)
+}
 
 /**
  * What actually reaches `dist/`.
@@ -71,6 +115,33 @@ function changedPaths(from, to) {
     encoding: 'utf8',
   })
   return raw.split('\n').filter((line) => line.length > 0)
+}
+
+/**
+ * Whether the ref already contains the checkpoint.
+ *
+ * `git merge-base --is-ancestor` exits 0 when the first commit is reachable
+ * from the second, and 1 when it is not. A ref that does not contain the
+ * checkpoint is not a candidate for equivalence at all: it is an older build.
+ */
+function contains(commit, candidate) {
+  try {
+    execFileSync('git', ['merge-base', '--is-ancestor', commit, candidate], {
+      stdio: 'ignore',
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
+if (!contains(productSha, ref)) {
+  console.error(`The build at ${ref} does not contain ${productSha}.`)
+  console.error('')
+  console.error('This is not a bundle difference — it is an older build. If the ref is a live')
+  console.error('deployment, the deploy for that checkpoint has not landed yet: wait for it and')
+  console.error('read the deployed SHA again. Nothing here says the checkpoint is wrong.')
+  process.exit(1)
 }
 
 const changed = changedPaths(productSha, ref)
