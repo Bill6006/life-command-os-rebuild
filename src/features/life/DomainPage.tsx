@@ -476,7 +476,7 @@ function ConceptRow({
           <div className="domain-correction">
             <p className="domain-correction__prompt">{reading.question.prompt(situation)}</p>
             <div className="domain-options">
-              {reading.question.options.map((option: QuestionOption) => (
+              {reading.question.options(situation).map((option: QuestionOption) => (
                 <button
                   key={option.id}
                   type="button"

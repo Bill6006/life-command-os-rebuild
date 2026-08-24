@@ -499,10 +499,12 @@ describe('an answer is an ordinary canonical record', () => {
   it('is written with the concept’s own privacy, not the question’s', () => {
     const spec = questionFor(CONCEPT.childPresent)
     if (spec === undefined) throw new Error('no question about that')
-    const option = spec.options[0]
+
+    const { scenario, snapshot } = open('durable-custody')
+    const situation = decide(buildView(snapshot, moment(scenario)), moment(scenario)).situation
+    const option = spec.options(situation)[0]
     if (option === undefined) throw new Error('no options')
 
-    const { scenario } = open('durable-custody')
     const record = answerRecord(spec, option, moment(scenario))
 
     expect(record.kind).toBe('observation')

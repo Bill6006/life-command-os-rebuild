@@ -332,3 +332,33 @@
 .qa-group[data-changes='true'] .qa-group__title {
   color: var(--accent);
 }
+
+.qa-sweep {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.qa-sweep__row {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-2);
+}
+
+.qa-sweep__when {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.qa-sweep__move {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.qa-sweep__note {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}

@@ -28,6 +28,19 @@ import { instant } from '../domain/time'
  * exist only in the index used to render a decision.
  */
 
+/**
+ * The owner-facing time vocabulary — AUD-0002, D-110.
+ *
+ * Re-exported rather than written out twice. The definitions live in
+ * `src/domain/horizon.ts` because `domain/recommendation.ts` composes the move
+ * sentences and may not import this layer; everything above the domain reads
+ * them from here, which is the module the audit named and the one an
+ * intelligence or surface file would look in. Two doors, one definition — the
+ * same arrangement `memoryContext.ts` uses for `HistorySource`, and for the
+ * same reason: two copies stay identical right up until they do not.
+ */
+export { blockNoun, hereNowWord, horizonWord, restOfWord, withinPhrase } from '../domain/horizon'
+
 const ALWAYS = instant(0)
 
 export const STANDING_ENTITIES: readonly SemanticEntity[] = [

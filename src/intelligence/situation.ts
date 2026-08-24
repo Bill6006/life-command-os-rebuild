@@ -38,7 +38,7 @@ import { resolveDirection, type ActiveGoal, type DirectionState } from './direct
 import { buildLearning, type LearningIndex } from './learning'
 import { collectEpisodes, type Episode, type MoveState } from './lifecycle'
 import { booleanValue, hoursValue, minutesValue, narrowKnowledge, ratioValue } from './values'
-import { decisionEntities } from './vocabulary'
+import { decisionEntities, horizonWord, withinPhrase } from './vocabulary'
 
 /**
  * The context assembler (canonical plan section 17.1, step 2).
@@ -401,6 +401,7 @@ function findLimiter(
   capacity: Capacity,
   usableMinutes: Knowledge<number>,
   coverage: CoverageState,
+  block: DayBlock,
 ): Limiter | undefined {
   const strain = capacity.strain
   if (isUsable(strain) && strain.value !== 'none') {
@@ -429,7 +430,7 @@ function findLimiter(
       kind: 'capacity',
       label: LIMITER_LABEL.capacity,
       domain: DOMAIN.health,
-      summary: 'The body is asking for an easier night.',
+      summary: `The body is asking for an easier ${block === 'evening' || block === 'late-night' ? 'night' : 'day'}.`,
       evidence: basisOf(soreness),
       certainty: confidence(0.55),
     }
@@ -440,7 +441,7 @@ function findLimiter(
       kind: 'time',
       label: LIMITER_LABEL.time,
       domain: DOMAIN.direction,
-      summary: `Only about ${Math.round(usableMinutes.value)} minutes left tonight.`,
+      summary: `Only about ${Math.round(usableMinutes.value)} minutes left ${withinPhrase(block)}.`,
       evidence: basisOf(usableMinutes),
       certainty: confidence(0.7),
     }
@@ -578,13 +579,18 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
   const entities = decisionEntities(view.entities.all())
   const reader = createFactReader(view, entities, concepts)
 
+  // Worked out before anything is read, because what a fact is *for* is worded
+  // from the hour — AUD-0001. The seam the audit found was exactly this: the
+  // block was assembled after the limiter that needed it.
+  const block = blockOf(moment.now, moment.zone)
+
   const capacity = assembleCapacity(view, moment, reader)
   const usableMinutes = narrowKnowledge(
     reader.read(CONCEPT.usableTimeTonight, 'how much time there is'),
     minutesValue,
   )
   const childPresent = narrowKnowledge(
-    reader.read(CONCEPT.childPresent, 'whether she is here tonight'),
+    reader.read(CONCEPT.childPresent, `whether she is here ${horizonWord(block)}`),
     booleanValue,
   )
   const socialEnergy = narrowKnowledge(
@@ -600,7 +606,6 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
   // One pass over history for both: the duplication check reads the recent end
   // of it, and learning reads all of it against the situation being decided.
   const episodes = collectEpisodes(view, moment.zone)
-  const block = blockOf(moment.now, moment.zone)
   const isWeekend = local.isoWeekday >= 6
 
   const coverage = assembleCoverage(view, entities, {
@@ -627,7 +632,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     learningTopic,
     direction: resolveDirection(view, moment, domains),
     coverage,
-    limiter: findLimiter(capacity, usableMinutes, coverage),
+    limiter: findLimiter(capacity, usableMinutes, coverage, block),
     preferences: collectPreferences(view),
     constraints: collectConstraints(view, moment.now),
     recentMoves: collectRecentMoves(

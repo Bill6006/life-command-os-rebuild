@@ -515,6 +515,20 @@ describe('there is exactly one arbitration path', () => {
    * coverage, applied to a second reader, and the guard below makes it
    * structural rather than a promise.
    */
+  /*
+   * `vocabulary` joined in Phase 81, and it is the least interesting entry
+   * here: it is a table of words. `horizonWord`, `hereNowWord`, `blockNoun`,
+   * `restOfWord` and `withinPhrase` turn a `DayBlock` into what a person calls
+   * it, and nothing else. It decides nothing, reads nothing and computes
+   * nothing about a move.
+   *
+   * It is open because the alternative is worse. The audit found the word
+   * `tonight` typed by hand 113 times across 29 files — including on Now, in
+   * the evidence panel's headings and on the decline button — and the whole
+   * point of the fix is that there is now one definition of that word. A
+   * surface that could not reach it would have to keep its own copy, which is
+   * the defect with an extra step.
+   */
   const OPEN_TO_SURFACES = [
     'engine',
     'guide',
@@ -528,6 +542,7 @@ describe('there is exactly one arbitration path', () => {
     'derived',
     'growth',
     'insights',
+    'vocabulary',
   ]
   const DECIDES = [
     'candidates',

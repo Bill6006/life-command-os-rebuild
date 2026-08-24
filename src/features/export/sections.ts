@@ -79,7 +79,7 @@ export const EXPORT_SECTIONS: readonly ExportSection[] = [
   {
     id: 'now',
     title: 'What the app is saying now',
-    summary: 'Tonight’s suggestion, why it was chosen, and what it read to choose it.',
+    summary: 'The current suggestion, why it was chosen, and what it read to choose it.',
     privacy: 'normal',
     byDefault: true,
     inSelectAll: true,

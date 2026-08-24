@@ -2,9 +2,15 @@ import type { ConceptRegistry } from '../domain/concepts'
 import type { DomainRegistry } from '../domain/domains'
 import { renderRecommendation } from '../domain/recommendation'
 import {
+  civilDateFromDayId,
+  DAY_BLOCKS,
   DEFAULT_WEEK_START,
+  instantAtLocal,
+  localDateTimeAt,
   localDayIdAt,
+  type DayBlock,
   type Instant,
+  type LocalDayId,
   type TimeZoneId,
   type WeekStartDay,
 } from '../domain/time'
@@ -30,6 +36,7 @@ import { profileFor } from './moves'
 import { outcomeWindowFor } from './outcomes'
 import { answerRecord, QUESTIONS } from './questions'
 import { assembleSituation, type Situation, type SituationMoment } from './situation'
+import { blockNoun, horizonWord } from './vocabulary'
 import type {
   DecisionTrace,
   EpisodeTrace,
@@ -225,7 +232,7 @@ export function probeSwings(
     if (entry === undefined || !entry.worthAsking) continue
 
     const outcomes: { answer: string; wouldChoose: string }[] = []
-    for (const option of question.options) {
+    for (const option of question.options(actual.situation)) {
       const record = answerRecord(
         question,
         option,
@@ -261,6 +268,83 @@ export function probeSwings(
 }
 
 // ---------------------------------------------------------------------------
+// The block sweep — AUD-0008
+// ---------------------------------------------------------------------------
+
+/**
+ * One representative hour inside each day block.
+ *
+ * The instrument the whole-app audit asked for, and the reason it asked: the
+ * scenario library was thirteen evenings and no morning that could decide, so
+ * every claim the app makes about the hour was checked at the one hour it was
+ * written for. A sweep re-runs *the same history* at five different moments and
+ * puts the five answers next to each other, which is the cheapest possible
+ * defence against a whole class of temporal wrongness — one press surfaces a
+ * limiter that says "tonight" at nine in the morning, a recovery limiter with
+ * no recovery move behind it, and a fact that has quietly expired since
+ * breakfast.
+ *
+ * Midpoints rather than edges. An edge is where a boundary bug lives and a
+ * midpoint is where the owner lives, and this is the owner's instrument; the
+ * boundary arithmetic has its own tests in `tests/unit/time.test.ts`.
+ * `late-night` covers two ranges and is swept at the late end, because that is
+ * the one a person is awake for — the small hours are covered by the
+ * half-hourly regression sweep rather than by this control.
+ */
+export const SWEEP_HOUR: Record<DayBlock, { readonly hour: number; readonly minute: number }> = {
+  'early-morning': { hour: 5, minute: 30 },
+  morning: { hour: 9, minute: 30 },
+  afternoon: { hour: 15, minute: 0 },
+  evening: { hour: 20, minute: 0 },
+  'late-night': { hour: 23, minute: 0 },
+}
+
+export interface SweptBlock {
+  readonly block: DayBlock
+  readonly at: Instant
+  /** The owner-local wall clock this was decided at, for the row's label. */
+  readonly timeOfDay: string
+  readonly decision: Decision
+}
+
+/**
+ * The same history, decided at every block of one owner-local day.
+ *
+ * Clock-free like everything else here: the day is taken from the moment it is
+ * given, and each block's instant is resolved through the same local-time
+ * arithmetic a scenario uses. Nothing is written and nothing is travelled to —
+ * the caller's own clock is untouched, so the laboratory can show five answers
+ * without moving the one on screen.
+ */
+export function sweepDayBlocks(
+  view: MemoryView,
+  moment: DecisionMoment,
+  options: DecideOptions = {},
+): readonly SweptBlock[] {
+  const zone = moment.zone
+  const dayId: LocalDayId = localDayIdAt(moment.now, zone)
+  const date = civilDateFromDayId(dayId)
+  const inner: DecideOptions = { ...options, probe: false }
+
+  return DAY_BLOCKS.map((block) => {
+    const { hour, minute } = SWEEP_HOUR[block]
+    const at = instantAtLocal({ ...date, hour, minute, second: 0 }, zone)
+    const swept: DecisionMoment = { ...moment, now: at }
+    const built = buildView(view.snapshot, {
+      now: at,
+      zone,
+      ...(moment.weekStartsOn === undefined ? {} : { weekStartsOn: moment.weekStartsOn }),
+    })
+    return {
+      block,
+      at,
+      timeOfDay: localDateTimeAt(at, zone).timeOfDay,
+      decision: decide(built, swept, inner),
+    }
+  })
+}
+
+// ---------------------------------------------------------------------------
 
 function proposedRows(
   candidates: readonly Candidate[],
@@ -279,7 +363,11 @@ function proposedRows(
 
 function rankingRows(selection: Selection, situation: Situation): readonly RankedMove[] {
   return selection.ranked.map((evaluation) => {
-    const rendered = renderRecommendation(evaluation.candidate.semantics, situation.entities)
+    const rendered = renderRecommendation(
+      evaluation.candidate.semantics,
+      situation.entities,
+      situation.block,
+    )
     return {
       id: evaluation.candidate.id,
       sentence: rendered.ok ? rendered.rendered.sentence : 'could not be put into words',
@@ -406,7 +494,13 @@ function learningRows(selection: Selection, situation: Situation): readonly Lear
 /** Every episode in the history, and how much this evening resembles it. */
 function episodeRows(situation: Situation): readonly EpisodeTrace[] {
   return situation.learning.episodes.map((episode) => {
-    const rendered = renderRecommendation(episode.semantics, situation.entities)
+    // The block the episode was decided in, not the one being read in: a line
+    // about last Tuesday evening is about that evening.
+    const rendered = renderRecommendation(
+      episode.semantics,
+      situation.entities,
+      episode.context?.block,
+    )
     const window = outcomeWindowFor(episode, situation.zone)
     const given = episode.outcomes.length
 
@@ -472,7 +566,12 @@ function stateOfChosen(evaluation: Evaluation, situation: Situation): MoveState 
 function nothingForThisLimiter(situation: Situation): string | undefined {
   switch (situation.limiter?.kind) {
     case 'recovery':
-      return 'Nothing here would help much before tonight.'
+      // When rest is what is short, the next thing that can help is the next
+      // night — so in the evening that is the morning, and before it that is
+      // tonight. Naming the wrong one of the two was the shape of AUD-0001.
+      return horizonWord(situation.block) === 'tonight'
+        ? 'Nothing here would help much before the morning.'
+        : 'Nothing here would help much until you can actually rest.'
     case 'capacity':
       return 'Nothing here is worth asking of a sore body.'
     case 'time':
@@ -482,7 +581,7 @@ function nothingForThisLimiter(situation: Situation): string | undefined {
       // how long. This says the only part it does not: that the app has nothing
       // to suggest which would bring anything back, which is the honest answer
       // and is different from the area not mattering.
-      return 'Nothing here would bring anything back about it tonight.'
+      return `Nothing here would bring anything back about it ${horizonWord(situation.block)}.`
     default:
       return undefined
   }
@@ -508,12 +607,12 @@ function noActionCopy(
   switch (reason) {
     case 'nothing-worth-doing':
       return {
-        headline: 'Nothing needs to move tonight.',
-        detail: 'Nothing on the list is worth the evening it would cost. That is a real answer.',
+        headline: `Nothing needs to move ${horizonWord(situation.block)}.`,
+        detail: `Nothing on the list is worth ${blockNoun(situation.block)} it would cost. That is a real answer.`,
       }
     case 'everything-ruled-out':
       return {
-        headline: 'Nothing fits tonight.',
+        headline: `Nothing fits ${horizonWord(situation.block)}.`,
         detail: 'There were things worth doing and none of them suit where you actually are.',
       }
     case 'nothing-proposed': {
@@ -529,8 +628,7 @@ function noActionCopy(
       }
       return {
         headline: 'Nothing to suggest just yet.',
-        detail:
-          'There is plenty of history here, and none of it says how tonight is going. One answer below is usually enough.',
+        detail: `There is plenty of history here, and none of it says how ${horizonWord(situation.block)} is going. One answer below is usually enough.`,
       }
     }
   }

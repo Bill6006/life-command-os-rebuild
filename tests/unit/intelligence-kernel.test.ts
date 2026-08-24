@@ -4,14 +4,29 @@ import { coreDomains, DOMAIN } from '../../src/domain/domains'
 import { explicit, inferred, confidence, unknown } from '../../src/domain/knowledge'
 import type { FactValue } from '../../src/domain/records'
 import { ACTION_VERBS } from '../../src/domain/recommendation'
-import { instant, timeZone } from '../../src/domain/time'
+import {
+  civilDateFromDayId,
+  DAY_BLOCKS,
+  instant,
+  instantAtLocal,
+  localDateTimeAt,
+  timeZone,
+  type DayBlock,
+  type Instant,
+  type TimeZoneId,
+} from '../../src/domain/time'
 import { arbitrate, WORTH_DOING } from '../../src/intelligence/arbitrate'
 import { generateCandidates } from '../../src/intelligence/candidates'
 import { domainFromText } from '../../src/intelligence/direction'
 import { MOVE_PROFILES } from '../../src/intelligence/moves'
 import { QUESTIONS } from '../../src/intelligence/questions'
 import { describePremise } from '../../src/intelligence/explain'
-import { assembleSituation, blockOf, describeHours } from '../../src/intelligence/situation'
+import {
+  assembleSituation,
+  blockOf,
+  describeHours,
+  type Situation,
+} from '../../src/intelligence/situation'
 import { snapshotFromWire } from '../../src/memory/snapshot'
 import { buildView } from '../../src/memory/view'
 import { scenarioById } from '../../src/synthetic/scenarios'
@@ -251,20 +266,72 @@ describe('the engine’s own vocabulary', () => {
   })
 })
 
+/** The same history, read at a chosen part of the day. */
+function situationInBlock(block: DayBlock): Situation {
+  const loaded = loadScenario('durable-custody')
+  const hours: Record<DayBlock, number> = {
+    'late-night': 23,
+    'early-morning': 5,
+    morning: 9,
+    afternoon: 15,
+    evening: 20,
+  }
+  const zone = loaded.scenario.zone
+  const at = movedToHour(loaded.scenario.now, hours[block], zone)
+  return assembleSituation(loaded.viewAt(at), { now: at, zone, weekStartsOn: 1 })
+}
+
+function movedToHour(day: Instant, hour: number, zone: TimeZoneId): Instant {
+  const local = localDateTimeAt(day, zone)
+  return instantAtLocal({ ...civilDateFromDayId(local.dayId), hour, minute: 0, second: 0 }, zone)
+}
+
 describe('the questions it is allowed to ask', () => {
+  /*
+   * Every question, at every part of the day — AUD-0002.
+   *
+   * The option labels are written from the block now, because the guide was
+   * offering "The evening is clear" as an answer about a morning. Sweeping the
+   * blocks is what makes these claims about the whole catalogue rather than
+   * about whichever hour the fixture happens to sit at: the shape of a question
+   * may not change with the clock, only its words.
+   */
+  const atEveryBlock = (): readonly { block: DayBlock; situation: Situation }[] =>
+    DAY_BLOCKS.map((block) => ({ block, situation: situationInBlock(block) }))
+
   it('offers real choices, not a free-text box', () => {
-    for (const question of QUESTIONS) {
-      expect(question.options.length, question.concept).toBeGreaterThanOrEqual(2)
-      expect(question.options.length, question.concept).toBeLessThanOrEqual(4)
+    for (const { block, situation } of atEveryBlock()) {
+      for (const question of QUESTIONS) {
+        const options = question.options(situation)
+        expect(options.length, `${question.concept} at ${block}`).toBeGreaterThanOrEqual(2)
+        expect(options.length, `${question.concept} at ${block}`).toBeLessThanOrEqual(4)
+      }
     }
   })
 
   it('gives every option a distinct answer', () => {
+    for (const { block, situation } of atEveryBlock()) {
+      for (const question of QUESTIONS) {
+        const options = question.options(situation)
+        const ids = options.map((option) => option.id)
+        expect(new Set(ids).size, `${question.concept} at ${block}`).toBe(ids.length)
+        const values = options.map((option) => JSON.stringify(option.value))
+        expect(new Set(values).size, `${question.concept} at ${block}`).toBe(values.length)
+      }
+    }
+  })
+
+  it('stores the same answers whatever the clock says', () => {
+    // Only the words move. If a block could change which values a question can
+    // record, the share rule in `guide.ts` and D-036's regression would be
+    // measuring different questions at different hours.
     for (const question of QUESTIONS) {
-      const ids = question.options.map((option) => option.id)
-      expect(new Set(ids).size, question.concept).toBe(ids.length)
-      const values = question.options.map((option) => JSON.stringify(option.value))
-      expect(new Set(values).size, question.concept).toBe(values.length)
+      const shapes = DAY_BLOCKS.map((block) =>
+        JSON.stringify(
+          question.options(situationInBlock(block)).map((option) => [option.id, option.value]),
+        ),
+      )
+      expect(new Set(shapes).size, question.concept).toBe(1)
     }
   })
 

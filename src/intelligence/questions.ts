@@ -6,6 +6,7 @@ import type { FactValue, ObservationRecord, Provenance } from '../domain/records
 import type { Instant, TimeZoneId } from '../domain/time'
 import type { ConceptId } from '../domain/windows'
 import type { Situation } from './situation'
+import { horizonWord, restOfWord } from './vocabulary'
 
 /**
  * The things the guide is allowed to ask (canonical plan sections 12 and 4.5).
@@ -34,18 +35,34 @@ export interface QuestionSpec {
   readonly concept: ConceptId
   /** Written fresh each time so it can name whoever it is actually about. */
   prompt(situation: Situation): string
-  readonly options: readonly QuestionOption[]
+  /**
+   * Written fresh for the same reason the prompt is — AUD-0002.
+   *
+   * At 07:30 the app asked how much time there was and offered **"The evening
+   * is clear"** as an answer about a morning. An option label is a sentence the
+   * owner reads and presses, so it is under exactly the same rule as every
+   * other owner-facing string: it names the stretch of day he is actually in.
+   *
+   * The *values* never move. Which answers exist, how many there are and what
+   * each one stores are fixed — only the words change — so the share rule in
+   * `guide.ts` and D-036's regression measure the same thing they always did.
+   */
+  options(situation: Situation): readonly QuestionOption[]
 }
 
 function scale(value: number): FactValue {
   return { type: 'scale', value, of: 5 }
 }
 
+function capitalise(text: string): string {
+  return text.length === 0 ? text : `${text.charAt(0).toUpperCase()}${text.slice(1)}`
+}
+
 export const QUESTIONS: readonly QuestionSpec[] = [
   {
     concept: CONCEPT.sleepHours,
     prompt: () => 'How much sleep did you actually get?',
-    options: [
+    options: () => [
       {
         id: 'under-5',
         label: 'Under 5 hours',
@@ -65,7 +82,7 @@ export const QUESTIONS: readonly QuestionSpec[] = [
     // Section 3's rule about not losing the noun is not only about
     // recommendations.
     prompt: () => 'How much energy have you got left?',
-    options: [
+    options: () => [
       { id: 'empty', label: 'Running on empty', value: scale(1) },
       { id: 'low', label: 'Low', value: scale(2) },
       { id: 'ok', label: 'Enough', value: scale(3) },
@@ -75,11 +92,16 @@ export const QUESTIONS: readonly QuestionSpec[] = [
   {
     concept: CONCEPT.usableTimeTonight,
     prompt: () => 'How much time have you got?',
-    options: [
+    options: (situation) => [
       { id: 'sliver', label: '15 minutes', value: { type: 'duration', minutes: 15 } },
       { id: 'half-hour', label: 'Half an hour', value: { type: 'duration', minutes: 30 } },
       { id: 'hour', label: 'An hour', value: { type: 'duration', minutes: 60 } },
-      { id: 'open', label: 'The evening is clear', value: { type: 'duration', minutes: 120 } },
+      {
+        id: 'open',
+        // The label the audit caught at half past seven in the morning.
+        label: `${capitalise(restOfWord(situation.block))} is clear`,
+        value: { type: 'duration', minutes: 120 },
+      },
     ],
   },
   {
@@ -90,19 +112,24 @@ export const QUESTIONS: readonly QuestionSpec[] = [
       const child = situation.entities
         .byKind('person')
         .find((entity) => entity.domain === DOMAIN.fatherhood)
+      const when = horizonWord(situation.block)
       return child === undefined
-        ? 'Is your daughter with you tonight?'
-        : `Is ${child.label} with you tonight?`
+        ? `Is your daughter with you ${when}?`
+        : `Is ${child.label} with you ${when}?`
     },
-    options: [
+    options: (situation) => [
       { id: 'yes', label: 'Yes', value: { type: 'boolean', value: true } },
-      { id: 'no', label: 'Not tonight', value: { type: 'boolean', value: false } },
+      {
+        id: 'no',
+        label: `Not ${horizonWord(situation.block)}`,
+        value: { type: 'boolean', value: false },
+      },
     ],
   },
   {
     concept: CONCEPT.soreness,
     prompt: () => 'Anything sore or holding you back?',
-    options: [
+    options: () => [
       { id: 'none', label: 'Nothing', value: scale(0) },
       { id: 'some', label: 'A bit stiff', value: scale(2) },
       { id: 'lots', label: 'Quite sore', value: scale(4) },
@@ -110,8 +137,8 @@ export const QUESTIONS: readonly QuestionSpec[] = [
   },
   {
     concept: CONCEPT.socialEnergy,
-    prompt: () => 'Up for people tonight?',
-    options: [
+    prompt: (situation) => `Up for people ${horizonWord(situation.block)}?`,
+    options: () => [
       { id: 'no', label: 'Rather not', value: scale(1) },
       { id: 'maybe', label: 'Could go either way', value: scale(3) },
       { id: 'yes', label: 'Yes', value: scale(4) },

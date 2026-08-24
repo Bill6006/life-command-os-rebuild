@@ -135,7 +135,7 @@ function mostValuable(swings: readonly Swing[], decision: Decision): Swing | und
   const rank = (swing: Swing) => ({
     outcomes: new Set(swing.outcomes.map((outcome) => outcome.wouldChoose)).size,
     overturns: swing.outcomes.filter((outcome) => outcome.wouldChoose !== standing).length,
-    options: questionFor(swing.concept)?.options.length ?? 0,
+    options: questionFor(swing.concept)?.options(decision.situation).length ?? 0,
     overdue: overdue(swing.concept),
     position: order.indexOf(swing.concept),
   })
@@ -283,7 +283,7 @@ export function nextGuideStep(
       question: {
         spec,
         prompt: spec.prompt(decision.situation),
-        options: spec.options,
+        options: spec.options(decision.situation),
         outcomes: [],
       },
       decision,
@@ -337,7 +337,7 @@ export function nextGuideStep(
     question: {
       spec,
       prompt: spec.prompt(decision.situation),
-      options: spec.options,
+      options: spec.options(decision.situation),
       outcomes: worthAsking.outcomes,
     },
     decision,

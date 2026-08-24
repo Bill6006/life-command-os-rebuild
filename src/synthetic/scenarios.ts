@@ -2434,6 +2434,440 @@ function observedEvenings(): Scenario {
   }
 }
 
+// ---------------------------------------------------------------------------
+// AUD-0008 — the instrument can see before noon
+// ---------------------------------------------------------------------------
+
+/**
+ * A morning with something to decide.
+ *
+ * The library was thirteen evenings, one late night, three afternoons and one
+ * morning — and that one morning is the near-empty history, which produces no
+ * move at all. So no fixture ever asked the engine to decide before noon, and
+ * every temporal defect in the whole-app audit survived 1,199 passing
+ * assertions because the instrument could not see half the day.
+ *
+ * This is the reproduction from AUD-0003, written down as a fixture: three
+ * broken nights, a live career goal, a topic that went badly, his daughter in
+ * the house, and the clock at ten in the morning. The deployed build answered
+ * it with a study session, directly underneath a line saying he was nine hours
+ * short of rest.
+ */
+function morningAfterBadNights(): Scenario {
+  const kit = createKit('GM', 'America/Denver', '2026-08-01T12:00:00Z')
+  const adaya = entityRef('person', 'Adaya')
+  const subnetting = entityRef('learning-topic', 'subnetting')
+  const ccna = entityRef('goal', 'the CCNA')
+  const career = entityRef('life-domain', 'the CCNA push')
+  const now = kit.local('2026-09-15', '10:00')
+
+  return {
+    id: 'morning-after-bad-nights',
+    title: 'A morning after three bad nights',
+    summary: 'Ten in the morning, three four-hour nights behind him, and a deadline in front.',
+    proves: 'AUD-0003 — a named recovery limiter has somewhere to go before noon.',
+    zone: kit.zone,
+    now,
+    build() {
+      const child = kit.entity({
+        kind: 'person',
+        label: 'Adaya',
+        domain: DOMAIN.fatherhood,
+        privacy: 'child-family-sensitive',
+      })
+      const topic = kit.entity({
+        kind: 'learning-topic',
+        label: 'subnetting',
+        domain: DOMAIN.career,
+        privacy: 'normal',
+        links: [{ relation: 'supports-goal', target: ccna.id }],
+      })
+      const goal = kit.entity({
+        kind: 'goal',
+        label: 'the CCNA',
+        domain: DOMAIN.career,
+        privacy: 'normal',
+      })
+      const direction = kit.entity({
+        kind: 'life-domain',
+        label: 'the CCNA push',
+        domain: DOMAIN.career,
+        privacy: 'normal',
+      })
+
+      const goalRecord = kit.record(
+        'goal',
+        {
+          occurredAt: kit.local('2026-08-01', '09:00'),
+          domains: [DOMAIN.career],
+          entities: [ccna],
+        },
+        { goal: ccna, statement: 'Pass the CCNA before the winter', status: 'active' },
+      )
+
+      const custody = kit.record(
+        'context',
+        {
+          occurredAt: kit.local('2026-08-01', '09:00'),
+          domains: [DOMAIN.fatherhood],
+          entities: [adaya],
+        },
+        {
+          concept: CONCEPT.childPresent,
+          value: { type: 'boolean', value: true },
+          durability: 'durable',
+          validFrom: kit.local('2026-08-01', '09:00'),
+        },
+      )
+
+      const studying = kit.record(
+        'observation',
+        {
+          occurredAt: kit.local('2026-09-08', '20:00'),
+          domains: [DOMAIN.career],
+          entities: [subnetting],
+        },
+        {
+          concept: CONCEPT.learningTopic,
+          value: { type: 'entity', value: subnetting },
+          method: 'self-report',
+        },
+      )
+
+      const struggle = kit.record(
+        'outcome',
+        {
+          occurredAt: kit.local('2026-09-14', '21:00'),
+          domains: [DOMAIN.career],
+          entities: [subnetting],
+        },
+        {
+          about: studying.id,
+          aspect: 'effect',
+          observation: { type: 'text', value: 'The /26 boundaries went wrong twice' },
+          sentiment: 'worse',
+        },
+      )
+
+      /*
+       * Three nights at about four hours, the last of them recorded at seven
+       * this morning — which is the reading AUD-0005 is about. It describes the
+       * night that has just ended, and it has to still be true at ten.
+       */
+      const nights = [4.5, 4.25, 5].map((value, offset) =>
+        kit.record(
+          'observation',
+          { occurredAt: kit.local(`2026-09-${13 + offset}`, '07:00'), domains: [DOMAIN.sleep] },
+          {
+            concept: CONCEPT.sleepHours,
+            value: { type: 'number', value, unit: 'hours' },
+            method: 'self-report',
+          },
+        ),
+      )
+
+      const energy = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-09-15', '07:30'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.energy,
+          value: { type: 'scale', value: 2, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      const time = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-09-15', '09:40'), domains: [DOMAIN.direction] },
+        {
+          concept: CONCEPT.usableTimeTonight,
+          value: { type: 'duration', minutes: 60 },
+          method: 'self-report',
+        },
+      )
+
+      const weekly = kit.record(
+        'explicit-fact',
+        {
+          occurredAt: kit.local('2026-09-14', '08:00'),
+          domains: [DOMAIN.direction],
+          entities: [career],
+        },
+        { concept: CONCEPT.weeklyFocus, value: { type: 'entity', value: career } },
+      )
+
+      return kit.document({
+        entities: [child, topic, goal, direction],
+        records: [goalRecord, custody, studying, struggle, ...nights, energy, time, weekly],
+        exportedAt: now,
+      })
+    },
+  }
+}
+
+/**
+ * The other end of the morning, and the block nothing in the library sat in.
+ *
+ * Twenty to seven on a Saturday is a real hour in this house — she is up, the
+ * day has not been spent yet, and he is properly rested. It is the counterpart
+ * to the scenario above for the same reason G-005 is built in pairs: a morning
+ * fixture where recovery wins proves nothing on its own.
+ */
+function saturdayMorningOpen(): Scenario {
+  const kit = createKit('GT', 'America/Denver', '2026-08-01T12:00:00Z')
+  const adaya = entityRef('person', 'Adaya')
+  const kitchen = entityRef('place', 'the kitchen')
+  const subnetting = entityRef('learning-topic', 'subnetting')
+  const now = kit.local('2026-09-19', '06:40')
+
+  return {
+    id: 'saturday-morning-open',
+    title: 'A Saturday morning with the day open',
+    summary: 'Twenty to seven, properly slept, his daughter here and nothing booked.',
+    proves: 'AUD-0008 — the early morning is a block the library can decide in.',
+    zone: kit.zone,
+    now,
+    build() {
+      const child = kit.entity({
+        kind: 'person',
+        label: 'Adaya',
+        domain: DOMAIN.fatherhood,
+        privacy: 'child-family-sensitive',
+      })
+      const place = kit.entity({
+        kind: 'place',
+        label: 'the kitchen',
+        domain: DOMAIN.home,
+        privacy: 'normal',
+      })
+      const topic = kit.entity({
+        kind: 'learning-topic',
+        label: 'subnetting',
+        domain: DOMAIN.career,
+        privacy: 'normal',
+      })
+
+      const custody = kit.record(
+        'context',
+        {
+          occurredAt: kit.local('2026-08-01', '09:00'),
+          domains: [DOMAIN.fatherhood],
+          entities: [adaya],
+        },
+        {
+          concept: CONCEPT.childPresent,
+          value: { type: 'boolean', value: true },
+          durability: 'durable',
+          validFrom: kit.local('2026-08-01', '09:00'),
+        },
+      )
+
+      const studying = kit.record(
+        'observation',
+        {
+          occurredAt: kit.local('2026-09-12', '20:00'),
+          domains: [DOMAIN.career],
+          entities: [subnetting],
+        },
+        {
+          concept: CONCEPT.learningTopic,
+          value: { type: 'entity', value: subnetting },
+          method: 'self-report',
+        },
+      )
+
+      const friction = kit.record(
+        'observation',
+        {
+          occurredAt: kit.local('2026-09-18', '18:00'),
+          domains: [DOMAIN.home],
+          entities: [kitchen],
+        },
+        {
+          concept: CONCEPT.homeFriction,
+          value: { type: 'text', value: 'the kitchen table is buried again' },
+          method: 'self-report',
+        },
+      )
+
+      const nights = [7.5, 8, 8.25].map((value, offset) =>
+        kit.record(
+          'observation',
+          { occurredAt: kit.local(`2026-09-${17 + offset}`, '06:30'), domains: [DOMAIN.sleep] },
+          {
+            concept: CONCEPT.sleepHours,
+            value: { type: 'number', value, unit: 'hours' },
+            method: 'self-report',
+          },
+        ),
+      )
+
+      const energy = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-09-19', '06:35'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.energy,
+          value: { type: 'scale', value: 4, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      const time = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-09-19', '06:35'), domains: [DOMAIN.direction] },
+        {
+          concept: CONCEPT.usableTimeTonight,
+          value: { type: 'duration', minutes: 120 },
+          method: 'self-report',
+        },
+      )
+
+      return kit.document({
+        entities: [child, place, topic],
+        records: [custody, studying, friction, ...nights, energy, time],
+        exportedAt: now,
+      })
+    },
+  }
+}
+
+// ---------------------------------------------------------------------------
+// AUD-0048 / D-112 — a growth history that does not go one way
+// ---------------------------------------------------------------------------
+
+/**
+ * Six chances, three managed, and never twice in a row.
+ *
+ * No scenario in the library contained a failed or partial growth occasion, so
+ * nothing ever asked what the app says about a child whose record alternates.
+ * The deployed build said "Adaya has handled ordering her own food 3 times
+ * running" — from three non-consecutive occasions, with the three that needed
+ * help filtered out of the count, and the most recent of the six being one of
+ * them.
+ *
+ * The occasions alternate on purpose and the last one is a partial on purpose.
+ * Both halves of D-112 are visible here: the sequence is what the evidence is,
+ * and the most recent contrary occasion is able to hold the suggestion back on
+ * its own.
+ */
+function growthMixedEvidence(): Scenario {
+  const kit = createKit('GU', 'America/Denver', '2026-05-01T12:00:00Z')
+  const nextId = sequentialRecordIds('GUX')
+  const adaya = entityRef('person', 'Adaya')
+  const ordering = entityRef('development-skill', 'ordering her own food')
+  const now = kit.local('2026-06-25', '18:20')
+
+  return {
+    id: 'growth-mixed-evidence',
+    title: 'Six chances, three managed',
+    summary: 'Six occasions at one skill, alternating, and the most recent one needed a hand.',
+    proves: 'D-112 — the app reads the sequence rather than the survivors.',
+    zone: kit.zone,
+    now,
+    build() {
+      const child = kit.entity({
+        kind: 'person',
+        label: 'Adaya',
+        domain: DOMAIN.fatherhood,
+        privacy: 'child-family-sensitive',
+      })
+      const skill = kit.entity({
+        kind: 'development-skill',
+        label: 'ordering her own food',
+        domain: DOMAIN.fatherhood,
+        privacy: 'child-family-sensitive',
+        links: [{ relation: 'about-person', target: adaya.id }],
+      })
+
+      const present = kit.record(
+        'context',
+        {
+          occurredAt: kit.local('2026-05-01', '09:00'),
+          domains: [DOMAIN.fatherhood],
+          entities: [adaya],
+        },
+        {
+          concept: CONCEPT.childPresent,
+          value: { type: 'boolean', value: true },
+          durability: 'durable',
+          validFrom: kit.local('2026-05-01', '09:00'),
+        },
+      )
+
+      const nights = ['23', '24', '25'].map((day) =>
+        kit.record(
+          'observation',
+          { occurredAt: kit.local(`2026-06-${day}`, '07:00'), domains: [DOMAIN.sleep] },
+          {
+            concept: CONCEPT.sleepHours,
+            value: { type: 'number', value: 7.25, unit: 'hours' },
+            method: 'self-report',
+          },
+        ),
+      )
+
+      const energy = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-06-25', '17:00'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.energy,
+          value: { type: 'scale', value: 3, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      const time = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-06-25', '18:00'), domains: [DOMAIN.direction] },
+        {
+          concept: CONCEPT.usableTimeTonight,
+          value: { type: 'duration', minutes: 90 },
+          method: 'self-report',
+        },
+      )
+
+      const anAfternoon = {
+        block: 'afternoon' as const,
+        weekend: false,
+        strain: 'none' as const,
+        childPresent: true,
+        usableMinutes: 120,
+      }
+
+      const occasions = [
+        { on: '2026-06-06', result: 'all' as const },
+        { on: '2026-06-09', result: 'part' as const },
+        { on: '2026-06-13', result: 'all' as const },
+        { on: '2026-06-16', result: 'part' as const },
+        { on: '2026-06-20', result: 'all' as const },
+        { on: '2026-06-23', result: 'part' as const },
+      ]
+
+      const past = pastEpisodeRecords(
+        kit,
+        occasions.map(({ on, result }) => ({
+          verb: 'growth-opportunity' as const,
+          object: ordering,
+          subject: ordering,
+          domain: DOMAIN.fatherhood,
+          on,
+          at: '12:30',
+          context: anAfternoon,
+          ending: 'completed' as const,
+          result,
+        })),
+        nextId,
+      )
+
+      return kit.document({
+        entities: [child, skill],
+        records: [present, ...nights, energy, time, ...past],
+        exportedAt: now,
+      })
+    },
+  }
+}
+
 export const SCENARIOS: readonly Scenario[] = [
   subnettingStruggle(),
   sleepDeficitAgainstCareer(),
@@ -2453,6 +2887,9 @@ export const SCENARIOS: readonly Scenario[] = [
   careerGoneQuiet(),
   aLongRun(),
   observedEvenings(),
+  morningAfterBadNights(),
+  saturdayMorningOpen(),
+  growthMixedEvidence(),
 ]
 
 export function scenarioById(id: string): Scenario | undefined {

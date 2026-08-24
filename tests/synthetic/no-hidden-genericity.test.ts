@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CONCEPT } from '../../src/domain/concepts'
 import { isUsable } from '../../src/domain/knowledge'
+import { DAY_BLOCKS } from '../../src/domain/time'
 import { renderRecommendation } from '../../src/domain/recommendation'
 import { AHEAD_BECAUSE } from '../../src/intelligence/explain'
 import { profileFor } from '../../src/intelligence/moves'
@@ -433,8 +434,13 @@ describe('the reason only cites what the decision leaned on — DEF-0006', () =>
   it('takes that why from the arbitration rather than from the winner', () => {
     // Every phrase it can use corresponds to a dimension the ranking actually
     // computed, so the explanation cannot invent a reason the engine never had.
-    const phrases = new Set(Object.values(AHEAD_BECAUSE))
-    phrases.add('Asks less of what is short right now.')
+    // Every phrase the table can produce, at every hour — three of them read
+    // the block now (AUD-0002), so enumerating one block's worth would let the
+    // other four say anything.
+    const phrases = new Set<string>(['Asks less of what is short right now.'])
+    for (const block of DAY_BLOCKS) {
+      for (const phrase of Object.values(AHEAD_BECAUSE)) phrases.add(phrase(block))
+    }
 
     for (const entry of spoken) {
       const because = entry.decision.explanation?.insteadBecause
@@ -451,6 +457,9 @@ describe('the renderer stays the only way words are made', () => {
       const again = renderRecommendation(
         entry.decision.explanation.semantics,
         entry.decision.situation.entities,
+        // The block is part of the input now (AUD-0002), so re-rendering the
+        // same semantics at the same hour has to be given the same hour.
+        entry.decision.situation.block,
       )
       expect(again.ok, entry.id).toBe(true)
       if (!again.ok) continue

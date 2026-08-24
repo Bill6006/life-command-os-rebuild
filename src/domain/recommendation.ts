@@ -1,6 +1,8 @@
 import type { LifeDomainId } from './domains'
 import type { EntityIndex, EntityRef } from './entities'
+import { blockNoun, horizonWord, restOfWord } from './horizon'
 import type { RecordId } from './ids'
+import type { DayBlock } from './time'
 
 /**
  * Recommendation meaning, and the sentence derived from it
@@ -91,6 +93,17 @@ interface TemplateParts {
   readonly person: string | undefined
   readonly goal: string | undefined
   readonly minutes: number | undefined
+  /**
+   * What part of the day the sentence is being said in — AUD-0002.
+   *
+   * Undefined where the caller genuinely does not know, which is a real case:
+   * a Timeline line about a recommendation made months ago is rendered from a
+   * record, and a record written before the decision context existed carries no
+   * block. Every horizon word below is read from `src/domain/horizon.ts`, whose
+   * fallbacks never claim the evening, so an unknown block produces a sentence
+   * that is true at any hour rather than one that is true at six.
+   */
+  readonly block: DayBlock | undefined
 }
 
 interface VerbTemplate {
@@ -145,7 +158,13 @@ const TEMPLATES: Record<ActionVerb, VerbTemplate> = {
   recover: {
     label: 'Recover',
     needsPerson: false,
-    action: ({ object }) => `Take tonight as recovery — no ${object} session.`,
+    // The one live horizon word in this table. `recover` suits the afternoon as
+    // well as the evening, so at three o'clock "take tonight as recovery" was
+    // the app announcing the wrong time of day inside its own instruction.
+    action: ({ object, block }) =>
+      block === 'evening' || block === 'late-night'
+        ? `Take tonight as recovery — no ${object} session.`
+        : `Take ${restOfWord(block)} as recovery — no ${object} session.`,
     followUp: ({ object }) => `Did skipping ${object} leave you better rested?`,
   },
   /*
@@ -197,9 +216,9 @@ const TEMPLATES: Record<ActionVerb, VerbTemplate> = {
   'reset-space': {
     label: 'Reset a space',
     needsPerson: false,
-    action: ({ object, minutes }) =>
+    action: ({ object, minutes, block }) =>
       minutes === undefined
-        ? `Clear ${object} before the evening gets away.`
+        ? `Clear ${object} before ${blockNoun(block)} gets away.`
         : `Spend ${minutes} minutes clearing ${object}.`,
     followUp: ({ object }) => `Did ${object} get cleared?`,
   },
@@ -221,7 +240,7 @@ const TEMPLATES: Record<ActionVerb, VerbTemplate> = {
   hold: {
     label: 'Hold',
     needsPerson: false,
-    action: ({ object }) => `Nothing needs to move on ${object} tonight.`,
+    action: ({ object, block }) => `Nothing needs to move on ${object} ${horizonWord(block)}.`,
     followUp: ({ object }) => `Anything change with ${object}?`,
   },
 }
@@ -231,7 +250,8 @@ const TRIGGER_REASONS: Record<WhyNowTrigger, (parts: TemplateParts) => string> =
   'stale-evidence': ({ subject }) => `Nothing has come in about ${subject} for a while.`,
   'goal-behind': ({ subject, goal }) => `${goal ?? subject} is behind where you wanted.`,
   'good-conditions': ({ subject }) => `Conditions suit ${subject} right now.`,
-  'constraint-active': ({ subject }) => `The evening is limited, and ${subject} still fits.`,
+  'constraint-active': ({ subject, block }) =>
+    `${capitaliseFirst(blockNoun(block))} is limited, and ${subject} still fits.`,
   deficit: ({ subject }) => `${subject} is what is running short.`,
   'opportunity-window': ({ subject }) => `There is a natural opening for ${subject}.`,
   'nothing-better': ({ subject }) => `Nothing else is pressing, and ${subject} moves you forward.`,
@@ -267,6 +287,7 @@ export type RenderResult =
 export function renderRecommendation(
   semantics: RecommendationSemantics,
   index: EntityIndex,
+  block?: DayBlock,
 ): RenderResult {
   const issues: RenderIssue[] = []
 
@@ -310,6 +331,7 @@ export function renderRecommendation(
     person,
     goal,
     minutes: semantics.target.minutes,
+    block,
   }
 
   const summary = semantics.whyNow.summary.trim()
@@ -323,6 +345,10 @@ export function renderRecommendation(
       verbLabel: template.label,
     },
   }
+}
+
+function capitaliseFirst(text: string): string {
+  return text.length === 0 ? text : `${text.charAt(0).toUpperCase()}${text.slice(1)}`
 }
 
 export function verbLabel(verb: ActionVerb): string {

@@ -20,6 +20,7 @@ import type { MemoryView } from '../memory/view'
 import { actionScopeOf, observedAssociations, type ObservedAssociation } from './association'
 import { WANTED_SOMETHING_ELSE, type Episode } from './lifecycle'
 import { profileFor } from './moves'
+import { horizonWord } from './vocabulary'
 import { comfortFrictionOf, effectValueOf, resultValueOf } from './outcomes'
 
 /**
@@ -538,10 +539,6 @@ function evidenceFor(
 /** A concept nobody registered, so the lookup lands on the default table. */
 const UNREGISTERED = 'reliability.default' as ConceptId
 
-function whenPhrase(block: DayBlock): string {
-  return block === 'evening' || block === 'late-night' ? 'tonight' : 'today'
-}
-
 /**
  * What the app has learned, in one line the owner can disagree with.
  *
@@ -557,7 +554,7 @@ function summarise(
 ): string | undefined {
   if (samples < 1) return undefined
   const move = verbLabel(verb).toLowerCase()
-  const when = whenPhrase(block)
+  const when = horizonWord(block)
   const often = samples === 1 ? 'once' : samples < 4 ? 'a few times' : 'several times'
 
   if (observed >= 0.6) return `${capitalise(move)} has worked ${often} in situations like ${when}.`

@@ -26,7 +26,12 @@ import {
   type TimeZoneId,
   type WeekStartDay,
 } from '../../domain/time'
-import { ARCHITECTURES, decide, type ArchitectureId } from '../../intelligence/engine'
+import {
+  ARCHITECTURES,
+  decide,
+  sweepDayBlocks,
+  type ArchitectureId,
+} from '../../intelligence/engine'
 import { REBUILD_PHASE } from '../../platform/buildInfo'
 import { nextGuideStep } from '../../intelligence/guide'
 import { SCENARIOS } from '../../synthetic/scenarios'
@@ -359,6 +364,8 @@ export function QaScreen() {
         </Rows>
       </Panel>
 
+      <BlockSweepPanel view={view} moment={moment} architecture={architecture} />
+
       <Collapsible title="Facts considered" count={trace.facts.length} open>
         <Rows>
           {trace.facts.map((fact) => (
@@ -640,7 +647,11 @@ export function QaScreen() {
           <p className="note">No recommendation in this history.</p>
         ) : (
           recommendationsOf(view).map((record) => {
-            const rendered = renderRecommendation(record.recommendation, view.entities)
+            const rendered = renderRecommendation(
+              record.recommendation,
+              view.entities,
+              record.context?.block,
+            )
             if (!rendered.ok) {
               return (
                 <div key={record.id} className="qa-warning" data-testid="recommendation-broken">
@@ -784,6 +795,80 @@ export function QaScreen() {
         )}
       </Collapsible>
     </Screen>
+  )
+}
+
+/**
+ * The same history, decided at all five blocks of one day — AUD-0008.
+ *
+ * The audit's own words for why this exists: to find the morning defects an
+ * auditor had to know to move the clock to ten, and nothing in the laboratory
+ * said so. One press answers the question the library could not ask — *does
+ * this history still make sense at nine in the morning?* — and puts the five
+ * answers where they can be read against each other.
+ *
+ * It does not move the clock. The rows are computed from the same store at five
+ * other moments, so the decision above them is still the one being inspected,
+ * and pressing this cannot lose the state somebody is halfway through
+ * examining. It is behind a press rather than always open because it is five
+ * more runs of the whole pipeline.
+ */
+function BlockSweepPanel({
+  view,
+  moment,
+  architecture,
+}: {
+  view: ReturnType<typeof useMemory>['view']
+  moment: { now: Instant; zone: TimeZoneId; weekStartsOn: WeekStartDay }
+  architecture: ArchitectureId
+}) {
+  const [open, setOpen] = useState(false)
+
+  const swept = useMemo(
+    () => (open ? sweepDayBlocks(view, moment, { architecture }) : undefined),
+    [open, view, moment, architecture],
+  )
+
+  return (
+    <Panel title="The whole day">
+      <p className="note">
+        The same history, decided at every block of {localDayIdAt(moment.now, moment.zone)}. Nothing
+        is written and the clock does not move.
+      </p>
+      <div className="qa-actions">
+        <button type="button" onClick={() => setOpen((shown) => !shown)} data-testid="qa-sweep">
+          {open ? 'Hide the block sweep' : 'Sweep the day'}
+        </button>
+      </div>
+
+      {swept === undefined ? null : (
+        <div className="qa-sweep" data-testid="qa-sweep-rows">
+          {swept.map((row) => (
+            <div
+              key={row.block}
+              className="qa-sweep__row"
+              data-block={row.block}
+              data-kind={row.decision.kind}
+            >
+              <p className="qa-sweep__when">
+                {row.block.replace('-', ' ')} · {row.timeOfDay}
+              </p>
+              <p className="qa-sweep__move">
+                {row.decision.explanation?.rendered.sentence ??
+                  row.decision.noAction?.headline ??
+                  'nothing'}
+              </p>
+              <p className="qa-sweep__note">
+                {row.decision.explanation?.rendered.reason ?? row.decision.noAction?.detail ?? ''}
+              </p>
+              <p className="qa-sweep__note">
+                In the way: {row.decision.situation.limiter?.summary ?? 'nothing in particular'}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </Panel>
   )
 }
 

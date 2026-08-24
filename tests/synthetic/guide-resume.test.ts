@@ -346,7 +346,7 @@ describe('the guide can still ask nothing at all', () => {
       QUESTIONS.slice(0, QUESTIONS_PER_DAY).map((question, index) =>
         answerRecord(
           question,
-          question.options[0]!,
+          question.options(step(session).decision.situation)[0]!,
           {
             now: session.now,
             zone: session.zone as never,

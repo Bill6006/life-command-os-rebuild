@@ -225,7 +225,9 @@ describe('DEF-0017 — the app does not call its own history silent', () => {
       const decision = decideOn(nineHoursDown(), at('2026-04-15', time), ZONE)
       expect(decision.situation.limiter?.kind, time).toBe('recovery')
       expect(decision.noAction?.detail, time).not.toMatch(/none of it says/i)
-      expect(decision.noAction?.detail, time).toBe('Nothing here would help much before tonight.')
+      expect(decision.noAction?.detail, time).toBe(
+        'Nothing here would help much until you can actually rest.',
+      )
     }
   })
 

@@ -284,7 +284,15 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.usableTimeTonight,
-    label: 'Usable time tonight',
+    /*
+     * The label, and only the label — AUD-0002.
+     *
+     * The stored id stays `career.usable-time-tonight`, because renaming a
+     * concept id is a migration and belongs with AUD-0006 rather than in a copy
+     * pass. What was owner-visible was the label, on the evidence panel and on
+     * the Career page, and it named an evening at every hour of the day.
+     */
+    label: 'Usable time now',
     domain: DOMAIN.career,
     freshness: elapsedHours(4),
     privacy: 'normal',

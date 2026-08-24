@@ -108,13 +108,13 @@ export function InsightsScreen() {
           {/*
             An honest empty state, and carefully not a claim that the app is
             not learning — it is, on every answer given. What is missing is
-            enough comparable evenings for anything said here to be worth
+            enough comparable occasions for anything said here to be worth
             relying on, which is a different sentence and a true one.
           */}
           <p>
             Patterns come from comparable occasions: the same kind of move, in the same kind of
-            evening, with what came of it recorded. There is not enough of that here to say anything
-            you could lean on.
+            occasion, with what came of it recorded. There is not enough of that here to say
+            anything you could lean on.
           </p>
           <p className="note">
             Nothing needs doing about this. It fills in through ordinary use — a suggestion taken,

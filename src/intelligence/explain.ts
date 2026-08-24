@@ -14,6 +14,7 @@ import {
   localDateTimeAt,
   localDayIdAt,
   minutesIntoDay,
+  type DayBlock,
   type Instant,
   type IsoWeekday,
   type TimeZoneId,
@@ -21,6 +22,7 @@ import {
 import type { DimensionName, Evaluation } from './evaluate'
 import { beliefKey } from './learning'
 import { describeHours, type Situation } from './situation'
+import { blockNoun, horizonWord } from './vocabulary'
 
 /**
  * The explanation generator (canonical plan section 17.1 step 9, and 61).
@@ -230,7 +232,8 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
           : `You are ${describeHours(debt.value)} down over ${span}.`
       }
       const energy = situation.capacity.energy
-      if (isUsable(energy)) return 'There is not much left in the tank tonight.'
+      if (isUsable(energy))
+        return `There is not much left in the tank ${horizonWord(situation.block)}.`
       return 'Rest is the thing running short.'
     }
 
@@ -267,11 +270,24 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
     case 'constraint-active': {
       const friction = situation.homeFriction
       if (isUsable(friction)) {
-        // The stored value is whatever the owner wrote, which may already be a
-        // whole sentence. Joining it to a clause would produce something
-        // neither of you said, so it is set off rather than run together.
+        /*
+         * What the owner wrote, and nothing added to it — AUD-0028.
+         *
+         * This used to end "— and it costs you the start of every evening",
+         * which is a causal claim about his own life with nothing behind it:
+         * the app has never measured what the kitchen costs him, and on the
+         * nine-month history it had twelve occasions pointing the other way
+         * while printing "reset a space has made little difference" one line
+         * below. Section 68 and D-066/D-089 forbid causal language where only
+         * association exists, and a constant clause cannot be falsified by
+         * evidence because no evidence reaches it.
+         *
+         * The stored value is whatever the owner wrote and may already be a
+         * whole sentence, so it stands on its own rather than being run into a
+         * clause neither of you said.
+         */
         const detail = describeFactValue(friction.value, (ref) => entities.labelFor(ref))
-        return `${capitalise(detail)} — and it costs you the start of every evening.`
+        return `${capitalise(detail)}.`
       }
       return `${capitalise(object)} is the small friction making the rest harder.`
     }
@@ -345,29 +361,39 @@ function lowerFirst(text: string): string {
  * contains a pronoun: the row sits beside the move it beat, and "it" there is
  * genuinely ambiguous about which of the two is meant.
  */
-export const AHEAD_BECAUSE: Record<DimensionName, string> = {
-  'bottleneck-fit': 'Answers what is actually in the way.',
-  'direction-fit': 'Closer to what the week is about.',
-  'goal-fit': 'Serves the goal you set.',
-  urgency: 'The more pressing of the two.',
-  'immediate-benefit': 'Worth more tonight.',
-  'next-day-effect': 'Pays back more tomorrow.',
-  'opportunity-cost': 'Costs less of the evening.',
-  friction: 'Easier to start.',
-  'time-fit': 'Fits the time you have.',
-  'capacity-fit': 'Fits what the body has tonight.',
-  'context-fit': 'Better suited to the hour.',
-  'recent-duplication': 'The other one came up recently.',
-  'owner-preference': 'Closer to what you have said you want.',
-  'follow-through': 'More likely to actually happen.',
-  'direct-result': 'More likely to get all the way there.',
+/**
+ * Three of these name the hour, so all of them are written from it — AUD-0002.
+ *
+ * The three that matter — "worth more tonight", "costs less of the evening",
+ * "fits what the body has tonight" — are among the most-read four words on the
+ * whole screen, and at half past nine in the morning all three were false. The
+ * table takes the block rather than three of its entries doing so, because a
+ * table where some rows are functions and some are strings is a table somebody
+ * adds the wrong kind of row to.
+ */
+export const AHEAD_BECAUSE: Record<DimensionName, (block: DayBlock) => string> = {
+  'bottleneck-fit': () => 'Answers what is actually in the way.',
+  'direction-fit': () => 'Closer to what the week is about.',
+  'goal-fit': () => 'Serves the goal you set.',
+  urgency: () => 'The more pressing of the two.',
+  'immediate-benefit': (block) => `Worth more ${horizonWord(block)}.`,
+  'next-day-effect': () => 'Pays back more tomorrow.',
+  'opportunity-cost': (block) => `Costs less of ${blockNoun(block)}.`,
+  friction: () => 'Easier to start.',
+  'time-fit': () => 'Fits the time you have.',
+  'capacity-fit': (block) => `Fits what the body has ${horizonWord(block)}.`,
+  'context-fit': () => 'Better suited to the hour.',
+  'recent-duplication': () => 'The other one came up recently.',
+  'owner-preference': () => 'Closer to what you have said you want.',
+  'follow-through': () => 'More likely to actually happen.',
+  'direct-result': () => 'More likely to get all the way there.',
   // Association, never cause (D-089). "What usually follows" is a
   // statement about the record; "what it does for you" would be a claim
   // about the world that a comparison of two proportions cannot support.
-  'observed-change': 'What usually follows it looks better in the record.',
-  uncertainty: 'Better supported by what is known.',
-  protection: 'The other one would borrow against tomorrow.',
-  advisor: 'What you wrote about the last attempt points here.',
+  'observed-change': () => 'What usually follows it looks better in the record.',
+  uncertainty: () => 'Better supported by what is known.',
+  protection: () => 'The other one would borrow against tomorrow.',
+  advisor: () => 'What you wrote about the last attempt points here.',
 }
 
 export interface Explanation {
@@ -399,7 +425,11 @@ export interface Explanation {
 }
 
 /** The dimension the winner most out-scored the runner-up on, as a phrase. */
-function aheadBecause(chosen: Evaluation, runnerUp: Evaluation): string | undefined {
+function aheadBecause(
+  chosen: Evaluation,
+  runnerUp: Evaluation,
+  block: DayBlock,
+): string | undefined {
   const theirs = new Map(runnerUp.dimensions.map((entry) => [entry.name, entry]))
   let best: { name: DimensionName; gap: number; value: number } | undefined
 
@@ -423,7 +453,7 @@ function aheadBecause(chosen: Evaluation, runnerUp: Evaluation): string | undefi
     return 'Asks less of what is short right now.'
   }
 
-  return AHEAD_BECAUSE[best.name]
+  return AHEAD_BECAUSE[best.name](block)
 }
 
 export type ExplanationResult =
@@ -442,7 +472,7 @@ export function explain(
     whyNow: { ...base.whyNow, summary: composeReason(chosen, situation, entities) },
   }
 
-  const rendered = renderRecommendation(semantics, entities)
+  const rendered = renderRecommendation(semantics, entities, situation.block)
   if (!rendered.ok) {
     return { ok: false, problems: rendered.issues.map((issue) => issue.problem) }
   }
@@ -457,10 +487,10 @@ export function explain(
   let instead: string | undefined
   let insteadBecause: string | undefined
   if (runnerUp !== undefined) {
-    const other = renderRecommendation(runnerUp.candidate.semantics, entities)
+    const other = renderRecommendation(runnerUp.candidate.semantics, entities, situation.block)
     if (other.ok) {
       instead = other.rendered.sentence
-      insteadBecause = aheadBecause(chosen, runnerUp)
+      insteadBecause = aheadBecause(chosen, runnerUp, situation.block)
     }
   }
 

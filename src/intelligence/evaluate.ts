@@ -4,6 +4,7 @@ import { applicableAssociation } from './association'
 import type { Candidate } from './candidates'
 import type { LearnedEffect } from './learning'
 import { profileFor, type MoveProfile } from './moves'
+import { blockNoun, hereNowWord, horizonWord } from './vocabulary'
 import type { Situation } from './situation'
 
 /**
@@ -288,7 +289,11 @@ function immediateBenefit(candidate: Candidate, situation: Situation): Dimension
     name: 'immediate-benefit',
     value: learned.now * 2 - 1,
     weight: WEIGHTS['immediate-benefit'],
-    note: describeLearned(learned.now, learned.moved === 'now' ? learned : undefined, 'tonight'),
+    note: describeLearned(
+      learned.now,
+      learned.moved === 'now' ? learned : undefined,
+      horizonWord(situation.block),
+    ),
   }
 }
 
@@ -352,7 +357,7 @@ function observedChange(candidate: Candidate, situation: Situation): Dimension {
         found === undefined
           ? 'nothing observable is expected to move, so nothing is claimed'
           : found.disagree
-            ? 'what follows this depends on the kind of evening, and there is not enough of one like tonight'
+            ? `what follows this depends on the kind of occasion, and there is not enough of one like ${hereNowWord(situation.block)}`
             : 'not enough on both sides to compare yet',
     }
   }
@@ -500,6 +505,7 @@ function directResult(candidate: Candidate, situation: Situation): Dimension {
 
 function timeFit(candidate: Candidate, situation: Situation): Dimension {
   const weight = WEIGHTS['time-fit']
+  const block = situation.block
   const minutes = candidate.semantics.target.minutes
   const usable = situation.usableMinutes
 
@@ -515,7 +521,7 @@ function timeFit(candidate: Candidate, situation: Situation): Dimension {
   const share = usable.value === 0 ? 2 : minutes / usable.value
   if (share <= 0.5) return { name: 'time-fit', value: 1, weight, note: 'fits comfortably' }
   if (share <= 0.8) return { name: 'time-fit', value: 0.5, weight, note: 'fits' }
-  return { name: 'time-fit', value: 0, weight, note: 'would use most of the evening' }
+  return { name: 'time-fit', value: 0, weight, note: `would use most of ${blockNoun(block)}` }
 }
 
 function capacityFit(situation: Situation, profile: MoveProfile): Dimension {
@@ -552,7 +558,12 @@ function capacityFit(situation: Situation, profile: MoveProfile): Dimension {
     }
   }
   if (profile.demand === 'effortful') {
-    return { name: 'capacity-fit', value: -level, weight, note: 'more than the body has tonight' }
+    return {
+      name: 'capacity-fit',
+      value: -level,
+      weight,
+      note: `more than the body has ${horizonWord(situation.block)}`,
+    }
   }
   return { name: 'capacity-fit', value: -level * 0.3, weight, note: 'a stretch, but a small one' }
 }

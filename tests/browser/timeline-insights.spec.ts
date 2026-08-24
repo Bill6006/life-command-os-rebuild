@@ -279,7 +279,7 @@ test.describe('the evidence behind the move on Now', () => {
 
     const panel = page.getByTestId('now-evidence')
     await expect(panel).toBeVisible()
-    await expect(panel).toContainText('12 evenings in the record are like tonight.')
+    await expect(panel).toContainText('12 occasions in the record are like this evening.')
     /*
      * "you said", since D-089 and QA-A1. This panel used to read "how often
      * clearing the kitchen made a difference afterwards — 67% — 8 of 12", which
@@ -305,7 +305,7 @@ test.describe('the evidence behind the move on Now', () => {
 
     const panel = page.getByTestId('now-evidence')
     await expect(panel).toContainText('6 of 6 on a weekday, 2 of 6 at the weekend.')
-    await expect(panel).toContainText('Tonight is at the weekend.')
+    await expect(panel).toContainText('This evening is at the weekend.')
   })
 
   test('states the belief in the same words Now already used', async ({ page }) => {
@@ -324,7 +324,7 @@ test.describe('the evidence behind the move on Now', () => {
     await page.getByTestId('now-see-evidence').click()
 
     const panel = page.getByTestId('now-evidence')
-    await expect(panel).toContainText('Nothing in the record is much like tonight yet.')
+    await expect(panel).toContainText('Nothing in the record is much like this evening yet.')
     await expect(panel.locator('.ev-rate')).toHaveCount(0)
     await expect(panel).toContainText('Too early to say')
   })

@@ -12,6 +12,7 @@ import {
   civilDateFromDayId,
   localDayIdAt,
   localDaysBetween,
+  type DayBlock,
   type Instant,
   type LocalDayId,
   type TimeZoneId,
@@ -45,6 +46,7 @@ import {
   resultValueOf,
 } from './outcomes'
 import type { Situation } from './situation'
+import { hereNowWord } from './vocabulary'
 import type { ConceptId, FreshnessHorizon } from '../domain/windows'
 
 /**
@@ -280,7 +282,7 @@ const EYEBROW: Record<InsightKind, string> = {
   'stable-strength': 'Works for you',
   'repeated-friction': 'Keeps getting in the way',
   'move-effectiveness': 'What actually happens',
-  'context-effect': 'Depends on the evening',
+  'context-effect': 'Depends on the occasion',
   'emerging-change': 'Changing',
   contradiction: 'Went the other way',
   'stale-assumption': 'Going on old evidence',
@@ -655,7 +657,7 @@ function lineFor(episode: Episode, note: string): EvidenceLine {
 }
 
 function counterexampleNote(episode: Episode): string {
-  if (episode.state === 'unable-now') return 'could not be done that evening'
+  if (episode.state === 'unable-now') return 'could not be done that day'
   const effect = answerOf(episode, 'effect', effectValueOf)
   if (effect !== undefined && effect.value <= LITTLE_DIFFERENCE) {
     return effect.value <= (EFFECT_VALUE[0] ?? 0)
@@ -1604,7 +1606,7 @@ function reasoningFor(
 
   lines.push(
     'This says what has followed what. It is not a claim that one brought the other about, and a lower reading afterwards is a lower reading rather than a sign of something going wrong.',
-    'It can only compare occasions where a reading exists on both sides, so it describes the record rather than every evening.',
+    'It can only compare occasions where a reading exists on both sides, so it describes the record rather than every occasion.',
   )
 
   return lines
@@ -2330,24 +2332,27 @@ export interface DecisionEvidence {
  * that was not made would be a button with nothing behind it.
  */
 /**
- * Where a move goes better, and which side of that tonight is on.
+ * Where a move goes better, and which side of that this moment is on.
  *
  * The last clause is the one that matters. Without it the panel states a split
  * and leaves the reader to work out which half applies — and the half that
  * applies is exactly what explains why the app's own conclusion is more
  * cautious than the plain tally directly above it.
  */
-function describeSplitForTonight(split: FoundSplit, context: DecisionContext): string {
+function describeSplitForNow(split: FoundSplit, context: DecisionContext): string {
   const strong = split.strongSide
   const weak = split.weakSide
   const answer = split.split.test(context)
-  const tonight =
-    answer === undefined ? '' : ` Tonight is ${answer ? split.split.label : split.split.opposite}.`
+  const here = hereNowWord(context.block)
+  const which =
+    answer === undefined
+      ? ''
+      : ` ${capitalise(here)} is ${answer ? split.split.label : split.split.opposite}.`
 
   return (
-    `Across every occasion, not only the ones like tonight: ` +
+    `Across every occasion, not only the ones like ${here}: ` +
     `${strong.rate.hit} of ${strong.rate.of} ${strong.label}, ` +
-    `${weak.rate.hit} of ${weak.rate.of} ${weak.label}.${tonight}`
+    `${weak.rate.hit} of ${weak.rate.of} ${weak.label}.${which}`
   )
 }
 
@@ -2368,6 +2373,7 @@ function describeAssociationBriefly(
   subject: string,
   at: Instant,
   zone: TimeZoneId,
+  block: DayBlock,
 ): string | undefined {
   if (found === undefined || found.withheld !== undefined) return undefined
 
@@ -2376,7 +2382,7 @@ function describeAssociationBriefly(
 
   if (side === undefined) {
     return found.disagree
-      ? `What follows ${subject} depends on the kind of evening, and there is not enough of one like tonight to say.`
+      ? `What follows ${subject} depends on the kind of occasion, and there is not enough of one like ${hereNowWord(block)} to say.`
       : undefined
   }
 
@@ -2386,7 +2392,7 @@ function describeAssociationBriefly(
       : side.direction === 'lower'
         ? 'more often been lower afterwards'
         : 'moved about the same either way'
-  const where = found.disagree ? `On evenings ${side.label}` : 'Across the whole record'
+  const where = found.disagree ? `On occasions ${side.label}` : 'Across the whole record'
   return `${where}, ${reading} has ${shape} with ${subject} than without: ${side.rosePresent} of ${side.present.length} against ${side.roseAbsent} of ${side.absent.length}.`
 }
 
@@ -2400,6 +2406,7 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
   const subject = situation.entities.labelFor(explanation.semantics.target.object)
   const name = patternNameFor(verb, subject)
 
+  const here = hereNowWord(situation.block)
   const leansOn = new Set<ConceptId>(evaluation.candidate.leansOn)
   const conditions: ConditionLine[] = []
   for (const fact of situation.considered) {
@@ -2461,10 +2468,10 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
     conditions,
     comparable:
       alike.length === 0
-        ? 'Nothing in the record is much like tonight yet.'
+        ? `Nothing in the record is much like ${here} yet.`
         : alike.length === 1
-          ? `One evening in the record is like tonight — ${describeDay(alike[0]!.dayId)}.`
-          : `${alike.length} evenings in the record are like tonight.`,
+          ? `One occasion in the record is like ${here} — ${describeDay(alike[0]!.dayId)}.`
+          : `${alike.length} occasions in the record are like ${here}.`,
     window: windowOf(alike),
     rates: ratesFor(alike, name),
     counterexamples: [...counterexamples.values()],
@@ -2480,8 +2487,9 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
       subject ?? lowerFirst(name),
       situation.at,
       situation.zone,
+      situation.block,
     ),
-    context: split === undefined ? undefined : describeSplitForTonight(split, situation.context),
+    context: split === undefined ? undefined : describeSplitForNow(split, situation.context),
     mix: describeEvidenceMix(evidenceRefsFor(alike)),
     /*
      * Written without "above" or "below".
@@ -2492,8 +2500,15 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
      * of thing that is only ever found by reading the assembled screen.
      */
     reasoning: [
-      'The conditions listed are the ones the choice actually rested on, not everything the app knows about tonight.',
-      'An evening counts as comparable on the same few things the app compares evenings on: the part of the day, how rested you are, whether it is a weekday, whether she is here, and roughly how much time there is.',
+      `The conditions listed are the ones the choice actually rested on, not everything the app knows about ${here}.`,
+      /*
+       * AUD-0036. The sentence itself was already the best thing on this panel
+       * — an accurate, plain-English statement of what `similarity()` actually
+       * compares — and the audit found it thrown away by one noun: at any hour
+       * before six it was describing a different day. The noun is the only
+       * thing that changed.
+       */
+      'An occasion counts as comparable on the same few things the app compares occasions on: the part of the day, how rested you are, whether it is a weekday, whether she is here, and roughly how much time there is.',
       'Each figure here measures one thing and says which. None of them are added together.',
     ],
   }

@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { Panel, PrimarySurface, Row, Rows, Screen } from '../../components/ui'
 import type { RecordId } from '../../domain/ids'
 import type { RecommendationSemantics } from '../../domain/recommendation'
-import { localDateTimeAt, systemClock } from '../../domain/time'
+import { localDateTimeAt, systemClock, type DayBlock } from '../../domain/time'
 import { beliefCorrectionRecord, describeBelief } from '../../intelligence/corrections'
 import { decide, type Decision } from '../../intelligence/engine'
 import type { Explanation } from '../../intelligence/explain'
@@ -29,6 +29,7 @@ import {
   type QuestionSpec,
 } from '../../intelligence/questions'
 import type { Situation } from '../../intelligence/situation'
+import { hereNowWord, horizonWord } from '../../intelligence/vocabulary'
 import { isPreview, isProduction } from '../../platform/buildInfo'
 import { hashForDestination } from '../../platform/routing'
 import {
@@ -62,18 +63,40 @@ import './NowScreen.css'
  * somewhere different.
  */
 
-const STATE_WORDS: Record<MoveState, string> = {
-  shown: 'New tonight',
-  started: 'Under way',
-  completed: 'Done',
-  declined: 'You passed on this',
-  'unable-now': 'You said not right now',
+/**
+ * Where the move on screen stands.
+ *
+ * `shown` reads from the hour rather than assuming one — AUD-0002. "New
+ * tonight" at half past eight in the morning was the app announcing the wrong
+ * time of day inside a status label.
+ */
+function stateWord(state: MoveState, block: DayBlock): string {
+  switch (state) {
+    case 'shown':
+      return `New ${horizonWord(block)}`
+    case 'started':
+      return 'Under way'
+    case 'completed':
+      return 'Done'
+    case 'declined':
+      return 'You passed on this'
+    case 'unable-now':
+      return 'You said not right now'
+  }
 }
 
+/**
+ * `decline` says **today** and not "tonight", and that is a concept rather
+ * than a word — AUD-0002.
+ *
+ * The button is a same-day dismissal: `constraints.ts` holds a declined move
+ * out for a local day, not for an evening. Naming it after the evening made a
+ * morning tap read as a promise about a night that had not happened yet.
+ */
 const ACTION_WORDS: Record<LifecycleAction, string> = {
   start: 'Start it',
   complete: 'Done',
-  decline: 'Not tonight',
+  decline: 'Not today',
   'unable-now': "Can't right now",
   'try-another': 'Something else',
 }
@@ -315,6 +338,7 @@ export function NowScreen() {
           <DetailPanel
             explanation={explanation}
             state={decision.state}
+            block={decision.situation.block}
             disabled={busy}
             onCorrect={correct}
           />
@@ -454,7 +478,7 @@ function OutcomePanel({
           {reading.prompt(situation)}
         </p>
         <div className="now-options">
-          {reading.options.map((option) => (
+          {reading.options(situation).map((option) => (
             <button
               key={option.id}
               type="button"
@@ -506,11 +530,13 @@ function OutcomePanel({
 function DetailPanel({
   explanation,
   state,
+  block,
   disabled,
   onCorrect,
 }: {
   explanation: Explanation
   state: MoveState | undefined
+  block: DayBlock
   disabled: boolean
   onCorrect: (belief: string) => void
 }) {
@@ -526,7 +552,7 @@ function DetailPanel({
       : { label: 'Why this one', value: explanation.insteadBecause },
     state === undefined || state === 'shown'
       ? undefined
-      : { label: 'Where this stands', value: STATE_WORDS[state] },
+      : { label: 'Where this stands', value: stateWord(state, block) },
   ].filter((row): row is { label: string; value: string } => row !== undefined)
 
   const belief = explanation.restsOnBelief
@@ -607,6 +633,9 @@ function EvidencePanel({
 }) {
   const evidence: DecisionEvidence | undefined = evidenceForDecision(decision)
   if (evidence === undefined) return null
+  // AUD-0036: the trust surface stops describing a different day. The headings
+  // read the hour from the same situation the decision was made in.
+  const block = decision.situation.block
 
   return (
     <div className="now-evidence">
@@ -629,7 +658,7 @@ function EvidencePanel({
       {!open ? null : (
         <div className="ev-detail" data-testid="now-evidence">
           {evidence.conditions.length === 0 ? null : (
-            <EvidenceNote title="What this rested on tonight">
+            <EvidenceNote title={`What this rested on ${hereNowWord(block)}`}>
               {evidence.conditions.map((condition) => (
                 <p key={condition.concept}>
                   {condition.label}: {condition.reading}
@@ -638,12 +667,12 @@ function EvidencePanel({
             </EvidenceNote>
           )}
 
-          <EvidenceNote title="Situations like tonight">
+          <EvidenceNote title={`Situations like ${hereNowWord(block)}`}>
             <p>{evidence.comparable}</p>
             {/*
               The unit is named, because the two numbers on this panel count
-              different things: twelve evenings, and the twenty-four answers
-              given about them. "Who said so: 24" under "12 evenings" reads as a
+              different things: twelve occasions, and the twenty-four answers
+              given about them. "Who said so: 24" under "12 occasions" reads as a
               contradiction, and it is not one.
             */}
             {evidence.mix === undefined ? null : (
@@ -655,8 +684,8 @@ function EvidencePanel({
             <EvidenceNote title="What the app took from them">
               <p>{evidence.concluded}</p>
               <p className="note">
-                This leans hardest on the evenings most like tonight, so it can be more cautious
-                than the plain count below.
+                This leans hardest on the occasions most like {hereNowWord(block)}, so it can be
+                more cautious than the plain count below.
               </p>
             </EvidenceNote>
           )}

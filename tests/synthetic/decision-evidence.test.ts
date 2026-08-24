@@ -195,7 +195,7 @@ describe('across every history in the library', () => {
 describe('an evening with nothing like it in the record', () => {
   it('says so rather than manufacturing a figure', () => {
     const { evidence } = evidenceOn('subnetting-struggle')
-    expect(evidence?.comparable).toMatch(/[Nn]othing in the record is much like tonight/)
+    expect(evidence?.comparable).toMatch(/[Nn]othing in the record is much like this evening/)
     expect(evidence?.rates).toEqual([])
     expect(evidence?.confidence.word).toBe('too early to say')
     expect(evidence?.counterexamples).toEqual([])
@@ -219,7 +219,7 @@ describe('an evening with a month behind it', () => {
   const { evidence } = evidenceOn('what-worked')
 
   it('counts the comparable evenings and says what happened on them', () => {
-    expect(evidence?.comparable).toMatch(/4 evenings/)
+    expect(evidence?.comparable).toMatch(/4 occasions/)
     const effect = evidence?.rates.find((rate) => rate.aspect === 'downstream-effect')
     expect(effect?.hit).toBe(4)
     expect(effect?.of).toBe(4)
@@ -250,12 +250,12 @@ describe('an evening where the same move goes differently by context', () => {
      * on 6-of-6 against 2-of-6 while Now quotes 8 of 12, with nothing on either
      * screen to reconcile them.
      */
-    expect(evidence?.context).toMatch(/Across every occasion, not only the ones like tonight/)
+    expect(evidence?.context).toMatch(/Across every occasion, not only the ones like this evening/)
     expect(evidence?.context).toMatch(/weekday/)
     expect(evidence?.context).toMatch(/weekend/)
     // And which side tonight is on, which is the clause that makes the app's
     // own conclusion legible against the plain tally above it.
-    expect(evidence?.context).toMatch(/Tonight is at the weekend\./)
+    expect(evidence?.context).toMatch(/This evening is at the weekend\./)
   })
 
   it('names the counterexamples rather than averaging them into the figure', () => {

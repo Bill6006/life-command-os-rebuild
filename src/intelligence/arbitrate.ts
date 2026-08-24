@@ -1,4 +1,5 @@
 import { profileFor } from './moves'
+import { blockNoun } from './vocabulary'
 import type { Evaluation } from './evaluate'
 import type { Situation } from './situation'
 
@@ -88,7 +89,9 @@ export function arbitrate(
       noAction: ruledOut > 0 ? 'everything-ruled-out' : 'nothing-proposed',
       notes:
         ruledOut > 0
-          ? [`${ruledOut} move(s) were proposed and none of them fitted tonight`]
+          ? [
+              `${ruledOut} move(s) were proposed and none of them fitted ${blockNoun(situation.block)}`,
+            ]
           : ['nothing in this history suggests a move'],
     }
   }

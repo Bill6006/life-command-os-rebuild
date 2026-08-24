@@ -726,7 +726,7 @@ function diagnosticsSection(request: ExportRequest): readonly string[] {
       `Local days covered: ${situation.view.summary.byLocalDay.size}; local weeks: ${situation.view.summary.byLocalWeek.size}`,
     ),
     '',
-    'How tonight’s decision was reached:',
+    'How this decision was reached:',
     bullet(`Moves proposed: ${trace.proposed.length}`),
     bullet(`Ruled out: ${trace.rejected.length}`),
     bullet(`Ranked: ${trace.ranking.length}`),

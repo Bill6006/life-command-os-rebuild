@@ -3,6 +3,7 @@ import type { RecordId } from '../domain/ids'
 import { basisOf, isUsable } from '../domain/knowledge'
 import { renderRecommendation } from '../domain/recommendation'
 import { addLocalDays } from '../domain/time'
+import { blockNoun, horizonWord } from './vocabulary'
 import type { Candidate } from './candidates'
 import { profileFor } from './moves'
 import type { Situation } from './situation'
@@ -109,7 +110,7 @@ export function applyConstraints(
   for (const proposed of candidates) {
     const profile = profileFor(proposed.semantics.target.verb)
 
-    const rendered = renderRecommendation(proposed.semantics, situation.entities)
+    const rendered = renderRecommendation(proposed.semantics, situation.entities, situation.block)
     if (!rendered.ok) {
       reject(
         proposed,
@@ -142,7 +143,12 @@ export function applyConstraints(
     }
 
     if (isUsable(strain) && strain.value === 'severe' && profile.demand === 'effortful') {
-      reject(proposed, 'too-strained', 'too much to ask of tonight', basisOf(strain))
+      reject(
+        proposed,
+        'too-strained',
+        `too much to ask of ${blockNoun(situation.block)}`,
+        basisOf(strain),
+      )
       continue
     }
 
@@ -156,7 +162,7 @@ export function applyConstraints(
       reject(
         proposed,
         'subject-not-available',
-        'she is not here tonight',
+        `she is not here ${horizonWord(situation.block)}`,
         basisOf(situation.childPresent),
       )
       continue

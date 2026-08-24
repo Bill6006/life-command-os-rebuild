@@ -307,7 +307,10 @@ export function describeRecord(
        * same reason there is none on Now — a fallback is exactly how "it" gets
        * on screen.
        */
-      const rendered = renderRecommendation(record.recommendation, entities)
+      // The block it was decided in, where the record carries one. A line
+      // about a Tuesday evening is about that evening, not about the hour the
+      // owner happens to be reading Timeline at.
+      const rendered = renderRecommendation(record.recommendation, entities, record.context?.block)
       return rendered.ok ? plain(rendered.rendered.sentence) : undefined
     }
     case 'action-start':
