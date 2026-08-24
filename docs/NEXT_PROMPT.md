@@ -5,68 +5,33 @@ is Codex (D-090); Claude builds. Every handoff ends with the model, the level,
 the conversation and a short copyable launcher (D-092) — the detail lives here,
 in the repository.
 
-**Phase 7 — AI exports + backup/restore is YELLOW: READY FOR INDEPENDENT
-RETEST.** Per D-077 this checkpoint does not self-certify. The full record is
-in [`PHASE_STATUS.md`](PHASE_STATUS.md) under "Phase 7 — AI exports +
-backup/restore"; the nine standing semantic and storage invariants are D-091;
-the QA protocol is [`qa/README.md`](qa/README.md) and D-090; the
-handoff-launcher rule is D-092.
+**Phase 7 — AI exports + backup/restore is YELLOW: ROUND 2 REPAIRED, AWAITING
+CODEX RETEST.** Per D-077 this checkpoint does not self-certify. The full
+record is in [`PHASE_STATUS.md`](PHASE_STATUS.md) under "Phase 7"; the standing
+semantic and storage invariants are D-091; the QA protocol is
+[`qa/README.md`](qa/README.md) and D-090.
 
-**This is a repair of the QA handoff itself, not of Phase 7's product
-behaviour.** Independent QA's first run stopped at the mandatory
-deployed-checkpoint preflight and returned FAIL, correctly, because the prior
-version of this file told QA to block unless `build-info.json` reported
-`322c00b` — a commit that the very act of pushing that instruction had already
-superseded. No product behaviour was tested. The repair is below (D-097,
-DEF-0061) and Phase 7's application code is untouched since `322c00b`.
-
----
-
-## What was wrong, and why it will not recur
-
-This repository redeploys the Preview on **every** push to `main`, including a
-documentation-only one, and `build-info.json` always reports the SHA of
-whatever commit was actually pushed. A "pin the checkpoint" commit that names
-an earlier commit as "the deployed checkpoint, confirmed live" is
-self-contradicting the moment it is pushed — pushing it is what moves the
-deployed SHA past the value it names. Phases 1 through 6 avoided this by never
-asserting literal SHA equality as a blocking precondition, informally: "the
-closing SHA… `git diff X..HEAD --name-only` shows only `docs/`, so the
-deployed product code **is** the checkpoint's." Phase 7's first QA handoff
-dropped that reasoning in favour of an exact-match assertion, and it broke the
-first time a docs commit followed a product commit under it.
-
-**The rule now, D-097:** a handoff never asserts that the deployed SHA equals
-a named product commit. It names the product checkpoint (the last commit that
-changed anything the build emits) and separately reports the deployed SHA
-(read live, whatever it is), and where equivalence matters, it is established
-by checking the diff between them touches nothing bundle-relevant — not by
-string comparison.
-
-**Made checkable:** `scripts/checkpoint-equivalence.mjs <product-sha>` runs
-`git diff --name-only` between the named product commit and the current ref
-and fails if anything under `src/`, `public/`, or the build-input files at the
-repository root changed. It knows nothing about `docs/`, `scripts/`, `tests/`
-or `.github/`, because none of them can alter one byte of `dist/`.
+Round 2 was the first full product pass and returned **FAIL** on seven product
+findings and one in `PHASE_STATUS.md`. All eight are repaired
+(DEF-0062, D-098, D-099). QA's report and its evidence are unchanged and
+unedited — the builder may not write to either.
 
 ---
 
 ## CHECKPOINT
 
-- **Product checkpoint:** `322c00b` — the last commit that changed anything
-  the build emits. Phase 7's application code, tests and the Android gate
-  script are unchanged since it.
+Reported to D-097's pattern. The product checkpoint and the deployed SHA are
+two facts, and the relationship between them is checked rather than asserted.
+
+- **Product checkpoint:** `3a8e8b6` — the last commit that changed anything the
+  build emits.
 - **Deployed SHA:** read `preview/build-info.json` live and use whatever
-  `commitSha` it reports. **Do not compare it against a value written in this
-  file** — every commit after `322c00b`, including this one, moves the
-  deployed SHA forward, by design (D-097).
-- **Bundle equivalence, checkable rather than asserted:** run
-  `node scripts/checkpoint-equivalence.mjs 322c00b` from a checkout at the
-  deployed SHA. It is read-only — a `git diff` and nothing else — and safe to
-  run as evidence-gathering under the QA protocol. It should report that
-  nothing bundle-relevant changed. If it reports otherwise, stop: something
-  changed that this handoff does not account for, and that is a real
-  precondition failure, not a naming one.
+  `commitSha` it reports. Do not compare it against a value written here; every
+  commit after the checkpoint, including this one, moves it forward by design.
+- **Bundle equivalence:** run `node scripts/checkpoint-equivalence.mjs 3a8e8b6`
+  from a checkout at the deployed SHA. Read-only. It should report that nothing
+  bundle-relevant changed. If it reports otherwise, stop — that is a real
+  precondition failure rather than a naming one.
 
 ---
 
@@ -76,161 +41,112 @@ or `.github/`, because none of them can alter one byte of `dist/`.
 - **Model:** the strongest current Codex reasoning model (GPT-5.1-Codex-Max, or
   the nearest current equivalent if renamed)
 - **Reasoning level:** **High**
-- **Conversation:** **SAME — the Codex conversation that returned the
-  checkpoint-preflight FAIL.** This is a retest after a builder repair
-  (`qa/README.md` section 4); no Phase 7 product testing has happened yet, so
-  the work ahead is the full first pass, not a narrow recheck — but the
-  conversation routing is a retest's regardless, per D-090.
-- **Why this model and level:** unchanged from the original assignment —
-  nothing about the size or stakes of the actual Phase 7 acceptance work has
-  changed, only the checkpoint-naming defect that blocked reaching it.
-- **Why the same conversation:** the reviewer must not re-derive context it
-  already has, and D-090's retest rule sends a repair back to the conversation
-  that found it.
-- **Report path:** `docs/qa/PHASE_07_QA_HANDOFF.md` — QA owns it, and QA
-  alone. Update it in place with a new section for this run; do not overwrite
-  the FAIL already recorded.
+- **Conversation:** **SAME — the Codex conversation that ran rounds 1 and 2.**
+  A retest returns to the conversation that found the defects; it has its own
+  reproductions and the acceptance expectations it set for each.
+- **Why this model and level:** the repairs cross export semantics, a privacy
+  boundary, owner/laboratory time, IndexedDB failure handling and mobile
+  stacking. Judging whether each root cause was actually reached — rather than
+  the reported symptom papered over — is the same class of reasoning that found
+  them.
+- **Report path:** `docs/qa/PHASE_07_QA_HANDOFF.md`. Add a round-3 section; do
+  not overwrite rounds 1 or 2.
 
 ---
 
 ## COPY/PASTE PROMPT
 
 ```text
-Independent QA retest — Life Command OS rebuild, Phase 7 (AI exports +
-backup/restore). Repository:
+Phase 7 round-2 repair is ready for your retest. This is the SAME Codex QA
+conversation that ran rounds 1 and 2 — you have your own reproductions of
+QA-07-002 through QA-07-009 and the acceptance expectations you set for each.
 
+Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
 
-You are the SAME Codex QA conversation that returned FAIL on the deployed-
-checkpoint preflight (QA-07-001). Read docs/NEXT_PROMPT.md in full before
-acting — it has been rewritten since your last read.
+Your report is docs/qa/PHASE_07_QA_HANDOFF.md. Add a "Round 3 — Codex retest"
+section. It remains the only file you may write, alongside narrowly scoped
+evidence under test-results/. Rounds 1 and 2 were committed exactly as you
+wrote them.
 
-WHAT CHANGED AND WHAT DID NOT
+CHECKPOINT
 
-Nothing in Phase 7's application code changed. The defect you found was real
-and the stop was correct: the prior handoff told you to block unless
-build-info.json reported 322c00b, and it never could, because pushing that
-instruction is what moved the deployed SHA past it. That is now D-097 and
-DEF-0061 in the repository's own decision log and defect ledger — read them if
-you want the full account, but you do not need to re-verify the mismatch
-itself; it is not in dispute.
+Product checkpoint: 3a8e8b6. As in round 2, do not expect build-info.json to
+report that literal string. Read the deployed SHA live, then confirm bundle
+equivalence yourself:
 
-CHECKPOINT, THIS TIME
+  node scripts/checkpoint-equivalence.mjs 3a8e8b6
 
-Product checkpoint: 322c00b. Do not expect build-info.json to report this
-literal string — every commit since, including this one, moves the deployed
-SHA forward by design. Instead:
+WHAT WAS REPAIRED
 
-1. Fetch preview/build-info.json live (bypass cache) and record whatever
-   commitSha it reports as the deployed SHA you are testing.
-2. Confirm bundle equivalence yourself, mechanically rather than by trusting
-   this document: run
-     node scripts/checkpoint-equivalence.mjs 322c00b
-   from a checkout at the deployed SHA. This is a read-only git diff — it
-   repairs nothing and is safe evidence-gathering under the QA protocol. It
-   should report that nothing bundle-relevant changed since 322c00b. If it
-   reports a bundle-relevant change, STOP and report that as a real blocking
-   finding — it would mean something changed that this handoff does not
-   account for.
-3. If it passes, proceed. The deployed build is 322c00b's product code,
-   whatever commit SHA the badge shows.
+All eight findings. The reasoning is in PHASE_STATUS.md under "Independent QA,
+round 2", the defect entry is DEF-0062, and two of the repairs became standing
+decisions — D-098 (an artefact states its identity in its first line, and an
+excluded area is excluded from the metadata too) and D-099 (a restore's
+post-reopen confirmation is part of its result, and a failed one is not rolled
+back).
 
-ORDER OF WORK FROM HERE — D-090's seven steps, qa/README.md section 2
+Two of those are judgement calls rather than mechanical fixes, and you should
+decide whether you agree rather than checking that the symptom is gone:
 
-1. Sealed cold owner-use, before reading anything else in the repository
-   beyond this prompt and the checkpoint confirmation above.
-2. Claim-to-evidence semantic audit.
-3. Semantic and product correctness.
-4. Targeted Phase 7 acceptance.
-5. Targeted known-defect regression for the surfaces this phase touched.
-6. Architecture inspection where warranted.
-7. Full-suite duplication only on a concrete trigger.
+- QA-07-003: the private exclusion now also drops the withheld "Private entry"
+  row from the recent record, which is the opposite of what Timeline does on
+  the owner's own screen. The argument is that Timeline is right there because
+  dropping the row would tell him his history is thinner than it is, and this
+  artefact is different because it leaves the device under an explicit promise.
+  The document states once that the exclusion covers whether anything is
+  recorded there, so the silence is not meant to read as an empty area. Test
+  whether that holds as a reader.
+- QA-07-007: a failed post-restore confirmation is deliberately NOT rolled
+  back. The write had committed and matched its fingerprint before the reopen
+  ran, so the argument is that undoing it would trade a restore that probably
+  worked for one that certainly did not happen. The outcome is a third state —
+  applied, verified once, not confirmed, not undone — and the owner is told to
+  reopen the app and look. Decide whether that is the right call and whether
+  the wording earns it.
 
-WHAT THIS PHASE BUILT
+WHAT TO RETEST
 
-A new destination, Data, reached from More (#/data). Three deliberately
-different things on it:
+Your eight findings, each against the acceptance expectation you set. Then the
+things a repair of this size can break, which is the more likely place to find
+something:
 
-- A REVIEW EXPORT: a description of what the app currently believes, composed
-  of chosen sections, with an embedded handoff prompt for whichever assistant
-  reads it. Allowed to leave things out.
-- A BACKUP: the file the owner's whole recorded life comes back from. The
-  claim is that NOTHING is omitted — not the private domain, not a row the
-  parser could not read, not a field this schema version has never heard of.
-- A RESTORE: replaces everything. Validate, preview, atomic apply, verify,
-  roll back on failure, never report a success it cannot deliver.
-
-Governing requirements: canonical plan section 52 (the phase), section 29
-(full backup and restore), section 11 (the private domain's export
-requirement), G-012 and G-013 in section 32, D-091's nine invariants. Read
-those yourself.
-
-ACCEPTANCE THIS PHASE IS BEING HELD TO
-
-- G-013: selected sections are present; the Private section can be included;
-  the handoff prompt is embedded; the prompt says what to keep, change, remove
-  and NOT change.
-- The export composer offers section selection, select all, clear, a
-  remembered last selection, and carries the app/engine version, the current
-  data range and the current selected domains.
-- The handoff prompt asks for an app-tuning review when diagnostics are
-  included.
-- A full backup is complete, transactional, verified, with rollback, and
-  tested on a phone.
-- Export stays reliable on a phone.
-- Restore exactness is proven.
-- Data and restore stay accessible during degraded-state tests (G-012).
-
-WHERE TO PUSH HARDEST — the builder's own claims; disprove them, don't confirm them
-
-- "A backup omits nothing." Take one with unreadable rows in the store and one
-  with something in the private domain. Compare field by field, not by count.
-- "A restore never reports a success it cannot deliver." What does the owner
-  see if the write fails? The read-back? Putting his old history back on top
-  of that failing too? Is the difference between "nothing was written" and
-  "something was written and then undone" legible to a person?
-- "A backup is of his own records whatever is on screen." Load a synthetic
-  scenario in the QA laboratory and take a backup. Whose history is in it?
-- "A restore does not run while a test history is on screen." Right rule, or a
-  refusal that reads as a bug? The builder chose it and recorded why in D-093
-  — decide whether you agree.
-- The export document. It leaves the device. Does any sentence claim more than
-  the record supports? Does it say whose history it is? Does a figure ever
-  appear without the quantity it counts?
-- The handoff prompt, read as the assistant receiving it. Useful review, or a
-  plausible one?
-- The private section: off by default, not reached by "select all", not
-  remembered between exports. Check all three, and check the document says
-  which way round it is when left out.
-- Copy, on a real phone. The builder's own automated Android gate passed
-  clean twice and a read-through of the actual screen then found five wording
-  defects each time — a plural that did not agree, a pronoun that did not
-  agree, a machine timestamp, a full-length hash on a 360px screen, and (on
-  the second reading) two of the sweeps meant to catch the first three that
-  could not fire because no history in the library held exactly one record.
-  Assume there are more of exactly this shape.
+- Everything round 2 passed. Field-by-field backup exactness with private,
+  unknown-field and malformed rows; damaged-file refusal; same-file retry;
+  atomic apply; the first fingerprint verification; a successful reopen;
+  G-012 reachability; deliberate Private inclusion rendering in full; Select
+  all and remembered-Private safety; prompt completeness and the diagnostics
+  tuning request.
+- The export header now describes the selected document rather than the whole
+  store. Check it against ordinary selections, not only the zero-section case:
+  does what it reports match what the document actually contains?
+- The private exclusion now reaches coverage, the header's areas and the
+  recent record. Check it does not over-reach — an ordinary non-private
+  document should be unchanged.
+- The restore's third outcome state. Force the reopen to fail all three ways
+  (throw, memory fallback, different contents) and read what the owner is
+  shown each time.
+- The header group now sticks as one element. Check the bar and both notices
+  at several scroll positions, on Data and elsewhere, and check the build
+  notice as well as the laboratory one.
+- Copy, on a real phone, from the first line of the document. Two rounds of
+  reading this screen have produced findings both times.
 
 KNOWN AND DISCLOSED — confirm unchanged rather than rediscovering
 
 Deliberately not built: authenticated/tamper validation (D-095), migrations,
-selective restore, override of a refused file, a library of past backups,
-legacy import. DEF-0059 (a literal-scanning guard silently covered less than
-it claimed) and DEF-0060 (counts beside plural nouns, and two sweeps that
-could not fire on them) are both closed this phase, with their own regressions.
-guide-resume.test.ts remains resolved-unreproduced from Phase 6.
-
-One tooling note: npx playwright test serves a PREBUILT dist and never builds.
-Use npm run test:browser if you change source and want the change tested.
+selective restore, override of a refused file, a past-backup library, legacy
+import. DEF-0059, DEF-0060, DEF-0061 and DEF-0062 are recorded closed.
+guide-resume.test.ts remains resolved-unreproduced. Bare npx playwright test
+still serves a prebuilt dist; npm run test:browser builds first.
 
 OUTPUT
 
-Update docs/qa/PHASE_07_QA_HANDOFF.md in place — add this run as a new section
-rather than overwriting the recorded FAIL, per the contract in plan section 43
-and qa/README.md section 3. Then, in the same response and without being asked
-(D-082), output the complete ready-to-paste next prompt — on FAIL addressed to
-the CURRENT builder conversation for repair under section 42, on PASS
-addressed to it for the formal GREEN closeout — and end with the four lines
-and the launcher (D-092): model, reasoning level, conversation, and a short
-copyable block naming the repository path and the exact MD file the next
-conversation must read.
+Update docs/qa/PHASE_07_QA_HANDOFF.md in place with the round-3 section, to the
+contract in plan section 43 and qa/README.md section 3. Then, in the same
+response and without being asked (D-082), output the complete ready-to-paste
+next prompt — on FAIL to the CURRENT builder conversation for repair under
+section 42, on PASS to it for the formal GREEN closeout — and end with the four
+lines and the launcher (D-092).
 ```

@@ -39,6 +39,31 @@ None.
 
 ## Fixed
 
+### DEF-0062 (QA-07-002 … QA-07-009) — eight things the green suites could not see
+
+- Status: Fixed
+- Severity: Blocker — five of the eight are blocking, two of those on the surface that writes to the owner's only copy of his own history
+- Found in: Phase 7 / `322c00b`
+- Found by: **independent Codex QA**, round 2, the first full product pass
+- Class: **a claim that is true somewhere in the artefact and false where it is read.** Not one class in the ordinary sense, and grouped as one entry deliberately, because the same shape produced five of the eight: a document that opens by claiming the wrong identity and corrects it later; an exclusion that covers the entries and not whether there are any; a header that describes the store while the sentence beneath it describes the document; a green success with its own contradiction printed underneath; a headline that ends twice. In each case both halves were present and the reader meets the wrong one first.
+
+#### The findings
+
+- **QA-07-002 (blocking, semantic).** A synthetic export opened "you are reviewing one person's own record of his life… he is the owner of everything below" and disclosed that it was an invented history further down, under a heading. **Fix:** `handoffPrompt` takes the source; the identity claim is made once, at the top, from it. **D-098.**
+- **QA-07-003 (blocking, privacy).** With the private section off, the document said "nothing from that area is below" and then reported the area as current, moderately evidenced, last heard three days ago; listed it under the header's life areas; and carried a dated `Noted: Private entry` row. **Participation is what stays sensitive after the detail is withheld.** **Fix:** the exclusion covers coverage rows, header domains and withheld placeholder rows, and the document says once that it covers whether anything is recorded there. **D-098.**
+- **QA-07-004 (blocking, semantic).** "No sections were chosen, so this document contains nothing about the owner" printed directly under a row reporting nineteen entries across four life areas. **Fix:** `recordsInScope` derives the range, count and areas from the records the chosen sections actually draw on.
+- **QA-07-005 (blocking, storage metadata).** A backup took its records from the owner store, correctly, and its `createdAt`, its Taken row and its filename from the laboratory's February clock. **Fix:** `ownerMoment()` — the same decision `ownerSnapshot()` already made, applied to time. The export's "composed on" line uses it too.
+- **QA-07-006 (major, mobile).** The bar and both notices were each `position: sticky; top: 0`, so once the page scrolled they occupied one coordinate and the higher z-index took the tap: the **Show mine** that the restore refusal names as the way out was underneath **More** at the scroll position where the refusal is legible. **Fix:** the header group sticks, its members do not.
+- **QA-07-007 (blocking, storage).** A failed post-restore reopen left a green "the store now holds the backup exactly" with "what came back is not what was restored" underneath, no rollback, and an empty fallback store published as his history. **Fix:** the confirmation is part of the result, with its own stage and three failure modes, and is deliberately not rolled back. **D-099.**
+- **QA-07-008 (non-blocking, copy).** `Nothing to suggest just yet..` — a headline that already carried its terminator joined to a fragment that added one.
+- **QA-07-009 (documentation, closeout-blocking).** `PHASE_STATUS.md` still asserted "Deployed Preview SHA `322c00b`" and "Do they match? Yes" after D-097 had removed exactly that pattern from the handoff. **Fix:** rewritten to D-097's pattern, with the equivalence script as the check.
+
+- Regression: `tests/synthetic/export-honesty.test.ts` (QA-07-002 opening-line order, QA-07-003 leak sweep, QA-07-004 scope, QA-07-005 composing moment, QA-07-008 doubled terminators); `tests/unit/memory-provider-restore.test.tsx` (QA-07-005 owner moment, QA-07-007 across all three confirmation failures plus the outer-catch path); `tests/browser/data.spec.ts` (QA-07-005 on a loaded fixture, QA-07-006 tapped from the scroll position where the refusal is read). **Twelve reintroductions, twelve caught.**
+- **Which assertions let these through, and why.** QA named them and the list is the useful part. `export-honesty` checked that "not a real person" appeared _somewhere_. The G-013 private test proved the heading and detail were absent and never looked at coverage metadata. The header test compared the document's domains against the **entire source record**, encoding the contradiction. The backup-under-laboratory test checked provenance and record ids and never the dates. The restore-under-laboratory test asserted the refusal contained the words "Show mine" and never tapped it. `memory-provider-restore` exercised a successful reopen and a first-write failure, and no confirmation failure at all. `scripts/android-gate.mjs` never loads a fixture, so 27 green checks could not observe either laboratory-scoped defect.
+- **Two reintroductions escaped first, both the same shape as this phase's earlier ones — a sweep that could not fire.** The private word list named the area's labels and not `discreetPlaceholder('private')`, so the dated placeholder row it existed to catch went past it. And forcing the reopen to _throw_ never reaches the operation's outer `catch`, because `openStore` catches everything and degrades to memory — proving that path needed a reopened store that refuses to be **read**.
+- Siblings: swept. Every artefact that leaves the device now takes its identity and its moment from the source rather than the screen; every restore failure path returns a stage-specific outcome; no notice sticks at the same coordinate as another.
+- Fixed in: `3a8e8b6`
+
 ### DEF-0061 (QA-07-001) — a QA handoff asserted literal SHA equality against a commit its own push had already superseded
 
 - Status: Fixed

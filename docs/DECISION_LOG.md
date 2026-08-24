@@ -2741,3 +2741,107 @@ asserting a match from memory. `qa/README.md`'s "checkpoint SHA tested" /
 this decision is what stops the gap between them being read as a failure
 instead of the ordinary consequence of a docs commit landing between the
 build and the QA read of it.
+
+---
+
+## D-098 — An artefact that leaves the device says whose life it is in its first line, and an excluded area is excluded from the metadata too
+
+**Phase:** 7 (QA round 2 repair) · **Status:** Active
+
+Two halves of one rule: **a document is read in order, and a correction that
+arrives later does not repair an instruction already given.**
+
+### Whose life it is
+
+The review export's opening sentence is an identity claim. It was written once,
+for the owner, and used for both sources — so a document composed from a
+synthetic laboratory history opened with "you are reviewing one person's own
+record of his life… he is the owner of everything below", and disclosed that it
+was an invented history several paragraphs later under a heading (QA-07-002).
+
+Both statements were in the document. That is not enough, and the test that
+checked only for presence — "not a real person" appears somewhere — passed on
+exactly that artefact. An assistant reading in order has already been told
+whose life it is by the time the correction arrives, and the two cannot both be
+true. D-091's eighth invariant is about identity, so it governs the first line
+of an artefact and not merely a section of it.
+
+**The rule:** where an artefact makes an identity claim, it makes it once, at
+the top, from the source. Not repaired below.
+
+### What an exclusion excludes
+
+The private section is off by default and includes nothing when off — the
+entries, that is. The document went on to report the area as current, moderately
+evidenced and last heard three days ago, listed it under the header's life
+areas, and carried a dated `Noted: Private entry` row in the recent record
+(QA-07-003).
+
+**Participation is the part of a private record that stays sensitive after the
+detail is withheld.** A placeholder is not a redaction when its presence is the
+fact: a dated row saying something private happened, and when, discloses the
+thing the exclusion exists to protect while appearing to protect it.
+
+**The rule:** an excluded area is excluded from the metadata as well as the
+detail — status, freshness, evidence strength, domain lists, and withheld
+placeholder rows — and the document states once, plainly, that the exclusion
+covers whether anything is recorded there. That last part is what stops the
+silence being read as an empty life, which is the failure this rule must not
+trade itself for.
+
+### And where it does _not_ apply
+
+Timeline keeps the private row on his own screen and replaces its detail with a
+placeholder, and that stays right. Dropping it there would tell him his history
+is thinner than it is, and he already knows what is in it. The difference is
+that a review export leaves the device under an explicit statement that nothing
+from that area is below. Same data, different promise, different answer.
+
+---
+
+## D-099 — A restore's confirmation is part of its result, and a failed confirmation is not rolled back
+
+**Phase:** 7 (QA round 2 repair) · **Status:** Active
+
+A restore writes, reads back and fingerprints, then closes the database, opens
+it again, and reads once more — because surviving a reopen is the thing a
+backup actually promises and the thing a browser under storage pressure is
+entitled to break.
+
+That last read was a **footnote**. Whatever it found, the operation returned the
+success from two steps earlier and set a separate line beside it. Force it to
+fail and the screen said, in green, that the store now held the backup exactly,
+with "what came back after reopening the database is not what was restored"
+printed underneath (QA-07-007). Two contradictory claims about one operation,
+the confident one first. Section 29 forbids a false success and does not stop
+forbidding it because a caveat follows.
+
+**The confirmation is part of the result.** It has its own stage, `confirm`, and
+three ways of failing that all get one answer: the reopen threw, the reopen
+degraded to an in-memory store, or the reopened contents differ.
+
+**And it is deliberately not rolled back.** Every other failure in a restore
+rolls back, and this one must not. By the time it runs the write has committed
+and matched its fingerprint, so the restored history is very probably on disk —
+QA proved it was — and undoing it would trade a restore that probably worked for
+one that certainly did not happen. The honest outcome is a third state:
+**applied, verified once, not confirmed, not undone**, with the owner told to
+reopen the app and look before restoring anything else over it.
+
+`applied` exists on the failure variant for that sentence. "Your history is
+untouched" and "the restore happened and the app cannot confirm it" are
+different things to tell somebody deciding what to do next, and section 29's ban
+on a false success equally forbids a failure report that talks him out of a
+restore that worked.
+
+### Two things the repair had to know
+
+`openStore` degrades to an in-memory store rather than throwing, and an empty
+memory store fingerprints as an empty history — so the check has to notice the
+**fallback itself**, not merely compare contents, or it reports "the restore
+lost everything" and publishes that empty store as his history.
+
+And the operation's outer `catch` returned `notAttempted`, which for a restore
+that has already written is the opposite of what happened. Whether a throw
+lands before or after the write is now the difference between two different
+outcomes rather than one wrong one.

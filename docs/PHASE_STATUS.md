@@ -24,13 +24,13 @@ reopens Phase 4 or any completed phase.
 
 # Phase 7 — AI exports + backup/restore
 
-**Status: YELLOW — READY FOR INDEPENDENT RETEST.**
+**Status: YELLOW — ROUND 2 REPAIRED, AWAITING CODEX RETEST.**
 
-Per D-077 this checkpoint does not self-certify. Independent QA's first run
-returned FAIL at the mandatory deployed-checkpoint preflight — a defect in the
-handoff, not in Phase 7's product code (DEF-0061, below) — and this status
-covers its repair. The retest goes to the **same** Codex conversation
-(D-090's retest routing), not a new one.
+Per D-077 this checkpoint does not self-certify. Two QA rounds so far. Round 1
+returned FAIL at the deployed-checkpoint preflight — a defect in the handoff
+rather than in the product (DEF-0061). Round 2 was the first full product pass
+and returned FAIL on seven product findings and one in this file; all eight are
+repaired here (DEF-0062). The retest goes to the **same** Codex conversation.
 
 Nothing in this area existed before this checkpoint: `MoreScreen.tsx` said so in
 as many words, and that sentence was one of the acknowledged deferrals in the
@@ -57,33 +57,38 @@ between the second and the third.
 
 ## Build identity
 
-|                      |                                                                                                        |
-| -------------------- | ------------------------------------------------------------------------------------------------------ |
-| Product checkpoint   | `322c00b` — the build every result below was measured against, and the one Codex should test           |
-| Earlier this phase   | `cc221bd` — the first complete build; `91bf40f` — the first round of read-through repairs              |
-| Closing SHA          | current `main` HEAD — documentation only past `322c00b`, no product code                               |
-| Deployed Preview SHA | `322c00b`, read live from `preview/build-info.json` and confirmed by the Android gate's own first line |
-| Do they match?       | Yes — confirmed by hand, and asserted live in CI                                                       |
-| Stable Preview URL   | https://bill6006.github.io/life-command-os-rebuild/preview/                                            |
-| Live proof           | `preview/build-info.json`                                                                              |
+Reported to D-097's pattern rather than as a claim of string equality — which
+is the shape QA-07-009 found still asserted here after D-097 had removed it
+from the handoff. The product checkpoint and the deployed SHA are two different
+facts, and the relationship between them is **checked**, not stated.
+
+|                    |                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| Product checkpoint | `3a8e8b6` — the last commit that changed anything the build emits, and the build every result below was measured against        |
+| Earlier this phase | `322c00b` — the round-2 checkpoint QA tested; `91bf40f`, `cc221bd` — the first complete build and its first read-through repair |
+| Closing SHA        | current `main` HEAD. Documentation only past the checkpoint                                                                     |
+| Deployed SHA       | read live from `preview/build-info.json`. It is whatever was pushed last and is **not expected** to equal the checkpoint        |
+| Bundle equivalence | `node scripts/checkpoint-equivalence.mjs 3a8e8b6` — passes; nothing under `src/`, `public/` or the build inputs changed         |
+| Stable Preview URL | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                     |
+| Live proof         | `preview/build-info.json`, and the equivalence script above                                                                     |
 
 ## Verification
 
-| Gate                                      | Result                                                                                                                            |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Privacy scan                              | Clean, 188 tracked files                                                                                                          |
-| Format (Prettier)                         | Pass                                                                                                                              |
-| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                  |
-| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                    |
-| Unit / contract / synthetic / adversarial | 1000 passed / 1000, 52 files (in plain Node, no DOM)                                                                              |
-| Browser tests (Playwright)                | 387 passed / 387 — 129 tests × 360, 430, 1280px                                                                                   |
-| Production build                          | Pass                                                                                                                              |
-| `npm run verify` from a clean checkout    | Pass — cloned fresh at `322c00b`, `npm ci`, 1000/1000                                                                             |
-| Deployed SHA matches checkpoint           | Pass — `322c00b` live, confirmed by hand                                                                                          |
-| Reintroduction pass                       | **15 deliberate reintroductions, 15 caught.** Four escaped on the first attempt; each of those four assertions is stronger for it |
-| Builder's own Android-style gate          | Pass — `scripts/android-gate.mjs` against the deployed checkpoint: 27 checks, touch, Android UA, device pixel ratio 3, 360×780    |
-| Owner-style read-through of the screen    | **Five findings, all repaired** — none of them from a failing assertion; see below                                                |
-| Independent QA                            | **Outstanding — this phase is YELLOW until it passes**                                                                            |
+| Gate                                      | Result                                                                                                                                                                    |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy scan                              | Clean, 188 tracked files                                                                                                                                                  |
+| Format (Prettier)                         | Pass                                                                                                                                                                      |
+| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                                                          |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                                                            |
+| Unit / contract / synthetic / adversarial | 1059 passed / 1059, 52 files (in plain Node, no DOM)                                                                                                                      |
+| Browser tests (Playwright)                | 393 passed / 393 — 131 tests × 360, 430, 1280px                                                                                                                           |
+| Production build                          | Pass                                                                                                                                                                      |
+| `npm run verify` from a clean checkout    | Pass — cloned fresh at `3a8e8b6`, `npm ci`, 1059/1059                                                                                                                     |
+| Deployed build is the checkpoint's        | Pass — by `scripts/checkpoint-equivalence.mjs`, not by string comparison (D-097)                                                                                          |
+| Reintroduction pass                       | **27 across the phase, 27 caught** — 15 before QA, 12 for QA's round-2 findings. Six escaped on a first attempt; each of those six assertions is stronger for it          |
+| Builder's own Android-style gate          | Pass — `scripts/android-gate.mjs` against the deployed checkpoint: 27 checks, touch, Android UA, device pixel ratio 3, 360×780                                            |
+| Owner-style read-through of the screen    | **Five findings, all repaired** — none of them from a failing assertion; see below                                                                                        |
+| Independent QA                            | **Round 1 FAIL at the checkpoint preflight, repaired. Round 2 FAIL on seven product findings and one documentation finding, all repaired here. Awaiting round 3 retest.** |
 
 Phase 6 ended at 780 unit-layer tests across 45 files. The 220 new ones are seven
 new suites plus growth in the sweeps that walk the whole scenario library.
@@ -373,12 +378,18 @@ detached?` on `page.goto` — the `vite preview` connection-dropping that
 - **D-097** — a handoff never asserts literal SHA equality against a commit a
   later push has already superseded; bundle equivalence is checked, not
   claimed.
+- **D-098** — an artefact that leaves the device states whose life it is in its
+  first line, and an excluded area is excluded from the metadata as well as the
+  detail.
+- **D-099** — a restore's post-reopen confirmation is part of its result, and a
+  confirmation that fails is reported without being rolled back.
 
 Defects closed here: **DEF-0059**, the literal scanner, found by the builder
 before QA; **DEF-0060**, a count printed beside a plural noun and the two
 sweeps that could not fire on it, found by the builder before QA;
-**DEF-0061**, the checkpoint-equivalence defect above, found by independent
-QA at the mandatory preflight.
+**DEF-0061**, the checkpoint-equivalence defect, found by independent QA at
+the mandatory preflight; **DEF-0062**, the eight round-2 findings above, found
+by independent QA's first full product pass.
 
 ## Independent QA, round 1 — FAIL at the checkpoint preflight
 
@@ -419,12 +430,158 @@ product checkpoint named once and never re-asserted as a literal match; the
 deployed SHA read live; equivalence established by the script's output rather
 than by string comparison.
 
+## Independent QA, round 2 — FAIL on seven product findings, all repaired
+
+The first full product pass. QA confirmed the checkpoint repair, ran the whole
+Phase 7 acceptance, and found seven things in the product plus one in this
+file. The exact reproductions are in
+[`qa/PHASE_07_QA_HANDOFF.md`](qa/PHASE_07_QA_HANDOFF.md) under "Round 2"; the
+evidence scripts are under `test-results/phase07-qa-retest/`.
+
+**Every one of them passed the existing green suites**, and QA named which
+assertion let each through. That list is worth more than the findings.
+
+### QA-07-002 — a synthetic export opened by claiming it was the owner's own life
+
+The prompt's first sentence is an identity claim and it was written once, for
+the owner, and used for both. A laboratory export opened with "you are
+reviewing one person's own record of his life… he is the owner of everything
+below" and disclosed that it was invented further down, under a heading.
+
+`export-honesty.test.ts` asserted that "not a real person" appeared
+**somewhere** in the document, and passed on exactly that. _Where_ a claim
+appears is the finding: an assistant reading in order has already been told
+whose life it is, and a later correction does not repair an instruction already
+given. D-091's eighth invariant applies to the first line of an artefact, not
+to a section of it.
+
+`handoffPrompt` now takes the source, and the regression asserts the opening
+line rather than the presence of a phrase.
+
+### QA-07-003 — the private exclusion covered the entries and not whether there were any
+
+With the private section off, the document said "nothing from that area is
+below" and then reported Private / Sexual Health as current, moderately
+evidenced, last heard three days ago. A dated `Noted: Private entry` row in the
+recent record said the same thing again, and the screen listed the area under
+"Life areas in it".
+
+Participation is the part of a private record that stays sensitive after the
+detail is withheld. **A placeholder is not a redaction when its presence is the
+fact.** The exclusion now covers the coverage row, the header's life areas, and
+the withheld Timeline row — and the document says, once, that it covers whether
+anything is recorded there, so the silence still cannot be read as an empty
+area.
+
+Worth stating precisely, because Timeline does the opposite on his own screen
+and is right to: dropping the row there would tell him his history is thinner
+than it is, and he already knows what is in it. The difference is that this
+artefact leaves the device under an explicit promise.
+
+### QA-07-004 — the header described the store, not the document
+
+"No sections were chosen, so this document contains nothing about the owner",
+printed directly under a row reporting nineteen entries across four life areas.
+Both sentences were composed from the same object and only one of them was
+about the document.
+
+`recordsInScope` now derives the range, the count and the life areas from the
+records the chosen sections actually draw on. The rule is deliberately coarse
+and stated in the code: the four sections that genuinely summarise the whole
+record put the whole record in scope, the narrower ones contribute their own,
+and privacy is applied to the result rather than per section.
+
+The old header test compared the document's domains against the **entire source
+record** — so it encoded the behaviour that made the two sentences contradict.
+
+### QA-07-005 — a backup took its records from the owner and its date from the laboratory
+
+`ownerSnapshot()` was already deliberately not `snapshot`. The clock was not
+given the same treatment, so a backup taken in August with a February fixture
+loaded was stamped, filed and previewed as February: correct contents under a
+date that would send him to the wrong file on the day it mattered.
+
+`ownerMoment()` is the same decision applied to time, and the export's
+"composed on" line uses it too — when a document was composed is a fact about
+now, not about the history it describes.
+
+### QA-07-006 — the way out was underneath the button it told him to avoid
+
+The restore refusal names **Show mine** as the remedy. The bar and both notices
+were each `position: sticky; top: 0`, so once the page scrolled they occupied
+the same coordinate and the higher z-index took the tap. At the scroll position
+where the refusal is legible, a real touch on Show mine went to More.
+
+It was visible throughout, which is why every assertion passed: `toBeVisible`
+and `toContainText` cannot tell a button from a picture of one. The group
+sticks now instead of its members, so they stack — no offsets to keep in step
+with the bar's height, and a notice added later inherits the behaviour.
+
+### QA-07-007 — a restore reported a success it could not confirm
+
+Force the post-restore reopen to fail and the screen showed, in green, "the
+store now holds 1 entry, exactly as the backup does" — with "what came back
+after reopening the database is not what was restored" printed underneath. Two
+contradictory claims about one operation, the confident one first, no rollback,
+and the provider publishing an empty fallback store as his history.
+
+The reopen is part of the claimed restore. It has its own stage now — `confirm`
+— and three ways of failing that all get the same answer: **applied, verified
+once, not confirmed, not undone.** Not undone deliberately: the write had
+committed and matched its fingerprint before this ran, so rolling back would
+trade a restore that probably worked for one that certainly did not happen. The
+owner is told exactly that, and told to reopen the app and look before
+restoring anything else over it.
+
+Two subtleties the repair had to get right. `openStore` degrades to an in-memory
+store rather than throwing, and an empty memory store fingerprints as an empty
+history — so the check has to notice the fallback itself, not just compare. And
+the operation's outer `catch` returned `notAttempted`, which for an applied
+restore is the opposite of what happened.
+
+### QA-07-008 — a sentence ended twice
+
+`The app is suggesting nothing right now: Nothing to suggest just yet..` — a
+headline that already carried its terminator joined to a fragment that added
+one. The English sweep DEF-0060 introduced only checked count/noun agreement,
+which QA correctly noted is narrower than the name "the document reads as
+English". It now checks doubled terminators too.
+
+### QA-07-009 — this file still asserted the equality D-097 removed
+
+The build identity table still read "Deployed Preview SHA `322c00b`", "Do they
+match? Yes" and "deployed SHA equals checkpoint — Pass", while the live
+deployment was `3fc1dde`. The handoff had been repaired to D-097's pattern and
+the full record it links to had not.
+
+Rewritten above: the product checkpoint and the deployed SHA are two different
+facts, and the relationship between them is checked by
+`scripts/checkpoint-equivalence.mjs` rather than asserted.
+
+## Twelve reintroductions for round 2, twelve caught
+
+Each defect was put back, run, and reverted. Two escaped on the first attempt
+and both escapes were the same shape as the ones this phase has already
+recorded twice — **a sweep that could not fire on the thing it was written
+for.**
+
+The private sweep's word list named the area's labels and not
+`discreetPlaceholder('private')`, so the dated `Noted: Private entry` row it
+was written to catch went straight past it. And forcing the database reopen to
+_throw_ never reaches the operation's outer `catch`, because `openStore`
+catches everything and degrades to memory — so proving the "reported as never
+attempted" defect gone needed a reopened store that refuses to be **read**,
+which is the only shape that gets there.
+
+Both are fixed and both are now proved by reintroduction rather than by
+reasoning.
+
 ## Next
 
-Independent QA retest, in the **same** Codex conversation that returned the
-checkpoint FAIL (D-090's retest routing). No Phase 7 product acceptance
-testing has happened yet, so the work ahead is the full first pass. The
-complete prompt is in [`NEXT_PROMPT.md`](NEXT_PROMPT.md).
+Independent QA retest, in the **same** Codex conversation (D-090's retest
+routing). Round 2's passes stand and need re-confirming against the repairs;
+the eight findings above need targeted retest. The complete prompt is in
+[`NEXT_PROMPT.md`](NEXT_PROMPT.md).
 
 ---
 

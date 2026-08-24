@@ -206,4 +206,494 @@ items, and the D-092 model/level/conversation/launcher ending. Do not make the
 owner ask for the retest prompt.
 ```
 
+## Independent QA retest — Round 2, full product pass
+
+### Result
+
+**Overall: FAIL — five blocking product findings, one closeout-blocking
+documentation finding, and two non-blocking findings.**
+
+QA-07-001 is resolved. The live deployed SHA was
+`3fc1dde68bf4907fae9b9ce6c99334fd8cd7451a`, and
+`node scripts/checkpoint-equivalence.mjs 322c00b` reported six changed files
+and no bundle-relevant changes. The deployed product is mechanically
+bundle-equivalent to product checkpoint `322c00b`, so the full Phase 7 pass
+proceeded.
+
+The product does pass the exact storage happy path: private records, unknown
+fields and unreadable raw rows survive field by field; a damaged file is
+refused; the same undamaged file is accepted immediately afterwards; the
+replacement is exact; and the reopened database matches. Those passes do not
+cover the failures below. The failures are at the boundaries the existing
+suites did not ask about: what an export claims before its later disclaimer,
+what “left out” actually excludes, which clock gives a backup its identity,
+what happens when the second persistence check fails, and whether the recovery
+control remains tappable after scrolling to Restore.
+
+### Checkpoint and configuration
+
+- **Phase:** Phase 7 — AI exports + backup/restore
+- **Product checkpoint tested:** `322c00b`
+- **Deployed SHA tested:**
+  `3fc1dde68bf4907fae9b9ce6c99334fd8cd7451a` (`3fc1dde`)
+- **Bundle equivalence:** PASS — six changed files, none bundle-relevant:
+  `docs/DECISION_LOG.md`, `docs/DEFECT_LEDGER.md`, `docs/NEXT_PROMPT.md`,
+  `docs/PHASE_STATUS.md`, `docs/qa/PHASE_07_QA_HANDOFF.md`, and
+  `scripts/checkpoint-equivalence.mjs`
+- **Deployed evidence:** live cache-bypassed HTTP 200 from
+  `preview/build-info.json`, build time `2026-08-23T19:26:21.327Z`
+- **Android/mobile configuration:** headless Chromium; 360 x 780 viewport;
+  360 x 800 screen; DPR 3; `isMobile: true`; `hasTouch: true`; Android 14
+  Galaxy-class Chrome user agent; America/New_York; touch/tap and mobile
+  scrolling
+- **Supplementary cold-use configuration:** Codex in-app Chromium at 360 x
+  800, used before reading the governing repository documents
+- **Evidence directory:** `test-results/phase07-qa-retest/`
+
+### Governing acceptance criteria
+
+- Canonical plan section 11 — private data is available to every export
+  family, but review inclusion is explicit and clearly stated.
+- Section 29 — complete backup; validate, preview, atomically apply, verify,
+  roll back on failure, no false success, no stale recovery overwrite, and
+  same-file retry.
+- G-012 — degraded data does not blank the app and Data/restore remains
+  reachable.
+- G-013 — selected sections, deliberate Private inclusion, embedded prompt,
+  and keep/change/remove/not-change instructions.
+- Section 52 — selection/select-all/clear/remembering, app and engine build,
+  data range, selected domains, diagnostics-conditioned tuning review,
+  complete transactional verified mobile backup/restore.
+- D-091 invariant 8 — synthetic and owner histories never share identity.
+- D-093 — backup reads the owner store whatever is shown; restore runs only on
+  owner history.
+- D-094 — sections are chosen, domains are reported from the document, and
+  Private is neither selected-all nor remembered.
+- D-095 — content fingerprint is integrity, not authentication.
+- D-097 — product and deployed SHAs are separately named and bundle
+  equivalence is checked.
+
+### Sealed cold-use claims recorded before specification reading
+
+At normal Now the Preview said the visible data was invented, showed deployed
+build `3fc1dde`, and offered the normal owner navigation. More then claimed:
+
+- data leaves the device only when exported or backed up;
+- a backup comes from the owner's records whichever history is visible;
+- Data creates a review, takes a complete backup including the private area,
+  validates a restore before applying it, verifies it afterwards, and undoes
+  it if it does not land.
+
+Data claimed:
+
+- review selection controls what is included and the document starts with a
+  self-contained assistant prompt;
+- Private is off unless deliberately enabled;
+- backup leaves nothing out and uses the owner records whatever is visible;
+- restore writes nothing until the final press.
+
+The default generated document also visibly contained the sentence
+`The app is suggesting nothing right now: Nothing to suggest just yet..`.
+
+### Scenarios and flows
+
+| Flow | Result | Evidence |
+| --- | --- | --- |
+| QA-07-001 checkpoint-equivalence repair | **PASS** | Live `3fc1dde`; equivalence script passes against `322c00b`. |
+| Data from More and direct `#/data` | **PASS** | Reached by Android touch and direct route. |
+| Default selection, Select all, Clear, remembered selection | **PARTIAL FAIL** | Controls operate; Select all leaves Private off and includes Diagnostics; Private is not remembered. After Clear, the UI still reports 19 entries and four “Life areas in it,” contradicting `Sections chosen: none` and the document’s “No sections were chosen.” QA-07-004. |
+| G-013 prompt parts and diagnostics tuning request | **PASS for owner history** | Embedded prompt contains source of truth, current state, limiter, app tuning when Diagnostics is included, working, drifting, change, simplify, not-change, actions, uncertainty and questions. |
+| Synthetic export source identity | **FAIL — BLOCKING** | Its opening instruction says this is one person's own record and he owns everything below; only later does it say it is a synthetic QA history and not a real person. QA-07-002. |
+| Private off / on / Select all | **FAIL — BLOCKING** | Private detail and heading are absent while off, present in full when deliberately enabled, and Select all leaves it off. But the off document says nothing from that area is below and later reports Private current, moderate, last heard three days ago; the screen also lists Private under “Life areas in it.” QA-07-003. |
+| Backup completeness and exact restore | **PASS** | Two valid records (one private), two different unknown-field payloads, one unreadable raw row, and the fingerprint survived field by field; the pre-existing replacement row disappeared; reopened storage matched. |
+| Damaged-file refusal and same-file retry | **PASS** | Altered checksum refused with “Nothing was changed”; the undamaged same file immediately produced a plan and restored. |
+| Backup while laboratory history is visible | **FAIL — BLOCKING** | Records correctly come from the owner store, but `createdAt`, Taken, and filename use the laboratory's February clock rather than the real August owner clock. QA-07-005. |
+| Restore while laboratory history is visible | **PASS in rule; mobile finding in remedy** | Apply is disabled and the refusal explains why. At the Restore scroll position, Show mine is overlapped by More and cannot be tapped; scrolling all the way to the top makes it work. QA-07-006. |
+| Restore happy path and reopened persistence check | **PASS** | Exact Android flow reported restored content and reopened IndexedDB matched the fingerprint. |
+| Post-restore reopen failure | **FAIL — BLOCKING** | Forced IndexedDB reopen failure falls back to an empty memory store, yet the UI keeps a green “Restored and checked” success and adds a contradictory warning below it; no rollback is attempted. QA-07-007. |
+| G-012 malformed owner row | **PASS for reachability and preservation** | Data remained reachable; backup held one unreadable row verbatim; restore preview accepted it and exact restore returned it. |
+| Phone copy/layout | **PARTIAL FAIL** | Export remains selectable and normal controls meet target sizing/no horizontal overflow in the standing gate. Sticky Show mine and More overlap after scrolling. QA-07-006. |
+| Owner-facing document read-through | **FAIL — NON-BLOCKING COPY** | Double terminal punctuation in the no-action sentence. QA-07-008. |
+| D-097 repository record | **FAIL — MATERIAL DOCUMENTATION** | `PHASE_STATUS.md` still says deployed SHA `322c00b`, “Do they match? Yes,” and “deployed SHA equals checkpoint,” while live deployment is `3fc1dde`; this contradicts D-097 and the repaired handoff. QA-07-009. |
+
+## Exact findings and reproductions
+
+### QA-07-002 — a synthetic export begins by claiming it is the owner's own life
+
+**Classification:** blocking; semantic; synthetic/owner identity.
+
+1. Open `#/qa` in Preview.
+2. Load **Two ordinary weeks**.
+3. Open More → Exports, backup and restore.
+4. Select all (Private may remain off).
+5. Read the generated document from the first line.
+
+**Actual opening:**
+
+> You are reviewing one person’s own record of his life, exported from an app
+> he uses to keep it. He is the owner of everything below and has chosen to
+> show it to you.
+
+Only later, under About this document, it says:
+
+> Source: a synthetic test history loaded into the app’s QA laboratory. This
+> is not a real person’s record.
+
+**Expected:** source identity is coherent from the first instruction an
+assistant reads. A later disclaimer cannot repair the prompt's initial claim.
+
+**Impact:** the artifact can leave the device with two mutually exclusive
+instructions about whose life it describes. This violates D-091 invariant 8
+and the phase's explicit “whose history is it?” acceptance pressure.
+
+### QA-07-003 — Private is declared absent while private status is disclosed
+
+**Classification:** blocking; privacy and semantic correctness.
+
+1. Load **Two ordinary weeks**, which contains a private record three days
+   before the scenario clock.
+2. Open Data and press Select all.
+3. Confirm Private remains unchecked and the screen says it is left out.
+4. Read all Private mentions in the generated document.
+
+**Actual:** the prompt says “Nothing from that area is below,” and the header
+says Private is left out. Later the coverage section says:
+
+> Private / Sexual Health — current, evidence moderate; last heard 3 days ago.
+> Something has come in about private / sexual health recently.
+
+The screen simultaneously lists Private / Sexual Health under **Life areas in
+it**.
+
+**Expected:** an export that says nothing from Private is included must not
+disclose the presence, freshness or evidence strength of private records.
+Either that metadata is part of the deliberate Private decision or the prompt
+must accurately name what remains disclosed.
+
+**Impact:** the document leaks sensitive participation metadata under an
+explicit exclusion and contradicts its own source-of-truth instructions.
+
+### QA-07-004 — range and selected domains ignore section selection
+
+**Classification:** blocking/material; semantic; section 52 and D-094.
+
+1. With **Two ordinary weeks** visible, open Data.
+2. Press Clear.
+3. Observe `Sections chosen: none` and the document sentence “No sections were
+   chosen, so this document contains nothing about the owner.”
+4. Read the rows immediately above it.
+
+**Actual:** `Record covers` still reports 19 entries and `Life areas in it`
+still reports Long-Range Direction, Fatherhood, Private and Sleep.
+
+**Expected:** “Life areas in it” and the current selected domains are facts
+about the selected document, not the whole source record after every section
+has been removed. At minimum the UI and document may not claim both “nothing
+about the owner” and four life areas “in it.”
+
+**Impact:** the composer carries a header wider than its selection and makes a
+zero-section export internally impossible to interpret.
+
+### QA-07-005 — an owner backup inherits the laboratory clock
+
+**Classification:** blocking; behavioral and storage metadata; D-093 boundary.
+
+1. In the Android context, load **Two ordinary weeks**. Its clock is
+   2026-02-15 owner-local; the real Preview date is 2026-08-23.
+2. Open Data while the test-history banner remains visible.
+3. Press Take a backup.
+4. Inspect the backup's `createdAt`, Taken row and filename.
+
+**Actual:** records come from the owner store as intended, but the new backup
+has `createdAt: 2026-02-16T04:00:00.000Z` and filename
+`life-command-os-backup-2026-02-15-3fc1dde.json`.
+
+**Expected:** reading records from the owner store must also give the backup an
+owner/real moment and zone. A laboratory clock may date the synthetic review
+it describes, but not the owner backup the screen says is independent of what
+is visible.
+
+**Impact:** a backup taken in August is filed and previewed as February. The
+metadata used to identify the right backup later is false.
+
+### QA-07-006 — Show mine is covered by More after scrolling to Restore
+
+**Classification:** major, non-blocking because a workaround exists; mobile/UI
+and D-093 product judgment.
+
+1. Use the Android configuration and load a scenario.
+2. Open Data and scroll down through the long export and backup panels to
+   Restore.
+3. Read the refusal directing the owner to press Show mine at the top.
+4. Tap the sticky Show mine control without first returning to page top.
+
+**Actual geometry at the Restore scroll position:** More occupies x 263.03–344,
+y 8–44; Show mine occupies x 246.78–344, y 12–56. The top bar is z-index 20
+and the lab notice z-index 19. A real touch tap times out because More receives
+the pointer. The scenario remains visible. After scrolling all the way to page
+top, Show mine moves to y 65–109 and the tap works.
+
+**Expected:** a sticky recovery notice stays actionable when sticky. D-093
+describes the cost as one press; at the destructive panel it is a full-page
+scroll plus a press, and the apparent button is untappable.
+
+**Evidence:** `android-data-top.png` shows the usable at-top state;
+`android-show-mine-after-tap.png` and the recorded rectangles show the scrolled
+failure.
+
+### QA-07-007 — failed reopened-storage verification leaves a green success
+
+**Classification:** blocking; behavioral/storage; no-false-success and rollback.
+
+1. In a fresh Android context, seed one valid owner record A and take a backup.
+2. Replace the owner database with different valid record B and reload.
+3. Check the A backup; the plan correctly says one entry will replace one.
+4. Immediately before the final press, force the next IndexedDB open to fail.
+   This targets only the provider's promised post-restore reopen check; the
+   transactional write and first read-back still run normally.
+5. Press Replace everything with this backup.
+
+**Actual:** `openStore` converts the failed reopen into an empty memory store.
+The screen then shows the green result:
+
+> Restored and checked: the store now holds 1 entry, exactly as the backup does.
+
+and below it:
+
+> what came back after reopening the database is not what was restored
+
+The provider publishes the fallback's empty snapshot, returns the earlier
+success outcome, and does not roll back. Record A was on disk when QA restored
+the normal IndexedDB open, proving that a write did occur; the app simply could
+not deliver the reopened verification it claims in green.
+
+**Expected:** the final persistence check is part of the claimed restore. If
+it cannot be completed or returns different content, the result cannot remain
+success. The owner must get one coherent stage-specific outcome and the
+rollback/uncertain-state handling required by section 29.
+
+**Evidence:** `restore-reopen-failure.mjs` and
+`android-reopen-failure.png`. The screenshot shows the green success before
+the contradictory warning below the fold.
+
+### QA-07-008 — double terminal punctuation in the export
+
+**Classification:** non-blocking; semantic copy.
+
+On the normal Preview no-action history, the generated document says:
+
+> The app is suggesting nothing right now: Nothing to suggest just yet..
+
+`compose.ts` appends a period to a headline that already carries one. This is
+the same whole-document English class DEF-0060 says is now swept, but the sweep
+only checks count/noun patterns.
+
+### QA-07-009 — Phase status still asserts the literal SHA equality D-097 removed
+
+**Classification:** material release documentation; blocking formal closeout,
+not a product-runtime defect.
+
+`docs/PHASE_STATUS.md` still records deployed Preview SHA `322c00b`, says
+“Do they match? Yes,” and marks “deployed SHA equals checkpoint SHA” Pass. The
+live deployed SHA is `3fc1dde`, and D-097 now explicitly says this repository
+must report product checkpoint and deployed SHA separately and check bundle
+equivalence. The repaired `NEXT_PROMPT.md` follows D-097; the full record it
+links to does not.
+
+## Findings by category
+
+### Semantic
+
+- **Blocking:** QA-07-002 synthetic/owner contradiction.
+- **Blocking:** QA-07-003 Private-exclusion contradiction.
+- **Blocking/material:** QA-07-004 selection-independent range/domains.
+- **Non-blocking:** QA-07-008 double terminal punctuation.
+- **Closeout-blocking documentation:** QA-07-009 stale literal SHA claims.
+
+### Behavioral and storage
+
+- **Blocking:** QA-07-005 laboratory time stamps the owner backup.
+- **Blocking:** QA-07-007 reopened-storage failure leaves a green success and
+  no rollback.
+- **Passed:** field-by-field backup/restore exactness, damaged-file refusal,
+  same-file retry, normal transactional apply, first fingerprint verification,
+  and successful reopened persistence verification.
+
+### Privacy
+
+- **Blocking:** QA-07-003 discloses the existence and freshness of a private
+  record while asserting that nothing from Private is included.
+- **Passed:** explicit Private detail is off by default, Select all does not
+  enable it, it is not remembered, and deliberate inclusion renders the full
+  private record.
+
+### Mobile/UI
+
+- **Major non-blocking:** QA-07-006 sticky Show mine is covered by More after
+  scrolling; returning to absolute page top is a working but costly workaround.
+- **Passed:** normal Data route, touch selection, normal restore flow, target
+  sizing and horizontal containment apart from the overlapping sticky controls.
+
+## Evidence artifacts
+
+- `test-results/phase07-qa-retest/android-owner-use.mjs`
+- `test-results/phase07-qa-retest/android-data-top.png`
+- `test-results/phase07-qa-retest/android-show-mine-after-tap.png`
+- `test-results/phase07-qa-retest/backup-restore-exactness.mjs`
+- `test-results/phase07-qa-retest/restore-reopen-failure.mjs`
+- `test-results/phase07-qa-retest/android-reopen-failure.png`
+
+The evidence scripts create isolated, disposable browser contexts. They do not
+touch the owner's browser data or repair product source.
+
+## Automated tests that gave false confidence
+
+- `tests/synthetic/export-honesty.test.ts` checks that a synthetic document
+  contains “not a real person” somewhere, but never checks that the opening
+  prompt says the opposite first (QA-07-002).
+- `tests/synthetic/g013-export-handoff.test.ts` proves the Private heading and
+  full detail are absent while off, but never checks coverage metadata or the
+  document's own “nothing from that area” promise (QA-07-003).
+- The header test explicitly compares domains with the entire source record,
+  so it encodes the behavior D-094's selected-document wording and the UI's
+  “in it” label make contradictory (QA-07-004).
+- `tests/browser/data.spec.ts` checks only that a cleared document contains “No
+  sections were chosen”; it does not read the adjacent range/domain rows.
+- The browser backup-while-laboratory test checks provenance/records only; it
+  does not check `createdAt`, Taken or filename against the real owner clock
+  (QA-07-005).
+- The restore-under-laboratory test asserts only that refusal copy contains
+  “Show mine”; it never taps the named remedy from the Restore scroll position
+  (QA-07-006).
+- `scripts/android-gate.mjs` never loads a laboratory history, so its 27 green
+  checks cannot observe the lab/topbar sticky overlap or lab-clock backup.
+- `memory-provider-restore.test.tsx` exercises a successful reopen and first
+  write failure, but not failed reopen/fallback or mismatched reopened content.
+  The Android gate accepts the mere presence of “Restored and checked” before
+  separately checking a successful storage line, so the contradictory success
+  state is outside both guards (QA-07-007).
+- The “document reads as English” sweep checks count/noun disagreements and
+  `(s)` only; it cannot see doubled terminal punctuation (QA-07-008).
+
+No full green suite was duplicated. The purpose-built QA evidence targeted
+claims the existing green suites demonstrably did not observe.
+
+## Deferred and disclosed items
+
+Confirmed unchanged by document and implementation inspection:
+
+- authenticated/tamper validation remains deliberately deferred; SHA-256 is a
+  content fingerprint, not a signature (D-095);
+- migrations remain empty because schema 1 is first;
+- selective restore, override of a refused file, a past-backup library and
+  legacy import remain unbuilt;
+- DEF-0059 and DEF-0060 remain recorded closed, though QA-07-008 shows the
+  English sweep is narrower than the phrase “document reads as English”;
+- `guide-resume.test.ts` remains resolved-unreproduced;
+- bare `npx playwright test` still serves prebuilt `dist`; QA changed no
+  product source and did not use it to certify a source edit.
+
+## Recommendation
+
+Keep Phase 7 **YELLOW**. Return to the CURRENT original Claude Phase 7 builder
+conversation. Repair QA-07-002 through QA-07-009 under canonical plan section
+42, preserving the storage exactness and privacy behaviors that passed. Deploy
+a new product checkpoint and return to this **same Codex QA conversation** for
+targeted retest plus regression of every passed boundary affected by the
+repairs. Do not start Phase 8 and do not mark Phase 7 GREEN.
+
+- **Recommended model:** current strongest Opus-class Claude coding model. The
+  repairs cross export semantics, privacy boundaries, owner/laboratory time,
+  IndexedDB failure handling, mobile stacking and release provenance.
+- **Recommended intelligence level:** Max. Root causes span multiple state and
+  evidence boundaries, and a local wording patch would leave sibling claims
+  exposed.
+- **Conversation:** CURRENT — the original Claude Phase 7 builder
+  conversation. It owns the unresolved phase and its deployment context; this
+  Codex conversation remains the independent retester.
+
+## NEXT CLAUDE ACTION
+
+- **Intelligence level:** Max
+- **Conversation:** CURRENT — original Phase 7 Claude builder conversation
+- **Why this level:** The repair requires cross-system privacy, storage,
+  temporal, UI and semantic root-cause work rather than isolated copy edits.
+- **Why this conversation:** The unresolved phase returns to its original
+  builder, while this Codex conversation remains independent for the retest.
+- **Attach/reference:** `docs/qa/PHASE_07_QA_HANDOFF.md` and the evidence files
+  under `test-results/phase07-qa-retest/`
+
+## COPY/PASTE PROMPT
+
+```text
+Phase 7 independent QA retest returned FAIL after the full product pass.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You are the CURRENT original Claude builder conversation for unresolved Phase
+7. Read docs/qa/PHASE_07_QA_HANDOFF.md in full before acting, including the
+Round 2 section and QA-07-002 through QA-07-009. The narrowly scoped evidence
+is under test-results/phase07-qa-retest/.
+
+Keep Phase 7 YELLOW. Do not start Phase 8 and do not mark Phase 7 GREEN. Do not
+edit docs/qa/PHASE_07_QA_HANDOFF.md; QA owns it.
+
+Repair every blocking/material finding under canonical plan section 42:
+reproduce it, identify the whole claim/state/privacy/layout defect class, write
+a focused regression, prove that regression fails when the defect is
+reintroduced, fix the root cause, and rerun the full relevant gate.
+
+The findings are:
+
+- QA-07-002: a synthetic export opens by calling itself the owner’s own real
+  record, then later says it is synthetic.
+- QA-07-003: Private is declared left out and “nothing from that area” is said
+  to follow, yet coverage discloses its presence, freshness and evidence
+  strength and the screen lists it under Life areas in it.
+- QA-07-004: Clear yields Sections chosen: none and “nothing about the owner”
+  while range and four Life areas in it remain populated.
+- QA-07-005: a backup correctly reads the owner store while a laboratory
+  scenario is visible, but its createdAt, Taken and filename inherit the
+  laboratory’s February clock instead of the real August owner moment.
+- QA-07-006: after scrolling to Restore on Android, sticky Show mine is covered
+  by More and cannot be tapped until the owner scrolls all the way back to the
+  page top.
+- QA-07-007: if the promised post-restore database reopen fails, the provider
+  falls back to empty memory state but retains a green Restored and checked
+  result, prints a contradiction below it, and does not enter rollback or an
+  honest uncertain/failure outcome.
+- QA-07-008: the exported no-action sentence ends in two periods.
+- QA-07-009: PHASE_STATUS.md still asserts deployed SHA 322c00b equals the
+  checkpoint and passed equality, contradicting live 3fc1dde and D-097.
+
+Preserve every flow QA passed: deliberate Private detail inclusion; Select all
+and remembered-Private safety; prompt completeness and diagnostics tuning;
+field-by-field private/unknown/malformed backup exactness; damaged-file
+refusal; same-file retry; atomic replacement; normal first verification;
+successful reopened persistence verification; G-012 reachability; and all
+explicit deferrals.
+
+For restore failures, cover the whole post-apply class: a failed reopen, a
+failed reopened read, different reopened contents, and any fallback backend.
+The owner must receive one coherent result that does not say success before a
+contradictory failure below it, and the rollback/uncertain-state semantics must
+match what actually happened.
+
+For export/privacy repairs, read the document from its first line as the
+receiving assistant and prove exclusions cover metadata as well as detail.
+Selected range/domains must agree with the actual selected document in the
+zero-section, Private-off and ordinary cases.
+
+For the mobile repair, use a touch Android context after scrolling to the
+Restore panel; visibility alone is not a regression. Prove the named recovery
+action receives the tap there.
+
+Run the full builder gate, deploy a repaired product checkpoint, verify the
+live deployed SHA and D-097 bundle equivalence, keep Phase 7 YELLOW, and write
+the complete retest handoff for the SAME Codex QA conversation. Include exact
+verification results, open/deferred items, model, level, conversation and the
+D-092 launcher. Do not make the owner ask for the retest prompt.
+```
+
 <!-- LCO_COMPLETE -->
