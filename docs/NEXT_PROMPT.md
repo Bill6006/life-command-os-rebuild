@@ -154,3 +154,5 @@ next prompt — on FAIL to the CURRENT builder conversation for repair under
 section 42, on PASS to it for the formal GREEN closeout — and end with the four
 lines and the launcher (D-092).
 ```
+
+<!-- LCO_COMPLETE -->

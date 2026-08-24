@@ -872,4 +872,261 @@ Do not make the owner ask for the retest prompt, do not edit QA's report, and
 do not claim deployment from local HEAD alone.
 ```
 
-<!-- LCO_COMPLETE -->
+## Round 4 — Codex retest (2026-08-23)
+
+### Overall result: FAIL — repaired product passes; one new blocking mobile defect
+
+Phase 7 remains **YELLOW**. The deployed repair resolves QA-07-002 through
+QA-07-009 and preserves the backup, restore, privacy and G-012 boundaries that
+Round 2 passed. Round 4 found one new blocking mobile/UI defect while testing
+the repaired sticky header with the stale-build notice visible: QA-07-010.
+
+### Checkpoint and deployed identity
+
+- **Product checkpoint tested:** `3a8e8b6`
+- **Deployed SHA tested:** `d8dd09b5848f048d5905842bccf18c1d9503f200`
+- **Preview build time:** `2026-08-24T02:01:25.229Z`
+- **Stable URL:** `https://bill6006.github.io/life-command-os-rebuild/preview/`
+
+The handoff's direct `--deployed` command encountered the local Node runtime's
+`UNABLE_TO_VERIFY_LEAF_SIGNATURE` error before it could read the manifest. QA
+read the same cache-busted manifest through the system trust store and passed
+its full SHA to the same checker:
+
+```text
+node scripts/checkpoint-equivalence.mjs 3a8e8b6 --ref d8dd09b5848f048d5905842bccf18c1d9503f200
+```
+
+Result: exit 0. The six intervening files are documentation plus
+`scripts/checkpoint-equivalence.mjs`; none is bundle-relevant. The deployed
+build contains and is bundle-equivalent to `3a8e8b6`.
+
+### Android/mobile configuration
+
+- Chromium, isolated disposable context
+- viewport `360 × 780`; screen `360 × 800`
+- device pixel ratio `3`
+- touch and mobile mode enabled
+- Android 14 / Pixel 7 mobile user agent
+- locale `en-US`; timezone `America/New_York`
+- deployed Preview, not a local server
+
+The context had its own IndexedDB and clipboard permissions. It did not inspect
+or modify the owner's browser data.
+
+### Verification executed
+
+- Export/privacy/restore-provider focus: **209 passed** across
+  `export-honesty`, G-013 handoff, and `memory-provider-restore`.
+- Backup/restore exactness and corruption focus: **62 passed** across the
+  contract round-trip, adversarial corrupt-backup, and restore unit suites.
+- Rebuilt Data browser suite: **81 passed** across `mobile-small`,
+  `mobile-large`, and desktop.
+- QA-07-007 verbose failure matrix: **7 passed** — reopen throw, memory
+  fallback, fallback snapshot publication, different reopened contents,
+  reopened read throw, restored bytes retained, and ordinary reopen success.
+  These seven repeat coverage already present in the 209-test run and are not
+  added to its count.
+- Independent deployed Android evidence script: all semantic, clipboard,
+  privacy, date, selection, action and rectangle assertions passed. Visual
+  review of its screenshots found QA-07-010.
+
+No full green suite was duplicated. These runs target the repaired classes and
+the passed boundaries the repair could disturb.
+
+### Round 2 finding retest
+
+| Finding | Result | Evidence |
+| --- | --- | --- |
+| QA-07-002 synthetic export opens as the owner | **PASS** | The first non-heading instruction is “**This is not a real person.**” and contains no owner claim; the phone clipboard preserves the whole 10,334-byte document from that opening. |
+| QA-07-003 Private exclusion contradicts metadata/recent row | **PASS** | With Private off, header areas are Direction, Fatherhood and Sleep only; `private-health` and “Noted: Private entry” are absent. Ordinary non-private content remains. |
+| QA-07-004 Clear leaves range/domains populated | **PASS** | Clear produces `Record covers: nothing recorded`, `Life areas in it: none`, and no chosen sections. A subsequent Recent-record-only selection restores its honest 18-entry range and three non-private areas. |
+| QA-07-005 owner backup carries laboratory time | **PASS** | Under the February fixture, backup `createdAt` was `2026-08-24T03:20:43.756Z`; owner-local filename was `life-command-os-backup-2026-08-23-d8dd09b.json`. |
+| QA-07-006 Show mine covered by More | **PASS** | From the Restore scroll position, More and Show mine do not overlap and a real touch click removes the laboratory and the restore refusal. |
+| QA-07-007 failed reopen remains green success | **PASS** | Throw, memory fallback and different contents all return `ok: false`, stage `confirm`, applied true, not rolled back. Fallback never publishes an empty history; a normal reopen remains success. |
+| QA-07-008 doubled punctuation | **PASS** | No doubled no-action terminator in the deployed export; the whole-scenario terminator sweep is green. |
+| QA-07-009 stale literal SHA claims | **PASS** | The Phase 7 status now reports checkpoint and deployed state separately and records the Round 3 ancestry correction. |
+
+### The two judgment calls
+
+**Private exclusion:** accepted. The exported artefact is not Timeline. It says
+plainly that exclusion covers both the entries and whether any exist, then
+withholds the participation metadata consistently. Its ordinary recent record
+still reports 18 non-private entries over the same range and areas, so the
+privacy rule does not make the rest of the history falsely thin. Deliberately
+turning Private on adds the area and a full Private section rather than a
+placeholder.
+
+**Unconfirmed restore:** accepted. Once the replacement transaction committed
+and matched its fingerprint, rolling it back because a later connection could
+not confirm it would convert a probable success into a definite non-restore.
+The third state is honest: not success, applied and checked once, not confirmed,
+not undone. The owner-facing copy says the backup is probably present, says
+exactly what could not be checked, and tells the owner to close/reopen and not
+restore over it before looking. It neither claims success nor claims nothing
+was attempted.
+
+### Preserved flows
+
+**PASS:** field-by-field backup round-trip, Private records, unknown record
+fields, malformed rows, checksum/damaged-file refusal, same-file retry, atomic
+replacement, first fingerprint verification, successful reopened persistence
+verification, G-012 Data reachability with a malformed row, deliberate Private
+inclusion in full, Select all excluding Private, Private not remembered, prompt
+completeness, diagnostics tuning request, mobile target size, horizontal
+containment, and destructive-control separation.
+
+## QA-07-010 — translucent stale-build notice becomes unreadable over scrolled content
+
+**Classification:** blocking formal closeout; mobile/UI and release provenance.
+
+### Reproduction
+
+1. Open the deployed Preview in the Android configuration above.
+2. Make the app's ordinary build-freshness request return a different valid
+   deployed SHA, so the real stale-build notice appears. This does not modify
+   product code.
+3. On Data, scroll until ordinary section text is behind the sticky header.
+4. Repeat with the laboratory notice also present, at the Restore panel.
+5. Repeat on Timeline with a real synthetic record behind the header.
+
+### Actual
+
+The repaired `.shell__top` correctly sticks as one group. At scroll positions
+0, 500, 1500 and 2937 its top remains 0, and More, Reload and Show mine have no
+rectangle overlap. Both actions remain tappable.
+
+The stale-build notice itself uses this translucent background:
+
+```text
+linear-gradient(rgba(255, 125, 77, 0.2), rgba(255, 125, 77, 0.11))
+```
+
+Once the sticky group leaves its original document position, page text scrolls
+behind that translucent layer and remains fully visible. On Data, “What has
+been observed to follow what” is drawn through “A newer build is deployed.” On
+Timeline, “6.75 hours” is drawn through the same warning. With both notices,
+Restore copy competes with the warning while the lower laboratory notice stays
+opaque and readable. The warning's controls do not geometrically overlap; its
+words visually overlap the page underneath.
+
+The stale-build warning exists so the owner does not mistake old code for the
+deployed product. A provenance warning whose sentence cannot be read under the
+ordinary scrolled condition does not meet that acceptance, so this blocks the
+formal GREEN closeout.
+
+### Expected
+
+Every member of the sticky header group must remain visually legible over
+whatever content scrolls beneath it. Fix the whole background/compositing
+class, on Data and ordinary routes and with either or both notices present. A
+regression that only compares control rectangles is insufficient; QA's
+rectangles all passed while the warning text was visibly interleaved.
+
+### Evidence
+
+- `test-results/phase07-qa-round4/android-round4.mjs`
+- `test-results/phase07-qa-round4/android-build-notice-only.png`
+- `test-results/phase07-qa-round4/android-stacked-notices.png`
+- `test-results/phase07-qa-round4/android-timeline-stacked-notices.png`
+- `test-results/phase07-qa-round4/android-data-lab-notice.png` — the laboratory
+  notice alone, opaque and readable, for comparison
+
+### Automated tests that gave false confidence
+
+- `tests/browser/shell.spec.ts` proves the stale-build notice is absent when
+  the build is current; it never makes the notice visible and scrolls content
+  behind it.
+- The QA-07-006 browser regression compares More and Show mine rectangles and
+  taps Show mine. It does not exercise the build notice.
+- The first pass of QA's own evidence script compared all three header-control
+  rectangles at four scroll positions and passed. Only screenshot review found
+  the translucent-layer text collision. This is why rectangle overlap is not a
+  visual-legibility test.
+- The unconfirmed-restore tests prove outcome semantics but do not render the
+  owner-facing third-state copy. Round 4 inspected that production copy
+  directly; adding a DOM regression for its no-success/no-never-attempted
+  wording would close that remaining automation gap, but no defect was found.
+
+### Deferred and disclosed items
+
+Confirmed unchanged: authenticated/tamper validation remains deferred (D-095);
+migrations remain empty; selective restore, override of a refused file, a
+past-backup library and legacy import remain unbuilt; DEF-0059 through DEF-0063
+remain recorded closed; `guide-resume.test.ts` remains
+resolved-unreproduced; bare `npx playwright test` still serves prebuilt `dist`,
+while `npm run test:browser` builds first.
+
+### Recommendation
+
+Keep Phase 7 **YELLOW**. Return to the **CURRENT original Claude Phase 7
+builder conversation** for QA-07-010 only. Repair the sticky-layer readability
+class under plan section 42, preserve every Round 4 pass, deploy the repaired
+checkpoint, and return to this **same Codex QA conversation** for a narrow
+Round 5 visual retest plus affected regression. Do not start Phase 8 or mark
+Phase 7 GREEN.
+
+- **Recommended model:** current strongest Opus-class Claude coding model,
+  because the next action is a product repair in the current builder-owned
+  phase.
+- **Recommended intelligence level:** High, because the defect is contained
+  but the regression must test composited readability rather than repeat the
+  already-green geometry assertion.
+- **Conversation:** CURRENT — original Phase 7 Claude builder conversation,
+  because the unresolved phase and deployment remain its responsibility.
+
+## ROUND 4 NEXT CLAUDE ACTION
+
+- **Model:** current strongest Opus-class Claude coding model
+- **Intelligence level:** High
+- **Conversation:** CURRENT — original Phase 7 Claude builder conversation
+- **Attach/reference:** `docs/qa/PHASE_07_QA_HANDOFF.md`, especially “Round 4
+  — Codex retest,” and `test-results/phase07-qa-round4/`
+
+## ROUND 4 COPY/PASTE PROMPT
+
+```text
+Phase 7 independent QA Round 4 returned FAIL on one new blocking mobile/UI
+finding after all eight Round 2 defects passed.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You are the CURRENT original Claude builder conversation for unresolved Phase
+7. Read docs/qa/PHASE_07_QA_HANDOFF.md in full before acting, especially “Round
+4 — Codex retest” and QA-07-010. Review the evidence under
+test-results/phase07-qa-round4/. Keep Phase 7 YELLOW. Do not start Phase 8 and
+do not mark Phase 7 GREEN. Do not edit docs/qa/PHASE_07_QA_HANDOFF.md; QA owns
+it.
+
+QA-07-010: the grouped sticky header fixes sibling-control overlap, but the
+stale-build notice has a translucent rgba gradient. When Data or Timeline
+content scrolls beneath the sticky group, underlying text remains visible and
+is drawn through “A newer build is deployed,” making the release-provenance
+warning unreadable. This reproduces with the build notice alone and with the
+laboratory notice; all control rectangles remain separate and the buttons work,
+so another rectangle-only regression will miss it.
+
+Repair this whole sticky-layer readability/compositing class under canonical
+plan section 42: reproduce it, write a focused regression, prove that
+regression fails when the defect is reintroduced, fix the root cause, and run
+the full relevant gate. Exercise Data and an ordinary route at multiple scroll
+positions, build notice alone and both notices together. The warning and every
+other sticky member must remain visually legible over arbitrary page content.
+Do not prescribe success as “rectangles do not overlap”; that already passes.
+
+Preserve every Round 4 pass: QA-07-002 through QA-07-009; the accepted Private
+exclusion and unconfirmed-restore judgments; honest zero/ordinary/private
+export metadata; phone clipboard from the first instruction; owner-clock
+backup; Show mine receiving the touch at Restore; exact Private/unknown/
+malformed backup round-trip; damaged-file refusal and retry; atomic apply;
+first and reopened verification; all three unconfirmed reopen states; G-012;
+Private selection safety; prompt/diagnostics completeness; and all disclosed
+deferrals.
+
+Deploy a repaired product checkpoint. After the live manifest contains it,
+prove bundle equivalence, keep Phase 7 YELLOW, and write the complete Round 5
+retest handoff for the SAME Codex QA conversation. Include exact verification,
+unchanged deferrals, model, level, conversation and the D-092 launcher. Do not
+make the owner ask for the retest prompt.
+```

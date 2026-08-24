@@ -39,6 +39,21 @@ None.
 
 ## Fixed
 
+### DEF-0064 (QA-07-010) — a sticky layer was a window, and rectangles could not see it
+
+- Status: Fixed
+- Severity: Blocker — the one piece of copy whose whole job is to stop the owner mistaking old code for the deployed product, rendered unreadable in the ordinary scrolled condition
+- Found in: Phase 7 / `3a8e8b6`
+- Found by: **independent Codex QA**, round 4, by looking at a screenshot after its own geometry assertions had passed
+- Class: **a sticky member with a non-opaque background.** DEF-0062's repair made the header stick as a group, which fixed the members overlapping _each other_ and said nothing about what is behind them. `.build-notice` is `linear-gradient(rgba(255, 125, 77, 0.2), rgba(255, 125, 77, 0.11))` with no blur: at the top of a document the only thing behind it is the page background, so it reads as a tint; once the group starts sticking it is a window. `.topbar` was in the same class and merely disguised by a `backdrop-filter`, and `.lab-notice` happened to be opaque — which is why QA saw one notice readable and the other not, in the same stack.
+- Reproduction: make the app's freshness request return a different valid SHA so the real stale-build notice appears, then scroll Data until section text is behind the header. "What has been observed to follow what" is drawn through "A newer build is deployed." Same on Timeline with "6.75 hours". With both notices present at the Restore panel, the lower laboratory notice stays opaque and readable while the warning above it does not.
+- Root cause: the background belonged to the members. A sticky layer composites over whatever scrolls beneath it, so the property that had to be true was about the **group**, not about any one notice's colour.
+- Fix: one opaque backing on `.shell__top`. Every member composites over that instead of over the page — including the next notice somebody adds — and keeps its own tint, so nothing changes at the top of a document and everything changes halfway down one. `.topbar`'s `backdrop-filter` is removed in the same pass: it was doing this job for one member only, which is precisely how the notices below it went unnoticed.
+- Regression: `tests/browser/sticky-header.spec.ts`. **Three of its four tests compare the header's pixels** at rest against its pixels with a page scrolled underneath, on Data, on Timeline, and with both notices stacked at the Restore panel — if anything shows through, the images differ. The fourth asserts the group has an opaque backing, so the reason survives a refactor that keeps the screenshots passing by accident. Reintroduced two ways — removing the backing, and making it translucent as a per-member fix would — and **all four tests fail both times.**
+- **Why rectangles were never going to find it, in QA's own words.** Its first pass compared all three header controls at four scroll positions and passed while the warning text was visibly interleaved with the page. The controls do not overlap; the _words_ do. A geometry assertion cannot express that, which is why the regression above is an image comparison and not a bounding-box one.
+- Siblings: swept. Every member of the sticky group is now backed by an opaque surface by construction rather than by each having remembered to be opaque; `.lab-notice` was already fine and stays unchanged.
+- Fixed in: this checkpoint
+
 ### DEF-0063 (QA round 3) — a handoff named a checkpoint whose deploy had not landed, and the checker could not say so
 
 - Status: Fixed

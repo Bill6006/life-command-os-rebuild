@@ -24,10 +24,10 @@ reopens Phase 4 or any completed phase.
 
 # Phase 7 — AI exports + backup/restore
 
-**Status: YELLOW — AWAITING CODEX RETEST.**
+**Status: YELLOW — ROUND 4 REPAIRED, AWAITING CODEX RETEST.**
 
-Per D-077 this checkpoint does not self-certify. Three QA rounds so far, and
-only one of them reached the product. Round 1 returned FAIL at the
+Per D-077 this checkpoint does not self-certify. Four QA rounds so far, and
+only two of them reached the product. Round 1 returned FAIL at the
 deployed-checkpoint preflight (DEF-0061, a defect in the handoff). Round 2 was
 the first full product pass and returned FAIL on seven product findings plus
 one in this file, all repaired (DEF-0062). Round 3 returned FAIL at the
@@ -35,7 +35,11 @@ checkpoint gate again, on a handoff pushed before its own deploy had landed and
 a checker that described that as eight bundle differences (DEF-0063). The
 retest goes to the **same** Codex conversation.
 
-**Two of the three rounds were lost to the checkpoint contract rather than to
+Round 4 reached the product on a deployment that carried the repair, passed
+all eight round-2 findings, accepted both judgement calls on their reasoning,
+and found one new blocking defect (DEF-0064, QA-07-010) — repaired here.
+
+**Two of the four rounds were lost to the checkpoint contract rather than to
 the product.** Both are closed, and the second closed the step the first left
 open.
 
@@ -81,21 +85,21 @@ facts, and the relationship between them is **checked**, not stated.
 
 ## Verification
 
-| Gate                                      | Result                                                                                                                                                                    |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Privacy scan                              | Clean, 188 tracked files                                                                                                                                                  |
-| Format (Prettier)                         | Pass                                                                                                                                                                      |
-| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                                                          |
-| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                                                            |
-| Unit / contract / synthetic / adversarial | 1059 passed / 1059, 52 files (in plain Node, no DOM)                                                                                                                      |
-| Browser tests (Playwright)                | 393 passed / 393 — 131 tests × 360, 430, 1280px                                                                                                                           |
-| Production build                          | Pass                                                                                                                                                                      |
-| `npm run verify` from a clean checkout    | Pass — cloned fresh at `3a8e8b6`, `npm ci`, 1059/1059                                                                                                                     |
-| Deployed build is the checkpoint's        | Pass — by `scripts/checkpoint-equivalence.mjs`, not by string comparison (D-097)                                                                                          |
-| Reintroduction pass                       | **27 across the phase, 27 caught** — 15 before QA, 12 for QA's round-2 findings. Six escaped on a first attempt; each of those six assertions is stronger for it          |
-| Builder's own Android-style gate          | Pass — `scripts/android-gate.mjs` against the deployed checkpoint: 27 checks, touch, Android UA, device pixel ratio 3, 360×780                                            |
-| Owner-style read-through of the screen    | **Five findings, all repaired** — none of them from a failing assertion; see below                                                                                        |
-| Independent QA                            | **Round 1 FAIL at the checkpoint preflight, repaired. Round 2 FAIL on seven product findings and one documentation finding, all repaired here. Awaiting round 3 retest.** |
+| Gate                                      | Result                                                                                                                                                                                                                  |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy scan                              | Clean, 188 tracked files                                                                                                                                                                                                |
+| Format (Prettier)                         | Pass                                                                                                                                                                                                                    |
+| Lint (ESLint)                             | Pass, 0 warnings                                                                                                                                                                                                        |
+| Typecheck (strict TS)                     | Pass, 0 errors                                                                                                                                                                                                          |
+| Unit / contract / synthetic / adversarial | 1059 passed / 1059, 52 files (in plain Node, no DOM)                                                                                                                                                                    |
+| Browser tests (Playwright)                | 405 passed / 405 — 135 tests × 360, 430, 1280px                                                                                                                                                                         |
+| Production build                          | Pass                                                                                                                                                                                                                    |
+| `npm run verify` from a clean checkout    | Pass — cloned fresh at `e9979ef`, `npm ci`, 1059/1059                                                                                                                                                                   |
+| Deployed build is the checkpoint's        | Pass — by `scripts/checkpoint-equivalence.mjs`, not by string comparison (D-097)                                                                                                                                        |
+| Reintroduction pass                       | **29 across the phase, 29 caught** — 15 before QA, 12 for round 2, 2 for round 4. Six escaped on a first attempt; each of those six assertions is stronger for it                                                       |
+| Builder's own Android-style gate          | Pass — `scripts/android-gate.mjs` against the deployed checkpoint: 27 checks, touch, Android UA, device pixel ratio 3, 360×780                                                                                          |
+| Owner-style read-through of the screen    | **Five findings, all repaired** — none of them from a failing assertion; see below                                                                                                                                      |
+| Independent QA                            | **Rounds 1 and 3 FAIL at the checkpoint gate, both repaired. Round 2 FAIL on eight findings, all repaired and all passed at round 4. Round 4 FAIL on one new blocking defect, repaired here. Awaiting round 5 retest.** |
 
 Phase 6 ended at 780 unit-layer tests across 45 files. The 220 new ones are seven
 new suites plus growth in the sweeps that walk the whole scenario library.
@@ -392,6 +396,8 @@ detached?` on `page.goto` — the `vite preview` connection-dropping that
   confirmation that fails is reported without being rolled back.
 - **D-097, amended** — a checkpoint is named only after its deploy has landed,
   confirmed against the live SHA rather than against a green CI workflow.
+- **D-100** — a sticky layer owns its own opacity, and a claim about legibility
+  is proved with pixels rather than with rectangles.
 
 Defects closed here: **DEF-0059**, the literal scanner, found by the builder
 before QA; **DEF-0060**, a count printed beside a plural noun and the two
@@ -399,7 +405,9 @@ sweeps that could not fire on it, found by the builder before QA;
 **DEF-0061**, the checkpoint-equivalence defect, found by independent QA at
 the mandatory preflight; **DEF-0062**, the eight round-2 findings, found by independent QA's first full
 product pass; **DEF-0063**, a checkpoint named before its deploy landed and a
-checker that could not say so, found by independent QA at the round-3 gate.
+checker that could not say so, found by independent QA at the round-3 gate;
+**DEF-0064**, a sticky layer that was a window, found by independent QA at
+round 4 by looking at a screenshot its own geometry assertions had passed.
 
 ## Independent QA, round 1 — FAIL at the checkpoint preflight
 
@@ -629,13 +637,71 @@ completes — not merely that the CI workflow succeeded, because GitHub's own
 ancestor of it before writing a handoff that names it. **Naming a checkpoint is
 something done after a deploy, not before one.**
 
+## Independent QA, round 4 — the repair passes; one new blocking defect
+
+The first round to reach the product on a deployment that carried the repair.
+**All eight round-2 findings PASS**, every round-2 boundary held, and both
+judgement calls were accepted on their reasoning rather than waved through:
+
+- **The private exclusion** — accepted. QA's words: the exported artefact is not
+  Timeline, it says plainly that the exclusion covers both the entries and
+  whether any exist, and its ordinary recent record still reports eighteen
+  non-private entries over the same range, so the rule does not make the rest of
+  the history falsely thin.
+- **The unconfirmed restore** — accepted. Rolling back because a later
+  connection could not confirm a committed, fingerprint-matched write "would
+  convert a probable success into a definite non-restore".
+
+One new blocking defect, found by looking at a screenshot after QA's own
+geometry assertions had passed.
+
+### QA-07-010 — the sticky layer was a window
+
+Sticking the header as a group fixed the members overlapping _each other_ and
+said nothing about what is behind them. `.build-notice` is a translucent orange
+wash with no blur: at the top of a document the only thing behind it is the page
+background, so it reads as a tint, and once the group starts sticking it is a
+window. "What has been observed to follow what" was drawn straight through "A
+newer build is deployed" on Data; "6.75 hours" on Timeline. With both notices
+stacked, the lower laboratory notice stayed opaque and readable while the
+warning above it did not — which is what pointed at the cause.
+
+That notice is the one piece of copy whose whole job is to stop the owner
+mistaking old code for the deployed product. A version of it he cannot read is
+worse than not showing it.
+
+**The background belonged to the members and the property is about the group.**
+One opaque backing on `.shell__top`; every member composites over that instead
+of over the page, keeps its own tint, and a notice added later inherits it. The
+top bar's `backdrop-filter` goes in the same pass — it was doing this job for
+one member only, which is exactly how the two notices underneath went
+transparent for two phases without anybody noticing. Same reasoning as the
+grouped-sticky fix, one layer down (D-100).
+
+### And the more useful half: rectangles cannot see this
+
+QA's first pass compared all three header controls at four scroll positions and
+passed while the warning text was visibly interleaved with the page. **The
+controls do not overlap; the words do**, and no geometry assertion can express
+that.
+
+So three of the four tests in `tests/browser/sticky-header.spec.ts` compare the
+header's **pixels** at rest against its pixels with a page scrolled underneath —
+on Data, on Timeline, and with both notices stacked at the Restore panel. If
+anything shows through, the images differ. The fourth asserts the group has an
+opaque backing, so the reason survives a refactor that keeps the screenshots
+passing by accident.
+
+Reintroduced two ways — removing the backing, and making it translucent as a
+per-member fix would — and **all four fail both times**, including the three
+pixel tests. That is the coverage QA said was missing, in the only form that
+holds it.
+
 ## Next
 
 Independent QA retest, in the **same** Codex conversation (D-090's retest
-routing). Round 2's eight findings still need their targeted retest against a
-deployment that actually carries them, and round 2's passes need re-confirming
-against the repairs. The complete prompt is in
-[`NEXT_PROMPT.md`](NEXT_PROMPT.md).
+routing). A narrow visual retest of QA-07-010 plus the round-4 passes the fix
+could disturb. The complete prompt is in [`NEXT_PROMPT.md`](NEXT_PROMPT.md).
 
 ---
 

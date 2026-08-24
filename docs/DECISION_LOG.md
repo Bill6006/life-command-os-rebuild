@@ -2864,3 +2864,48 @@ And the operation's outer `catch` returned `notAttempted`, which for a restore
 that has already written is the opposite of what happened. Whether a throw
 lands before or after the write is now the difference between two different
 outcomes rather than one wrong one.
+
+---
+
+## D-100 — A sticky layer owns its own opacity, and legibility is proved with pixels rather than rectangles
+
+**Phase:** 7 (QA round 4 repair) · **Status:** Active
+
+Two rules from one defect (DEF-0064, QA-07-010).
+
+### The layer
+
+Anything pinned over scrolling content composites against whatever passes
+beneath it. A background that looks deliberate at the top of a document — a
+tint, a wash, a pane of glass — becomes a window the moment the layer starts
+sticking, and the copy inside it becomes unreadable exactly when it is being
+read over content rather than over the page background.
+
+That is not a property of any one notice's colour. It is a property of the
+**group**, so the group carries it: one opaque backing under
+`.shell__top`, and every member composites over that. Members keep their own
+tints. A notice added later inherits the guarantee instead of having to
+remember it — which is the same reasoning that made the group sticky rather
+than its members (QA-07-006), applied one layer down.
+
+The `backdrop-filter` this replaces is the evidence for the rule. It gave the
+top bar the property and gave it to nothing else, so the two notices underneath
+were transparent for two whole phases without anybody noticing.
+
+### The proof
+
+**A geometry assertion cannot see a legibility defect.** QA compared all three
+header controls at four scroll positions, found no overlap, and the warning text
+was visibly interleaved with the page underneath. The controls did not overlap;
+the words did.
+
+So a claim about what something _looks like_ is proved with an image. The
+regression captures the sticky header at rest and again with a page scrolled
+beneath it and requires the two to be identical — if anything shows through,
+they differ. It is deterministic, it needs no baseline file, and it states the
+defect in the only form that can hold it.
+
+This does not make every visual property a screenshot test. It applies where
+the claim is about compositing — a layer over other content — and it comes with
+the structural assertion beside it, so the _reason_ survives a change that
+happens to keep the images equal.
