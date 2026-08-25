@@ -38,22 +38,22 @@ the ones written during the work are **D-114 … D-121**.
 
 ## Checkpoint
 
-| | |
-| --- | --- |
-| Product checkpoint | `PRODUCT_SHA` — the last commit that changes the bundle |
-| Deployed Preview SHA | `DEPLOYED_SHA` |
-| Relationship | Proved with `node scripts/checkpoint-equivalence.mjs PRODUCT_SHA`, per D-097. Not asserted as string equality: this repository redeploys on every push, including a documentation-only one. |
-| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+|                      |                                                                                                                                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product checkpoint   | `PRODUCT_SHA` — the last commit that changes the bundle                                                                                                                                     |
+| Deployed Preview SHA | `DEPLOYED_SHA`                                                                                                                                                                              |
+| Relationship         | Proved with `node scripts/checkpoint-equivalence.mjs PRODUCT_SHA`, per D-097. Not asserted as string equality: this repository redeploys on every push, including a documentation-only one. |
+| Preview              | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                                                 |
 
 ## Exact verification results
 
-| Gate | Result |
-| --- | --- |
-| `npm run verify` from a clean checkout | **PASS** — format, lint, typecheck, 1,310 unit tests across 59 files, build |
-| Unit layer | **1,310 / 1,310** across 59 files (was 1,199 / 1,199 across 57) |
-| Browser, three widths | **489 / 489** at 360, 430 and 1,280px — 163 each |
-| Android-style gate on the deployed build | **ANDROID_RESULT** |
-| Privacy scan | clean, 216 tracked files |
+| Gate                                      | Result                                                                                     |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `npm run verify` from a clean checkout    | **PASS** — format, lint, typecheck, 1,310 unit tests across 59 files, build                |
+| Unit layer                                | **1,310 / 1,310** across 59 files (was 1,199 / 1,199 across 57)                            |
+| Browser, three widths                     | **489 / 489** at 360, 430 and 1,280px — 163 each                                           |
+| Android-style gate on the deployed build  | **ANDROID_RESULT**                                                                         |
+| Privacy scan                              | clean, 216 tracked files                                                                   |
 | Block sweep, every scenario × every block | in `tests/synthetic/block-sweep.test.ts`, and by hand through the laboratory's own control |
 
 **One thing was already failing before a line of code changed, and is fixed in
@@ -117,12 +117,12 @@ fires everywhere.
 
 ## The gate, item by item
 
-| # | Acceptance item | Where it is proved |
-| --- | --- | --- |
-| 1 | No owner-visible string asserts the evening outside the evening, at any block, in any scenario | `block-sweep.test.ts` — every scenario × six moments, over the move, the reason, the premise, the limiter, the no-action states, the growth suggestion, the guide's question and labels, the whole evidence panel and every Insights card |
-| 2 | A named limiter always has a candidate that addresses it, in every block | `recovery-has-somewhere-to-go.test.ts` — **for `recovery`.** The `capacity` limiter is a named exception, asserted rather than hidden; see below |
-| 3 | No sentence about the child claims consecutiveness the occasions do not support; no percentage, rank, grade or score reaches any surface; the suggestion states how many occasions went the other way | `g003-growth-evidence.test.ts` |
-| 4 | The owner can stop a recommendation family, and find and lift that veto afterwards | `refusal-and-veto.test.ts` and `phase81.spec.ts` |
+| #   | Acceptance item                                                                                                                                                                                       | Where it is proved                                                                                                                                                                                                                        |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | No owner-visible string asserts the evening outside the evening, at any block, in any scenario                                                                                                        | `block-sweep.test.ts` — every scenario × six moments, over the move, the reason, the premise, the limiter, the no-action states, the growth suggestion, the guide's question and labels, the whole evidence panel and every Insights card |
+| 2   | A named limiter always has a candidate that addresses it, in every block                                                                                                                              | `recovery-has-somewhere-to-go.test.ts` — **for `recovery`.** The `capacity` limiter is a named exception, asserted rather than hidden; see below                                                                                          |
+| 3   | No sentence about the child claims consecutiveness the occasions do not support; no percentage, rank, grade or score reaches any surface; the suggestion states how many occasions went the other way | `g003-growth-evidence.test.ts`                                                                                                                                                                                                            |
+| 4   | The owner can stop a recommendation family, and find and lift that veto afterwards                                                                                                                    | `refusal-and-veto.test.ts` and `phase81.spec.ts`                                                                                                                                                                                          |
 
 ## Open, and named rather than left to be found
 
