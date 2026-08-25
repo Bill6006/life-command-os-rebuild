@@ -529,8 +529,17 @@ describe('there is exactly one arbitration path', () => {
    * surface that could not reach it would have to keep its own copy, which is
    * the defect with an extra step.
    */
+  /*
+   * `commitments` joined in Phase 82, on the recording side of the same line
+   * `outcomes` and `corrections` sit on: it turns a tap on the Life panel into
+   * a `commitment-window` record and answers which of the two seeds is still
+   * unanswered. It chooses nothing. What an obligation *means* for a decision
+   * is assembled by `situation.ts` and spent by the evaluator, and a surface
+   * reaches that the same way it reaches everything else.
+   */
   const OPEN_TO_SURFACES = [
     'engine',
+    'commitments',
     'guide',
     'questions',
     'trace',

@@ -3,6 +3,7 @@ import type { EntityIndex } from '../../domain/entities'
 import type { RecordId } from '../../domain/ids'
 import { discreetPlaceholder, mayShowDetail, type DisplayPolicy } from '../../domain/privacy'
 import { renderRecommendation } from '../../domain/recommendation'
+import { describeCommitmentWindow } from '../../domain/schedule'
 import {
   describeFactValue,
   type CanonicalRecord,
@@ -81,6 +82,10 @@ const TAGS = {
   constraint: 'Limit',
   goal: 'Goal',
   commitment: 'Commitment',
+  // Not 'Commitment': the two are different objects and the tag is the one
+  // place a reader tells them apart at a glance. A promise has a due date; this
+  // is a stretch of the day that is already spoken for.
+  'commitment-window': 'On the day',
   preference: 'Preference',
   decision: 'Decision',
   'action-recommendation': 'Suggested',
@@ -294,6 +299,8 @@ export function describeRecord(
       )
     case 'commitment':
       return plain(`Commitment: ${record.statement}`)
+    case 'commitment-window':
+      return plain(describeCommitmentWindow(record))
     case 'preference':
       return plain(record.statement)
     case 'decision':

@@ -14,15 +14,20 @@ import {
 import {
   bearsConcept,
   describeFactValue,
+  type CommitmentWindowSource,
   type DecisionContext,
   type FactValue,
 } from '../domain/records'
+import { occursOn } from '../domain/schedule'
 import type { PrivacyClass } from '../domain/privacy'
 import type { RecommendationSemantics } from '../domain/recommendation'
 import {
   addLocalDays,
   blockOf,
+  civilDateFromDayId,
+  instantAtLocal,
   localDateTimeAt,
+  localDayIdAt,
   localWeekIdAt,
   type DayBlock,
   type Instant,
@@ -105,6 +110,16 @@ export const SORE_ENOUGH_TO_EASE_OFF = 0.7
 
 export const SLEEP_DEBT_DAYS = 3
 
+/**
+ * Below this, the clock is what is in the way.
+ *
+ * Named rather than typed inline because AUD-0004 gave it a second reader: the
+ * figure it is applied to is now the smaller of what the owner said and what
+ * the day allows, and two copies of the threshold would eventually disagree
+ * about which of the two counts as short.
+ */
+export const SHORT_ENOUGH_TO_LIMIT = 20
+
 export interface ConsideredFact {
   readonly concept: ConceptId
   readonly label: string
@@ -184,6 +199,43 @@ export const LIMITER_LABEL: Record<LimiterKind, string> = {
   coverage: 'Out of date',
 }
 
+/**
+ * A stretch of the owner's day that is already spoken for — AUD-0004.
+ *
+ * Resolved to instants on the day being decided, from a `commitment-window`
+ * record that stores a rhythm rather than a list of occurrences. The record is
+ * the fact ("her school day runs 08:30 to 15:00 on weekdays"); this is what
+ * that means about today.
+ */
+export interface Obligation {
+  readonly label: string
+  readonly startsAt: Instant
+  readonly endsAt: Instant
+  /** Whether the span takes the owner's own time, or shapes his day at its edges. */
+  readonly whose: 'mine' | 'theirs'
+  /** Owner-entered, recurring, or from a schedule the app was given. */
+  readonly knownFrom: CommitmentWindowSource
+  readonly source: RecordId
+}
+
+/**
+ * How much time there actually is, which is not the same as how much he said.
+ *
+ * The audit's example is 07:15 on a school morning: the owner has answered "an
+ * hour" about the morning, and there are twenty minutes before the school run.
+ * Both are true and only one of them is what he has. So this is the smaller of
+ * the two, and it carries **which** of the two it is, so a sentence can say
+ * *why* the time is short rather than only that it is.
+ *
+ * `before` is set only when the obligation is the binding constraint. Where the
+ * owner's own answer is the shorter figure this is undefined, and the copy
+ * above it stays the copy it always was.
+ */
+export interface TimeInHand {
+  readonly minutes: Knowledge<number>
+  readonly before: Obligation | undefined
+}
+
 export interface Capacity {
   readonly lastNightHours: Knowledge<number>
   readonly sleepDebtHours: Knowledge<number>
@@ -233,7 +285,23 @@ export interface Situation {
   /** The comparable shape of this moment, for learning and for the record. */
   readonly context: DecisionContext
   readonly capacity: Capacity
+  /** What the owner said he has. Unchanged, and no longer the whole story. */
   readonly usableMinutes: Knowledge<number>
+  /** Everything spoken for on the owner-local day being decided, in order. */
+  readonly commitments: readonly Obligation[]
+  /** The next one that has not started yet — AUD-0004. */
+  readonly nextObligation: Obligation | undefined
+  /** How long until it. Zero while one is under way; unknown with none. */
+  readonly minutesUntilNextObligation: Knowledge<number>
+  /**
+   * The smaller of what he said and what the day allows — AUD-0004.
+   *
+   * Everything that used to read `usableMinutes` reads this instead: the time
+   * limiter, `time-fit`, `opportunity-cost` and the size a move is trimmed to.
+   * `usableMinutes` stays exactly what it was — the owner's own answer — so the
+   * two can be told apart wherever it matters.
+   */
+  readonly inHand: TimeInHand
   readonly childPresent: Knowledge<boolean>
   readonly socialEnergy: Knowledge<number>
   readonly homeFriction: Knowledge<FactValue>
@@ -468,6 +536,150 @@ function assessStrain(
 }
 
 /**
+ * Everything spoken for on one owner-local day — AUD-0004.
+ *
+ * Read from `history.effective`, so a corrected schedule supersedes the old one
+ * the same way every other correction works, and filtered by `occurredAt` so a
+ * commitment entered on Friday does not retroactively fill in Tuesday when a
+ * scenario is replayed at Tuesday's hour.
+ *
+ * The rhythm is stored and the occurrence is derived. `occursOn` lives in
+ * `domain/schedule.ts` so that the panel showing the school run and the engine
+ * deciding there are twenty minutes before it can never disagree about which
+ * days it happens on.
+ */
+function collectObligations(view: MemoryView, moment: SituationMoment): readonly Obligation[] {
+  const dayId = localDayIdAt(moment.now, moment.zone)
+  const date = civilDateFromDayId(dayId)
+  const out: Obligation[] = []
+
+  for (const record of view.history.effective) {
+    if (record.kind !== 'commitment-window') continue
+    if (record.occurredAt > moment.now) continue
+    if (!occursOn(record.recurrence, dayId)) continue
+    if (record.endsAt <= record.startsAt) continue
+    out.push({
+      label: record.label,
+      startsAt: instantAtLocal(
+        {
+          ...date,
+          hour: Math.floor(record.startsAt / 60),
+          minute: record.startsAt % 60,
+          second: 0,
+        },
+        moment.zone,
+      ),
+      endsAt: instantAtLocal(
+        { ...date, hour: Math.floor(record.endsAt / 60), minute: record.endsAt % 60, second: 0 },
+        moment.zone,
+      ),
+      whose: record.whose,
+      knownFrom: record.knownFrom,
+      source: record.id,
+    })
+  }
+
+  return out.sort((a, b) => a.startsAt - b.startsAt)
+}
+
+/**
+ * How sure the app is about an obligation, by where it came from — AUD-0004.
+ *
+ * The provenance is carried from the start precisely so this can differ later
+ * without a redesign. Today it barely does: a rhythm the owner described once
+ * is slightly less certain about *this* day than something he entered about
+ * this day, and a schedule the app was given would be more certain than either.
+ * The point is that the difference has somewhere to live.
+ */
+const OBLIGATION_CERTAINTY: Record<CommitmentWindowSource, number> = {
+  'owner-entered': 0.9,
+  recurring: 0.8,
+  calendar: 0.95,
+}
+
+/**
+ * How long until the next thing that has to happen.
+ *
+ * **A span's edges are what constrain the day, and only a span of the owner's
+ * own constrains its middle.** Working hours are time he does not have; his
+ * daughter's school day is time he mostly does, bracketed by two moments he has
+ * to be somewhere. Reading both the same way would have the app fall silent
+ * between half past eight and three — the five hours a father with full custody
+ * actually has — which is the opposite of the defect AUD-0004 is about.
+ *
+ * Zero is a real answer rather than a missing one: at half past nine on a
+ * working morning there is no time at all, and saying so is more useful than
+ * saying the app does not know.
+ */
+function untilNextObligation(
+  obligations: readonly Obligation[],
+  now: Instant,
+): {
+  readonly next: Obligation | undefined
+  /** Whichever obligation the figure below is about — the one under way, or the next edge. */
+  readonly binding: Obligation | undefined
+  readonly minutes: Knowledge<number>
+} {
+  const occupying = obligations.find(
+    (entry) => entry.whose === 'mine' && entry.startsAt <= now && now < entry.endsAt,
+  )
+  if (occupying !== undefined) {
+    return {
+      next: obligations.find((entry) => entry.startsAt > now),
+      binding: occupying,
+      minutes: inferred(0, now, confidence(OBLIGATION_CERTAINTY[occupying.knownFrom]), [
+        occupying.source,
+      ]),
+    }
+  }
+
+  // Every edge still ahead: the start of anything not begun, and the end of
+  // somebody else's span, which is the moment he has to collect her.
+  let soonest: { readonly at: Instant; readonly of: Obligation } | undefined
+  for (const entry of obligations) {
+    const edges: Instant[] =
+      entry.whose === 'theirs' ? [entry.startsAt, entry.endsAt] : [entry.startsAt]
+    for (const edge of edges) {
+      if (edge <= now) continue
+      if (soonest === undefined || edge < soonest.at) soonest = { at: edge, of: entry }
+    }
+  }
+
+  if (soonest === undefined) {
+    return { next: undefined, binding: undefined, minutes: unknown('never-observed') }
+  }
+  return {
+    next: soonest.of,
+    binding: soonest.of,
+    minutes: inferred(
+      Math.max(0, Math.round((soonest.at - now) / 60_000)),
+      now,
+      confidence(OBLIGATION_CERTAINTY[soonest.of.knownFrom]),
+      [soonest.of.source],
+    ),
+  }
+}
+
+/**
+ * The smaller of what the owner said and what the day allows — AUD-0004.
+ *
+ * Neither reading is thrown away and neither is averaged with the other: the
+ * app takes the one that binds, and remembers which it was so the sentence
+ * above it can name the reason. An obligation only wins ties by being strictly
+ * shorter, so a day with nothing coming reads exactly as it did before this
+ * existed.
+ */
+function timeInHand(
+  said: Knowledge<number>,
+  until: Knowledge<number>,
+  binding: Obligation | undefined,
+): TimeInHand {
+  if (!isUsable(until) || binding === undefined) return { minutes: said, before: undefined }
+  if (isUsable(said) && said.value <= until.value) return { minutes: said, before: undefined }
+  return { minutes: until, before: binding }
+}
+
+/**
  * What is actually in the way right now (canonical plan section 19).
  *
  * Order matters and is deliberate: recovery outranks a sore body, which
@@ -484,7 +696,7 @@ function assessStrain(
  */
 function findLimiter(
   capacity: Capacity,
-  usableMinutes: Knowledge<number>,
+  inHand: TimeInHand,
   coverage: CoverageState,
   block: DayBlock,
 ): Limiter | undefined {
@@ -521,13 +733,30 @@ function findLimiter(
     }
   }
 
-  if (isUsable(usableMinutes) && usableMinutes.value < 20) {
+  const minutes = inHand.minutes
+  if (isUsable(minutes) && minutes.value < SHORT_ENOUGH_TO_LIMIT) {
+    /*
+     * And what the time is short *of* — AUD-0004.
+     *
+     * "Only about 20 minutes left this morning" is true at 07:15 on a school
+     * morning and tells the owner nothing he does not know. "Twenty minutes
+     * before Adaya's school day" is the same reading with the reason in it, and
+     * it is the sentence the app could not write at all until an obligation was
+     * something it could see. It is said only when the obligation is what
+     * binds; where his own answer is the shorter figure the line is unchanged.
+     */
+    const before = inHand.before
     return {
       kind: 'time',
       label: LIMITER_LABEL.time,
       domain: DOMAIN.direction,
-      summary: `Only about ${Math.round(usableMinutes.value)} minutes left ${withinPhrase(block)}.`,
-      evidence: basisOf(usableMinutes),
+      summary:
+        before === undefined
+          ? `Only about ${Math.round(minutes.value)} minutes left ${withinPhrase(block)}.`
+          : minutes.value <= 0
+            ? `${before.label} is under way.`
+            : `About ${Math.round(minutes.value)} minutes before ${before.label}.`,
+      evidence: basisOf(minutes),
       certainty: confidence(0.7),
     }
   }
@@ -575,6 +804,10 @@ function contextFor(
   isWeekend: boolean,
   strain: Knowledge<Strain>,
   childPresent: Knowledge<boolean>,
+  // The time actually in hand rather than the answer he gave — AUD-0004. Two
+  // twenty-minute evenings resemble each other whether the twenty minutes came
+  // from his own answer or from the school run, and that resemblance is what
+  // this fingerprint is for.
   usableMinutes: Knowledge<number>,
 ): DecisionContext {
   return {
@@ -689,6 +922,11 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
 
   const local = localDateTimeAt(moment.now, moment.zone)
 
+  // What the day already has in it, before anything is decided about it.
+  const commitments = collectObligations(view, moment)
+  const until = untilNextObligation(commitments, moment.now)
+  const inHand = timeInHand(usableMinutes, until.minutes, until.binding)
+
   // One pass over history for both: the duplication check reads the recent end
   // of it, and learning reads all of it against the situation being decided.
   const episodes = collectEpisodes(view, moment.zone)
@@ -709,16 +947,20 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     weekStartsOn: moment.weekStartsOn,
     block,
     isWeekend,
-    context: contextFor(block, isWeekend, capacity.strain, childPresent, usableMinutes),
+    context: contextFor(block, isWeekend, capacity.strain, childPresent, inHand.minutes),
     capacity,
     usableMinutes,
+    commitments,
+    nextObligation: until.next,
+    minutesUntilNextObligation: until.minutes,
+    inHand,
     childPresent,
     socialEnergy,
     homeFriction,
     learningTopic,
     direction: resolveDirection(view, moment, domains),
     coverage,
-    limiter: findLimiter(capacity, usableMinutes, coverage, block),
+    limiter: findLimiter(capacity, inHand, coverage, block),
     preferences: collectPreferences(view),
     constraints: collectConstraints(view, moment.now),
     shown: (moment.shown ?? []).filter(

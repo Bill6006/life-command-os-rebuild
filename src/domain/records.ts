@@ -3,7 +3,7 @@ import type { EntityRef } from './entities'
 import type { RecordId } from './ids'
 import type { PrivacyClass } from './privacy'
 import type { RecommendationSemantics } from './recommendation'
-import type { DayBlock, Instant, TimeZoneId } from './time'
+import type { DayBlock, Instant, IsoWeekday, LocalDayId, TimeZoneId } from './time'
 import type { ConceptId, DueWindow, ObservationWindow } from './windows'
 
 /**
@@ -29,6 +29,16 @@ export const RECORD_KINDS = [
   'constraint',
   'goal',
   'commitment',
+  /**
+   * A named obligation with a place in the owner's day — AUD-0004.
+   *
+   * Distinct from `commitment`, which is a promise with a due window: this is a
+   * span of the day that is already spoken for. The school run, working hours,
+   * a handover. Nothing in the engine could see one before this phase, so 07:15
+   * with twenty minutes before the school run and 11:00 with the house quiet
+   * were the same morning and got the same answer.
+   */
+  'commitment-window',
   'preference',
   'decision',
   'action-recommendation',
@@ -232,6 +242,86 @@ export type GoalRecord = Record_<
 export type CommitmentRecord = Record_<
   'commitment',
   { readonly statement: string; readonly due: DueWindow; readonly to?: EntityRef }
+>
+
+/**
+ * How the app came to know about an obligation — AUD-0004.
+ *
+ * **Carried from the start even though only two of the three can occur**, and
+ * that is the whole reason the field exists now rather than later. Owner-entered
+ * commitments, recurring ones and calendar-derived ones are the same shape at
+ * different reliabilities; writing the shape without the provenance would mean
+ * that adding a trusted schedule source later is a redesign of the record
+ * rather than an adapter in front of it.
+ *
+ * - `owner-entered` — he typed this one, about this day.
+ * - `recurring` — he told the app the shape of an ordinary week, once.
+ * - `calendar` — nothing produces one yet. It is here so that when something
+ *   does, everything downstream already knows the difference.
+ */
+export const COMMITMENT_WINDOW_SOURCES = ['owner-entered', 'recurring', 'calendar'] as const
+
+export type CommitmentWindowSource = (typeof COMMITMENT_WINDOW_SOURCES)[number]
+
+export function isCommitmentWindowSource(value: unknown): value is CommitmentWindowSource {
+  return (
+    typeof value === 'string' && (COMMITMENT_WINDOW_SOURCES as readonly string[]).includes(value)
+  )
+}
+
+/**
+ * When an obligation happens, as a rhythm rather than as a list of instants.
+ *
+ * A school term is a weekly shape, not two hundred separate rows, and storing
+ * it as instants would make "what time does her school day start" unanswerable
+ * the moment the term rolled over. `one-off` is the other real case — a
+ * handover, an appointment — and it names an owner-local day rather than an
+ * instant for the same reason `RecordEnvelope` derives the local day rather than
+ * storing it (section 15).
+ */
+export type CommitmentRecurrence =
+  | { readonly kind: 'one-off'; readonly on: LocalDayId }
+  | { readonly kind: 'weekly'; readonly days: readonly IsoWeekday[] }
+
+/**
+ * A span of the owner's day that is already spoken for — AUD-0004.
+ *
+ * The audit's clean answer to the brief's question — *does a recommendation
+ * ever consider WHEN, not just WHETHER?* — was **no**, and this is the missing
+ * half. Five fixed blocks from wall-clock minutes model the shape of a day and
+ * nothing about *this* owner's day: at 07:15 with the school run in twenty
+ * minutes and at 11:00 with the house quiet, the engine saw the same morning.
+ *
+ * Minutes into the owner-local day rather than instants, because that is what
+ * the fact is: her school day starts at half past eight, on every day it starts
+ * at all. An instant would be one occurrence of a rhythm, and would need
+ * re-deriving every time the rhythm was read.
+ */
+export type CommitmentWindowRecord = Record_<
+  'commitment-window',
+  {
+    /** What the owner calls it. Rendered exactly, never paraphrased. */
+    readonly label: string
+    /** Minutes into the owner-local day it begins. */
+    readonly startsAt: number
+    /** Minutes into the owner-local day it ends. Always after `startsAt`. */
+    readonly endsAt: number
+    readonly recurrence: CommitmentRecurrence
+    /**
+     * Whose time the span actually takes.
+     *
+     * The distinction is not a nicety, and getting it wrong would make the
+     * whole record worse than nothing. **`mine`** is a span the owner is not
+     * free in — his working hours. **`theirs`** is a span somebody *else* is
+     * occupied for, and it shapes his day at its edges rather than in its
+     * middle: a school day means he has to be somewhere at half past eight and
+     * somewhere at three, and the five hours between them are the freest he
+     * gets all week. Treating that as time he is busy would have the app go
+     * quiet at precisely the hours it should be speaking.
+     */
+    readonly whose: 'mine' | 'theirs'
+    readonly knownFrom: CommitmentWindowSource
+  }
 >
 
 export type PreferenceRecord = Record_<
@@ -440,6 +530,7 @@ export type CanonicalRecord =
   | ConstraintRecord
   | GoalRecord
   | CommitmentRecord
+  | CommitmentWindowRecord
   | PreferenceRecord
   | DecisionRecord
   | ActionRecommendationRecord

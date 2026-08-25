@@ -9,7 +9,7 @@ import {
   type CanonicalRecord,
   type RecordKind,
 } from '../../src/domain/records'
-import { instant, timeZone, type Instant } from '../../src/domain/time'
+import { instant, localDayId, timeZone, type Instant } from '../../src/domain/time'
 import { entityToWire, parseEntities, parseRecords, recordToWire } from '../../src/domain/wire'
 import { conceptId } from '../../src/domain/windows'
 
@@ -99,6 +99,21 @@ const minimal: Record<RecordKind, CanonicalRecord> = {
     'commitment',
     { occurredAt: T },
     { statement: 'School pickup', due: { kind: 'due', earliest: T, latest: LATER } },
+  ),
+  // The minimal shape of an obligation is a one-off: a label, a span of the
+  // day and the day it is on. Nothing here is optional, because an obligation
+  // with no time on it is not one.
+  'commitment-window': record(
+    'commitment-window',
+    { occurredAt: T },
+    {
+      label: 'School run',
+      startsAt: 8 * 60 + 10,
+      endsAt: 8 * 60 + 40,
+      recurrence: { kind: 'one-off', on: localDayId({ year: 2026, month: 9, day: 16 }) },
+      whose: 'mine',
+      knownFrom: 'owner-entered',
+    },
   ),
   preference: record(
     'preference',
@@ -234,6 +249,19 @@ const full: Record<RecordKind, CanonicalRecord> = {
       to: adaya,
     },
   ),
+  // The recurring shape, with the provenance AUD-0004 asks for from the start.
+  'commitment-window': record(
+    'commitment-window',
+    { occurredAt: T, domains: [DOMAIN.fatherhood], entities: [adaya] },
+    {
+      label: 'Adaya’s school day',
+      startsAt: 8 * 60 + 30,
+      endsAt: 15 * 60,
+      recurrence: { kind: 'weekly', days: [1, 2, 3, 4, 5] },
+      whose: 'theirs',
+      knownFrom: 'recurring',
+    },
+  ),
   preference: record(
     'preference',
     { occurredAt: T, domains: [DOMAIN.privateHealth] },
@@ -340,7 +368,7 @@ function throughJson(value: unknown): unknown {
 
 describe('canonical records round-trip without loss', () => {
   it('covers every record kind the plan lists', () => {
-    expect(RECORD_KINDS).toHaveLength(20)
+    expect(RECORD_KINDS).toHaveLength(21)
     expect(Object.keys(minimal).sort()).toEqual([...RECORD_KINDS].sort())
     expect(Object.keys(full).sort()).toEqual([...RECORD_KINDS].sort())
   })

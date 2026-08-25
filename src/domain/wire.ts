@@ -17,16 +17,26 @@ import {
   type WhyNowContext,
 } from './recommendation'
 import {
+  COMMITMENT_WINDOW_SOURCES,
   OUTCOME_ASPECTS,
   PROVENANCE_SOURCES,
   RECORD_KINDS,
   type CanonicalRecord,
+  type CommitmentRecurrence,
   type DecisionContext,
   type FactValue,
   type Provenance,
   type RecordKind,
 } from './records'
-import { DAY_BLOCKS, instantToIso, parseTimeZone, type Instant, type TimeZoneId } from './time'
+import {
+  DAY_BLOCKS,
+  instantToIso,
+  parseLocalDayId,
+  parseTimeZone,
+  type Instant,
+  type IsoWeekday,
+  type TimeZoneId,
+} from './time'
 import {
   absorb,
   createReader,
@@ -38,6 +48,7 @@ import {
   readInstant,
   readNumber,
   readObject,
+  readArray,
   readOptionalArray,
   readOptionalBoolean,
   readOptionalEnum,
@@ -225,6 +236,54 @@ function readDueWindow(reader: Reader, key: string, required: boolean): DueWindo
   return { kind: 'due', earliest, latest }
 }
 
+/**
+ * When an obligation happens, as a rhythm — AUD-0004.
+ *
+ * The weekday list is read strictly: 1 to 7, integers, and nothing else. A
+ * document claiming an obligation on day 9 is a malformed row rather than an
+ * obligation on some other day, which is section 36's rule about not inventing
+ * a substitute value.
+ */
+function readRecurrence(reader: Reader, key: string): CommitmentRecurrence | undefined {
+  const nested = readObject(reader, key)
+  if (nested === undefined) return undefined
+  const kind = readEnum(nested, 'kind', ['one-off', 'weekly'] as const)
+
+  let parsed: CommitmentRecurrence | undefined
+  if (kind === 'one-off') {
+    const on = parseLocalDayId(raw(nested, 'on'))
+    if (on === undefined) note(nested, 'on', 'expected an owner-local day id')
+    else parsed = { kind, on }
+  } else if (kind === 'weekly') {
+    const list = readArray(nested, 'days')
+    if (list !== undefined) {
+      const days: IsoWeekday[] = []
+      for (const [position, entry] of list.entries()) {
+        if (typeof entry !== 'number' || !Number.isInteger(entry) || entry < 1 || entry > 7) {
+          note(nested, `days[${position}]`, 'expected an ISO weekday, 1 to 7')
+          continue
+        }
+        days.push(entry as IsoWeekday)
+      }
+      if (days.length === list.length) parsed = { kind, days }
+    }
+  }
+
+  rejectExtras(nested, 'a recurrence')
+  absorb(reader, nested)
+  return parsed
+}
+
+/** Minutes into the owner-local day: a whole number inside one day. */
+function readDayMinute(reader: Reader, key: string): number | undefined {
+  const value = readNumber(reader, key)
+  if (value === undefined) return undefined
+  if (!Number.isInteger(value) || value < 0 || value > 1440) {
+    return note(reader, key, 'expected minutes into a day, 0 to 1440')
+  }
+  return value
+}
+
 function readProvenance(reader: Reader, key: string): Provenance | undefined {
   const nested = readObject(reader, key)
   if (nested === undefined) return undefined
@@ -380,6 +439,15 @@ function readPayload(reader: Reader, kind: RecordKind): Record<string, unknown> 
         statement: readString(reader, 'statement'),
         due: readDueWindow(reader, 'due', true),
         to: readOptionalEntityRef(reader, 'to'),
+      }
+    case 'commitment-window':
+      return {
+        label: readString(reader, 'label'),
+        startsAt: readDayMinute(reader, 'startsAt'),
+        endsAt: readDayMinute(reader, 'endsAt'),
+        recurrence: readRecurrence(reader, 'recurrence'),
+        whose: readEnum(reader, 'whose', ['mine', 'theirs'] as const),
+        knownFrom: readEnum(reader, 'knownFrom', COMMITMENT_WINDOW_SOURCES),
       }
     case 'preference':
       return {
@@ -789,6 +857,18 @@ function payloadOut(record: CanonicalRecord): Record<string, unknown> {
         statement: record.statement,
         due: dueWindowOut(record.due),
         ...(record.to === undefined ? {} : { to: refOut(record.to) }),
+      }
+    case 'commitment-window':
+      return {
+        label: record.label,
+        startsAt: record.startsAt,
+        endsAt: record.endsAt,
+        recurrence:
+          record.recurrence.kind === 'one-off'
+            ? { kind: 'one-off', on: record.recurrence.on }
+            : { kind: 'weekly', days: [...record.recurrence.days] },
+        whose: record.whose,
+        knownFrom: record.knownFrom,
       }
     case 'preference':
       return { about: refOut(record.about), stance: record.stance, statement: record.statement }

@@ -2991,7 +2991,150 @@ function growthMixedEvidence(): Scenario {
   }
 }
 
+// ---------------------------------------------------------------------------
+// A school morning — AUD-0004
+// ---------------------------------------------------------------------------
+
+export const SCHOOL_MORNING_ZONE = timeZone('America/Denver')
+
+/**
+ * Twenty past eight on a Wednesday, and ten o'clock on the same Wednesday.
+ *
+ * The adversarial history AUD-0004 asks for: *"a school-morning history where
+ * the same move is right at 10:00 and wrong at 07:15."* Both hours are the same
+ * `morning` block, both read the same rested body and the same live topic, and
+ * before this phase the engine could not tell them apart — five fixed blocks
+ * from wall-clock minutes model the shape of a day and nothing about this
+ * owner's day.
+ *
+ * The one thing that separates them is a `commitment-window`: her school day
+ * runs 08:30 to 15:00 on weekdays. At twenty past eight that is ten minutes
+ * away; at ten
+ * o'clock the next edge is three in the afternoon and the house is quiet, which
+ * is the freest stretch of the week for a father with full custody.
+ *
+ * **Note what the window is not.** It is `whose: 'theirs'` — hers. If the app
+ * read it as time *he* is busy it would go silent for the five hours he is
+ * most able to do something, which is the opposite of the finding.
+ */
+export const SCHOOL_MORNING_NOW = createKit('SM', 'America/Denver', '2026-06-01T12:00:00Z').local(
+  '2026-09-16',
+  '08:20',
+)
+
+/** The same Wednesday, once the house is quiet. */
+export const SCHOOL_MORNING_LATER = createKit('SM', 'America/Denver', '2026-06-01T12:00:00Z').local(
+  '2026-09-16',
+  '10:00',
+)
+
+export function schoolMorning(): SnapshotWire {
+  const kit = createKit('SM', 'America/Denver', '2026-06-01T12:00:00Z')
+  const adaya = entityRef('person', 'Adaya')
+  const subnetting = entityRef('learning-topic', 'subnetting')
+
+  const child = kit.entity({
+    kind: 'person',
+    label: 'Adaya',
+    domain: DOMAIN.fatherhood,
+    privacy: 'child-family-sensitive',
+  })
+  const topic = kit.entity({
+    kind: 'learning-topic',
+    label: 'subnetting',
+    domain: DOMAIN.career,
+    privacy: 'normal',
+  })
+
+  const custody = kit.record(
+    'context',
+    {
+      occurredAt: kit.local('2026-06-01', '09:00'),
+      domains: [DOMAIN.fatherhood],
+      entities: [adaya],
+    },
+    {
+      concept: CONCEPT.childPresent,
+      value: { type: 'boolean', value: true },
+      durability: 'durable',
+      validFrom: kit.local('2026-06-01', '09:00'),
+    },
+  )
+
+  const school = kit.record(
+    'commitment-window',
+    {
+      occurredAt: kit.local('2026-09-01', '19:00'),
+      domains: [DOMAIN.fatherhood],
+      entities: [adaya],
+    },
+    {
+      label: 'Adaya’s school day',
+      startsAt: 8 * 60 + 30,
+      endsAt: 15 * 60,
+      recurrence: { kind: 'weekly', days: [1, 2, 3, 4, 5] },
+      whose: 'theirs',
+      knownFrom: 'recurring',
+    },
+  )
+
+  const studying = kit.record(
+    'observation',
+    {
+      occurredAt: kit.local('2026-09-14', '20:00'),
+      domains: [DOMAIN.career],
+      entities: [subnetting],
+    },
+    {
+      concept: CONCEPT.learningTopic,
+      value: { type: 'entity', value: subnetting },
+      method: 'self-report',
+    },
+  )
+
+  // Three full nights, so nothing about the body is in the way and the only
+  // thing that can separate the two hours is the shape of the day.
+  const nights = [8, 8.25, 8].map((value, offset) =>
+    kit.record(
+      'observation',
+      { occurredAt: kit.local(`2026-09-${14 + offset}`, '07:00'), domains: [DOMAIN.sleep] },
+      {
+        concept: CONCEPT.sleepHours,
+        value: { type: 'number', value, unit: 'hours' },
+        method: 'self-report',
+      },
+    ),
+  )
+
+  const energy = kit.record(
+    'observation',
+    { occurredAt: kit.local('2026-09-16', '07:30'), domains: [DOMAIN.health] },
+    { concept: CONCEPT.energy, value: { type: 'scale', value: 4, of: 5 }, method: 'self-report' },
+  )
+
+  return kit.document({
+    entities: [child, topic],
+    records: [custody, school, studying, ...nights, energy],
+    exportedAt: SCHOOL_MORNING_NOW,
+  })
+}
+
+function schoolMorningScenario(): Scenario {
+  return {
+    id: 'school-morning',
+    title: 'A school morning',
+    summary:
+      'Twenty past eight on a Wednesday, with her school day starting at half past. The same history reads very differently at ten, when the house is quiet.',
+    proves:
+      'AUD-0004 — the day is more than clock arithmetic. Twenty minutes before the school run and two hours into a quiet house are the same block, and no longer the same answer.',
+    zone: SCHOOL_MORNING_ZONE,
+    now: SCHOOL_MORNING_NOW,
+    build: schoolMorning,
+  }
+}
+
 export const SCENARIOS: readonly Scenario[] = [
+  schoolMorningScenario(),
   subnettingStruggle(),
   sleepDeficitAgainstCareer(),
   restedAgainstCareer(),

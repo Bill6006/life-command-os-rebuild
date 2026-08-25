@@ -100,3 +100,57 @@
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
 }
+
+/*
+ * How the day is already spoken for — AUD-0004.
+ *
+ * Deliberately the plainest thing on the page: two lines and a link. Life is a
+ * report, and the one part of it the owner is invited to fill in must not look
+ * like the questionnaire dump section 59 excludes.
+ */
+.life-commitments {
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.life-commitment {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.life-commitment:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.life-commitment__what {
+  margin: 0 0 var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+}
+
+.life-commitment__form {
+  margin-top: var(--space-2);
+}
+
+.life-commitment__clocks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.life-commitment__clock {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.life-commitment__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

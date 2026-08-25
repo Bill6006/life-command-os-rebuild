@@ -94,8 +94,12 @@ function target(verb: ActionVerb, object: EntityRef, minutes: number | undefined
 function sizeFor(verb: ActionVerb, situation: Situation): number | undefined {
   const natural = profileFor(verb).size
   if (natural === undefined) return undefined
-  if (!isUsable(situation.usableMinutes)) return natural
-  const available = situation.usableMinutes.value
+  // Trimmed to what is actually left rather than to what the owner said —
+  // AUD-0004. "Spend 45 minutes on a lab" twenty minutes before the school run
+  // is the sentence the audit found and the one an obligation makes impossible.
+  const inHand = situation.inHand.minutes
+  if (!isUsable(inHand)) return natural
+  const available = inHand.value
   if (available <= 0) return natural
   return Math.max(5, Math.min(natural, Math.floor(available)))
 }

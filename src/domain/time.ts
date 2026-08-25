@@ -396,6 +396,18 @@ export function addLocalDays(at: Instant, days: number, zone: TimeZoneId): Insta
   )
 }
 
+/**
+ * Which day of the week an owner-local day is, from the identifier alone.
+ *
+ * No clock and no timezone: a day id already fixes a calendar date, and the
+ * weekday of a calendar date is arithmetic. That is what lets `occursOn` answer
+ * "is the school run today" inside the engine, which may not read a clock
+ * (`docs/ARCHITECTURE_BOUNDARIES.md`).
+ */
+export function isoWeekdayOfDayId(dayId: LocalDayId): IsoWeekday {
+  return isoWeekdayOfDays(daysFromCivil(civilDateFromDayId(dayId)))
+}
+
 export function localDaysBetween(a: LocalDayId, b: LocalDayId): number {
   return daysFromCivil(civilDateFromDayId(b)) - daysFromCivil(civilDateFromDayId(a))
 }

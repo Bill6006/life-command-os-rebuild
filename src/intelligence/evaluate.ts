@@ -580,13 +580,24 @@ function followThrough(candidate: Candidate, situation: Situation): Dimension {
 function opportunityCost(candidate: Candidate, situation: Situation): Dimension {
   const weight = WEIGHTS['opportunity-cost']
   const minutes = candidate.semantics.target.minutes
-  const usable = situation.usableMinutes
+  // What is actually left, not what he said he had — AUD-0004. An hour with
+  // twenty minutes of it before the school run is twenty minutes.
+  const usable = situation.inHand.minutes
+  const before = situation.inHand.before
 
   if (minutes === undefined) {
     return { name: 'opportunity-cost', value: 0, weight, note: 'takes no fixed block of time' }
   }
   if (!isUsable(usable) || usable.value <= 0) {
-    return { name: 'opportunity-cost', value: 0, weight, note: 'how much time there is is unknown' }
+    return {
+      name: 'opportunity-cost',
+      value: 0,
+      weight,
+      note:
+        before === undefined
+          ? 'how much time there is is unknown'
+          : `there is no time before ${before.label}`,
+    }
   }
 
   const share = minutes / usable.value
@@ -594,7 +605,10 @@ function opportunityCost(candidate: Candidate, situation: Situation): Dimension 
     name: 'opportunity-cost',
     value: scaled(0.4 - share * 1.4),
     weight,
-    note: `takes about ${Math.round(share * 100)} percent of what is left`,
+    note:
+      before === undefined
+        ? `takes about ${Math.round(share * 100)} percent of what is left`
+        : `takes about ${Math.round(share * 100)} percent of what is left before ${before.label}`,
   }
 }
 
@@ -656,7 +670,9 @@ function timeFit(candidate: Candidate, situation: Situation): Dimension {
   const weight = WEIGHTS['time-fit']
   const block = situation.block
   const minutes = candidate.semantics.target.minutes
-  const usable = situation.usableMinutes
+  // The smaller of what he said and what the day allows — AUD-0004.
+  const usable = situation.inHand.minutes
+  const before = situation.inHand.before
 
   if (minutes === undefined) {
     return { name: 'time-fit', value: 0.3, weight, note: 'fits whatever is left' }
@@ -670,7 +686,15 @@ function timeFit(candidate: Candidate, situation: Situation): Dimension {
   const share = usable.value === 0 ? 2 : minutes / usable.value
   if (share <= 0.5) return { name: 'time-fit', value: 1, weight, note: 'fits comfortably' }
   if (share <= 0.8) return { name: 'time-fit', value: 0.5, weight, note: 'fits' }
-  return { name: 'time-fit', value: 0, weight, note: `would use most of ${blockNoun(block)}` }
+  return {
+    name: 'time-fit',
+    value: 0,
+    weight,
+    note:
+      before === undefined
+        ? `would use most of ${blockNoun(block)}`
+        : `would not fit before ${before.label}`,
+  }
 }
 
 function capacityFit(situation: Situation, profile: MoveProfile): Dimension {

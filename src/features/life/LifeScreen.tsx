@@ -5,6 +5,7 @@ import { assembleSituation, type DomainCoverage } from '../../intelligence/situa
 import { hashForLifePage } from '../../platform/routing'
 import { originOfSources } from '../history/origin'
 import { useMemory } from '../memory/memoryContext'
+import { DayShape } from './DayShape'
 import { pageForDomain } from './domainPages'
 import { GROUP_ORDER, standingFor } from './standing'
 import './LifeScreen.css'
@@ -135,14 +136,16 @@ function groupsFrom(domains: readonly DomainCoverage[]): readonly Group[] {
 export function LifeScreen() {
   const memory = useMemory()
 
-  const coverage = useMemo(() => {
+  const situation = useMemo(() => {
     if (!memory.ready || memory.snapshot.records.length === 0) return undefined
     return assembleSituation(memory.view, {
       now: memory.now,
       zone: memory.zone,
       weekStartsOn: memory.weekStartsOn,
-    }).coverage
+    })
   }, [memory.ready, memory.snapshot, memory.view, memory.now, memory.zone, memory.weekStartsOn])
+
+  const coverage = situation?.coverage
 
   const groups = useMemo(
     () => (coverage === undefined ? [] : groupsFrom(coverage.domains)),
@@ -203,6 +206,16 @@ export function LifeScreen() {
               </section>
             ))}
           </Panel>
+
+          {/*
+            How the day is already spoken for — AUD-0004.
+
+            Under the areas rather than above them, because it is a fact the
+            owner supplies rather than a reading the app made: Life's first job
+            is to report, and this is the one thing on the page he is invited to
+            add. Two questions, answered once, never re-asked.
+          */}
+          {situation === undefined ? null : <DayShape situation={situation} />}
 
           <Panel title="Why this is here">
             <p>

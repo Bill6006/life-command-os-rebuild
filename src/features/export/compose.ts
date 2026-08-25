@@ -1,7 +1,8 @@
 import { countOf } from '../../domain/counts'
 import { DOMAIN, type LifeDomainId } from '../../domain/domains'
 import { FULL_EXPORT, type DisplayPolicy } from '../../domain/privacy'
-import type { CanonicalRecord } from '../../domain/records'
+import type { CanonicalRecord, CommitmentWindowRecord } from '../../domain/records'
+import { describeCommitmentWindow } from '../../domain/schedule'
 import { localDayIdAt, type Instant, type LocalDayId, type TimeZoneId } from '../../domain/time'
 import type { Decision } from '../../intelligence/engine'
 import type { InsightsReport } from '../../intelligence/insights'
@@ -211,7 +212,10 @@ export function recordsInScope(
     }
     if (
       chosen.includes('direction') &&
-      (record.kind === 'goal' || record.kind === 'commitment' || record.kind === 'decision')
+      (record.kind === 'goal' ||
+        record.kind === 'commitment' ||
+        record.kind === 'commitment-window' ||
+        record.kind === 'decision')
     ) {
       wanted.add(record)
       continue
@@ -406,6 +410,25 @@ function directionSection(request: ExportRequest): readonly string[] {
     for (const record of commitments) {
       const described = describeRecord(record, context)
       if (described !== undefined) lines.push(bullet(withOrigin(described.text, described.origin)))
+    }
+  }
+
+  /*
+   * What is already spoken for in the day — AUD-0004.
+   *
+   * Its own list rather than folded in with the promises above, because they
+   * are different objects and a reviewer reading this needs to be able to tell
+   * them apart: a commitment is something the owner said he would do, and an
+   * obligation is a stretch of the day that is not his to spend.
+   */
+  const obligations = situation.view.history.effective.filter(
+    (record): record is CommitmentWindowRecord => record.kind === 'commitment-window',
+  )
+  if (obligations.length === 0) lines.push('', bullet('Standing in the day: nothing recorded.'))
+  else {
+    lines.push('', 'Standing in the day:')
+    for (const record of obligations) {
+      lines.push(bullet(`${describeCommitmentWindow(record)} (${record.knownFrom})`))
     }
   }
 
