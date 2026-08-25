@@ -39,6 +39,85 @@ None.
 
 ## Fixed
 
+### DEF-0087 — the trigger that means "nothing raised this" asserted that nothing else was pressing
+
+- Status: Fixed
+- Severity: Major — an owner-facing falsehood of a class this file already
+  holds twice, on the primary surface
+- Found in: Phase 82 / package 3
+- Found by: the first scenario in the library with a career move and no career
+  goal, on its first run — `study-thread`
+- Class: **an absence asserted from ignorance** — DEF-0012's family, and the
+  third member of it in the same file. "Nothing else is pressing" reads as a
+  finding about the owner's life and is a statement about how little the engine
+  could see: `nothing-better` means nothing raised this candidate in
+  particular, which is a fact about the catalogue.
+- Reproduction: any history with a `career` learning topic and no active career
+  goal. `explain.ts:653` rendered `Nothing else is pressing, and subnetting
+pays back tomorrow.` on Now.
+- Root cause: the branch was written before either of its siblings was
+  repaired, and no history in the scenario library reached it. Both siblings —
+  the walk's sleep figure and "nothing more pressing is in the way" on
+  `good-conditions` — were removed with the rule written down beside them, and
+  this one was not touched because nothing rendered it.
+- Regression: `tests/synthetic/no-hidden-genericity.test.ts` — "claims nothing
+  about what it could not see — DEF-0012" already forbade the exact phrase and
+  was passing over a set that did not contain it. The new test beside it,
+  "names which why-now triggers the library actually reaches — DEF-0012",
+  enumerates the reached set and names the one it does not reach with the reason
+  and with where that sentence is covered instead. Reintroducing the string
+  fails the first test; removing a scenario that reaches a trigger fails the
+  second.
+- Siblings: checked. Every one of the eight `WhyNowTrigger` branches is now
+  either reached by the library or named as unreached with its coverage
+  elsewhere. The growth branches were repaired in Phase 81; `stale-evidence`,
+  `constraint-active`, `good-conditions`, `deficit`, `opportunity-window`,
+  `recent-struggle` and `nothing-better` are all read from a real history.
+- Note on the fix: the replacement claims nothing about what else exists.
+  "Subnetting is the one you have open" is a fact from the record; whether
+  anything else was pressing is not a question this trigger was answering.
+- Fixed in: the checkpoint that closes Phase 82
+
+---
+
+### DEF-0088 — a study session was offered at eleven at night
+
+- Status: Fixed
+- Severity: Major — the class the whole temporal half of the audit is about,
+  surviving on the primary surface
+- Found in: Phase 82 / package 6
+- Found by: the tournament rubric, widened under AUD-0039(b) to ask "does it get
+  the hour right" at every block rather than at the hour each history was
+  written for
+- Class: **a move profile that refuses no hour at all.** `recall-practice` was
+  the only entry in `MOVE_PROFILES` with an empty `refuses` list, so nothing
+  could stop it: it is `light`, so `protection` had nothing to say about it; the
+  deferral path added in this phase has nowhere to defer to once the last block
+  has begun; and the filter only removes what a profile refuses.
+- Reproduction: "The same week, properly slept" at 23:00. The app offered
+  _"Spend 10 minutes recalling subnetting before you reopen your notes."_
+- Root cause: an oversight rather than a decision. Every sibling that suits the
+  same three blocks — `review-weak-topic`, `time-with`, `move`, `reset-space`,
+  `reach-out` — refuses the late night for the same reason, and this one was
+  left empty with no comment saying why.
+- Regression: `tests/synthetic/intelligence-tournament.test.ts` — "gets the hour
+  right", per profile, swept across all five blocks. Reintroducing the empty
+  `refuses` list fails it.
+- Siblings: checked, and the check is now the rubric itself rather than a list:
+  every profile is swept at every block on every tournament profile, so a new
+  verb with an empty `refuses` fails on the first run rather than on the evening
+  somebody reads it.
+- Note on what the repair then broke: making the move refuse the late night
+  changed which rejection reasons reach the no-action copy at that hour, and a
+  branch that required **every** rejection to be repetition stopped firing —
+  putting "none of them suit where you actually are" back on a screen QA-81-006
+  had repaired. That condition is now stated as what it always meant (D-134's
+  neighbour, in `noActionCopy`), and the mixed case has its own line and its own
+  row in the copy table.
+- Fixed in: the checkpoint that closes Phase 82
+
+---
+
 ### DEF-0085 (QA-81-006) — the repetition rule promoted a move the situation argued against
 
 - Status: Fixed

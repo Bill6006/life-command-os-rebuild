@@ -144,13 +144,52 @@ export function DayShape({ situation }: { situation: Situation }) {
 
   const disabled = busy || memory.busy
 
+  /*
+   * One line, whichever place it is read in — AUD-0004.
+   *
+   * The two seeds are an aside rather than a form. Built once so the line the
+   * owner reads at the bottom of Life and the line he reads inside the panel
+   * are the same line, rather than two that drift.
+   */
+  const invitation = (
+    <span data-testid="day-shape-seeds">
+      The app reads the clock and nothing else about your day. Tell it about{' '}
+      {seeds.map((seed, index) => (
+        <span key={seed.id}>
+          {index === 0 ? '' : ' or '}
+          <button
+            type="button"
+            className="domain-linkish"
+            disabled={disabled}
+            data-testid={`day-shape-tell-${seed.id}`}
+            onClick={() => startSeed(seed)}
+          >
+            {seed.invite(situation)}
+          </button>
+        </span>
+      ))}
+      .
+    </span>
+  )
+
+  const open = openSeed === undefined ? undefined : seeds.find((seed) => seed.id === openSeed)
+
+  /*
+   * A panel when there is something to report, and a line when there is not —
+   * D-075.
+   *
+   * Life is a report, and on a history where the app knows nothing about the
+   * owner's day there is nothing to report: what is left is an invitation, and
+   * an invitation with a heading and a bordered card around it is the wall this
+   * screen was rebuilt to stop being. So the chrome arrives with the content.
+   */
+  if (standing.length === 0 && open === undefined) {
+    if (seeds.length === 0) return null
+    return <p className="note">{invitation}</p>
+  }
+
   return (
     <Panel title="How your day is set up">
-      <p className="note">
-        The app reads the clock and nothing else about your day. Telling it these two things is what
-        lets it know when <em>not</em> to ask.
-      </p>
-
       {standing.length === 0 ? null : (
         <ul className="life-commitments" data-testid="day-shape-list">
           {standing.map((record) => (
@@ -207,47 +246,41 @@ export function DayShape({ situation }: { situation: Situation }) {
         </ul>
       )}
 
-      {seeds.map((seed) => (
-        <div key={seed.id} className="life-commitment" data-testid={`day-shape-seed-${seed.id}`}>
-          <p className="life-commitment__what">{seed.prompt(situation)}</p>
-          {openSeed === seed.id ? (
-            <div className="life-commitment__form">
-              <ClockPair draft={draft} disabled={disabled} onChange={setDraft} />
-              <div className="life-commitment__actions">
-                <button
-                  type="button"
-                  className="domain-option"
-                  disabled={disabled || draft.endsAt <= draft.startsAt}
-                  onClick={() => saveSeed(seed)}
-                >
-                  Save
-                </button>
-                <button
-                  type="button"
-                  className="domain-linkish"
-                  disabled={disabled}
-                  onClick={() => setOpenSeed(undefined)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
+      {open === undefined ? null : (
+        <div className="life-commitment__form" data-testid={`day-shape-seed-${open.id}`}>
+          <p className="life-commitment__what">{open.prompt(situation)}</p>
+          <ClockPair draft={draft} disabled={disabled} onChange={setDraft} />
+          <div className="life-commitment__actions">
+            <button
+              type="button"
+              className="domain-option"
+              disabled={disabled || draft.endsAt <= draft.startsAt}
+              onClick={() => saveSeed(open)}
+            >
+              Save
+            </button>
             <button
               type="button"
               className="domain-linkish"
               disabled={disabled}
-              onClick={() => startSeed(seed)}
+              onClick={() => setOpenSeed(undefined)}
             >
-              Tell it
+              Cancel
             </button>
-          )}
+          </div>
         </div>
-      ))}
+      )}
 
-      {standing.length === 0 && seeds.length === 0 ? (
-        <p className="note">Nothing standing in your day that the app knows about.</p>
-      ) : null}
+      {/*
+        The invitation, as one line rather than a block each — D-075.
+
+        Life is a report and this is the one thing on it the owner is asked to
+        add, so it has to read as an aside. The first version gave each of the
+        two seeds a heading, a prompt and a control of its own, and put two
+        thirds of a phone screen of homework on the page whose whole complaint
+        was being homework.
+      */}
+      {seeds.length === 0 ? null : <p className="note">{invitation}</p>}
     </Panel>
   )
 }

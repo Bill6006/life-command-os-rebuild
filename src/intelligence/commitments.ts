@@ -159,6 +159,16 @@ export interface ScheduleSeed {
   prompt(situation: Situation): string
   /** What the record will be called. Also written fresh, for the same reason. */
   label(situation: Situation): string
+  /**
+   * What the invitation calls it, in one short phrase.
+   *
+   * Separate from `label` because they are read in different frames: the label
+   * stands alone on the entry it names — "work, 09:00 to 17:00, weekdays" — and
+   * this one sits inside a sentence. Life is a report and the one thing on it
+   * the owner is invited to add has to read as an aside rather than as a form
+   * (D-075).
+   */
+  invite(situation: Situation): string
   readonly domain: LifeDomainId
   /** Whose time the span takes. See `CommitmentWindowRecord.whose`. */
   readonly whose: CommitmentWindowRecord['whose']
@@ -193,6 +203,12 @@ export const SCHEDULE_SEEDS: readonly ScheduleSeed[] = [
         .find((entity) => entity.domain === DOMAIN.fatherhood)
       return child === undefined ? 'the school day' : `${child.label}’s school day`
     },
+    invite: (situation) => {
+      const child = situation.entities
+        .byKind('person')
+        .find((entity) => entity.domain === DOMAIN.fatherhood)
+      return child === undefined ? 'the school day' : `${child.label}’s school day`
+    },
     domain: DOMAIN.fatherhood,
     // Hers, not his. He has to be somewhere when it starts and when it ends,
     // and the hours between are the freest stretch of his week.
@@ -204,6 +220,7 @@ export const SCHEDULE_SEEDS: readonly ScheduleSeed[] = [
     id: 'working-hours',
     prompt: () => 'What are your working hours?',
     label: () => 'work',
+    invite: () => 'your working hours',
     domain: DOMAIN.career,
     whose: 'mine',
     startsAt: 9 * 60,

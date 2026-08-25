@@ -270,9 +270,29 @@ test.describe('the evidence behind the move on Now', () => {
     expect(await page.locator('main').innerText()).not.toContain('%')
   })
 
-  test('opens real evidence for the move actually on screen', async ({ page }) => {
+  /**
+   * The same nine months, read on the Friday — AUD-0035.
+   *
+   * "Nine months of evenings" is written around clearing the kitchen: it helped
+   * on all six weekday evenings and on two of six weekends, and the scenario's
+   * own clock stands on a Saturday. Before the instrument was re-cut, the app
+   * offered the kitchen on both — 5.3 units of dead weight compressed every
+   * candidate toward the middle and the ordering came out of the compression.
+   * It now offers the kitchen on the Friday and something else on the Saturday,
+   * which is the app acting on the split this panel describes.
+   *
+   * So the panel is opened on the day the move is on. That is not a convenience:
+   * the evidence panel explains the move on screen, and on the Saturday the
+   * kitchen is not the move on screen.
+   */
+  async function onTheWeekdayBefore(page: Page) {
     await loadInQa(page, 'Nine months of evenings')
+    await page.getByRole('button', { name: '−1 day' }).click()
     await go(page, 'Now')
+  }
+
+  test('opens real evidence for the move actually on screen', async ({ page }) => {
+    await onTheWeekdayBefore(page)
 
     const move = await page.locator('.primary-surface__headline').innerText()
     await page.getByTestId('now-see-evidence').click()
@@ -299,18 +319,16 @@ test.describe('the evidence behind the move on Now', () => {
      * plainer tally beside it. Without it the panel states a split and leaves
      * the reader to work out which half applies to tonight.
      */
-    await loadInQa(page, 'Nine months of evenings')
-    await go(page, 'Now')
+    await onTheWeekdayBefore(page)
     await page.getByTestId('now-see-evidence').click()
 
     const panel = page.getByTestId('now-evidence')
     await expect(panel).toContainText('6 of 6 on a weekday, 2 of 6 at the weekend.')
-    await expect(panel).toContainText('This evening is at the weekend.')
+    await expect(panel).toContainText('This evening is on a weekday.')
   })
 
   test('states the belief in the same words Now already used', async ({ page }) => {
-    await loadInQa(page, 'Nine months of evenings')
-    await go(page, 'Now')
+    await onTheWeekdayBefore(page)
 
     const onScreen = await page.getByTestId('now-rests-on').innerText()
     await page.getByTestId('now-see-evidence').click()

@@ -346,8 +346,28 @@ test.describe('the no-action screen at late night', () => {
     const reason = page.getByTestId('now-reason')
     await expect(reason).not.toContainText('worth tonight it would cost')
     await expect(reason).not.toContainText('worth night it would cost')
-    // The whole sentence, because "does not contain the broken fragment" is
-    // satisfied by a screen that says nothing at all.
-    await expect(reason).toContainText('worth the night it would cost')
+    /*
+     * The whole sentence, because "does not contain the broken fragment" is
+     * satisfied by a screen that says nothing at all.
+     *
+     * **Which sentence this route reaches moved in Phase 82**, and the reason is
+     * worth writing down. `recall-practice` used to refuse no hour at all, so at
+     * half past eleven it survived the filter, scored below the bar, and the
+     * screen said "nothing on the list is worth the night it would cost". It now
+     * refuses the late night like every one of its siblings (AUD-0039's widened
+     * rubric found it), so at this hour there is nothing left to weigh and the
+     * honest answer is the other one: things were worth doing and the hour rules
+     * all of them out. Which is true here — every candidate on this history
+     * refuses the late night.
+     *
+     * The sentence that used to be here is not unread. It is one of the forty
+     * finished lines in `tests/synthetic/no-action-copy.test.ts`, rendered at
+     * every block, which is the instrument QA-81-007 produced precisely because
+     * a browser route only ever reaches the states a history happens to reach.
+     */
+    await expect(reason).toContainText('none of them suit where you actually are')
+    const spoken = (await reason.innerText()).trim()
+    expect(spoken.endsWith('.'), spoken).toBe(true)
+    expect(spoken, 'a fragment where a noun belongs').not.toMatch(/\b(?:the|a)\s+(?:the|a)\b/)
   })
 })

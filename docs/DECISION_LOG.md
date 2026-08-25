@@ -3970,3 +3970,340 @@ under the sweep built to catch precisely it.
 **So the guard is a table of finished lines.** Forty of them, written out rather than generated,
 because a generated expectation is the implementation restated and this file exists because the
 implementation was wrong in a way only a reader could see.
+
+---
+
+## D-128 — A goal is behind only when its own trajectory says so
+
+**Phase:** 82 · **Status:** Active — AUD-0046
+
+The `goal-behind` trigger may be raised only where a goal carries both a date the owner set and a
+set of named pieces, and less of the work has moved than of the time. Where either is missing it is
+not raised at all.
+
+**Why this is not an unused-field story.** `GoalRecord.targetWindow` had parsed, serialised and
+reached `ActiveGoal` since Phase 1 with nothing reading it, which sounds like tidiness. The
+consequence was not: `candidates.ts` raised `goal-behind` whenever a career goal merely existed and
+whenever the cash buffer was merely known, and `evaluate.ts` pays that trigger `urgency 0.4`. So
+every career recommendation carried an urgency premium justified by a claim nothing checked, and
+there is an owner-facing template for it — _"X is behind where you wanted."_
+
+**Why the measurement is a trajectory rather than a pace.** The app knows when the goal was set,
+when the owner said it should be done by, and how many of its pieces have had a session. Comparing
+the share of the work that has moved against the share of the time that has gone needs no tuned
+constant, because both quantities are his. A pace — "a piece a week" — would have been a number
+somebody chose.
+
+**The comparison never reaches a surface.** It is a ratio, and a ratio about a man's own
+certification is a completion percentage with the arithmetic hidden. What he reads is counts of
+pieces and the date he set (D-129).
+
+---
+
+## D-129 — A goal's pieces are counted and never divided
+
+**Phase:** 82 · **Status:** Active — AUD-0021
+
+`describeGoalTrajectory` says how many named pieces have had a session and how far off the date is.
+It says no share, no percentage and no verdict, on any surface — the Career page, the Insights
+card, the reason on Now.
+
+**Why the rule needs writing down rather than intending.** AUD-0021 names the risk itself: a "4 of
+9" reading is one short step from a completion percentage, which is a score by another name and is
+what section 22 forbids. The step is short enough that the next person to touch the card will take
+it without noticing, so the guard sweeps for `%`, `percent`, `score` and "on track" over every
+sentence the trajectory can produce — and asserts the Insights card carries no `rate`, because the
+evidence panel renders a rate as a percentage and a card could print "0%" under his certification
+without any sentence containing a `%`.
+
+**A piece "has had a session" and nothing more.** The weakest claim the evidence supports:
+something about it happened and was written down. Not mastered, not finished.
+
+---
+
+## D-130 — An obligation says whose time it takes
+
+**Phase:** 82 · **Status:** Active — AUD-0004
+
+A `commitment-window` carries `whose: 'mine' | 'theirs'`. A span of the owner's own time — his
+working hours — makes him unavailable throughout. A span of somebody else's — his daughter's school
+day — shapes his day at its **edges** and leaves its middle free.
+
+**Why it is not a nicety.** AUD-0004's two seed questions are the school day and the working day,
+and reading them the same way would have the app fall silent from half past eight to three: the
+five hours a father with full custody actually has. That is the opposite of the finding, produced
+by implementing it literally.
+
+**What it costs to get wrong is asymmetric**, which is why the field is required rather than
+optional with a default. Treating his time as free produces a suggestion he cannot act on; treating
+her school day as his makes the app go quiet at the only hours it could help.
+
+---
+
+## D-131 — The two schedule questions live on Life and are never asked on Now
+
+**Phase:** 82 · **Status:** Active — AUD-0004
+
+The app knows about two obligations by name — the school day and the working day — and there is no
+general "add an event" control. Both are answered on the Life overview, once, and never re-asked.
+
+**Why not through the guide.** `questions.ts` asks about concepts and writes observations; an
+obligation is a record kind. Routing it through the guide would have meant either a second kind of
+guide question or a concept invented to hold a schedule. Section 12's rotation is for things that
+could change tonight's answer once answered; these change every evening after they are answered
+once.
+
+**Why the bound is two.** Section 4.5 constrains input burden and AUD-0004 names the mitigation:
+ask twice, durably, never re-ask — the shape the custody arrangement already uses. Everything past
+those two is a calendar, which is a different product.
+
+**An unanswered seed costs nothing**, and it is written as an aside rather than as a panel. The app
+simply does not know about his mornings, which is the state it has been in all along, and Life is a
+report he visits rather than a form (D-075).
+
+---
+
+## D-132 — A thread influences the score and never the choice
+
+**Phase:** 82 · **Status:** Active — AUD-0020, and the phase's first gate item
+
+A course of action reaches a decision in exactly one place: the `thread-fit` dimension in
+`evaluate.ts`. `arbitrate.ts` and `engine.ts` contain no reference to threads at all, and
+`tests/unit/architecture-guards.test.ts` fails the build if either learns one.
+
+**Why the existing guard was the wrong instrument.** Section 17.2 is enforced by an import list
+over `src/features/`, and it would have been satisfied by a thread that overrode the ranking inside
+the engine. That is a plausible thing for somebody to add: `engine.ts` already contains one
+deliberate override (`continuing`, D-049), a second would look reasonable beside it, and nothing
+would have caught it.
+
+**So the guard is about where a thread is read, not about which directory read it.** Four files may
+look — `situation.ts` assembles them, `threads.ts` is them, `evaluate.ts` scores one dimension,
+`explain.ts` says which course a move belongs to. `lifecycle.ts` is the fifth and reads one only in
+order to write one: a decline pauses the course, which is the recording side of the line
+`docs/ARCHITECTURE_BOUNDARIES.md` draws.
+
+**And `thread-fit` is weighted below `bottleneck-fit`**, asserted against the weights table
+directly. A plan that could out-argue a body needing rest is the app nagging the owner with his own
+past intentions.
+
+---
+
+## D-133 — Three courses, and no generic way to start a fourth
+
+**Phase:** 82 · **Status:** Active — AUD-0020
+
+`THREAD_KINDS` is `recovery-run`, `study-schedule`, `growth-ladder`, and there is no
+thread-creation control anywhere in the app. Each kind is offered beside the move it would be the
+first occasion of, and the owner starts it with one tap or ignores it.
+
+**Why the bound is the decision.** AUD-0020 is explicit that this is a strategic skeleton rather
+than a project-management subsystem and that the bound is what keeps it one. A screen where the
+owner could invent a plan about anything is the second product, and it would arrive by accident.
+
+**Each kind answers a finding raised separately** — recovery was always one night (AUD-0009),
+studying had no schedule (AUD-0010), a growth skill had no next rung (AUD-0015a) — which is what
+makes three the right number rather than a round one.
+
+**A thread's moves and step count are written onto the record** rather than looked up from the
+kind. A course outlives a release, and a table that changed underneath it would silently re-scope a
+plan the owner agreed to.
+
+**Its moves are a set rather than a sequence**, and that is a departure from the finding's wording
+worth naming. AUD-0020 describes "a small ordered set of expected moves"; for a study schedule an
+order is arguable, and for a recovery run it is not — which recovery verb is right depends entirely
+on the hour (DEF-0016 gave the afternoon its own, AUD-0003 the morning). Rather than have two kinds
+mean two things by one field, the plan counts occasions and the sequence lives in the sentence the
+owner reads.
+
+---
+
+## D-134 — A deferral is bounded on four sides at once
+
+**Phase:** 82 · **Status:** Active — AUD-0024
+
+`hold` is returned when the best move — already above `WORTH_DOING` — does not suit this block and
+does suit **the next one**, which must be at least an hour away and must have at least twenty
+minutes of the owner's own time in it.
+
+**Why four.** AUD-0024 names the risk in as many words: "`hold` could become a comfortable
+default", and a deferral path is a new way for the app to say nothing. Each bound removes a
+different way of abusing it, and none is a counter anybody has to maintain:
+
+- **the next block only** — deferring across the day is not deferral, it is the app planning his
+  Saturday. It also caps the whole thing structurally: a move held into the next block is offered
+  there rather than pushed further down the day;
+- **an hour of lead time** — "later" that is twenty minutes off is not advice he can act on
+  differently from "now"; he would simply wait. Without it, every block boundary becomes a deferral
+  opportunity, reachable at the moment it says least;
+- **room in the block** — deferring into a stretch of day he does not have is the confident
+  wrongness AUD-0004 was added to remove, arriving through the door AUD-0004 opened;
+- **the last block of the day has nowhere to go**, so `hold` is unreachable there by construction.
+
+**The held move's own reason does not survive.** "She is here, and that window closes on its own"
+is an argument for doing it _now_, and printing it under a sentence that says to wait would be the
+app contradicting itself in two lines. The reason is composed from what the deferral rests on: the
+move, the block that suits it, and the block that does not.
+
+**And a deferral has no "chosen over" row and no buttons.** Nothing was chosen, so a row saying
+otherwise would describe a contest that did not happen; and there is nothing to start, because the
+whole content of the sentence is that starting can wait.
+
+---
+
+## D-135 — Three occasions across two settings — D-070 amended, not replaced
+
+**Phase:** 82 · **Status:** Active — AUD-0017, amends D-070 and D-112
+
+Before the app offers to call a growth skill settled, the three-in-a-row the record ends on must
+span at least two distinct settings. Where they do not, it says so instead — _"three times in a
+row, all in the same place"_ — with the suggestion that would settle it.
+
+**What does not change.** Three occasions, the sequence rather than the survivors (D-112), a
+proposal the owner answers, and nothing written until he does.
+
+**Why the bar moved.** The claim is about generalisation and the evidence was about repetition.
+Generalisation across settings, people and time is the thing that has to be programmed and probed
+rather than inferred from a run in one context (Stokes & Baer, _Journal of Applied Behavior
+Analysis_ 10(2):349–367, 1977). Three good goes three weeks apart at the same restaurant with her
+father at the table supports "she can do this here, with me" — and "independently now" is what got
+written down.
+
+**A skipped setting is unknown and never "familiar".** Two known settings plus a skip is a spread;
+one known setting plus two skips is not. Where the record holds no settings at all the app says the
+record does not say where, rather than claiming they were in one place — the difference between an
+honest gap and an invented fact.
+
+**And the occasion carries how much help she needed**, which is the scaffolding construct itself:
+the adult's assistance is pitched slightly ahead of the child's competence and responsibility
+transfers as she masters each component (Wood, Bruner & Ross, _J. Child Psychol. Psychiatry_
+17(2):89–100, 1976). The three answers name what **he** did — "on her own", "with a small prompt",
+"needed me" — which is where section 4.4 asks the framing to sit, and the scale underneath is
+unchanged step for step, so every occasion recorded before this phase still parses and still
+counts.
+
+**This will fire less often, and that is the point.** It will feel like a regression against the
+three-occasion rule, which is why it is written down as an amendment rather than left to be
+noticed.
+
+---
+
+## D-136 — A stored judgement about a child is never permanent
+
+**Phase:** 82 · **Status:** Active — AUD-0015(a)
+
+A `development-skill` carries a stage — `practising` or `settled` — set by the owner's
+confirmation, read by the candidate generator, and put back by one tap on the Fatherhood page. A
+settled skill stops being proposed and comes round as an occasional check at expanding intervals,
+in a different sentence.
+
+**Why the stage had to exist at all.** His confirmation used to change nothing. It wrote a
+free-text `domain-update` the coverage engine read, `development-skill` entities carried no status,
+and `fatherhoodCandidates` enumerated every one of them unconditionally — so "Yes, she has got
+this" suppressed the _suggestion_ and not the _move_. Section 62 forbids that in as many words: the
+app should preserve the correction and stop reasserting the old belief.
+
+**Why reversibility is not a nicety.** Regression is real in children, and the app must never make
+"settled" permanent. The control that sets it is the control that unsets it, on the page where the
+skill is listed — a belief he cannot find is a belief he cannot correct.
+
+**The interval runs from her last go, not from his answer**, because that is what the sentence
+says: "she hasn't ordered for herself in a couple of months". It doubles with every probe that
+actually happens, so the app asks less and less and never becomes a schedule.
+
+---
+
+## D-137 — The instrument is re-cut once, and the constants re-derived from it
+
+**Phase:** 82 · **Status:** Active — AUD-0035, completing D-048
+
+`bottleneck-fit`, `direction-fit` and `goal-fit` abstain — zero value at zero weight — when there
+is no limiter, no weekly direction and no goal in the area. D-048's rule, applied to the three
+dimensions D-048 explicitly left alone.
+
+**Why the bar could not be carried across.** The old score was a mean over a denominator carrying
+between 3.5 and 5.3 units of forced zero depending on how much context a history happened to have.
+Measured across the library, the same decisions land between 1.29 and 1.51 times higher once the
+dead weight is gone — so `WORTH_DOING = 0.05` corresponded to somewhere between 0.064 and 0.076,
+and **which of those depended on the history**. That is AUD-0035's complaint stated as a
+translation problem: the bar was systematically harder exactly when the app had least context.
+
+**Set at the bottom of that range and rounded down**, to 0.06. Setting it at the top would have
+raised the bar hardest for the histories with least context — the same defect with the sign
+flipped — and the app would have gone quieter on the evenings it was already too quiet on.
+
+**`CLOSE_ENOUGH_TO_MENTION` is half the bar, and derived from it.** A gap smaller than half of what
+a move needs in order to be worth doing at all is not a difference the app should present as a
+decision. It stays absolute and may now do so honestly: AUD-0033 asked for it to be relative to the
+ranked spread **or** for the two to be fixed together, and the two have now been fixed together.
+
+**What the re-cut deliberately did not reach.** Three more dimensions still score zero at full
+weight for an absent reading — `capacity-fit`, `opportunity-cost` and `time-fit`, each when the
+reading it needs is unknown. AUD-0035 scopes itself to "the three older dimensions"; each further
+one is a separate judgement about a differently shaped scale; and `time-fit` runs 0…1, so
+abstaining there would _reward_ a move for the app not knowing how long the evening is.
+`tests/synthetic/instrument-recut.test.ts` enumerates every remaining case with a reason, so the
+next phase inherits a list rather than a search and a fourth one appearing fails the build.
+
+**And a consequence worth naming.** Abstention makes the denominator differ between candidates in
+the same field, so a candidate with more to say about it is judged over a larger one. That is not
+new — D-048 introduced it in Phase 3 — but removing 5.3 units of shared weight made it larger, and
+it is visible: on "Nine months of evenings" the ordering of three near-tied candidates changed. The
+new ordering is the honest one — the move whose own record says it half-works at the weekend now
+loses on a Saturday and wins on the Friday — and the app says out loud that the call was close.
+
+---
+
+## D-138 — An advisor's reach is a share of the field it is judging
+
+**Phase:** 82 · **Status:** Active — AUD-0039
+
+`MAX_NUDGE` is a quarter of the ranked spread, capped at the old absolute of 0.06. A field with one
+candidate has no spread and no contest, so the bound is zero.
+
+**Why a number was wrong.** The comment above it said a nudge "can settle a close contest and
+cannot reverse a decided one", and 0.06 was chosen against an assumed score range. On the range the
+evaluator actually produced, an ordinary evening's whole ranked field spanned 0.137 to −0.023 and
+the top two were 0.002 apart — so 0.06 was large on that scale and would have reversed most
+rankings the audit observed. The fence was calibrated against a scale nobody had measured, and
+AUD-0035 was about to change the real one.
+
+**What the share buys.** Two candidates can be moved past each other only if they were inside half
+the spread to begin with — one lifted a quarter, one dropped a quarter — so the old comment's
+sentence is now arithmetic. Asserted on the arithmetic rather than on a scenario, because it is a
+claim about every possible field.
+
+**The ceiling stays.** A very wide field must not buy a very large opinion: the advisor settles a
+margin and never becomes a dimension.
+
+**D-024 and D-025 are untouched.** The tournament was re-run against the re-cut instrument under a
+rubric widened by the three checks AUD-0039 asks for — does it get the hour right, does it repeat
+itself across a day, does it notice an approach failing — and both architectures scored 100/100.
+The hybrid still scores no better, so the baseline stands for the reason it always did.
+
+---
+
+## D-139 — A sweep names the branches it does not reach
+
+**Phase:** 82 · **Status:** Active — owner-facing rule, generalising D-108
+
+Where a sweep asserts something about a closed set of owner-facing sentences, it enumerates which
+members of that set the library actually reaches, and names the ones it does not with the reason
+and with where they are covered instead.
+
+**What this was learned from, twice in one phase.**
+
+`explain.ts` rendered `nothing-better` as _"Nothing else is pressing, and X pays back tomorrow"_ —
+DEF-0012's absence-asserted-from-ignorance, in the same file two siblings had already been removed
+from, guarded by a test that forbids that exact phrase by name. It survived three phases because no
+history in the library reached the branch. The first scenario with a career move and no career goal
+printed it on the first run.
+
+`recall-practice` refused no hour at all, so the app offered a study session at eleven at night. It
+survived because every check of "does it suit the hour" ran at the one hour each history was
+written for. The tournament rubric, widened to ask at every hour, found it immediately.
+
+**So the rule is mechanical, and it is D-108's fourth check applied to coverage rather than to
+assertions.** A green sweep over a set is evidence about the members it reached. Writing down which
+those are turns "we did not check that" into a failing test the day somebody removes the exception
+or adds a member, and turns an unread sentence into a named gap rather than a silent one.

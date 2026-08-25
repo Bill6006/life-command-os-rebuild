@@ -227,12 +227,18 @@ export function LifeScreen() {
           {situation === undefined ? null : <DayShape situation={situation} />}
 
           <Panel title="Why this is here">
+            {/*
+              Trimmed in Phase 82, and not to make room.
+
+              The four-step account of how the app repairs stale coverage is the
+              app explaining its own machinery — DEF-0005's class, on a screen
+              whose complaint was being homework. What is load-bearing is the
+              first two sentences: an area may be quiet, and it may not be quiet
+              unnoticed.
+            */}
             <p>
               An area is allowed to be quiet. What it is not allowed to be is quiet without anybody
-              noticing — so nothing above is a task, and most of it should stay dull. When something
-              does go out of date, the app tries what your ordinary week already produces, then what
-              it can work out, then a move on Now, then one small question, before it ever asks you
-              to come and look.
+              noticing — so nothing above is a task, and most of it should stay dull.
             </p>
           </Panel>
         </>
