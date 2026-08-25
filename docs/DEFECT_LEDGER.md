@@ -39,6 +39,187 @@ None.
 
 ## Fixed
 
+### DEF-0074 (AUD-0001, AUD-0002, AUD-0036) — the app told the owner the time, and got it wrong
+
+- Status: Fixed
+- Severity: Major
+- Found in: whole-app audit / `0eb920b`
+- Found by: independent audit, on the deployed Preview
+- Class: **a word typed at the point of use rather than derived from what is
+  known.** Not a copy preference: the app's central claim is that it knows what
+  is going on, and two components of one decision disagreeing about what time it
+  is makes that claim visibly false. `tonight` or `evening` appeared 113 times
+  across 29 source files, so the assumption had been made 113 separate times and
+  could only be unmade 113 times.
+- Reproduction: the deployed build at **08:40 on a Tuesday morning**, with a
+  usable-time reading of 10 minutes. Now showed _"Tuesday morning, 8 hours of
+  sleep, about 10 minutes free."_ and, directly beneath it, _"What is in the way
+  — Only about 10 minutes left tonight."_ At 07:30 the guide asked how much time
+  there was and offered **"The evening is clear"** as an answer. The evidence
+  panel — the surface whose job is to be checkable — read _"WHAT THIS RESTED ON
+  TONIGHT"_, _"SITUATIONS LIKE TONIGHT"_ and _"An evening counts as comparable
+  on the same few things the app compares evenings on"_ at every hour of the day.
+- Root cause: there was no shared vocabulary for the horizon. `whenPhrase`
+  existed in exactly one file and was private to it; `findLimiter` was never
+  passed the block, and the seam was inside `situation.ts` itself — the block was
+  assembled after the limiter that needed it.
+- Regression: `tests/synthetic/block-sweep.test.ts` — _"the app never asserts the
+  evening outside the evening"_, swept over every scenario at every block across
+  every owner-visible string a decision can produce, plus the guide's question
+  and its answer labels. Its sibling asserts the other half: at eight in the
+  evening the app still says so, because a find-and-replace would pass the first
+  test and make the product worse.
+- Siblings: the state label ("New tonight"), the decline button, the
+  recommendation and trigger templates, the four "why this one" phrases, the
+  no-action copy, the Insights eyebrow, the export sections and the concept
+  registry's own display label — all in the same commit.
+- Fixed in: `979179e`
+
+### DEF-0075 (AUD-0005) — last night's sleep expired mid-morning, and a buried table did not
+
+- Status: Fixed
+- Severity: Major
+- Found in: whole-app audit / `0eb920b`
+- Found by: independent audit, on the deployed Preview
+- Class: **a freshness window measured as elapsed time when the fact is true of
+  something.** Every unit was a countdown from the reading, so a fact about a
+  specific night aged like milk while a claim about the state of a room did not.
+- Reproduction: "A week pointed at the house". At 06:30 the situation line read
+  _"Wednesday early morning, 8 hours of sleep, Adaya is here."_; at 10:00 the same
+  day it read _"Wednesday morning, Adaya is here."_ — same value, same night, and
+  the app had lost its best morning fact at the hour it most needed it.
+- Root cause: `FreshnessHorizon` had two units and both were elapsed-time
+  measures. There was no unit meaning "valid for the local day it describes" or
+  "valid within the part of the day it was said in".
+- Regression: `tests/unit/registries.test.ts` — _"a reading expires with the
+  thing it is about"_, including the assertion that the new unit is **not** a
+  widening; and `tests/synthetic/g011-timezone-and-week-boundary.test.ts`, where
+  G-011's own claim is now proved twice.
+- Siblings: `usableTimeTonight` expired four hours after it was said rather than
+  at its block boundary; `homeFriction` was current for a week. Both changed, and
+  the reasoning for each is written where the number is.
+- Fixed in: `f40a6e9`
+
+### DEF-0076 (AUD-0003) — nine hours short of rest at ten in the morning, and it prescribed a study session
+
+- Status: Fixed
+- Severity: Blocker
+- Found in: whole-app audit / `0eb920b`
+- Found by: independent audit, on the deployed Preview
+- Class: **DEF-0016 a second time — a filter with no fallback**, and the reason
+  it came back is written into DEF-0016's own regression: that sweep runs "every
+  half hour from noon to midnight". The morning was never swept.
+- Reproduction: "Three broken nights, and a deadline", clock at **10:00
+  Tuesday**. Now: _"Tuesday morning, 9 hours short on sleep."_ / *_"RECALL
+  PRACTICE — Spend 10 minutes recalling subnetting before you reopen your
+  notes."_ / _"What is in the way — About 9 hours short of rest over the last few
+  nights."_ The probe reported three candidates, all career, and two ruled out as
+  `too-strained`.
+- Root cause: `sleepCandidates` returned `[]` outright before noon, because no
+  recovery verb suits those blocks and proposing one would only be refused. The
+  early return was honest about the verb table; nothing was put in its place.
+- Regression: `tests/synthetic/recovery-has-somewhere-to-go.test.ts` — the sweep
+  now runs **midnight to midnight**, plus AUD-0003's invariant swept over every
+  scenario at every block, plus the reproduction itself.
+- Siblings: the `capacity` limiter still has no restorative candidate. That is
+  named in the same file rather than hidden, with the reasoning: AUD-0003's
+  implementation guidance says to gate on strain exactly as the existing
+  generator does, and widening it made a sore, well-rested father be told to ease
+  off instead of spending half an hour with his daughter.
+- Fixed in: `ecd1656`
+
+### DEF-0077 (AUD-0048, AUD-0049) — "three times running" about a four-year-old, from a record that alternates
+
+- Status: Fixed
+- Severity: Blocker
+- Found in: whole-app audit / `0eb920b`
+- Found by: independent audit, through the QA document loader
+- Class: **a claim written from the survivors of a filter, as though the filter
+  had ordered them.** It is also DEF-0022 / DEF-0033 / DEF-0039's class a fifth
+  time — two owner-visible lines about one thing that a reader has no way to
+  reconcile — and the subject this time is a child.
+- Reproduction: a constructed history of six occasions of "ordering her own
+  food", alternating all-the-way and part-of-the-way — three of six, never twice
+  in a row, the most recent one needing help. At one instant, on two screens:
+  **Now** — _"Adaya has handled ordering her own food 3 times running. Worth
+  calling that settled?"_ with [Yes, she has got this]; **Fatherhood** — the
+  alternating record, in full. Tapping yes would have recorded _"She handles
+  ordering her own food independently now."_
+- Root cause: `growthSuggestions` built `cleared` by discarding every occasion
+  that did not reach 0.9 and wrote the headline from the length of what was left.
+  Nothing checked adjacency because nothing needed to until a history contained a
+  failure — and **no scenario in the library contained one**.
+- Regression: `tests/synthetic/g003-growth-evidence.test.ts` — _"D-112 — the app
+  reads the sequence rather than the survivors"_, including the exact
+  reproduction, the run that ends on a partial, the copy sweep for any
+  percentage, rank, grade or scale about her, and the assertion that the internal
+  confidence never renders.
+- Siblings: `daysSincePractice` counted a refusal as practice (AUD-0014); the
+  explanation rendered a skill through a sentence written for a person
+  (AUD-0015b); the reason for a developmental challenge was the age of the app's
+  own records (AUD-0016); and Insights and Now stated different sufficiency about
+  one skill at one instant (AUD-0037). All four in the same commit.
+- Fixed in: `e4f72e7`
+
+### DEF-0078 (AUD-0028, AUD-0032) — a causal claim with nothing behind it, and a coin flip spoken as a fact
+
+- Status: Fixed
+- Severity: Major
+- Found in: whole-app audit / `0eb920b`
+- Found by: independent audit, on the deployed Preview
+- Class: **a constant that reads as a finding.** A clause that cannot be
+  falsified by evidence, because no evidence reaches it; and a phrasing layer
+  that collapsed `known` and `inferred` and therefore could not tell a reading
+  from a guess.
+- Reproduction: "A month of what actually worked" and "Nine months of evenings"
+  produced **byte-identical** recommendation and explanation — _"The kitchen
+  table is buried again — and it costs you the start of every evening."_ — with
+  the only difference one advisory line below, which said the move had made
+  little difference. Separately, the default history at Monday 15:05: Now said
+  _"There is enough in the tank for a walk"_ while the belief store said
+  _"Current energy — 2 of 5 · inferred, 50%"_.
+- Root cause: the causal clause was a string constant in `explain.ts`, and the
+  learned band was rendered as a separate advisory line that never reached
+  `whyNow()`. `isUsable()` collapses two knowledge states, and the phrasing read
+  it that way.
+- Regression: `tests/synthetic/decision-evidence.test.ts` — the section-64
+  regression, the causal sweep, and AUD-0032's hedge asserted in both directions;
+  plus `tests/unit/architecture-guards.test.ts`, whose causal sweep now covers
+  `explain.ts` and `recommendation.ts`. It covered the surfaces and the module
+  that words a _finding_, and missed the module that words the _reason_.
+- Siblings: none outstanding. The same sweep found no other causal construction.
+- Fixed in: `c7ee339`
+
+### DEF-0079 (AUD-0023, AUD-0025, AUD-0050) — the decline loop jammed, and there was no way to say stop
+
+- Status: Fixed
+- Severity: Major
+- Found in: whole-app audit / `0eb920b`
+- Found by: independent audit, on the deployed Preview
+- Class: **every owner action honoured individually, with no response to the
+  pattern of them.** Section 4.3 gives the owner six things he can do and the
+  interface offered five.
+- Reproduction: "Three times running", 17:00. Can't right now ×1 → the walk. ×2 →
+  the growth opportunity. ×3 → **back to** _"Spend the next 30 minutes with
+  Adaya, phone away"_, badged _"You said not right now"_. ×4 → identical screen,
+  no button doing anything, and the situation line gone. Separately: the
+  identical kitchen sentence at 06:30, 10:00, 14:00 and 19:00 of one day, because
+  a move shown and ignored left no trace and scored _"+0.20 — not offered
+  lately"_.
+- Root cause: `settledRecently` held a decline for a day and an unable-now for
+  nothing at all, so the rotation could walk back onto its own first move;
+  `recent-duplication` read only recorded recommendations, which is to say only
+  the moves the owner responded to; and no control in the product could construct
+  the `preference` record `vetoFor` had always enforced.
+- Regression: `tests/synthetic/refusal-and-veto.test.ts`, plus
+  `tests/browser/phase81.spec.ts` for the controls a thumb has to find, plus the
+  architecture guard asserting the shown-ledger is unreachable from learning,
+  insights, association, Timeline, the store and the export path.
+- Siblings: `nothing-proposed` read as the app not being ready at seven in the
+  morning (AUD-0034), and the situation line vanished in every no-action state.
+  Both in the same commit.
+- Fixed in: `cb44c62`
+
 ### DEF-0073 (QA-08-003, QA-08-004) — two regressions that claimed more than they asserted
 
 - Status: Fixed

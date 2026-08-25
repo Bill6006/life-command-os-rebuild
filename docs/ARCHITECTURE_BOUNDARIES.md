@@ -96,9 +96,33 @@ Three further boundaries hold inside the folder:
   and cannot reach each other's (D-045). Section 20's first two rules are held
   by the code paths not meeting rather than by anyone remembering them.
 
+`vocabulary` joined the open list in Phase 81, and it is the least interesting
+entry on it: a table of words. `horizonWord`, `hereNowWord`, `blockNoun`,
+`restOfWord` and `withinPhrase` turn a `DayBlock` into what a person calls it and
+do nothing else. It is open because the alternative is worse — the audit found
+the word `tonight` typed by hand 113 times across 29 files, including on Now and
+on the decline button, and a surface that could not reach the one definition
+would have to keep its own copy.
+
+The definitions themselves live one layer down, in `src/domain/horizon.ts`,
+because `domain/recommendation.ts` composes the move sentences and may not import
+this layer. `vocabulary.ts` re-exports them: two doors, one definition, and the
+same arrangement `memoryContext.ts` uses for `HistorySource`.
+
+**One thing arrives from the surface rather than from the store**, and it is the
+only one. `Situation.shown` is what the current session has already put on
+screen today — one entry per move per owner-local day (AUD-0025, D-118). D-043
+still holds: nothing is written when a screen renders. This is not a record, it
+is not durable, and it is data on the moment rather than a lookup, because
+reaching for a ledger from inside a pure, clock-free layer would breach that
+boundary _invisibly_ — it is not a directory violation, so the existing guard
+would not fire. `recent-duplication` reads it; `learning`, `insights`,
+`association`, Timeline, `src/memory/` and the export path may not, and
+`tests/unit/architecture-guards.test.ts` fails the build on any of them.
+
 _Created in Phase 2. Phase 3 added `lifecycle.ts`, `outcomes.ts`, `learning.ts`
 and `corrections.ts`. Phase 4 added `coverage.ts`, `derived.ts` and `growth.ts`.
-Phase 6 added `insights.ts`._
+Phase 6 added `insights.ts`. Phase 81 opened `vocabulary.ts`._
 
 ## `src/features/` — owner surfaces
 
@@ -220,17 +244,21 @@ An invariant about **what the app is allowed to claim** gets a named home, one
 `describe` block per invariant, so that a later reader can find the rule from
 the defect and the defect from the rule.
 
-| Invariant             | Home                                                                           |
-| --------------------- | ------------------------------------------------------------------------------ |
-| action identity       | `tests/synthetic/observed-relationships.test.ts`                               |
-| negative exposure     | `tests/synthetic/observed-relationships.test.ts`                               |
-| context               | `tests/synthetic/observed-relationships.test.ts`                               |
-| confounding           | `tests/synthetic/observed-relationships.test.ts`                               |
-| correctability        | `tests/synthetic/observed-relationships.test.ts`                               |
-| tracked state meaning | `src/domain/concepts.ts` + `tests/unit/registries.test.ts`                     |
-| historical order      | `tests/synthetic/domain-page-data.test.ts`, `tests/synthetic/timeline.test.ts` |
-| freshness language    | `tests/unit/life-pages.test.ts`, `tests/synthetic/domain-page-data.test.ts`    |
-| synthetic vs real     | `tests/browser/qa-lab.spec.ts`                                                 |
+| Invariant                                   | Home                                                                           |
+| ------------------------------------------- | ------------------------------------------------------------------------------ |
+| action identity                             | `tests/synthetic/observed-relationships.test.ts`                               |
+| negative exposure                           | `tests/synthetic/observed-relationships.test.ts`                               |
+| context                                     | `tests/synthetic/observed-relationships.test.ts`                               |
+| confounding                                 | `tests/synthetic/observed-relationships.test.ts`                               |
+| correctability                              | `tests/synthetic/observed-relationships.test.ts`                               |
+| tracked state meaning                       | `src/domain/concepts.ts` + `tests/unit/registries.test.ts`                     |
+| historical order                            | `tests/synthetic/domain-page-data.test.ts`, `tests/synthetic/timeline.test.ts` |
+| freshness language                          | `tests/unit/life-pages.test.ts`, `tests/synthetic/domain-page-data.test.ts`    |
+| synthetic vs real                           | `tests/browser/qa-lab.spec.ts`                                                 |
+| the horizon a sentence names                | `tests/synthetic/block-sweep.test.ts`                                          |
+| what may be claimed about the child         | `tests/synthetic/g003-growth-evidence.test.ts`                                 |
+| a limiter has somewhere to go               | `tests/synthetic/recovery-has-somewhere-to-go.test.ts`                         |
+| what a refusal means, and what a veto means | `tests/synthetic/refusal-and-veto.test.ts`                                     |
 
 Two rules about these tests, both learned the expensive way:
 

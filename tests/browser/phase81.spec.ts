@@ -121,15 +121,6 @@ test.describe('the growth suggestion', () => {
 // AUD-0050 — the sixth owner action
 // ---------------------------------------------------------------------------
 
-/**
- * Back to the laboratory without reloading, so the clock it set survives.
- */
-async function backToQa(page: Page) {
-  await page.locator('.topbar').getByRole('button', { name: 'More' }).click()
-  await page.getByRole('link', { name: 'Open the QA laboratory' }).click()
-  await expect(page.getByRole('heading', { level: 1, name: 'QA' })).toBeVisible()
-}
-
 test.describe('stopping a recommendation family', () => {
   /**
    * Refuse the move on screen, and the offer to stop it for good follows it.

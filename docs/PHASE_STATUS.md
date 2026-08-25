@@ -22,6 +22,160 @@ reopens Phase 4 or any completed phase.
 
 ---
 
+# Phase 81 — Correctness and truthfulness
+
+**Status: YELLOW — READY FOR INDEPENDENT QA.**
+
+Under D-077 this conversation may not approve its own phase. Twenty-two audit
+findings in six steps, every one of them a thing the app states that is untrue or
+an action the plan promises that the interface lacks. Nothing here is a new
+capability, a new domain or a new screen.
+
+The specification is
+[`WHOLE_APP_INTELLIGENCE_AUDIT.md`](WHOLE_APP_INTELLIGENCE_AUDIT.md) section 6.
+The governing decisions written before any code changed are **D-109 … D-113**;
+the ones written during the work are **D-114 … D-121**.
+
+## Checkpoint
+
+| | |
+| --- | --- |
+| Product checkpoint | `PRODUCT_SHA` — the last commit that changes the bundle |
+| Deployed Preview SHA | `DEPLOYED_SHA` |
+| Relationship | Proved with `node scripts/checkpoint-equivalence.mjs PRODUCT_SHA`, per D-097. Not asserted as string equality: this repository redeploys on every push, including a documentation-only one. |
+| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+
+## Exact verification results
+
+| Gate | Result |
+| --- | --- |
+| `npm run verify` from a clean checkout | **PASS** — format, lint, typecheck, 1,310 unit tests across 59 files, build |
+| Unit layer | **1,310 / 1,310** across 59 files (was 1,199 / 1,199 across 57) |
+| Browser, three widths | **489 / 489** at 360, 430 and 1,280px — 163 each |
+| Android-style gate on the deployed build | **ANDROID_RESULT** |
+| Privacy scan | clean, 216 tracked files |
+| Block sweep, every scenario × every block | in `tests/synthetic/block-sweep.test.ts`, and by hand through the laboratory's own control |
+
+**One thing was already failing before a line of code changed, and is fixed in
+its own commit.** `npm run verify` runs `format:check`, and three documents
+written after Phase 8 closed — `DECISION_LOG.md`, `NEXT_PROMPT.md` and
+`WHOLE_APP_INTELLIGENCE_AUDIT.md` — had never been through the formatter. The
+standing gate is "verify from a clean checkout", and it did not hold at the
+checkpoint this phase started from.
+
+## The six steps
+
+**81.0 — the instrument (AUD-0008).** The library was thirteen evenings, one late
+night, three afternoons and one morning, and that one morning is the near-empty
+history that produces no move. Nothing in it ever asked the engine to decide
+before noon, which is how every temporal finding survived 1,199 green assertions.
+Three fixtures close the gap — a morning after three bad nights, a Saturday
+morning with the day open, and the first history the library has ever held
+containing a failed growth occasion — and `sweepDayBlocks` re-runs one history at
+all five blocks without moving the clock, with a control in the laboratory that
+shows the five answers side by side.
+
+**81.1 — the horizon (AUD-0002 → AUD-0001, AUD-0036; AUD-0005).** One definition
+of what to call the part of the day, in `src/domain/horizon.ts` and re-exported
+under the name the audit gave it. Every function there is total and an unknown
+block is never the evening. The limiter, the templates, every explanation branch,
+the four "why this one" phrases, the no-action copy, the guide's prompts **and
+its answer labels**, the evidence panel's headings and its own account of
+comparability, the decline button and the state label all read it now. Separately,
+two freshness units that describe validity rather than shelf life: last night's
+sleep is true of the day it describes, and how much time there is expires with
+the part of the day it was said in.
+
+**81.2 — the morning has an answer (AUD-0003).** `lighten-the-day`, gated on
+strain exactly as the existing generator is, and worded only from what is known —
+it defers nothing to a tomorrow the app has no model of. DEF-0016's sweep now
+runs midnight to midnight rather than noon to midnight, which is the bound that
+let this survive.
+
+**81.3 — Adaya (AUD-0048 → 0049; AUD-0014 → 0015b, 0016; AUD-0037).** The
+evidence is the sequence rather than the survivors, so the only count the app can
+honestly speak is the run the record ends on — which makes the most recent
+contrary occasion hold a settled suggestion back on its own. No share, no rate
+and no pass mark about a four-year-old anywhere. The suggestion carries an
+internal confidence that never renders and an evidence line in his own words. A
+decline stopped counting as practice; the growth move sits on the parent rather
+than on the child; and growth left the screen that was contradicting it.
+
+**81.4 — honest sentences (AUD-0032, 0028, 0027, 0026, 0033).** A guess is spoken
+as a guess. The app's best sentence about the owner's own life reaches the screen
+it is about. The unfounded causal clause is gone and the learned band is
+acknowledged rather than contradicted. The choice says what it cost. A near-tie
+does not read like a clear win.
+
+**81.5 — interaction (AUD-0025, 0023, 0050, 0034, 0031).** A session-scoped
+shown-ledger, handed to the engine as data on the moment. A refused move is out
+of the running for the block it was refused in, a question follows the second
+refusal, and the app stops after the third. "Stop suggesting this", listed and
+liftable. Silence that names the app's own reach rather than its readiness. And
+D-111's narrow exception, verified last because it changes how often the guide
+fires everywhere.
+
+## The gate, item by item
+
+| # | Acceptance item | Where it is proved |
+| --- | --- | --- |
+| 1 | No owner-visible string asserts the evening outside the evening, at any block, in any scenario | `block-sweep.test.ts` — every scenario × six moments, over the move, the reason, the premise, the limiter, the no-action states, the growth suggestion, the guide's question and labels, the whole evidence panel and every Insights card |
+| 2 | A named limiter always has a candidate that addresses it, in every block | `recovery-has-somewhere-to-go.test.ts` — **for `recovery`.** The `capacity` limiter is a named exception, asserted rather than hidden; see below |
+| 3 | No sentence about the child claims consecutiveness the occasions do not support; no percentage, rank, grade or score reaches any surface; the suggestion states how many occasions went the other way | `g003-growth-evidence.test.ts` |
+| 4 | The owner can stop a recommendation family, and find and lift that veto afterwards | `refusal-and-veto.test.ts` and `phase81.spec.ts` |
+
+## Open, and named rather than left to be found
+
+**The `capacity` limiter still has no restorative candidate.** AUD-0003's
+invariant names `capacity` alongside `recovery`; the same finding's
+implementation guidance says to gate the new verb on `strain !== 'none'` "exactly
+as the existing sleep generator does". Those do not agree. The gate is what this
+phase followed: widening it was tried and reverted because it made a sore,
+well-rested father be told to ease off instead of spending half an hour with his
+daughter — a scoring-model change dressed as a copy fix. What this phase does
+about a body in pain instead is AUD-0031: it asks before it prescribes exertion.
+The gap has its own test, which fails the day somebody closes it.
+
+**AUD-0027's refusal half is not shipped**, per the audit's own instruction to
+drop it if either half is in doubt. Surfacing "you have passed on this fourteen
+times" needs D-031 and DEF-0006's rule widened, and the audit calls that sentence
+the riskiest copy it proposes without offering wording for it. D-115 records the
+decision and a guard asserts no reason in the library mentions a refusal.
+
+**The shown-ledger does not flip the audit's own reproduction.** On "A week
+pointed at the house" the kitchen still wins at every hour of the day: the
+penalty is real and grows, and the kitchen's lead is wider than the whole range
+of `recent-duplication` at its current weight. Whether that weight is right is
+AUD-0035's question, which is Phase 82's. D-118 says so rather than re-cutting
+the instrument here.
+
+**AUD-0005's own two columns disagree.** Its Tests-required column asks that a
+reading taken at 22:00 still be known at 09:00 the next day; its
+Recommended-behaviour column says a sleep reading is valid for the local day that
+follows the night it describes. Those cannot both hold, and the recommended
+behaviour is what is implemented.
+
+**One known transient carries forward, unchanged.** One Playwright test per full
+local run fails at `page.goto` with `net::ERR_ABORTED`, on a different spec each
+time; this run it was `legacy-import.spec.ts` at 360px, and it passed alone
+immediately afterwards. Local dev-server flake rather than a product defect. Not
+retried past: reported again, with the spec named.
+
+## Deliberate non-features, unchanged
+
+No import from the QA laboratory, no partial import, no undo button. The v297
+ancestor export, life-context-change mapping, the load-bearing literal NUL byte
+in derived record ids, and the archived skill-claim, faith-anchor and
+milestone-observation families all carry forward from Phase 8.
+
+## Still open for the owner, and not this phase's to close
+
+Q1 (Adaya's age and normative references), Q4 (legacy evidence admissibility),
+Q6 (live model inference — D-025 stands), Q7 (which emotional dimensions exist)
+and Q8 (private evidence versus the concept registry).
+
+---
+
 # Phase 8 — Legacy migration
 
 **Status: GREEN — CLOSED after independent QA PASS.**
