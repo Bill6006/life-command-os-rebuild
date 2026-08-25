@@ -3540,3 +3540,121 @@ because it matters less.
 empty and requires a written `because` for any entry (D-091, DEF-0046). Pooling two routines is a
 claim that the owner's own two subjects are the same thing. **Diversity is delivered by modelling
 more distinct routines, never by pooling them.**
+
+---
+
+## D-114 — An inference below a stated confidence says where it came from
+
+**Phase:** 81 · **Status:** Active — builder decision, AUD-0032
+
+An owner-facing sentence may assert a reading as a fact when the reading is `explicit`, or when
+it is `inferred` at a confidence of **0.7 or above**. Below that it names what the inference rests
+on instead: _"Going on how the last few days have gone, there should be enough for a walk."_
+
+`SPOKEN_AS_FACT` lives in `explain.ts` beside the sentences it governs.
+
+**Why:** `isUsable()` collapses `known` and `inferred`, and the phrasing read it that way. On the
+default history the belief store reported _"Current energy — 2 of 5 · inferred, 50%"_ while Now
+said, flatly, _"There is enough in the tank for a walk, and the afternoon suits it."_ Two of five
+is the second-lowest reading on the scale, the confidence was a coin flip, and the sentence
+carried no hedge at all. Section 18's guardrail — never turn low confidence into confident
+language — is written as something a _model_ must not do, and the deterministic layer was doing
+it. `Knowledge` carries four states precisely so they can be told apart (D-014).
+
+**Why a threshold rather than hedging every inference.** The opposite failure is real and just as
+damaging: an app that qualifies every sentence sounds unsure of everything, and section 61 asks
+for direct copy. 0.7 is where a reading stops being a guess and starts being a working belief —
+the same shape as `MIN_PAIRS` and `MATERIAL_GAP` in `association.ts`, which is a number written
+down so it can be argued with.
+
+**What this is not:** a change to what the engine believes. The reading, its confidence and its
+weight in the ranking are all unchanged. Only the sentence moves.
+
+---
+
+## D-115 — An explanation may prefer a winning dimension's own sentence, and D-031 is not widened
+
+**Phase:** 81 · **Status:** Active — builder decision, AUD-0027
+
+`whyNow()` switches on the candidate's `trigger`, which is set at generation time before anything
+is scored — so it can only ever say why a move was _proposed_, never why it _won_. A dimension may
+now answer instead, and it is bounded on three sides:
+
+1. it must have **materially moved the score** — `value × weight ≥ 0.2`, and positive;
+2. it must **rest on a concept in the winning candidate's `leansOn`**, which is D-031 and
+   DEF-0006's rule, unchanged;
+3. it must carry a **`phrase` written for the owner**, never the `note` written for the inspector.
+
+The third is DEF-0040's rule given a type. `ConsideredFact.reading` was written for the inspector,
+reused verbatim on the evidence panel, and shipped _"not known — never-observed"_ to the owner;
+`note` says "+0.50 — current energy rose 11 of 14 times with it and 4 of 14 without, across the
+record", and shipping it raw would repeat that defect and breach section 61's ban on confidence
+arithmetic.
+
+**Why:** the app's best sentence about the owner's own life was computed, used to rank, and never
+shown to him. On "Two months of readings, and nothing graded" the screen said _"There is enough in
+the tank for a walk, and the evening suits it"_ while the ranking carried the specific,
+comparative, non-causal statement made entirely of his own record. Section 4.6 asks for the
+specific ordinary sentence over the elegant generic one, and the specific one already existed one
+layer down.
+
+**The refusal half of AUD-0027 is deliberately not shipped.** Surfacing _"you have passed on this
+fourteen times"_ requires widening the DEF-0006 rule from _concepts in `leansOn`_ to _concepts in
+`leansOn`, plus dimensions that materially moved the score_ — a deliberate amendment to a fix for
+a Blocker. Three things decided against it, and the audit itself names the tiebreak: it calls that
+sentence _"the riskiest copy in the audit"_, offers no wording it is willing to endorse, and says
+in as many words that it is the half to drop if either is in doubt. It also does not need the
+amendment to be reached later: the rule can be widened the day there is a sentence worth widening
+it for.
+
+**Consequence, asserted rather than assumed:** `tests/synthetic/no-hidden-genericity.test.ts`'s
+DEF-0006 regression is unchanged and still bites, and
+`tests/synthetic/decision-evidence.test.ts` asserts that no reason in the library mentions a
+refusal.
+
+---
+
+## D-116 — `protection` is half-reachable, and the unreachable half duplicates the filter
+
+**Phase:** 81 · **Status:** Active — builder finding, AUD-0026's second half
+
+The audit asked for `protection` to be explained: it reported `+0.00 — costs no other area
+anything` in every ranking observed, and asked either that it be given inputs or that it be
+recorded as dormant. Measured across every scenario in the library at six hours of the day —
+167 ranked rows — it is neither.
+
+- **`+0.5 — protects tomorrow`** fires 8 times. The dimension is live.
+- **`−0.5 — borrows against rest`** requires an effortful move with non-severe strain, which is
+  reachable in principle and which no history in the library currently produces.
+- **`−0.8 — this late it costs tomorrow`** requires an effortful move at late night, and **every
+  effortful move already refuses late night in its own profile**. The constraint filter removes
+  it before the evaluator sees it, so that branch is structurally unreachable.
+
+So `protection`'s heaviest branch is a second copy of a rule the filter already enforces, which is
+why it never fires and why nothing was lost by its never firing. It is left in place: removing a
+guard because the thing it guards is currently prevented elsewhere is how the thing stops being
+prevented.
+
+**What follows from this, and does not belong here.** Whether the ranking should keep a dimension
+whose strongest reading cannot occur is a question about the instrument, and AUD-0035 is the
+finding that asks it. This entry exists so that the answer is on the record when that phase asks.
+
+---
+
+## D-117 — Growth's own sufficiency is not a rate, so it is not on the rate screen
+
+**Phase:** 81 · **Status:** Active — builder decision, AUD-0037
+
+`growth-opportunity` is excluded from Insights' "Still gathering" list.
+
+**Why:** `GROWTH_OCCASIONS` is 3 and `MIN_FOR_A_RATE` is 4, and they measure different quantities —
+how many occasions before the app asks whether something about _her_ has changed, and how many
+before it can state a rate about what follows a _move_. The owner has no way to know that. At one
+instant, in one build, about one skill, Now asked him to conclude she had mastered it while
+Insights said the evidence needed one more occasion, and whichever he read second undermined the
+first.
+
+Excluding the verb rather than relabelling both, because `growth.ts` decides sufficiency here and
+the growth suggestion now carries its own evidence line (D-112, AUD-0049) — so nothing is lost.
+The exclusion is keyed on the verb rather than on whether a suggestion happens to be standing,
+because otherwise the contradiction returns the moment he answers.

@@ -1,8 +1,9 @@
 import type { EntityIndex } from '../domain/entities'
-import { isUsable } from '../domain/knowledge'
+import { isUsable, type Confidence } from '../domain/knowledge'
 import { describeFactValue, type OutcomeRecord } from '../domain/records'
 import {
   renderRecommendation,
+  verbLabel,
   type RecommendationSemantics,
   type RenderedRecommendation,
 } from '../domain/recommendation'
@@ -19,6 +20,7 @@ import {
   type IsoWeekday,
   type TimeZoneId,
 } from '../domain/time'
+import { CLOSE_ENOUGH_TO_MENTION } from './arbitrate'
 import type { DimensionName, Evaluation } from './evaluate'
 import { beliefKey } from './learning'
 import { describeHours, SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
@@ -197,7 +199,139 @@ export function composeReason(
   situation: Situation,
   entities: EntityIndex,
 ): string {
-  return `${whyNow(evaluation, situation, entities)}${directionClause(evaluation, situation)}`
+  const object =
+    entities.labelFor(evaluation.candidate.semantics.target.object) ??
+    entities.labelFor(evaluation.candidate.semantics.subject) ??
+    ''
+
+  return (
+    `${observedClause(evaluation) ?? whyNow(evaluation, situation, entities)}` +
+    `${learnedBandClause(evaluation, situation, object)}` +
+    `${directionClause(evaluation, situation)}` +
+    `${costClause(evaluation, situation, object)}`
+  )
+}
+
+/**
+ * How sure an inference has to be before it may be spoken as a fact — AUD-0032.
+ *
+ * A builder decision, written down because it is a number that governs what the
+ * app is willing to assert. Below it the sentence says where the reading came
+ * from; at or above it the reading stands on its own. Two of five at fifty per
+ * cent is the case that named the rule.
+ */
+export const SPOKEN_AS_FACT = 0.7
+
+function isGuess(known: { state: string; confidence?: Confidence }): boolean {
+  return known.state === 'inferred' && (known.confidence ?? 1) < SPOKEN_AS_FACT
+}
+
+/**
+ * How much of the score a dimension has to have moved before it may speak.
+ *
+ * `observed-change` carries weight 0.9, so a gap of a fifth clears this and a
+ * gap of a twentieth does not. The bar exists so that a dimension which barely
+ * touched the ranking cannot present itself as the reason.
+ */
+const MATERIALLY_MOVED_IT = 0.2
+
+/**
+ * The owner's own record, said out loud — AUD-0027.
+ *
+ * The app computed *"current energy rose 11 of 14 times with it and 4 of 14
+ * without"*, ranked the move with it, and then told him "There is enough in the
+ * tank for a walk, and the evening suits it". The specific sentence existed one
+ * layer down and never reached the screen it was about.
+ *
+ * `whyNow` switches on the candidate's trigger, which is set at generation time
+ * before anything is scored — so it can only ever say why a move was
+ * *proposed*, never why it *won*. This is the one place a winning dimension
+ * gets to answer instead, and it is bounded on three sides:
+ *
+ * - it must have materially moved the score, not merely have a value;
+ * - it must rest on a concept in the winning candidate's `leansOn`, which is
+ *   D-031 and DEF-0006's rule, unwidened;
+ * - it must carry a `phrase` written for the owner rather than a `note` written
+ *   for the inspector, which is DEF-0040's rule.
+ *
+ * **The refusal half of AUD-0027 is deliberately not shipped**, and the audit
+ * says which half to drop if either is in doubt. Surfacing "you have passed on
+ * this fourteen times" needs D-031 widened from *concepts in `leansOn`* to
+ * *concepts in `leansOn` plus dimensions that materially moved the score* — an
+ * amendment to a Blocker's fix — and the audit calls that sentence the riskiest
+ * copy it proposes, with no wording it is willing to endorse. See D-114.
+ */
+function observedClause(evaluation: Evaluation): string | undefined {
+  for (const dimension of evaluation.dimensions) {
+    if (dimension.phrase === undefined || dimension.restsOn === undefined) continue
+    if (dimension.value <= 0) continue
+    if (dimension.value * dimension.weight < MATERIALLY_MOVED_IT) continue
+    if (!leanedOn(evaluation, dimension.restsOn)) continue
+    return capitalise(dimension.phrase)
+  }
+  return undefined
+}
+
+/**
+ * What the owner's own outcomes say about this move, when they disagree with it.
+ *
+ * AUD-0028(b). The learned band was rendered as a separate advisory line and
+ * never reached the reason, so the screen said *"The kitchen table is buried
+ * again — and it costs you the start of every evening"* directly above *"Reset
+ * a space has made little difference in situations like tonight"*. Both from one
+ * run, each individually true, and no way for a reader to reconcile them —
+ * DEF-0022, DEF-0033 and DEF-0039's class for the fourth time.
+ *
+ * Only the two lower bands, and one clause. Hedging on every middling belief
+ * would make the app sound unsure of everything, which is the opposite failure
+ * and just as real.
+ */
+function learnedBandClause(evaluation: Evaluation, situation: Situation, object: string): string {
+  const learned = situation.learning.effectFor(
+    evaluation.candidate.semantics.target.verb,
+    situation.context,
+  )
+  if (learned.summary === undefined) return ''
+  if (learned.now > LITTLE_DIFFERENCE) return ''
+  // Named rather than pronominal, because a clause that says "it" and never
+  // says what "it" is about is the failure section 3 describes (DEF-0001).
+  return ` The last few times made little difference, and ${object} is still the best of what is here.`
+}
+
+/** The top of the band `learning.ts` calls "has made little difference". */
+const LITTLE_DIFFERENCE = 0.6
+
+/**
+ * What the choice cost, when it cost something — AUD-0026.
+ *
+ * Section 6 lists "relevant tradeoff" among the ten things Now should be able to
+ * show, and it was one of three on that list it could not. "Chosen over: a walk"
+ * plus "Worth more tonight" is a comparison, not a trade-off: the app never said
+ * *this is the evening you were going to study, and I am asking you to sleep
+ * instead* — not even in the scenario built to demonstrate exactly that, where
+ * `direction-fit` scored −0.30 and the screen said none of it.
+ *
+ * One clause, and it reads as a considered trade rather than an apology. The
+ * owner's sovereignty (section 4.3) is better served by an owner who can see
+ * what he is being asked to give up.
+ */
+function costClause(evaluation: Evaluation, situation: Situation, object: string): string {
+  const against = (name: DimensionName): boolean => {
+    const dimension = evaluation.dimensions.find((entry) => entry.name === name)
+    if (dimension === undefined) return false
+    return dimension.value * dimension.weight <= -MATERIALLY_MOVED_IT
+  }
+
+  const named = capitalise(object)
+  const weekly = situation.direction.weekly
+  if (against('direction-fit') && weekly.state === 'set') {
+    return ` The week is pointed at ${weekly.wording}, and ${object} still looks like the better call.`
+  }
+  if (against('goal-fit')) {
+    return ` ${named} does nothing for the goal you set, and still looks like the better call.`
+  }
+  if (against('protection')) return ` ${named} borrows a little from tomorrow.`
+  return ''
 }
 
 /**
@@ -378,10 +512,35 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
       const hour = hourThatSuits(evaluation, situation)
       const energy = situation.capacity.energy
       if (leanedOn(evaluation, CONCEPT.energy) && isUsable(energy)) {
-        if (energy.value >= 0.7) {
+        /*
+         * A guess is spoken as a guess — AUD-0032.
+         *
+         * `isUsable` collapses `known` and `inferred`, and the phrasing read it
+         * that way: on the default history the belief store reported *"Current
+         * energy — 2 of 5 · inferred, 50%"* while Now said, flatly, "There is
+         * enough in the tank for a walk, and the afternoon suits it". Two of
+         * five is the second-lowest reading on the scale, the confidence was a
+         * coin flip, and the sentence carried no hedge at all.
+         *
+         * Section 18's guardrail — never turn low confidence into confident
+         * language — is written as something a *model* must not do, and the
+         * deterministic layer was doing it. `Knowledge` carries four states
+         * precisely so they can be told apart (D-014); this reads them.
+         *
+         * Not every inference: over-hedging every sentence would be worse than
+         * the defect. Only an inference below {@link SPOKEN_AS_FACT}, and it
+         * names what the inference rests on rather than hedging into mush.
+         */
+        const guessing = isGuess(energy)
+        if (energy.value >= 0.7 && !guessing) {
           return hour === undefined
             ? `Energy is good.`
             : `Energy is good, and the ${hour} suits ${object}.`
+        }
+        if (guessing) {
+          return hour === undefined
+            ? `Going on how the last few days have gone, there should be enough for ${object}.`
+            : `Going on how the last few days have gone, there should be enough for ${object}, and the ${hour} suits it.`
         }
         return hour === undefined
           ? `There is enough in the tank for ${object}.`
@@ -390,6 +549,9 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
 
       const soreness = situation.capacity.soreness
       if (leanedOn(evaluation, CONCEPT.soreness) && isUsable(soreness) && soreness.value <= 0.3) {
+        if (isGuess(soreness)) {
+          return `Nothing in the record says anything is sore, so ${object} looks fine.`
+        }
         return hour === undefined
           ? `Nothing is sore.`
           : `Nothing is sore, and the ${hour} suits ${object}.`
@@ -503,6 +665,19 @@ export interface Explanation {
   /** Why it beat that one — the dimension that most separated them. */
   readonly insteadBecause: string | undefined
   /**
+   * Said out loud when the decision was close — AUD-0033.
+   *
+   * `arbitrate` already knew: a gap inside {@link CLOSE_ENOUGH_TO_MENTION}
+   * pushed a note reading "close — … 0.002 behind", and the note went only to
+   * the trace. So a 0.002 margin and a 0.2 margin produced identical screens,
+   * and the app presented a near-tie with exactly the confidence of a clear
+   * win. The information was computed, correct, and thrown away at the surface.
+   *
+   * Absent when the margin is wide, and absent when there was no contest at
+   * all: a single candidate is not a close call, it is the only call.
+   */
+  readonly closeCall: string | undefined
+  /**
    * What the owner's own outcomes contributed, when they contributed enough to
    * be worth saying. Absent on a move nothing has been learned about yet.
    */
@@ -551,6 +726,7 @@ export function explain(
   chosen: Evaluation,
   runnerUp: Evaluation | undefined,
   situation: Situation,
+  margin?: number,
 ): ExplanationResult {
   const entities = situation.entities
   const base = chosen.candidate.semantics
@@ -573,11 +749,19 @@ export function explain(
    */
   let instead: string | undefined
   let insteadBecause: string | undefined
+  let closeCall: string | undefined
   if (runnerUp !== undefined) {
     const other = renderRecommendation(runnerUp.candidate.semantics, entities, situation.block)
     if (other.ok) {
       instead = other.rendered.sentence
       insteadBecause = aheadBecause(chosen, runnerUp, situation.block)
+      if (margin !== undefined && margin <= CLOSE_ENOUGH_TO_MENTION) {
+        // Named, because the row sits beside "Chosen over" and "the other one"
+        // there is genuinely ambiguous about which of the two is meant — the
+        // same reason none of the `AHEAD_BECAUSE` phrases contains a pronoun.
+        const other = verbLabel(runnerUp.candidate.semantics.target.verb).toLowerCase()
+        closeCall = `Close call — ${other} was nearly it.`
+      }
     }
   }
 
@@ -622,6 +806,7 @@ export function explain(
           : { label: limiter.label, summary: limiter.summary },
       instead,
       insteadBecause,
+      closeCall,
       restsOn: learned.summary,
       restsOnBelief:
         learned.summary === undefined ? undefined : beliefKey('effect', semantics.target.verb),

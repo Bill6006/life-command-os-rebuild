@@ -414,11 +414,18 @@ function continuing(selection: Selection, situation: Situation): Selection {
     if (found === undefined) continue
     if (found === selection.chosen) return selection
 
+    const reordered = [found, ...selection.ranked.filter((evaluation) => evaluation !== found)]
+    const next = reordered[1]
+
     return {
       ...selection,
       chosen: found,
       noAction: undefined,
-      ranked: [found, ...selection.ranked.filter((evaluation) => evaluation !== found)],
+      ranked: reordered,
+      // Recomputed, not carried: the margin belongs to the pair actually on
+      // screen, and promoting a move that was under way changes both halves of
+      // it. A stale one would make Now call a wide gap a close call (AUD-0033).
+      margin: next === undefined ? undefined : found.score - next.score,
       notes: [
         ...selection.notes,
         `${found.candidate.id} is already under way, so it stays in front of what would otherwise have been chosen`,
@@ -665,7 +672,7 @@ export function decide(
     const reason = selection.noAction ?? 'nothing-worth-doing'
     noAction = { reason, ...noActionCopy(reason, situation) }
   } else {
-    const result = explain(selection.chosen, selection.ranked[1], situation)
+    const result = explain(selection.chosen, selection.ranked[1], situation, selection.margin)
     if (result.ok) {
       explanation = result.explanation
       state = stateOfChosen(selection.chosen, situation)

@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import { CONCEPT } from '../../src/domain/concepts'
+import { DOMAIN } from '../../src/domain/domains'
 import { evidenceForDecision, MIN_FOR_A_RATE } from '../../src/intelligence/insights'
+import { createKit } from '../../src/synthetic/kit'
 import { SCENARIOS } from '../../src/synthetic/scenarios'
-import { loadScenario, ORPHAN_PRONOUNS } from './harness'
+import { decideOn, loadScenario, ORPHAN_PRONOUNS } from './harness'
 
 /**
  * "See evidence" for the recommendation currently on screen
@@ -267,5 +270,264 @@ describe('an evening where the same move goes differently by context', () => {
         [],
       )
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 81.4 — honest sentences
+// ---------------------------------------------------------------------------
+
+/** Every sentence the reason and its clauses can put on Now, per scenario. */
+function reasonsAcrossTheLibrary(): readonly { id: string; reason: string }[] {
+  return SCENARIOS.map((scenario) => ({
+    id: scenario.id,
+    reason: loadScenario(scenario.id).decision().explanation?.rendered.reason ?? '',
+  })).filter((entry) => entry.reason !== '')
+}
+
+describe('AUD-0027 — the app says the best thing it knows about his own life', () => {
+  it('puts the observed relationship on Now, not only in the probe', () => {
+    /*
+     * "Two months of readings, and nothing graded", Saturday 18:10. Now said
+     * *"Move for 25 minutes: a walk. / There is enough in the tank for a walk,
+     * and the evening suits it."* while the ranking carried, one layer down,
+     * *"+0.50 — current energy rose 11 of 14 times with it and 4 of 14 without,
+     * across the record."* Section 4.6 asks for the specific ordinary sentence
+     * over the elegant generic one, and the specific one already existed.
+     */
+    const reason = loadScenario('observed-evenings').decision().explanation?.rendered.reason ?? ''
+    expect(reason.toLowerCase()).toContain('more often been')
+    expect(reason.toLowerCase()).toContain('a walk')
+    expect(reason.toLowerCase()).toContain('than without')
+  })
+
+  it('states an association and never a cause — D-089, D-066', () => {
+    // "Has more often been higher afterwards" is a statement about the record.
+    // "Does you good" would be a claim about the world that a comparison of two
+    // proportions cannot carry, in either direction.
+    for (const { id, reason } of reasonsAcrossTheLibrary()) {
+      expect(reason, id).not.toMatch(/\bcauses?\b|\bcaused\b|\bimproves?\b|\bboosts?\b/i)
+      expect(reason, id).not.toMatch(/\bmakes? you\b|\bcosts you\b|\bleads to\b/i)
+    }
+  })
+
+  it('never ships the inspector’s register to the owner — DEF-0040', () => {
+    /*
+     * The dimension's `note` is diagnostics copy: it names dimensions, quotes
+     * both sides of a comparison and says "across the record". `ConsideredFact.reading`
+     * was written that way, reused verbatim on the evidence panel, and shipped
+     * "not known — never-observed" to the owner. A `phrase` exists precisely so
+     * the two registers cannot be confused.
+     */
+    for (const { id, reason } of reasonsAcrossTheLibrary()) {
+      expect(reason, id).not.toMatch(/%/)
+      expect(reason, id).not.toMatch(/observed-change|bottleneck-fit|direction-fit|context-fit/)
+      expect(reason, id).not.toMatch(/across the record|\bpull\b|\bsamples?\b|\bweight\b/i)
+      expect(reason, id).not.toMatch(/\brose \d+ of \d+/i)
+    }
+  })
+
+  it('keeps D-031 unwidened, so a dimension may only speak from what was leaned on', () => {
+    /*
+     * The half of AUD-0027 that is **not** shipped, asserted rather than left
+     * implicit (D-114). Surfacing "you have passed on this fourteen times"
+     * needs the DEF-0006 rule widened from *concepts in `leansOn`* to *concepts
+     * in `leansOn` plus dimensions that materially moved the score* — an
+     * amendment to a Blocker's fix — and the audit calls that the riskiest copy
+     * it proposes with no wording it is willing to endorse.
+     */
+    for (const { id, reason } of reasonsAcrossTheLibrary()) {
+      expect(reason, id).not.toMatch(/passed on|turned .* down|said no to/i)
+    }
+  })
+})
+
+describe('AUD-0032 — a guess is spoken as a guess', () => {
+  /**
+   * The same Monday afternoon, with energy known or worked out.
+   *
+   * A `derived` reading resolves to `inferred` and takes the concept's own
+   * reliability as its confidence (D-014, D-059), which for energy is 0.4 —
+   * below the bar. An owner-reported one is `explicit` and stands on its own.
+   */
+  function afternoonWithEnergy(from: 'owner' | 'derived') {
+    const kit = createKit(
+      from === 'owner' ? 'HE1' : 'HE2',
+      'America/Denver',
+      '2026-05-01T12:00:00Z',
+    )
+    const walkable = kit.record(
+      'observation',
+      { occurredAt: kit.local('2026-05-11', '14:00'), domains: [DOMAIN.health] },
+      { concept: CONCEPT.energy, value: { type: 'scale', value: 2, of: 5 }, method: 'self-report' },
+    )
+    const sore = kit.record(
+      'observation',
+      { occurredAt: kit.local('2026-05-11', '14:00'), domains: [DOMAIN.health] },
+      {
+        concept: CONCEPT.soreness,
+        value: { type: 'scale', value: 0, of: 5 },
+        method: 'self-report',
+      },
+    )
+    const nights = [7.5, 7.75, 8].map((value, offset) =>
+      kit.record(
+        'observation',
+        {
+          occurredAt: kit.local(`2026-05-${String(9 + offset).padStart(2, '0')}`, '07:00'),
+          domains: [DOMAIN.sleep],
+        },
+        {
+          concept: CONCEPT.sleepHours,
+          value: { type: 'number', value, unit: 'hours' },
+          method: 'self-report',
+        },
+      ),
+    )
+
+    const energy =
+      from === 'owner'
+        ? walkable
+        : { ...walkable, provenance: { source: 'derived' as const, writtenBy: 'derived' } }
+
+    return kit.document({
+      entities: [],
+      records: [energy, sore, ...nights],
+      exportedAt: kit.local('2026-05-11', '15:05'),
+    })
+  }
+
+  const at = createKit('HE0', 'America/Denver', '2026-05-01T12:00:00Z').local('2026-05-11', '15:05')
+  const zone = createKit('HE0', 'America/Denver', '2026-05-01T12:00:00Z').zone
+
+  it('hedges a low-confidence inference and names what it rests on', () => {
+    const decision = decideOn(afternoonWithEnergy('derived'), at, zone)
+    expect(decision.situation.capacity.energy.state, 'the fixture should infer').toBe('inferred')
+    const reason = decision.explanation?.rendered.reason ?? ''
+    expect(reason).toMatch(/going on how the last few days have gone/i)
+  })
+
+  it('does not hedge a reading the owner actually gave', () => {
+    // The opposite failure is real: over-hedging every sentence would be worse
+    // than the defect, so the bar is a stated one rather than a mood.
+    const decision = decideOn(afternoonWithEnergy('owner'), at, zone)
+    expect(decision.situation.capacity.energy.state).toBe('explicit')
+    const reason = decision.explanation?.rendered.reason ?? ''
+    expect(reason).not.toMatch(/going on how the last few days have gone/i)
+    expect(reason).toMatch(/there is enough in the tank|energy is good|nothing is sore/i)
+  })
+
+  it('makes no flat assertion from a sub-threshold inference, anywhere in the library', () => {
+    for (const scenario of SCENARIOS) {
+      const decision = loadScenario(scenario.id).decision()
+      const energy = decision.situation.capacity.energy
+      if (energy.state !== 'inferred' || energy.confidence >= 0.7) continue
+      const reason = decision.explanation?.rendered.reason ?? ''
+      if (reason === '') continue
+      expect(reason, scenario.id).not.toMatch(/^there is enough in the tank/i)
+      expect(reason, scenario.id).not.toMatch(/^energy is good/i)
+    }
+  })
+})
+
+describe('AUD-0028 — two lines about one move that a reader can reconcile', () => {
+  it('makes one month and nine months say materially different things', () => {
+    /*
+     * Section 64, run properly. Both histories produced byte-identical
+     * recommendation *and* explanation — *"The kitchen table is buried again —
+     * and it costs you the start of every evening. / Why this one: Pays back
+     * more tomorrow."* — with the only difference one advisory line below,
+     * which said the move had made little difference while the reason asserted
+     * what it cost him.
+     */
+    const month = loadScenario('what-worked').decision()
+    const months = loadScenario('long-run').decision()
+
+    expect(month.explanation?.rendered.reason).toBeDefined()
+    expect(months.explanation?.rendered.reason).toBeDefined()
+    expect(months.explanation?.rendered.reason).not.toBe(month.explanation?.rendered.reason)
+    expect(months.explanation?.rendered.reason).toMatch(/made little difference/i)
+  })
+
+  it('asserts nothing causal about his own evenings', () => {
+    // The clause that went: "— and it costs you the start of every evening" is
+    // a causal claim with nothing behind it, and a constant cannot be falsified
+    // by evidence because no evidence reaches it (section 68, D-066, D-089).
+    for (const { id, reason } of reasonsAcrossTheLibrary()) {
+      expect(reason, id).not.toMatch(/costs you the start of every evening/i)
+    }
+  })
+})
+
+describe('AUD-0026 — the app says what the choice cost', () => {
+  it('names the cost when the winner is against the week the owner set', () => {
+    /*
+     * "Three broken nights, and a deadline": the app chooses recovery over the
+     * CCNA session in the same week the owner set the CCNA push as his
+     * direction, `direction-fit` scored −0.30, and the screen said none of it.
+     */
+    const decision = loadScenario('running-on-empty').decision()
+    const direction = decision.evaluation?.dimensions.find((d) => d.name === 'direction-fit')
+    expect((direction?.value ?? 0) * (direction?.weight ?? 0)).toBeLessThan(0)
+    expect(decision.explanation?.rendered.reason).toMatch(/the week is pointed at/i)
+  })
+
+  it('says nothing about a cost when the move is what the week is about', () => {
+    const decision = loadScenario('rested-and-behind').decision()
+    expect(decision.explanation?.rendered.reason).not.toMatch(/the week is pointed at/i)
+  })
+
+  it('reads as a considered trade rather than an apology', () => {
+    for (const { id, reason } of reasonsAcrossTheLibrary()) {
+      expect(reason, id).not.toMatch(/sorry|unfortunately|afraid|apolog|i know you|forgive/i)
+    }
+  })
+})
+
+describe('AUD-0033 — a near-tie does not read like a clear win', () => {
+  it('says so when the margin is inside the arbiter’s own threshold', () => {
+    /*
+     * "Nine months of evenings", Saturday 19:30: the probe read *"chosen at
+     * 0.137 from 4 that fitted"* and *"close — …/recall-practice came in at
+     * 0.135, 0.002 behind"*, and Now showed a flat declarative recommendation.
+     * A 0.002 margin and a 0.2 margin produced identical screens.
+     */
+    const decision = loadScenario('long-run').decision()
+    const chosen = decision.evaluation?.score ?? 0
+    const runnerUp = decision.trace.ranking[1]?.score ?? 0
+    expect(chosen - runnerUp).toBeLessThanOrEqual(0.02)
+    expect(decision.explanation?.closeCall).toBeDefined()
+    expect(decision.explanation?.closeCall).toMatch(/close call/i)
+  })
+
+  it('stays quiet when the winner is clear', () => {
+    const decision = loadScenario('morning-after-bad-nights').decision()
+    const chosen = decision.evaluation?.score ?? 0
+    const runnerUp = decision.trace.ranking[1]?.score ?? 0
+    expect(chosen - runnerUp).toBeGreaterThan(0.02)
+    expect(decision.explanation?.closeCall).toBeUndefined()
+  })
+
+  it('does not present a single candidate as a choice', () => {
+    for (const scenario of SCENARIOS) {
+      const decision = loadScenario(scenario.id).decision()
+      if (decision.trace.ranking.length !== 1) continue
+      expect(decision.explanation?.instead, scenario.id).toBeUndefined()
+      expect(decision.explanation?.closeCall, scenario.id).toBeUndefined()
+    }
+  })
+
+  it('does not fire on most evenings, which would be evidence for AUD-0035', () => {
+    // The audit's own instruction: measure how often it fires before shipping
+    // the clause. If it fired on most evenings that would be evidence the score
+    // scale has collapsed (AUD-0035) rather than a reason to suppress it.
+    const spoken = SCENARIOS.map((scenario) => loadScenario(scenario.id).decision()).filter(
+      (decision) => decision.explanation !== undefined,
+    )
+    const close = spoken.filter((decision) => decision.explanation?.closeCall !== undefined)
+    expect(close.length, 'a close call on every evening is a scale problem').toBeLessThan(
+      spoken.length / 2,
+    )
+    expect(close.length, 'the clause never fires, so nothing is being tested').toBeGreaterThan(0)
   })
 })

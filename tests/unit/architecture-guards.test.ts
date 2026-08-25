@@ -1047,6 +1047,10 @@ describe('the owner is not asked to do the app’s thinking — D-089', () => {
       /\bimproves?\b/i,
       /\bboosts?\b/i,
       /\bmakes? you (?:feel|more|less)\b/i,
+      // Phase 81 — AUD-0028. Two constructions the explanation templates
+      // were using about the owner's own evenings with nothing behind them.
+      /\bcosts you\b/i,
+      /\bleads to\b/i,
     ]
 
     const offenders: string[] = []
@@ -1054,6 +1058,24 @@ describe('the owner is not asked to do the app’s thinking — D-089', () => {
       ...FEATURES.filter((file) => !repoPath(file).startsWith('src/features/qa/')),
       join(ROOT, 'src/intelligence/association.ts'),
       join(ROOT, 'src/intelligence/insights.ts'),
+      /*
+       * The explanation templates joined in Phase 81 — AUD-0028.
+       *
+       * The sweep covered the surfaces and the module that words a finding,
+       * and missed the module that words the *reason* — which is the sentence
+       * the owner reads first. `explain.ts` was ending the home-friction
+       * branch with "and it costs you the start of every evening": a causal
+       * claim about his own evenings that nothing has ever measured, printed
+       * directly above a learned line saying the move had made little
+       * difference. A constant clause cannot be falsified by evidence,
+       * because no evidence reaches it.
+       *
+       * `recommendation.ts` is here for the same reason one layer earlier: it
+       * holds the action and trigger templates, and a causal clause typed
+       * into one of those reaches every owner surface at once.
+       */
+      join(ROOT, 'src/intelligence/explain.ts'),
+      join(ROOT, 'src/domain/recommendation.ts'),
     ]
 
     for (const file of sources) {

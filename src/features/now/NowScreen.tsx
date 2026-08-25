@@ -550,6 +550,19 @@ function DetailPanel({
     explanation.insteadBecause === undefined
       ? undefined
       : { label: 'Why this one', value: explanation.insteadBecause },
+    /*
+      How close it was — AUD-0033.
+
+      The arbiter already knew and said so only to the trace, so a hundredth of
+      a point and a fifth of a point produced identical screens. It sits under
+      "why this one" because that is the row it qualifies: the owner learns
+      when the app is genuinely sure and when it is picking between near-equals,
+      which is exactly what makes a recommendation easy to accept or easy to
+      overrule.
+    */
+    explanation.closeCall === undefined
+      ? undefined
+      : { label: 'How close', value: explanation.closeCall },
     state === undefined || state === 'shown'
       ? undefined
       : { label: 'Where this stands', value: stateWord(state, block) },

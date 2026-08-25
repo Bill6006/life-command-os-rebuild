@@ -50,6 +50,16 @@ export interface Selection {
   /** Everything that survived, best first. */
   readonly ranked: readonly Evaluation[]
   readonly noAction: NoActionReason | undefined
+  /**
+   * How far ahead the winner finished, when there was a runner-up — AUD-0033.
+   *
+   * Structured rather than prose, because the margin was already computed here
+   * and put only into `notes`: a 0.002 gap and a 0.2 gap produced identical
+   * screens, so the app presented a near-tie with exactly the confidence of a
+   * clear win. Undefined when nothing else survived, which is a different state
+   * from a wide margin and reads differently on Now.
+   */
+  readonly margin: number | undefined
   /** How the choice was settled, in the trace's words. */
   readonly notes: readonly string[]
 }
@@ -86,6 +96,7 @@ export function arbitrate(
     return {
       chosen: undefined,
       ranked,
+      margin: undefined,
       noAction: ruledOut > 0 ? 'everything-ruled-out' : 'nothing-proposed',
       notes:
         ruledOut > 0
@@ -100,6 +111,7 @@ export function arbitrate(
     return {
       chosen: undefined,
       ranked,
+      margin: undefined,
       noAction: 'nothing-worth-doing',
       notes: [
         `the best of ${ranked.length} came out at ${best.score.toFixed(2)}, which is not worth asking for`,
@@ -115,5 +127,11 @@ export function arbitrate(
     )
   }
 
-  return { chosen: best, ranked, noAction: undefined, notes }
+  return {
+    chosen: best,
+    ranked,
+    margin: runnerUp === undefined ? undefined : best.score - runnerUp.score,
+    noAction: undefined,
+    notes,
+  }
 }

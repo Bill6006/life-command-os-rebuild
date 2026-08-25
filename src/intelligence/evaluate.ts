@@ -1,4 +1,5 @@
 import { confidence, isUsable, type Confidence } from '../domain/knowledge'
+import type { ConceptId } from '../domain/windows'
 import { addLocalDays } from '../domain/time'
 import { applicableAssociation } from './association'
 import type { Candidate } from './candidates'
@@ -61,6 +62,29 @@ export interface Dimension {
   readonly value: number
   readonly weight: number
   readonly note: string
+  /**
+   * The same finding in the owner's register, where there is one — AUD-0027.
+   *
+   * **Deliberately not `note`, and DEF-0040 is why.** `ConsideredFact.reading`
+   * was written for the inspector, reused verbatim on the evidence panel, and
+   * shipped "not known — never-observed" to the owner. `note` is diagnostics
+   * copy: it names dimensions, quotes both sides of a comparison and says
+   * "across the record". Shipping it raw would repeat that defect and breach
+   * section 61's ban on confidence arithmetic.
+   *
+   * Absent on every dimension that has nothing an owner would want read out,
+   * which is most of them: a dimension earns a sentence on Now by having one
+   * worth saying, not by existing.
+   */
+  readonly phrase?: string
+  /**
+   * The concept the phrase rests on, so D-031 can be checked before it is said.
+   *
+   * "An explanation may only cite evidence the decision leaned on" — so the
+   * permission travels with the sentence rather than being re-derived by
+   * whoever renders it.
+   */
+  readonly restsOn?: ConceptId
 }
 
 export interface Evaluation {
@@ -362,13 +386,41 @@ function observedChange(candidate: Candidate, situation: Situation): Dimension {
     }
   }
 
+  const subject = situation.entities.labelFor(candidate.semantics.target.object)
+
   return {
     name: 'observed-change',
     // Already −1…1: the difference of two proportions.
     value: side.gap,
     weight: WEIGHTS['observed-change'],
     note: `${found.label.toLowerCase()} rose ${side.rosePresent} of ${side.present.length} times with it and ${side.roseAbsent} of ${side.absent.length} without, ${side.label}`,
+    /*
+     * The best sentence the app writes about the owner's own life — AUD-0027.
+     *
+     * It was computed, used to rank, and never shown to him. The screen said
+     * "There is enough in the tank for a walk, and the evening suits it" while
+     * this dimension carried, one layer down, a specific and comparative
+     * statement made entirely of his own record. Section 4.6 is explicit that a
+     * specific ordinary sentence beats an elegant generic one, and the specific
+     * one already existed.
+     *
+     * Association, never cause (D-089, D-066): "has more often been higher
+     * afterwards" is a statement about the record; "does you good" would be a
+     * claim about the world that a comparison of two proportions cannot carry.
+     * The counts stay in the evidence panel, which is the one place allowed to
+     * print a figure with the sentence naming what it measures (D-084).
+     */
+    ...(subject === undefined || found.withheld !== undefined
+      ? {}
+      : {
+          phrase: `${lowerFirst(found.label)} has more often been ${side.direction === 'lower' ? 'lower' : 'higher'} after ${subject} than without.`,
+          restsOn: found.concept,
+        }),
   }
+}
+
+function lowerFirst(text: string): string {
+  return text.length === 0 ? text : `${text.charAt(0).toLowerCase()}${text.slice(1)}`
 }
 
 function learnedFor(candidate: Candidate, situation: Situation): LearnedEffect {
