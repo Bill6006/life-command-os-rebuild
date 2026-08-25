@@ -46,6 +46,32 @@ function check(name, condition, detail) {
   else findings.push(`${name}${detail === undefined ? '' : ` — ${detail}`}`)
 }
 
+/**
+ * The smallest a control may be for a thumb — QA-82-004.
+ *
+ * One number, read by the name, the predicate and the diagnostic. It used to be
+ * three: two checks were called "clears 44px of thumb" and asserted `>= 40`,
+ * and the four that asserted `>= 44` printed the measurement rounded — so a
+ * control measuring 43.9996 failed a check whose own diagnostic said it was
+ * 44px tall. Whatever this gate reports has to be the thing it tested.
+ */
+const THUMB = 44
+
+/**
+ * A touch target, measured and reported unrounded.
+ *
+ * `toFixed(2)` rather than `Math.round`, because the value this exists to make
+ * legible is the fractional one: a subpixel miss and an undersized button are
+ * different findings and used to print identically.
+ */
+function clearsThumb(what, height) {
+  check(
+    `${what} clears ${THUMB}px of thumb`,
+    height !== undefined && height !== null && height >= THUMB,
+    height === undefined || height === null ? 'not on screen' : `${height.toFixed(2)}px tall`,
+  )
+}
+
 async function seedOwnerHistory(page) {
   await page.evaluate(async () => {
     const at = new Date(Date.now() - 3_600_000).toISOString()
@@ -169,7 +195,12 @@ async function main() {
     const box = await targets.nth(index).boundingBox()
     if (box !== null) smallest = Math.min(smallest, box.height)
   }
-  check('every control clears 44px of thumb', smallest >= 40, `smallest is ${smallest}px`)
+  // `Infinity` would sail through the comparison, so nothing found is reported
+  // as nothing found rather than as a pass.
+  clearsThumb(
+    'the smallest control on the data screen',
+    Number.isFinite(smallest) ? smallest : undefined,
+  )
 
   // ---- Copying works on a phone --------------------------------------------
   await page.getByRole('button', { name: 'Copy the prompt' }).tap()
@@ -434,10 +465,9 @@ async function main() {
       Math.min(node.getBoundingClientRect().height, node.getBoundingClientRect().width),
     ),
   )
-  check(
-    'the import controls clear 44px of thumb',
-    importSizes.every((size) => size >= 40),
-    `smallest is ${Math.min(...importSizes, 999)}px`,
+  clearsThumb(
+    'the smallest of the import controls',
+    importSizes.length === 0 ? undefined : Math.min(...importSizes),
   )
 
   await page.getByTestId('import-apply').tap()
@@ -602,11 +632,7 @@ async function main() {
   check('and is offered behind one', (await stop.count()) === 1)
 
   const stopBox = await stop.boundingBox()
-  check(
-    'the stop control clears 44px of thumb',
-    stopBox !== null && stopBox.height >= 44,
-    stopBox === null ? 'not on screen' : `${Math.round(stopBox.height)}px tall`,
-  )
+  clearsThumb('the stop control', stopBox?.height)
 
   await stop.tap()
   const confirm = await page.getByTestId('now-stop-confirm').innerText()
@@ -626,11 +652,7 @@ async function main() {
   check('the veto is listed on the area it was filed under', listed > 0)
   const lift = page.getByTestId('domain-veto-lift').first()
   const liftBox = await lift.boundingBox()
-  check(
-    'and lifting it clears 44px of thumb',
-    liftBox !== null && liftBox.height >= 44,
-    liftBox === null ? 'not on screen' : `${Math.round(liftBox.height)}px tall`,
-  )
+  clearsThumb('and lifting it', liftBox?.height)
   await lift.tap()
   // Appending a record is a round trip to IndexedDB, so the row leaves on the
   // render after it rather than on the tap.
@@ -746,11 +768,7 @@ async function main() {
   const asked = page.getByTestId('now-question')
   check('it asks instead of guessing again', (await asked.count()) === 1)
   const answerBox = await page.locator('.now-options button').first().boundingBox()
-  check(
-    'and the answer clears 44px of thumb',
-    answerBox !== null && answerBox.height >= 44,
-    answerBox === null ? 'not on screen' : `${Math.round(answerBox.height)}px tall`,
-  )
+  clearsThumb('and the answer', answerBox?.height)
   await sideways('Now, two refusals in one block')
 
   await page.locator('.now-options button').first().tap()
@@ -851,11 +869,7 @@ async function main() {
   const stopControl = page.getByTestId('life-thread-stop')
   check('Life lists the course', (await stopControl.count()) === 1)
   const threadStopBox = await stopControl.boundingBox()
-  check(
-    'and the stop clears 44px of thumb',
-    threadStopBox !== null && threadStopBox.height >= 44,
-    threadStopBox === null ? 'not on screen' : `${Math.round(threadStopBox.height)}px tall`,
-  )
+  clearsThumb('and the stop', threadStopBox?.height)
   await stopControl.tap()
   await page.waitForSelector('[data-testid="life-threads-past"]')
   const stoppedThread = await page.getByTestId('life-threads-past').innerText()
@@ -961,6 +975,48 @@ async function main() {
     'while the middle of her school day is still his to use',
     !/About \d+ minutes before Adaya/.test(insideScreen),
   )
+  /*
+   * And the two fact surfaces one tap away — QA-82-001, round 2.
+   *
+   * Now was repaired in round 1 and this gate checked Now. The laboratory's
+   * own ledger and the Fatherhood page render the concept registry, knew
+   * nothing about the repair, and went on printing the durable arrangement as
+   * the answer to whether she was here.
+   */
+  const ledger = await page.getByTestId('qa-facts').innerText()
+  check(
+    'the fact ledger separates whose day it is from where she is',
+    /Child in the owner’s care today/.test(ledger) && /Child here right now/.test(ledger),
+    ledger.replace(/\s+/g, ' ').slice(0, 160),
+  )
+  check(
+    'and the current reading names the span that took her',
+    /school day is on until 15:00/.test(ledger),
+  )
+  check(
+    'and nothing on it is used for whether she is here',
+    !/for whether she is here/.test(ledger),
+  )
+
+  await page.locator('.nav').getByRole('button', { name: 'Life' }).tap()
+  await page.waitForSelector('h1:has-text("Life")')
+  await page.getByRole('link', { name: 'Fatherhood / Family' }).tap()
+  await page.waitForSelector('h1:has-text("Fatherhood")')
+  const believes = await page.locator('.domain-reading').allInnerTexts()
+  const presence = believes.find((row) => /Child here right now/.test(row)) ?? ''
+  check(
+    'the Fatherhood page says where she actually is',
+    /school day is on until 15:00/.test(presence),
+    presence.replace(/\s+/g, ' ').trim(),
+  )
+  check('and offers no correction on a thing the app worked out', !/Not right\?/.test(presence))
+  await sideways('Fatherhood, inside the school window')
+
+  await page.goto(`${BASE}#/qa`)
+  await page.waitForSelector('h1:has-text("QA")')
+  await page.getByRole('button', { name: new RegExp('A school morning') }).tap()
+  await page.waitForSelector('.qa-scenario--active')
+  await openNow()
   await sideways('Now, inside the school window')
 
   // ---- A stage on a child’s skill, set and unset — AUD-0015(a) --------------
@@ -971,11 +1027,7 @@ async function main() {
   await page.waitForSelector('h1:has-text("Fatherhood")')
   const stage = page.getByTestId('domain-skill-stage')
   const stageBox = await stage.boundingBox()
-  check(
-    'the growth stage clears 44px of thumb',
-    stageBox !== null && stageBox.height >= 44,
-    stageBox === null ? 'not on screen' : `${Math.round(stageBox.height)}px tall`,
-  )
+  clearsThumb('the growth stage', stageBox?.height)
   await stage.tap()
   await page.waitForSelector('[data-testid="domain-skill"]:has-text("Settled")')
   check('one tap settles it', true)
