@@ -3808,3 +3808,101 @@ ignorance. So it names the reach rather than the evening, and a guard asserts it
 least on them the one piece of orientation the screen offers vanished at the moment it was most
 needed. It is a statement about the situation rather than about the decision, and it is true
 whether or not there is one.
+
+---
+
+## D-122 — Soreness is a reading about exertion, and says nothing about a light move
+
+**Phase:** 81 (QA repair) · **Status:** Active — builder decision, QA-81-001
+
+`capacityFit` treated a soreness reading as an argument against every candidate. It is not: it is
+a statement about what the body can be _asked_ for. An effortful move is marked down by it, a
+restorative one is what it is asking for, and a light one — half an hour with Adaya, phone away —
+is untouched by it. The dimension now says that in three branches instead of one slope, each with
+its own note.
+
+**Why this and not a wider generator.** Phase 81 shipped with the `capacity` limiter having no
+move that addressed it, and the reason recorded at the time was real: widening the recovery
+generator on `strain === 'none'` produced "ease off today" over an hour with a daughter, which is
+a scoring-model change wearing a copy fix's clothes. The mistake was locating the fault in the
+generator. A sore, well-rested father had a light move available the whole time and it was being
+marked down by a fact about his shoulder. With the reading corrected, the gate can be opened
+without the regression it was closed to avoid, and the arbitration decides on the merits.
+
+**What is not claimed.** That `ease-off` never out-ranks time with Adaya. On the fixture built for
+this it still does, on `bottleneck-fit`, and that is a judgement the ranking is entitled to make
+once nothing false is feeding it. Section 10's protection of that move is against being merged or
+made conditional, not against being out-ranked. [[D-125]]
+
+**And the guide narrows with it.** D-111's exception — ask anyway when an answer would let the app
+ask _less_ — fired on sixteen of twenty-one histories once soreness had a move of its own, because
+almost any answer could now flip something. It is bounded to standing moves that are actually
+effortful: where the app is already proposing something light, there is no harm to put a floor
+under, and section 47 fails a phase for asking too much. Back to nine.
+
+---
+
+## D-123 — A composed clause names nothing it did not derive
+
+**Phase:** 81 (QA repair) · **Status:** Active — builder decision, QA-81-002
+
+No sentence-building function in `explain.ts` takes a noun from its caller. The trade-off clause
+had been handed the chosen move's `target.object` and assumed it named the winner; for a `recover`
+move that object is the thing being put **down**, so under _"Take the rest of the afternoon as
+recovery — no subnetting session"_ the app printed _"subnetting still looks like the better call"_,
+while listing that same move under **Chosen over**.
+
+**The class is not the sentence.** It is a clause completing itself with an entity it did not
+derive from the thing the clause is about — the same shape as DEF-0001's orphan pronoun, one level
+up. The fix removes the parameter rather than correcting the argument, so the next clause written
+cannot make the mistake.
+
+**And the clause stayed.** The first repair also made the trade-off conditional on a limiter, which
+was silently the deletion of AUD-0026: at no hour of any history in the library is `direction-fit`
+materially against with nothing short — measured, zero — so every unit test passed and the only
+thing that caught it was a browser test pressing an answer. Saying nothing passes every falsehood
+test ever written. The cost is still named; what completes it is what the app read, and when
+nothing is short, that the hour is time away from the week he set. [[D-114]]
+
+---
+
+## D-124 — A move put on screen twice and left is taken off the table
+
+**Phase:** 81 (QA repair) · **Status:** Active — builder decision, QA-81-003
+
+`applyConstraints` rejects a candidate the surface has already rendered `SHOWN_ENOUGH_TIMES_TODAY`
+times in the owner-local day. Twice is a coincidence; a third is the app not listening.
+
+**Why a filter and not a weight.** D-118 gave the ledger a score penalty, which is the gentler half
+and stays — it is what makes a second showing cheaper than a first. What a penalty cannot do is
+promise an outcome: a move whose lead is wider than that dimension's whole range at its current
+weight keeps winning however often it has been read, and the audit's own reproduction did exactly
+that at four hours of one day. Re-cutting the weights is AUD-0035's work. A bounded rule in the
+filter keeps the promise without touching the scoring model.
+
+**The silence it can cause is named.** Three histories in the library now end a day with every
+candidate held back for having been read already. _"There were things worth doing and none of them
+suit where you actually are"_ is false there — they suit fine — so that state says so in its own
+words. A repair for one falsehood has no business introducing another.
+
+---
+
+## D-125 — Two refusals stop the offers; an answer re-opens them
+
+**Phase:** 81 (QA repair) · **Status:** Active — builder decision, QA-81-004
+
+The escalation AUD-0023 describes is _stop offering and ask_, and Phase 81 built only half of it.
+The guide relaxed the bar a question had to clear while the engine went on ranking, so a history
+where no counterfactual question existed fell straight through to a third suggestion — on the
+audit's own reproduction, a third guess about time with Adaya, under _"Nothing else worth asking
+right now"_. Both halves now read the same threshold, and the engine is where stopping happens.
+
+**An answer is the way back, and not only a courtesy.** Two refusals mean something the app cannot
+see is in the way; an answer is the owner making it visible, and a changed picture earns a fresh
+look. Without that, an app that stopped at two would have nothing to refuse a third time, and
+D-119's stop could never be reached at all.
+
+**What the copy promises.** That it has stopped guessing, and that the block turning over is the
+way back. Not a question — the guide may have none worth asking, and the honest fallback is the
+state itself rather than a promise the app cannot keep. Where there is one, it renders directly
+beneath. [[D-119]] [[D-111]]

@@ -24,17 +24,30 @@ reopens Phase 4 or any completed phase.
 
 # Phase 81 — Correctness and truthfulness
 
-**Status: YELLOW — READY FOR INDEPENDENT QA.**
+**Status: YELLOW — READY FOR INDEPENDENT QA (second submission).**
 
 Under D-077 this conversation may not approve its own phase. Twenty-two audit
 findings in six steps, every one of them a thing the app states that is untrue or
 an action the plan promises that the interface lacks. Nothing here is a new
 capability, a new domain or a new screen.
 
+**Round 1 of independent QA returned FAIL on five blocking findings**
+([`qa/PHASE_81_QA_HANDOFF.md`](qa/PHASE_81_QA_HANDOFF.md)): a named-limiter
+invariant that was documented rather than met, a trade-off sentence that
+endorsed the move the app had just rejected, the ignored-recommendation
+reproduction still repeating four times, the promised question not following the
+second refusal, and a clean-tree `npm run verify` that did not pass. All five are
+repaired in step 81.6 below, each under section 42 rather than at the line
+reported, and each regression proved to fail against a faithful reintroduction
+of the defect it guards. Three of the five had a green regression standing over
+them at the time QA found them; what those regressions had in common is recorded
+with each entry.
+
 The specification is
 [`WHOLE_APP_INTELLIGENCE_AUDIT.md`](WHOLE_APP_INTELLIGENCE_AUDIT.md) section 6.
 The governing decisions written before any code changed are **D-109 … D-113**;
-the ones written during the work are **D-114 … D-121**.
+the ones written during the work are **D-114 … D-121**, and the five repairs
+add **D-122 … D-125**.
 
 ## Checkpoint
 
@@ -47,14 +60,14 @@ the ones written during the work are **D-114 … D-121**.
 
 ## Exact verification results
 
-| Gate                                      | Result                                                                                     |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `npm run verify` from a clean checkout    | **PASS** — format, lint, typecheck, 1,310 unit tests across 59 files, build                |
-| Unit layer                                | **1,310 / 1,310** across 59 files (was 1,199 / 1,199 across 57)                            |
-| Browser, three widths                     | **489 / 489** at 360, 430 and 1,280px — 163 each                                           |
-| Android-style gate on the deployed build  | **clean — 76 checks** (was 56; twenty of them are this phase’s own surfaces)               |
-| Privacy scan                              | clean, 216 tracked files                                                                   |
-| Block sweep, every scenario × every block | in `tests/synthetic/block-sweep.test.ts`, and by hand through the laboratory's own control |
+| Gate                                      | Result                                                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `npm run verify` from a clean checkout    | **PASS** — format, lint, typecheck, 1,321 unit tests across 59 files, build                 |
+| Unit layer                                | **1,321 / 1,321** across 59 files (was 1,310; eleven of the new ones are the QA repairs)    |
+| Browser, three widths                     | **495 / 495** at 360, 430 and 1,280px — 165 each                                            |
+| Android-style gate on the deployed build  | **clean — 86 checks** (was 76; the ten new ones press QA-81-003 and QA-81-004 on a handset) |
+| Privacy scan                              | clean, 216 tracked files                                                                    |
+| Block sweep, every scenario × every block | in `tests/synthetic/block-sweep.test.ts`, and by hand through the laboratory's own control  |
 
 **One thing was already failing before a line of code changed, and is fixed in
 its own commit.** `npm run verify` runs `format:check`, and three documents
@@ -115,26 +128,39 @@ liftable. Silence that names the app's own reach rather than its readiness. And
 D-111's narrow exception, verified last because it changes how often the guide
 fires everywhere.
 
+**81.6 — the five QA findings (QA-81-001 … 005).** Soreness is read as a
+statement about exertion rather than about everything, which closes the
+`capacity` invariant by fixing what was wrong upstream of the generator instead
+of widening it. No clause in `explain.ts` takes a noun from its caller any more,
+and the trade-off it composes names no move but the one on screen — while still
+naming the cost, which the first attempt at this quietly deleted. A move put on
+screen twice and left is taken off the table, and the silence that can cause
+says why. Two refusals stop the app offering; an answer re-opens the block, which
+is also what keeps the third-refusal stop reachable. And a synthetic test that
+rebuilt the whole library inside its own loop no longer does.
+
 ## The gate, item by item
 
 | #   | Acceptance item                                                                                                                                                                                       | Where it is proved                                                                                                                                                                                                                        |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | No owner-visible string asserts the evening outside the evening, at any block, in any scenario                                                                                                        | `block-sweep.test.ts` — every scenario × six moments, over the move, the reason, the premise, the limiter, the no-action states, the growth suggestion, the guide's question and labels, the whole evidence panel and every Insights card |
-| 2   | A named limiter always has a candidate that addresses it, in every block                                                                                                                              | `recovery-has-somewhere-to-go.test.ts` — **for `recovery`.** The `capacity` limiter is a named exception, asserted rather than hidden; see below                                                                                          |
+| 2   | A named limiter always has a candidate that addresses it, in every block                                                                                                                              | `recovery-has-somewhere-to-go.test.ts` — for `recovery` **and** `capacity`, the second closed in 81.6 (QA-81-001) with a fixture that reaches it, so the sweep is not vacuous                                                             |
 | 3   | No sentence about the child claims consecutiveness the occasions do not support; no percentage, rank, grade or score reaches any surface; the suggestion states how many occasions went the other way | `g003-growth-evidence.test.ts`                                                                                                                                                                                                            |
 | 4   | The owner can stop a recommendation family, and find and lift that veto afterwards                                                                                                                    | `refusal-and-veto.test.ts` and `phase81.spec.ts`                                                                                                                                                                                          |
 
 ## Open, and named rather than left to be found
 
-**The `capacity` limiter still has no restorative candidate.** AUD-0003's
-invariant names `capacity` alongside `recovery`; the same finding's
-implementation guidance says to gate the new verb on `strain !== 'none'` "exactly
-as the existing sleep generator does". Those do not agree. The gate is what this
-phase followed: widening it was tried and reverted because it made a sore,
-well-rested father be told to ease off instead of spending half an hour with his
-daughter — a scoring-model change dressed as a copy fix. What this phase does
-about a body in pain instead is AUD-0031: it asks before it prescribes exertion.
-The gap has its own test, which fails the day somebody closes it.
+**The sleep-protection move still out-ranks time with Adaya on the
+sore-and-rested fixture**, 0.354 to 0.098, and the gap is `bottleneck-fit`:
+2.375 against −0.250. This is the outcome that caused the `capacity` gate to be
+closed in the first place, and it is now reached with nothing false feeding it —
+`capacity-fit` reads +0.48 for the restorative move, 0.00 for the half-hour with
+Adaya and −0.66 for a walk, which is the correction QA-81-001 asked for. What
+decides it is a bottleneck the history states outright. Section 10 item 13
+protects time with Adaya from being merged into a generic family or made
+conditional; it does not protect it from being out-ranked by a history in which
+the body is the bottleneck. That is a judgement, it is stated here rather than
+buried, and QA is invited to adjudicate it.
 
 **AUD-0027's refusal half is not shipped**, per the audit's own instruction to
 drop it if either half is in doubt. Surfacing "you have passed on this fourteen
@@ -142,12 +168,13 @@ times" needs D-031 and DEF-0006's rule widened, and the audit calls that sentenc
 the riskiest copy it proposes without offering wording for it. D-115 records the
 decision and a guard asserts no reason in the library mentions a refusal.
 
-**The shown-ledger does not flip the audit's own reproduction.** On "A week
-pointed at the house" the kitchen still wins at every hour of the day: the
-penalty is real and grows, and the kitchen's lead is wider than the whole range
-of `recent-duplication` at its current weight. Whether that weight is right is
-AUD-0035's question, which is Phase 82's. D-118 says so rather than re-cutting
-the instrument here.
+**The shown-ledger's weight question is still Phase 82's.** The kitchen's lead on
+"A week pointed at the house" is wider than the whole range of
+`recent-duplication` at its current weight, and that is still true. What changed
+in 81.6 is that the promise no longer rests on the weight: a move put on screen
+twice and left is removed by the filter, which cannot be outvoted (D-124).
+Whether the weights themselves are cut right remains AUD-0035, and remains
+Phase 82's.
 
 **AUD-0005's own two columns disagree.** Its Tests-required column asks that a
 reading taken at 22:00 still be known at 09:00 the next day; its

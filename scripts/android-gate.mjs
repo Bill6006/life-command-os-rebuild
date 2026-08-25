@@ -640,6 +640,104 @@ async function main() {
   check('and it goes when lifted', (await page.getByTestId('domain-veto').count()) === 0)
   await sideways('a domain page, standing vetoes')
 
+  // ---- Phase 81.6: what QA found by pressing things -------------------------
+  /*
+   * QA-81-003 and QA-81-004 were both found on a deployed screen, in one
+   * session, by pressing a button twice and by looking at the same sentence at
+   * four hours of one day. Neither was visible to the unit suite, which was
+   * green throughout. So both reproductions are pressed here, on a handset,
+   * against the deployed bytes.
+   */
+  const nowHeadline = async () => {
+    await openNow()
+    return (await page.locator('.primary-surface__headline').innerText()).trim()
+  }
+  const travel = async (direction, hours) => {
+    // A hash change on the same document, which is how the owner would get
+    // there and the only way the session ledger survives the trip.
+    await page.goto(`${BASE}#/qa`)
+    await page.waitForSelector('h1:has-text("QA")')
+    const button = page.getByRole('button', { name: `${direction}1 hour` })
+    for (let step = 0; step < hours; step += 1) await button.tap()
+  }
+
+  /*
+   * Forwards, and from the morning — QA-81-003's own hours.
+   *
+   * The ledger only reads entries earlier than the moment being decided, which
+   * is deliberate: noting a render must not change the render it is noting. So
+   * a day walked *backwards* is a day where nothing has been shown yet, and a
+   * gate that walked backwards would report the defect as present forever. The
+   * scenario is set at 19:30, so the trip to 06:30 happens before Now is opened
+   * at all and nothing is recorded on the way.
+   */
+  await loadScenario('A week pointed at the house')
+  await travel('−', 13)
+  const acrossTheDay = [await nowHeadline()]
+  for (const hours of [4, 4, 5]) {
+    await travel('+', hours)
+    acrossTheDay.push(await nowHeadline())
+  }
+  check(
+    'the same sentence is not repeated through the hours of one day',
+    new Set(acrossTheDay).size > 1,
+    acrossTheDay.join(' | '),
+  )
+  await sideways('Now, later in the same session')
+
+  await loadScenario('A week pointed at the house')
+  await openNow()
+  const refuseNow = () => page.getByTestId('now-actions').getByRole('button', { name: /right now/ })
+  const headline = page.locator('.primary-surface__headline')
+  /*
+   * Waiting for the sentence to change, not for the button to exist.
+   *
+   * Writing the refusal is a round trip to IndexedDB and the button never
+   * leaves the screen, so a second tap taken immediately lands on the same move
+   * — and two refusals of one move are one refusal of one move. The gate would
+   * then report the escalation missing when what it had done was refuse once,
+   * twice.
+   */
+  const refuseAndWait = async () => {
+    const before = await headline.innerText()
+    await refuseNow().tap()
+    await page.waitForFunction(
+      (was) => document.querySelector('.primary-surface__headline')?.textContent?.trim() !== was,
+      before.trim(),
+      { timeout: 5000 },
+    )
+  }
+  await refuseAndWait()
+  await refuseAndWait()
+
+  const stopped = await headline.innerText()
+  check('two refusals stop the app offering', /not landing/i.test(stopped), stopped)
+  check(
+    'and there is nothing left to refuse a third time',
+    (await page.getByTestId('now-actions').count()) === 0,
+  )
+  const asked = page.getByTestId('now-question')
+  check('it asks instead of guessing again', (await asked.count()) === 1)
+  const answerBox = await page.locator('.now-options button').first().boundingBox()
+  check(
+    'and the answer clears 44px of thumb',
+    answerBox !== null && answerBox.height >= 44,
+    answerBox === null ? 'not on screen' : `${Math.round(answerBox.height)}px tall`,
+  )
+  await sideways('Now, two refusals in one block')
+
+  await page.locator('.now-options button').first().tap()
+  await page.waitForSelector('[data-testid="now-actions"]', { timeout: 5000 })
+  check('answering it is worth something — the app looks again', true)
+  await refuseAndWait()
+  const stoppedForGood = await headline.innerText()
+  check(
+    'and the third refusal still stops the block',
+    /nothing then/i.test(stoppedForGood),
+    stoppedForGood,
+  )
+  await sideways('Now, the third refusal')
+
   // ---- The rest of the app is still standing --------------------------------
   for (const destination of ['Now', 'Life', 'Timeline', 'Insights']) {
     await page.locator('.nav').getByRole('button', { name: destination }).tap()

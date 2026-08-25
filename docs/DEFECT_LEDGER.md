@@ -39,6 +39,154 @@ None.
 
 ## Fixed
 
+### DEF-0080 (QA-81-001) — a named limiter with nowhere to go, and the wrong reason for it
+
+- Status: Fixed
+- Severity: Blocker — audit section 6 gate item 2
+- Found in: Phase 81 / `736a761`
+- Found by: independent QA, reading the regression that documented the gap
+- Class: **a fact read as an argument about every option rather than about the
+  options it is actually about.** Soreness is a statement about what the body
+  can be _asked_ for. `capacityFit` applied it as a single downward slope over
+  all candidates, so a reading about a shoulder marked down half an hour with a
+  four-year-old, which asks nothing of a shoulder.
+- Reproduction: `soreAndRested(1)` — three nights of 7.5, 7.75 and 8 hours, a
+  current soreness of 4/5, decided at `2026-04-15 20:00 America/Denver`. The
+  limiter is `capacity`; no candidate addressed it, and the test asserted that
+  as the expected result.
+- Root cause: not the generator. The gate on `sleepCandidates` was closed
+  because opening it produced "ease off today" over time with Adaya — but the
+  reason Adaya lost was upstream, in a dimension that had no branch for a move
+  which asks nothing of a sore body. Fixing the reading let the gate open
+  without the regression it had been closed to avoid.
+- Regression: `tests/synthetic/recovery-has-somewhere-to-go.test.ts` — "reaches
+  the capacity limiter at all, so the sweep above is not vacuous" and "does not
+  conclude anything about a light move from a sore body". The fixture gained
+  Adaya and a durable custody record on purpose: without a light move in it,
+  the second assertion passed by never meeting one, which is D-108's hole.
+- Siblings: checked — the `recovery` arm was already covered; `bottleneck-fit`,
+  `direction-fit` and `protection` were read for the same shape and none of
+  them apply a reading outside what it is about. D-111's exception was
+  over-firing as a consequence (sixteen histories of twenty-one) and is bounded
+  to effortful standing moves.
+- Note: the sleep-protection move still out-ranks time with Adaya on this
+  fixture, 0.354 to 0.098, decided by `bottleneck-fit` at 2.375 against −0.250.
+  `capacity-fit` now reads +0.48, 0.00 and −0.66 across the restorative, light
+  and effortful candidates, which is the correction this entry is about. The
+  ordering that remains is arbitration on the merits, and it is named in the
+  handoff rather than hidden.
+- Fixed in: `1fc6420`
+
+### DEF-0081 (QA-81-002) — the trade-off recommended the move the app had rejected
+
+- Status: Fixed
+- Severity: Blocker — semantic falsehood, D-114
+- Found in: Phase 81 / `736a761`
+- Found by: independent QA, reading the deployed Preview at 15:00
+- Class: **a composed clause completing itself with an entity it did not derive
+  from the thing the clause is about.** DEF-0001's failure one level up: there
+  the sentence lost the noun, here it borrowed the wrong one.
+- Reproduction: deployed QA laboratory, "A morning after three bad nights",
+  clock at `2026-09-15 15:00 America/Denver`, open Now. Observed: _"Take the
+  rest of the afternoon as recovery — no subnetting session. … The week is
+  pointed at the CCNA push, and subnetting still looks like the better call."_
+  with the subnetting recall listed under **Chosen over**. Same at evening and
+  late night; correct in the morning, which is the one hour the library sweep
+  reads.
+- Root cause: `costClause` took an `object` string and assumed it named the
+  winner. For a `recover` move `target.object` is the thing being put down.
+- Regression: `tests/synthetic/decision-evidence.test.ts` — "does not call
+  subnetting the better call while putting subnetting down" (the exact hour),
+  "makes no verdict about an alternative, at any hour of any history" (every
+  scenario × five hours, against an enumerated list of what counts as a
+  verdict), "still says what the choice cost" and "names the cost even when
+  nothing is short".
+- Siblings: checked — every clause in `explain.ts` now takes no noun at all.
+  `learnedBandClause` was reworded for the same reason and says neither a noun
+  nor a pronoun.
+- Note on the first repair: it also made the clause conditional on a limiter,
+  which deleted AUD-0026 in every state the library can reach. Measured: at no
+  hour of any history is `direction-fit` materially against with nothing short.
+  The unit suite passed; a browser test pressing the guide's answer caught it.
+  That state is now a unit test.
+- Fixed in: `1fc6420`
+
+### DEF-0082 (QA-81-003) — the ignored recommendation still came back four times
+
+- Status: Fixed
+- Severity: Blocker — the promised owner-visible behaviour was false
+- Found in: Phase 81 / `736a761`
+- Found by: independent QA, one uninterrupted browser session
+- Class: **a promise about an outcome kept only with a score adjustment.** A
+  weighted dimension can make a move cheaper; it cannot stop a move whose lead
+  exceeds that dimension's entire range at its current weight. Anything stated
+  as "the app will not do X" needs a rule that cannot be outvoted.
+- Reproduction: deployed laboratory, "A week pointed at the house", Now at
+  06:30, 10:30, 14:30 and 19:30 on `2026-09-15`, pressing no lifecycle action.
+  All four showed _"Spend 15 minutes clearing the kitchen."_
+- Root cause: the shown-ledger fed `recent-duplication` only. Phase 81's own
+  report conceded the reproduction did not flip and routed the weights to
+  AUD-0035.
+- Regression: `tests/synthetic/refusal-and-veto.test.ts` — "stops giving the
+  same answer at four hours of one day", now on `week-pointed-at-home` at the
+  audit's own hours rather than on `rested-and-behind`, which varies by
+  mid-afternoon on its own and passed while the reproduction repeated; "takes a
+  move off the table once showing it again would be repeating"; and "does not
+  tell him nothing suits when the truth is that he has read it". Also
+  `scripts/android-gate.mjs`, forwards through the day on a handset.
+- Siblings: checked — D-043 is untouched (nothing is written when a screen
+  renders), and the architecture guards on the ledger still hold: it stays a
+  session note handed in on the moment, never history, never evidence.
+- Fixed in: `1fc6420`
+
+### DEF-0083 (QA-81-004) — the promised question did not follow the second refusal
+
+- Status: Fixed
+- Severity: Blocker — interaction failure
+- Found in: Phase 81 / `736a761`
+- Found by: independent QA, pressing `Can't right now` twice
+- Class: **half an escalation.** One component relaxed its standard while the
+  component that produces the behaviour carried on unchanged, so the escalation
+  existed only where the other half happened to have something to contribute.
+- Reproduction: deployed laboratory, "A week pointed at the house", Now at
+  19:30, `Can't right now` twice. Observed a third move — _"Spend the next 30
+  minutes with Adaya, phone away"_ — under _"Nothing else worth asking right
+  now"_. The third refusal did correctly reach _"Nothing then"_.
+- Root cause: `REFUSALS_BEFORE_ASKING` lived in `guide.ts` and governed only the
+  bar a question had to clear. `decide` had no branch between one refusal and
+  three.
+- Regression: `tests/synthetic/refusal-and-veto.test.ts` — "asks after the
+  second refusal rather than offering a third suggestion" (rewritten onto the
+  audit's history; the previous version proved `growth-mixed-evidence`, where a
+  question was available anyway, and passed throughout), "never offers a third
+  move, on any history that can be refused twice", "stops offering even when it
+  has nothing left to ask" (the daily question cap spent, so the honest fallback
+  is exercised rather than assumed), and "takes the answer as the reason to look
+  again". Also `tests/browser/phase81.spec.ts` at three widths and
+  `scripts/android-gate.mjs` on a handset.
+- Siblings: checked — D-119's third-refusal stop and the block rollover both
+  still hold, and are reachable only because an answer re-opens the offers.
+- Fixed in: `1fc6420`
+
+### DEF-0084 (QA-81-005) — clean-tree verify timed out on a test that grew quadratically
+
+- Status: Fixed
+- Severity: Blocker — the standing gate is "verify from a clean checkout"
+- Found in: Phase 81 / `736a761`
+- Found by: independent QA, from a fresh clone
+- Class: **a fixture rebuilt inside the loop that consumes it.** Invisible while
+  the library is small, and it fails on the phase that adds the fixture that
+  crosses the threshold rather than on the phase that wrote the loop.
+- Reproduction: `npm run verify` from a clean checkout —
+  `tests/synthetic/imported-origin.test.ts` exceeded the 5s default.
+- Root cause: `situationsFor` built all twenty-one scenarios for every card it
+  checked. Phase 81 added three fixtures.
+- Regression: the test itself, which now runs in a tenth of the time; the gate
+  is `npm run verify` from a clean checkout, re-run below.
+- Siblings: checked — no other synthetic test rebuilds the library inside a
+  loop.
+- Fixed in: `1fc6420`
+
 ### DEF-0074 (AUD-0001, AUD-0002, AUD-0036) — the app told the owner the time, and got it wrong
 
 - Status: Fixed
