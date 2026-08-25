@@ -19,7 +19,7 @@ D-092).
 |                                    |                                                                                 |
 | ---------------------------------- | ------------------------------------------------------------------------------- |
 | Product checkpoint                 | `736a761` — the last commit that changes the bundle                             |
-| Deployed Preview SHA               | `736a761d96b9b2d40c4042eb8977a7ebbaffbe92`                                      |
+| Deployed Preview SHA               | `736a761` at the time of writing, and **read it live** — see below              |
 | Relationship                       | proved with `scripts/checkpoint-equivalence.mjs`, never string equality (D-097) |
 | Preview                            | https://bill6006.github.io/life-command-os-rebuild/preview/                     |
 | Unit layer                         | 1,310 / 1,310 across 59 files (was 1,199 / 1,199 across 57)                     |
@@ -63,7 +63,10 @@ docs/qa/PHASE_81_QA_HANDOFF.md and narrowly scoped QA evidence artifacts.
 
 Checkpoint
 - Product checkpoint: 736a761
-- Deployed Preview SHA: 736a761d96b9b2d40c4042eb8977a7ebbaffbe92
+- Deployed Preview SHA: read it live from the URL below rather than from this
+  file. It was 736a761 when this was written and every push since — including
+  the one that wrote this file — has moved it, without changing a byte the
+  browser downloads.
 - These are two facts, not one. Prove the relationship with
   `node scripts/checkpoint-equivalence.mjs 736a761 --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json`
   rather than by comparing strings. This repository redeploys on every push,
