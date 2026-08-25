@@ -3906,3 +3906,67 @@ D-119's stop could never be reached at all.
 way back. Not a question — the guide may have none worth asking, and the honest fallback is the
 state itself rather than a promise the app cannot keep. Where there is one, it renders directly
 beneath. [[D-119]] [[D-111]]
+
+---
+
+## D-126 — A rule about listening may stop the app speaking, not change its mind
+
+**Phase:** 81 (QA round 2 repair) · **Status:** Active — builder decision, QA-81-006
+
+When the repetition rule (D-124) withholds the only candidate that answers a named limiter,
+nothing that fails to answer that limiter may take its place. What is left is a real no-action
+state, and it says why it is one.
+
+**Why the two rules needed an order.** They were written a day apart and each was correct alone.
+D-122 gave the `capacity` limiter a move; D-124 stopped a move being put on screen more than twice
+in a day. Their interaction is the defect independent QA found: once the recovery move had been
+read twice, the filter removed it, the ranking was recomputed over what remained, and the
+runner-up won. On "A morning after three bad nights" that runner-up is ten minutes of subnetting
+recall — offered at eleven at night to a man the same screen described as nine hours short of
+sleep, by an app that had spent the afternoon and the evening saying _"no subnetting session"_.
+
+**The principle, stated so the next pair of rules inherits it.** The shown-ledger is a record of
+screens. It is not evidence about the owner's life, it never was (D-118), and it therefore has no
+standing to change what the app believes is good for him. It may make the app quieter. It may not
+make it wrong.
+
+**One definition of "answers the limiter."** `answersLimiter` lives beside `Limiter` and is read
+by the dimension that rewards it, the filter that protects it and the invariant that sweeps for
+it. Three copies of that rule would have drifted, and the way they would have drifted is the way
+this defect already went: the filter removing what the evaluator thought was the only good answer.
+
+**Measured, not assumed.** The rule fires on two of a hundred and five decisions across the
+library with the ledger running, and both are the reported defect. A version without the bound —
+firing whenever anything at all was withheld — blanks ordinary screens and breaks D-124's own
+reproduction; there is a test for that direction too. [[D-124]] [[D-122]]
+
+---
+
+## D-127 — A horizon fragment keeps the grammatical shape its callers assume
+
+**Phase:** 81 (QA round 2 repair) · **Status:** Active — builder decision, QA-81-007
+
+`blockNoun` returns a bare noun phrase — a determiner and at most two words — for every block and
+for the fallback. `hereNowWord` is where an adverb belongs. Every branch of the no-action copy is
+held as a finished sentence at every block, in `tests/synthetic/no-action-copy.test.ts`.
+
+**What the contract was worth without a guard.** The function was documented as "a plain noun
+phrase, for a sentence that needs one" and returned "tonight" for late night, which is an adverb.
+Every caller drops it into a frame that takes a noun, and the no-action screen at half past eleven
+read _"Nothing on the list is worth tonight it would cost."_ The fallback arm returned "the time
+you have" — a noun phrase, but one already carrying a relative clause, which breaks the same
+frame.
+
+**Why every existing sweep was green.** They ask which words appear. `block-sweep.test.ts` checks
+that nothing says "evening" outside the evening, across every scenario at every block — and it can
+only see the branches the library actually reaches. The no-action states are reached in ones and
+twos, so most of this catalogue had never been rendered by anything.
+
+**What rendering it found.** Beyond the reported sentence: the fallback arm above, and a third —
+`nothing-in-reach` ended _"rather than about your evening"_ at every block, including nine in the
+morning. That is gate item 1 of this phase, in a sentence written to protect a different truth,
+under the sweep built to catch precisely it.
+
+**So the guard is a table of finished lines.** Thirty-eight of them, written out rather than
+generated, because a generated expectation is the implementation restated and this file exists
+because the implementation was wrong in a way only a reader could see.

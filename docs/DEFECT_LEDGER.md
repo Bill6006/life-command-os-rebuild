@@ -39,6 +39,83 @@ None.
 
 ## Fixed
 
+### DEF-0085 (QA-81-006) — the repetition rule promoted a move the situation argued against
+
+- Status: Fixed
+- Severity: Blocker — regression against gate item 2 and the recovery/capacity
+  invariant
+- Found in: Phase 81 QA round 2 / `1fc6420`
+- Found by: independent QA, walking one deployed session across three hours
+- Class: **two rules written a day apart, each correct alone, never run against
+  each other.** More precisely: a bookkeeping rule about what has been
+  _displayed_ was allowed to change what the app _believes_. The shown-ledger is
+  a record of screens and has no standing as evidence about the owner's life
+  (D-118), so it may make the app quieter and may not make it wrong.
+- Reproduction: deployed laboratory, "A morning after three bad nights", one
+  uninterrupted session, Now at 15:00, 20:00 and 23:00 on `2026-09-15`, pressing
+  no lifecycle action. The first two say _"Take the rest of the afternoon as
+  recovery — no subnetting session."_ and its evening form. The third said
+  _"Spend 10 minutes recalling subnetting before you reopen your notes."_ while
+  the situation line still read nine hours short of sleep.
+- Root cause: `applyConstraints` removed the recovery move as `just-covered`,
+  and the ranking was then computed over what was left. `bottleneck-fit` for the
+  survivor is −0.25 and `capacity-fit` is −0.36: every dimension that reads the
+  body was against it. It won on `direction-fit` and `goal-fit` alone — on
+  ambition, against the body, at eleven at night.
+- Regression: `tests/synthetic/recovery-has-somewhere-to-go.test.ts` — "does not
+  prescribe the study session it spent the day declining" (the exact three-hour
+  sequence), "says why it has nothing rather than blaming the hour", "holds
+  across the library, at every hour of a kept day" (swept **with the ledger
+  running**, which is the thing every existing sweep did not do), and "leaves the
+  rule alone where the answer is not what was withheld" — the over-correction
+  guard. Also `tests/browser/phase81.spec.ts` at three widths and
+  `scripts/android-gate.mjs` on a handset.
+- Siblings: checked. `answersLimiter` is now one definition read by the
+  dimension, the filter and the invariant. And one real sibling found: the
+  session ledger survived a change of history, so loading one laboratory fixture
+  after another carried the first one's showings into the second and a move could
+  arrive already used up — not reachable by an owner, entirely reachable by an
+  auditor, and it made the builder's own gate report the wrong screen for this
+  very finding. Fixed in `MemoryProvider`, with
+  `tests/unit/memory-provider-race.test.tsx` holding both paths.
+- Measured: the new rule fires on 2 of 105 decisions across the library with the
+  ledger kept, and both are the reported defect.
+- Fixed in: `7e00dac`
+
+### DEF-0086 (QA-81-007) — the no-action screen at late night was not a sentence
+
+- Status: Fixed
+- Severity: Major — owner-visible broken English, in the phase about what the
+  app says
+- Found in: Phase 81 QA round 2 / `1fc6420`
+- Found by: independent QA, after the refusal sequence and a block rollover
+- Class: **a fragment with a semantic contract dropped into a grammatical
+  frame.** `blockNoun` is documented as "a plain noun phrase, for a sentence
+  that needs one"; nothing held it to that, and it is used in six frames that
+  take a bare noun.
+- Reproduction: deployed, "A week pointed at the house" at 19:30 — refuse,
+  refuse, answer the soreness question, refuse — then advance four hours to
+  23:30. The reset block printed _"Nothing on the list is worth night it would
+  cost. That is a real answer."_
+- Root cause: `blockNoun('late-night')` returned "tonight", an adverb. The
+  fallback arm returned "the time you have", a noun phrase already carrying a
+  relative clause, which breaks the same frame. Both are now a determiner and at
+  most two words.
+- Regression: `tests/synthetic/no-action-copy.test.ts` — every reason at every
+  block rendered as a finished sentence and held against a written-out table of
+  thirty-eight lines, plus a shape guard on `blockNoun` itself and its
+  counterpart on `hereNowWord`. Also `tests/browser/phase81.spec.ts`, which
+  walks QA's own sequence, and two checks in the Android gate.
+- Siblings: checked, and one more of the same class found on the first render of
+  the catalogue: `nothing-in-reach` ended _"rather than about your evening"_ at
+  every block, including nine in the morning — a gate item 1 violation, in a
+  sentence written to protect a different truth, under the sweep built to catch
+  precisely that. It reads the horizon now.
+- Note on why everything was green: every existing sweep over this copy asks
+  which words appear, and can only see the branches the scenario library
+  reaches. Most of this catalogue had never been rendered by anything.
+- Fixed in: `7e00dac`
+
 ### DEF-0080 (QA-81-001) — a named limiter with nowhere to go, and the wrong reason for it
 
 - Status: Fixed

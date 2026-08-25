@@ -60,14 +60,14 @@ add **D-122 … D-125**.
 
 ## Exact verification results
 
-| Gate                                      | Result                                                                                      |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `npm run verify` from a clean checkout    | **PASS** — format, lint, typecheck, 1,321 unit tests across 59 files, build                 |
-| Unit layer                                | **1,321 / 1,321** across 59 files (was 1,310; eleven of the new ones are the QA repairs)    |
-| Browser, three widths                     | **495 / 495** at 360, 430 and 1,280px — 165 each                                            |
-| Android-style gate on the deployed build  | **clean — 86 checks** (was 76; the ten new ones press QA-81-003 and QA-81-004 on a handset) |
-| Privacy scan                              | clean, 216 tracked files                                                                    |
-| Block sweep, every scenario × every block | in `tests/synthetic/block-sweep.test.ts`, and by hand through the laboratory's own control  |
+| Gate                                      | Result                                                                                        |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `npm run verify` from a clean checkout    | **PASS** — format, lint, typecheck, 1,332 unit tests across 60 files, build                   |
+| Unit layer                                | **1,332 / 1,332** across 60 files (was 1,321 across 59; the new file is the copy catalogue)   |
+| Browser, three widths                     | **501 / 501** at 360, 430 and 1,280px — 167 each                                              |
+| Android-style gate on the deployed build  | **clean — 93 checks** (was 86; the seven new ones press QA-81-006 and QA-81-007 on a handset) |
+| Privacy scan                              | clean, 216 tracked files                                                                      |
+| Block sweep, every scenario × every block | in `tests/synthetic/block-sweep.test.ts`, and by hand through the laboratory's own control    |
 
 **One thing was already failing before a line of code changed, and is fixed in
 its own commit.** `npm run verify` runs `format:check`, and three documents
@@ -139,6 +139,18 @@ says why. Two refusals stop the app offering; an answer re-opens the block, whic
 is also what keeps the third-refusal stop reachable. And a synthetic test that
 rebuilt the whole library inside its own loop no longer does.
 
+**81.7 — the two findings round 2 raised (QA-81-006, QA-81-007).** The repetition
+rule and the limiter invariant are ordered rather than left to compete:
+withholding an answer may make the app stop speaking, and may not promote
+something the situation argues against into the answer's place. "Answers the
+limiter" is one definition now, read by the dimension that rewards it and the
+filter that protects it. A sibling went with it — the session ledger survived a
+change of history, which no owner can reach and every auditor can. And the
+no-action copy is held as a table of finished sentences at every block, which
+fixed the reported one, the fallback that broke the same frame, and a third the
+render turned up: `nothing-in-reach` saying "your evening" at nine in the
+morning.
+
 ## The gate, item by item
 
 | #   | Acceptance item                                                                                                                                                                                       | Where it is proved                                                                                                                                                                                                                        |
@@ -147,6 +159,11 @@ rebuilt the whole library inside its own loop no longer does.
 | 2   | A named limiter always has a candidate that addresses it, in every block                                                                                                                              | `recovery-has-somewhere-to-go.test.ts` — for `recovery` **and** `capacity`, the second closed in 81.6 (QA-81-001) with a fixture that reaches it, so the sweep is not vacuous                                                             |
 | 3   | No sentence about the child claims consecutiveness the occasions do not support; no percentage, rank, grade or score reaches any surface; the suggestion states how many occasions went the other way | `g003-growth-evidence.test.ts`                                                                                                                                                                                                            |
 | 4   | The owner can stop a recommendation family, and find and lift that veto afterwards                                                                                                                    | `refusal-and-veto.test.ts` and `phase81.spec.ts`                                                                                                                                                                                          |
+
+Item 1 gained a second instrument in 81.7. `block-sweep.test.ts` sweeps the
+states the library reaches; `no-action-copy.test.ts` renders the copy catalogue
+whether the library reaches it or not, which is how the `nothing-in-reach`
+violation was found after two rounds of QA had passed the item.
 
 ## Open, and named rather than left to be found
 
@@ -159,8 +176,13 @@ Adaya and −0.66 for a walk, which is the correction QA-81-001 asked for. What
 decides it is a bottleneck the history states outright. Section 10 item 13
 protects time with Adaya from being merged into a generic family or made
 conditional; it does not protect it from being out-ranked by a history in which
-the body is the bottleneck. That is a judgement, it is stated here rather than
-buried, and QA is invited to adjudicate it.
+the body is the bottleneck.
+
+**Round 2 adjudicated this and accepted it**, in those terms: the remaining gap
+comes from an explicit capacity bottleneck rather than from the old false
+inference that soreness argues against a light move, and no further change is
+required. It stays listed here because it is a judgement rather than a
+derivation, and the next person to read the ranking should find it named.
 
 **AUD-0027's refusal half is not shipped**, per the audit's own instruction to
 drop it if either half is in doubt. Surfacing "you have passed on this fourteen
@@ -182,11 +204,10 @@ Recommended-behaviour column says a sleep reading is valid for the local day tha
 follows the night it describes. Those cannot both hold, and the recommended
 behaviour is what is implemented.
 
-**One known transient carries forward, unchanged.** One Playwright test per full
-local run fails at `page.goto` with `net::ERR_ABORTED`, on a different spec each
-time; this run it was `legacy-import.spec.ts` at 360px, and it passed alone
-immediately afterwards. Local dev-server flake rather than a product defect. Not
-retried past: reported again, with the spec named.
+**The known Playwright transient did not occur.** One test per full local run
+used to fail at `page.goto` with `net::ERR_ABORTED`, on a rotating spec. Neither
+the round-2 run of 495 nor this run of 501 saw it, and independent QA did not
+see it in either round. Still reported rather than declared gone.
 
 ## Deliberate non-features, unchanged
 
