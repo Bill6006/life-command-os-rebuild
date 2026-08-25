@@ -208,6 +208,24 @@ export type GoalRecord = Record_<
     readonly statement: string
     readonly status: GoalStatus
     readonly targetWindow?: DueWindow
+    /**
+     * The named pieces of work this goal is made of — AUD-0021.
+     *
+     * Optional, and the model has to work with none of them. Most goals will
+     * never have any, and a goal with an empty list must behave exactly as it
+     * did before this field existed: what parts buy is the ability to say
+     * *"four of nine topics have had a session"*, and where there are no parts
+     * the honest thing is to say less rather than to guess at a denominator.
+     *
+     * References rather than strings, because the pieces already exist as
+     * entities — a certification's topics are `learning-topic` entities the
+     * career generator is already studying — and a second, looser name for the
+     * same thing is section 13.4's whole complaint.
+     *
+     * **Counts, never a percentage.** Section 22 forbids a life score and
+     * "44%" about a man's certification is one with a friendlier face.
+     */
+    readonly parts?: readonly EntityRef[]
   }
 >
 

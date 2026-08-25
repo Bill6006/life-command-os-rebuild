@@ -18,7 +18,7 @@ import type {
   GoalStatus,
 } from '../domain/records'
 import type { Instant, TimeZoneId } from '../domain/time'
-import type { ConceptId } from '../domain/windows'
+import type { ConceptId, DueWindow } from '../domain/windows'
 import { actionScopeParts } from './association'
 import { parseBeliefKey } from './learning'
 
@@ -321,6 +321,33 @@ export interface GoalCorrectionInput {
   readonly previous: GoalRecord
   readonly statement: string
   readonly status: GoalStatus
+  /**
+   * When the owner wants it done by — AUD-0046.
+   *
+   * Three states rather than two, and the third is why this is not simply an
+   * optional field: `undefined` means "leave whatever is there alone", and
+   * `null` means "he has taken the date off". Collapsing them would make
+   * clearing a horizon impossible through the only control that can set one.
+   */
+  readonly targetWindow?: DueWindow | null
+  /** The named pieces of work — AUD-0021. Same three states, same reason. */
+  readonly parts?: readonly EntityRef[] | null
+}
+
+function carriedForward<T>(given: T | null | undefined, previous: T | undefined): T | undefined {
+  if (given === null) return undefined
+  return given ?? previous
+}
+
+// Omitted rather than written as `undefined`: an optional field that is present
+// and empty round-trips differently from one that is absent, and `parts: []` is
+// a goal broken into no pieces rather than a goal that was never broken up.
+function withHorizon(window: DueWindow | undefined) {
+  return window === undefined ? {} : { targetWindow: window }
+}
+
+function withParts(parts: readonly EntityRef[] | undefined) {
+  return parts === undefined ? {} : { parts }
 }
 
 /**
@@ -349,7 +376,13 @@ export function goalCorrectionRecord(
       privacy: input.previous.privacy,
       supersedes: input.previous.id,
     },
-    { goal: input.previous.goal, statement: input.statement, status: input.status },
+    {
+      goal: input.previous.goal,
+      statement: input.statement,
+      status: input.status,
+      ...withHorizon(carriedForward(input.targetWindow, input.previous.targetWindow)),
+      ...withParts(carriedForward(input.parts, input.previous.parts)),
+    },
   )
 }
 

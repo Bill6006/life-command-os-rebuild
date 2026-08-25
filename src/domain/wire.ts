@@ -370,6 +370,10 @@ function readPayload(reader: Reader, kind: RecordKind): Record<string, unknown> 
         statement: readString(reader, 'statement'),
         status: readEnum(reader, 'status', ['active', 'paused', 'achieved', 'abandoned'] as const),
         targetWindow: readDueWindow(reader, 'targetWindow', false),
+        // Absent and empty are different answers — AUD-0021. A goal that has
+        // never been broken into parts says nothing about coverage; one broken
+        // into parts none of which are done says something quite specific.
+        parts: reader.value.parts === undefined ? undefined : readEntityRefList(reader, 'parts'),
       }
     case 'commitment':
       return {
@@ -778,6 +782,7 @@ function payloadOut(record: CanonicalRecord): Record<string, unknown> {
         ...(record.targetWindow === undefined
           ? {}
           : { targetWindow: dueWindowOut(record.targetWindow) }),
+        ...(record.parts === undefined ? {} : { parts: record.parts.map(refOut) }),
       }
     case 'commitment':
       return {

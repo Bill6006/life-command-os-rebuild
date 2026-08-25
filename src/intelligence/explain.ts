@@ -21,6 +21,7 @@ import {
   type TimeZoneId,
 } from '../domain/time'
 import { CLOSE_ENOUGH_TO_MENTION } from './arbitrate'
+import { describeGoalTrajectory } from './direction'
 import type { DimensionName, Evaluation } from './evaluate'
 import { beliefKey } from './learning'
 import { describeHours, SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
@@ -522,9 +523,25 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
       const goal = situation.direction.goals.find(
         (entry) => entry.goal.id === semantics.relatedGoal?.id,
       )
-      if (goal !== undefined)
-        return `${capitalise(goal.statement)} — and ${object} is the weak part.`
-      return `${capitalise(object)} is the part that needs the reps.`
+      if (goal === undefined) return `${capitalise(object)} is the part that needs the reps.`
+      /*
+       * The clause that makes the app's best sentence true — AUD-0046.
+       *
+       * "Pass the CCNA before the winter — and subnetting is the weak part" was
+       * an excellent sentence resting on nothing: the deadline lived inside the
+       * owner's own wording, and the typed field holding it was empty two
+       * layers down and read by nobody. This trigger can now only be raised
+       * where a horizon and a set of pieces actually measure behind-ness
+       * (`goalIsBehind`), so the sentence may finally say what the measurement
+       * was.
+       *
+       * Counts and a stretch of time, never a share — section 22, and AUD-0021
+       * in as many words: "4 of 9" is one short step from a completion
+       * percentage, which is a score about a man's life by another name.
+       */
+      const trajectory = describeGoalTrajectory(goal)
+      const head = `${capitalise(goal.statement)} — and ${object} is the weak part.`
+      return trajectory === undefined ? head : `${head} ${trajectory}`
     }
 
     case 'opportunity-window': {

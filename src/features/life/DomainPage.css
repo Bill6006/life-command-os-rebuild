@@ -174,7 +174,45 @@
 
 .domain-goal__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+/*
+  What the app can say about how a goal is going — AUD-0021.
+
+  Set as an ordinary line rather than as a figure: counts of pieces and a date,
+  in the same type as everything else on the page. Anything that reads as a
+  measurement — a bar, a badge, a right-aligned number — would turn a trajectory
+  into a mark, which is what section 22 forbids.
+*/
+.domain-goal__trajectory {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.domain-goal__parts {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.domain-goal__part {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  font-size: var(--text-sm);
+}
+
+.domain-goal__part-name {
+  color: var(--text-primary);
+}
+
+.domain-goal__part-state {
+  color: var(--text-secondary);
 }
 
 .domain-recent {

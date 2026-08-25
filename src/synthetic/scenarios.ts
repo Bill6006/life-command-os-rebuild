@@ -4,6 +4,7 @@ import { entityRef, type SemanticEntity } from '../domain/entities'
 import { sequentialRecordIds } from '../domain/ids'
 import type { CanonicalRecord, DecisionContext } from '../domain/records'
 import { timeZone } from '../domain/time'
+import { dueWindow } from '../domain/windows'
 import type { SnapshotWire } from '../memory/snapshot'
 import { createKit, pastEpisodeRecords, type Scenario } from './kit'
 
@@ -736,6 +737,26 @@ export interface WeekDirectionOptions {
     { readonly named: LifeDomainId; readonly wording: string } | { readonly text: string }
   /** Set in the owner-local week before this one, to test that it expires. */
   readonly setLastWeek?: boolean
+  /**
+   * What the CCNA goal actually carries — AUD-0046, AUD-0021.
+   *
+   * Four combinations from one history, which is the same instrument G-008
+   * already uses for the direction: hold the evening still and change exactly
+   * one thing. `winter` is the date the owner's own statement names; `soon` is
+   * a week out, which is what makes the horizon change the ranking rather than
+   * merely being present; `none` is the state every goal was in before this
+   * phase and the state most goals will stay in.
+   */
+  readonly goalHorizon?: 'winter' | 'soon' | 'none'
+  /**
+   * Whether the certification is broken into its named topics, and whether one
+   * of them has already been sat with.
+   *
+   * `one-done` is what makes coverage of the pieces observable rather than
+   * merely stored: with a finished session about subnetting in the record, the
+   * piece the move is about stops being the untouched one.
+   */
+  readonly goalParts?: 'named' | 'one-done' | 'none'
 }
 
 export function weekPointedAt(options: WeekDirectionOptions = {}): SnapshotWire {
@@ -743,6 +764,8 @@ export function weekPointedAt(options: WeekDirectionOptions = {}): SnapshotWire 
   const adaya = entityRef('person', 'Adaya')
   const kitchen = entityRef('place', 'the kitchen')
   const subnetting = entityRef('learning-topic', 'subnetting')
+  const vlans = entityRef('learning-topic', 'VLAN trunking')
+  const ospf = entityRef('learning-topic', 'OSPF areas')
   const ccna = entityRef('goal', 'the CCNA')
   const now = WEEK_POINTED_AT_NOW
 
@@ -772,10 +795,39 @@ export function weekPointedAt(options: WeekDirectionOptions = {}): SnapshotWire 
     privacy: 'normal',
   })
 
+  /*
+   * The winter, as a date the app can actually see — AUD-0046, AUD-0021.
+   *
+   * "Pass the CCNA before the winter" carried its deadline inside the owner's
+   * own wording while `GoalRecord.targetWindow` sat empty two layers down, and
+   * the career generator raised `goal-behind` on the strength of the goal
+   * merely existing. This fixture is where that reads as an evening: the exam
+   * is a real date, the certification has named topics, and none of them has
+   * had a session — so the career move is behind by something measured rather
+   * than by something assumed, and the three non-career directions below have
+   * a real winner to overturn.
+   */
+  const horizonDay =
+    options.goalHorizon === 'none'
+      ? undefined
+      : options.goalHorizon === 'soon'
+        ? '2026-09-22'
+        : '2026-11-30'
+
   const goalRecord = kit.record(
     'goal',
     { occurredAt: kit.local('2026-04-01', '09:00'), domains: [DOMAIN.career], entities: [ccna] },
-    { goal: ccna, statement: 'Pass the CCNA before the winter', status: 'active' },
+    {
+      goal: ccna,
+      statement: 'Pass the CCNA before the winter',
+      status: 'active',
+      ...(horizonDay === undefined
+        ? {}
+        : {
+            targetWindow: dueWindow(kit.local(horizonDay, '00:00'), kit.local(horizonDay, '23:59')),
+          }),
+      ...(options.goalParts === 'none' ? {} : { parts: [subnetting, vlans, ospf] }),
+    },
   )
 
   const custody = kit.record(
@@ -845,7 +897,22 @@ export function weekPointedAt(options: WeekDirectionOptions = {}): SnapshotWire 
     },
   )
 
-  const entities: SemanticEntity[] = [child, place, topic, goal]
+  // The other two named pieces of the certification. They exist as entities
+  // rather than as bare references so the goal's parts point at real things —
+  // and they are added after `topic` so the topic the owner is actually on
+  // stays the first learning topic in the index.
+  const otherTopics = [vlans, ospf].map((ref) =>
+    kit.entity({
+      kind: 'learning-topic',
+      label: ref.id.slice(ref.id.indexOf(':') + 1),
+      domain: DOMAIN.career,
+      privacy: 'normal',
+      links: [{ relation: 'supports-goal', target: ccna.id }],
+      id: ref.id,
+    }),
+  )
+
+  const entities: SemanticEntity[] = [child, place, topic, goal, ...otherTopics]
   const records: CanonicalRecord[] = [
     goalRecord,
     custody,
@@ -855,6 +922,31 @@ export function weekPointedAt(options: WeekDirectionOptions = {}): SnapshotWire 
     energy,
     time,
   ]
+
+  // A finished session about one of the pieces, a fortnight back — far enough
+  // that the duplication check has nothing to say about it, so what changes is
+  // the goal's own coverage and nothing else.
+  if (options.goalParts === 'one-done') {
+    const nextId = sequentialRecordIds('GNS')
+    records.push(
+      ...pastEpisodeRecords(
+        kit,
+        [
+          {
+            verb: 'recall-practice',
+            object: subnetting,
+            domain: DOMAIN.career,
+            on: '2026-09-01',
+            at: '20:00',
+            context: { block: 'evening', weekend: false, strain: 'none', usableMinutes: 60 },
+            ending: 'completed',
+            effect: 'some',
+          },
+        ],
+        nextId,
+      ),
+    )
+  }
 
   // 14 September is the Monday of the same owner-local week as the evening
   // above; 7 September is the Monday before it.

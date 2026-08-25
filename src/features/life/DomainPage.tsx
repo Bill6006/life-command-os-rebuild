@@ -1,10 +1,19 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Panel, Screen } from '../../components/ui'
 import type { LifeDomainId } from '../../domain/domains'
+import type { EntityRef } from '../../domain/entities'
 import type { FactValue, GoalStatus } from '../../domain/records'
 import type { RecordId } from '../../domain/ids'
-import { localDayIdAt, localDaysBetween, systemClock } from '../../domain/time'
-import type { ConceptId } from '../../domain/windows'
+import {
+  civilDateFromDayId,
+  instantAtLocal,
+  localDayIdAt,
+  localDaysBetween,
+  parseLocalDayId,
+  systemClock,
+  type TimeZoneId,
+} from '../../domain/time'
+import { dueWindow, type ConceptId } from '../../domain/windows'
 import {
   contextCorrectionRecord,
   coverageInterpretationRecord,
@@ -67,6 +76,7 @@ export function DomainPage({ page }: { page: LifePage }) {
   const [conceptDraft, setConceptDraft] = useState('')
   const [openStatus, setOpenStatus] = useState<LifeDomainId | undefined>(undefined)
   const [statusDraft, setStatusDraft] = useState('')
+  const [openGoal, setOpenGoal] = useState<RecordId | undefined>(undefined)
 
   const situation = useMemo<Situation | undefined>(() => {
     if (!memory.ready || memory.snapshot.records.length === 0) return undefined
@@ -182,6 +192,59 @@ export function DomainPage({ page }: { page: LifePage }) {
     ])
   }
 
+  /**
+   * The one date control the horizon has ever had — AUD-0046.
+   *
+   * `GoalRecord.targetWindow` has parsed, serialised and round-tripped since
+   * Phase 1, and no surface could write it: the deadline in "Pass the CCNA
+   * before the winter" lived inside the owner's own sentence while the typed
+   * field for it sat empty. This is where he puts it, and taking it off again
+   * is the same control — an absent horizon has to stay reachable, because it
+   * is the honest state for most goals and the app must never default one.
+   *
+   * The span is the whole owner-local day he named. A due window is a stretch
+   * of time rather than an instant (section 15), and "by the 30th" means the
+   * 30th rather than midnight at the start of it.
+   */
+  const setGoalHorizon = (goal: DomainGoal, dayId: string | undefined) => {
+    const previous = goal.record
+    if (previous === undefined) return
+    const day = dayId === undefined ? undefined : parseLocalDayId(dayId)
+    if (dayId !== undefined && day === undefined) return
+    const date = day === undefined ? undefined : civilDateFromDayId(day)
+    append(() => [
+      goalCorrectionRecord(
+        {
+          previous,
+          statement: goal.statement,
+          status: 'active',
+          targetWindow:
+            date === undefined
+              ? null
+              : dueWindow(
+                  instantAtLocal({ ...date, hour: 0, minute: 0, second: 0 }, memory.zone),
+                  instantAtLocal({ ...date, hour: 23, minute: 59, second: 59 }, memory.zone),
+                ),
+        },
+        { now: memory.now, zone: memory.zone, recordedAt: systemClock().now() },
+      ),
+    ])
+    setOpenGoal(undefined)
+  }
+
+  /** The named pieces a goal is made of — AUD-0021. Adding one, or taking it off. */
+  const setGoalParts = (goal: DomainGoal, parts: readonly EntityRef[]) => {
+    const previous = goal.record
+    if (previous === undefined) return
+    append(() => [
+      goalCorrectionRecord(
+        { previous, statement: goal.statement, status: 'active', parts },
+        { now: memory.now, zone: memory.zone, recordedAt: systemClock().now() },
+      ),
+    ])
+    setOpenGoal(undefined)
+  }
+
   const byDomain = new Map<LifeDomainId, ConceptReading[]>()
   for (const reading of data.readings) {
     const held = byDomain.get(reading.domain)
@@ -254,38 +317,18 @@ export function DomainPage({ page }: { page: LifePage }) {
       {data.goals.length === 0 ? null : (
         <Panel title="Goals here">
           {data.goals.map((goal) => (
-            <div key={goal.source} className="domain-goal">
-              <p className="domain-goal__statement">
-                {goal.statement}{' '}
-                {goal.origin === undefined ? null : (
-                  <span
-                    className="origin-badge"
-                    data-testid="domain-origin"
-                    title={goal.origin.detail}
-                  >
-                    {goal.origin.label}
-                  </span>
-                )}
-              </p>
-              <div className="domain-goal__actions">
-                <button
-                  type="button"
-                  className="domain-option"
-                  disabled={busy || goal.record === undefined}
-                  onClick={() => correctGoal(goal, 'achieved')}
-                >
-                  Done
-                </button>
-                <button
-                  type="button"
-                  className="domain-option"
-                  disabled={busy || goal.record === undefined}
-                  onClick={() => correctGoal(goal, 'abandoned')}
-                >
-                  No longer this
-                </button>
-              </div>
-            </div>
+            <GoalRow
+              key={goal.source}
+              goal={goal}
+              zone={situation.zone}
+              disabled={busy}
+              open={openGoal === goal.source}
+              onOpen={() => setOpenGoal(goal.source)}
+              onClose={() => setOpenGoal(undefined)}
+              onStatus={(status) => correctGoal(goal, status)}
+              onHorizon={(dayId) => setGoalHorizon(goal, dayId)}
+              onParts={(parts) => setGoalParts(goal, parts)}
+            />
           ))}
         </Panel>
       )}
@@ -352,6 +395,182 @@ export function DomainPage({ page }: { page: LifePage }) {
         </Panel>
       )}
     </Screen>
+  )
+}
+
+/**
+ * One goal, with the two things that turn a statement into a tracked objective.
+ *
+ * ## Why the controls are closed until tapped
+ *
+ * The same rule as every other correction on this page: a page that opens with
+ * a form for every row is the static questionnaire dump section 59 excludes. A
+ * goal reads as a sentence, its trajectory reads as a sentence, and the date
+ * and the pieces are behind one link.
+ *
+ * ## What the trajectory may and may not say
+ *
+ * Counts of pieces and the date the owner set — AUD-0021, and the risk it names
+ * in as many words: a "4 of 9" reading is one short step from a completion
+ * percentage, which is a score about a man's life by another name. So there is
+ * no share, no bar, no "on track" verdict and no arithmetic on this row. What
+ * the ranking does with the same two facts is a separate question and stays
+ * inside the engine.
+ */
+function GoalRow({
+  goal,
+  zone,
+  disabled,
+  open,
+  onOpen,
+  onClose,
+  onStatus,
+  onHorizon,
+  onParts,
+}: {
+  goal: DomainGoal
+  zone: TimeZoneId
+  disabled: boolean
+  open: boolean
+  onOpen: () => void
+  onClose: () => void
+  onStatus: (status: GoalStatus) => void
+  onHorizon: (dayId: string | undefined) => void
+  onParts: (parts: readonly EntityRef[]) => void
+}) {
+  const editable = goal.record !== undefined
+  const dueOn = goal.horizon === undefined ? '' : localDayIdAt(goal.horizon.window.latest, zone)
+
+  return (
+    <div className="domain-goal">
+      <p className="domain-goal__statement">
+        {goal.statement}{' '}
+        {goal.origin === undefined ? null : (
+          <span className="origin-badge" data-testid="domain-origin" title={goal.origin.detail}>
+            {goal.origin.label}
+          </span>
+        )}
+      </p>
+
+      {goal.trajectory === undefined ? null : (
+        <p className="domain-goal__trajectory" data-testid="domain-goal-trajectory">
+          {goal.trajectory}
+        </p>
+      )}
+
+      {goal.parts.length === 0 ? null : (
+        <ul className="domain-goal__parts" data-testid="domain-goal-parts">
+          {goal.parts.map((part) => (
+            <li key={part.ref.id} className="domain-goal__part">
+              <span className="domain-goal__part-name">{part.label}</span>
+              <span className="domain-goal__part-state">
+                {part.covered ? 'has had a session' : 'no session yet'}
+              </span>
+              {!open ? null : (
+                <button
+                  type="button"
+                  className="domain-linkish"
+                  disabled={disabled || !editable}
+                  aria-label={`Remove ${part.label}`}
+                  onClick={() =>
+                    onParts(
+                      goal.parts
+                        .filter((entry) => entry.ref.id !== part.ref.id)
+                        .map((entry) => entry.ref),
+                    )
+                  }
+                >
+                  Not part of this
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {open ? (
+        <div className="domain-correction" data-testid="domain-goal-edit">
+          <label className="domain-correction__prompt" htmlFor={`goal-date-${goal.source}`}>
+            When do you want this done by?
+          </label>
+          <input
+            id={`goal-date-${goal.source}`}
+            type="date"
+            className="domain-input"
+            defaultValue={dueOn}
+            disabled={disabled || !editable}
+            data-testid="domain-goal-date"
+            onChange={(event) =>
+              event.target.value === '' ? undefined : onHorizon(event.target.value)
+            }
+          />
+          <div className="domain-correction__actions">
+            {goal.horizon === undefined ? null : (
+              <button
+                type="button"
+                className="domain-linkish"
+                disabled={disabled || !editable}
+                data-testid="domain-goal-clear-date"
+                onClick={() => onHorizon(undefined)}
+              >
+                No date on this
+              </button>
+            )}
+          </div>
+
+          {goal.couldBeParts.length === 0 ? null : (
+            <>
+              <p className="domain-correction__prompt">What is this made of?</p>
+              <div className="domain-options">
+                {goal.couldBeParts.map((option) => (
+                  <button
+                    key={option.ref.id}
+                    type="button"
+                    className="domain-option"
+                    disabled={disabled || !editable}
+                    onClick={() => onParts([...goal.parts.map((part) => part.ref), option.ref])}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          <button type="button" className="domain-linkish" disabled={disabled} onClick={onClose}>
+            Done editing
+          </button>
+        </div>
+      ) : (
+        <div className="domain-goal__actions">
+          <button
+            type="button"
+            className="domain-option"
+            disabled={disabled || !editable}
+            onClick={() => onStatus('achieved')}
+          >
+            Done
+          </button>
+          <button
+            type="button"
+            className="domain-option"
+            disabled={disabled || !editable}
+            onClick={() => onStatus('abandoned')}
+          >
+            No longer this
+          </button>
+          <button
+            type="button"
+            className="domain-linkish"
+            disabled={disabled || !editable}
+            data-testid="domain-goal-open"
+            onClick={onOpen}
+          >
+            Date and pieces
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 

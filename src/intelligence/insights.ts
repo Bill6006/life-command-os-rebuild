@@ -45,7 +45,7 @@ import {
   RESULT_VALUE,
   resultValueOf,
 } from './outcomes'
-import type { Situation } from './situation'
+import { describeGoalTrajectory, type Situation } from './situation'
 import { hereNowWord } from './vocabulary'
 import { approximateHorizonMs, type ConceptId, type FreshnessHorizon } from '../domain/windows'
 
@@ -1941,6 +1941,87 @@ function trajectoryCards(situation: Situation): readonly Built[] {
 }
 
 /**
+ * How a long-range goal is actually going — AUD-0021.
+ *
+ * Section 21 asks that long-range direction reach the daily move, and until
+ * this phase a goal was a statement plus a status: no date, no body of work, no
+ * way to see whether it was moving. The record now carries both — a horizon the
+ * owner set (AUD-0046) and a small set of named pieces — and this is where he
+ * reads what they add up to.
+ *
+ * **Counts and a date, and nothing that grades him.** AUD-0021 names the risk
+ * itself: a "4 of 9" reading is one short step from a completion percentage,
+ * which is a score about a man's life by another name and is what section 22
+ * forbids. So there is no rate on this card, no share in its evidence, and no
+ * "on track" verdict — the two facts are put next to each other and he draws
+ * the line.
+ *
+ * **It reports rather than concludes**, so it carries no confidence word and no
+ * belief to disagree with. Which pieces have had a session is something the
+ * record says; whether that is good enough is his to judge.
+ */
+function goalTrajectoryCards(situation: Situation): readonly Built[] {
+  const out: Built[] = []
+
+  for (const goal of situation.direction.goals) {
+    const trajectory = describeGoalTrajectory(goal)
+    if (trajectory === undefined) continue
+
+    const included: EvidenceLine[] = goal.parts.map((part) => ({
+      record: goal.source,
+      when: situation.dayId,
+      text: `${situation.entities.labelFor(part.ref) ?? part.ref.id} — ${
+        part.covered ? 'has had a session' : 'no session yet'
+      }`,
+    }))
+
+    out.push({
+      // Below a contradiction and a coverage gap, above a stable pattern: a
+      // goal moving slowly is worth knowing and is not news the way something
+      // going the other way is.
+      rank: 45,
+      insight: {
+        id: `goal:${goal.source}`,
+        kind: 'trajectory',
+        eyebrow: EYEBROW.trajectory,
+        domain: goal.domain,
+        headline: goal.statement,
+        detail: trajectory,
+        confidence: undefined,
+        // Empty: filled from what this card cites. See `withSources`.
+        sources: [],
+        evidence: {
+          comparable: goal.parts.length,
+          window: undefined,
+          // The detail line above already says how many pieces have moved, in
+          // the owner's own units. A second tally would say nothing extra.
+          counted: undefined,
+          // No rate, deliberately. A proportion of a man's own certification is
+          // the completion percentage AUD-0021 warns this card is one step from.
+          rates: [],
+          counterexamples: [],
+          included,
+          includedTitle: 'Every piece of this',
+          excluded: [],
+          excludedTitle: undefined,
+          strongerIn: undefined,
+          weakerIn: undefined,
+          trend: undefined,
+          mix: undefined,
+          reasoning: [
+            'A piece counts as having had a session when the record holds a completed move or an answered result about it.',
+            'The date is the one you set on this goal. Nothing here says whether that is enough time.',
+          ],
+        },
+        belief: undefined,
+      },
+    })
+  }
+
+  return out
+}
+
+/**
  * A standing arrangement, and the history that predates it (section 16).
  *
  * "Old evidence from another life season remains visible but may be less
@@ -2210,6 +2291,7 @@ export function insightsFor(situation: Situation): InsightsReport {
 
   built.push(...coverageCards(situation))
   built.push(...trajectoryCards(situation))
+  built.push(...goalTrajectoryCards(situation))
   built.push(...lifeSeasonCards(situation))
 
   return {

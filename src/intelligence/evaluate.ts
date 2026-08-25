@@ -6,6 +6,7 @@ import type { Candidate } from './candidates'
 import type { LearnedEffect } from './learning'
 import { profileFor, type MoveProfile } from './moves'
 import { blockNoun, hereNowWord, horizonWord } from './vocabulary'
+import type { GoalHorizon } from './direction'
 import { answersLimiter, type Situation } from './situation'
 
 /**
@@ -261,29 +262,123 @@ function directionFit(candidate: Candidate, situation: Situation): Dimension {
   }
 }
 
-function goalFit(candidate: Candidate, situation: Situation): Dimension {
-  const weight = WEIGHTS['goal-fit']
-  const related = candidate.semantics.relatedGoal
-  if (related !== undefined) {
-    const goal = situation.direction.goals.find((entry) => entry.goal.id === related.id)
-    if (goal !== undefined) {
-      return { name: 'goal-fit', value: 1, weight, note: `serves ${goal.statement.toLowerCase()}` }
-    }
-  }
+/**
+ * How close the date is before a goal starts pulling harder — AUD-0046.
+ *
+ * A goal with two months to run and a goal with nine days to run are not the
+ * same claim on a Tuesday evening, and until this phase the app could not tell
+ * them apart: the horizon was in the schema, parsed and carried, and read by
+ * nothing.
+ *
+ * A month, because that is the shortest span over which the app can watch the
+ * work move — its own coverage windows run in weeks — and because a shorter
+ * fuse would turn a date into a countdown, which is what section 4.4 forbids
+ * doing with a personal goal.
+ */
+const GOAL_CLOSING_DAYS = 28
 
-  const sameDomain = situation.direction.goals.find(
-    (goal) => goal.domain === candidate.semantics.domain,
-  )
-  if (sameDomain !== undefined) {
+/** What a date inside the last month adds. Caps at 1 like everything else here. */
+const CLOSING_PULL = 0.2
+
+/** What a date still months away takes off. A goal is not tonight's business yet. */
+const PATIENT = 0.8
+
+/** How much a piece of the work that has already had a session is still worth. */
+const PIECE_ALREADY_TOUCHED = 0.6
+
+/**
+ * What a candidate is worth to what the owner is aiming at.
+ *
+ * ## What this used to be, and what AUD-0021 changed
+ *
+ * The whole of it was domain membership: 1.0 when the candidate named the goal,
+ * 0.6 when a goal merely existed in the same life area, 0 otherwise. "Pass the
+ * CCNA before the winter" was a string that made career moves score 0.6 higher,
+ * and there was no notion of what remained or how long there was.
+ *
+ * Two readings now sit on top of that, and **the case with neither is byte for
+ * byte the old behaviour** — 1.0, 0.6, 0 — which is both findings' own
+ * acceptance condition: an absent horizon must stay unknown rather than become
+ * a default, and a goal with no parts must behave exactly as today.
+ *
+ * ## Coverage of the pieces
+ *
+ * A candidate whose object is one of the goal's named pieces is judged on
+ * whether that piece has had a session. The piece nothing has happened on is
+ * what the goal needs next; the one that has already had a session is still
+ * worth something and is no longer the most useful thing to do. That is a
+ * coverage statement rather than a score, which is what keeps section 22 intact
+ * — the app never says how far along he is, it says which piece is untouched.
+ *
+ * ## Time remaining
+ *
+ * The date moves it in both directions, and both are the same reading. A goal
+ * whose date is months out is not asking for this particular evening; one
+ * inside its last month is. Deliberately modest either way: a horizon is a fact
+ * about the goal, never a reason to override what is actually in the way.
+ */
+function goalFit(candidate: Candidate, situation: Situation): Dimension {
+  const object = candidate.semantics.target.object
+  const related = candidate.semantics.relatedGoal
+
+  const named =
+    related === undefined
+      ? undefined
+      : situation.direction.goals.find((entry) => entry.goal.id === related.id)
+  const goal =
+    named ?? situation.direction.goals.find((entry) => entry.domain === candidate.semantics.domain)
+
+  if (goal === undefined) {
     return {
       name: 'goal-fit',
-      value: 0.6,
-      weight,
-      note: `sits under ${sameDomain.statement.toLowerCase()}`,
+      value: 0,
+      weight: WEIGHTS['goal-fit'],
+      note: 'no active goal in this area',
     }
   }
 
-  return { name: 'goal-fit', value: 0, weight, note: 'no active goal in this area' }
+  const piece = goal.parts.find((part) => part.ref.id === object.id)
+  const statement = goal.statement.toLowerCase()
+
+  const base =
+    piece !== undefined
+      ? piece.covered
+        ? PIECE_ALREADY_TOUCHED
+        : 1
+      : named !== undefined
+        ? 1
+        : 0.6
+
+  const note =
+    piece !== undefined
+      ? piece.covered
+        ? `a piece of ${statement} that has already had a session`
+        : `a piece of ${statement} with no session yet`
+      : named !== undefined
+        ? `serves ${statement}`
+        : `sits under ${statement}`
+
+  return {
+    name: 'goal-fit',
+    value: timed(base, goal.horizon),
+    weight: WEIGHTS['goal-fit'],
+    note: horizonNote(note, goal.horizon),
+  }
+}
+
+/** The same value, read against the date the owner set — or unchanged, with none. */
+function timed(base: number, horizon: GoalHorizon | undefined): number {
+  if (horizon === undefined) return base
+  if (horizon.passed || horizon.daysRemaining <= GOAL_CLOSING_DAYS)
+    return scaled(base + CLOSING_PULL)
+  return base * PATIENT
+}
+
+function horizonNote(note: string, horizon: GoalHorizon | undefined): string {
+  if (horizon === undefined) return note
+  if (horizon.passed) return `${note}, and the date you set has gone`
+  if (horizon.daysRemaining <= GOAL_CLOSING_DAYS) return `${note}, and the date is close`
+  return `${note}, and the date is still a way off`
 }
 
 function urgency(candidate: Candidate): Dimension {

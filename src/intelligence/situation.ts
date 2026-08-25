@@ -34,7 +34,14 @@ import {
 import type { ConceptId } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
 import { assembleCoverage, type CoverageState } from './coverage'
-import { resolveDirection, type ActiveGoal, type DirectionState } from './direction'
+import {
+  describeGoalTrajectory,
+  resolveDirection,
+  type ActiveGoal,
+  type DirectionState,
+  type GoalHorizon,
+  type GoalPart,
+} from './direction'
 import { buildLearning, type LearningIndex } from './learning'
 import { collectEpisodes, type Episode, type MoveState } from './lifecycle'
 import type { MoveProfile } from './moves'
@@ -735,5 +742,16 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
   }
 }
 
-export type { ActiveGoal, DirectionState }
+export type { ActiveGoal, DirectionState, GoalHorizon, GoalPart }
+/*
+ * Re-exported so a Life page can read a goal's trajectory through the same door
+ * it already reads the situation through — AUD-0021.
+ *
+ * `direction` is not on `OPEN_TO_SURFACES` and should not be: it resolves what
+ * the owner is aiming at, which is part of how a move is ranked. What a surface
+ * needs is the *sentence*, and there must be exactly one of those or the Career
+ * page and the Insights card will drift into saying different things about the
+ * same goal.
+ */
+export { describeGoalTrajectory }
 export type { CoverageState, DomainCoverage, ConceptCoverage, RefreshRoute } from './coverage'

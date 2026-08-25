@@ -11,6 +11,7 @@ import type {
   WhyNowTrigger,
 } from '../domain/recommendation'
 import type { ConceptId } from '../domain/windows'
+import { goalIsBehind, type ActiveGoal } from './direction'
 import { practiceEvidenceHasAged } from './growth'
 import { profileFor } from './moves'
 import { SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
@@ -175,8 +176,26 @@ function roughOutcomesFor(situation: Situation, subject: EntityRef): readonly Re
   return found.sort((a, b) => b.at - a.at).map((entry) => entry.id)
 }
 
-function goalRefFor(situation: Situation, domain: LifeDomainId): EntityRef | undefined {
-  return situation.direction.goals.find((goal) => goal.domain === domain)?.goal
+function activeGoalFor(situation: Situation, domain: LifeDomainId): ActiveGoal | undefined {
+  return situation.direction.goals.find((goal) => goal.domain === domain)
+}
+
+/**
+ * Whether the app may say a goal is behind — AUD-0046.
+ *
+ * The trigger used to be raised by the *existence* of a goal, and `evaluate.ts`
+ * pays it `urgency 0.4`, so every career recommendation carried an urgency
+ * premium justified by a claim nothing checked. `goalIsBehind` is the check:
+ * it needs both a horizon the owner set and named pieces of work, and it
+ * returns false where either is missing rather than guessing.
+ *
+ * There is one rule and one helper because two generators raise this trigger,
+ * and both were raising it from something that is not behind-ness — the career
+ * one from a goal existing, the money one from the cash buffer being known.
+ */
+function behindOn(situation: Situation, domain: LifeDomainId): boolean {
+  const goal = activeGoalFor(situation, domain)
+  return goal !== undefined && goalIsBehind(goal)
 }
 
 // ---------------------------------------------------------------------------
@@ -327,7 +346,9 @@ const careerCandidates: Generator = (situation) => {
   if (topic === undefined) return []
 
   const ref: EntityRef = { id: topic.id, kind: topic.kind }
-  const goal = goalRefFor(situation, DOMAIN.career)
+  const goal = activeGoalFor(situation, DOMAIN.career)?.goal
+  // Only when something actually measures behind-ness — AUD-0046.
+  const behind = behindOn(situation, DOMAIN.career)
   const rough = roughOutcomesFor(situation, ref)
   const evidence = [...basisOf(situation.learningTopic), ...rough]
   const leansOn: readonly ConceptId[] = [CONCEPT.learningTopic, CONCEPT.usableTimeTonight]
@@ -362,12 +383,7 @@ const careerCandidates: Generator = (situation) => {
       {
         ...base,
         verb: 'recall-practice',
-        trigger:
-          rough.length > 0
-            ? 'recent-struggle'
-            : goal === undefined
-              ? 'nothing-better'
-              : 'goal-behind',
+        trigger: rough.length > 0 ? 'recent-struggle' : behind ? 'goal-behind' : 'nothing-better',
         proposedBecause: 'retrieval is what moves a topic, and this is the current one',
       },
       situation,
@@ -379,7 +395,7 @@ const careerCandidates: Generator = (situation) => {
       {
         ...base,
         verb: 'hands-on-lab',
-        trigger: goal === undefined ? 'good-conditions' : 'goal-behind',
+        trigger: behind ? 'goal-behind' : 'good-conditions',
         proposedBecause: 'building something is the proof a topic is actually held',
       },
       situation,
@@ -587,7 +603,19 @@ const moneyCandidates: Generator = (situation) => {
         domain: DOMAIN.money,
         verb: 'handle-money-item',
         object: ref,
-        trigger: known ? 'goal-behind' : 'stale-evidence',
+        /*
+         * Not `goal-behind` merely because the buffer is known — AUD-0046.
+         *
+         * This raised behind-ness whenever the cash buffer had a reading, which
+         * is a fact about what the app has been told rather than about the
+         * goal. Knowing the balance is not evidence that the goal is slipping,
+         * and the urgency premium was being paid for it anyway.
+         */
+        trigger: behindOn(situation, DOMAIN.money)
+          ? 'goal-behind'
+          : known
+            ? 'nothing-better'
+            : 'stale-evidence',
         evidence: basisOf(cash),
         leansOn: [CONCEPT.cashBuffer],
         // When the buffer is unknown, dealing with the item is how the app

@@ -1,6 +1,6 @@
 import type { ActiveGoal } from '../../intelligence/situation'
 import { DOMAIN, type LifeDomainId } from '../../domain/domains'
-import type { EntityIndex } from '../../domain/entities'
+import type { EntityIndex, EntityKind, EntityRef } from '../../domain/entities'
 import type { RecordId } from '../../domain/ids'
 import type { DisplayPolicy } from '../../domain/privacy'
 import {
@@ -18,7 +18,11 @@ import {
 } from '../../domain/records'
 import type { Instant } from '../../domain/time'
 import type { ConceptId } from '../../domain/windows'
-import type { DomainCoverage, Situation } from '../../intelligence/situation'
+import {
+  describeGoalTrajectory,
+  type DomainCoverage,
+  type Situation,
+} from '../../intelligence/situation'
 import { questionFor, type QuestionSpec } from '../../intelligence/questions'
 import { describeRecord } from '../history/describe'
 import { originOf, originOfAll, type RecordOrigin } from '../history/origin'
@@ -190,11 +194,45 @@ function conceptReadings(situation: Situation, domains: readonly LifeDomainId[])
 // Goals in this domain
 // ---------------------------------------------------------------------------
 
+/** One named piece of a goal, ready to render. */
+export interface GoalPartRow {
+  readonly ref: EntityRef
+  readonly label: string
+  readonly covered: boolean
+}
+
+/**
+ * The kinds of entity that can be a piece of a goal — AUD-0021.
+ *
+ * A closed list, because "add a part" against every entity in the store would
+ * let a person become a piece of a certification. These are the five kinds that
+ * name a body of work: the topics of a course, the skills behind a trade, a
+ * project, a work item, a money goal.
+ */
+const PART_KINDS: readonly EntityKind[] = [
+  'learning-topic',
+  'skill',
+  'project',
+  'work-item',
+  'financial-goal',
+]
+
 export interface DomainGoal extends ActiveGoal {
   /** The full record, so a correction can supersede exactly what it replaces. */
   readonly record: GoalRecord | undefined
   /** Where it came from, when the owner did not write it (QA-08-001). */
   readonly origin: RecordOrigin | undefined
+  /**
+   * What the app can say about how this is going, or nothing — AUD-0021.
+   *
+   * Counts of pieces and the date the owner set. Never a share, never a verdict
+   * — section 22 forbids a life score and "62% of the way to the CCNA" is one
+   * with the arithmetic showing.
+   */
+  readonly trajectory: string | undefined
+  readonly parts: readonly GoalPartRow[]
+  /** Pieces in this area the goal has not been broken into yet. */
+  readonly couldBeParts: readonly { readonly ref: EntityRef; readonly label: string }[]
 }
 
 function goalsFor(situation: Situation, domains: readonly LifeDomainId[]): readonly DomainGoal[] {
@@ -202,10 +240,26 @@ function goalsFor(situation: Situation, domains: readonly LifeDomainId[]): reado
     .filter((goal) => domains.includes(goal.domain))
     .map((goal) => {
       const found = situation.view.history.byId(goal.source)
+      const named = new Set(goal.parts.map((part) => part.ref.id))
+      const couldBeParts: { ref: EntityRef; label: string }[] = []
+      for (const kind of PART_KINDS) {
+        for (const entity of situation.entities.byKind(kind)) {
+          if (!domains.includes(entity.domain)) continue
+          if (named.has(entity.id)) continue
+          couldBeParts.push({ ref: { id: entity.id, kind: entity.kind }, label: entity.label })
+        }
+      }
       return {
         ...goal,
         record: found?.kind === 'goal' ? found : undefined,
         origin: found === undefined ? undefined : originOf(found),
+        trajectory: describeGoalTrajectory(goal),
+        parts: goal.parts.map((part) => ({
+          ref: part.ref,
+          label: situation.entities.labelFor(part.ref) ?? part.ref.id,
+          covered: part.covered,
+        })),
+        couldBeParts,
       }
     })
 }
