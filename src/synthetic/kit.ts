@@ -8,7 +8,12 @@ import {
 } from '../domain/entities'
 import { sequentialRecordIds, type RecordId } from '../domain/ids'
 import type { ActionVerb, RecommendationSemantics } from '../domain/recommendation'
-import type { CanonicalRecord, DecisionContext, Provenance } from '../domain/records'
+import type {
+  CanonicalRecord,
+  DecisionContext,
+  OccasionContext,
+  Provenance,
+} from '../domain/records'
 import {
   civilDateFromDayId,
   instantAtLocal,
@@ -136,11 +141,34 @@ export interface PastEpisode {
    * it felt.
    */
   readonly result?: 'all' | 'part' | 'none'
+  /**
+   * Where a growth occasion happened — AUD-0017.
+   *
+   * Only meaningful on a `growth-opportunity` result. Absent means the owner
+   * skipped the second step, which is a real state and the one every occasion
+   * recorded before this phase is in.
+   */
+  readonly setting?: 'somewhere-new' | 'somewhere-familiar' | EntityRef
   readonly effect?: 'real' | 'some' | 'little' | 'harm'
   readonly comfort?: 'easy' | 'awkward' | 'hard'
 }
 
 const RESULT_STEP = { all: 2, part: 1, none: 0 } as const
+const HELP_FOR_RESULT = {
+  all: 'on-her-own',
+  part: 'a-small-prompt',
+  none: 'needed-me',
+} as const
+
+function occasionFor(
+  result: 'all' | 'part' | 'none',
+  setting: PastEpisode['setting'],
+): OccasionContext {
+  const help = HELP_FOR_RESULT[result]
+  if (setting === undefined) return { help }
+  if (typeof setting === 'string') return { help, setting: { kind: setting } }
+  return { help, setting: { kind: 'place', place: setting } }
+}
 const EFFECT_STEP = { real: 3, some: 2, little: 1, harm: 0 } as const
 const EFFECT_SENTIMENT = {
   real: 'better',
@@ -228,6 +256,17 @@ export function pastEpisodeRecords(
             about: recommendation,
             aspect: 'result',
             observation: { type: 'scale', value: RESULT_STEP[seed.result], of: 2 },
+            /*
+             * The occasion's own context — AUD-0017.
+             *
+             * The help level follows the result step, because these three
+             * buttons were written to make them the same answer: "on her own"
+             * is what "all the way" means once the sentence is framed on the
+             * parent (section 4.4).
+             */
+            ...(seed.verb === 'growth-opportunity'
+              ? { occasion: occasionFor(seed.result, seed.setting) }
+              : {}),
           },
         ),
       )

@@ -109,6 +109,22 @@ export default defineConfig(({ mode }) => {
       // Test layers from canonical plan section 41. Browser tests run under
       // Playwright and are deliberately not in this list.
       include: ['tests/{unit,contract,synthetic,adversarial}/**/*.test.{ts,tsx}'],
+      /*
+       * Long enough that a library sweep is never the thing that fails.
+       *
+       * Several tests decide every scenario in the library, some of them at
+       * five hours of the day and some of them several rounds deep, so their
+       * cost grows with the library rather than with what they assert. Phase 82
+       * added three scenarios and two of those sweeps crossed the five-second
+       * default — under parallel load only, which is the worst way for a gate
+       * to fail: green on a rerun, and telling nobody anything.
+       *
+       * The number is not a licence for slow tests. It is the recognition that
+       * a sweep over every history is the shape this repository's strongest
+       * guards take, and that a timeout tuned to today's library is a guard
+       * that gets weaker every time a scenario is added.
+       */
+      testTimeout: 30_000,
     },
   }
 })

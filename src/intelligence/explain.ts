@@ -22,6 +22,7 @@ import {
 } from '../domain/time'
 import { CLOSE_ENOUGH_TO_MENTION } from './arbitrate'
 import { describeGoalTrajectory } from './direction'
+import { daysSincePractice, growthStandingFor } from './growth'
 import { describeThreadPosition, threadFor } from './threads'
 import type { DimensionName, Evaluation } from './evaluate'
 import { beliefKey } from './learning'
@@ -451,6 +452,23 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
    */
   if (semantics.target.verb === 'growth-opportunity') {
     const person = entities.linked(semantics.subject.id, 'about-person')?.label
+    /*
+     * A settled skill coming round again is a different sentence — AUD-0015(a).
+     *
+     * The finding asks for an occasional maintenance probe at expanding
+     * intervals after mastery, and is explicit that it "is a different
+     * sentence": the app is not proposing that she work on this, it is
+     * noticing that a thing she has had for a while has not come up lately.
+     * Wording it like the ordinary opportunity would make the owner's own
+     * confirmation look as though it had changed nothing, which is the defect.
+     */
+    if (growthStandingFor(situation, semantics.subject).stage === 'settled') {
+      const days = daysSincePractice(situation, semantics.subject)
+      const gap = days === undefined ? 'a while' : describeGap(days)
+      return person === undefined
+        ? `${capitalise(object)} has not come up in ${gap} — worth a look?`
+        : `${person} has not done ${object} in ${gap} — worth a look?`
+    }
     if (person !== undefined) {
       return `${person} is here, and this is one she can lead if there is room for it.`
     }
@@ -698,6 +716,20 @@ function studiedSubject(
 
 function capitalise(text: string): string {
   return text.length === 0 ? text : `${text.charAt(0).toUpperCase()}${text.slice(1)}`
+}
+
+/**
+ * How long it has been, in the words a person uses.
+ *
+ * Coarse on purpose. "Sixty-three days" about a child's skill is the record's
+ * own arithmetic read out loud; "a couple of months" is what the owner would
+ * say, and section 22 forbids inventing precision either way.
+ */
+function describeGap(days: number): string {
+  if (days < 45) return 'a few weeks'
+  if (days < 75) return 'a couple of months'
+  const months = Math.round(days / 30)
+  return months >= 12 ? 'over a year' : `${months} months`
 }
 
 function lowerFirst(text: string): string {

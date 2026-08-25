@@ -1,6 +1,7 @@
 import type { ActiveGoal } from '../../intelligence/situation'
 import { DOMAIN, type LifeDomainId } from '../../domain/domains'
 import type { EntityIndex, EntityKind, EntityRef } from '../../domain/entities'
+import type { GrowthStage } from '../../domain/records'
 import type { RecordId } from '../../domain/ids'
 import type { DisplayPolicy } from '../../domain/privacy'
 import {
@@ -23,6 +24,7 @@ import {
   type DomainCoverage,
   type Situation,
 } from '../../intelligence/situation'
+import { daysSincePractice, growthStandingFor } from '../../intelligence/growth'
 import { questionFor, type QuestionSpec } from '../../intelligence/questions'
 import { describeRecord } from '../history/describe'
 import { originOf, originOfAll, type RecordOrigin } from '../history/origin'
@@ -386,13 +388,47 @@ export interface StandingVeto {
   readonly at: Instant
 }
 
+/**
+ * A development skill and where the owner says it has got to — AUD-0015(a).
+ *
+ * On the page rather than only inside the engine, because the finding's own
+ * risk note is about this: a stage is a stored judgement about a child and must
+ * be correctable in one tap and reversible. A belief he cannot find is a belief
+ * he cannot correct.
+ */
+export interface DomainSkill {
+  readonly ref: EntityRef
+  readonly label: string
+  readonly stage: GrowthStage
+  readonly domain: LifeDomainId
+  /** How long since she last had a go, in owner-local days. */
+  readonly daysSince: number | undefined
+}
+
 export interface DomainPageData {
   readonly page: LifePage
   readonly coverage: readonly DomainCoverage[]
   readonly readings: readonly ConceptReading[]
   readonly goals: readonly DomainGoal[]
+  readonly skills: readonly DomainSkill[]
   readonly vetoes: readonly StandingVeto[]
   readonly recentChanges: readonly RecentChange[]
+}
+
+function skillsFor(situation: Situation, domains: readonly LifeDomainId[]): readonly DomainSkill[] {
+  const out: DomainSkill[] = []
+  for (const entity of situation.entities.byKind('development-skill')) {
+    if (!domains.includes(entity.domain)) continue
+    const ref: EntityRef = { id: entity.id, kind: entity.kind }
+    out.push({
+      ref,
+      label: entity.label,
+      stage: growthStandingFor(situation, ref).stage,
+      domain: entity.domain,
+      daysSince: daysSincePractice(situation, ref),
+    })
+  }
+  return out
 }
 
 function vetoesFor(
@@ -424,6 +460,7 @@ export function assembleDomainPageData(situation: Situation, page: LifePage): Do
     coverage,
     readings: conceptReadings(situation, page.domains),
     goals: goalsFor(situation, page.domains),
+    skills: skillsFor(situation, page.domains),
     vetoes: vetoesFor(situation, page.domains),
     recentChanges: recentChanges(situation, page.domains),
   }

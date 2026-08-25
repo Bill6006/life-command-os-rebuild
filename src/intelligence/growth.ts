@@ -6,9 +6,11 @@ import type {
   CanonicalRecord,
   CoverageUpdateRecord,
   DomainUpdateRecord,
+  GrowthStage,
   Provenance,
 } from '../domain/records'
 import type { Instant, TimeZoneId } from '../domain/time'
+import type { OccasionContext } from '../domain/records'
 import { confidence, confidenceFromSampleCount, type Confidence } from '../domain/knowledge'
 import { localDaysBetween, localDayIdAt } from '../domain/time'
 import type { Episode } from './lifecycle'
@@ -103,9 +105,75 @@ export const GROWTH_PROVENANCE: Provenance = { source: 'owner', writtenBy: 'now'
 export interface GrowthOccasion {
   readonly episode: Episode
   readonly cleared: boolean
+  /**
+   * What else was true of it — AUD-0017. Absent on every occasion recorded
+   * before the second step existed, and those must not be back-filled.
+   */
+  readonly occasion: OccasionContext | undefined
 }
 
+/**
+ * How many distinct settings a run has to span before "settled" is offered.
+ *
+ * Two, and it **amends D-070 rather than replacing it** (see the decision log).
+ * Three occasions is still the count; what is added is that they cannot all be
+ * the same place. Generalisation across settings, people and time is the thing
+ * that has to be programmed and probed, not inferred from a run in one context
+ * (Stokes & Baer, *Journal of Applied Behavior Analysis* 10(2):349–367, 1977) —
+ * and the claim the app was making, "she handles this independently now", is a
+ * generalisation claim resting on evidence about repetition.
+ *
+ * Raising the bar means the suggestion fires less often. That is correct and it
+ * will feel like a regression against the three-occasion rule, which is why it
+ * is written down as an amendment.
+ */
+export const SETTINGS_FOR_SETTLED = 2
+
+/**
+ * A settled skill, and what the owner can do about it — AUD-0015(a).
+ *
+ * The owner's confirmation used to change nothing. `growthAnswerRecord` wrote a
+ * free-text `domain-update`, `development-skill` entities carried no status,
+ * and `fatherhoodCandidates` enumerated every one of them unconditionally — so
+ * "Yes, she has got this" suppressed the *suggestion* and not the *move*, and
+ * the app went on proposing a skill he had told it she had.
+ *
+ * **`settled` is never permanent, and that is not a nicety.** Regression is
+ * real in children. It is set by one tap and unset by one tap, from the page
+ * where the skill is listed.
+ */
+export type { GrowthStage }
+
+/**
+ * How long a settled skill goes before the app asks about it again, the first
+ * time — AUD-0015(a).
+ *
+ * Two months, and then twice as long each time. Expanding intervals are what
+ * the maintenance literature recommends after mastery, and the point is that
+ * the app stops *proposing* a settled skill and keeps a way of noticing a
+ * regression — which is a different sentence and a much rarer one: *"She hasn't
+ * ordered for herself in a couple of months — worth a check?"*
+ *
+ * The doubling is what keeps it from becoming a schedule. A skill she settled
+ * two years ago is asked about roughly once a year, and one she settled last
+ * month is not asked about at all.
+ */
+export const MAINTENANCE_FIRST_DAYS = 60
+
+/**
+ * What the app is actually offering — AUD-0017.
+ *
+ * Two different sentences with two different meanings, and conflating them is
+ * what the finding is about. `settled` asks a question and writes a belief
+ * about his daughter if he agrees. `widen-the-setting` asks nothing: it is a
+ * suggestion, and a genuinely useful one — *"three times, all at the same
+ * place. Worth trying somewhere new before we call it."* — rather than a hedged
+ * version of the first.
+ */
+export type GrowthSuggestionKind = 'settled' | 'widen-the-setting'
+
 export interface GrowthSuggestion {
+  readonly kind: GrowthSuggestionKind
   readonly skill: EntityRef
   /** The life area the update belongs to, taken from the skill itself. */
   readonly domain: LifeDomainId
@@ -190,9 +258,37 @@ function judgedOccasions(situation: Situation, skill: EntityRef): readonly Growt
     if (!wasAttempted(episode)) continue
     const reached = resultReached(episode)
     if (reached === undefined) continue
-    out.push({ episode, cleared: reached >= GROWTH_CLEARLY })
+    out.push({ episode, cleared: reached >= GROWTH_CLEARLY, occasion: occasionOf(episode) })
   }
   return out
+}
+
+/** What the owner said about where this occasion happened, if he said. */
+function occasionOf(episode: Episode): OccasionContext | undefined {
+  for (const outcome of episode.outcomes) {
+    if (outcome.aspect !== 'result') continue
+    return outcome.occasion
+  }
+  return undefined
+}
+
+/**
+ * How many distinct settings a run of occasions covers.
+ *
+ * A named place counts as itself; the two coarse answers count as themselves.
+ * An occasion with no setting counts as **nothing at all** — not as a third
+ * setting and not as a repeat of the last one. That is G-009's rule applied to
+ * the one claim in the product that is about a child: unknown is unknown, and
+ * the reading that asserts less is the safe one.
+ */
+function settingsIn(occasions: readonly GrowthOccasion[]): number {
+  const seen = new Set<string>()
+  for (const occasion of occasions) {
+    const setting = occasion.occasion?.setting
+    if (setting === undefined) continue
+    seen.add(setting.kind === 'place' ? `place:${setting.place.id}` : setting.kind)
+  }
+  return seen.size
 }
 
 /** How many all-the-way occasions the record ends on, in a row. */
@@ -307,6 +403,18 @@ export function growthSuggestions(situation: Situation): readonly GrowthSuggesti
     if (latest === undefined) continue
     if (answeredSince(situation, ref, latest.episode.shownAt)) continue
 
+    /*
+     * And whether the run says anything about generalisation — AUD-0017.
+     *
+     * The count is unchanged; what is added is that three occasions in one
+     * place do not support "independently now". Where they do not span two
+     * settings the app says so instead, which is a more useful sentence than a
+     * hedge and is the one the finding asks for.
+     */
+    const spread = settingsIn(run)
+    const kind: GrowthSuggestionKind =
+      spread >= SETTINGS_FOR_SETTLED ? 'settled' : 'widen-the-setting'
+
     const person = situation.entities.linked(skill.id, 'about-person')
     const who = person?.label ?? 'she'
     const otherWay = occasions.filter((occasion) => !occasion.cleared)
@@ -325,10 +433,14 @@ export function growthSuggestions(situation: Situation): readonly GrowthSuggesti
      * sentence and judges it.
      */
     out.push({
+      kind,
       skill: ref,
       domain: skill.domain,
       person: person === undefined ? undefined : { id: person.id, kind: person.kind },
-      headline: `${who} has handled ${skill.label} ${runLength} times in a row.`,
+      headline:
+        kind === 'settled'
+          ? `${who} has handled ${skill.label} ${runLength} times in a row, in more than one place.`
+          : `${who} has handled ${skill.label} ${runLength} times in a row, ${describeSpread(run)}.`,
       occasionsSummary: describeOccasions(occasions.length, otherWay.length),
       statement: `${who} handles ${skill.label} independently now.`,
       occasions: occasions.length,
@@ -356,6 +468,20 @@ export function growthSuggestions(situation: Situation): readonly GrowthSuggesti
  * Absent when there is nothing to say, rather than announcing a zero about a
  * four-year-old.
  */
+/**
+ * Why a run does not yet support "settled", in the owner's own terms.
+ *
+ * Two cases, and they are different claims. The app either knows the occasions
+ * were all in one place, or it does not know where they were — and saying "all
+ * at the same place" about a run it has no settings for would be asserting the
+ * very fact it is short of (D-038).
+ */
+function describeSpread(run: readonly GrowthOccasion[]): string {
+  const known = run.filter((occasion) => occasion.occasion?.setting !== undefined).length
+  if (known === 0) return 'and the record does not say where'
+  return 'all in the same place'
+}
+
 function describeOccasions(total: number, otherWay: number): string | undefined {
   if (otherWay === 0) return undefined
   const goes = otherWay === 1 ? 'one earlier go' : `${otherWay} earlier goes`
@@ -401,7 +527,19 @@ export function growthAnswerRecord(
   }
 
   return agreed
-    ? build('domain-update', envelope, { domain, summary: suggestion.statement })
+    ? build('domain-update', envelope, {
+        domain,
+        summary: suggestion.statement,
+        /*
+         * The half that changes what the app does — AUD-0015(a).
+         *
+         * The sentence has always been written down; what was missing was
+         * anything the candidate generator could read, so his answer suppressed
+         * the *suggestion* and not the *move*. Both are here now, and the
+         * sentence is still exactly what he agreed to.
+         */
+        growthStage: { skill: suggestion.skill, stage: 'settled' },
+      })
     : build('coverage-update', envelope, {
         domain,
         evidenceStrength: 'moderate',
@@ -416,4 +554,107 @@ export function growthAnswerRecords(
   moment: GrowthAnswerMoment,
 ): readonly CanonicalRecord[] {
   return [growthAnswerRecord(suggestion, agreed, moment)]
+}
+
+// ---------------------------------------------------------------------------
+// The stage, and what the generator does with it — AUD-0015(a)
+// ---------------------------------------------------------------------------
+
+/**
+ * Where the owner says this skill has got to, and when he said so.
+ *
+ * Read from `domain-update` records rather than from the entity, because the
+ * entity is a name and this is a judgement that changes. Append-first: the
+ * latest one wins, so putting a settled skill back to `practising` is one more
+ * record and nothing is edited.
+ *
+ * `practising` is the answer for a skill nobody has judged, and it is the same
+ * answer as "he judged it and put it back" on purpose: the app's behaviour
+ * should be identical in both cases, because in both cases she is working on it.
+ */
+export interface GrowthStanding {
+  readonly stage: GrowthStage
+  /** When it became settled. Undefined while it is being practised. */
+  readonly settledAt: Instant | undefined
+}
+
+export function growthStandingFor(situation: Situation, skill: EntityRef): GrowthStanding {
+  let latest: { at: Instant; stage: GrowthStage } | undefined
+  for (const record of situation.view.history.effective) {
+    if (record.kind !== 'domain-update') continue
+    if (record.occurredAt > situation.at) continue
+    const stage = record.growthStage
+    if (stage === undefined || stage.skill.id !== skill.id) continue
+    if (latest === undefined || record.occurredAt >= latest.at) {
+      latest = { at: record.occurredAt, stage: stage.stage }
+    }
+  }
+  if (latest === undefined || latest.stage !== 'settled') {
+    return { stage: 'practising', settledAt: undefined }
+  }
+  return { stage: 'settled', settledAt: latest.at }
+}
+
+/**
+ * Whether a settled skill is due an occasional check — AUD-0015(a).
+ *
+ * The interval doubles with every probe that has actually happened since it
+ * settled, so the app asks less and less. It never reaches zero and it never
+ * becomes a schedule.
+ *
+ * A skill that is being practised is not probed: it is simply proposed, which
+ * is what the generator has always done.
+ */
+export function maintenanceProbeDue(situation: Situation, skill: EntityRef): boolean {
+  const standing = growthStandingFor(situation, skill)
+  if (standing.stage !== 'settled' || standing.settledAt === undefined) return false
+
+  const today = localDayIdAt(situation.at, situation.zone)
+  const settledOn = localDayIdAt(standing.settledAt, situation.zone)
+  const sinceSettled = Math.max(0, localDaysBetween(settledOn, today))
+
+  const settledAt = standing.settledAt
+  const probes = occasionsFor(situation, skill).filter(
+    (episode) => wasAttempted(episode) && episode.shownAt > settledAt,
+  ).length
+
+  const days = daysSincePractice(situation, skill)
+  const sinceLast = days ?? sinceSettled
+  return sinceLast >= MAINTENANCE_FIRST_DAYS * 2 ** probes
+}
+
+/**
+ * The owner putting a skill back, or forward, in one tap — AUD-0015(a).
+ *
+ * **A stored judgement about a child must be correctable and reversible**, and
+ * the finding says why in one line: regression is real in children, and the app
+ * must never make "settled" permanent. So this is the same record kind his
+ * confirmation writes, with the stage he chose and a sentence saying what he
+ * chose — nothing is edited, and the earlier judgement stays exactly as he made
+ * it.
+ */
+export function growthStageRecord(
+  skill: EntityRef,
+  label: string,
+  domain: LifeDomainId,
+  stage: GrowthStage,
+  moment: GrowthAnswerMoment,
+  id: RecordId = newRecordId(),
+): DomainUpdateRecord {
+  const build = createRecordFactory({ zone: moment.zone, provenance: GROWTH_PROVENANCE })
+  return build(
+    'domain-update',
+    {
+      occurredAt: moment.now,
+      ...(moment.recordedAt === undefined ? {} : { recordedAt: moment.recordedAt }),
+      id,
+      domains: [domain],
+      entities: [skill],
+    },
+    {
+      domain,
+      summary: stage === 'settled' ? `${label} is settled.` : `${label} is being worked on again.`,
+      growthStage: { skill, stage },
+    },
+  )
 }

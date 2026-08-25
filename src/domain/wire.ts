@@ -20,6 +20,8 @@ import {
 } from './recommendation'
 import {
   COMMITMENT_WINDOW_SOURCES,
+  GROWTH_STAGES,
+  HELP_LEVELS,
   OUTCOME_ASPECTS,
   THREAD_KINDS,
   THREAD_STATES,
@@ -29,6 +31,9 @@ import {
   type CommitmentRecurrence,
   type DecisionContext,
   type FactValue,
+  type GrowthStage,
+  type OccasionContext,
+  type OccasionSetting,
   type Provenance,
   type RecordKind,
 } from './records'
@@ -299,6 +304,72 @@ function readActionVerbs(reader: Reader, key: string): readonly ActionVerb[] | u
   return out.length === list.length ? out : undefined
 }
 
+/**
+ * What else was true of a growth occasion — AUD-0017.
+ *
+ * A missing setting stays missing. There is no default arm here and there must
+ * not be: an occasion recorded before this field existed happened somewhere,
+ * and reading it as "somewhere familiar" would invent the very fact the
+ * generalisation claim rests on.
+ */
+function readOccasion(reader: Reader, key: string): OccasionContext | undefined {
+  const nested = readOptionalObject(reader, key)
+  if (nested === undefined) return undefined
+  const help = readEnum(nested, 'help', HELP_LEVELS)
+
+  let setting: OccasionSetting | undefined
+  const settingReader = readOptionalObject(nested, 'setting')
+  if (settingReader !== undefined) {
+    const kind = readEnum(settingReader, 'kind', [
+      'place',
+      'somewhere-new',
+      'somewhere-familiar',
+    ] as const)
+    if (kind === 'place') {
+      const place = readEntityRefFrom(settingReader, 'place')
+      if (place !== undefined) setting = { kind, place }
+    } else if (kind !== undefined) {
+      setting = { kind }
+    }
+    rejectExtras(settingReader, 'an occasion setting')
+    absorb(nested, settingReader)
+  }
+
+  rejectExtras(nested, 'an occasion')
+  absorb(reader, nested)
+  if (help === undefined) return undefined
+  return setting === undefined ? { help } : { help, setting }
+}
+
+function occasionOut(occasion: OccasionContext): Record<string, unknown> {
+  return {
+    help: occasion.help,
+    ...(occasion.setting === undefined
+      ? {}
+      : {
+          setting:
+            occasion.setting.kind === 'place'
+              ? { kind: 'place', place: refOut(occasion.setting.place) }
+              : { kind: occasion.setting.kind },
+        }),
+  }
+}
+
+/** The owner's judgement about a development skill — AUD-0015(a). */
+function readGrowthStage(
+  reader: Reader,
+  key: string,
+): { readonly skill: EntityRef; readonly stage: GrowthStage } | undefined {
+  const nested = readOptionalObject(reader, key)
+  if (nested === undefined) return undefined
+  const skill = readEntityRefFrom(nested, 'skill')
+  const stage = readEnum(nested, 'stage', GROWTH_STAGES)
+  rejectExtras(nested, 'a growth stage')
+  absorb(reader, nested)
+  if (skill === undefined || stage === undefined) return undefined
+  return { skill, stage }
+}
+
 /** Minutes into the owner-local day: a whole number inside one day. */
 function readDayMinute(reader: Reader, key: string): number | undefined {
   const value = readNumber(reader, key)
@@ -526,6 +597,7 @@ function readPayload(reader: Reader, kind: RecordKind): Record<string, unknown> 
         aspect: readEnum(reader, 'aspect', OUTCOME_ASPECTS),
         observation: readFactValue(reader, 'observation'),
         sentiment: readOptionalEnum(reader, 'sentiment', ['better', 'same', 'worse'] as const),
+        occasion: readOccasion(reader, 'occasion'),
         window: readObservationWindow(reader, 'window'),
       }
     case 'correction':
@@ -550,6 +622,7 @@ function readPayload(reader: Reader, kind: RecordKind): Record<string, unknown> 
       return {
         domain: readString(reader, 'domain'),
         summary: readString(reader, 'summary'),
+        growthStage: readGrowthStage(reader, 'growthStage'),
       }
     case 'coverage-update':
       return {
@@ -949,6 +1022,7 @@ function payloadOut(record: CanonicalRecord): Record<string, unknown> {
         aspect: record.aspect,
         observation: factValueOut(record.observation),
         ...(record.sentiment === undefined ? {} : { sentiment: record.sentiment }),
+        ...(record.occasion === undefined ? {} : { occasion: occasionOut(record.occasion) }),
         ...(record.window === undefined ? {} : { window: observationWindowOut(record.window) }),
       }
     case 'correction':
@@ -966,7 +1040,18 @@ function payloadOut(record: CanonicalRecord): Record<string, unknown> {
         ...(record.quality === undefined ? {} : { quality: record.quality }),
       }
     case 'domain-update':
-      return { domain: record.domain, summary: record.summary }
+      return {
+        domain: record.domain,
+        summary: record.summary,
+        ...(record.growthStage === undefined
+          ? {}
+          : {
+              growthStage: {
+                skill: refOut(record.growthStage.skill),
+                stage: record.growthStage.stage,
+              },
+            }),
+      }
     case 'coverage-update':
       return {
         domain: record.domain,

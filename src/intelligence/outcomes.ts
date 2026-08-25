@@ -6,6 +6,9 @@ import {
   bearsConcept,
   factValuesEqual,
   type FactValue,
+  type HelpLevel,
+  type OccasionContext,
+  type OccasionSetting,
   type OutcomeAspect,
   type OutcomeRecord,
   type Provenance,
@@ -298,6 +301,17 @@ export interface OutcomeAnswer {
    * says nothing whatever about the topic.
    */
   readonly sentiment?: 'better' | 'same' | 'worse'
+  /**
+   * The scaffolding level this label states — AUD-0017.
+   *
+   * Only on the growth result, where "how far did she get" and "how much did I
+   * do" are the same question asked from the two ends. Storing it explicitly
+   * rather than deriving it from the scale step is what stops a later reader
+   * inferring an answer the owner never gave: the step is a coarse ordinal and
+   * the help level is a named thing, and the two are only equal because these
+   * three buttons were written to make them equal.
+   */
+  readonly help?: HelpLevel
 }
 
 export interface OutcomeQuestion {
@@ -434,12 +448,33 @@ const OUTCOME_QUESTIONS: Record<ActionVerb, Partial<Record<OutcomeAspect, Aspect
       answers: EFFECT_ANSWERS,
     },
   },
+  /*
+   * The one question that changed shape in Phase 82 — AUD-0017.
+   *
+   * It used to ask how far she got, against "All the way / Part of the way /
+   * Not today". Those are answers about *her*, and section 4.4 asks the framing
+   * to sit on the parent — which is exactly what the scaffolding construct
+   * does: the adult's assistance varies with the child's competence, and
+   * responsibility transfers as she masters each component (Wood, Bruner &
+   * Ross, 1976).
+   *
+   * So the three answers name what **he** did. The scale underneath is
+   * unchanged, step for step, which is what lets every occasion recorded before
+   * this phase still parse and still count toward three.
+   */
   'growth-opportunity': {
     result: {
-      prompt: ({ object, person }) => `How far did ${person ?? ''} get with ${object}?`,
-      // "Not today" rather than "Did not manage": section 4.4 — the app does
-      // not grade a five-year-old, and the owner should not have to either.
-      answers: resultAnswers('All the way', 'Part of the way', 'Not today'),
+      prompt: ({ object, person }) => `How did ${person ?? ''} get on with ${object}?`,
+      answers: [
+        { id: 'all', label: 'On her own', observation: scale(2, RESULT_STEPS), help: 'on-her-own' },
+        {
+          id: 'part',
+          label: 'With a small prompt',
+          observation: scale(1, RESULT_STEPS),
+          help: 'a-small-prompt',
+        },
+        { id: 'none', label: 'Needed me', observation: scale(0, RESULT_STEPS), help: 'needed-me' },
+      ],
     },
   },
   'reach-out': {
@@ -701,6 +736,15 @@ export function outcomeRecord(
   answer: OutcomeAnswer,
   moment: OutcomeMoment,
   id: RecordId = newRecordId(),
+  /**
+   * What else was true of the occasion — AUD-0017.
+   *
+   * Last, and optional, because it applies to one verb. It arrives with the
+   * answer rather than after it: the setting is the second step of one flow,
+   * and writing it as a separate record afterwards would leave a window where
+   * the occasion existed with a setting the owner had already given.
+   */
+  occasion?: OccasionContext,
 ): OutcomeRecord {
   const build = createRecordFactory({ zone: moment.zone, provenance: OUTCOME_PROVENANCE })
   const semantics = episode.semantics
@@ -718,6 +762,7 @@ export function outcomeRecord(
       aspect,
       observation: answer.observation,
       ...(answer.sentiment === undefined ? {} : { sentiment: answer.sentiment }),
+      ...(occasion === undefined ? {} : { occasion }),
     },
   )
 }
@@ -763,4 +808,79 @@ export function everyOutcomeQuestion(): readonly {
     }
   }
   return out
+}
+
+// ---------------------------------------------------------------------------
+// The second step — AUD-0017
+// ---------------------------------------------------------------------------
+
+/**
+ * How many of the owner's own places the setting question offers.
+ *
+ * Three, and then the two coarse answers and a way past. The point of the
+ * question is generalisation across settings, not an accurate address, and a
+ * list of every place the app has ever heard of would turn one tap into a
+ * scroll on the flow the owner is most likely to be halfway through a
+ * restaurant for (section 4.5).
+ */
+const PLACES_OFFERED = 3
+
+export interface SettingOption {
+  readonly id: string
+  readonly label: string
+  /** Absent on the way past. A skipped setting is unknown, never "familiar". */
+  readonly setting: OccasionSetting | undefined
+}
+
+export interface SettingQuestion {
+  readonly prompt: string
+  readonly options: readonly SettingOption[]
+}
+
+/**
+ * Where the occasion happened, asked as one extra tap — AUD-0017.
+ *
+ * The load-bearing half of the finding, and it is an interaction change rather
+ * than a label change: answering a growth outcome becomes a two-step flow, and
+ * Phase 9 has to design it. It exists because the claim the app was making —
+ * "she handles this independently now" — is about **generalisation**, and the
+ * evidence was about **repetition**. Three good occasions three weeks apart at
+ * the same restaurant with her father at the table supports "she can do this
+ * here, with me" (Stokes & Baer, 1977).
+ *
+ * Only the growth verb has one. Where the answer would mean nothing, asking for
+ * it would be collecting data because a field exists.
+ */
+export function settingQuestionFor(
+  episode: Episode,
+  entities: EntityIndex,
+): SettingQuestion | undefined {
+  if (episode.semantics.target.verb !== 'growth-opportunity') return undefined
+  const person = entities.linked(episode.semantics.subject.id, 'about-person')?.label
+
+  const places = entities.byKind('place').slice(0, PLACES_OFFERED)
+  return {
+    prompt: person === undefined ? 'Where was this?' : `Where was ${person}?`,
+    options: [
+      ...places.map((place) => ({
+        id: place.id,
+        label: place.label,
+        setting: { kind: 'place' as const, place: { id: place.id, kind: place.kind } },
+      })),
+      { id: 'new', label: 'Somewhere new', setting: { kind: 'somewhere-new' as const } },
+      {
+        id: 'familiar',
+        label: 'Somewhere familiar',
+        setting: { kind: 'somewhere-familiar' as const },
+      },
+      // Skippable, and a skipped setting is recorded as unknown rather than as
+      // the safer-sounding answer — AUD-0017 says so in as many words.
+      { id: 'skip', label: 'Rather not say', setting: undefined },
+    ],
+  }
+}
+
+/** The scaffolding level an answer names, where it names one. */
+export function helpLevelOf(answer: OutcomeAnswer): HelpLevel | undefined {
+  return answer.help
 }

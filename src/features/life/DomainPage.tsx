@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { Panel, Screen } from '../../components/ui'
 import type { LifeDomainId } from '../../domain/domains'
 import type { EntityRef } from '../../domain/entities'
-import type { FactValue, GoalStatus } from '../../domain/records'
+import type { FactValue, GoalStatus, GrowthStage } from '../../domain/records'
 import type { RecordId } from '../../domain/ids'
 import {
   civilDateFromDayId,
@@ -22,6 +22,7 @@ import {
   goalCorrectionRecord,
   liftVetoRecord,
 } from '../../intelligence/corrections'
+import { growthStageRecord } from '../../intelligence/growth'
 import type { QuestionOption } from '../../intelligence/questions'
 import {
   assembleSituation,
@@ -35,6 +36,7 @@ import {
   type ConceptReading,
   type DomainGoal,
   type DomainPageData,
+  type DomainSkill,
   type LifePage,
   type RecentChange,
 } from './domainPages'
@@ -179,6 +181,16 @@ export function DomainPage({ page }: { page: LifePage }) {
     ])
     setOpenStatus(undefined)
     setStatusDraft('')
+  }
+
+  const setSkillStage = (skill: DomainSkill, stage: GrowthStage) => {
+    append(() => [
+      growthStageRecord(skill.ref, skill.label, skill.domain, stage, {
+        now: memory.now,
+        zone: memory.zone,
+        recordedAt: systemClock().now(),
+      }),
+    ])
   }
 
   const correctGoal = (goal: DomainGoal, status: GoalStatus) => {
@@ -329,6 +341,53 @@ export function DomainPage({ page }: { page: LifePage }) {
               onHorizon={(dayId) => setGoalHorizon(goal, dayId)}
               onParts={(parts) => setGoalParts(goal, parts)}
             />
+          ))}
+        </Panel>
+      )}
+
+      {data.skills.length === 0 ? null : (
+        <Panel title="What she is working on">
+          {/*
+            A stored judgement about a child, and the tap that takes it back —
+            AUD-0015(a).
+
+            Section 62 asks that a correction stick and that the app stop
+            reasserting the old belief. What it could not do before this phase
+            was hold the belief at all: "Yes, she has got this" wrote a sentence
+            nobody read, so the move kept coming back. It is held now, which
+            makes the other half compulsory — regression is real in children,
+            and **settled must never be permanent**.
+          */}
+          <p className="note">
+            Anything settled stops being suggested, and comes round occasionally as a check. Nothing
+            here is fixed — put it back the moment it stops being true.
+          </p>
+          {data.skills.map((skill) => (
+            <div key={skill.ref.id} className="domain-skill" data-testid="domain-skill">
+              <p className="domain-skill__name">{skill.label}</p>
+              <p className="domain-skill__stage">
+                {skill.stage === 'settled' ? 'Settled' : 'Being worked on'}
+                {skill.daysSince === undefined
+                  ? ' — nothing in the record yet'
+                  : ` — last go ${describeAge(skill.daysSince)}`}
+              </p>
+              <button
+                type="button"
+                className="domain-linkish"
+                disabled={busy}
+                aria-label={
+                  skill.stage === 'settled'
+                    ? `Working on it again: ${skill.label}`
+                    : `Settled: ${skill.label}`
+                }
+                data-testid="domain-skill-stage"
+                onClick={() =>
+                  setSkillStage(skill, skill.stage === 'settled' ? 'practising' : 'settled')
+                }
+              >
+                {skill.stage === 'settled' ? 'Working on it again' : 'She has got this'}
+              </button>
+            </div>
           ))}
         </Panel>
       )}

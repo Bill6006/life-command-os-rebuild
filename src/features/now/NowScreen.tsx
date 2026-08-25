@@ -24,9 +24,11 @@ import {
 import {
   nextDueOutcome,
   outcomeRecord,
+  settingQuestionFor,
   type OutcomeAnswer,
   type OutcomeQuestion,
   type PendingOutcome,
+  type SettingOption,
 } from '../../intelligence/outcomes'
 import {
   answerRecord,
@@ -172,6 +174,15 @@ export function NowScreen() {
    * he is still thinking about the weaker one.
    */
   const [justRefused, setJustRefused] = useState<RecommendationSemantics | undefined>(undefined)
+  /**
+   * The first step of a growth answer, while the second is on screen — AUD-0017.
+   *
+   * Session state and nothing more: no record is written until both steps are
+   * answered or the second is skipped, so a flow abandoned halfway leaves the
+   * history exactly as it was rather than an occasion with a result and no
+   * account of where it happened.
+   */
+  const [heldAnswer, setHeldAnswer] = useState<OutcomeAnswer | undefined>(undefined)
 
   /*
    * A synchronous latch, deliberately a ref rather than state.
@@ -297,13 +308,34 @@ export function NowScreen() {
     pending: PendingOutcome,
     question: OutcomeQuestion,
     answer: OutcomeAnswer,
+    setting?: SettingOption,
   ) => {
     append(() => [
-      outcomeRecord(pending.episode, question.aspect, answer, {
-        now: memory.now,
-        zone: memory.zone,
-        recordedAt: systemClock().now(),
-      }),
+      outcomeRecord(
+        pending.episode,
+        question.aspect,
+        answer,
+        {
+          now: memory.now,
+          zone: memory.zone,
+          recordedAt: systemClock().now(),
+        },
+        undefined,
+        /*
+         * One record, written after both steps — AUD-0017.
+         *
+         * The occasion arrives with the answer rather than after it. Writing
+         * the result on the first tap and the setting as a second record would
+         * leave a window in which the occasion existed with no setting the
+         * owner had in fact already given, and `growthSuggestions` reads the
+         * setting off the result outcome.
+         */
+        answer.help === undefined
+          ? undefined
+          : setting?.setting === undefined
+            ? { help: answer.help }
+            : { help: answer.help, setting: setting.setting },
+      ),
     ])
   }
 
@@ -435,6 +467,8 @@ export function NowScreen() {
           pending={due}
           situation={decision.situation}
           disabled={busy}
+          held={heldAnswer}
+          onHeld={setHeldAnswer}
           onAnswer={answerOutcome}
           onReading={answerGuide}
         />
@@ -640,15 +674,26 @@ function OutcomePanel({
   pending,
   situation,
   disabled,
+  held,
+  onHeld,
   onAnswer,
   onReading,
 }: {
   pending: PendingOutcome
   situation: Situation
   disabled: boolean
-  onAnswer: (pending: PendingOutcome, question: OutcomeQuestion, answer: OutcomeAnswer) => void
+  /** The first step's answer, while the second step is on screen — AUD-0017. */
+  held: OutcomeAnswer | undefined
+  onHeld: (answer: OutcomeAnswer | undefined) => void
+  onAnswer: (
+    pending: PendingOutcome,
+    question: OutcomeQuestion,
+    answer: OutcomeAnswer,
+    setting?: SettingOption,
+  ) => void
   onReading: (spec: QuestionSpec, option: QuestionOption) => void
 }) {
+  const entities = situation.entities
   /*
    * The reading comes first, and where there is one there is no grade (D-089).
    *
@@ -688,6 +733,47 @@ function OutcomePanel({
   const question: OutcomeQuestion | undefined = pending.questions[0]
   if (question === undefined) return null
 
+  /*
+   * And where it happened — AUD-0017, the load-bearing half.
+   *
+   * The claim the app was making about his daughter — "she handles this
+   * independently now" — is about **generalisation**, and the evidence was
+   * about **repetition**: three good goes at any interval, in any place, with
+   * anyone. Three weeks apart at the same restaurant with her father at the
+   * table supports "she can do this here, with me", and "independently now" is
+   * what got written down.
+   *
+   * So answering a growth outcome is a two-step flow. That is an interaction
+   * change rather than a label change, which is why it belongs before Phase 9
+   * rather than after it.
+   */
+  const setting = held === undefined ? undefined : settingQuestionFor(pending.episode, entities)
+  if (held !== undefined && setting !== undefined) {
+    return (
+      <Panel title="Earlier">
+        <p className="now-question" data-testid="now-outcome-setting">
+          {setting.prompt}
+        </p>
+        <div className="now-options">
+          {setting.options.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              className="now-option"
+              disabled={disabled}
+              onClick={() => {
+                onAnswer(pending, question, held, option)
+                onHeld(undefined)
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </Panel>
+    )
+  }
+
   return (
     <Panel title="Earlier">
       <p className="now-question" data-testid="now-outcome">
@@ -700,7 +786,15 @@ function OutcomePanel({
             type="button"
             className="now-option"
             disabled={disabled}
-            onClick={() => onAnswer(pending, question, answer)}
+            onClick={() => {
+              // A growth answer opens the second step rather than writing. Every
+              // other answer is one tap, exactly as it was.
+              if (answer.help !== undefined && settingQuestionFor(pending.episode, entities)) {
+                onHeld(answer)
+                return
+              }
+              onAnswer(pending, question, answer)
+            }}
           >
             {answer.label}
           </button>
@@ -1064,6 +1158,41 @@ function GrowthPanel({
   disabled: boolean
   onAnswer: (agreed: boolean) => void
 }) {
+  /*
+   * Two different sentences, and conflating them is what AUD-0017 is about.
+   *
+   * A run of three in one place is not evidence of generalisation, so the app
+   * does not ask whether to call it settled — it says what it sees and suggests
+   * the thing that would actually settle it. That is a more useful sentence
+   * than a hedged version of the question, and it is the one the finding asks
+   * for in as many words.
+   */
+  if (suggestion.kind === 'widen-the-setting') {
+    return (
+      <Panel title="Something that may have changed">
+        <p className="now-question" data-testid="now-growth">
+          {suggestion.headline} Worth trying somewhere new before we call it.
+        </p>
+        {suggestion.occasionsSummary === undefined ? null : (
+          <p className="note" data-testid="now-growth-evidence">
+            {suggestion.occasionsSummary}
+          </p>
+        )}
+        <div className="now-options">
+          <button
+            type="button"
+            className="now-option"
+            disabled={disabled}
+            data-testid="now-growth-noted"
+            onClick={() => onAnswer(false)}
+          >
+            Noted
+          </button>
+        </div>
+      </Panel>
+    )
+  }
+
   return (
     <Panel title="Something that may have changed">
       <p className="now-question" data-testid="now-growth">

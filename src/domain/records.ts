@@ -513,12 +513,71 @@ export function isOutcomeAspect(value: unknown): value is OutcomeAspect {
   return typeof value === 'string' && (OUTCOME_ASPECTS as readonly string[]).includes(value)
 }
 
+/**
+ * How much the adult did, on one occasion — AUD-0017.
+ *
+ * **Not an invention: it is the scaffolding construct itself.** The adult
+ * provides assistance pitched slightly ahead of the child's current competence
+ * and transfers responsibility for each component as she masters it (Wood,
+ * Bruner & Ross, *Journal of Child Psychology and Psychiatry* 17(2):89–100,
+ * 1976). So recording it is recording the thing that actually changes as she
+ * develops, which is why it earns the tap it costs (section 4.5).
+ *
+ * It is also the one reading here that describes what *he* did rather than what
+ * she managed, which is where section 4.4 asks the framing to sit.
+ */
+export const HELP_LEVELS = ['on-her-own', 'a-small-prompt', 'needed-me'] as const
+
+export type HelpLevel = (typeof HELP_LEVELS)[number]
+
+export function isHelpLevel(value: unknown): value is HelpLevel {
+  return typeof value === 'string' && (HELP_LEVELS as readonly string[]).includes(value)
+}
+
+/**
+ * Where an occasion happened, coarsely — AUD-0017.
+ *
+ * A place the app already knows about, or one of two coarse answers for the
+ * places it does not. Three occasions three weeks apart at the same restaurant
+ * with her father at the table supports "she can do this here, with me" and not
+ * "independently now" — and generalisation across settings is the thing that
+ * has to be programmed and probed rather than inferred from a run in one
+ * context (Stokes & Baer, 1977).
+ *
+ * **A skipped answer is absent, never `somewhere-familiar`.** AUD-0017 says so
+ * in as many words, and it is G-009's rule about a child: unknown is unknown,
+ * and the safe reading of it is the one that asserts less.
+ */
+export type OccasionSetting =
+  | { readonly kind: 'place'; readonly place: EntityRef }
+  | { readonly kind: 'somewhere-new' }
+  | { readonly kind: 'somewhere-familiar' }
+
+export interface OccasionContext {
+  readonly help: HelpLevel
+  /** Absent where he skipped it, which is a real answer and stays one. */
+  readonly setting?: OccasionSetting
+}
+
 export type OutcomeRecord = Record_<
   'outcome',
   {
     readonly about: RecordId
     readonly aspect: OutcomeAspect
     readonly observation: FactValue
+    /**
+     * What else was true of this occasion — AUD-0017.
+     *
+     * Present on a growth result and absent everywhere else. `observation` is a
+     * single `FactValue` and there was nowhere to put "where" or "with how much
+     * help", so the occasion could not carry them and the app could not tell a
+     * child who is *emerging* from one who is *consistent*.
+     *
+     * Optional, and existing occasions must not be back-filled: an occasion
+     * recorded before this field existed happened somewhere, and the app does
+     * not know where.
+     */
+    readonly occasion?: OccasionContext
     /**
      * Only an `effect` observation carries one, and the restriction matters:
      * `roughOutcomesFor` reads `sentiment === 'worse'` to decide that a topic
@@ -580,9 +639,37 @@ export type RelationshipEventRecord = Record_<
   }
 >
 
+export const GROWTH_STAGES = ['practising', 'settled'] as const
+
+export type GrowthStage = (typeof GROWTH_STAGES)[number]
+
+export function isGrowthStage(value: unknown): value is GrowthStage {
+  return typeof value === 'string' && (GROWTH_STAGES as readonly string[]).includes(value)
+}
+
 export type DomainUpdateRecord = Record_<
   'domain-update',
-  { readonly domain: LifeDomainId; readonly summary: string }
+  {
+    readonly domain: LifeDomainId
+    readonly summary: string
+    /**
+     * The owner's judgement about where a skill of his daughter's has got to —
+     * AUD-0015(a).
+     *
+     * The record kind already existed and already carried his answer as a
+     * free-text summary; what it could not carry was anything the **candidate
+     * generator** could read. So "Yes, she has got this" suppressed the
+     * suggestion and not the move, and the app went on proposing a skill he had
+     * told it she had — which breaches section 62 in as many words.
+     *
+     * Structured alongside the sentence rather than instead of it: the summary
+     * is what he agreed to and stays exactly as it was written.
+     *
+     * **Never permanent.** Regression is real in children, so the same field
+     * carries `practising` and one tap puts it back.
+     */
+    readonly growthStage?: { readonly skill: EntityRef; readonly stage: GrowthStage }
+  }
 >
 
 export type EvidenceStrength = 'strong' | 'moderate' | 'weak' | 'none'

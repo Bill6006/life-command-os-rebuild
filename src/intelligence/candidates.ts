@@ -12,7 +12,7 @@ import type {
 } from '../domain/recommendation'
 import type { ConceptId } from '../domain/windows'
 import { goalIsBehind, type ActiveGoal } from './direction'
-import { practiceEvidenceHasAged } from './growth'
+import { growthStandingFor, maintenanceProbeDue, practiceEvidenceHasAged } from './growth'
 import { profileFor } from './moves'
 import { SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
 import { entityValue } from './values'
@@ -451,6 +451,24 @@ const fatherhoodCandidates: Generator = (situation) => {
      * a cash buffer. When she practised it on Tuesday, this is simply a chance
      * that is open now, which is a different sentence and a different urgency.
      */
+    /*
+     * A settled skill is not proposed — AUD-0015(a).
+     *
+     * This enumerated every `development-skill` unconditionally, so the owner's
+     * confirmation that his daughter had got something changed nothing at all:
+     * the suggestion beside the decision went quiet and the move kept coming
+     * back. Section 62 in as many words — "the app should preserve the
+     * correction and stop reasserting the old belief unless new evidence
+     * genuinely supports revisiting it".
+     *
+     * What is left is an occasional check at expanding intervals, which is what
+     * the maintenance literature recommends after mastery and is a different
+     * sentence rather than the same one at a lower rate.
+     */
+    const standing = growthStandingFor(situation, skillRef)
+    if (standing.stage === 'settled' && !maintenanceProbeDue(situation, skillRef)) continue
+
+    const probing = standing.stage === 'settled'
     const aged = practiceEvidenceHasAged(situation, skillRef)
     out.push(
       candidate(
@@ -460,12 +478,14 @@ const fatherhoodCandidates: Generator = (situation) => {
           domain: DOMAIN.fatherhood,
           verb: 'growth-opportunity',
           object: skillRef,
-          trigger: aged ? 'stale-evidence' : 'opportunity-window',
+          trigger: probing ? 'stale-evidence' : aged ? 'stale-evidence' : 'opportunity-window',
           evidence,
           leansOn: [CONCEPT.childPresent],
-          proposedBecause: aged
-            ? 'nothing has come in about this growth area for a while'
-            : 'there is a growth area with a natural chance to practise it',
+          proposedBecause: probing
+            ? 'this one is settled, and it has been a long while since it came up'
+            : aged
+              ? 'nothing has come in about this growth area for a while'
+              : 'there is a growth area with a natural chance to practise it',
         },
         situation,
       ),

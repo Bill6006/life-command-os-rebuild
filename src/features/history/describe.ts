@@ -9,6 +9,7 @@ import {
   describeFactValue,
   type CanonicalRecord,
   type FactValue,
+  type OccasionContext,
   type OutcomeAspect,
 } from '../../domain/records'
 import type { ConceptId } from '../../domain/windows'
@@ -169,10 +170,32 @@ function describeOutcome(
   if (subject === undefined) return undefined
   const answer = outcomeAnswerLabel(target.verb, record.aspect, record.observation)
   if (answer === undefined) return undefined
-  return OUTCOME_FRAME[record.aspect](
+  const line = OUTCOME_FRAME[record.aspect](
     lowerFirst(patternNameFor(target.verb, subject)),
     lowerFirst(answer),
   )
+  /*
+   * And where it happened, where the owner said — AUD-0017.
+   *
+   * The finding asks for the setting to show in the domain page's "Recently"
+   * list, and the reason is the same one the field exists for: the run he is
+   * being asked to judge is only meaningful if he can see whether it was all in
+   * one place. Absent where he skipped it, which is not the same as familiar.
+   */
+  const where = describeSetting(record.occasion, entities)
+  return where === undefined ? line : `${line} ${where}`
+}
+
+function describeSetting(
+  occasion: OccasionContext | undefined,
+  entities: EntityIndex,
+): string | undefined {
+  const setting = occasion?.setting
+  if (setting === undefined) return undefined
+  if (setting.kind === 'somewhere-new') return 'Somewhere new.'
+  if (setting.kind === 'somewhere-familiar') return 'Somewhere familiar.'
+  const place = entities.labelFor(setting.place)
+  return place === undefined ? undefined : `At ${place}.`
 }
 
 /**

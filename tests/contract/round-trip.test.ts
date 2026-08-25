@@ -354,6 +354,9 @@ const full: Record<RecordKind, CanonicalRecord> = {
       aspect: 'effect',
       observation: { type: 'duration', minutes: 12 },
       sentiment: 'better',
+      // What else was true of the occasion — AUD-0017. A place the app knows
+      // about is the richest shape the field takes.
+      occasion: { help: 'a-small-prompt', setting: { kind: 'place', place: kitchen } },
       window: { kind: 'observation', from: T, to: LATER },
     },
   ),

@@ -271,3 +271,31 @@
   font-size: var(--text-sm);
   color: var(--text-primary);
 }
+
+/*
+ * What she is working on, and what she has — AUD-0015(a).
+ *
+ * The control is the important part of the row rather than the smallest: a
+ * stored judgement about a child has to be as easy to take back as it was to
+ * make.
+ */
+.domain-skill {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.domain-skill:first-child {
+  border-top: none;
+}
+
+.domain-skill__name {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-base);
+}
+
+.domain-skill__stage {
+  margin: var(--space-1) 0 var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}

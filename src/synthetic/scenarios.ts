@@ -1720,9 +1720,27 @@ function growthEvidence(): Scenario {
         usableMinutes: 120,
       }
 
+      /*
+       * Three occasions across two settings — AUD-0017.
+       *
+       * The spread is what turns three good goes into a claim about
+       * generalisation rather than about repetition. Three times three weeks
+       * apart at the same restaurant with her father at the table supports "she
+       * can do this here, with me"; twice somewhere new is what the app may
+       * call settled (Stokes & Baer, 1977).
+       *
+       * `tests/synthetic/g003-growth-evidence.test.ts` runs the same history
+       * with all three in one place and asserts the app says so instead.
+       */
       const past = pastEpisodeRecords(
         kit,
-        ['2026-06-06', '2026-06-13', '2026-06-20'].map((on) => ({
+        (
+          [
+            ['2026-06-06', 'somewhere-familiar'],
+            ['2026-06-13', 'somewhere-new'],
+            ['2026-06-20', 'somewhere-new'],
+          ] as const
+        ).map(([on, setting]) => ({
           verb: 'growth-opportunity' as const,
           object: ordering,
           subject: ordering,
@@ -1732,6 +1750,7 @@ function growthEvidence(): Scenario {
           context: anAfternoon,
           ending: 'completed' as const,
           result: 'all' as const,
+          setting,
         })),
         nextId,
       )
