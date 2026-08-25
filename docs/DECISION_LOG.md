@@ -4307,3 +4307,101 @@ written for. The tournament rubric, widened to ask at every hour, found it immed
 assertions.** A green sweep over a set is evidence about the members it reached. Writing down which
 those are turns "we did not check that" into a failing test the day somebody removes the exception
 or adds a member, and turns an unread sentence into a named gap rather than a silent one.
+
+---
+
+## D-140 — A durable fact and a current reading are two concepts, and only one of them is asked
+
+**Phase:** 82 (QA round 1) · **Status:** Active — engine rule
+
+Where the app holds a durable arrangement about a person and can also observe
+something that bears on where that person is right now, the two are separate
+values. The arrangement is what the owner answered and is never re-asked
+(section 62). The reading is derived from it, may only ever **narrow** it, and
+is what every decision, filter and sentence uses.
+
+**What this was learned from.** `Situation.childPresent` was written in Phase 1
+to hold a weekly custody arrangement and was read everywhere as a claim that the
+owner's daughter was in the room. Phase 82 gave the model its first fact capable
+of contradicting that — an obligation belonging to somebody other than the
+owner — and on a Wednesday at ten, inside a school day the owner had entered
+himself, the app said _"Adaya is here"_ and offered thirty unhurried minutes with
+her. Five consumers of that field were wrong for six and a half hours of every
+weekday, and a passing test sat directly over it asserting that two hours of the
+same day agreed about the value.
+
+**Narrowing only, and the asymmetry is the whole rule.** A school day is
+evidence about her afternoon, not about whose week it is. So an unknown
+arrangement stays unknown — the guide still has a question to ask, and the
+filter still has nothing to rule out — and a stated absence is never turned into
+a presence. The derived value can subtract and can do nothing else, which is
+what makes it safe to put in front of every consumer.
+
+**One place, once.** The reading is computed in `assembleSituation` and carried,
+along with the span that caused it. Three surfaces need to name that span — the
+filter says why a move was removed, the premise says where she is, and the
+evidence panel cites what the reading rests on — and three separate searches
+through the obligation list would eventually name three different spans.
+
+**What must survive the narrowing.** Her span is hers. Reading a child's school
+day as time the _owner_ is busy would silence the app through the five hours of
+a full-custody week he is most able to act, which is the opposite of what the
+obligation was added for.
+
+---
+
+## D-141 — A decision kind that a surface cannot answer for is a defect in the surface
+
+**Phase:** 82 (QA round 1) · **Status:** Active — surface rule
+
+When a new decision kind is added, every surface that explains a decision must
+be asked what that kind changes about the question it is answering. A surface
+that renders without error for a new kind has not been checked; a surface that
+answers the _old_ question about the new kind is worse than one that says
+nothing, because the owner has no way to tell.
+
+**What this was learned from.** Phase 82 added `hold`, the fifth Now state. The
+evidence panel kept working, kept opening, and kept answering _why this move?_ —
+under a headline whose entire content was that the app was **not** offering that
+move. The conditions came from the held candidate's `leansOn` list, which is a
+list about a move and cannot answer a question about an hour. The panel's own
+invariant test passed throughout, because it asked whether the panel had a move
+in it.
+
+**The reasoning goes where the decision is made.** The grounds for a deferral
+are written in `arbitrate.ts`, beside the conditions they describe, and quoted
+by the panel unchanged. Section 51 forbids a parallel explanation truth, and the
+cheapest way to honour that is for there to be nothing to disagree with.
+
+**The guard is an enumeration, not an example.** Every `Decision['kind']` the
+scenario library reaches is asserted against what each surface owes it,
+including the kinds that correctly owe nothing. A sixth kind fails the test the
+day it exists rather than the evening somebody reads it.
+
+---
+
+## D-142 — A scoring band states one fact, or it is two bands
+
+**Phase:** 82 (QA round 1) · **Status:** Active — evaluator rule
+
+A dimension's band must produce a sentence that is true everywhere in its range.
+Where one band would have to describe two different situations, it is two bands
+with two sentences and two values — and the dividing line is the same comparison
+the sentence makes.
+
+**What this was learned from.** `time-fit` had one band above 0.8 and it read
+_"would not fit before Adaya's school day"_. Ten minutes before the school run,
+with every move trimmed to ten minutes by the engine itself, that sentence
+appeared beside a figure the same engine had worked out. The band was carrying
+"uses everything there is" and "does not fit at all" at once, and had to pick.
+
+**The score is half of the statement.** An overrunning move used to score zero —
+the same as one that fits exactly — so the defect existed in the number as well
+as in the words, and only the words were reported. Fixing the sentence and
+leaving the score would have left the ranking believing something the trace no
+longer said.
+
+**Reachability is part of the claim.** A band nothing arrives at can say
+anything, so the regression walks the approach to an obligation minute by
+minute and asserts that all four bands are reached. That is D-139's rule applied
+to a scale rather than to a sentence catalogue.

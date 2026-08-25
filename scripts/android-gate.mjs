@@ -888,7 +888,28 @@ async function main() {
     'and offers nothing to press, because there is nothing to start',
     (await page.getByTestId('now-actions').count()) === 0,
   )
-  await sideways('Now, a deferral')
+  /*
+   * And one tap lower — QA-82-002.
+   *
+   * The round 1 report is explicit that this gate repeated the existence,
+   * touch-target and overflow checks and none of the cross-line semantic
+   * comparisons that found the defects. This is one of the two it was missing:
+   * the panel that exists to answer *why this?* said nothing about the only
+   * question a held decision raises.
+   */
+  await page.getByTestId('now-see-evidence').tap()
+  await page.waitForSelector('[data-testid="now-evidence"]')
+  const heldWhy = await page.getByTestId('now-evidence-deferral').innerText()
+  check(
+    'and the evidence says why later rather than now',
+    /the morning/.test(heldWhy) && /not spoken for/.test(heldWhy),
+    heldWhy.replace(/\s+/g, ' ').trim(),
+  )
+  check(
+    'without arguing for doing it now under a sentence that says to wait',
+    !/closes on its own/.test(heldWhy),
+  )
+  await sideways('Now, a deferral with its evidence open')
 
   // ---- The shape of the day — AUD-0004 -------------------------------------
   await loadScenario('A school morning')
@@ -908,6 +929,39 @@ async function main() {
     dayShape.replace(/\s+/g, ' ').trim(),
   )
   await sideways('Life, the day’s shape')
+
+  /*
+   * And two hours on, inside the window — QA-82-001.
+   *
+   * The other comparison this gate was missing. It read the run-up to her
+   * school day and never walked into it, so the hours the app was wrong about
+   * her were the hours nothing here ever looked at.
+   */
+  await page.goto(`${BASE}#/qa`)
+  await page.waitForSelector('h1:has-text("QA")')
+  await page.getByRole('button', { name: '+1 hour' }).tap()
+  await page.getByRole('button', { name: '+1 hour' }).tap()
+  await openNow()
+  const insideSchool = await page.getByTestId('now-premise').innerText()
+  check(
+    'the premise stops claiming she is here once her school day has started',
+    !/Adaya is here/.test(insideSchool),
+    insideSchool.replace(/\s+/g, ' ').trim(),
+  )
+  check(
+    'and says where she is instead of going quiet about her',
+    /school day is on until 15:00/.test(insideSchool),
+  )
+  const insideScreen = await page.locator('.screen').innerText()
+  check(
+    'and nothing on the screen offers time with someone at school',
+    !/with Adaya/.test(insideScreen),
+  )
+  check(
+    'while the middle of her school day is still his to use',
+    !/About \d+ minutes before Adaya/.test(insideScreen),
+  )
+  await sideways('Now, inside the school window')
 
   // ---- A stage on a child’s skill, set and unset — AUD-0015(a) --------------
   await loadScenario('Three times running, and the app noticed')

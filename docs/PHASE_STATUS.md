@@ -24,11 +24,15 @@ reopens Phase 4 or any completed phase.
 
 # Phase 82 — The structural intelligence skeleton
 
-**Status: YELLOW — READY FOR INDEPENDENT QA.**
+**Status: YELLOW — READY FOR INDEPENDENT QA, ROUND 2.**
+
+Round 1 returned FAIL with three findings. They are repaired, the repaired
+checkpoint is deployed, and the retest handoff is written — so the phase is back
+where it was, awaiting an independent verdict rather than holding one.
 
 Not GREEN, and not this conversation's to make GREEN. Owner decision D-077: a
 builder conversation may not approve its own phase, and nothing concluded while
-building changes that.
+building or while repairing changes that.
 
 Nine audit findings in six work packages, and the membership test was one
 question and nothing else — _would Phase 9 approve the wrong product structure
@@ -44,30 +48,75 @@ audit's own reasons for excluding each are unchanged.
 
 ## Checkpoint
 
-|                      |                                                                                                                                                                                                                                                                                               |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Product checkpoint   | `160ec9a` — the last commit that changes the bundle                                                                                                                                                                                                                                           |
-| Deployed Preview SHA | past the checkpoint by the commits that wrote these docs — **read it live**                                                                                                                                                                                                                   |
-| Relationship         | Proved with `node scripts/checkpoint-equivalence.mjs 160ec9a --deployed <build-info url>`, per D-097. Never asserted as string equality: this repository redeploys on every push, including a documentation-only one, and two files differed at the time of writing, neither bundle-relevant. |
-| Independent QA       | **Required.** Not yet run. Report will be written to [`qa/PHASE_82_QA_HANDOFF.md`](qa/PHASE_82_QA_HANDOFF.md)                                                                                                                                                                                 |
-| Owner phone test     | Required — owner-visible behaviour changed on Now, on Life and on two domain pages                                                                                                                                                                                                            |
-| Preview              | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                                                                                                                                                   |
+|                      |                                                                                                                                                                                                                                                                               |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product checkpoint   | `0899f18` — QA round 1 repairs; the last commit that changes the bundle. The first-build checkpoint was `160ec9a`                                                                                                                                                             |
+| Deployed Preview SHA | Serving `0899f18` at the time of writing, and past it by the commits that wrote these docs. **Read it live**                                                                                                                                                                  |
+| Relationship         | Proved with `node scripts/checkpoint-equivalence.mjs 0899f18 --deployed <build-info url>`, per D-097. Never asserted as string equality: this repository redeploys on every push, including a documentation-only one, and only documentation differed at the time of writing. |
+| Independent QA       | **Round 1 returned FAIL** on gate item 4, with three findings. All three are repaired and a retest handoff is written into [`qa/PHASE_82_QA_HANDOFF.md`](qa/PHASE_82_QA_HANDOFF.md). Round 2 is required before anything becomes GREEN                                        |
+| Owner phone test     | Required — owner-visible behaviour changed on Now, on Life and on two domain pages                                                                                                                                                                                            |
+| Preview              | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                                                                                                                                   |
 
 ## Exact verification results
 
-| Gate                                     | Result                                                                                                                 |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `npm run verify` from a clean checkout   | **PASS** — format, lint, typecheck, 1,470 unit tests across 66 files, build                                            |
-| Unit layer                               | **1,470 / 1,470** across 66 files (was 1,332 across 60)                                                                |
-| Browser, three widths                    | **528 / 528** at 360, 430 and 1,280px — 176 each (was 501)                                                             |
-| Android-style gate on the deployed build | **clean — 119 checks** against the live Preview (was 93; the 26 new ones press this phase’s own surfaces on a handset) |
-| Privacy scan                             | clean, 230 tracked files                                                                                               |
-| Tournament, re-run and re-baselined      | **100 / 100 deterministic, 100 / 100 hybrid** under the widened rubric                                                 |
-| Reintroductions proved                   | **22** — every regression this phase added, plus gate item 6's two                                                     |
+Two columns, because the phase has been verified twice: once at the first build
+and once after the round 1 repairs. The second column is the state of the
+deployed checkpoint now.
 
-Six new test files: `goal-horizon-and-parts`, `commitment-windows`, `threads`,
-`deferral`, `growth-stage-and-occasion`, `instrument-recut`, and a browser suite
-`phase82.spec.ts` for the surfaces the packages end in.
+| Gate                                     | First build (`160ec9a`)                   | After round 1 (`0899f18`)                        |
+| ---------------------------------------- | ----------------------------------------- | ------------------------------------------------ |
+| `npm run verify` from a clean checkout   | **PASS**                                  | **PASS** — format, lint, typecheck, tests, build |
+| Unit layer                               | 1,470 / 1,470 across 66 files             | **1,490 / 1,490** across 67 files                |
+| Browser, three widths                    | 528 / 528 at 360, 430 and 1,280px         | **537 / 537** — 179 each                         |
+| Android-style gate on the deployed build | clean — 119 checks                        | **clean — 126 checks** against the live Preview  |
+| Privacy scan                             | clean, 230 tracked files                  | **clean, 231 tracked files**                     |
+| Tournament                               | 100 / 100 deterministic, 100 / 100 hybrid | **100 / 100 deterministic, 100 / 100 hybrid**    |
+| Reintroductions proved                   | 22                                        | **13 more, 35 in total**                         |
+
+Seven test files: `goal-horizon-and-parts`, `commitment-windows`, `threads`,
+`deferral`, `growth-stage-and-occasion`, `instrument-recut`, `qa-82-round-1`,
+and a browser suite `phase82.spec.ts` for the surfaces the packages end in.
+
+## Independent QA — round 1
+
+**FAIL**, on gate item 4: _the complete owner experience_. Items 1, 2, 3, 5 and
+6 passed, every standing gate passed, and the equivalence check between the
+tested checkpoint and the live Preview passed. Three findings, all on the
+primary surface, all now closed as DEF-0089, DEF-0090 and DEF-0091.
+
+They are worth reading together, because they are one story about this phase's
+own shape rather than three unrelated bugs. Phase 82 gave the engine its first
+structural facts — an obligation, a fifth decision kind, a countdown to
+something in the day — and each finding is an older part of the app meeting one
+of them for the first time and being wrong in a way nothing could previously
+have been wrong.
+
+- **QA-82-001 → DEF-0089.** A durable custody arrangement was read as a claim
+  that the owner's daughter was in the room, so during a school day he had
+  entered himself the app said _"Adaya is here"_ and offered thirty minutes with
+  her. The repair is a second concept — the arrangement, narrowed by her own day
+  — computed once and read by every consumer, and it can only ever subtract.
+  D-140.
+- **QA-82-002 → DEF-0090.** The evidence panel for a held decision explained the
+  move the app was declining to offer, and said nothing about the deferral. The
+  grounds are now written where the deferral is decided and quoted unchanged.
+  D-141.
+- **QA-82-003 → DEF-0091.** A `time-fit` band carried two different facts and
+  had to pick one sentence, so a ten-minute move with ten minutes in hand was
+  told it would not fit. Four bands, split on the same comparison the sentence
+  makes, and an overrun now counts against a move rather than abstaining.
+  D-142.
+
+**Three tests that gave false confidence were repaired rather than deleted**,
+and QA named all three. One asserted that two hours of the same day agreed about
+the daughter, which was true of the field and false of the day. One read the
+headline at each hour and compared two different moves. One never advanced the
+browser clock into the school window at all. Each is now the assertion it was
+trying to be, and each fails against a reintroduction.
+
+**Every PASS from round 1 is preserved and every deferral stands.** Nothing in
+this repair reopens a package, and the three items QA deferred to Phase 9 are
+untouched.
 
 ## The six packages
 
@@ -244,6 +293,35 @@ needs is unknown. AUD-0035 scopes itself to "the three older dimensions", and
 `time-fit` runs 0…1 so abstaining there would _reward_ a move for the app not
 knowing how long the evening is. `instrument-recut.test.ts` enumerates every
 remaining case with a written reason, so a fourth one appearing fails the build.
+
+**`time-fit`'s overrun band is reachable through one fixture and one narrow
+gap.** After the QA-82-003 repair the bottom band — a move that genuinely does
+not fit — is only reached when `inHand` is between one and four minutes, because
+`sizeFor` floors a move at five and the filter already removes anything longer
+than the free time the owner stated. Only the approach to her school day
+produces that, and the regression walks 08:00 to 08:35 minute by minute to reach
+it. That is honest coverage rather than comfortable coverage: a second
+obligation in the library, or a fixture whose stated free time is large while
+the next edge is minutes away, would exercise the same band from a different
+direction.
+
+**The three deferral sentences are asserted by content, not by wording.** What
+is pinned is that the panel carries them on every hold and on nothing else,
+names the block it is held for, states the room in it, never argues for acting
+now, and never uses vague deferral language. The sentences themselves are not
+string-matched, because this repository's own rule is that an exact-string
+assertion proves a string is stable rather than right and fails for
+improvements. If QA wants the wording frozen, that is a decision to take
+deliberately rather than by accident.
+
+**One non-reproducing browser failure was seen and is reported rather than
+hidden.** In one full three-width run, `qa-lab.spec.ts` — "gives him his history
+back and keeps it — Empty the laboratory, from QA" — failed at desktop. It
+passes in isolation, passed in the immediately preceding full run and in the one
+after, and the test is timing-sensitive by construction: it waits 1,500ms for
+in-flight laboratory work to land and then asserts none of it reached the
+screen. It is the same rotating class the round 1 QA report documented. No
+product assertion about this phase's surfaces was involved.
 
 **The re-cut did not separate a genuinely near-tied field, and cannot.** The
 audit's worked example is three candidates inside three thousandths. They are

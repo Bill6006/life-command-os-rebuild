@@ -39,6 +39,131 @@ None.
 
 ## Fixed
 
+### DEF-0089 — a standing custody arrangement was read as a claim that she was in the room
+
+- Status: Fixed
+- Severity: Blocker — a false statement about where the owner's daughter is, on
+  the primary surface, at a moment he can see out of the window is wrong
+- Found in: Phase 82 / `160ec9a`
+- Found by: independent QA round 1, gate item 4 — QA-82-001
+- Class: **one field carrying two meanings, and every consumer believing the
+  wrong one.** `Situation.childPresent` is the durable custody arrangement:
+  whose week it is, answered once, never re-asked (section 62). Five separate
+  places read it as a claim about the room — the generator, the filter, the
+  premise, the context the learner compares evenings on, and the trace beneath
+  all of them — so the app was wrong about her for the six and a half hours of
+  every weekday a school day differs from a weekend, not on one line at one
+  hour.
+- Reproduction: load "A school morning" and advance the clock to 10:00 on the
+  Wednesday. The premise read _"Wednesday morning, 8 hours of sleep, Adaya is
+  here."_ and the headline read _"Spend the next 30 minutes with Adaya, phone
+  away."_, while the Life page beside it listed her school day as 08:30 to 15:00.
+- Root cause: the concept was written in Phase 1 for a full-custody arrangement
+  that changes weekly, and Phase 82 added the first fact in the model capable of
+  contradicting it — an obligation belonging to somebody other than the owner.
+  Nothing brought the two together, and nothing had to: `Obligation` did not
+  record whose span it was, so a school day was a shape in the day with nobody
+  in it.
+- Regression: `tests/synthetic/qa-82-round-1.test.ts` — "does not say she is
+  here during her own school day", "does not offer a move that needs her while
+  she is at school", "keeps the arrangement itself, and never re-asks it",
+  "agrees with itself about her at every hour of the school day", "never invents
+  presence the record does not carry", "writes it on the path the owner actually
+  takes", "removes it, and says which span took her"; and in the browser,
+  `tests/browser/phase82.spec.ts` — "stops claiming she is here once her school
+  day has started". Seven separate reintroductions were run and each fails.
+- Siblings: enumerated rather than searched for. `Situation.childHere` is worked
+  out once in `assembleSituation`, and every consumer of presence now reads it:
+  `candidates.ts` (the generator), `constraints.ts` (the filter),
+  `explain.ts` (the premise), and `contextFor`, which is what `learning.ts`
+  compares evenings on — two evenings resemble each other by who was in the
+  house, and a standing arrangement is not an answer to that. The record itself
+  is untouched: `childPresent` is still explicit, still true, and still never
+  re-asked.
+- Note on what the repair must not break: her school day is **hers**. Reading it
+  as time the owner is busy would silence the app through the five hours of a
+  full-custody week he is most able to do something, which is the opposite of
+  what AUD-0004 asked for. Asserted directly.
+- Fixed in: the checkpoint that closes QA round 1
+
+### DEF-0090 — the evidence panel for a held decision explained the move it was not offering
+
+- Status: Fixed
+- Severity: Major — the one surface that exists to answer _why this?_ said
+  nothing about the decision on screen
+- Found in: Phase 82 / `160ec9a`
+- Found by: independent QA round 1, gate item 4 — QA-82-002
+- Class: **a surface built for one decision kind, reused for another without
+  asking what the question had become.** On a `move`, "See evidence" answers
+  why that move; on a `hold` the app is declining to offer the move, so the
+  question is why not yet — and every field on the panel was about the move.
+  The conditions came from the held candidate's `leansOn` list, which is a list
+  about the move and cannot answer a question about the hour.
+- Reproduction: load "Before the house is up" (05:30), open Now, tap "See
+  evidence". The panel led with "What this rested on this morning: Usable time
+  now — Not known yet; Child with the owner — yes", under a headline reading
+  _"The morning suits Adaya better than now."_ Nothing on the panel mentioned
+  the morning, the room in it, or why now was refused.
+- Root cause: the fifth Now state was added in this phase and the panel was not
+  revisited. `evidenceForDecision` reads everything off the decision, which is
+  correct and is why it kept working — the deferral simply was not on the
+  decision to read.
+- Regression: `tests/synthetic/qa-82-round-1.test.ts` — "answers the deferral on
+  the panel that exists to explain the decision", "says nothing about a deferral
+  where there was none", "answers for every decision kind the library can
+  reach", "holds it to somewhere, and never argues for doing it now"; and
+  `tests/browser/phase82.spec.ts` — "says why later rather than now when the
+  owner asks". Four reintroductions run, each fails.
+- Siblings: the class check is the enumeration itself. Every `Decision['kind']`
+  the library reaches is now asserted against what the panel owes it: a `move`
+  gets a panel and no deferral, a `hold` gets a panel and a deferral, and
+  `no-action` correctly gets no panel because Now carries its own explanation
+  for a night with nothing on it. A fourth kind fails the test the day it exists.
+- Note on where the words are written: in `arbitrate.ts`, beside the conditions
+  they describe, and quoted by the panel unchanged. Section 51 forbids a
+  parallel explanation truth and the cheapest way to honour it is for there to
+  be nothing to disagree with.
+- Fixed in: the checkpoint that closes QA round 1
+
+### DEF-0091 — a move that fitted exactly was told it would not fit
+
+- Status: Fixed
+- Severity: Major — the app contradicting its own figure, in the trace the
+  inspector reads and the score the ranking uses
+- Found in: Phase 82 / `160ec9a`
+- Found by: independent QA round 1, gate item 4 — QA-82-003
+- Class: **a band whose sentence is not true of its own range.** `time-fit` had
+  three bands and the third covered everything above 0.8, so it had to pick one
+  sentence for two different facts: "this will use everything you have left" and
+  "this will run past the thing you have to be at". Those are different
+  statements about a move, they deserve different scores, and the owner acts on
+  them differently — the first is a choice and the second is not one.
+- Reproduction: load "A school morning" at 08:20, ten minutes before her school
+  day. Every move is trimmed to ten minutes by `sizeFor`, and every one of them
+  carried `time-fit 0 — "would not fit before Adaya's school day"`.
+- Root cause: the note was written for the far end of the band and the near end
+  was never looked at. Nothing in the scenario library sat at a share between
+  0.8 and 1 until this phase gave the engine an obligation to count down to.
+- Regression: `tests/synthetic/qa-82-round-1.test.ts` — "does not say a
+  ten-minute move will not fit in ten minutes", "still says so when a move
+  genuinely does not fit", "never tells the owner a move will not fit when it
+  does, at any hour", "reaches all four bands, so none of them is a guard
+  nobody checks". Both reintroductions run, both fail.
+- Siblings: the sweep is the check. The approach to her school day is walked
+  minute by minute from 08:00 to 08:35, which crosses all four bands, and every
+  `time-fit` note in the library at every block is compared against the two
+  figures the dimension was given. A note and a score that drift apart again
+  fail on the next run rather than on the morning somebody reads it.
+- Note on the score, which was the same defect in the number: an overrunning
+  move used to abstain, so a move that cannot be finished ranked level with one
+  that fits exactly. It now scores −0.5. The band is reachable and it is worth
+  saying why it is not obvious that it is: `constraints.ts` already removes a
+  move longer than the free time the owner **stated**, but `inHand` is the
+  smaller of that and what the day allows, and `sizeFor` floors a move at five
+  minutes. Three minutes before the school run, a five-minute move arrives at
+  the evaluator with three minutes to do it in.
+- Fixed in: the checkpoint that closes QA round 1
+
 ### DEF-0087 — the trigger that means "nothing raised this" asserted that nothing else was pressing
 
 - Status: Fixed

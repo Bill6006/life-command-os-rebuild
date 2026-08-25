@@ -86,6 +86,37 @@ describe('across every history in the library', () => {
     }
   })
 
+  it('answers the question the decision on screen actually raises', () => {
+    /*
+     * QA-82-002, and the reason the two invariants above were not enough.
+     *
+     * They ask whether the panel names the rendered move and cites only what
+     * that move leaned on. Both are true of a `hold` and neither is the point:
+     * on a hold the app is declining to offer the move, so *why this?* means
+     * *why not yet?*, and a list of conditions about the move cannot answer it.
+     * The panel passed every check in this file while saying nothing about the
+     * only decision on the screen.
+     *
+     * Written as a rule about the kind rather than about a scenario, so the
+     * sixth decision state fails this the day it exists.
+     */
+    for (const scenario of SCENARIOS) {
+      const { decision, evidence } = evidenceOn(scenario.id)
+      if (evidence === undefined) continue
+      if (decision.kind === 'hold') {
+        expect(
+          evidence.deferral.length,
+          `${scenario.id}: a held decision whose panel does not say why later`,
+        ).toBeGreaterThan(0)
+      } else {
+        expect(
+          evidence.deferral,
+          `${scenario.id}: a ${decision.kind} explaining a deferral it did not make`,
+        ).toEqual([])
+      }
+    }
+  })
+
   it('states the belief in the words Now already used, never a second version', () => {
     /*
      * Found by reading the rendered panel. Now prints "Reset a space has made

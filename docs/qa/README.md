@@ -301,6 +301,26 @@ Recommend the **lowest level appropriate to the work**, not Max by default.
   only when a discovered defect genuinely needs architectural reasoning, and say
   why. Do not mechanically recommend the top of the range.
 
+### The audit-repair campaign is Max work (owner decision, 2026-08-25)
+
+Every builder step in the whole-app intelligence audit campaign — Phase 81,
+Phase 82 and any further phase created by its adjudication — is **Max**, on
+both the first build and every repair round. Independent QA keeps its own
+middle-level default; this rule is about the builder.
+
+It is not an exception to the rule above, it is a classification under it.
+These findings are _"difficult cross-system semantics"_: temporal reasoning that
+spans every surface, domains that are stored and displayed but cannot reach a
+decision, a strategy layer that does not exist yet. The changes are
+interdependent and carry an explicit ordering constraint, and the audit's own
+conclusion was that a lower level will fix the wording without fixing the
+reasoning underneath it.
+
+The trap is that each individual repair _reads_ like ordinary work — a sentence
+to reword, a filter to reorder — so "normal repairs" is the natural
+classification and it has already been chosen twice. Judge the level by what
+the change has to reason about, not by how large the diff looks.
+
 The recommendation stays **outside** the copy/paste prompt so the owner can
 switch levels before sending it.
 
