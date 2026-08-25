@@ -22,6 +22,281 @@ reopens Phase 4 or any completed phase.
 
 ---
 
+# Phase 82 — The structural intelligence skeleton
+
+**Status: YELLOW — READY FOR INDEPENDENT QA.**
+
+Not GREEN, and not this conversation's to make GREEN. Owner decision D-077: a
+builder conversation may not approve its own phase, and nothing concluded while
+building changes that.
+
+Nine audit findings in six work packages, and the membership test was one
+question and nothing else — _would Phase 9 approve the wrong product structure
+if this landed afterwards?_ So this phase creates the persistent owner-visible
+objects the visual phase has to design around: a course of action, an
+obligation, a fifth Now state, a date and a set of pieces on a goal, a stage on
+a child's skill, and a two-step answer where there was one tap. Its gate is
+structural rather than truthfulness-based, which is a different kind of
+acceptance from the one Phase 81 just went through.
+
+**AUD-0040, AUD-0045 and AUD-0047 are not in scope**, were not added, and the
+audit's own reasons for excluding each are unchanged.
+
+## Checkpoint
+
+|                      |                                                                                                                                               |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product checkpoint   | `PLACEHOLDER_SHA`                                                                                                                             |
+| Deployed Preview SHA | `PLACEHOLDER_DEPLOYED`                                                                                                                        |
+| Relationship         | Proved with `node scripts/checkpoint-equivalence.mjs <checkpoint> --deployed <build-info url>`, per D-097. Never asserted as string equality. |
+| Independent QA       | **Required.** Not yet run. Report will be written to [`qa/PHASE_82_QA_HANDOFF.md`](qa/PHASE_82_QA_HANDOFF.md)                                 |
+| Owner phone test     | Required — owner-visible behaviour changed on Now, on Life and on two domain pages                                                            |
+| Preview              | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                   |
+
+## Exact verification results
+
+| Gate                                     | Result                                                                      |
+| ---------------------------------------- | --------------------------------------------------------------------------- |
+| `npm run verify` from a clean checkout   | **PASS** — format, lint, typecheck, 1,470 unit tests across 66 files, build |
+| Unit layer                               | **1,470 / 1,470** across 66 files (was 1,332 across 60)                     |
+| Browser, three widths                    | **PLACEHOLDER_BROWSER**                                                     |
+| Android-style gate on the deployed build | **PLACEHOLDER_ANDROID**                                                     |
+| Privacy scan                             | clean, 230 tracked files                                                    |
+| Tournament, re-run and re-baselined      | **100 / 100 deterministic, 100 / 100 hybrid** under the widened rubric      |
+| Reintroductions proved                   | **22** — every regression this phase added, plus gate item 6's two          |
+
+Six new test files: `goal-horizon-and-parts`, `commitment-windows`, `threads`,
+`deferral`, `growth-stage-and-occasion`, `instrument-recut`, and a browser suite
+`phase82.spec.ts` for the surfaces the packages end in.
+
+## The six packages
+
+### 1 — Goal horizon and parts (AUD-0046, AUD-0021)
+
+`GoalRecord.targetWindow` had parsed, serialised and reached `ActiveGoal` since
+Phase 1 with nothing reading it and no surface able to write it. That is not a
+tidiness story: `candidates.ts` raised `goal-behind` whenever a career goal
+merely existed and whenever the cash buffer was merely known, and `evaluate.ts`
+pays that trigger `urgency 0.4` — an urgency premium on every career
+recommendation, justified by a claim nothing checked.
+
+- `activeGoals` reads the horizon and, for each named piece, whether the record
+  holds a finished session about it.
+- `goalIsBehind` is the measurement: less of the work has moved than of the
+  time, needing both a date and pieces, and false where either is missing.
+  Both generators that raise the trigger go through it.
+- `goalFit` reads both. With neither, it is byte for byte the old behaviour —
+  which is both findings' own acceptance condition.
+- The Career page gains the one date control the horizon has ever had and the
+  pieces beside it; Insights gains a trajectory card. Counts and a date, never
+  a share (D-129).
+- `week-pointed-at-home` now carries the winter its own statement names, so
+  G-008's baseline wins on a measurement rather than on an assumption.
+
+### 2 — Commitment windows (AUD-0004)
+
+Five fixed blocks from wall-clock minutes modelled the shape of a day and
+nothing about this owner's day. The brief's question — _does a recommendation
+ever consider WHEN, not just WHETHER?_ — had a clean answer, and it was no.
+
+- A `commitment-window` record kind: a label, a span of minutes into the
+  owner-local day, a recurrence, and the provenance the finding asks for from
+  the start so a trusted schedule source later is an adapter rather than a
+  redesign.
+- `whose` distinguishes a span that takes his time from one that takes somebody
+  else's (D-130). Reading her school day as time he is busy would silence the
+  app for the five freest hours of a full-custody week.
+- The situation carries the day's obligations, the minutes until the next edge,
+  and the smaller of that and what he said he had. The time limiter, `time-fit`,
+  `opportunity-cost` and a move's own size all read it.
+- Two seed questions on Life, answered once and never re-asked (D-131). No
+  general event form: a calendar is a different product.
+- `school-morning` is the adversarial history the finding asks for — one
+  Wednesday, read at 08:20 and at 10:00, same block, opposite answers about a
+  lab.
+
+### 3 — Threads (AUD-0020)
+
+The audit's highest-leverage change, and the phase's strongest member.
+
+- A `thread` record kind, bounded to three concrete courses with no generic
+  creation control (D-133).
+- `thread-fit` is the nineteenth dimension. It abstains at zero weight for every
+  move belonging to no live course — nearly all of them — so a history with no
+  plan in it ranks exactly as it did before.
+- A thread is never a hidden reason: Now says which course a move belongs to and
+  where in it, and Life stops one in a tap. It expires on its own, and declining
+  one of its moves pauses it.
+- The architecture guard the finding asks for: `arbitrate.ts` and `engine.ts`
+  know nothing about threads at all, and four files in the engine may look
+  (D-132).
+
+### 4 — Deferral (AUD-0024)
+
+`hold` had a full move profile and its own templates since Phase 1 and no
+generator produced it, because deferring needs a model of later blocks and there
+was not one. There is now.
+
+- The situation carries the rest of today with his own obligations taken out of
+  it, and `arbitrate.ts` returns a deferral when the best move — already worth
+  doing — does not suit this block and does suit the next one.
+- Bounded on four sides at once (D-134), none of them a counter anybody has to
+  maintain.
+- The fifth Now state, with no buttons on it: there is nothing to start, and the
+  way back is the hour arriving.
+- `before-the-house-is-up` is the same Wednesday as `school-morning`, three
+  hours earlier, so the state is read from the library rather than only from a
+  test.
+
+### 5 — Growth state and occasion context (AUD-0015(a), AUD-0017)
+
+Two findings that had to move together because they change the same flow.
+
+- A `domain-update` now carries the stage, the generator reads it, and a settled
+  skill comes round only as an occasional check at expanding intervals, in a
+  different sentence. Reversible in one tap (D-136).
+- An occasion carries how much help she needed — the scaffolding construct
+  itself, framed on the parent — and, in one extra skippable tap, where it
+  happened.
+- Three good goes in one place no longer produce "call that settled": the app
+  says what it sees and suggests the thing that would settle it. A skipped
+  setting is unknown, never familiar. This **amends** D-070 rather than
+  replacing it (D-135).
+
+### 6 — Re-cut and re-run (AUD-0035, AUD-0039)
+
+Last, in one change, after the dimension package 3 added.
+
+- `bottleneck-fit`, `direction-fit` and `goal-fit` abstain. D-048's rule,
+  applied to the three dimensions D-048 explicitly left alone because
+  re-cutting them means re-running the tournament — "which belongs to a phase
+  that can".
+- `WORTH_DOING` is re-derived rather than carried across, and the derivation is
+  the argument: the same decisions land 1.29 to 1.51 times higher once the dead
+  weight is gone, and _which_ depended on the history (D-137).
+  `CLOSE_ENOUGH_TO_MENTION` is half of it, derived.
+- `MAX_NUDGE` is a quarter of the ranked spread, capped at the old absolute, so
+  "cannot reverse a decided contest" is arithmetic rather than a comment
+  (D-138).
+- The rubric gains the three checks AUD-0039 says it lacked. Both architectures
+  re-baseline at 100/100; the hybrid still scores no better, so D-024 stands.
+
+## The gate, item by item
+
+| #   | Acceptance item                                                                                                    | Where it is proved                                                                                                                                                                                                           |
+| --- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | A thread never bypasses the arbiter — an architecture-guard test, per section 17.2's shape                         | `tests/unit/architecture-guards.test.ts` — "lets a thread reach a decision in exactly one place". Three assertions: the chooser knows nothing of threads; four files in the engine may read them; the dimension still exists |
+| 2   | A dominant limiter overrides a thread — `thread-fit` weighted below `bottleneck-fit`, asserted directly            | The weights table itself, in `architecture-guards.test.ts`; and the consequence on a real evening in `threads.test.ts` — the same history, differing only in three nights of sleep                                           |
+| 3   | A thread can be stopped in one tap, expires on its own, and explains why it is active                              | `threads.test.ts` (five separate ways it stops pulling, enumerated) and `phase82.spec.ts` (the Life control, at three widths)                                                                                                |
+| 4   | `hold` names a real later block and cannot be returned when no later block scores higher                           | `deferral.test.ts` — the block is named, later, free and his; and six separate states in which it cannot be returned                                                                                                         |
+| 5   | The tournament is re-run and re-baselined on the re-cut instrument, with `MAX_NUDGE` relative to the ranked spread | `intelligence-tournament.test.ts` (100/100 both, widened rubric) and `model-guardrails.test.ts` (the bound, and the arithmetic that a decided contest cannot be turned over)                                                 |
+| 6   | No percentage, rank, grade or score about the child survives package 5 — the Phase 81 copy guard must still bite   | `g003-growth-evidence.test.ts`, proved by reintroduction twice: a rate put back into the summary, and a confidence word put onto the **new** package-5 headline. Both caught                                                 |
+
+## Two defects the phase found in passing, and what they taught
+
+Neither was in scope, and both are the same lesson from opposite directions.
+
+**DEF-0087** — `explain.ts` rendered `nothing-better` as _"Nothing else is
+pressing, and X pays back tomorrow."_ That is DEF-0012's
+absence-asserted-from-ignorance, in the same file two siblings had already been
+removed from, guarded by a test that forbids the exact phrase by name. It
+survived three phases because no history in the library reached the branch. The
+first scenario with a career move and no career goal printed it on the first
+run.
+
+**DEF-0088** — `recall-practice` refused no hour at all, so the app offered a
+study session at eleven at night. It survived because every check of "does it
+suit the hour" ran at the one hour each history was written for. The tournament
+rubric, widened under AUD-0039(b) to ask at every hour, found it immediately.
+
+**D-139 is what they leave**: where a sweep asserts something about a closed set
+of owner-facing sentences, it enumerates which members the library actually
+reaches and names the ones it does not, with the reason and with where they are
+covered instead. A green sweep over a set is evidence about the members it
+reached, and writing down which those are turns "we did not check that" into a
+failing test.
+
+And repairing DEF-0088 re-broke a QA-81-006 copy branch — a condition that
+required **every** rejection to be repetition stopped firing the moment one more
+move refused the late night, putting "none of them suit where you actually are"
+back on a screen that had been repaired for saying exactly that. It is now
+stated as what it always meant, and the mixed case has its own line and its own
+row in the copy catalogue.
+
+## Open, and named rather than left to be found
+
+**Abstention makes the denominator differ between candidates, and it changed an
+ordering.** A score is a weighted mean, so a candidate with more dimensions
+speaking about it is judged over a larger denominator. That is not new — D-048
+introduced it in Phase 3 — but removing 5.3 units of shared dead weight made it
+larger, and on "Nine months of evenings" the ordering of three candidates within
+0.003 of each other changed. The new ordering is defensible and arguably better:
+clearing the kitchen helped on all six weekday evenings and on two of six
+weekends, the scenario's own clock stands on a Saturday, and the app now offers
+it on the Friday and something else on the Saturday. But the mechanism is
+arithmetic rather than judgement, and **the next phase should decide whether a
+weighted mean is the right shape at all**. It is the deeper version of AUD-0035
+and the audit does not ask for it.
+
+**Three dimensions still score zero at full weight for an absent reading.**
+`capacity-fit`, `opportunity-cost` and `time-fit`, each when the reading it
+needs is unknown. AUD-0035 scopes itself to "the three older dimensions", and
+`time-fit` runs 0…1 so abstaining there would _reward_ a move for the app not
+knowing how long the evening is. `instrument-recut.test.ts` enumerates every
+remaining case with a written reason, so a fourth one appearing fails the build.
+
+**The re-cut did not separate a genuinely near-tied field, and cannot.** The
+audit's worked example is three candidates inside three thousandths. They are
+now inside three thousandths of a scale roughly half again as tall, and the app
+says "close call" about them. Removing the compression was the fixable half;
+the rest is that the evidence about those three moves is genuinely similar.
+
+**A thread's moves are a set rather than an ordered sequence**, which departs
+from AUD-0020's wording. The reasoning is in D-133: for a recovery run an order
+is not merely unnecessary but wrong, because which recovery verb is right
+depends entirely on the hour. If QA reads the finding as requiring an ordered
+list, this is the place to say so.
+
+**`goal-behind` is not reached by any history in the library**, and is named as
+such by `no-hidden-genericity.test.ts` under D-139. Its sentence is rendered and
+swept in `goal-horizon-and-parts.test.ts` across four combinations of horizon
+and pieces, but no scenario puts a behind goal in front of the owner. A history
+that does would be worth adding.
+
+**The legacy mapper gained no rule for either new record kind**, and that is a
+finding rather than an omission: `mapping.ts`'s registry is keyed on the old
+app's own types, and nothing in it corresponds to a schedule or to a course of
+action. Both new kinds round-trip through backup and restore, and both are in
+`round-trip.test.ts`'s enumeration of all twenty-two.
+
+**The default vitest timeout was raised to 30 seconds.** Two library sweeps
+crossed the five-second default under parallel load only — green on a rerun,
+which is the worst way for a gate to fail. The number is not a licence for slow
+tests; it is the recognition that a sweep over every history is the shape this
+repository's strongest guards take, and a timeout tuned to today's library gets
+weaker every time a scenario is added.
+
+**The two-step growth flow is reachable only by doing it.** No scenario in the
+library puts the growth move in front of the owner as its primary suggestion, so
+the browser test reaches the second step the way he would: ask for something
+else, do it, and answer. That works and is honest, and a fixture with a growth
+result already pending would be a better instrument.
+
+## Deliberate non-features
+
+No generic thread creation. No calendar. No third schedule question. No
+percentage, share or progress bar anywhere — about the owner or about his
+daughter. `hold` cannot name tomorrow, because the app has no model of it.
+
+## Still open for the owner, and not this phase's to close
+
+Q1 (Adaya's age and normative references), Q4 (legacy evidence admissibility),
+Q6 (live model inference — D-025 and D-024 both stand, re-checked against the
+re-cut instrument), Q7 (which emotional dimensions exist) and Q8 (private
+evidence versus the concept registry).
+
+---
+
 # Phase 81 — Correctness and truthfulness
 
 **Status: GREEN — CLOSED after independent QA PASS.**
