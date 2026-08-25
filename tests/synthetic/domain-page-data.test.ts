@@ -115,19 +115,19 @@ describe('a domain page reads the same situation Now and Life were built from', 
   })
 
   it('never claims a domain has nothing out of date while a reading on the same page is tagged out of date — QA-M1', () => {
-    // homeFriction's own freshness window is 7 days; three times that,
-    // floored at a week, is 21 — so a reading 10 days old is genuinely past
+    // homeFriction's own freshness window is 3 days (AUD-0005); three times
+    // that, floored at a week, is 9 — so a reading 7 days old is genuinely past
     // its own window (`stale`, "out of date" on its row) without yet being
     // neglected at the domain level (`quiet`, not `stale`). Both readings
     // are honest; the old copy asserted a blanket "nothing has gone out of
     // date" that the row directly underneath it contradicted.
     const kit = createKit('m1', 'America/Denver', '2026-01-01T00:00:00Z')
     const now = kit.local('2026-07-14', '19:00')
-    const tenDaysAgo = addLocalDays(now, -10, kit.zone)
+    const sevenDaysAgo = addLocalDays(now, -7, kit.zone)
 
     const homeFriction = kit.record(
       'observation',
-      { occurredAt: tenDaysAgo, domains: [DOMAIN.home] },
+      { occurredAt: sevenDaysAgo, domains: [DOMAIN.home] },
       {
         concept: CONCEPT.homeFriction,
         value: { type: 'text', value: 'kitchen counter' },
@@ -136,7 +136,7 @@ describe('a domain page reads the same situation Now and Life were built from', 
     )
     const matters = kit.record(
       'preference',
-      { occurredAt: tenDaysAgo, domains: [DOMAIN.home] },
+      { occurredAt: sevenDaysAgo, domains: [DOMAIN.home] },
       { about: entityRef('place', 'the kitchen'), stance: 'prefers', statement: 'a clear counter' },
     )
 
@@ -233,7 +233,7 @@ describe('a domain page reads the same situation Now and Life were built from', 
 
     const stale = kit.record(
       'observation',
-      { occurredAt: addLocalDays(now, -11, kit.zone), domains: [DOMAIN.home] },
+      { occurredAt: addLocalDays(now, -5, kit.zone), domains: [DOMAIN.home] },
       {
         concept: CONCEPT.homeFriction,
         value: { type: 'text', value: 'kitchen counter' },

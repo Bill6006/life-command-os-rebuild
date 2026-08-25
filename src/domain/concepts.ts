@@ -161,6 +161,18 @@ function localDays(days: number): FreshnessHorizon {
 
 const DURABLE: FreshnessHorizon = { unit: 'durable' }
 
+/**
+ * True of the local day it was recorded on, rather than for N hours — AUD-0005.
+ *
+ * The night that has just ended is the same night at ten in the morning as it
+ * was at half past six. It stops being the answer when the next night has
+ * happened, and the next night is on the other side of midnight.
+ */
+const THIS_LOCAL_DAY: FreshnessHorizon = { unit: 'this-local-day' }
+
+/** True of the part of the day it was recorded in, and gone at its boundary. */
+const THIS_BLOCK: FreshnessHorizon = { unit: 'this-block' }
+
 export const CONCEPT = {
   sleepHours: conceptId('sleep.hours-last-night'),
   sleepQuality: conceptId('sleep.quality-last-night'),
@@ -189,7 +201,18 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     id: CONCEPT.sleepHours,
     label: 'Hours slept last night',
     domain: DOMAIN.sleep,
-    freshness: localDays(1),
+    /*
+     * AUD-0005, and the reproduction that named it: at 06:30 the situation line
+     * read "Wednesday early morning, 8 hours of sleep"; at 10:00 the same day it
+     * read "Wednesday morning". Same value, same night, and the app had lost its
+     * best morning fact at the hour it most needed it — which is what left the
+     * morning with a named recovery limiter and no recovery move (AUD-0003).
+     *
+     * `local-days: 1` counted forward from whenever the reading happened to be
+     * taken. This is true of the day it describes, which is what the concept
+     * actually is.
+     */
+    freshness: THIS_LOCAL_DAY,
     standing: true,
     tracked: 'number',
     privacy: 'normal',
@@ -215,7 +238,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     id: CONCEPT.sleepQuality,
     label: 'Sleep quality last night',
     domain: DOMAIN.sleep,
-    freshness: localDays(1),
+    // The same night, and therefore the same window as the hours it describes.
+    freshness: THIS_LOCAL_DAY,
     tracked: 'scale',
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
@@ -294,7 +318,14 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
      */
     label: 'Usable time now',
     domain: DOMAIN.career,
-    freshness: elapsedHours(4),
+    /*
+     * Free minutes in *this* part of the day, so it expires with the part of
+     * the day rather than four hours after it was said — AUD-0005. An answer
+     * given at half past five about the evening is not still an answer at ten,
+     * and an answer given at ten in the morning has nothing to say about the
+     * afternoon.
+     */
+    freshness: THIS_BLOCK,
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
     // A calendar is genuinely good at this, and is still not the whole evening.
@@ -328,7 +359,28 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     id: CONCEPT.homeFriction,
     label: 'Home friction',
     domain: DOMAIN.home,
-    freshness: localDays(7),
+    /*
+     * Three days, not seven — AUD-0005, and the other half of the pair.
+     *
+     * The audit put these two side by side: last night's sleep expired
+     * mid-morning while "the kitchen table is buried again" stayed current for
+     * a week. The second is the more perishable of the two by a long way — he
+     * clears the table without telling the app — and it was the one that
+     * persisted, so the app was asserting a state of a room from a reading old
+     * enough to be about a different week.
+     *
+     * Three days rather than a number nearer zero because friction in a house
+     * is a standing condition rather than an event: a table that was buried on
+     * Monday is usually still buried on Tuesday, and asking every evening is
+     * section 4.5's failure in the other direction. What goes is the fourth day
+     * onwards, where the honest state is "ask" rather than "assert".
+     *
+     * The audit's other option — retiring it on a completed `reset-space` —
+     * is the better mechanism and is deliberately not done here: it needs the
+     * app to write a derived fact about a room from an outcome answer, which is
+     * new behaviour rather than a corrected claim.
+     */
+    freshness: localDays(3),
     standing: true,
     privacy: 'normal',
     ask: { materialToDecision: false, askWhenStale: true },

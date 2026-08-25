@@ -19,6 +19,20 @@ import {
   createConceptRegistry,
   type TrackedReading,
 } from '../../src/domain/concepts'
+import {
+  civilDateFromDayId,
+  instantAtLocal,
+  parseLocalDayId,
+  timeZone,
+  type Instant,
+  type LocalDayId,
+} from '../../src/domain/time'
+import {
+  approximateHorizonMs,
+  freshnessWindow,
+  isFreshAt,
+  type FreshnessHorizon,
+} from '../../src/domain/windows'
 import { entityRef } from '../../src/domain/entities'
 import type { FactValue } from '../../src/domain/records'
 import { numericValue } from '../../src/intelligence/association'
@@ -109,9 +123,22 @@ describe('concepts', () => {
       unit: 'local-days',
       days: 1,
     })
+    /*
+     * …and last night's sleep is true of the day it describes rather than for a
+     * fixed number of hours after somebody happened to say it — AUD-0005. The
+     * unit is the claim: `local-days: 1` expired a 06:30 reading at 10:00 the
+     * same morning, about the same night.
+     */
     expect(coreConcepts.definitionFor(CONCEPT.sleepHours).freshness).toEqual({
-      unit: 'local-days',
-      days: 1,
+      unit: 'this-local-day',
+    })
+    expect(coreConcepts.definitionFor(CONCEPT.sleepQuality).freshness).toEqual({
+      unit: 'this-local-day',
+    })
+    // How much time there is is a fact about this part of the day, and it goes
+    // when the part of the day does.
+    expect(coreConcepts.definitionFor(CONCEPT.usableTimeTonight).freshness).toEqual({
+      unit: 'this-block',
     })
     expect(coreConcepts.definitionFor(CONCEPT.energy).freshness).toEqual({
       unit: 'elapsed',
@@ -318,5 +345,119 @@ describe('a tracked dimension is one thing, on one scale', () => {
       expect(concept.reliability, `${concept.id}: no reliability`).toBeDefined()
       expect(concept.reliability?.owner, `${concept.id}: no owner reliability`).toBeGreaterThan(0)
     }
+  })
+})
+
+/**
+ * A reading is valid for the thing it describes — AUD-0005.
+ *
+ * The audit put two windows side by side and showed they were the wrong way
+ * round. "Hours slept last night" carried a rolling one-day countdown, so a
+ * reading taken at 06:30 was `known` at 06:30 and `stale` at 10:00 on the same
+ * morning — the same value, about the same night, on the same day — and the
+ * morning lost its best fact at the hour it most needed it. Meanwhile "the
+ * kitchen table is buried again", one of the most perishable claims the model
+ * holds, stayed current for a week.
+ *
+ * These test the two new units directly rather than through a scenario, because
+ * what changed is what a window *means* rather than what any particular history
+ * says.
+ */
+describe('a reading expires with the thing it is about', () => {
+  const DENVER = timeZone('America/Denver')
+
+  const dayId = (value: string): LocalDayId => {
+    const parsed = parseLocalDayId(value)
+    if (parsed === undefined) throw new Error(`not a local day: ${value}`)
+    return parsed
+  }
+
+  const at = (day: string, hour: number, minute = 0): Instant =>
+    instantAtLocal({ ...civilDateFromDayId(dayId(day)), hour, minute, second: 0 }, DENVER)
+
+  const stillFresh = (recordedAt: Instant, horizon: FreshnessHorizon, when: Instant): boolean =>
+    isFreshAt(recordedAt, when, freshnessWindow(CONCEPT.sleepHours, horizon), DENVER)
+
+  it('keeps last night’s sleep for the whole of the day it describes', () => {
+    const horizon: FreshnessHorizon = { unit: 'this-local-day' }
+    const morning = at('2026-05-12', 6, 30)
+
+    // The exact reproduction: known at half past six, and still known at ten.
+    expect(stillFresh(morning, horizon, at('2026-05-12', 6, 30))).toBe(true)
+    expect(stillFresh(morning, horizon, at('2026-05-12', 10))).toBe(true)
+    expect(stillFresh(morning, horizon, at('2026-05-12', 22))).toBe(true)
+    // And gone once the following night has happened, which is what makes it
+    // stop being an answer to "how did you sleep last night".
+    expect(stillFresh(morning, horizon, at('2026-05-13', 0, 30))).toBe(false)
+    expect(stillFresh(morning, horizon, at('2026-05-13', 6, 30))).toBe(false)
+  })
+
+  it('is not a widening — an evening reading goes at the same midnight', () => {
+    /*
+     * Worth asserting explicitly, because a change to a freshness window is a
+     * change to what the app is willing to assert, and section 63 is breached
+     * by widening exactly as much as by narrowing. A reading taken at ten at
+     * night is good for two hours under this rule and was good for a further
+     * twenty-two under the old one.
+     */
+    const horizon: FreshnessHorizon = { unit: 'this-local-day' }
+    const lateEvening = at('2026-05-12', 22)
+
+    expect(stillFresh(lateEvening, horizon, at('2026-05-12', 23, 30))).toBe(true)
+    expect(stillFresh(lateEvening, horizon, at('2026-05-13', 0, 30))).toBe(false)
+  })
+
+  it('ends a block-scoped reading at the boundary of its own block', () => {
+    const horizon: FreshnessHorizon = { unit: 'this-block' }
+
+    // How much time there is is a fact about the morning it was said in.
+    const inTheMorning = at('2026-05-12', 9, 40)
+    expect(stillFresh(inTheMorning, horizon, at('2026-05-12', 11, 59))).toBe(true)
+    expect(stillFresh(inTheMorning, horizon, at('2026-05-12', 12, 1))).toBe(false)
+
+    // The afternoon runs to six, the evening to ten.
+    const inTheAfternoon = at('2026-05-12', 13)
+    expect(stillFresh(inTheAfternoon, horizon, at('2026-05-12', 17, 59))).toBe(true)
+    expect(stillFresh(inTheAfternoon, horizon, at('2026-05-12', 18, 1))).toBe(false)
+
+    const inTheEvening = at('2026-05-12', 19)
+    expect(stillFresh(inTheEvening, horizon, at('2026-05-12', 21, 59))).toBe(true)
+    expect(stillFresh(inTheEvening, horizon, at('2026-05-12', 22, 1))).toBe(false)
+  })
+
+  it('carries a late-night reading over midnight rather than dropping it there', () => {
+    // Late night spans both ends of the day, and a reading taken at eleven is
+    // about the same stretch of time as one taken at one in the morning.
+    const horizon: FreshnessHorizon = { unit: 'this-block' }
+    const beforeMidnight = at('2026-05-12', 23)
+
+    expect(stillFresh(beforeMidnight, horizon, at('2026-05-13', 1))).toBe(true)
+    expect(stillFresh(beforeMidnight, horizon, at('2026-05-13', 3, 59))).toBe(true)
+    expect(stillFresh(beforeMidnight, horizon, at('2026-05-13', 4, 1))).toBe(false)
+  })
+
+  it('gives the readers that need a number one answer rather than three', () => {
+    /*
+     * `association.ts`, `coverage.ts` and `insights.ts` each had their own
+     * `unit === 'local-days' ? … : …` line, which is three places to forget a
+     * new unit in — and forgetting one is silent, because the expression still
+     * compiles and simply reads the wrong field.
+     */
+    expect(approximateHorizonMs({ unit: 'durable' })).toBeUndefined()
+    expect(approximateHorizonMs({ unit: 'local-days', days: 2 })).toBe(2 * 86_400_000)
+    expect(approximateHorizonMs({ unit: 'elapsed', ms: 5_000 })).toBe(5_000)
+    expect(approximateHorizonMs({ unit: 'this-local-day' })).toBe(86_400_000)
+    // The longest block there is, so a fact that lasts all afternoon is not
+    // treated as one that lasts an hour.
+    expect(approximateHorizonMs({ unit: 'this-block' })).toBe(6 * 3_600_000)
+  })
+
+  it('shortens the claim about a room rather than lengthening it', () => {
+    // The other half of the pair. Three days, not seven: he clears the table
+    // without telling the app.
+    expect(coreConcepts.definitionFor(CONCEPT.homeFriction).freshness).toEqual({
+      unit: 'local-days',
+      days: 3,
+    })
   })
 })

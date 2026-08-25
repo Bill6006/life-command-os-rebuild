@@ -47,7 +47,7 @@ import {
 } from './outcomes'
 import type { Situation } from './situation'
 import { hereNowWord } from './vocabulary'
-import type { ConceptId, FreshnessHorizon } from '../domain/windows'
+import { approximateHorizonMs, type ConceptId, type FreshnessHorizon } from '../domain/windows'
 
 /**
  * What the system has learned, said out loud (canonical plan sections 27 and 51).
@@ -1741,9 +1741,9 @@ function coverageCards(situation: Situation): readonly Built[] {
 
 /** Six of this concept's own freshness windows, never under a week. */
 function spanNeededFor(horizon: FreshnessHorizon): number {
-  if (horizon.unit === 'durable') return Number.POSITIVE_INFINITY
-  const days = horizon.unit === 'local-days' ? horizon.days : horizon.ms / 86_400_000
-  return Math.max(TRAJECTORY_SPAN_FLOOR_DAYS, days * TRAJECTORY_SPAN_WINDOWS)
+  const ms = approximateHorizonMs(horizon)
+  if (ms === undefined) return Number.POSITIVE_INFINITY
+  return Math.max(TRAJECTORY_SPAN_FLOOR_DAYS, (ms / 86_400_000) * TRAJECTORY_SPAN_WINDOWS)
 }
 
 interface Reading {

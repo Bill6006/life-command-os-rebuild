@@ -4,10 +4,14 @@ import {
   instant,
   localDayIdAt,
   localWeekIdAt,
+  parseLocalDayId,
+  startOfLocalDay as startOfDay,
   timeZone,
   type Instant,
+  type LocalDayId,
   type TimeZoneId,
 } from '../../src/domain/time'
+import { freshUntil, freshnessWindow } from '../../src/domain/windows'
 import { loadScenario } from './harness'
 
 /**
@@ -27,6 +31,13 @@ const AUCKLAND = timeZone('Pacific/Auckland')
 const UTC = timeZone('UTC')
 const NEW_YORK = timeZone('America/New_York')
 const SYDNEY = timeZone('Australia/Sydney')
+
+/** Midnight opening the named owner-local day. */
+function startOfLocalDay(dayId: string, zone: TimeZoneId): Instant {
+  const parsed: LocalDayId | undefined = parseLocalDayId(dayId)
+  if (parsed === undefined) throw new Error(`not a local day: ${dayId}`)
+  return startOfDay(parsed, zone)
+}
 
 const WEEK_EDGE = instant(Date.parse('2026-01-04T12:00:00Z'))
 const SPRING_FORWARD = instant(Date.parse('2026-03-08T07:30:00Z'))
@@ -111,35 +122,77 @@ describe('G-011 — one instant, several owner-local answers', () => {
 describe('G-011 — freshness is measured in local days, not in 24-hour blocks', () => {
   const loaded = loadScenario('across-timezones')
 
-  it('expires an entry an hour early on the day the clocks go forward', () => {
-    // The entry is 00:30 on 8 March in Denver, and that local day is 23 hours
-    // long. A one-local-day horizon therefore runs out at 00:30 on the 9th,
-    // which is 23 hours later — not 24.
+  const hoursFrom = (from: Instant, to: Instant | undefined): number => {
+    if (to === undefined) throw new Error('that horizon never expires')
+    return (to - from) / 3_600_000
+  }
+
+  it('runs a one-local-day horizon for 23 hours in spring and 25 in autumn', () => {
+    /*
+     * The arithmetic itself, on the unit that still measures elapsed local
+     * days. The entry is 00:30 on 8 March in Denver and that local day is 23
+     * hours long; 31 October into 1 November is 25. Both were worked out from
+     * the calendar rather than read back out of the implementation.
+     */
+    const oneDay = freshnessWindow(CONCEPT.childPresent, { unit: 'local-days', days: 1 })
+    expect(hoursFrom(SPRING_FORWARD, freshUntil(SPRING_FORWARD, oneDay, DENVER))).toBe(23)
+    expect(hoursFrom(FALL_BACK, freshUntil(FALL_BACK, oneDay, DENVER))).toBe(25)
+  })
+
+  it('ends a this-local-day horizon at the owner’s own midnight — AUD-0005', () => {
+    /*
+     * The unit that replaced the countdown for last night's sleep. It is a
+     * calendar boundary rather than a span, so the DST question is the same one
+     * and the answer has to come from the same arithmetic: midnight in Denver
+     * is not midnight anywhere else, and it is not 24 hours after the reading.
+     */
+    const window = freshnessWindow(CONCEPT.sleepQuality, { unit: 'this-local-day' })
+
     expect(localDayIdAt(SPRING_FORWARD, DENVER)).toBe('2026-03-08')
+    expect(freshUntil(SPRING_FORWARD, window, DENVER)).toBe(startOfLocalDay('2026-03-09', DENVER))
 
-    const at22h: Instant = instant(SPRING_FORWARD + 22 * 3_600_000)
-    const at23h: Instant = instant(SPRING_FORWARD + 23 * 3_600_000)
+    expect(localDayIdAt(FALL_BACK, DENVER)).toBe('2026-10-31')
+    expect(freshUntil(FALL_BACK, window, DENVER)).toBe(startOfLocalDay('2026-11-01', DENVER))
 
-    expect(loaded.viewAt(at22h, DENVER).facts.knowledgeFor(CONCEPT.sleepQuality).state).toBe(
-      'explicit',
-    )
-    expect(loaded.viewAt(at23h, DENVER).facts.knowledgeFor(CONCEPT.sleepQuality).state).toBe(
+    // And the same instant lands on a different midnight for a different owner.
+    expect(freshUntil(FALL_BACK, window, UTC)).toBe(startOfLocalDay('2026-11-02', UTC))
+  })
+
+  it('keeps last night’s sleep through the whole of the day it describes', () => {
+    /*
+     * The reproduction AUD-0005 is named for, through the real fact layer. The
+     * old horizon expired a 06:30 reading at 10:00 the same morning — the same
+     * value, about the same night — which is how the morning lost its best fact
+     * at the hour it most needed it.
+     */
+    // The eighth is 23 hours long, so half past midnight plus 22 is half past
+    // eleven the same night, and one hour more is the next day.
+    const stillTheEighth: Instant = instant(SPRING_FORWARD + 22 * 3_600_000)
+    const theNinth: Instant = instant(SPRING_FORWARD + 23 * 3_600_000)
+
+    expect(localDayIdAt(stillTheEighth, DENVER)).toBe('2026-03-08')
+    expect(localDayIdAt(theNinth, DENVER)).toBe('2026-03-09')
+
+    expect(
+      loaded.viewAt(stillTheEighth, DENVER).facts.knowledgeFor(CONCEPT.sleepQuality).state,
+    ).toBe('explicit')
+    expect(loaded.viewAt(theNinth, DENVER).facts.knowledgeFor(CONCEPT.sleepQuality).state).toBe(
       'stale',
     )
   })
 
-  it('expires it an hour late on the day the clocks go back', () => {
-    // 31 October in Denver is 25 hours long, because the clocks go back on the
-    // 1st. The same horizon runs a full hour longer.
-    const at24h: Instant = instant(FALL_BACK + 24 * 3_600_000)
-    const at25h: Instant = instant(FALL_BACK + 25 * 3_600_000)
+  it('lets it go the moment the owner’s day does', () => {
+    // Half past eleven at night on 31 October in Denver: the same reading is
+    // half an hour from being about a night before last.
+    const beforeMidnight: Instant = instant(FALL_BACK + 15 * 60_000)
+    const afterMidnight: Instant = instant(FALL_BACK + 3_600_000)
 
-    expect(loaded.viewAt(at24h, DENVER).facts.knowledgeFor(CONCEPT.sleepQuality).state).toBe(
-      'explicit',
-    )
-    expect(loaded.viewAt(at25h, DENVER).facts.knowledgeFor(CONCEPT.sleepQuality).state).toBe(
-      'stale',
-    )
+    expect(
+      loaded.viewAt(beforeMidnight, DENVER).facts.knowledgeFor(CONCEPT.sleepQuality).state,
+    ).toBe('explicit')
+    expect(
+      loaded.viewAt(afterMidnight, DENVER).facts.knowledgeFor(CONCEPT.sleepQuality).state,
+    ).toBe('stale')
   })
 })
 

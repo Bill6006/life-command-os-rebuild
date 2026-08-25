@@ -18,7 +18,7 @@ import {
   type Instant,
   type TimeZoneId,
 } from '../domain/time'
-import type { ConceptId, FreshnessHorizon } from '../domain/windows'
+import { approximateHorizonMs, type ConceptId, type FreshnessHorizon } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
 
 /**
@@ -227,9 +227,9 @@ const NEGLECT_FLOOR_DAYS = 7
 const DOMAIN_QUIET_DAYS = 28
 
 export function neglectedAfterDaysFor(horizon: FreshnessHorizon): number | undefined {
-  if (horizon.unit === 'durable') return undefined
-  const days = horizon.unit === 'local-days' ? horizon.days : horizon.ms / 86_400_000
-  return Math.max(NEGLECT_FLOOR_DAYS, days * NEGLECT_MULTIPLE)
+  const ms = approximateHorizonMs(horizon)
+  if (ms === undefined) return undefined
+  return Math.max(NEGLECT_FLOOR_DAYS, (ms / 86_400_000) * NEGLECT_MULTIPLE)
 }
 
 // ---------------------------------------------------------------------------

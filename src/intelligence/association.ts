@@ -11,7 +11,7 @@ import {
   type LocalDayId,
   type TimeZoneId,
 } from '../domain/time'
-import type { ConceptId, FreshnessHorizon } from '../domain/windows'
+import { approximateHorizonMs, type ConceptId, type FreshnessHorizon } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
 import { targetKey, type Episode } from './lifecycle'
 import { profileFor } from './moves'
@@ -176,8 +176,7 @@ export function numericValue(value: FactValue): number | undefined {
  * sleep readings six hours apart are not two nights.
  */
 export function maxGapFor(horizon: FreshnessHorizon): number | undefined {
-  if (horizon.unit === 'durable') return undefined
-  return horizon.unit === 'local-days' ? horizon.days * 86_400_000 : horizon.ms
+  return approximateHorizonMs(horizon)
 }
 
 /**
