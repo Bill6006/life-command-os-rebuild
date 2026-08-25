@@ -37,6 +37,7 @@ import { assembleCoverage, type CoverageState } from './coverage'
 import { resolveDirection, type ActiveGoal, type DirectionState } from './direction'
 import { buildLearning, type LearningIndex } from './learning'
 import { collectEpisodes, type Episode, type MoveState } from './lifecycle'
+import type { MoveProfile } from './moves'
 import { booleanValue, hoursValue, minutesValue, narrowKnowledge, ratioValue } from './values'
 import { decisionEntities, horizonWord, withinPhrase } from './vocabulary'
 
@@ -144,6 +145,26 @@ export interface Limiter {
   readonly summary: string
   readonly evidence: readonly RecordId[]
   readonly certainty: Confidence
+}
+
+/**
+ * Whether a move answers what is in the way — QA-81-006.
+ *
+ * One definition, in one place, because there are now three callers and two of
+ * them are in different layers: `bottleneckFit` scores it, `applyConstraints`
+ * protects it, and the acceptance invariant sweeps for it. Two copies of this
+ * rule would eventually disagree, and the way they would disagree is that the
+ * filter would remove something the evaluator thought was the only good answer.
+ *
+ * Only `recovery` and `capacity` have an answer of this shape. `time` is
+ * answered by fitting the time rather than by a kind of move, and `coverage` is
+ * the app's own blind spot rather than an obstacle at all (D-063) — the
+ * dimension scores it zero either way, so there is nothing here to protect.
+ */
+export function answersLimiter(limiter: Limiter | undefined, profile: MoveProfile): boolean {
+  if (limiter === undefined) return false
+  if (limiter.kind !== 'recovery' && limiter.kind !== 'capacity') return false
+  return profile.demand === 'restorative'
 }
 
 /** What each kind of limiter is called where the owner reads it. */

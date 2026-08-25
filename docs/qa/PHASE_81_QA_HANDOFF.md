@@ -1,5 +1,193 @@
 # Phase 81 independent QA handoff
 
+## Round 2 — repair retest
+
+**Phase:** 81 — correctness and truthfulness
+
+**Round:** 2
+
+**QA system:** Codex, the same independent QA conversation that wrote Round 1
+(D-077, D-090)
+
+**Overall result:** **FAIL — keep Phase 81 YELLOW**
+
+All five Round 1 findings are repaired. The retest nevertheless found one new
+blocking interaction between two of those repairs and one new owner-visible
+copy defect. The builder must repair those two collateral findings; QA did not
+change application or product code.
+
+### Build tested
+
+| Fact | Result |
+| --- | --- |
+| Product checkpoint | `1fc64204369f7be36d941c7cc4c93c1e60b8360c` |
+| Deployed SHA read live | `b60139633906d80f5f6872b39c6285890ac876c2` |
+| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Relationship | **PASS.** `node scripts/checkpoint-equivalence.mjs 1fc6420 --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json` found five post-checkpoint changes — `docs/DECISION_LOG.md`, `docs/DEFECT_LEDGER.md`, `docs/NEXT_PROMPT.md`, `docs/PHASE_STATUS.md`, and `scripts/android-gate.mjs` — and none is bundle-relevant. The deployed product is therefore equivalent to the checkpoint under D-097. |
+| QA report commit | Not committed by QA. |
+
+As in Round 1, the local Node trust store did not validate the GitHub Pages
+certificate. The equivalence and Android commands used the narrow
+`NODE_TLS_REJECT_UNAUTHORIZED=0` workaround after the deployment had loaded
+normally over HTTPS and its SHA had been read in the in-app browser.
+
+### Round 1 findings retested
+
+| Finding | Result | Independent evidence |
+| --- | --- | --- |
+| QA-81-001 — capacity limiter had no restorative candidate | **REPAIRED** | The source sweep reaches `capacity` at all five day blocks and finds a restorative candidate; `capacity-fit` is positive for restorative, zero for light, and negative for effortful. The focused recovery file passed inside the 1,321-test clean verification. |
+| QA-81-002 — recovery copy endorsed subnetting | **REPAIRED** | On the deployed “A morning after three bad nights” history at 15:00 and 20:00, recovery wins and the reason says rest is short; it no longer says subnetting is the better call. The all-history/all-block verdict sweep also passed. |
+| QA-81-003 — ignored kitchen recommendation repeated four times | **REPAIRED** | In one uninterrupted deployed session on “A week pointed at the house,” the answer was kitchen at 06:30 and 10:30, hands-on lab at 14:30, and recall practice at 19:30. The exact four-identical-sentences reproduction is gone, and the all-held-back copy regression passed. |
+| QA-81-004 — a third suggestion followed the second refusal | **REPAIRED** | Deployed at 19:30: first refusal changed the move; second refusal produced “This is not landing” and a soreness question, with no third move; answering reopened recommendations; the third refusal stopped the block; advancing four hours reset it. |
+| QA-81-005 — clean verify timed out | **REPAIRED** | `npm run verify` passed from the clean tracked tree: 59 files, 1,321/1,321 tests, then a successful production build. The imported-origin file completed within its ordinary test budget. |
+
+### QA-81-001 adjudication
+
+**Accept the builder's judgment.** On the sore-and-rested fixture, the
+sleep-protection move may outrank time with Adaya, 0.354 to 0.098. The remaining
+gap comes from `bottleneck-fit` on an explicit capacity bottleneck, not from the
+old false inference that soreness argues against a light move. Section 10 item
+13 protects the distinct Adaya move from being merged or made conditional; it
+does not grant it unconditional priority. The repaired dimension now says only
+what the evidence supports: restorative `+0.48`, light `0.00`, effortful
+`-0.66` after weighting. No further change is required for this adjudication.
+
+### New findings
+
+#### QA-81-006 — the repetition filter can remove the only move that protects recovery
+
+- **Severity:** Blocker — regression against Phase 81 gate item 2 and the
+  recovery/capacity invariant.
+- **Class:** a listening constraint applied without preserving the safety
+  invariant it now competes with. The hard “shown twice” filter is allowed to
+  eliminate the only candidate that answers a dominant limiter, after which an
+  effortful move can win on the same unchanged facts.
+- **Exact deployed reproduction:** in one uninterrupted session, load **A
+  morning after three bad nights**. At 15:00 open Now: _“Take the rest of the
+  afternoon as recovery — no subnetting session.”_ Advance to 20:00: recovery
+  still wins. Advance to 23:00 without pressing a lifecycle action: Now changes
+  to _“RECALL PRACTICE — Spend 10 minutes recalling subnetting…”_ The Situation
+  and limiter copy still say the owner is nine hours short of sleep.
+- **Expected:** the anti-repetition behaviour must not revive the exact study
+  advice the recovery repair exists to prevent. The app may vary the recovery
+  wording, honestly choose no action, or use another recovery-compatible move;
+  it may not remove every answer to the named dominant limiter and then
+  prescribe effort against it.
+- **Likely seam:** `shownEnoughToday` in `constraints.ts` rejects every candidate
+  family uniformly. D-124 repaired repetition locally but did not test its
+  interaction with the invariant repaired under D-122.
+- **Required regression:** reproduce the exact uninterrupted 15:00 → 20:00 →
+  23:00 ledger sequence on `morning-after-bad-nights`, and sweep the class: a
+  hard interaction filter must never leave recovery/capacity dominant while an
+  effortful recommendation wins because all compatible answers were filtered.
+  The test must fail when the unsafe uniform filter is faithfully
+  reintroduced.
+
+#### QA-81-007 — late-night no-action copy drops its article
+
+- **Severity:** Major — owner-visible broken English in the phase devoted to
+  truthful, horizon-correct sentences.
+- **Class:** a grammatical frame composed from a horizon fragment whose
+  contract is only semantic. A fragment that works as _“the evening”_ is not
+  necessarily valid after _“worth”_ at every block.
+- **Exact deployed reproduction:** on **A week pointed at the house** at 19:30,
+  press `Can't right now` twice, answer the soreness question with `Nothing`,
+  press `Can't right now` a third time, then advance four hours to 23:30. The
+  correctly reset block reaches the real no-action state and prints: _“Nothing
+  on the list is worth night it would cost. That is a real answer.”_
+- **Expected:** grammatical owner-visible copy at late night without falsely
+  calling it evening.
+- **Root seam:** `noActionCopy` composes `Nothing on the list is worth
+  ${blockNoun(block)} it would cost`; the late-night fragment does not include
+  the article the sentence frame requires.
+- **Required regression:** enumerate every horizon/block through every
+  no-action copy branch and assert the rendered sentence, not just forbidden
+  time words. Faithfully restoring the late-night fragment mismatch must fail
+  the guard.
+
+### Collateral and standing gates
+
+| Gate | Round 2 result |
+| --- | --- |
+| `npm run verify` from the clean tracked tree | **PASS** — format, lint, typecheck, 59 files / 1,321 tests, production build |
+| Browser suite, 360 / 430 / 1,280px | **PASS — 495/495** (165 each), 8.3 minutes; no retry or `page.goto` transient |
+| Android-style gate against deployed Preview | **PASS — 86/86**, Galaxy S24-class 360×780, touch, DPR 3, Android Chrome UA |
+| Complete synthetic scenario × block sweep | **PASS** inside `npm run verify` — 12/12 assertions |
+| Build/checkpoint equivalence | **PASS** — live `b601396` is bundle-equivalent to `1fc6420` |
+| Cold owner-use and collateral screens | **PASS except the two findings above.** Now, Life, Timeline, Insights, domain pages, evidence panels, QA library, More/Data, navigation, privacy, keyboard focus, overflow and fixed-nav coverage passed the three-width matrix. |
+
+The clean tracked tree was not altered during the retest before this report.
+The one local dependency reinstall needed by the QA harness changed no tracked
+file.
+
+### Independent defect reintroductions
+
+The two most load-bearing Round 1 repairs were independently reintroduced one
+at a time in an isolated detached worktree at `1fc6420`, then restored before
+the worktree was removed:
+
+| Reintroduction | Result |
+| --- | --- |
+| Remove D-124's hard shown-twice rejection while leaving its score penalty | **CAUGHT.** `refusal-and-veto.test.ts` failed 3/22: the exact kitchen sentence returned at all four hours, no all-held state was reachable, and the twice-shown move came back a third time. |
+| Remove D-125's engine branch that stops after the second refusal | **CAUGHT.** The same file failed 4/22: the exact reproduction offered a third move, the all-history sweep found a third move, the no-question fallback offered again, and the answer-reopen precondition disappeared. |
+| Both repairs restored | **PASS — 22/22.** |
+
+These are faithful reintroductions of the repaired root seams, not weakened
+neighbouring examples. They establish that the new guards really hold the
+original two interaction repairs. QA-81-006 is a missing interaction invariant
+between those otherwise-working repairs.
+
+### Preserved scope and deferrals
+
+The Round 1 passed items were not relitigated except where the repair touched
+them. Owner questions Q1, Q4, Q6, Q7 and Q8 remain open. AUD-0027's refusal
+history sentence remains deliberately unshipped under D-115. AUD-0035 remains
+Phase 82. The Phase 8 carry-forwards and the explicit non-features remain
+unchanged. No new domain, screen, capability, provider, sync, notification,
+scoring redesign or audit expansion is authorized by this FAIL.
+
+### Verdict and repair handoff
+
+**Phase 81 remains YELLOW.** Repair QA-81-006 and QA-81-007 at their defect
+classes, add focused regressions that fail under faithful reintroduction, and
+check siblings under canonical-plan section 42. Do not reopen the five repaired
+Round 1 findings or change the accepted sore/rested ordering unless a new
+reproduction proves a separate defect.
+
+After the focused repairs, rerun `npm run verify`, all 495 browser cases at the
+three widths, the deployed Android-style gate, and the complete block sweep.
+Deploy a new product checkpoint and prove its relationship to the live deployed
+SHA with `scripts/checkpoint-equivalence.mjs`, not string equality.
+
+Do not edit this QA report. Update the builder-owned phase status, defect
+ledger, decision log if a decision changes, and `docs/NEXT_PROMPT.md`. Remain
+YELLOW and address Round 3 to this SAME Codex QA conversation. Include the
+repaired checkpoint, live deployed SHA, equivalence result, exact gate counts,
+preserved deferrals, recommended Codex model/reasoning level, conversation
+instruction, and a short standalone launcher under D-082/D-092.
+
+**Model:** strongest Claude model available (Opus-class)
+
+**Intelligence level:** Max
+
+**Conversation:** CURRENT — original Phase 81 Claude builder conversation
+
+```text
+Continue the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_81_QA_HANDOFF.md in full and execute the current Phase 81
+Round 2 repair handoff exactly as written.
+
+Do not ask me to paste the file contents.
+```
+
+---
+
+## Round 1 — original submission
+
 **Phase:** 81 — correctness and truthfulness  
 **Round:** 1  
 **QA system:** Codex, independent of the builder conversation (D-077, D-090)  
@@ -382,5 +570,3 @@ repair handoff exactly as written.
 
 Do not ask me to paste the file contents.
 ```
-
-<!-- LCO_COMPLETE -->

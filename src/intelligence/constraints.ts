@@ -6,7 +6,7 @@ import { addLocalDays, blockOf, localDayIdAt, type Instant } from '../domain/tim
 import { blockNoun, horizonWord } from './vocabulary'
 import type { Candidate } from './candidates'
 import { profileFor } from './moves'
-import type { PriorMove, Situation } from './situation'
+import { answersLimiter, type PriorMove, type Situation } from './situation'
 
 /**
  * The constraint filter (canonical plan section 17.1, step 6).
@@ -43,6 +43,15 @@ export type RejectionReason =
   | 'subject-not-available'
   /** Offered and settled recently enough that offering it again is noise. */
   | 'just-covered'
+  /**
+   * It would have taken the place of the one move that answers the
+   * limiter — QA-81-006.
+   *
+   * Not a judgement about the move. It is the app declining to change its mind
+   * about what the owner needs because of a fact about what it has already put
+   * on a screen.
+   */
+  | 'not-instead-of-that'
 
 export interface Rejection {
   readonly candidate: string
@@ -207,6 +216,8 @@ export function applyConstraints(
 
   const strain = situation.capacity.strain
   const usable = situation.usableMinutes
+  /** Which candidates went for having been read already, rather than settled. */
+  const repetition: Candidate[] = []
 
   for (const proposed of candidates) {
     const profile = profileFor(proposed.semantics.target.verb)
@@ -276,6 +287,7 @@ export function applyConstraints(
     }
 
     if (shownEnoughToday(proposed, situation)) {
+      repetition.push(proposed)
       reject(
         proposed,
         'just-covered',
@@ -285,6 +297,43 @@ export function applyConstraints(
     }
 
     kept.push(proposed)
+  }
+
+  /*
+   * A rule about listening does not get to change the app's mind — QA-81-006.
+   *
+   * The repetition rule (D-124) exists so the app stops saying the same thing
+   * at four hours of one day. It removes a candidate from the running, and the
+   * ranking is then computed over what is left — so on "A morning after three
+   * bad nights", once the recovery move had been read twice, the runner-up won:
+   * at 23:00, nine hours short of sleep, the app recommended ten minutes of
+   * subnetting recall. That is the exact advice the whole of AUD-0003 exists to
+   * prevent, and it is the advice the app had spent the day declining, in a
+   * sentence that names it — "no subnetting session". Nothing about his sleep
+   * had changed. Only the app's record of what it had already displayed.
+   *
+   * So the two rules are ordered rather than left to compete. Withholding an
+   * answer may make the app stop speaking; it may not promote something the
+   * situation argues against into the answer's place. What is left when that
+   * happens is a real no-action state, and `noActionCopy` says why it is one.
+   *
+   * Nothing fires here unless every answer to the limiter is gone AND at least
+   * one of them went for repetition — a history that simply has no restorative
+   * move is the invariant's business (QA-81-001), not this rule's.
+   */
+  const answered = (candidate: Candidate): boolean =>
+    answersLimiter(situation.limiter, profileFor(candidate.semantics.target.verb))
+
+  if (repetition.some(answered) && !kept.some(answered)) {
+    const displaced = [...kept]
+    kept.length = 0
+    for (const candidate of displaced) {
+      reject(
+        candidate,
+        'not-instead-of-that',
+        'what is in the way still stands, and this does not answer it',
+      )
+    }
   }
 
   return { kept, rejected }

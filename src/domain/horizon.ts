@@ -68,13 +68,32 @@ export function hereNowWord(block: DayBlock | undefined): string {
   }
 }
 
-/** The part of the day as a plain noun phrase, for a sentence that needs one. */
+/**
+ * The part of the day as a bare noun phrase, for a sentence that needs one.
+ *
+ * **Bare** is the contract, and it is load-bearing — QA-81-007. Every caller
+ * drops this into a frame that expects a noun it can put a preposition in front
+ * of or a clause after: "worth ⟨this⟩ it would cost", "most of ⟨this⟩", "before
+ * ⟨this⟩ gets away", "⟨This⟩ is limited". Two arms used to break that.
+ *
+ * `late-night` returned "tonight", which is an adverb rather than a noun
+ * phrase, and the no-action screen at half past eleven read *"Nothing on the
+ * list is worth tonight it would cost."* The default arm returned "the time you
+ * have", which is a noun phrase but not a bare one — it already carries a
+ * relative clause, so the same frame produced *"worth the time you have it
+ * would cost"*.
+ *
+ * The fix is the contract rather than the two sentences: every arm is now a
+ * determiner and at most two words, and `no-action-copy.test.ts` holds that
+ * shape against every block. `hereNowWord` and `horizonWord` are where an
+ * adverb belongs, and `withinPhrase` already reaches for "tonight" itself.
+ */
 export function blockNoun(block: DayBlock | undefined): string {
   switch (block) {
     case 'evening':
       return 'the evening'
     case 'late-night':
-      return 'tonight'
+      return 'the night'
     case 'afternoon':
       return 'the afternoon'
     case 'early-morning':
@@ -82,7 +101,7 @@ export function blockNoun(block: DayBlock | undefined): string {
     case 'morning':
       return 'the morning'
     default:
-      return 'the time you have'
+      return 'the time'
   }
 }
 

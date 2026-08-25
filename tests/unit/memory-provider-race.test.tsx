@@ -144,6 +144,9 @@ let seen: {
   zone: TimeZoneId
   weekStartsOn: WeekStartDay
   travelled: boolean
+  shown: readonly { move: string; count: number }[]
+  noteShown: (move: string) => void
+  loadDocument: (json: string, label?: string) => Promise<void>
   append: (r: CanonicalRecord[]) => void
   clear: () => void
   travelTo: (at: Instant) => void
@@ -180,6 +183,9 @@ async function mount() {
       zone: memory.zone,
       weekStartsOn: memory.weekStartsOn,
       travelled: memory.travelled,
+      shown: memory.shown,
+      noteShown: (move) => memory.noteShown(move),
+      loadDocument: (json, label) => memory.loadDocument(json, label),
       append: (r) => void memory.append(r),
       clear: () => void memory.clear(),
       travelTo: (at) => memory.travelTo(at),
@@ -348,5 +354,77 @@ describe('the provider consults the rule before it publishes', () => {
 
       expect(seen.source, 'an overtaken return moved the screen anyway').toBe('laboratory')
     })()
+  })
+})
+
+describe('QA-81-006 — what has been on screen is about the history it was on', () => {
+  /*
+   * The session ledger counts screens (D-118), and a screen is about a
+   * history. Swapping the history leaves the counts about nothing.
+   *
+   * Not reachable by an owner, who has one history. Entirely reachable by an
+   * auditor, who loads one fixture and then another inside a minute — and the
+   * second fixture then arrives with a move already used up, on a screen
+   * nobody could otherwise get to. The builder's own Android gate hit exactly
+   * this and reported the wrong screen for it.
+   */
+  it('forgets what was on screen when the laboratory takes a different history', async () => {
+    await mount()
+    expect(seen.source).toBe('laboratory')
+
+    await act(async () => {
+      seen.noteShown('home/reset-space/place:the-kitchen')
+      await Promise.resolve()
+    })
+    expect(seen.shown.map((entry) => entry.move)).toEqual(['home/reset-space/place:the-kitchen'])
+
+    const other = JSON.stringify({
+      format: 'life-command-os/canonical',
+      schemaVersion: 1,
+      exportedAt: '2026-02-15T21:00:00.000Z',
+      records: [
+        {
+          id: '01JQWNXTHER000000000000000',
+          schemaVersion: 1,
+          kind: 'observation',
+          occurredAt: '2026-02-15T21:00:00.000Z',
+          recordedAt: '2026-02-15T21:00:00.000Z',
+          zone: 'America/Denver',
+          domains: ['home'],
+          entities: [],
+          privacy: 'normal',
+          provenance: { source: 'synthetic', writtenBy: 'test' },
+          concept: 'home.friction',
+          value: { type: 'text', value: 'another invented evening' },
+          method: 'self-report',
+        },
+      ],
+      entities: [],
+      malformed: [],
+    })
+    await act(async () => {
+      await seen.loadDocument(other, 'Another history')
+    })
+
+    expect(seen.snapshot.records.map((entry) => entry.id)).toEqual(['01JQWNXTHER000000000000000'])
+    expect(seen.shown, 'a move arrived already used up, from a different life').toEqual([])
+  })
+
+  it('forgets it again when he goes back to his own history', async () => {
+    await mount()
+    await act(async () => {
+      seen.noteShown('home/reset-space/place:the-kitchen')
+      await Promise.resolve()
+    })
+    expect(seen.shown.length).toBe(1)
+
+    await act(async () => {
+      seen.clear()
+      await Promise.resolve()
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+    expect(seen.source).toBe('owner')
+    expect(seen.shown, 'the laboratory followed him home').toEqual([])
   })
 })

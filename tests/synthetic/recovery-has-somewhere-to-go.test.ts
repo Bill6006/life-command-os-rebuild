@@ -6,7 +6,8 @@ import { blockOf, instant, timeZone, type DayBlock, type Instant } from '../../s
 import { generateCandidates, type Candidate } from '../../src/intelligence/candidates'
 import { applyConstraints } from '../../src/intelligence/constraints'
 import { profileFor } from '../../src/intelligence/moves'
-import { assembleSituation } from '../../src/intelligence/situation'
+import { decide } from '../../src/intelligence/engine'
+import { assembleSituation, type ShownMove } from '../../src/intelligence/situation'
 import { buildView } from '../../src/memory/view'
 import { snapshotFromWire } from '../../src/memory/snapshot'
 import { createKit } from '../../src/synthetic/kit'
@@ -604,5 +605,238 @@ describe('AUD-0003 — a named limiter has somewhere to go, at every hour', () =
     const row = decision.trace.ranking.find((entry) => entry.id === effortful!.id)
     const penalty = row?.dimensions.find((entry) => entry.name === 'capacity-fit')
     expect(penalty?.value ?? 0, 'a sore body stopped marking effort down').toBeLessThan(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// QA-81-006 — the invariant survives the rule that competes with it
+// ---------------------------------------------------------------------------
+
+/**
+ * What is in the way does not stop being in the way because he has read the
+ * answer.
+ *
+ * Independent QA found this between two repairs that each worked. D-122 gave
+ * the capacity limiter a move; D-124 stopped the app putting the same move on
+ * screen more than twice a day. Neither was tested against the other, and the
+ * interaction is the defect: once the recovery move had been read twice, the
+ * filter removed it, the ranking was recomputed over what was left, and the
+ * runner-up won. On "A morning after three bad nights" that runner-up is ten
+ * minutes of subnetting recall — recommended at eleven at night to a man nine
+ * hours short of sleep, by an app that had spent the same day saying "no
+ * subnetting session" in the sentence above it.
+ *
+ * Nothing about his sleep changed between the three screens. The only thing
+ * that changed was the app's record of what it had already displayed, and a
+ * record of what has been displayed is not evidence about what is good for
+ * him.
+ *
+ * The invariant these tests hold is therefore not "a restorative candidate
+ * exists" — that is the generator's business and QA-81-001's. It is: **a rule
+ * about repetition may stop the app speaking, and may not change what it
+ * says.**
+ */
+describe('QA-81-006 — a listening rule does not get to change the answer', () => {
+  /** The hours the audit reproduction walks, in order, in one session. */
+  const SEQUENCE = [15, 20, 23]
+
+  /** Replay one history across a day, keeping the ledger the surface keeps. */
+  function acrossTheDay(id: string, hours: readonly number[]) {
+    const scenario = SCENARIOS.find((entry) => entry.id === id)
+    expect(scenario, `${id} is gone`).toBeDefined()
+
+    const loaded = snapshotFromWire(scenario!.build())
+    const steps: { hour: number; decision: ReturnType<typeof decideOn> }[] = []
+    let shown: readonly ShownMove[] = []
+
+    for (const hour of hours) {
+      const now = movedTo(scenario!.now, `${String(hour).padStart(2, '0')}:00`, scenario!.zone)
+      const moment = {
+        now,
+        zone: scenario!.zone,
+        weekStartsOn: (scenario!.weekStartsOn ?? 1) as 1,
+        shown,
+      }
+      const decision = decide(buildView(loaded.snapshot, moment), moment)
+      steps.push({ hour, decision })
+
+      const move = decision.evaluation?.candidate.id
+      if (move === undefined) continue
+      shown = [
+        ...shown.filter((entry) => entry.move !== move),
+        {
+          move,
+          dayId: decision.situation.dayId,
+          at: now,
+          count: (shown.find((entry) => entry.move === move)?.count ?? 0) + 1,
+        },
+      ]
+    }
+    return steps
+  }
+
+  it('does not prescribe the study session it spent the day declining', () => {
+    /*
+     * The exact reproduction: 15:00, 20:00, 23:00 on "A morning after three bad
+     * nights", one uninterrupted session, no lifecycle action pressed.
+     */
+    const steps = acrossTheDay('morning-after-bad-nights', SEQUENCE)
+    expect(steps.length, 'the sequence did not run').toBe(3)
+
+    for (const step of steps) {
+      expect(
+        step.decision.situation.limiter?.kind,
+        `${step.hour}:00 stopped naming a limiter`,
+      ).toBe('recovery')
+    }
+
+    const [afternoon, evening, late] = steps
+    for (const step of [afternoon!, evening!]) {
+      const verb = step.decision.evaluation?.candidate.semantics.target.verb
+      expect(verb, `${step.hour}:00 no longer offers anything`).toBeDefined()
+      expect(profileFor(verb!).demand, `${step.hour}:00 stopped answering the limiter`).toBe(
+        'restorative',
+      )
+    }
+
+    // And the third hour, which is the one that was wrong. Whatever it says, it
+    // is not allowed to be a move that does not answer what it has just named.
+    const verb = late!.decision.evaluation?.candidate.semantics.target.verb
+    if (verb !== undefined) {
+      expect(
+        profileFor(verb).demand,
+        `23:00 recommended ${late!.decision.explanation?.rendered.sentence}`,
+      ).toBe('restorative')
+    }
+    const spoken = `${late!.decision.explanation?.rendered.sentence ?? ''} ${
+      late!.decision.noAction?.headline ?? ''
+    } ${late!.decision.noAction?.detail ?? ''}`
+    expect(spoken, 'the app recommended the thing it had been declining all day').not.toMatch(
+      /recalling subnetting|subnetting session before/i,
+    )
+  })
+
+  it('says why it has nothing rather than blaming the hour', () => {
+    // The state the repair creates is a real no-action state, and D-114 does
+    // not stop applying to it. "None of them suit where you actually are" would
+    // be false: one of them suited exactly, and it is being held back.
+    const steps = acrossTheDay('morning-after-bad-nights', SEQUENCE)
+    const late = steps[steps.length - 1]!.decision
+    expect(late.kind).toBe('no-action')
+    expect(late.noAction?.detail, late.noAction?.detail).not.toMatch(/none of them suit/i)
+    expect(late.noAction?.detail).toMatch(/already been in front of you/i)
+  })
+
+  it('holds across the library, at every hour of a kept day', () => {
+    /*
+     * The class. Swept with the ledger running, because the defect only exists
+     * once something has been shown twice — a sweep that decides each hour from
+     * a clean session cannot reach it, which is why every existing sweep was
+     * green.
+     */
+    const offenders: string[] = []
+    let reached = 0
+
+    for (const scenario of SCENARIOS) {
+      const loaded = snapshotFromWire(scenario.build())
+      let shown: readonly ShownMove[] = []
+
+      for (const { time } of EVERY_BLOCK) {
+        const now = movedTo(scenario.now, time, scenario.zone)
+        const moment = {
+          now,
+          zone: scenario.zone,
+          weekStartsOn: (scenario.weekStartsOn ?? 1) as 1,
+          shown,
+        }
+        const decision = decide(buildView(loaded.snapshot, moment), moment)
+        const limiter = decision.situation.limiter
+
+        const answering = decision.trace.proposed.filter(
+          (proposed) => profileFor(proposed.verb).demand === 'restorative',
+        )
+        const withheld = answering.some((proposed) =>
+          decision.trace.rejected.some(
+            (row) => row.candidate === proposed.id && row.reason === 'just-covered',
+          ),
+        )
+
+        if (withheld && (limiter?.kind === 'recovery' || limiter?.kind === 'capacity')) {
+          // The state, counted whether or not anything won — saying nothing is
+          // one of the correct outcomes, so a counter that only saw moves would
+          // read zero the moment the repair worked.
+          reached += 1
+          if (decision.evaluation !== undefined) {
+            const demand = profileFor(decision.evaluation.candidate.semantics.target.verb).demand
+            if (demand !== 'restorative') {
+              offenders.push(
+                `${scenario.id} at ${time}: ${limiter.kind} still stands and it offered a ${demand} move — ${decision.explanation?.rendered.sentence}`,
+              )
+            }
+          }
+        }
+
+        const move = decision.evaluation?.candidate.id
+        if (move === undefined) continue
+        shown = [
+          ...shown.filter((entry) => entry.move !== move),
+          {
+            move,
+            dayId: decision.situation.dayId,
+            at: now,
+            count: (shown.find((entry) => entry.move === move)?.count ?? 0) + 1,
+          },
+        ]
+      }
+    }
+
+    expect(offenders).toEqual([])
+    // Vacuity is the failure mode this whole finding is about: the sweep that
+    // missed it did so by never reaching the state. If the withheld-answer
+    // state stops being reachable, this test has stopped asserting anything.
+    expect(
+      reached,
+      'no history ever reaches a withheld answer, so this sweep proves nothing',
+    ).toBeGreaterThan(0)
+  })
+
+  it('leaves the rule alone where the answer is not what was withheld', () => {
+    /*
+     * The bound. The rule may only fire when the move taken off the table was
+     * itself an answer to the limiter — otherwise every ordinary repetition
+     * under a `time` or `coverage` limiter would blank the screen, which would
+     * be a far worse defect than the one being repaired.
+     */
+    const scenario = SCENARIOS.find((entry) => entry.id === 'week-pointed-at-home')
+    expect(scenario, 'the history this is bounded against is gone').toBeDefined()
+
+    const loaded = snapshotFromWire(scenario!.build())
+    const now = movedTo(scenario!.now, '19:30', scenario!.zone)
+    const first = decide(buildView(loaded.snapshot, { now, zone: scenario!.zone }), {
+      now,
+      zone: scenario!.zone,
+      weekStartsOn: 1,
+    })
+    const move = first.evaluation?.candidate.id
+    expect(move, 'the history no longer proposes anything').toBeDefined()
+    expect(
+      profileFor(first.evaluation!.candidate.semantics.target.verb).demand,
+      'this bound needs a move that does not answer a recovery limiter',
+    ).not.toBe('restorative')
+
+    const twice = {
+      now,
+      zone: scenario!.zone,
+      weekStartsOn: 1 as const,
+      // An hour earlier, because the ledger deliberately ignores an entry
+      // stamped at the moment being decided — noting a render must not change
+      // the render it is noting.
+      shown: [
+        { move: move!, dayId: first.situation.dayId, at: instant(now - 3_600_000), count: 2 },
+      ],
+    }
+    const after = decide(buildView(loaded.snapshot, twice), twice)
+    expect(after.kind, 'an ordinary repetition blanked the screen').toBe('move')
+    expect(after.evaluation?.candidate.id).not.toBe(move)
   })
 })

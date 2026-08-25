@@ -6,7 +6,7 @@ import type { Candidate } from './candidates'
 import type { LearnedEffect } from './learning'
 import { profileFor, type MoveProfile } from './moves'
 import { blockNoun, hereNowWord, horizonWord } from './vocabulary'
-import type { Situation } from './situation'
+import { answersLimiter, type Situation } from './situation'
 
 /**
  * The candidate evaluator (canonical plan sections 17.1 step 7, and 19).
@@ -200,7 +200,9 @@ function bottleneckFit(situation: Situation, profile: MoveProfile, friction: num
   }
 
   if (limiter.kind === 'recovery' || limiter.kind === 'capacity') {
-    if (profile.demand === 'restorative') {
+    // `answersLimiter` rather than the demand directly, because the filter now
+    // protects whatever this branch rewards and the two must not drift apart.
+    if (answersLimiter(limiter, profile)) {
       return {
         name: 'bottleneck-fit',
         value: 0.95,

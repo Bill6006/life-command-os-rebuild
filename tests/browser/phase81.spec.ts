@@ -22,6 +22,21 @@ async function goToNow(page: Page) {
   await expect(page.getByRole('heading', { level: 1, name: 'Now' })).toBeVisible()
 }
 
+/**
+ * Move the laboratory clock, the way an owner returning to it would.
+ *
+ * A hash change on the same document rather than a reload, because the session
+ * ledger is what both of the findings below turn on and a reload would clear
+ * it — which is also why neither was visible to any test that decides one hour
+ * at a time from a clean start.
+ */
+async function travel(page: Page, direction: '−' | '+', hours: number) {
+  await page.goto(`${APP}#/qa`)
+  await expect(page.getByRole('heading', { level: 1, name: 'QA' })).toBeVisible()
+  const button = page.getByRole('button', { name: `${direction}1 hour` })
+  for (let step = 0; step < hours; step += 1) await button.click()
+}
+
 // ---------------------------------------------------------------------------
 // AUD-0008 — the block sweep
 // ---------------------------------------------------------------------------
@@ -247,5 +262,92 @@ test.describe('two refusals in one block', () => {
     await page.getByTestId('now-actions').getByRole('button', { name: "Can't right now" }).click()
     await expect(headline).toContainText('Nothing then')
     await expect(page.getByTestId('now-reason')).toContainText('part of the day')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// QA-81-006 — the repetition rule and the limiter, on one screen
+// ---------------------------------------------------------------------------
+
+test.describe('a day where the recovery answer has already been read', () => {
+  test('does not end up prescribing the study session it spent the day declining', async ({
+    page,
+  }) => {
+    /*
+     * QA's reproduction, in one session: "A morning after three bad nights" at
+     * 15:00, 20:00 and 23:00, pressing nothing. What it used to end on was
+     * "Spend 10 minutes recalling subnetting", at eleven at night, to a man the
+     * same screen still described as nine hours short of sleep — because the
+     * repetition rule had removed the recovery move and the runner-up won.
+     *
+     * The unit suite could not see it: it decides an hour at a time from a
+     * clean session, and the defect only exists once something has been on
+     * screen twice.
+     */
+    await loadInQa(page, 'A morning after three bad nights')
+
+    await travel(page, '+', 5)
+    await goToNow(page)
+    const headline = page.locator('.primary-surface__headline')
+    await expect(headline).toContainText('recovery')
+
+    await travel(page, '+', 5)
+    await goToNow(page)
+    await expect(headline).toContainText('recovery')
+
+    await travel(page, '+', 3)
+    await goToNow(page)
+
+    // Whatever it says now, it is not the thing it has been declining all day.
+    const screen = page.locator('.screen')
+    await expect(screen).not.toContainText('recalling subnetting')
+    await expect(page.getByTestId('now-premise')).toContainText('short on sleep')
+    // And it says why it has nothing, rather than blaming the hour for it.
+    await expect(page.getByTestId('now-reason')).toContainText('already been in front of you')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// QA-81-007 — the sentence at half past eleven
+// ---------------------------------------------------------------------------
+
+test.describe('the no-action screen at late night', () => {
+  test('is a sentence', async ({ page }) => {
+    /*
+     * QA's reproduction, exactly: refuse twice, answer, refuse a third time,
+     * then let the block turn over. What the reset block used to print was
+     * "Nothing on the list is worth tonight it would cost."
+     *
+     * Reached through the refusal sequence rather than constructed, because
+     * that is how a person got to it, and because the block rollover is the
+     * thing that makes the state real rather than a leftover.
+     */
+    await loadInQa(page, 'A week pointed at the house')
+    await goToNow(page)
+
+    const refuse = () =>
+      page.getByTestId('now-actions').getByRole('button', { name: "Can't right now" })
+    const headline = page.locator('.primary-surface__headline')
+
+    await refuse().click()
+    await expect(headline).not.toContainText('kitchen')
+    await refuse().click()
+    await expect(headline).toContainText('not landing')
+
+    await page.getByTestId('now-question').waitFor()
+    await page.locator('.now-options').getByRole('button').first().click()
+    await expect(page.getByTestId('now-actions')).toBeVisible()
+    await refuse().click()
+    await expect(headline).toContainText('Nothing then')
+
+    await travel(page, '+', 4)
+    await goToNow(page)
+
+    const reason = page.getByTestId('now-reason')
+    await expect(reason).not.toContainText('worth tonight it would cost')
+    await expect(reason).not.toContainText('worth night it would cost')
+    // The whole sentence, because "does not contain the broken fragment" is
+    // satisfied by a screen that says nothing at all.
+    await expect(reason).toContainText('worth the night it would cost')
   })
 })

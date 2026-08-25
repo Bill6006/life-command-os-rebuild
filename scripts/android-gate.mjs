@@ -652,13 +652,40 @@ async function main() {
     await openNow()
     return (await page.locator('.primary-surface__headline').innerText()).trim()
   }
+  /** What the laboratory says the owner-local clock currently reads. */
+  const ownerLocal = async () => {
+    const row = await page.locator('.rows__row', { hasText: 'Owner-local' }).innerText()
+    return (row.match(/(\d{4}-\d{2}-\d{2}) (\d{2}):(\d{2})/) ?? []).slice(1)
+  }
+
+  /*
+   * Move the laboratory clock, and check that it moved.
+   *
+   * A hash change on the same document, which is how the owner would get there
+   * and the only way the session ledger survives the trip. Each press is
+   * confirmed against the clock the screen is showing rather than counted:
+   * `travelTo` exists because a loop of presses can outrun the re-render and
+   * land an hour short, and a gate that lands an hour short reports on a screen
+   * nobody asked about.
+   */
   const travel = async (direction, hours) => {
-    // A hash change on the same document, which is how the owner would get
-    // there and the only way the session ledger survives the trip.
     await page.goto(`${BASE}#/qa`)
     await page.waitForSelector('h1:has-text("QA")')
     const button = page.getByRole('button', { name: `${direction}1 hour` })
-    for (let step = 0; step < hours; step += 1) await button.tap()
+    for (let step = 0; step < hours; step += 1) {
+      const before = (await ownerLocal()).join(' ')
+      await button.tap()
+      await page
+        .waitForFunction(
+          (was) =>
+            ![...document.querySelectorAll('.rows__row')]
+              .find((row) => row.textContent?.includes('Owner-local'))
+              ?.textContent?.includes(was),
+          before,
+          { timeout: 5000 },
+        )
+        .catch(() => {})
+    }
   }
 
   /*
@@ -737,6 +764,62 @@ async function main() {
     stoppedForGood,
   )
   await sideways('Now, the third refusal')
+
+  /*
+   * And the sentence the block turns over into — QA-81-007.
+   *
+   * This is the screen independent QA reached by pressing through the whole
+   * refusal sequence and then waiting four hours, and what it printed was
+   * "Nothing on the list is worth night it would cost." Broken English on a
+   * real screen, in the phase about what the app says, under a green suite.
+   */
+  await travel('+', 4)
+  const rolled = await nowHeadline()
+  const rolledReason = await page.getByTestId('now-reason').innerText()
+  check(
+    'the block turns over into something to do or a sentence about not',
+    rolled.length > 0 && rolledReason.length > 0,
+    `${rolled} | ${rolledReason}`,
+  )
+  check(
+    'and the late-night no-action copy is a sentence',
+    !/worth (to)?night it would cost/i.test(rolledReason),
+    rolledReason,
+  )
+  await sideways('Now, the block after the stop')
+
+  /*
+   * QA-81-006 — the repetition rule meeting the limiter, on a handset.
+   *
+   * One session on "A morning after three bad nights": 15:00, 20:00, 23:00,
+   * pressing nothing. It used to end on ten minutes of subnetting recall, at
+   * eleven at night, on a screen still saying he was nine hours short.
+   */
+  await loadScenario('A morning after three bad nights')
+  await travel('+', 5)
+  const afternoon = await nowHeadline()
+  await travel('+', 5)
+  const evening = await nowHeadline()
+  await travel('+', 3)
+  const lateNight = await nowHeadline()
+  const lateNightScreen = await page.locator('.screen').innerText()
+
+  check(
+    'a day nine hours short opens on recovery and stays there',
+    /recovery/i.test(afternoon) && /recovery/i.test(evening),
+    `${afternoon} | ${evening}`,
+  )
+  check(
+    'and never turns into the study session it spent the day declining',
+    !/recalling subnetting/i.test(lateNightScreen),
+    lateNight,
+  )
+  check(
+    'and says why it has nothing rather than blaming the hour',
+    /already been in front of you/i.test(lateNightScreen),
+    lateNight,
+  )
+  await sideways('Now, the third hour of one day')
 
   // ---- The rest of the app is still standing --------------------------------
   for (const destination of ['Now', 'Life', 'Timeline', 'Insights']) {

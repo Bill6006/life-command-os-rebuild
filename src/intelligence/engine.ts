@@ -43,7 +43,7 @@ import {
   type Situation,
   type SituationMoment,
 } from './situation'
-import { blockNoun, horizonWord } from './vocabulary'
+import { blockNoun, hereNowWord, horizonWord } from './vocabulary'
 import type {
   DecisionTrace,
   EpisodeTrace,
@@ -663,6 +663,13 @@ function nothingForThisLimiter(situation: Situation): string | undefined {
  * two weeks of records that there is "too little here" is simply false, and so
  * is telling someone whose sleep debt is printed above the sentence that
  * nothing here says how the day is going.
+ *
+ * **Exported so that every branch can be read at every block** — QA-81-007. The
+ * late-night no-action screen said *"Nothing on the list is worth tonight it
+ * would cost."* for as long as this state has existed, and every sweep over it
+ * passed, because the sweeps checked which time words appeared rather than
+ * whether the sentence was a sentence. A copy catalogue this small should be
+ * held as a table of finished lines, and it cannot be unless it can be called.
  */
 /**
  * Whether the owner has told the app anything since he last said no.
@@ -702,7 +709,7 @@ function answeredAfterLastRefusal(view: MemoryView, situation: Situation): boole
   return false
 }
 
-function noActionCopy(
+export function noActionCopy(
   reason: NoActionReason,
   situation: Situation,
   rejected: readonly Rejection[] = [],
@@ -728,6 +735,21 @@ function noActionCopy(
           headline: 'Nothing new for today.',
           detail:
             'Everything this history has to suggest has already been in front of you today, and tomorrow starts again.',
+        }
+      }
+      /*
+       * The answer was withheld, not withdrawn — QA-81-006.
+       *
+       * "None of them suit where you actually are" is false the other way round
+       * here: one of them suited exactly, and the app is holding it back because
+       * he has read it twice today. Saying the situation ruled everything out
+       * would blame the evening for a decision about repetition.
+       */
+      if (rejected.some((row) => row.reason === 'not-instead-of-that')) {
+        return {
+          headline: `Nothing to add ${horizonWord(situation.block)}.`,
+          detail:
+            'What is short has one answer here, and it has already been in front of you today. Everything else here works against it.',
         }
       }
       return {
@@ -788,11 +810,17 @@ function noActionCopy(
        *
        * What it must not say is that the evening is quiet. That would be
        * asserting an absence from ignorance, which is exactly D-038's error.
+       *
+       * **And it must not say "evening" at nine in the morning** — QA-81-007's
+       * class, found by rendering this catalogue at every block rather than by
+       * sweeping the states the library happens to reach. The sentence written
+       * to stop the app calling the evening quiet was itself calling every hour
+       * the evening, in the one phase whose first gate item forbids exactly
+       * that. The last hour it was read at is the one it was written for.
        */
       return {
         headline: 'Nothing here to push you toward.',
-        detail:
-          'The picture is current. None of the areas this app can act in has anything in it right now, which is about its reach rather than about your evening.',
+        detail: `The picture is current. None of the areas this app can act in has anything in it right now, which is about its reach rather than about ${hereNowWord(situation.block)}.`,
       }
     case 'nothing-proposed': {
       if (situation.view.history.all.length === 0) {

@@ -159,6 +159,30 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | undefined>(undefined)
   const [storageCheck, setStorageCheck] = useState<StorageCheck | undefined>(undefined)
 
+  /*
+   * Declared here rather than beside `noteShown`, because the paths that
+   * replace the visible history have to be able to empty it — QA-81-006's
+   * sibling.
+   *
+   * The ledger counts screens, and a screen is about a history. Swap the
+   * history and the counts are about nothing: in the laboratory, loading one
+   * fixture and then another would carry the first one's showings into the
+   * second, and a move could arrive already used up. That is not a defect an
+   * owner can reach — he has one history — but it is reachable by exactly the
+   * sequence an auditor runs, and a QA session that suppresses a move for
+   * having been seen in a different life is a session reporting on a screen
+   * nobody would ever get.
+   */
+  const shownLedger = useRef(new Map<string, ShownMove>())
+  const [shown, setShown] = useState<readonly ShownMove[]>([])
+
+  /** Forget what has been on screen, because it was about a different history. */
+  const forgetShown = useCallback(() => {
+    if (shownLedger.current.size === 0) return
+    shownLedger.current = new Map()
+    setShown([])
+  }, [])
+
   const [now, setNow] = useState<Instant>(() => clock.now())
   const [zone, setZone] = useState<TimeZoneId>(clock.zone())
   const [weekStartsOn, setWeekStartsOn] = useState<WeekStartDay>(DEFAULT_WEEK_START)
@@ -231,6 +255,7 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
           setSource('laboratory')
           setSnapshot(fixture)
           setLoadedLabel(label)
+          forgetShown()
         }
         if (job.isCurrent()) setIssues(load.issues)
       } catch (caught) {
@@ -239,7 +264,7 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
         if (job.isCurrent()) setBusy(false)
       }
     },
-    [projection],
+    [projection, forgetShown],
   )
 
   const loadDocument = useCallback(
@@ -328,6 +353,7 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
        */
       setSource('owner')
       setSnapshot(his)
+      forgetShown()
       setNow(clock.now())
       setZone(clock.zone())
       setWeekStartsOn(DEFAULT_WEEK_START)
@@ -340,7 +366,7 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     } finally {
       if (job.isCurrent()) setBusy(false)
     }
-  }, [clock, projection])
+  }, [clock, projection, forgetShown])
 
   /**
    * His own records, read from his own store, whatever is on screen.
@@ -412,6 +438,7 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
         if (projection.show('owner', job)) {
           setSource('owner')
           setSnapshot(outcome.snapshot)
+          forgetShown()
           setNow(clock.now())
           setZone(clock.zone())
           setWeekStartsOn(DEFAULT_WEEK_START)
@@ -518,7 +545,7 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
         if (job.isCurrent()) setBusy(false)
       }
     },
-    [clock, projection],
+    [clock, projection, forgetShown],
   )
 
   const verifyStorage = useCallback(async () => {
@@ -573,9 +600,6 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
    * with the moment it was shown at, so the move on screen is never penalised
    * for being on screen right now.
    */
-  const shownLedger = useRef(new Map<string, ShownMove>())
-  const [shown, setShown] = useState<readonly ShownMove[]>([])
-
   const noteShown = useCallback(
     (move: string) => {
       const dayId = localDayIdAt(now, zone)
