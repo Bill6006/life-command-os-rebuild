@@ -1015,6 +1015,32 @@ async function main() {
   check('and offers no correction on a thing the app worked out', !/Not right\?/.test(presence))
   await sideways('Fatherhood, inside the school window')
 
+  /*
+   * And the document the owner would hand somebody — QA-82-005.
+   *
+   * A third surface, and the one the previous two repairs did not reach: the
+   * review export is built from raw fact state rather than from the decision,
+   * and it printed the current reading in one section and called the same
+   * concept "never answered" in another.
+   */
+  await page.goto(`${BASE}#/data`)
+  await page.waitForSelector('h1:has-text("Data")')
+  await page.getByRole('button', { name: 'Select all' }).tap()
+  const exported = await page.getByTestId('export-text').inputValue()
+  check(
+    'the export carries the reading it worked out',
+    /Child here right now — No — Adaya’s school day is on until 15:00\./.test(exported),
+  )
+  check(
+    'and never calls that same fact one nobody answered',
+    !/Child here right now — never answered/.test(exported),
+  )
+  check(
+    'while still saying what it genuinely has not heard',
+    /Things the app knows it does not know:/.test(exported) && /— never answered/.test(exported),
+  )
+  await sideways('Data, the export inside the school window')
+
   await openNow()
   await sideways('Now, inside the school window')
 

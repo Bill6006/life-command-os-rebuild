@@ -39,6 +39,89 @@ None.
 
 ## Fixed
 
+### DEF-0094 — the review export said the app had never answered a question it had just answered
+
+- Status: Fixed
+- Severity: Blocker — one generated document contradicting itself about one
+  fact, on a surface that explicitly asks its reader to treat it as the source
+  of truth
+- Found in: Phase 82 / `da1a4ee`
+- Found by: independent QA round 3 — QA-82-005
+- Class: **a surface that reads raw fact state rather than the decision, for a
+  concept no record can carry.** The fact layer seeds an entry for every concept
+  in the registry so that a concept nothing has been said about still resolves
+  to a _known_ unknown — which is right for everything the owner can answer and
+  wrong for a derived one. `coverage.ts` had its own exclusion for that;
+  `compose.ts` did not; and the next surface to walk the same list would not
+  have known it needed one either.
+- Reproduction: load **A school morning** on the deployed Preview, advance to
+  10:20, open More → Exports. Under _What it read to decide that_: **"Child here
+  right now — No — Adaya's school day is on until 15:00. (inferred)"**. Under
+  _Things the app knows it does not know_: **"Child here right now — never
+  answered."**
+- Root cause: `resolveFacts` seeds `conceptIds` from `concepts.all()`. Nothing
+  writes a record for `family.child-here-now`, so it resolved as `unknown`
+  permanently, and `situation.view.facts.inState('unknown')` handed that to the
+  export's diagnostics and to the QA laboratory's fact-state browser.
+- Regression: `tests/synthetic/qa-82-round-1.test.ts` — "does not say the app
+  never answered something it worked out", "never states a reading and lists the
+  same concept as unanswered", "never manufactures an unanswered fact for
+  something no record can carry", "excludes any derived concept, not the one
+  that happens to exist", "still says the app has not heard about the things it
+  genuinely has not", "leaves a history with no child alone entirely";
+  `tests/synthetic/export-honesty.test.ts` — "never answers a question and
+  disowns it", per scenario; `tests/browser/phase82.spec.ts` — "does not disown
+  the reading in the document it puts it in". Four reintroductions run, all four
+  fail.
+- Siblings: enumerated rather than searched for, and the enumeration is the
+  test. Every consumer of raw fact state was checked against a derived concept:
+  `facts.get`, `inState('unknown')`, `facts.questions` (`worthAsking`), the
+  coverage rows, and the guide. `worthAsking` and the guide were already clean
+  because a derived concept has no question spec; coverage had its own
+  exclusion; the export and the QA fact browser did not, and both are fixed by
+  the single change at the fact layer.
+- Note on where the fix went, and why not in the export: the export was the
+  symptom. The one place that knows a concept cannot be recorded is the layer
+  that resolves records, so that is where the exclusion lives. `coverage.ts`
+  keeps its own because it walks the registry directly rather than the fact
+  layer — two guards for two different traversals, not one guard written twice.
+- Note on what the first version of the regression missed: reintroducing a
+  narrower fix — excluding `family.child-here-now` by id rather than every
+  derived concept — **passed**, because that concept is the only derived one
+  today. The guard now exercises the rule against a registry extended with a
+  second, invented derived concept, and confirms an ordinary invented concept is
+  still seeded. Found by running the reintroduction rather than by reading it.
+- Fixed in: the checkpoint that closes QA round 3
+
+### DEF-0095 — a documentation commit went out without the gate being re-run
+
+- Status: Fixed
+- Severity: Major — the handoff named CI green at a head where CI was red
+- Found in: Phase 82 / `e302394`
+- Found by: independent QA round 3 — QA-82-006
+- Class: **a gate run before the last commit rather than on it.** `npm run
+verify` and CI were both run and both green, and then one more
+  documentation-only commit was made and neither was run again. The handoff then
+  reported the earlier head's results as the handoff head's.
+- Reproduction: `npm run verify` from a clean tracked tree at `e302394` stops at
+  `format:check` on `docs/qa/README.md`. CI run `32889209473` failed the same
+  job on the same file.
+- Root cause: the content was one emphasis marker — `*"…"*` where Prettier wants
+  `_"…"_` — which is exactly why it is worth recording. The defect is not the
+  marker; it is that a docs-only change was treated as not needing the gate, and
+  that component results from an earlier head were reported as the aggregate
+  result for a later one.
+- Regression: the gate itself, run in the right order. There is deliberately no
+  new test: a test cannot assert that somebody ran the gate. What changes is
+  **D-147**, which states the finishing condition — the aggregate `npm run
+verify` from a clean clone of the tracked head, and CI green at that exact
+  SHA, both after the last commit — and the handoff now names the head those
+  results came from so a wrong claim is checkable rather than plausible.
+- Siblings: checked. The other builder-owned documents are Prettier-clean, and
+  `npm run format:check` covers the whole tree rather than a list of paths, so
+  the instrument was never the problem.
+- Fixed in: the checkpoint that closes QA round 3
+
 ### DEF-0092 — every touch target was specified at exactly the size the gate measures against
 
 - Status: Fixed

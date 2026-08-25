@@ -24,13 +24,16 @@ reopens Phase 4 or any completed phase.
 
 # Phase 82 — The structural intelligence skeleton
 
-**Status: YELLOW — READY FOR INDEPENDENT QA, ROUND 3.**
+**Status: YELLOW — READY FOR INDEPENDENT QA, ROUND 4.**
 
-Round 1 returned FAIL with three findings; round 2 closed one of them and found
-two of the repairs incomplete, plus a defect in the mobile gate itself. All are
+Three FAIL rounds so far, and the shape of them is worth reading before the
+detail. Round 1 found three defects. Round 2 closed one and found two of the
+repairs incomplete — the class had been named correctly and then the repair
+scoped to the places that had been _observed_ failing. Round 3 closed those two
+and found one more instance of the same habit: a boundary fixed on the surfaces
+that had been looked at, and not at the layer every surface reads from. All are
 now repaired, the repaired checkpoint is deployed, and the retest handoff is
-written — so the phase is back where it was, awaiting an independent verdict
-rather than holding one.
+written.
 
 Not GREEN, and not this conversation's to make GREEN. Owner decision D-077: a
 builder conversation may not approve its own phase, and nothing concluded while
@@ -65,15 +68,16 @@ Two columns, because the phase has been verified twice: once at the first build
 and once after the round 1 repairs. The second column is the state of the
 deployed checkpoint now.
 
-| Gate                                     | First build (`160ec9a`)                   | After round 1 (`0899f18`)                 | After round 2 (`da1a4ee`)                        |
-| ---------------------------------------- | ----------------------------------------- | ----------------------------------------- | ------------------------------------------------ |
-| `npm run verify` from a clean checkout   | **PASS**                                  | **PASS**                                  | **PASS** — format, lint, typecheck, tests, build |
-| Unit layer                               | 1,470 / 1,470 across 66 files             | 1,490 / 1,490 across 67 files             | **1,498 / 1,498** across 67 files                |
-| Browser, three widths                    | 528 / 528 at 360, 430 and 1,280px         | 537 / 537 — 179 each                      | **540 / 540** — 180 each                         |
-| Android-style gate on the deployed build | clean — 119 checks                        | clean — 126 checks                        | **clean — 132 checks**                           |
-| Privacy scan                             | clean, 230 tracked files                  | clean — 233 tracked files                 | **clean — 233 tracked files**                    |
-| Tournament                               | 100 / 100 deterministic, 100 / 100 hybrid | 100 / 100 deterministic, 100 / 100 hybrid | **100 / 100 deterministic, 100 / 100 hybrid**    |
-| Reintroductions proved                   | 22                                        | 13                                        | **14 more, 49 in total**                         |
+| Gate                                                    | First build (`160ec9a`) | Round 1 (`0899f18`)   | Round 2 (`da1a4ee`)   | Round 3 (`5936fe2`)                              |
+| ------------------------------------------------------- | ----------------------- | --------------------- | --------------------- | ------------------------------------------------ |
+| `npm run verify` from a clean clone of the tracked head | **PASS**                | **PASS**              | **PASS**              | **PASS** — format, lint, typecheck, tests, build |
+| Unit layer                                              | 1,470 across 66 files   | 1,490 across 67 files | 1,498 across 67 files | **1,528 / 1,528** across 67 files                |
+| Browser, three widths                                   | 528 / 528               | 537 / 537             | 540 / 540             | **543 / 543** — 181 each                         |
+| Android-style gate on the deployed build                | clean — 119             | clean — 126           | clean — 132           | **clean — 136 checks**                           |
+| Privacy scan                                            | clean, 230              | clean, 233            | clean, 233            | **clean — 233 tracked files**                    |
+| Tournament                                              | 100/100 and 100/100     | 100/100 and 100/100   | 100/100 and 100/100   | **100 / 100 deterministic, 100 / 100 hybrid**    |
+| CI green at the handed-off head                         | —                       | —                     | **no — DEF-0095**     | **green at `5936fe2`**                           |
+| Reintroductions proved                                  | 22                      | 13                    | 14                    | **4 more, 53 in total**                          |
 
 Seven test files: `goal-horizon-and-parts`, `commitment-windows`, `threads`,
 `deferral`, `growth-stage-and-occasion`, `instrument-recut`, `qa-82-round-1`,
@@ -162,6 +166,40 @@ argument for the token.
 touched. No package was reopened, and the owner questions, Phase 8
 carry-forwards, deliberate non-features and audit-section-10 do-not-change items
 are unchanged.
+
+## Independent QA — round 3
+
+**FAIL**, with the principal findings of rounds 1 and 2 all confirmed closed.
+QA-82-002, QA-82-003 and QA-82-004 passed; the QA-82-001 boundary passed on the
+fact ledger and the Fatherhood page. Two things remained.
+
+- **QA-82-005 → DEF-0094.** The review export printed the derived reading under
+  _what it read to decide_ and the same concept under _things the app knows it
+  does not know_, in one document that asks its reader to treat it as the source
+  of truth. `coverage.ts` had an exclusion for derived concepts because coverage
+  was the surface that had been thought about; `compose.ts` read raw fact state
+  and had none. The exclusion now lives in `resolveFacts` — the one place that
+  knows a concept can never be recorded — so every reader of the fact layer is
+  right without knowing the flag exists. **D-146.**
+- **QA-82-006 → DEF-0095.** The handed-off head failed `npm run verify` at
+  `format:check` and CI failed the same job. Both gates had been run and both
+  were green — on the head before the last commit. The defect is not the
+  emphasis marker that broke it; it is that a documentation-only change was
+  treated as not needing the gate, and that an earlier head's results were
+  reported as this head's. **D-147** states the finishing condition as a
+  sequence, and every count below now names the head it came from.
+
+**One reintroduction found a hole in its own regression**, which is worth
+recording because it is the third time this phase that a guard has been narrower
+than the class it was written for. Excluding the one derived concept by id —
+rather than every concept marked derived — passed every assertion, because that
+concept is the only derived one today. The guard now exercises the rule against
+a registry extended with a second, invented derived concept, and separately
+confirms an ordinary invented concept is still seeded.
+
+**Every round 3 PASS is preserved and every deferral stands.** No package was
+reopened, and the owner questions, Phase 8 carry-forwards, deliberate
+non-features and audit-section-10 do-not-change items are unchanged.
 
 ## The six packages
 

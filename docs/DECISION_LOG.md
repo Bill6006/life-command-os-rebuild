@@ -4516,3 +4516,80 @@ other — and one written as `2.25rem`, thirty-six pixels, under a comment
 asserting it was a real touch target. The comment was the whole defence and it
 was wrong by eight pixels. That control is on the shell, reachable from every
 screen in the product, and nothing had ever measured it.
+
+---
+
+## D-146 — A fact the app works out is excluded where records are resolved, not on the screens that show it
+
+**Phase:** 82 (QA round 3) · **Status:** Active — memory rule, completing D-143
+
+D-143 put the derived reading in the concept registry so every generic surface
+would render it. This says the other half: **the fact layer must not manufacture
+an answerable unknown for a concept no record can carry**, and that exclusion
+lives in `resolveFacts` rather than in each surface that reads it.
+
+**What this was learned from.** `coverage.ts` had an explicit
+`definition.derived === true` exclusion, written when the flag was introduced,
+because coverage was the surface that had been thought about. `compose.ts` read
+`facts.inState('unknown')` and had none. So the review export printed _"Child
+here right now — No — Adaya's school day is on until 15:00"_ under what it read
+to decide, and _"Child here right now — never answered"_ under what it does not
+know, in one document that asks another assistant to treat it as the source of
+truth.
+
+**The rule is about where the knowledge lives.** The registry seeds the fact
+layer so that a concept nothing has been said about still resolves to a _known_
+unknown — that is what lets the guide ask about it and the export say the app
+has not heard. That is correct for every concept the owner can answer. The one
+place that knows a concept cannot be answered at all is the layer that resolves
+records, so that is where it is excluded, and every reader is right without
+knowing the flag exists.
+
+**Two guards, for two traversals, and that is not duplication.** `coverage.ts`
+walks the registry directly rather than the fact layer, so it needs its own. A
+surface that walks the fact layer needs none. Knowing which of those a new
+surface is doing is the only thing anybody has to get right.
+
+**And the honest unknowns must survive.** Excluding a concept from the unknown
+list is only safe because nothing can ever answer it. Every concept the owner
+_can_ answer still appears when nothing has been said about it, and the
+regression asserts that as loudly as it asserts the exclusion — an over-broad
+fix here would quietly empty the list the guide asks from.
+
+---
+
+## D-147 — The gate is run on the commit that is handed off, not on the one before it
+
+**Phase:** 82 (QA round 3) · **Status:** Active — release rule
+
+A phase is not handed off until the **aggregate** `npm run verify` has passed
+from a clean clone of the exact tracked head being handed off, and CI is green
+at that same SHA. Component results — lint passed, tests passed, the build
+passed — are not a substitute for the aggregate command, and results from an
+earlier head are not results for this one.
+
+**What this was learned from.** Round 2's handoff reported CI green and a clean
+verify. Both were true, of the head they were run on. One more
+documentation-only commit followed, changing a single emphasis marker in
+`docs/qa/README.md` from `*"…"*` to something Prettier rejects, and neither gate
+was re-run. `npm run verify` at the handed-off head stopped at `format:check`
+before lint, tests or build, and CI failed the same job. QA reproduced it in a
+clean tracked tree in one command.
+
+**The failure is not the marker.** It is that a documentation-only change was
+treated as not needing the gate, and that an earlier head's results were
+reported as this head's. Both are easy to do and neither is visible in the
+diff — which is why the finishing condition is now written down as a sequence
+rather than as a habit:
+
+1. make the last commit;
+2. clone the tracked head into a clean directory and run the aggregate
+   `npm run verify` there;
+3. wait for CI to finish green **at that SHA**;
+4. only then write the counts into the handoff, naming the head they came from.
+
+**Naming the head is the part that makes it checkable.** A handoff that says
+"CI green" is a claim nobody can test six commits later. One that says "CI green
+at `abc1234`" is a claim the next reader can verify in a second, which is the
+whole point of D-097's insistence on reading the deployed SHA live rather than
+asserting it.
