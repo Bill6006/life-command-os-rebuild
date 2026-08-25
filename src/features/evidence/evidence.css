@@ -138,7 +138,7 @@
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  min-height: 2.75rem;
+  min-height: var(--touch-target);
   padding: 0;
   font: inherit;
   font-size: var(--text-sm);

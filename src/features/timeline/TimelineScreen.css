@@ -108,7 +108,7 @@
   align-self: stretch;
   /* Comfortably over the 44px minimum, and full width so it is unmissable at
    * the bottom of a long scroll (section 37). */
-  min-height: 2.75rem;
+  min-height: var(--touch-target);
   padding: var(--space-3) var(--space-4);
   font: inherit;
   font-size: var(--text-base);

@@ -21,7 +21,7 @@
   align-items: flex-start;
   padding: var(--space-3) var(--space-4);
   /* A comfortable target for a thumb, not a mouse (section 37). */
-  min-height: 2.75rem;
+  min-height: var(--touch-target);
   cursor: pointer;
   background: var(--surface-2);
   border: 1px solid var(--line-soft);
@@ -68,7 +68,7 @@
 
 .data-actions button {
   padding: var(--space-2) var(--space-4);
-  min-height: 2.75rem;
+  min-height: var(--touch-target);
   font: inherit;
   font-size: var(--text-sm);
   color: var(--text-primary);

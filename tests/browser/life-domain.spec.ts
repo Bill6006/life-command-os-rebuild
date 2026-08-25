@@ -161,8 +161,13 @@ test.describe('a correction, and what it changes', () => {
     await loadInQa(page, 'A settled arrangement, and one week away')
     await page.goto(`${APP}#/life/fatherhood`)
 
+    /*
+     * The arrangement row, which is the one he answered and the one he can
+     * change — QA-82-001. The row beside it is the app's current reading of
+     * where she is, and it is deliberately not correctable.
+     */
     await page
-      .locator('.domain-reading', { hasText: 'Child with the owner' })
+      .locator('.domain-reading', { hasText: 'Child in the owner’s care today' })
       .getByRole('button', { name: 'Not right?' })
       .click()
     await expect(page.locator('input.domain-input')).toHaveCount(0)
@@ -171,7 +176,7 @@ test.describe('a correction, and what it changes', () => {
 
     await page.getByRole('button', { name: 'Not tonight' }).click()
     await expect(
-      page.locator('.domain-reading', { hasText: 'Child with the owner' }),
+      page.locator('.domain-reading', { hasText: 'Child in the owner’s care today' }),
     ).toContainText('no')
   })
 

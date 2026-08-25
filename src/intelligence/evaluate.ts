@@ -770,36 +770,41 @@ function timeFit(candidate: Candidate, situation: Situation): Dimension {
   }
 
   /*
-   * Four bands, not three — QA-82-003.
+   * Five bands, and every sentence is about the two figures rather than about
+   * the ratio — QA-82-003, round 2.
    *
-   * There used to be one band above 0.8 and it said "would not fit before
-   * Adaya's school day". At ten past eight with ten minutes to the school run,
-   * the app said that about a ten-minute move: a figure it had worked out
-   * itself, contradicted by a sentence it wrote itself, on the same screen.
+   * Round 1 split "does not fit" off the top of a band that used to say it
+   * about a move that fitted exactly. It left a band that says *"would use all
+   * the time before Adaya's school day"* for everything from four-fifths to
+   * all of it — so at eighteen minutes past eight, with twelve minutes in hand,
+   * a ten-minute move was told it would use all twelve while the dimension
+   * printed directly beneath it said it takes about 83 percent. Two of the
+   * app's own numbers, disagreeing on one row.
    *
-   * The defect was not the boundary. It was that one band was carrying two
-   * different facts. "This will use everything you have left" and "this will
-   * run past the thing you have to be at" are different statements about a
-   * move, they call for different scores, and the owner acts on them
-   * differently — the first is a choice, the second is not one. So the band
-   * that cannot say which of them is true says neither.
+   * The mistake was the shape of the repair rather than its direction. A band
+   * is chosen by a ratio, and three of these sentences are claims about the
+   * **minutes** — "all of it", "most of it", "more than there is". So the top
+   * three bands are decided by comparing the two figures the sentence is about,
+   * and only the two that genuinely are about proportion ("fits comfortably",
+   * "fits") are decided by the share.
    *
-   * The dividing line is `share > 1`, and it is the same comparison the
-   * sentence makes. It is reachable, and this is worth saying because it is not
-   * obvious: `constraints.ts` already removes a move longer than the time the
-   * owner said he has, so nothing here is ever longer than *that*. But
-   * `inHand` is the smaller of what he said and what the day allows (AUD-0004),
-   * and a twenty-five minute walk with two hours free and ten minutes before
-   * the school run passes the filter and arrives here at a share of 2.5.
-   *
-   * The overrun band is negative rather than zero. Abstaining put a move that
-   * cannot be finished level with one that exactly fits, which is the same
-   * defect as the note, expressed in the number instead of in the words.
+   * The score judgement from round 1 is unchanged and deliberate: an exact fit
+   * and a near fit are both worth nothing either way, and a move that cannot be
+   * finished counts against. Only the words moved.
    */
-  const share = usable.value === 0 ? 2 : minutes / usable.value
-  if (share <= 0.5) return { name: 'time-fit', value: 1, weight, note: 'fits comfortably' }
-  if (share <= 0.8) return { name: 'time-fit', value: 0.5, weight, note: 'fits' }
-  if (share <= 1) {
+  const left = usable.value
+  if (minutes > left) {
+    return {
+      name: 'time-fit',
+      value: -0.5,
+      weight,
+      note:
+        before === undefined
+          ? `is longer than what is left of ${blockNoun(block)}`
+          : `would not fit before ${before.label}`,
+    }
+  }
+  if (minutes === left) {
     return {
       name: 'time-fit',
       value: 0,
@@ -810,14 +815,18 @@ function timeFit(candidate: Candidate, situation: Situation): Dimension {
           : `would use all the time before ${before.label}`,
     }
   }
+
+  const share = left === 0 ? 1 : minutes / left
+  if (share <= 0.5) return { name: 'time-fit', value: 1, weight, note: 'fits comfortably' }
+  if (share <= 0.8) return { name: 'time-fit', value: 0.5, weight, note: 'fits' }
   return {
     name: 'time-fit',
-    value: -0.5,
+    value: 0,
     weight,
     note:
       before === undefined
-        ? `is longer than what is left of ${blockNoun(block)}`
-        : `would not fit before ${before.label}`,
+        ? `would use most of ${blockNoun(block)}`
+        : `would use most of the time before ${before.label}`,
   }
 }
 

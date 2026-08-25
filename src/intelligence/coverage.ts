@@ -538,6 +538,16 @@ export function assembleCoverage(
 
   const conceptsByDomain = new Map<LifeDomainId, ConceptDefinition[]>()
   for (const definition of moment.concepts.all()) {
+    /*
+     * A conclusion is not something the owner can be neglecting — QA-82-001.
+     *
+     * Nothing ever writes a record for a derived concept, so measuring how long
+     * it has been since one would report permanent neglect of a fact he has no
+     * way to supply, and start prodding him about it. That is DEF-0015's
+     * failure arriving from a new direction, and the comment below about a
+     * settled custody arrangement is the same warning from the other side.
+     */
+    if (definition.derived === true) continue
     const held = conceptsByDomain.get(definition.domain)
     if (held === undefined) conceptsByDomain.set(definition.domain, [definition])
     else held.push(definition)

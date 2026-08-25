@@ -7,6 +7,7 @@ import {
   confidence,
   inferred,
   isUsable,
+  mapKnowledge,
   unknown,
   type Confidence,
   type Knowledge,
@@ -463,6 +464,23 @@ export interface SituationMoment {
 
 interface FactReader {
   read(concept: ConceptId, usedFor: string): Knowledge<FactValue>
+  /**
+   * Record something the app worked out rather than something it was told —
+   * QA-82-001.
+   *
+   * No record carries a derived concept, so `read` would resolve it to
+   * `unknown` forever and the surfaces that list what the decision considered
+   * would leave out the readings the decision actually turned on. The reading
+   * text is supplied rather than rendered from the value, because a conclusion
+   * is worth stating with the thing it rests on: "no — her school day is on
+   * until 15:00" is the useful row, and "no" is not.
+   */
+  derive(
+    concept: ConceptId,
+    knowledge: Knowledge<FactValue>,
+    reading: string,
+    usedFor: string,
+  ): void
   considered(): readonly ConsideredFact[]
 }
 
@@ -501,6 +519,22 @@ function createFactReader(
         },
       })
       return knowledge
+    },
+    derive(concept, knowledge, reading, usedFor) {
+      const definition = concepts.definitionFor(concept)
+      seen.set(concept, {
+        usedFor: [usedFor],
+        entry: {
+          concept,
+          label: definition.label,
+          domain: definition.domain,
+          privacy: definition.privacy,
+          state: knowledge.state,
+          reading,
+          usedFor: [usedFor],
+          sources: basisOf(knowledge),
+        },
+      })
     },
     considered: () => [...seen.values()].map((held) => held.entry),
   }
@@ -766,6 +800,27 @@ function timeInHand(
   if (!isUsable(until) || binding === undefined) return { minutes: said, before: undefined }
   if (isUsable(said) && said.value <= until.value) return { minutes: said, before: undefined }
   return { minutes: until, before: binding }
+}
+
+/**
+ * The current reading, in a sentence rather than a word — QA-82-001.
+ *
+ * "no" is a true row and a useless one: the owner reading it on the Fatherhood
+ * page has no way to tell whether the app thinks she is at her mother's, at
+ * school, or simply has nothing recorded. Where a span took her out of the
+ * room, the row names the span and when it ends, which is the fact he can act
+ * on. Where nothing did, it says what it knows and no more.
+ */
+function presenceReading(
+  here: Knowledge<boolean>,
+  person: SemanticEntity,
+  because: Obligation | undefined,
+  zone: TimeZoneId,
+): string {
+  if (!isUsable(here)) return `Not known — nothing says whether ${person.label} is here.`
+  if (here.value) return `Yes — ${person.label} is here.`
+  if (because === undefined) return `No — ${person.label} is not here.`
+  return `No — ${because.label} is on until ${endsAtClock(because, zone)}.`
 }
 
 /** When a span ends, on the owner's own clock. One definition, four readers. */
@@ -1118,8 +1173,17 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     reader.read(CONCEPT.usableTimeTonight, 'how much time there is'),
     minutesValue,
   )
+  /*
+   * The arrangement, read as the arrangement — QA-82-001.
+   *
+   * The purpose string reaches the owner: the fact ledger prints "… — for
+   * whether she is here today" under each row. It used to say exactly that
+   * about this record, which is how a durable custody answer went on being
+   * presented as a claim about the room after the decision path had stopped
+   * treating it as one. What this record answers is whose day it is.
+   */
   const childPresent = narrowKnowledge(
-    reader.read(CONCEPT.childPresent, `whether she is here ${horizonWord(block)}`),
+    reader.read(CONCEPT.childPresent, `whether she is in your care ${horizonWord(block)}`),
     booleanValue,
   )
   const socialEnergy = narrowKnowledge(
@@ -1152,6 +1216,25 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     moment.now,
   )
   const childHere = elsewhere.knowledge
+
+  /*
+   * And it is written down where the owner can see it — QA-82-001, round 2.
+   *
+   * Round 1 moved the narrowed reading into the generator, the filter, the
+   * premise and the learning context, and stopped there. Every surface that
+   * walks the concept registry — the QA fact ledger, the Fatherhood page, the
+   * export — went on printing the raw arrangement as the app's current belief
+   * about where she was. Recording the reading here is what makes those
+   * surfaces right without any of them having to know about school days.
+   */
+  if (child !== undefined) {
+    reader.derive(
+      CONCEPT.childHere,
+      mapKnowledge(childHere, (value): FactValue => ({ type: 'boolean', value })),
+      presenceReading(childHere, child, elsewhere.because, moment.zone),
+      `whether she is in the room ${horizonWord(block)}`,
+    )
+  }
 
   // One pass over history for both: the duplication check reads the recent end
   // of it, and learning reads all of it against the situation being decided.

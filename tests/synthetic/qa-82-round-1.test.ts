@@ -7,6 +7,8 @@ import {
   type Instant,
   type TimeZoneId,
 } from '../../src/domain/time'
+import { CONCEPT } from '../../src/domain/concepts'
+import { assembleDomainPageData, pageForDomain } from '../../src/features/life/domainPages'
 import type { Candidate } from '../../src/intelligence/candidates'
 import { SCHEDULE_SEEDS, commitmentWindowRecord } from '../../src/intelligence/commitments'
 import { applyConstraints } from '../../src/intelligence/constraints'
@@ -164,6 +166,103 @@ describe('QA-82-001 — whose week it is, and where she actually is', () => {
     }
 
     expect(wrong, 'a surface claimed her presence at an hour the situation denied it').toEqual([])
+  })
+
+  /**
+   * The surfaces that walk the registry \u2014 QA-82-001, round 2.
+   *
+   * Round 1 repaired the decision path and stopped there, and the round 1
+   * tests asserted exactly what had been repaired: the premise, the proposals,
+   * the filter and the stored arrangement. Every generic surface \u2014 the QA
+   * fact ledger, the Fatherhood page's "What the app currently believes", the
+   * export \u2014 renders the concept registry, and at ten past ten on a Wednesday
+   * they all still printed the durable custody record as the answer to
+   * *whether she is here today*.
+   *
+   * So the rule is about the registry rather than about a screen: a fact the
+   * app is showing the owner has to be labelled as the thing it stores, and
+   * used for the thing it answers.
+   */
+  it('shows the arrangement and the reading as two different things', () => {
+    const inside = schoolMorningAt('10:20')
+    const facts = new Map(inside.situation.considered.map((fact) => [fact.concept, fact]))
+
+    const arrangement = facts.get(CONCEPT.childPresent)
+    expect(arrangement, 'the arrangement should still be considered').toBeDefined()
+    // It still says yes, because it is still his day. What it must not do is
+    // claim to be the answer to where she is.
+    expect(arrangement!.reading).toContain('yes')
+    expect(arrangement!.label.toLowerCase()).toContain('care')
+    for (const purpose of arrangement!.usedFor) {
+      expect(purpose, 'the arrangement may not be used for presence').not.toMatch(
+        /\bis here\b|\bin the room\b/,
+      )
+    }
+
+    const reading = facts.get(CONCEPT.childHere)
+    expect(reading, 'the current reading should be on the ledger too').toBeDefined()
+    expect(reading!.reading).toMatch(/^No \u2014/)
+    // And it names the span, because "no" alone leaves him guessing why.
+    expect(reading!.reading).toContain('school day is on until 15:00')
+    // Sourced from both the arrangement and the span it was narrowed by.
+    expect(reading!.sources.length).toBeGreaterThan(1)
+  })
+
+  it('puts the reading on the Fatherhood page beside the arrangement', () => {
+    const inside = schoolMorningAt('10:20')
+    const page = pageForDomain(DOMAIN.fatherhood)
+    expect(page, 'fatherhood should have a page').toBeDefined()
+    const rows = assembleDomainPageData(inside.situation, page!).readings
+
+    const arrangement = rows.find((row) => row.concept === CONCEPT.childPresent)
+    const reading = rows.find((row) => row.concept === CONCEPT.childHere)
+    expect(arrangement, 'the arrangement row should be on the page').toBeDefined()
+    expect(reading, 'the current reading should be on the page').toBeDefined()
+
+    // The one he answered is correctable; the one the app worked out is not.
+    expect(arrangement!.derived).toBe(false)
+    expect(reading!.derived).toBe(true)
+    expect(reading!.question).toBeUndefined()
+    expect(reading!.text).toContain('school day is on until 15:00')
+  })
+
+  /**
+   * The class: no owner-facing surface may claim she is here while the
+   * situation says she is not.
+   *
+   * Swept over every hour of the window and over every string those surfaces
+   * can produce, rather than over the two rows the report happened to open.
+   */
+  it('never shows a presence claim the decision does not hold', () => {
+    const wrong: string[] = []
+    const page = pageForDomain(DOMAIN.fatherhood)!
+
+    for (const hour of ['08:31', '10:20', '12:00', '14:59']) {
+      const decision = schoolMorningAt(hour)
+      const here = decision.situation.childHere
+      if (isUsable(here) && here.value) continue
+
+      const said: string[] = []
+      for (const fact of decision.situation.considered) {
+        said.push(`${fact.label}: ${fact.reading} (for ${fact.usedFor.join(', ')})`)
+      }
+      for (const row of assembleDomainPageData(decision.situation, page).readings) {
+        said.push(`${row.label}: ${row.text}`)
+      }
+
+      for (const text of said) {
+        /*
+         * A row that pairs a word meaning "now" with a word meaning "yes" is
+         * the shape of the defect, wherever it is written. The arrangement is
+         * allowed to say yes; it is not allowed to say yes about now.
+         */
+        if (/here (?:right )?now|is here|in the room/i.test(text) && /\byes\b/i.test(text)) {
+          wrong.push(`${hour}: \u201c${text}\u201d`)
+        }
+      }
+    }
+
+    expect(wrong, 'a fact surface claimed her presence inside her school day').toEqual([])
   })
 
   it('never invents presence the record does not carry', () => {
@@ -393,11 +492,14 @@ describe('QA-82-003 — a move that fits exactly', () => {
     expect(contradictions, 'a time-fit note contradicted the figures it was given').toEqual([])
   })
 
-  it('reaches all four bands, so none of them is a guard nobody checks', () => {
+  it('reaches all five bands, so none of them is a guard nobody checks', () => {
     /*
      * A band no test arrives at is a band that can say anything. The approach
      * to the school run is the one stretch of the library that crosses every
      * one of them, which is why the sweep above walks it minute by minute.
+     *
+     * Five, not four \u2014 QA-82-003 round 2. "Would use all the time" used to
+     * cover everything from four-fifths of the window to all of it.
      */
     const notes = new Set<string>()
     for (let minute = 0; minute <= 35; minute += 1) {
@@ -412,7 +514,114 @@ describe('QA-82-003 — a move that fits exactly', () => {
       'fits comfortably',
       'would not fit before Adaya\u2019s school day',
       'would use all the time before Adaya\u2019s school day',
+      'would use most of the time before Adaya\u2019s school day',
     ])
+  })
+
+  it('says "all" only when the move uses every minute there is', () => {
+    /*
+     * QA-82-003, round 2, and the reproduction the report gives.
+     *
+     * Eighteen minutes past eight: twelve minutes before her school day, and a
+     * ten-minute recall session. `opportunity-cost` said it takes about 83
+     * percent of what is left; `time-fit`, on the row directly above it, said
+     * it would use all the time. Two of the app's own numbers about one move,
+     * disagreeing in one glance.
+     *
+     * The round 1 test could not see it: it asked whether the four note
+     * strings were reachable and whether "would not fit" agreed with an
+     * overrun, and every one of those questions had the right answer.
+     */
+    const twelve = schoolMorningAt('08:18')
+    expect(
+      twelve.situation.inHand.minutes.state === 'inferred'
+        ? twelve.situation.inHand.minutes.value
+        : -1,
+      'the fixture should leave twelve minutes at 08:18',
+    ).toBe(12)
+
+    const near = twelve.trace.ranking.find((row) => row.minutes === 10)
+    expect(near, 'a ten-minute move should rank at 08:18').toBeDefined()
+    const note = near!.dimensions.find((d) => d.name === 'time-fit')?.note ?? ''
+    expect(note).toBe('would use most of the time before Adaya\u2019s school day')
+
+    // And the move that genuinely takes all twelve still says so, on the same
+    // screen, so the distinction is visible rather than merely correct.
+    const exact = twelve.trace.ranking.find((row) => row.minutes === 12)
+    expect(exact?.dimensions.find((d) => d.name === 'time-fit')?.note).toBe(
+      'would use all the time before Adaya\u2019s school day',
+    )
+  })
+
+  /**
+   * The class, stated as the two dimensions agreeing rather than as a band
+   * table \u2014 QA-82-003, round 2.
+   *
+   * The round 1 guard compared `time-fit`'s words with the minutes, which
+   * caught "would not fit" and nothing else, because "all" was not a claim it
+   * knew how to check. This compares the words with the **percentage the app
+   * prints beside them**: whatever `opportunity-cost` says the move takes,
+   * `time-fit`'s sentence has to be true of that share. It is the assertion
+   * that would have failed on the deployed build.
+   */
+  it('never disagrees with the percentage printed beside it', () => {
+    const contradictions: string[] = []
+
+    const check = (label: string, decision: Decision) => {
+      const held = decision.situation.inHand.minutes
+      if (!isUsable(held)) return
+      for (const row of decision.trace.ranking) {
+        const fit = row.dimensions.find((d) => d.name === 'time-fit')
+        const cost = row.dimensions.find((d) => d.name === 'opportunity-cost')
+        if (fit === undefined || row.minutes === undefined) continue
+
+        const percent = Number(/about (\d+) percent/.exec(cost?.note ?? '')?.[1] ?? Number.NaN)
+        const where = `${label} ${row.id}: \u201c${fit.note}\u201d with ${row.minutes} of ${held.value}`
+
+        /*
+         * Each sentence, against the range it is allowed to be said in. Read
+         * as a rule about meaning rather than as a table of strings: "all"
+         * means every minute, "most" means more than half and not all, and
+         * "not fit" means more than there is.
+         */
+        if (/would use all the time|would use the rest of/.test(fit.note)) {
+          if (row.minutes !== held.value) contradictions.push(`${where} \u2014 said all, uses part`)
+          if (!Number.isNaN(percent) && percent !== 100) {
+            contradictions.push(`${where} \u2014 said all, beside ${percent}%`)
+          }
+        }
+        if (/would use most of/.test(fit.note)) {
+          if (row.minutes >= held.value) contradictions.push(`${where} \u2014 said most, uses all`)
+          if (!Number.isNaN(percent) && percent >= 100) {
+            contradictions.push(`${where} \u2014 said most, beside ${percent}%`)
+          }
+        }
+        if (/would not fit|is longer than/.test(fit.note) && row.minutes <= held.value) {
+          contradictions.push(`${where} \u2014 said no, and it fits`)
+        }
+        if (row.minutes > held.value) {
+          if (!/would not fit|is longer than/.test(fit.note)) {
+            contradictions.push(`${where} \u2014 overruns and does not say so`)
+          }
+          if (fit.value >= 0)
+            contradictions.push(`${where} \u2014 overruns and scores ${fit.value}`)
+        }
+      }
+    }
+
+    // Every minute of the approach to an obligation, where the bands are, and
+    // then the whole library at every block.
+    for (let minute = 0; minute <= 35; minute += 1) {
+      const clock = `08:${String(minute).padStart(2, '0')}`
+      check(clock, schoolMorningAt(clock))
+    }
+    for (const scenario of SCENARIOS) {
+      for (const time of ['02:30', '05:40', '09:30', '15:00', '20:00', '23:00']) {
+        check(`${scenario.id} ${time}`, decideFor(scenario, at(time, scenario.zone, scenario.now)))
+      }
+    }
+
+    expect(contradictions, 'a time-fit note contradicted the figures beside it').toEqual([])
   })
 })
 

@@ -50,7 +50,7 @@
 
 .now-act {
   /* Section 37 — a target a thumb can hit without aiming. */
-  min-height: 2.75rem;
+  min-height: var(--touch-target);
   padding: var(--space-2) var(--space-4);
   font: inherit;
   font-size: var(--text-base);
@@ -109,7 +109,7 @@
 
 .now-option {
   /* Section 37 — a target a thumb can hit without aiming. */
-  min-height: 2.75rem;
+  min-height: var(--touch-target);
   padding: var(--space-2) var(--space-4);
   font: inherit;
   font-size: var(--text-base);
@@ -182,6 +182,13 @@
 .now-stop button {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  /*
+   * The token, not 44px — QA-82-004.
+   *
+   * This said `44px` while every sibling said `2.75rem`, which is the same
+   * number written so that a sweep for one of them misses the other. Both were
+   * exactly the size the Android gate measures against.
+   */
+  min-height: var(--touch-target);
   padding: 0 var(--space-2);
 }

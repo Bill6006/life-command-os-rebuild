@@ -62,8 +62,8 @@ button {
   border: none;
   cursor: pointer;
   /* Practical touch targets (plan section 37). */
-  min-height: 2.75rem;
-  min-width: 2.75rem;
+  min-height: var(--touch-target);
+  min-width: var(--touch-target);
 }
 
 a {

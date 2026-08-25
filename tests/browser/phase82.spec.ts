@@ -172,6 +172,54 @@ test.describe('how the day is set up', () => {
     await expect(page.locator('.rows')).not.toContainText('Adaya is here')
   })
 
+  test('says the same thing about her on the fact ledger and the domain page', async ({ page }) => {
+    /*
+     * QA-82-001, round 2, and the two screens this file was not opening.
+     *
+     * The test above walks Now into the window and passed on the deployed
+     * build while, one tap away, the QA laboratory's own fact ledger said
+     * "Child with the owner \u00b7 known \u2014 yes \u2014 for whether she is here today" and
+     * the Fatherhood page said "Child with the owner \u2014 yes". Both are generic
+     * surfaces that render the concept registry, so neither knew anything had
+     * been repaired.
+     */
+    await loadInQa(page, 'A school morning')
+    await page.getByRole('button', { name: '+1 hour' }).click()
+    await page.getByRole('button', { name: '+1 hour' }).click()
+
+    // The laboratory's own ledger, at the clock it is holding.
+    const facts = page.getByTestId('qa-facts')
+    await expect(facts).toContainText('Child in the owner\u2019s care today')
+    await expect(facts).toContainText('Child here right now')
+    await expect(facts).toContainText('school day is on until 15:00')
+    await expect(facts).not.toContainText('for whether she is here today')
+
+    // And the page the owner would go to for the same question.
+    await go(page, 'Life')
+    await page.getByRole('link', { name: 'Fatherhood / Family' }).click()
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Fatherhood')
+
+    const believes = page.locator('.domain-reading')
+    await expect(believes.filter({ hasText: 'Child here right now' })).toContainText(
+      'school day is on until 15:00',
+    )
+    // The arrangement is still there, still his to correct, and still says yes
+    // \u2014 because it is still his day. It just no longer claims to be the answer
+    // to where she is.
+    await expect(
+      believes.filter({ hasText: 'Child in the owner\u2019s care today' }),
+    ).toContainText('yes')
+    // A conclusion is not the owner's to correct.
+    await expect(
+      believes.filter({ hasText: 'Child here right now' }).getByTestId('domain-reading-derived'),
+    ).toBeVisible()
+    await expect(
+      believes
+        .filter({ hasText: 'Child here right now' })
+        .getByRole('button', { name: 'Not right?' }),
+    ).toHaveCount(0)
+  })
+
   test('has her back, and the middle of the day free, either side of it', async ({ page }) => {
     /*
      * The half that would be easy to break while fixing the first. Her school

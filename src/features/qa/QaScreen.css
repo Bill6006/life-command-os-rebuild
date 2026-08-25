@@ -66,7 +66,7 @@
 .qa-travel button {
   padding: var(--space-2) var(--space-4);
   /* A comfortable target for a thumb, not a mouse (section 37). */
-  min-height: 2.75rem;
+  min-height: var(--touch-target);
   font: inherit;
   font-size: var(--text-sm);
   color: var(--text-primary);
@@ -106,7 +106,7 @@
   flex: 1 1 auto;
   min-width: 0;
   max-width: 60%;
-  min-height: 2.75rem;
+  min-height: var(--touch-target);
   padding: var(--space-2) var(--space-3);
   font: inherit;
   font-size: var(--text-sm);

@@ -51,8 +51,12 @@ export function PrimarySurface({
   )
 }
 
-export function Rows({ children }: { children: ReactNode }) {
-  return <dl className="rows">{children}</dl>
+export function Rows({ children, testId }: { children: ReactNode; testId?: string }) {
+  return (
+    <dl className="rows" {...(testId === undefined ? {} : { 'data-testid': testId })}>
+      {children}
+    </dl>
+  )
 }
 
 export function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {

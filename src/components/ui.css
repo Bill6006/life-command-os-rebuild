@@ -224,7 +224,7 @@
 .qa-link {
   display: inline-flex;
   align-items: center;
-  min-height: 2.75rem;
+  min-height: var(--touch-target);
   font-size: var(--text-base);
   font-weight: var(--weight-medium);
   color: var(--accent);

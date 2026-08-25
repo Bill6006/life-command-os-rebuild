@@ -817,6 +817,18 @@ function ConceptRow({
             </button>
           </div>
         )
+      ) : reading.derived ? (
+        /*
+         * A conclusion, so there is nothing to correct here — QA-82-001.
+         *
+         * The row above it is the one he answered and the one he can change,
+         * and saying so is the difference between a read-only row and a row
+         * that looks broken. Correcting this one would write a record nothing
+         * reads and would read, on this page, as changing the arrangement.
+         */
+        <p className="domain-reading__note" data-testid="domain-reading-derived">
+          Worked out from what you have told the app.
+        </p>
       ) : (
         <button type="button" className="domain-linkish" disabled={disabled} onClick={onOpen}>
           {known ? 'Not right?' : 'Add this'}

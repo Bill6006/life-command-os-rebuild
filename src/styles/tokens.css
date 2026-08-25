@@ -92,6 +92,24 @@
   --space-10: 2.5rem;
   --space-12: 3rem;
 
+  /* ---- Touch ---------------------------------------------------------------
+   *
+   * The smallest a thing may be if a thumb has to find it — QA-82-004.
+   *
+   * Forty-eight, not forty-four, and the four pixels are the whole point. The
+   * accepted minimum is 44, the Android gate asserts 44, and every control in
+   * the app used to be specified at exactly 44 — so on a handset at a device
+   * pixel ratio of 3 the measured height came out at 44.00006, and which side
+   * of the requirement a button landed on was decided by subpixel rounding
+   * rather than by the design. One run passed at 126 checks and the next failed
+   * at 125 with the same bytes on the same control.
+   *
+   * A minimum a design sits exactly on is not a minimum it meets; it is a
+   * minimum it is level with. This clears it by four pixels, so the gate is
+   * measuring the product again instead of measuring float noise.
+   */
+  --touch-target: 3rem;
+
   /* ---- Radii --------------------------------------------------------------- */
   --radius-sm: 0.5rem;
   --radius-md: 0.875rem;

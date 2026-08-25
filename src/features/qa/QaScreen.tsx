@@ -367,7 +367,7 @@ export function QaScreen() {
       <BlockSweepPanel view={view} moment={moment} architecture={architecture} />
 
       <Collapsible title="Facts considered" count={trace.facts.length} open>
-        <Rows>
+        <Rows testId="qa-facts">
           {trace.facts.map((fact) => (
             <Row
               key={fact.concept}

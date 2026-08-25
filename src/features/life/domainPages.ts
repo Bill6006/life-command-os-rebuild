@@ -151,6 +151,16 @@ export interface ConceptReading {
    * entries underneath say it individually.
    */
   readonly origin: RecordOrigin | undefined
+  /**
+   * Whether the app worked this out rather than being told it — QA-82-001.
+   *
+   * A derived row is read-only. Offering "Not right?" on a conclusion invites
+   * the owner to correct a thing that is not his to correct: the correction
+   * would write a record nothing reads, and on this page it would read as
+   * changing the arrangement underneath. So the row says what it rests on
+   * instead, and the correctable row is the one directly above it.
+   */
+  readonly derived: boolean
 }
 
 function readingText(knowledge: Knowledge<FactValue>, entities: EntityIndex): string {
@@ -167,6 +177,40 @@ function conceptReadings(situation: Situation, domains: readonly LifeDomainId[])
   const out: ConceptReading[] = []
   for (const definition of situation.concepts.all()) {
     if (!domains.includes(definition.domain)) continue
+
+    /*
+     * A derived reading comes from the decision, not from the store —
+     * QA-82-001.
+     *
+     * `view.facts` only knows what a record said, so a concept nothing records
+     * resolves to `unknown` here and this page would print "Not known yet."
+     * about a reading the app is actively deciding on. The situation already
+     * carries it, with the sources it rests on, because the decision read it.
+     */
+    if (definition.derived === true) {
+      const worked = situation.considered.find((fact) => fact.concept === definition.id)
+      if (worked === undefined) continue
+      out.push({
+        concept: definition.id,
+        label: definition.label,
+        domain: definition.domain,
+        state: worked.state,
+        standing: false,
+        text: worked.reading,
+        outOfDate: false,
+        // Never correctable, and never asked. See `ConceptDefinition.derived`.
+        question: undefined,
+        origin: originOfAll(
+          worked.sources.flatMap((id) => {
+            const found = situation.view.history.byId(id)
+            return found === undefined ? [] : [found]
+          }),
+        ),
+        derived: true,
+      })
+      continue
+    }
+
     const entry = situation.view.facts.get(definition.id)
     const knowledge = entry?.knowledge
     out.push({
@@ -187,6 +231,7 @@ function conceptReadings(situation: Situation, domains: readonly LifeDomainId[])
                 return found === undefined ? [] : [found]
               }),
             ),
+      derived: false,
     })
   }
   return out

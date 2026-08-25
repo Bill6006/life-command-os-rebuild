@@ -1573,3 +1573,101 @@ describe('an interchangeable-action family is a written decision', () => {
     }
   })
 })
+
+// ---------------------------------------------------------------------------
+// QA-82-004 — a target the size of its own threshold
+// ---------------------------------------------------------------------------
+
+/**
+ * Every touch target reads one token, and that token clears the requirement.
+ *
+ * The Android gate asserts 44px of thumb, and every control in the app used to
+ * be declared at exactly `2.75rem` — 44px. At a device pixel ratio of 3 the
+ * measured height came back as 44.00006, so whether a button passed was decided
+ * by subpixel rounding rather than by the design: one deployed run reported 126
+ * checks clean and the next reported 125, on the same bytes and the same
+ * control.
+ *
+ * Two rules, and the second is what makes the first worth anything:
+ *
+ * 1. No stylesheet states a target size of its own. Fifteen copies of one
+ *    number is fifteen chances for the next one to be 40.
+ * 2. The token is **strictly greater** than the threshold the gate measures
+ *    against. A minimum a design sits exactly on is not a minimum it meets.
+ */
+describe('a touch target is bigger than the smallest allowed target', () => {
+  const cssFiles = (): readonly string[] => {
+    const out: string[] = []
+    const walk = (current: string): void => {
+      for (const name of readdirSync(current)) {
+        const full = join(current, name)
+        if (statSync(full).isDirectory()) {
+          walk(full)
+          continue
+        }
+        if (name.endsWith('.css')) out.push(full)
+      }
+    }
+    walk(join(ROOT, 'src'))
+    return out
+  }
+
+  /** The token, in pixels, at the 16px root the app never overrides. */
+  const tokenPx = (): number => {
+    const tokens = readFileSync(join(ROOT, 'src/styles/tokens.css'), 'utf8')
+    const found = /--touch-target:\s*([0-9.]+)rem/.exec(tokens)
+    expect(found, 'tokens.css should declare --touch-target').not.toBeNull()
+    return Number(found![1]) * 16
+  }
+
+  /** What the deployed Android gate actually measures against. */
+  const gateThreshold = (): number => {
+    const gate = readFileSync(join(ROOT, 'scripts/android-gate.mjs'), 'utf8')
+    const found = /const THUMB = ([0-9]+)/.exec(gate)
+    expect(found, 'the Android gate should name its threshold once').not.toBeNull()
+    return Number(found![1])
+  }
+
+  it('clears the gate’s own threshold with room to spare', () => {
+    expect(tokenPx()).toBeGreaterThan(gateThreshold())
+  })
+
+  it('is the only place a target size is written down', () => {
+    const offenders: string[] = []
+    for (const file of cssFiles()) {
+      const lines = readFileSync(file, 'utf8').split('\n')
+      lines.forEach((line, index) => {
+        if (!/min-(?:height|width)\s*:/.test(line)) return
+        if (line.includes('var(--touch-target)')) return
+        /*
+         * Not every minimum is a touch target — a panel or a chart can have
+         * one for its own reasons. What may not happen is a *control* sized by
+         * a number written here, because that number is then free to drift
+         * below the one the gate measures.
+         */
+        if (/0|auto|100%|var\(--space/.test(line)) return
+        offenders.push(`${repoPath(file)}:${index + 1}: ${line.trim()}`)
+      })
+    }
+    expect(offenders, 'a target size written outside the token').toEqual([])
+  })
+
+  it('the gate reports the measurement it tested, unrounded', () => {
+    /*
+     * The other half of the finding. The failing run's diagnostic said the
+     * control was "44px tall" beside a predicate that had just rejected it for
+     * being under 44 — because the diagnostic rounded. A gate whose report and
+     * whose test state different numbers cannot be acted on.
+     */
+    const gate = readFileSync(join(ROOT, 'scripts/android-gate.mjs'), 'utf8')
+    expect(gate, 'the measured height should be reported in full').toContain('height.toFixed(2)')
+    expect(gate, 'a rounded height in a threshold diagnostic').not.toMatch(
+      new RegExp(String.raw`Math\.round\([^)]*height`),
+    )
+    // And one number, read by the name, the predicate and the diagnostic. Two
+    // checks used to be named for 44 and assert 40.
+    expect(gate, 'a hand-written thumb threshold').not.toMatch(
+      new RegExp(String.raw`(?:height|size|smallest)[a-zA-Z.?() ]*>=\s*\d`),
+    )
+  })
+})

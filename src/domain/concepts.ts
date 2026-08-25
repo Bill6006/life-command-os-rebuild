@@ -162,6 +162,34 @@ export interface ConceptDefinition {
    * beside `freshness` rather than in a global ladder.
    */
   readonly reliability?: SourceReliability
+  /**
+   * Whether the app works this out rather than being told it — QA-82-001.
+   *
+   * No record ever carries a derived concept. `assembleSituation` computes it
+   * from concepts that *are* recorded, plus whatever else the situation knows,
+   * and hands it to the surfaces along with everything else the decision read.
+   *
+   * **It exists so that a reading and the record under it can stop pretending
+   * to be one thing.** The custody arrangement answers whose day it is; a
+   * school day answers whether she is in the room; and while those were one
+   * concept, every surface that walks this registry — the fact ledger, the
+   * domain page, the export — printed the standing arrangement as the answer
+   * to *is she here right now*, which was false for six and a half hours of
+   * every weekday.
+   *
+   * Three things follow from the flag, and each is a rule somewhere else:
+   *
+   * - **Never asked.** There is no question spec, and `guide.ts` cannot ask
+   *   what has none. The owner cannot answer a conclusion on the app's behalf.
+   * - **Never counted as coverage.** Nothing writes a record for it, so
+   *   measuring how long it has been since one would report permanent neglect
+   *   of a fact the owner has no way to supply — DEF-0015's failure, arriving
+   *   from a new direction (`coverage.ts`).
+   * - **Never corrected directly.** The domain page shows it read-only and
+   *   points at the fact it rests on, because a correction typed here would
+   *   read as changing the arrangement and would write a record nothing reads.
+   */
+  readonly derived?: boolean
 }
 
 /**
@@ -210,6 +238,8 @@ export const CONCEPT = {
    * such as travel overrides it for a window without erasing it.
    */
   childPresent: conceptId('family.child-present'),
+  /** Worked out, never recorded — see `ConceptDefinition.derived`. */
+  childHere: conceptId('family.child-here-now'),
   custodyArrangement: conceptId('family.custody-arrangement'),
   learningTopic: conceptId('career.current-learning-topic'),
   usableTimeTonight: conceptId('career.usable-time-tonight'),
@@ -306,7 +336,22 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.childPresent,
-    label: 'Child with the owner',
+    /*
+     * What the record stores, said in the words it stores it in — QA-82-001.
+     *
+     * This was "Child with the owner", and the guide asks it as *"Is Adaya with
+     * you today?"* — both of which are about the day. What the app then did
+     * with the answer was treat it as a claim about the room, and the label was
+     * how that reading reached every generic surface: the fact ledger and the
+     * Fatherhood page printed "Child with the owner — yes" at ten past ten on a
+     * Wednesday, beside a school day the same screen showed running until three.
+     *
+     * "In the owner's care" is the answer the owner actually gave. She is in
+     * his care all day on a day that is his, including the hours she spends at
+     * school, and that is what makes the record durable and never worth
+     * re-asking. Whether she is in the room is {@link CONCEPT.childHere}.
+     */
+    label: 'Child in the owner’s care today',
     domain: DOMAIN.fatherhood,
     // A one-off observation of tonight is good for tonight. The standing
     // answer comes from a durable context record, whose currency is its own
@@ -316,6 +361,31 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     privacy: 'child-family-sensitive',
     ask: { materialToDecision: true, askWhenStale: true },
     reliability: { owner: 1, device: 0.4, derived: 0.5, model: 0.15 },
+  },
+  {
+    id: CONCEPT.childHere,
+    /*
+     * The other half of the same question, and the reason it is a second row
+     * rather than a better sentence on the first — QA-82-001.
+     *
+     * A person reading the Fatherhood page is entitled to both answers: the
+     * arrangement he gave, which he can correct, and the reading the app is
+     * actually deciding on, which he cannot — it is a conclusion, not a fact
+     * about him. Collapsing them into one row is what produced the defect
+     * twice: once as a recommendation to spend half an hour with a daughter who
+     * was at school, and once as an inspection surface still saying she was
+     * with him after the recommendation had been repaired.
+     */
+    label: 'Child here right now',
+    domain: DOMAIN.fatherhood,
+    derived: true,
+    // Worked out from this moment, so it is never anything but current.
+    freshness: localDays(1),
+    // The same class as the arrangement it narrows: this is about a child.
+    privacy: 'child-family-sensitive',
+    // Never. There is no question spec for it and there must not be one — the
+    // owner does not answer the app's own conclusions.
+    ask: { materialToDecision: false, askWhenStale: false },
   },
   {
     id: CONCEPT.custodyArrangement,
