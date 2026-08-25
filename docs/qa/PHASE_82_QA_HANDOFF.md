@@ -1014,9 +1014,9 @@ started.
 | --- | --- |
 | Repaired product checkpoint | `da1a4eed1d502673dbbf8b7886ea37fba8823c47` (`da1a4ee`) — "QA-82 round 2: the identity of a fact, and the size of a target" |
 | Previous checkpoints | `0899f18` (round 1 repairs) and `160ec9a` (first build) |
-| Deployed SHA when equivalence was last proved | `DEPLOYED_FULL` |
+| Deployed SHA when equivalence was last proved | `a77ababe31e4d86f27b44eaf585413bc66b6d05e` (`a77abab`) |
 | Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
-| Relationship | **PASS** — the exact result is recorded below. Never asserted as string equality (D-097). |
+| Relationship | **PASS.** `node scripts/checkpoint-equivalence.mjs da1a4ee --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json` reported five files changed between the checkpoint and the deployed `a77abab` and **none of them bundle-relevant**: four documents and the Android gate script. Never asserted as string equality (D-097). The commit carrying this row moves the live SHA once more — run the checker rather than comparing strings. |
 | Report this responds to | the Round 2 section above, in this same file |
 
 ## What Round 2 got right, and what it changes about how this was repaired
@@ -1286,7 +1286,7 @@ Repaired product checkpoint:
 da1a4eed1d502673dbbf8b7886ea37fba8823c47
 
 Deployed SHA when the builder last proved equivalence:
-DEPLOYED_FULL — read it live from preview/build-info.json and prove checkpoint
+a77ababe31e4d86f27b44eaf585413bc66b6d05e — read it live from preview/build-info.json and prove checkpoint
 equivalence rather than string equality, per D-097. The documentation commits
 carrying this handoff move the live SHA past the checkpoint.
 
