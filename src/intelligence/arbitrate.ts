@@ -1,3 +1,4 @@
+import type { DayBlock } from '../domain/time'
 import { profileFor } from './moves'
 import { blockNoun } from './vocabulary'
 import type { Evaluation } from './evaluate'
@@ -75,11 +76,30 @@ export const CLOSE_ENOUGH_TO_MENTION = 0.02
 /** A move has to be worth making. Anything at or below this is not. */
 export const WORTH_DOING = 0.05
 
+/**
+ * A move worth doing, and worth doing later rather than now — AUD-0024.
+ *
+ * The one answer that is neither "do this" nor "do nothing", and the one the
+ * app could not give: `hold` has been in `ACTION_VERBS` with a full move
+ * profile and its own templates since Phase 1, and no generator produced it.
+ * Section 19 lists "wait" among valid decisions; what existed instead was
+ * `nothing-worth-doing`, which means "nothing is good enough" rather than "not
+ * now", and only one of those is useful at half past seven on a school morning.
+ */
+export interface Deferral {
+  /** The move being held. It is a real ranked candidate, not a placeholder. */
+  readonly evaluation: Evaluation
+  /** The part of today it is being held for. Always later, always today. */
+  readonly until: DayBlock
+}
+
 export interface Selection {
   readonly chosen: Evaluation | undefined
   /** Everything that survived, best first. */
   readonly ranked: readonly Evaluation[]
   readonly noAction: NoActionReason | undefined
+  /** Set when the best move is worth doing and worth doing later — AUD-0024. */
+  readonly deferred: Deferral | undefined
   /**
    * How far ahead the winner finished, when there was a runner-up — AUD-0033.
    *
@@ -127,6 +147,7 @@ export function arbitrate(
       chosen: undefined,
       ranked,
       margin: undefined,
+      deferred: undefined,
       noAction: ruledOut > 0 ? 'everything-ruled-out' : 'nothing-proposed',
       notes:
         ruledOut > 0
@@ -142,6 +163,7 @@ export function arbitrate(
       chosen: undefined,
       ranked,
       margin: undefined,
+      deferred: undefined,
       noAction: 'nothing-worth-doing',
       notes: [
         `the best of ${ranked.length} came out at ${best.score.toFixed(2)}, which is not worth asking for`,
@@ -157,11 +179,113 @@ export function arbitrate(
     )
   }
 
+  /*
+   * Not this, because it will go better later — AUD-0024, AUD-0004.
+   *
+   * Bounded hard, because a deferral path is a new way for the app to say
+   * nothing and "hold" must not become its comfortable answer. Three conditions
+   * have to hold at once and each removes a different way of abusing it, and
+   * they are checked *after* arbitration rather than instead of it, so the trace
+   * still shows what would have been chosen.
+   */
+  const deferred = heldForLater(best, situation)
+  if (deferred !== undefined) {
+    return {
+      chosen: undefined,
+      ranked,
+      margin: runnerUp === undefined ? undefined : best.score - runnerUp.score,
+      deferred,
+      noAction: undefined,
+      notes: [
+        ...notes,
+        `${best.candidate.id} suits ${deferred.until} better than ${situation.block}, and there is room in it, so it was held`,
+      ],
+    }
+  }
+
   return {
     chosen: best,
     ranked,
     margin: runnerUp === undefined ? undefined : best.score - runnerUp.score,
+    deferred: undefined,
     noAction: undefined,
     notes,
   }
+}
+
+/**
+ * How much of a later block has to be the owner's own before it can be named.
+ *
+ * Twenty minutes, the same figure below which the clock is what is in the way
+ * (`SHORT_ENOUGH_TO_LIMIT`). Deferring something into a stretch of day he does
+ * not have would be the confident wrongness AUD-0004 is about, arriving through
+ * the door AUD-0004 opened.
+ */
+const ROOM_IN_A_LATER_BLOCK = 20
+
+/**
+ * How far off a later block has to be before deferring to it is advice.
+ *
+ * An hour, and the reason is what the sentence would otherwise be worth. "Leave
+ * this until the morning" said at twenty to seven is not a decision the owner
+ * can act on differently from "do it now" — the morning is twenty minutes away
+ * and he would simply wait, which is not something the app needed to say. The
+ * figure is the guide's own smallest open-ended answer ("An hour"), which is
+ * the coarsest unit this app measures a stretch of free time in.
+ *
+ * Without it, every block boundary becomes a deferral opportunity and `hold`
+ * becomes the comfortable default AUD-0024 warns about — reachable at the exact
+ * moment it says least.
+ */
+const WORTH_WAITING_FOR_MS = 60 * 60_000
+
+/**
+ * Whether the best move is worth doing and worth doing later.
+ *
+ * **It has to be a real move first.** Only the candidate arbitration already
+ * chose, already above the bar. Holding something not worth doing at all would
+ * be `nothing-worth-doing` wearing a more confident face.
+ *
+ * **The gap has to be material, and "material" is not a threshold anybody
+ * tuned.** `context-fit` scores a move on whether it belongs in the block it is
+ * in, and the profile answers that as a yes or a no. So the condition is the
+ * discrete one: this is an odd fit for now, and it genuinely suits a part of
+ * today that has not happened yet.
+ *
+ * **The later block is the next one, and it has to be real, free and far
+ * enough off to be worth saying.** Real and free
+ * come from the obligations AUD-0004 added; soonest is what caps the whole
+ * thing structurally — a move is held into the next block that suits it, so it
+ * is offered there rather than being deferred again and again down the day.
+ * There is no counter anywhere, and there does not need to be one.
+ */
+function heldForLater(best: Evaluation, situation: Situation): Deferral | undefined {
+  const profile = profileFor(best.candidate.semantics.target.verb)
+  if (profile.suits.includes(situation.block)) return undefined
+
+  /*
+   * The next part of today, and no further.
+   *
+   * Deferring across the whole day is not the answer AUD-0024 asks for; it is
+   * the app planning the owner's Saturday. At twenty to seven with his daughter
+   * up and nothing booked, "the afternoon suits this better" is worse advice
+   * than simply saying it now — and holding into any later block that happened
+   * to suit produced exactly that. "Not now, later" is a credible thing to say
+   * about the next stretch of the day and nothing beyond it.
+   *
+   * It is also the second half of the cap. One candidate block, one hour of
+   * lead time, and a block that has to be his: three conditions that all have
+   * to line up, on a move that is already worth doing. `hold` cannot become the
+   * comfortable default because there is almost never anywhere for it to go.
+   */
+  const next = situation.laterToday[0]
+  if (next === undefined) return undefined
+  if (!profile.suits.includes(next.block)) return undefined
+  if (profile.refuses.includes(next.block)) return undefined
+  if (next.from - situation.at < WORTH_WAITING_FOR_MS) return undefined
+
+  const minutes = best.candidate.semantics.target.minutes
+  if (next.free < Math.max(ROOM_IN_A_LATER_BLOCK, minutes ?? 0)) return undefined
+
+  return { evaluation: best, until: next.block }
 }

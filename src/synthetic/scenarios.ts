@@ -3028,6 +3028,12 @@ export const SCHOOL_MORNING_LATER = createKit('SM', 'America/Denver', '2026-06-0
   '10:00',
 )
 
+/** And the same Wednesday before any of it — AUD-0024's hour. */
+export const SCHOOL_MORNING_EARLY = createKit('SM', 'America/Denver', '2026-06-01T12:00:00Z').local(
+  '2026-09-16',
+  '05:30',
+)
+
 export function schoolMorning(): SnapshotWire {
   const kit = createKit('SM', 'America/Denver', '2026-06-01T12:00:00Z')
   const adaya = entityRef('person', 'Adaya')
@@ -3294,7 +3300,35 @@ function studyThreadScenario(): Scenario {
   }
 }
 
+/**
+ * Half past five, and the answer that is neither do-this nor do-nothing.
+ *
+ * The fifth Now state — AUD-0024. `hold` has been in the vocabulary with a full
+ * move profile and its own templates since Phase 1 and no generator produced
+ * it, because deferring needs a model of later blocks and there was not one.
+ * There is now, so this history has an hour where the honest answer is that the
+ * move is right and the hour is not.
+ *
+ * It is the same Wednesday as `school-morning`, three hours earlier. Holding
+ * the day still and moving only the clock is what makes the state legible: the
+ * identical history gives a hold at half past five, a squeezed morning at
+ * twenty past eight, and an open house at ten.
+ */
+function beforeTheHouseIsUp(): Scenario {
+  return {
+    id: 'before-the-house-is-up',
+    title: 'Before the house is up',
+    summary: 'Half past five on a Wednesday, rested, with the whole day still ahead.',
+    proves:
+      'AUD-0024 — the app can say "not this, because it will go better later" and name a real later block, rather than only "do this" or "nothing to suggest".',
+    zone: SCHOOL_MORNING_ZONE,
+    now: SCHOOL_MORNING_EARLY,
+    build: schoolMorning,
+  }
+}
+
 export const SCENARIOS: readonly Scenario[] = [
+  beforeTheHouseIsUp(),
   studyThreadScenario(),
   schoolMorningScenario(),
   subnettingStruggle(),

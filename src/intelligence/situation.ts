@@ -25,6 +25,7 @@ import {
   addLocalDays,
   blockOf,
   civilDateFromDayId,
+  DAY_BLOCKS,
   instantAtLocal,
   localDateTimeAt,
   localDayIdAt,
@@ -237,6 +238,28 @@ export interface TimeInHand {
   readonly before: Obligation | undefined
 }
 
+/**
+ * A part of today that has not happened yet, and how much of it is his.
+ *
+ * The half of AUD-0004 that makes AUD-0024 reachable. `hold` — the verb that
+ * says *not this, because something better is coming later* — has been in the
+ * vocabulary since Phase 1 with a full move profile and templates, and nothing
+ * generated it, because deferring needs a model of later blocks and there was
+ * not one. This is that model, and it is deliberately coarse: which blocks are
+ * still ahead today, and how many minutes of each are not already spoken for.
+ *
+ * `free` is what stops the app deferring something into a block the owner does
+ * not have. Naming a later block he is working through would be exactly the
+ * confident wrongness the whole finding is about.
+ */
+export interface LaterBlock {
+  readonly block: DayBlock
+  readonly from: Instant
+  readonly to: Instant
+  /** Minutes of it not taken by an obligation of his own. */
+  readonly free: number
+}
+
 export interface Capacity {
   readonly lastNightHours: Knowledge<number>
   readonly sleepDebtHours: Knowledge<number>
@@ -303,6 +326,8 @@ export interface Situation {
    * two can be told apart wherever it matters.
    */
   readonly inHand: TimeInHand
+  /** The parts of today still ahead, and how much of each is his — AUD-0004. */
+  readonly laterToday: readonly LaterBlock[]
   readonly childPresent: Knowledge<boolean>
   /**
    * Courses of action under way, and the ones that have stopped — AUD-0020.
@@ -690,6 +715,69 @@ function timeInHand(
 }
 
 /**
+ * The parts of today still ahead, with the obligations taken out of them.
+ *
+ * Only blocks that begin after this moment, and only within the same
+ * owner-local day: `late-night` spans midnight at its far end, so it is
+ * measured to the end of the day rather than into tomorrow. The app has no
+ * model of tomorrow and must not acquire one by accident here (AUD-0003's own
+ * warning about naming a day it cannot see).
+ */
+const BLOCK_STARTS_AT: Record<DayBlock, number> = {
+  'late-night': 22 * 60,
+  'early-morning': 4 * 60,
+  morning: 7 * 60,
+  afternoon: 12 * 60,
+  evening: 18 * 60,
+}
+
+const BLOCK_ENDS_AT: Record<DayBlock, number> = {
+  'late-night': 24 * 60,
+  'early-morning': 7 * 60,
+  morning: 12 * 60,
+  afternoon: 18 * 60,
+  evening: 22 * 60,
+}
+
+function collectLaterToday(
+  obligations: readonly Obligation[],
+  moment: SituationMoment,
+): readonly LaterBlock[] {
+  const dayId = localDayIdAt(moment.now, moment.zone)
+  const date = civilDateFromDayId(dayId)
+  const at = (minutes: number): Instant =>
+    instantAtLocal(
+      { ...date, hour: Math.floor(minutes / 60), minute: minutes % 60, second: 0 },
+      moment.zone,
+    )
+
+  const out: LaterBlock[] = []
+  for (const block of DAY_BLOCKS) {
+    const from = at(BLOCK_STARTS_AT[block])
+    if (from <= moment.now) continue
+    const to = at(BLOCK_ENDS_AT[block])
+
+    // Only his own obligations take minutes out of a block. A span of somebody
+    // else's time shapes the day at its edges rather than in its middle —
+    // her school day is the freest stretch of his week, not a busy one.
+    let taken = 0
+    for (const entry of obligations) {
+      if (entry.whose !== 'mine') continue
+      const overlap = Math.min(to, entry.endsAt) - Math.max(from, entry.startsAt)
+      if (overlap > 0) taken += overlap
+    }
+
+    out.push({
+      block,
+      from,
+      to,
+      free: Math.max(0, Math.round((to - from) / 60_000 - taken / 60_000)),
+    })
+  }
+  return out
+}
+
+/**
  * What is actually in the way right now (canonical plan section 19).
  *
  * Order matters and is deliberate: recovery outranks a sore body, which
@@ -970,6 +1058,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     learningTopic,
     direction: resolveDirection(view, moment, domains),
     coverage,
+    laterToday: collectLaterToday(commitments, moment),
     threads: activeThreads(view, episodes, { now: moment.now, zone: moment.zone }),
     limiter: findLimiter(capacity, inHand, coverage, block),
     preferences: collectPreferences(view),

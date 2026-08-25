@@ -126,7 +126,15 @@ export interface NoAction {
 }
 
 export interface Decision {
-  readonly kind: 'move' | 'no-action'
+  /**
+   * `hold` is the fifth state — AUD-0024.
+   *
+   * Not a move and not no-action: the app has something worth doing and is
+   * saying this is the wrong hour for it. Those are different sentences and
+   * Phase 9 designs them separately, which is why the state exists now rather
+   * than after the visual phase.
+   */
+  readonly kind: 'move' | 'hold' | 'no-action'
   readonly architecture: ArchitectureId
   readonly situation: Situation
   readonly explanation: Explanation | undefined
@@ -134,6 +142,14 @@ export interface Decision {
   /** Where the chosen move stands, if it has been in front of the owner before. */
   readonly state: MoveState | undefined
   readonly noAction: NoAction | undefined
+  /**
+   * The part of today a held move is being kept for — AUD-0024.
+   *
+   * Set only on a `hold`, and always a block that is later than this one and
+   * inside the same owner-local day. The app has no model of tomorrow and must
+   * not acquire one by naming it.
+   */
+  readonly heldUntil: DayBlock | undefined
   /**
    * Growth areas the evidence says have moved on, as questions (section 9).
    *
@@ -223,6 +239,10 @@ function takeAdvice(
     }),
     notes,
   }
+}
+
+function capitalise(text: string): string {
+  return text.length === 0 ? text : `${text.charAt(0).toUpperCase()}${text.slice(1)}`
 }
 
 function describeError(caught: unknown): string {
@@ -883,6 +903,7 @@ export function decide(
   let explanation: Explanation | undefined
   let noAction: NoAction | undefined
   let state: MoveState | undefined
+  let heldUntil: DayBlock | undefined
 
   /*
    * The app reads the room before it reads the ranking — AUD-0023.
@@ -914,6 +935,76 @@ export function decide(
   } else if (refusals >= REFUSALS_BEFORE_ASKING && !heard) {
     noAction = { reason: 'not-landing', ...noActionCopy('not-landing', situation) }
     notes.push(`${refusals} refusals in this block, so the app stopped offering and asked instead`)
+  } else if (selection.deferred !== undefined) {
+    /*
+     * Not this, because it will go better later — AUD-0024.
+     *
+     * The arbiter decided; this composes the sentence, exactly as it composes
+     * the no-action copy from a reason the arbiter chose. Nothing here selects
+     * anything: `heldForLater` is inside `arbitrate.ts` for the same reason
+     * every other selection is.
+     *
+     * The move's own subject and object are kept, so the sentence names the
+     * thing being held rather than talking about deferral in the abstract. The
+     * block passed to the renderer is the one it is being held **for**, which
+     * is the only place in the app where that is true and is commented at the
+     * template.
+     */
+    const held = selection.deferred
+    /*
+     * No runner-up, and the absence is copy rather than an oversight.
+     *
+     * "Chosen over" is true of a move that was picked. Nothing was picked here:
+     * the app is not doing the held move and it is not doing the runner-up
+     * either, so a row saying it was chosen over something would be describing
+     * a contest that did not happen. The trace still carries the whole ranking.
+     */
+    const result = explain(held.evaluation, undefined, situation, undefined)
+    if (result.ok) {
+      const base = held.evaluation.candidate.semantics
+      /*
+       * The held move's own semantics, with the verb changed.
+       *
+       * Not a new object built beside them: `explanation.semantics` is what
+       * every surface renders from, and a pair where the sentence and the
+       * semantics disagree is exactly what `no-hidden-genericity.test.ts` fails
+       * the build over — the renderer has to stay the only way words are made.
+       * The subject, the domain and the evidence are the held move's, because
+       * they are what the app is holding.
+       */
+      /*
+       * What is being held, said in full, and then why later is better.
+       *
+       * The held move's own reason must not survive: "Adaya is here, and that
+       * window closes on its own" is an argument for doing it **now**, and
+       * printing it under a sentence that says to wait is the app contradicting
+       * itself in two lines. So the reason is composed from what the deferral
+       * actually rests on — the move, the block that suits it, and the block
+       * that does not.
+       */
+      const reason = `${result.explanation.rendered.sentence} ${capitalise(
+        blockNoun(held.until),
+      )} has the room, and ${blockNoun(situation.block)} does not.`
+      const semantics = {
+        ...base,
+        target: { verb: 'hold' as const, object: base.target.object },
+        whyNow: { ...base.whyNow, summary: reason },
+      }
+      const rendered = renderRecommendation(semantics, situation.entities, held.until)
+      if (rendered.ok) {
+        heldUntil = held.until
+        explanation = { ...result.explanation, semantics, rendered: rendered.rendered }
+      }
+    }
+    if (heldUntil === undefined) {
+      // A hold that could not be put into words is a defect, not an answer —
+      // D-018's rule, and the same fall-through a chosen move takes.
+      noAction = {
+        reason: 'nothing-worth-doing',
+        ...noActionCopy('nothing-worth-doing', situation),
+      }
+      notes.push('the held move could not be put into words')
+    }
   } else if (selection.chosen === undefined) {
     const proposed = selection.noAction ?? 'nothing-worth-doing'
     const reason: NoActionReason =
@@ -939,13 +1030,19 @@ export function decide(
   }
 
   const decision: Decision = {
-    kind: noAction === undefined ? 'move' : 'no-action',
+    kind: noAction !== undefined ? 'no-action' : heldUntil !== undefined ? 'hold' : 'move',
     architecture,
     situation,
     explanation,
-    evaluation: noAction === undefined ? selection.chosen : undefined,
+    evaluation:
+      noAction !== undefined
+        ? undefined
+        : heldUntil !== undefined
+          ? selection.deferred?.evaluation
+          : selection.chosen,
     state,
     noAction,
+    heldUntil,
     growth: growthSuggestions(situation),
     trace: {
       architecture,
@@ -972,7 +1069,10 @@ export function decide(
       ranking: rankingRows(selection, situation),
       learning: learningRows(selection, situation),
       episodes: episodeRows(situation),
-      chosen: noAction === undefined ? selection.chosen?.candidate.id : undefined,
+      chosen:
+        noAction === undefined
+          ? (selection.deferred?.evaluation ?? selection.chosen)?.candidate.id
+          : undefined,
       noAction: noAction?.reason,
       notes,
       wouldChange: [],

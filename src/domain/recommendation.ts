@@ -1,6 +1,6 @@
 import type { LifeDomainId } from './domains'
 import type { EntityIndex, EntityRef } from './entities'
-import { blockNoun, horizonWord, restOfWord } from './horizon'
+import { blockNoun, restOfWord } from './horizon'
 import type { RecordId } from './ids'
 import type { DayBlock } from './time'
 
@@ -279,11 +279,29 @@ const TEMPLATES: Record<ActionVerb, VerbTemplate> = {
         : `Move for ${minutes} minutes: ${object}.`,
     followUp: ({ object }) => `Did ${object} happen?`,
   },
+  /*
+   * The verb that says *not now* — AUD-0024.
+   *
+   * "Nothing needs to move on X tonight" was written before there was anything
+   * that could generate a hold, and it says the wrong thing: it is a statement
+   * that the subject is fine, when the point of a deferral is that the move is
+   * worth making and this is the wrong hour for it. Section 19 lists "wait"
+   * among valid decisions, and what the app had instead was
+   * `nothing-worth-doing` — "nothing is good enough" rather than "not now".
+   *
+   * **`block` is the block being held *for*, not the one being decided in**, and
+   * it is the only template where that is true. A deferral whose sentence named
+   * the current hour would be the app announcing the wrong time of day inside
+   * its own instruction, which is the class `recover` was repaired for.
+   */
   hold: {
-    label: 'Hold',
+    label: 'Later today',
     needsPerson: false,
-    action: ({ object, block }) => `Nothing needs to move on ${object} ${horizonWord(block)}.`,
-    followUp: ({ object }) => `Anything change with ${object}?`,
+    action: ({ object, block }) =>
+      block === undefined
+        ? `${capitaliseFirst(object)} would go better later today.`
+        : `${capitaliseFirst(blockNoun(block))} suits ${object} better than now.`,
+    followUp: ({ object }) => `Did ${object} happen in the end?`,
   },
 }
 

@@ -476,11 +476,22 @@ export function NowScreen() {
             <p data-testid="now-reason">{explanation.rendered.reason}</p>
           </PrimarySurface>
 
-          <MoveActions
-            state={decision.state ?? 'shown'}
-            disabled={busy}
-            onAct={act(explanation.semantics, decision.situation)}
-          />
+          {/*
+            No buttons on a deferral — AUD-0024.
+
+            There is nothing to start, nothing to finish and nothing to decline:
+            the app is saying the move is right and the hour is not, and the way
+            back is the hour arriving. Drawing the five lifecycle controls under
+            it would ask him to act on a sentence whose whole content is that
+            acting can wait.
+          */}
+          {decision.kind === 'hold' ? null : (
+            <MoveActions
+              state={decision.state ?? 'shown'}
+              disabled={busy}
+              onAct={act(explanation.semantics, decision.situation)}
+            />
+          )}
 
           <StopSuggesting
             refused={justRefused}

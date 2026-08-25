@@ -39,12 +39,21 @@ function evidenceOn(id: string) {
 
 describe('across every history in the library', () => {
   it('offers evidence exactly when there is a move on screen', () => {
+    /*
+     * A deferral counts, and AUD-0024 is why — a `hold` is a real ranked move
+     * with a real reason, and the app is asking the owner to wait on the
+     * strength of it. If anything, it is the state he is most likely to want to
+     * check: "not now" is a harder claim to take on trust than "do this".
+     *
+     * The two states that offer nothing are the two with nothing behind them:
+     * no-action has no move to explain.
+     */
     for (const scenario of SCENARIOS) {
       const { decision, evidence } = evidenceOn(scenario.id)
       expect(
         evidence !== undefined,
         `${scenario.id}: a ${decision.kind} evening with evidence ${evidence === undefined ? 'missing' : 'offered'}`,
-      ).toBe(decision.kind === 'move')
+      ).toBe(decision.kind !== 'no-action')
     }
   })
 

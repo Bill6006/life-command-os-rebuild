@@ -478,6 +478,14 @@ describe('the reason only cites what the decision leaned on — DEF-0006', () =>
       if (explanation === undefined) continue
       const hadRival = entry.decision.trace.ranking.length > 1
       if (!hadRival) continue
+      /*
+       * A deferral has no "chosen over" row, and the absence is copy rather
+       * than an oversight — AUD-0024. "Chosen over" is true of a move that was
+       * picked; nothing was picked here, so a row saying otherwise would
+       * describe a contest that did not happen. The whole ranking is still in
+       * the trace.
+       */
+      if (entry.decision.kind === 'hold') continue
 
       expect(
         explanation.instead,
@@ -513,9 +521,18 @@ describe('the renderer stays the only way words are made', () => {
       const again = renderRecommendation(
         entry.decision.explanation.semantics,
         entry.decision.situation.entities,
-        // The block is part of the input now (AUD-0002), so re-rendering the
-        // same semantics at the same hour has to be given the same hour.
-        entry.decision.situation.block,
+        /*
+         * The block is part of the input now (AUD-0002), so re-rendering the
+         * same semantics at the same hour has to be given the same hour.
+         *
+         * A deferral is the one case where the hour in the sentence is not the
+         * hour being decided in — `hold` names the block it is being held
+         * **for** — so the re-render is given the block the decision itself
+         * used. The invariant is unchanged and is the one that matters: the
+         * sentence on screen came out of the renderer and can be produced again
+         * from what the decision carries.
+         */
+        entry.decision.heldUntil ?? entry.decision.situation.block,
       )
       expect(again.ok, entry.id).toBe(true)
       if (!again.ok) continue
