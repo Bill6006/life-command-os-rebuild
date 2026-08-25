@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Panel, PrimarySurface, Row, Rows, Screen } from '../../components/ui'
 import type { RecordId } from '../../domain/ids'
-import type { RecommendationSemantics } from '../../domain/recommendation'
+import { renderRecommendation, type RecommendationSemantics } from '../../domain/recommendation'
+import type { EntityIndex } from '../../domain/entities'
 import { localDateTimeAt, systemClock, type DayBlock } from '../../domain/time'
 import { entityRef } from '../../domain/entities'
 import {
@@ -161,6 +162,16 @@ export function NowScreen() {
    */
   const [evidenceFor, setEvidenceFor] = useState<string | undefined>(undefined)
 
+  /**
+   * The move he most recently said no to, for as long as this screen is open.
+   *
+   * Session-local rather than derived, and deliberately so: a refusal is not a
+   * veto (D-045, section 20), and nothing about it may be inferred from the
+   * store. What the screen offers is a chance to say the stronger thing while
+   * he is still thinking about the weaker one.
+   */
+  const [justRefused, setJustRefused] = useState<RecommendationSemantics | undefined>(undefined)
+
   /*
    * A synchronous latch, deliberately a ref rather than state.
    *
@@ -256,6 +267,18 @@ export function NowScreen() {
 
   const act = (semantics: RecommendationSemantics, situation: Situation) => {
     return (action: LifecycleAction) => {
+      /*
+       * Hold on to what he just said no to — AUD-0050.
+       *
+       * The refused move leaves the screen immediately, because a move refused
+       * in this block is out of the running for it (AUD-0023). So the offer to
+       * stop it for good has to be about the move he just pressed no on rather
+       * than about whatever came next, and this is the only place that knows
+       * which one that was.
+       */
+      if (action === 'decline' || action === 'unable-now' || action === 'try-another') {
+        setJustRefused(semantics)
+      }
       append(() => {
         const planned = planLifecycle({
           view: memory.view,
@@ -415,11 +438,21 @@ export function NowScreen() {
           />
 
           <StopSuggesting
-            refused={decision.state === 'declined' || decision.state === 'unable-now'}
-            move={explanation.rendered.sentence}
-            area={decision.situation.domains.labelFor(explanation.semantics.domain)}
+            refused={justRefused}
+            entities={decision.situation.entities}
+            area={
+              justRefused === undefined
+                ? ''
+                : decision.situation.domains.labelFor(justRefused.domain)
+            }
+            block={decision.situation.block}
             disabled={busy}
-            onForbid={(scope) => forbid(explanation.semantics, scope)}
+            onForbid={(scope) => {
+              if (justRefused === undefined) return
+              forbid(justRefused, scope)
+              setJustRefused(undefined)
+            }}
+            onDismiss={() => setJustRefused(undefined)}
           />
 
           <DetailPanel
@@ -844,19 +877,29 @@ function EvidencePanel({
  */
 function StopSuggesting({
   refused,
-  move,
+  entities,
   area,
+  block,
   disabled,
   onForbid,
+  onDismiss,
 }: {
-  refused: boolean
-  move: string
+  refused: RecommendationSemantics | undefined
+  entities: EntityIndex
   area: string
+  block: DayBlock
   disabled: boolean
   onForbid: (scope: 'move' | 'area') => void
+  onDismiss: () => void
 }) {
   const [asking, setAsking] = useState(false)
-  if (!refused) return null
+  if (refused === undefined) return null
+
+  const rendered = renderRecommendation(refused, entities, block)
+  const move = rendered.ok ? rendered.rendered.sentence : undefined
+  // D-018: no fallback wording. A move that cannot be named cannot be vetoed by
+  // name either, and a control saying "stop suggesting it" is the "it" problem.
+  if (move === undefined) return null
 
   if (!asking) {
     return (
@@ -869,16 +912,16 @@ function StopSuggesting({
           onClick={() => setAsking(true)}
           data-testid="now-stop"
         >
-          Stop suggesting this
+          Stop suggesting that
         </button>
       </p>
     )
   }
 
   return (
-    <Panel title="Stop suggesting this">
+    <Panel title="Stop suggesting that">
       <p className="now-question" data-testid="now-stop-confirm">
-        This stays off until you lift it, and you can lift it on the {area} page.
+        {move} This stays off until you lift it, and you can lift it on the {area} page.
       </p>
       <div className="now-options">
         <button
@@ -899,7 +942,14 @@ function StopSuggesting({
         >
           Anything from {area}
         </button>
-        <button type="button" className="now-option" onClick={() => setAsking(false)}>
+        <button
+          type="button"
+          className="now-option"
+          onClick={() => {
+            setAsking(false)
+            onDismiss()
+          }}
+        >
           Cancel
         </button>
       </div>

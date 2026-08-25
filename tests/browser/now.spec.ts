@@ -88,15 +88,24 @@ test.describe('one scenario, read from Now', () => {
      * rows are absent — and the panel around them was still drawn, leaving an
      * empty bordered rectangle under the recommendation for the owner to work
      * out. A panel with nothing in it is not a quiet panel.
+     *
+     * The claim is that no panel is empty, not that no panel exists. Counting
+     * them was a proxy that stopped meaning what it said the moment the app
+     * gained a reason to draw one here: this history has no sleep reading for
+     * the night it stands on, and sleep is a concept the app may ask about even
+     * when the share rule would refuse (D-111).
      */
     await loadInQa(page, 'A settled arrangement, and one week away')
     await goToNow(page)
 
     await expect(page.locator('.primary-surface__headline')).toContainText('Adaya')
 
-    // No limiter, one candidate, nothing asked — so there is nothing to put in
-    // a panel, and none is drawn.
-    await expect(page.locator('.panel')).toHaveCount(0)
+    // No limiter and one candidate, so the detail panel has nothing to put in
+    // it and is not drawn.
+    await expect(page.locator('.panel', { hasText: 'Chosen over' })).toHaveCount(0)
+    for (const panel of await page.locator('.panel').all()) {
+      await expect(panel).not.toBeEmpty()
+    }
   })
 
   test('never draws a panel with nothing in it, on any scenario', async ({ page }) => {
@@ -156,9 +165,13 @@ test.describe('the guide, on the Now flow', () => {
     await expect(headline).toHaveText('Move for 25 minutes: a walk.')
     // Only what the walk actually won on: the reading just given, and the part
     // of the day, which the ranking scored positively.
-    await expect(page.getByTestId('now-reason')).toHaveText(
+    await expect(page.getByTestId('now-reason')).toContainText(
       'Energy is good, and the evening suits a walk.',
     )
+    // And what it cost, because the week is pointed somewhere else and the app
+    // is overruling it — AUD-0026. Section 6 lists the tradeoff among the ten
+    // things Now should be able to show, and it was one of three it could not.
+    await expect(page.getByTestId('now-reason')).toContainText('The week is pointed at')
   })
 
   test('does not ask anything when it already knows enough', async ({ page }) => {

@@ -483,9 +483,19 @@ test.describe('the laboratory and the owner keep separate histories', () => {
     await seedHisOwnHistory(page)
     await openQa(page)
 
-    // Deliberately not awaited: the load is still running when the next line
-    // clicks.
-    void page.getByRole('button', { name: /Two months of readings/ }).click()
+    /*
+     * Scrolled into place first, then fired without awaiting.
+     *
+     * The unawaited click has to land *now*: if Playwright has to scroll to
+     * reach the button, the sticky header intercepts the first attempt, the
+     * retry waits half a second, and by then the next line has already emptied
+     * the laboratory and re-rendered the list out from under it. That reads as
+     * a product failure and is a test-harness one — section 60's warning
+     * exactly. Scrolling is not part of what this test is about.
+     */
+    const slowLoad = page.getByRole('button', { name: /Two months of readings/ })
+    await slowLoad.scrollIntoViewIfNeeded()
+    void slowLoad.click({ force: true })
     await page.getByRole('button', { name: 'Empty the laboratory' }).click()
 
     await page.goto(`${APP}#/timeline`)
