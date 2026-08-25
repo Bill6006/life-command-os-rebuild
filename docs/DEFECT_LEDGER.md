@@ -103,9 +103,9 @@ None.
   most two words.
 - Regression: `tests/synthetic/no-action-copy.test.ts` — every reason at every
   block rendered as a finished sentence and held against a written-out table of
-  thirty-eight lines, plus a shape guard on `blockNoun` itself and its
-  counterpart on `hereNowWord`. Also `tests/browser/phase81.spec.ts`, which
-  walks QA's own sequence, and two checks in the Android gate.
+  forty lines, plus a shape guard on `blockNoun` itself and its counterpart on
+  `hereNowWord`. Also `tests/browser/phase81.spec.ts`, which walks QA's own
+  sequence, and two checks in the Android gate.
 - Siblings: checked, and one more of the same class found on the first render of
   the catalogue: `nothing-in-reach` ended _"rather than about your evening"_ at
   every block, including nine in the morning — a gate item 1 violation, in a

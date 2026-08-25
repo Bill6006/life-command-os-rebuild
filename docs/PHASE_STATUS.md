@@ -24,39 +24,62 @@ reopens Phase 4 or any completed phase.
 
 # Phase 81 — Correctness and truthfulness
 
-**Status: YELLOW — READY FOR INDEPENDENT QA (second submission).**
+**Status: GREEN — CLOSED after independent QA PASS.**
 
-Under D-077 this conversation may not approve its own phase. Twenty-two audit
-findings in six steps, every one of them a thing the app states that is untrue or
-an action the plan promises that the interface lacks. Nothing here is a new
-capability, a new domain or a new screen.
+Three QA rounds: **FAIL, FAIL, PASS.** Under D-077 the builder conversation
+could not approve its own phase; the same independent Codex conversation tested
+the deployed build across all three rounds, and its Round 3 PASS is what closes
+this phase.
 
-**Round 1 of independent QA returned FAIL on five blocking findings**
+Twenty-two audit findings in six steps, every one of them a thing the app
+states that is untrue or an action the plan promises that the interface lacks.
+Nothing here is a new capability, a new domain or a new screen.
+
+**Round 1 returned FAIL on five blocking findings**
 ([`qa/PHASE_81_QA_HANDOFF.md`](qa/PHASE_81_QA_HANDOFF.md)): a named-limiter
 invariant that was documented rather than met, a trade-off sentence that
 endorsed the move the app had just rejected, the ignored-recommendation
 reproduction still repeating four times, the promised question not following the
-second refusal, and a clean-tree `npm run verify` that did not pass. All five are
-repaired in step 81.6 below, each under section 42 rather than at the line
+second refusal, and a clean-tree `npm run verify` that did not pass. All five
+were repaired in step 81.6, each under section 42 rather than at the line
 reported, and each regression proved to fail against a faithful reintroduction
 of the defect it guards. Three of the five had a green regression standing over
 them at the time QA found them; what those regressions had in common is recorded
 with each entry.
 
+**Round 2 confirmed all five round-1 findings repaired and accepted the
+sore/rested adjudication, then returned FAIL on two findings the round-1
+repairs had themselves produced**: a repetition rule that could be made to
+promote a move the situation argued against once it had withheld the correct
+one, and a late-night no-action sentence that was not a sentence. Both were
+repaired in step 81.7, and rendering the no-action copy catalogue for the first
+time turned up a third defect of the same class that QA had not named.
+
+**Round 3 confirmed both repaired, adjudicated the third defect as correctly
+fixed, and returned PASS.** QA's own words on the acceptance instrument: _"The
+old `block-sweep.test.ts` was insufficient by itself for gate item 1: it could
+only render states the scenario library reached... The new explicit catalogue
+closes that gap, while the real sweep continues to prove wiring."_ QA
+independently reintroduced QA-81-006's root seam in an isolated worktree and
+confirmed the guard fails without it (3/19) and holds with it (19/19). One
+non-blocking documentation slip was found and is corrected here: DEF-0086 and
+D-127 said the no-action copy table held thirty-eight lines; it holds forty.
+
 The specification is
 [`WHOLE_APP_INTELLIGENCE_AUDIT.md`](WHOLE_APP_INTELLIGENCE_AUDIT.md) section 6.
 The governing decisions written before any code changed are **D-109 … D-113**;
-the ones written during the work are **D-114 … D-121**, and the five repairs
-add **D-122 … D-125**.
+the ones written during the work are **D-114 … D-127**.
 
 ## Checkpoint
 
-|                      |                                                                                                                                                                                                                                                |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Product checkpoint   | `736a761` — the last commit that changes the bundle                                                                                                                                                                                            |
-| Deployed Preview SHA | `736a761` at the time of writing, and **read it live** — see below                                                                                                                                                                             |
-| Relationship         | Proved with `node scripts/checkpoint-equivalence.mjs 736a761 --deployed <build-info url>`, which reported them equal, per D-097. Not asserted as string equality: this repository redeploys on every push, including a documentation-only one. |
-| Preview              | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                                                                                                    |
+|                        |                                                                                                                                                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product checkpoint     | `7e00dac` — the last commit that changes the bundle; the code Round 3 QA tested                                                                                                                                     |
+| QA-tested deployed SHA | `caaf179` — read live by QA during Round 3, bundle-equivalent to `7e00dac`                                                                                                                                          |
+| Docs-only closeout SHA | this commit — corrects DEF-0086/D-127's line count and records the PASS; changes no byte the browser downloads                                                                                                      |
+| Relationship           | Proved with `node scripts/checkpoint-equivalence.mjs 7e00dac --deployed <build-info url>`, per D-097. Not asserted as string equality: this repository redeploys on every push, including a documentation-only one. |
+| QA verdict             | **PASS**, Round 3, same Codex conversation across all three rounds. Report: [`qa/PHASE_81_QA_HANDOFF.md`](qa/PHASE_81_QA_HANDOFF.md)                                                                                |
+| Preview                | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                                                                         |
 
 ## Exact verification results
 
@@ -207,7 +230,14 @@ behaviour is what is implemented.
 **The known Playwright transient did not occur.** One test per full local run
 used to fail at `page.goto` with `net::ERR_ABORTED`, on a rotating spec. Neither
 the round-2 run of 495 nor this run of 501 saw it, and independent QA did not
-see it in either round. Still reported rather than declared gone.
+see it in any of the three rounds. Still reported rather than declared gone.
+
+**Round 3's own reading of gate item 1's instrument is recorded rather than
+paraphrased**, because it states a rule this phase should keep: a sweep over
+reachable states proves real wiring and cannot prove a universal claim about
+branches the library does not reach; an explicit catalogue proves the universal
+claim and cannot prove the wiring. Gate item 1 needed both, and `nothing-in-reach`
+is the sentence that was wrong only where the first instrument could not see.
 
 ## Deliberate non-features, unchanged
 

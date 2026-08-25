@@ -3967,6 +3967,6 @@ twos, so most of this catalogue had never been rendered by anything.
 morning. That is gate item 1 of this phase, in a sentence written to protect a different truth,
 under the sweep built to catch precisely it.
 
-**So the guard is a table of finished lines.** Thirty-eight of them, written out rather than
-generated, because a generated expectation is the implementation restated and this file exists
-because the implementation was wrong in a way only a reader could see.
+**So the guard is a table of finished lines.** Forty of them, written out rather than generated,
+because a generated expectation is the implementation restated and this file exists because the
+implementation was wrong in a way only a reader could see.

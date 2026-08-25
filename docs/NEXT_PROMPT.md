@@ -1,250 +1,213 @@
 # Next prompt
 
-**Phase:** 81 — **QA round 3, retest after repair**
+Canonical plan section 43. The intelligence level, model and conversation
+instruction sit outside the prompt so the owner can switch Claude Code before
+pasting.
 
-Canonical plan section 43 for the workflow, section 58 for the report format.
-Independent QA is Codex (D-090); Claude builds. Every handoff ends with the
-model, the level, the conversation and a short copyable launcher (D-092).
-
-**Round 2 returned FAIL on two findings.** Both are repaired. The phase stays
-**YELLOW — READY FOR INDEPENDENT QA** and remains Phase 81; under D-077 the
-builder conversation may not approve its own phase, and under D-109 and D-092 a
-retest keeps the phase number and goes to the **same Codex conversation that has
-written both rounds**.
-
-Round 2 also confirmed all five round-1 findings repaired and accepted the
-sore/rested adjudication. Neither is reopened here.
-
-The report is [`qa/PHASE_81_QA_HANDOFF.md`](qa/PHASE_81_QA_HANDOFF.md). The
-builder's own report is [`PHASE_STATUS.md`](PHASE_STATUS.md); the specification
-is section 6 of
-[`WHOLE_APP_INTELLIGENCE_AUDIT.md`](WHOLE_APP_INTELLIGENCE_AUDIT.md).
-
-|                                    |                                                                                 |
-| ---------------------------------- | ------------------------------------------------------------------------------- |
-| Product checkpoint                 | `7e00dac` — the last commit that changes the bundle                             |
-| Deployed Preview SHA               | past the checkpoint by the commits that wrote these docs — **read it live**     |
-| Relationship                       | proved with `scripts/checkpoint-equivalence.mjs`, never string equality (D-097) |
-| Preview                            | https://bill6006.github.io/life-command-os-rebuild/preview/                     |
-| Unit layer                         | 1,332 / 1,332 across 60 files (was 1,321 across 59)                             |
-| Browser                            | 501 / 501 — 167 each at 360, 430 and 1,280px (was 495)                          |
-| Android-style gate, deployed build | clean, 93 checks (was 86)                                                       |
-| `npm run verify` from a clean tree | PASS                                                                            |
-| Report path for this phase         | `docs/qa/PHASE_81_QA_HANDOFF.md` — the same file, updated for round 3           |
+**Phase 81 is GREEN**, approved after independent QA's round 3 retest returned
+PASS. Product checkpoint `7e00dac`; QA-tested deployed SHA `caaf179`; report at
+[`qa/PHASE_81_QA_HANDOFF.md`](qa/PHASE_81_QA_HANDOFF.md). Full closeout in
+[`PHASE_STATUS.md`](PHASE_STATUS.md) under "Phase 81 — Correctness and
+truthfulness."
 
 ---
 
-## NEXT ACTION
+## NEXT CLAUDE ACTION
 
-- **System:** **Codex** — independent QA (D-090)
-- **Model:** the strongest Codex model available for careful reading rather than
-  for search depth
-- **Reasoning level:** **High** — not Max. Round 2's two findings both came from
-  walking a deployed screen across a day and reading what it said, and this
-  retest is the same work on a smaller surface. Reach higher only if a repair
-  turns out to have moved the architecture rather than the line.
-- **Conversation:** **THE SAME CODEX CONVERSATION THAT WROTE ROUNDS 1 AND 2.**
-- **Report path:** `docs/qa/PHASE_81_QA_HANDOFF.md`, updated in place
+- **Model:** Opus-class (Claude Opus 5 or the nearest current equivalent)
+- **Intelligence level:** High
+- **Conversation:** **NEW — a fresh builder conversation for Phase 82**
+- **Why this model:** Phase 82's hard packages are structural-judgement work
+  rather than routine wiring — deciding what a "thread" is allowed to be
+  without becoming a second recommendation engine, keeping a thread from
+  overriding a dominant limiter, and re-cutting the scoring instrument
+  (AUD-0035) in a change that moves every learned belief and every scenario
+  expectation at once. That is architecture-adjacent design judgement, the
+  same class of work Phase 3 and Phase 6 needed Opus-class for.
+- **Why this level:** High is enough. The work packages, their order, their
+  dependencies and their gate are already fully specified in section 7 of the
+  audit — this is disciplined execution against a written spec, not open
+  invention. Max is not needed.
+- **Why a new conversation:** a genuinely new phase after GREEN, per
+  `qa/README.md`'s conversation rule and plan section 43's default routing.
+  Phase 81's five-then-two repair history is not load-bearing context for
+  Phase 82's work, which starts from a different part of the codebase
+  (`direction.ts`, a new commitment-window record kind, a new `thread-fit`
+  dimension) and has its own gate.
+- **Attach/reference:** nothing beyond what the prompt below already names.
+
+---
 
 ## COPY/PASTE PROMPT
 
 ```text
-Independent QA — Phase 81, correctness and truthfulness. Round 3, retest after
-repair.
+You are continuing the Life Command OS rebuild. Phase 81 is complete and GREEN,
+approved by independent QA on round 3. Begin Phase 82 — the structural
+intelligence skeleton.
 
-Repository:
+Work in this repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+GitHub: Bill6006/life-command-os-rebuild (public, default branch main)
+Preview: https://bill6006.github.io/life-command-os-rebuild/preview/
 
-Preview:
-https://bill6006.github.io/life-command-os-rebuild/preview/
+Phase 81 was approved after independent QA's round 3 retest returned PASS, at
+product checkpoint 7e00dac (QA-tested deployed SHA caaf179). The
+independent-QA gate (D-077), the eleven-domains/ten-pages rule (D-078), and the
+QA-handoff output rule (D-082 — every QA run or retest, PASS or FAIL, outputs
+the complete next prompt automatically) all remain in force and unchanged.
 
-You are the same Codex conversation that wrote rounds 1 and 2 of this report.
-Your two open findings are QA-81-006 and QA-81-007 and both are reported
-repaired. Do not repair application or product code: you may create or update
-only docs/qa/PHASE_81_QA_HANDOFF.md and narrowly scoped QA evidence artifacts.
+WHAT PHASE 82 IS, AND WHAT IT IS NOT
 
-Checkpoint
-- Product checkpoint: 7e00dac
-- Deployed Preview SHA: read it live from the URL below rather than from this
-  file. The commits that wrote these documents sit on top of the checkpoint and
-  change no byte the browser downloads.
-- These are two facts, not one. Prove the relationship with
-  `node scripts/checkpoint-equivalence.mjs 7e00dac --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json`
-  rather than by comparing strings. That is D-097 and DEF-0061, and a deployed
-  SHA past the checkpoint is not a reason to refuse to test.
+Read docs/WHOLE_APP_INTELLIGENCE_AUDIT.md section 7 in full before anything
+else — it is this phase's specification, and its own opening line is the test
+that governs scope: "Membership is decided by one test and nothing else: would
+Phase 9 approve the wrong product structure if this landed afterwards?" Nine
+audit findings, six work packages, no owner-visible falsehood to fix — this
+phase's gate is structural rather than truthfulness-based, which is a different
+kind of acceptance than Phase 81 just went through. Do not import Phase 81's
+gate shape onto this phase; read section 7's own gate instead.
 
-WORK IN THIS ORDER
+Three findings that look like they belong here do not: AUD-0040, AUD-0045 and
+AUD-0047 were in an earlier draft and were removed on re-examination. Section 7
+explains why for each. Do not add them back without a reproduction that the
+test above actually fails without them.
 
-1. YOUR TWO REPRODUCTIONS, PRESSED AGAIN ON THE DEPLOYED BUILD, before reading
-   anything the builder wrote about them.
-2. THE THIRD DEFECT THE REPAIR FOUND, which you did not report and should
-   judge — below.
-3. THE REGRESSIONS, HELD AGAINST THE ACCEPTANCE MEANING. Round 2's own lesson
-   is the one to apply: both findings were interactions and collateral, not the
-   thing anyone was looking at. Ask what each new guard would have to be wrong
-   about for the defect to come back green, and reintroduce at least one of the
-   two root seams yourself.
-4. COLLATERAL. The repair touched the filter, the engine's copy, one horizon
-   fragment used in six frames, and the memory provider. Read whole screens
-   across the library and the block sweep for anything that moved which should
-   not have.
-5. THE STANDING GATES, as before.
-6. FULL-SUITE DUPLICATION ONLY ON A CONCRETE TRIGGER.
+THE SIX WORK PACKAGES, IN THE ORDER SECTION 7 RECOMMENDS
 
-QA-81-006 — the repetition filter and the limiter
+1. Goal horizon and parts — AUD-0046, AUD-0021. AUD-0046 first (goalFit must
+   read the horizon before parts build on it).
+2. Commitment windows — AUD-0004. A new Life surface, new record kind, carrying
+   provenance and recurrence from the start.
+3. Threads — AUD-0020. The strongest member and the new persistent
+   owner-visible object. Bounded to three concrete thread types with no generic
+   creation UI — do not build a fourth or a generic mechanism "while you're in
+   there."
+4. Deferral — AUD-0024. A fifth Now state, depends on package 2 (hold cannot
+   name a later block until commitment windows exist).
+5. Growth state and occasion context — AUD-0015(a), AUD-0017. AUD-0017 is
+   load-bearing: the extra tap makes the outcome answer a two-step flow, an
+   interaction change, not a label change.
+6. Re-cut and re-run — AUD-0035, AUD-0039. The re-cut of the scoring instrument
+   itself, absolutely last, after package 3 (thread-fit is the dimension being
+   cut around). The tournament is re-baselined in the same change. This is the
+   highest-blast-radius change in the audit — every learned belief, every
+   scenario's expected output and every golden profile moves. Do it once,
+   deliberately, in one change, not incrementally.
 
-  Reproduction: your own. "A morning after three bad nights", one uninterrupted
-  session, Now at 15:00, 20:00 and 23:00 on 2026-09-15, pressing no lifecycle
-  action. The third hour must not become the study advice the app has spent the
-  day declining.
+Packages 1 and 5 have no dependency on anything else in this phase and may
+float if a different order is more convenient. Packages 2→4 and 3→6 are hard
+dependencies and must not be reordered.
 
-  What changed: the two rules are ordered rather than left to compete. When the
-  repetition rule withholds the only candidate that answers a named limiter,
-  nothing that fails to answer that limiter may take its place; what is left is
-  a real no-action state with copy that says why. "Answers the limiter" is now
-  one definition read by the dimension that rewards it, the filter that protects
-  it and the invariant that sweeps for it.
+THE GATE — section 7, six items, all structural
 
-  Judge specifically:
-  - The new no-action copy. It says "What is short has one answer here, and it
-    has already been in front of you today. Everything else here works against
-    it." Is that true, and is it the right thing to say to him at eleven at
-    night? Saying nothing is one of the three outcomes you sanctioned; this is
-    what saying nothing looks like.
-  - The bound. The rule fires only when the withheld move was itself an answer
-    to the limiter. Without that bound, an ordinary repetition under a time or
-    coverage limiter would blank the screen — a worse defect than the one
-    repaired. There is a test for that direction; check that it is real.
-  - Measured blast radius: 2 of 105 decisions across the library with the ledger
-    running, both of them the reported defect. Reproduce that count if you doubt
-    it.
+1. A thread never bypasses the arbiter — an architecture-guard test, per
+   section 17.2's existing shape.
+2. A dominant limiter overrides a thread — thread-fit weighted below
+   bottleneck-fit, asserted directly.
+3. A thread can be stopped in one tap, expires on its own, and explains why it
+   is active.
+4. hold names a real later block and cannot be returned when no later block
+   scores higher.
+5. The tournament is re-run and re-baselined on the re-cut instrument
+   (AUD-0035, AUD-0039), with MAX_NUDGE expressed relative to the ranked
+   spread rather than as an absolute.
+6. No percentage, rank, grade or score about the child survives package 5 —
+   the Phase 81 copy guard (g003-growth-evidence.test.ts) must still bite.
+   Package 5 touches the growth model's data shape; prove the guard still
+   catches a faithfully reintroduced violation before calling it green,
+   exactly as Phase 81's own repairs were held to (canonical plan section 42).
 
-  A sibling was found and fixed, and it matters to how you test: the session
-  ledger used to survive a change of history, so loading one laboratory fixture
-  after another carried the first one's showings into the second and a move
-  could arrive already used up. No owner can reach that; every auditor can, and
-  it made the builder's own Android gate report the wrong screen for this very
-  finding. If your round-2 notes contain a screen that looked odd after a
-  scenario swap, that is probably why.
+READ, IN THIS ORDER
 
-QA-81-007 — the sentence at late night
+1. docs/CANONICAL_REBUILD_PLAN.md — the sole governing authority (v1.2), read
+   completely. Section 34 (module ownership), section 42 (the repair
+   discipline — reproduce, name the class, regression, prove it fails
+   reintroduced, fix, focused coverage, full gate — this now governs day-one
+   work too, not only repairs), section 43 (the handoff workflow), section 58
+   (report format).
+2. docs/WHOLE_APP_INTELLIGENCE_AUDIT.md section 7 in full (read above), then
+   the nine findings themselves in full: AUD-0046, AUD-0021 (goal horizon,
+   H-adjacent sections), AUD-0004 (commitment windows), AUD-0020 (threads),
+   AUD-0024 (deferral), AUD-0015(a) and AUD-0017 (growth), AUD-0035 and
+   AUD-0039 (H.1 and its neighbour — the re-cut and the tournament rubric).
+   Each finding's own "Implementation scope", "Risks" and "Tests required"
+   rows are load-bearing, not decoration.
+3. docs/qa/README.md — the independent QA protocol. This phase's gate is
+   structural rather than copy-truthfulness, so read section 3a (D-082) again
+   for how the retest loop and automatic next-prompt output apply regardless
+   of gate shape.
+4. docs/PHASE_STATUS.md — read the Phase 81 entry in full, especially "The six
+   steps" and step 81.6/81.7's account of what a green regression can miss
+   when it only sweeps reachable states rather than rendering a full
+   catalogue. That lesson applies directly to package 6: a tournament
+   re-baseline is exactly the kind of change where "the golden profiles still
+   pass" can be true while the new scale is wrong in states the profiles do
+   not reach.
+5. docs/DECISION_LOG.md — D-109 (why Phase 82 exists and is only nine
+   findings — read in full), D-077 (the QA protocol), D-078 (domains/pages),
+   D-082 and D-092 (handoff format), D-097 (checkpoint equivalence), D-108
+   (a guard is not a guard until its defect has been reintroduced and
+   caught — read this one closely; it is what section 42 turned into
+   mechanical steps and what package 6's tournament re-run must satisfy),
+   D-114 through D-127 (Phase 81's decisions — background on the arbitration
+   dimensions and copy discipline package 6 will re-derive constants against
+   and package 3 will add a dimension alongside).
+6. docs/ARCHITECTURE_BOUNDARIES.md — module ownership, and the line between
+   deciding and recording. `src/intelligence/` is the one brain; a thread must
+   be read by `arbitrate.ts` as a dimension input the same way every other
+   limiter and direction signal is, not as a side channel that can win outside
+   the ranking. `OPEN_TO_SURFACES` in tests/unit/architecture-guards.test.ts is
+   the enforced import list for `src/features/` — a new commitment-window
+   surface and a threads list on Life read through `situation`/`decide` the
+   same way every existing Life page does.
+7. docs/DEFECT_LEDGER.md — DEF-0006 (the four-facts-collapsed-into-one class,
+   relevant to keeping thread state and growth-occasion context from folding
+   back into a single number the way an earlier phase's mistake did), and
+   DEF-0080 through DEF-0086 (Phase 81's QA repairs — read for the pattern of
+   how a rule correct in isolation broke when a second rule was added next to
+   it, which is exactly the risk in adding thread-fit next to eighteen
+   existing dimensions in package 6).
 
-  Reproduction: your own. "A week pointed at the house" at 19:30 — refuse twice,
-  answer the soreness question, refuse a third time, advance four hours to 23:30.
+Then read the engine you are extending: src/intelligence/direction.ts (goal
+state — package 1's foundation), src/intelligence/evaluate.ts (the eighteen
+scoring dimensions and their weights — package 3 adds a nineteenth, package 6
+re-derives the constants read against all of them), src/intelligence/arbitrate.ts
+(the no-action reasons and near-tie handling — package 4's fifth state and
+package 6's re-baselined MAX_NUDGE both land here), src/intelligence/guide.ts
+and constraints.ts (Phase 81 just added the shown-ledger repetition rule and
+the answersLimiter ordering here — thread-fit must not create the same
+untested-interaction risk with them that QA-81-006 found), src/domain/records.ts
+(every canonical record kind — commitment-window is a new one), and
+src/synthetic/scenarios.ts (the 21-scenario library every package 6 change must
+be re-verified against).
 
-  What changed: `blockNoun` is documented as a noun phrase and returned an adverb
-  for late night; the fallback arm returned a phrase that already carried a
-  relative clause and broke the same frame. Both are fixed at the contract — a
-  determiner and at most two words for every block — rather than at the
-  sentence. Every no-action branch is now held as a finished sentence at every
-  block in tests/synthetic/no-action-copy.test.ts, which required exporting the
-  copy function so the catalogue can be rendered at all.
+HOW THIS PHASE ENDS — READ BEFORE YOU START
 
-THE THIRD DEFECT, WHICH YOU DID NOT REPORT — please judge it
+You may not approve your own phase. This is owner decision D-077 and it is not
+negotiable by anything you conclude while building.
 
-  Rendering that catalogue for the first time turned up a violation of gate item
-  1, which you passed in both rounds and which block-sweep.test.ts sweeps for
-  directly. The `nothing-in-reach` no-action detail ended "...which is about its
-  reach rather than about your evening" — at every block, including nine in the
-  morning. It survived because the state is not reached before the evening on
-  any history in the library, so no sweep ever rendered it.
+When you believe the implementation is complete:
 
-  It now reads the horizon. Two things worth your judgement:
-  - Whether the repaired wording is right at each block.
-  - Whether gate item 1 should be considered met by a sweep over reachable
-    states at all, or whether the acceptance instrument for owner-visible copy
-    has to enumerate the catalogue. The builder's position is that both are
-    needed and neither replaces the other, and PHASE_STATUS.md says so under the
-    gate table.
+- the phase becomes YELLOW — READY FOR INDEPENDENT QA. Never GREEN.
+- write docs/PHASE_STATUS.md's Phase 82 entry to the report format in section
+  58: what was built, per work package; the gate, item by item, with where
+  each is proved; anything you believe is still weak, named rather than
+  hidden — Phase 81's "Open, and named rather than left to be found" section
+  is the model for this, and it is what let QA adjudicate the sore/rested
+  ordering instead of having to discover it.
+- run the full clean-tree npm run verify, the browser suite at all three
+  widths, the Android-style gate against a deployed build, and the tournament
+  re-run required by gate item 5.
+- deploy a checkpoint and prove its relationship to the live deployed SHA with
+  scripts/checkpoint-equivalence.mjs, never string equality (D-097).
+- write the complete independent-QA handoff into docs/NEXT_PROMPT.md, to a NEW
+  Codex conversation (this is a first submission, not a retest), per D-082 and
+  D-092: the model, the level, the conversation instruction, and a short
+  standalone launcher, all in the same response, without waiting for another
+  owner turn.
 
-READ AFTER STEP 1, NOT BEFORE
-
-- docs/PHASE_STATUS.md — step 81.7 is this repair.
-- docs/DEFECT_LEDGER.md — DEF-0085 and DEF-0086.
-- docs/DECISION_LOG.md — D-126 and D-127, both written during a repair, which
-  makes them the ones most worth disputing.
-- docs/WHOLE_APP_INTELLIGENCE_AUDIT.md sections 6, 9 and 10, unchanged.
-- docs/CANONICAL_REBUILD_PLAN.md sections 4.3, 4.6, 6, 10, 12, 36, 42, 43, 58
-  and 63.
-
-THE GATE — unchanged, four items
-
-1. No owner-visible string asserts the evening outside the evening, at any
-   block, in any scenario.
-2. A named limiter always has a candidate that addresses it, in every block.
-3. No sentence about the child claims consecutiveness the occasions do not
-   support; no percentage, rank, grade or score about her reaches any surface;
-   and the suggestion states how many occasions went the other way.
-4. The owner can stop a recommendation family, and find and lift that veto
-   afterwards.
-
-Plus the standing gates: npm run verify from a clean checkout, the browser suite
-at three widths, an Android-style pass on the deployed build, and the block
-sweep across every scenario at five blocks.
-
-WHAT IS SETTLED AND IS NOT BEING RELITIGATED
-
-QA-81-001 through QA-81-005, which you confirmed repaired in round 2. The
-sore/rested ordering, which you adjudicated and accepted; it stays listed in
-PHASE_STATUS.md as a judgement rather than a derivation, and the record now says
-you accepted it. Every round-1 PASS. Re-check any of these only where this
-repair could plausibly have moved them — steps 3 and 4 above.
-
-STILL OPEN FOR THE OWNER, AND NOT YOURS OR THE BUILDER'S TO CLOSE
-
-Q1 Adaya's age and normative references (blocks AUD-0018 only); Q4 legacy
-evidence admissibility (blocks AUD-0030(b) only); Q6 live model inference
-(D-025 stands); Q7 which emotional dimensions exist (blocks AUD-0011's
-emotional half); Q8 private evidence versus the concept registry (blocks
-AUD-0040). Repeat them in your report; do not answer them.
-
-AUD-0027's refusal half remains deliberately unshipped under D-115. AUD-0035's
-weight question remains Phase 82's. The Phase 8 carry-forwards and the three
-deliberate non-features — no import from the QA laboratory, no partial import,
-no undo button — remain unchanged. No new domain, screen, capability, provider,
-sync, notification, scoring redesign or audit expansion is in scope.
-
-ONE KNOWN TRANSIENT
-
-The rotating Playwright page.goto ERR_ABORTED did not occur in the builder's
-last two full runs and you did not see it in either round. Reported rather than
-declared gone.
-
-WRITE
-
-docs/qa/PHASE_81_QA_HANDOFF.md, updated in place for round 3, to the contract in
-canonical plan section 43 and qa/README.md: phase and round; checkpoint SHA
-tested; deployed SHA tested and how the relationship was established;
-Android/mobile configuration; governing acceptance criteria; flows tested with
-PASS/FAIL each; for each of QA-81-006 and QA-81-007 an explicit REPAIRED or NOT
-REPAIRED with the evidence; your judgement on the third defect and on whether
-gate item 1's instrument is sufficient; exact reproductions for any new defect;
-semantic, behavioural, privacy and mobile findings; blocking versus
-non-blocking; automated tests that gave false confidence; deferred items
-confirmed unchanged; overall PASS or FAIL.
-
-End with D-082 and D-092: the complete ready-to-paste next prompt in the same
-response, without waiting for another owner turn — to the builder conversation
-for repair on FAIL, or for the GREEN closeout on PASS — plus the model, the
-level, the conversation instruction and a short standalone launcher naming this
-repository and the exact MD file.
-```
-
----
-
-**Model:** the strongest Codex model available
-**Intelligence level:** High
-**Conversation:** THE SAME Codex conversation that wrote rounds 1 and 2
-
-```text
-Continue independent QA on the Life Command OS rebuild.
-
-Repository:
-D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
-
-Read docs/NEXT_PROMPT.md in full and execute the current independent-QA handoff
-exactly as written. It is Phase 81, round 3 — the retest of QA-81-006 and
-QA-81-007.
-
-Do not ask me to paste the file contents.
+Do not start Phase 9 or the later intelligence phase. Do not add AUD-0040,
+AUD-0045 or AUD-0047 back into scope. Do not touch anything in canonical plan
+section 10 (DO-NOT-CHANGE) or add a percentage, rank, grade or score about
+Adaya anywhere.
 ```

@@ -1,5 +1,253 @@
 # Phase 81 independent QA handoff
 
+## Round 3 — repair retest
+
+**Phase:** 81 — correctness and truthfulness
+
+**Round:** 3
+
+**QA system:** Codex, the same independent QA conversation that wrote Rounds 1
+and 2 (D-077, D-090)
+
+**Overall result:** **PASS — recommend the formal Phase 81 GREEN closeout**
+
+QA-81-006 and QA-81-007 are repaired on the deployed build. The third defect
+found while repairing QA-81-007 is also repaired, and the new catalogue is the
+missing complement to the reachable-state sweep. No application or product code
+was changed by QA.
+
+### Build tested
+
+| Fact | Result |
+| --- | --- |
+| Product checkpoint | `7e00dac087ffc793e5b09cc3f8c09f30103a6397` |
+| Deployed SHA read live | `caaf179440faa22aa9116d4f01f9d904f0ccd9f5` |
+| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Relationship | **PASS.** `node scripts/checkpoint-equivalence.mjs 7e00dac --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json` found five post-checkpoint changes — `docs/DECISION_LOG.md`, `docs/DEFECT_LEDGER.md`, `docs/NEXT_PROMPT.md`, `docs/PHASE_STATUS.md`, and this QA report — and none is bundle-relevant. Under D-097, deployed `caaf179` serves the same product bytes as `7e00dac`. |
+| QA report commit | Not committed by QA. |
+
+The local Node trust store again could not validate the GitHub Pages
+certificate. The equivalence command and Android gate used the same narrow
+`NODE_TLS_REJECT_UNAUTHORIZED=0` workaround disclosed in Rounds 1 and 2 after
+the HTTPS deployment had loaded normally and its live SHA had been read in the
+in-app browser.
+
+### Test configurations
+
+- Deployed semantic retest in the in-app browser, using one uninterrupted
+  session for each exact QA reproduction and reading the complete Now screen.
+- Focused local browser coverage at 360×740, 430×932 and 1,280×900, one worker,
+  against the production bundle built from the checkpoint.
+- Deployed Android-style gate using a Galaxy S24-class context: 360×780 CSS
+  viewport, device-pixel ratio 3, Android 14 Chrome user agent, `isMobile`,
+  touch interaction and mobile scrolling.
+- Source inspection of the filter, shared limiter definition, evaluator,
+  horizon vocabulary, no-action catalogue and session-ledger reset.
+- One faithful defect reintroduction in an isolated detached worktree at
+  `7e00dac`, removed after the repaired source was restored and rechecked.
+
+### Governing acceptance criteria
+
+| # | Criterion | Round 3 result |
+| --- | --- | --- |
+| 1 | No owner-visible string asserts the evening outside the evening, at any block, in any scenario. | **PASS.** The reachable scenario/block sweep passed, and the complete no-action catalogue independently renders unreachable branches at every block. |
+| 2 | A named limiter always has a candidate that addresses it, in every block. | **PASS.** Generation still supplies the restorative answer; if repetition withholds the only such answer, filtering now produces honest silence rather than promoting a move that works against the limiter. |
+| 3 | Child-growth copy claims no unsupported consecutiveness or score and states contrary occasions. | **PASS.** Unchanged targeted browser, synthetic and Android checks remain green. |
+| 4 | The owner can stop a recommendation family and later find and lift the veto. | **PASS.** Unchanged browser and deployed Android touch flows remain green. |
+
+### QA-81-006 — repetition filter versus the limiter
+
+**REPAIRED.** Exact deployed reproduction, with no lifecycle action pressed:
+
+1. Load **A morning after three bad nights** and open Now at 15:00. It says
+   _“Take the rest of the afternoon as recovery — no subnetting session.”_
+2. Advance the same uninterrupted session to 20:00. It says _“Take tonight as
+   recovery — no subnetting session.”_
+3. Advance to 23:00. The screen still says the owner is nine hours short of
+   sleep, but now reaches **“Nothing to add tonight.”** Its explanation is:
+   _“What is short has one answer here, and it has already been in front of you
+   today. Everything else here works against it.”_ It does not prescribe
+   subnetting.
+
+The new no-action copy is true on the reproduced state. Recovery is the only
+candidate that answers the explicitly named sleep deficit, it has been shown
+twice, and the remaining candidates score against that limiter. At eleven at
+night, declining to add another suggestion is the right outcome and is better
+than restating the same recovery sentence a third time.
+
+The bound is real. `answersLimiter` is shared by `bottleneckFit`, the constraint
+ordering and the invariant rather than restated in three layers. The
+over-correction test uses an ordinary repeated move under a non-recovery
+history and proves that withholding it still selects another move instead of
+blanking the screen. Across the current 21-scenario, five-block library, the
+builder measured only the two reported withheld-answer states; source review
+found no unbounded branch.
+
+The session-ledger sibling is also repaired. Loading the bad-nights fixture and
+then the house fixture in the deployed laboratory produced the house fixture's
+normal first kitchen recommendation, not a move consumed by the previous
+history. The provider tests hold both a laboratory history replacement and the
+return to owner history. The ledger remains session-only and never reaches the
+store, backup, Timeline or learning evidence.
+
+### QA-81-007 — late-night no-action sentence
+
+**REPAIRED.** The exact deployed sequence on **A week pointed at the house**
+passed:
+
+1. At 19:30, refuse the kitchen move and then the subnetting move.
+2. The app stops with _“This is not landing”_ and asks about soreness.
+3. Answer `Nothing`; the app looks again and offers time with Adaya.
+4. Refuse that third move; the block stops at _“Nothing then.”_
+5. Advance four hours to 23:30. The reset block says _“Nothing needs to move
+   tonight. Nothing on the list is worth the night it would cost. That is a
+   real answer.”_
+
+The sentence is grammatical and horizon-correct. The repair is held at the
+fragment contract: `blockNoun` returns a determiner plus a short bare noun
+phrase for every block and the fallback; adverbial forms such as `tonight`
+remain in `hereNowWord`. That is the correct class-level boundary for all six
+call frames.
+
+### Third defect found during the repair
+
+**Repair accepted.** The prior `nothing-in-reach` detail ended in _“rather than
+about your evening”_ even when rendered at nine in the morning. The catalogue
+now produces:
+
+- early morning and morning: `this morning`;
+- afternoon: `this afternoon`;
+- evening: `this evening`;
+- late night: `tonight`.
+
+Those are the right readings. The builder is also right about the acceptance
+instrument: a sweep over reachable states is necessary to prove real wiring,
+but it cannot prove a universal claim about branches the scenario library does
+not reach. The explicit catalogue is necessary to render those branches, but
+cannot replace the real scenario/block sweep. Gate item 1 requires both.
+
+### Regression quality and faithful reintroduction
+
+QA independently removed only the new post-filter ordering rule from
+`constraints.ts`, leaving generation, scoring, the repetition threshold and
+the new tests intact. The focused recovery file then failed 3 of 19 assertions:
+
+- the exact 23:00 reproduction again recommended subnetting and exposed its
+  `light` demand instead of a restorative answer;
+- the expected no-action state became a move;
+- the running-ledger library sweep found four offenders across the two depleted
+  histories at 20:00 and 23:00.
+
+The bound assertion stayed green, as it should: the reintroduced defect was the
+missing safety ordering, not an over-broad rule. Restoring the ordering returned
+the file to **19/19 PASS**. This is a faithful reintroduction of QA-81-006's root
+seam and establishes that the guard is load-bearing.
+
+The new no-action catalogue contains written-out finished sentences rather than
+expectations generated from the implementation. It covers every reason, block
+and rejection shape, asserts its own coverage, and separately guards the noun
+and adverb fragment contracts. This closes the false-confidence class that let
+an unreachable morning sentence pass the earlier block sweep.
+
+### Collateral, privacy and mobile findings
+
+- **Semantic:** PASS. No effortful recommendation replaced a withheld answer to
+  a recovery/capacity limiter. No new contradiction was found in the complete
+  Now screens.
+- **Behavioural:** PASS. Scenario changes reset the session ledger; the
+  two-refusal question, answered reopening, third-refusal stop and block
+  rollover remain intact.
+- **Privacy/storage:** PASS. The shown ledger remains ephemeral and scoped to
+  the visible history. No new durable record, export field or Timeline row was
+  introduced.
+- **Mobile/UI:** PASS. The deployed 93-check Android run found no overflow,
+  sub-44px touch target, console error, sticky-navigation problem or regression
+  on Now, Life, Timeline or Insights.
+- **Library/block collateral:** PASS. The focused Phase 81 browser spec covered
+  its whole-day laboratory control at every width, and the 12-assertion
+  synthetic sweep covered every scenario and block.
+
+One non-blocking documentation discrepancy remains: DEF-0086 says the
+no-action regression table has **38** lines, while
+`tests/synthetic/no-action-copy.test.ts` contains **40** guarded `EXPECTED`
+rows. The implementation and coverage assertion are correct; the prose count
+should be corrected during the GREEN documentation closeout. It does not
+require another QA round.
+
+### Standing gates
+
+| Gate | Round 3 evidence |
+| --- | --- |
+| `npm run verify` from the clean tracked tree | **PASS** — format, lint, typecheck, 60 files / 1,332 tests, production build |
+| Complete synthetic scenario × block sweep | **PASS — 12/12** inside the clean verification run |
+| Focused Phase 81 browser matrix | **PASS — 42/42**, 14 at each of 360, 430 and 1,280px |
+| Full browser suite | Builder's **501/501** remains standing evidence. QA did not duplicate all 501 because no concrete mismatch, suspected false-green or harness failure appeared; this follows plan section 43 and the explicit Round 3 work order. |
+| Android-style deployed gate | **PASS — 93/93** against live `caaf179`, Galaxy S24-class configuration |
+| Checkpoint/deployment equivalence | **PASS** — live `caaf179` is bundle-equivalent to product checkpoint `7e00dac` |
+| Faithful defect reintroduction | **PASS** — unsafe seam failed 3/19; restored seam passed 19/19 |
+
+The rotating Playwright `page.goto` `ERR_ABORTED` transient did not occur. It
+remains reported rather than declared gone.
+
+### False confidence adjudication
+
+The old `block-sweep.test.ts` was insufficient by itself for gate item 1: it
+could only render states the scenario library reached, so it passed while the
+unreachable `nothing-in-reach` morning form was wrong. It is not a bad test; it
+was an incomplete instrument for a universal copy claim. The new explicit
+catalogue closes that gap, while the real sweep continues to prove wiring. No
+current Round 3 assertion was found green over a reproduced defect.
+
+### Deferred and settled items
+
+QA-81-001 through QA-81-005 remain repaired. The sore/rested ordering remains
+accepted. Every Round 1 PASS remains standing except where the touched paths
+were directly rechecked above.
+
+Owner questions Q1, Q4, Q6, Q7 and Q8 remain open and unanswered. AUD-0027's
+refusal half remains deliberately unshipped under D-115. AUD-0035's weight
+question remains Phase 82. The Phase 8 carry-forwards and the deliberate
+non-features — no QA-laboratory import, no partial import and no undo button —
+remain unchanged. No new domain, screen, capability, provider, sync,
+notification or scoring redesign was introduced.
+
+### PASS handoff — formal GREEN closeout
+
+Return to the original Phase 81 Claude builder conversation. Confirm that QA
+tested product checkpoint `7e00dac087ffc793e5b09cc3f8c09f30103a6397`, that
+live deployed `caaf179440faa22aa9116d4f01f9d904f0ccd9f5` is bundle-equivalent,
+and that Round 3 recommends PASS. Perform the formal Phase 81 GREEN closeout;
+do not make further product changes.
+
+Update the builder-owned governing documents, correct DEF-0086's non-blocking
+38-versus-40 prose count, preserve every settled and deferred item above, and
+write the complete next-phase handoff into `docs/NEXT_PROMPT.md`. The next
+phase may begin only after this closeout is recorded. Include the final product
+checkpoint, docs-only closeout SHA, current deployed SHA/equivalence, exact gate
+results, the QA report path and tested SHA, open owner questions, preserved
+deferrals, decisions, next phase, recommended model and level, conversation
+instruction, and D-092 launcher.
+
+**Model:** Sonnet-class Claude model (or nearest current equivalent)
+
+**Intelligence level:** High
+
+**Conversation:** CURRENT — the original Phase 81 Claude builder conversation
+
+```text
+Continue the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_81_QA_HANDOFF.md in full and execute the current Phase 81
+Round 3 PASS and GREEN-closeout handoff exactly as written.
+
+Do not ask me to paste the file contents.
+```
+
+---
+
 ## Round 2 — repair retest
 
 **Phase:** 81 — correctness and truthfulness
