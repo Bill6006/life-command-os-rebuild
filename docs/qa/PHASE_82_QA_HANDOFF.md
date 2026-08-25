@@ -520,7 +520,7 @@ Every figure below is from a run on the repaired tree.
 | Unit / synthetic / contract / adversarial | 1,470 across 66 files | **1,490 / 1,490 across 67 files** |
 | Browser, three widths (360, 430, 1,280px) | 528 / 528 | **537 / 537** — 179 each |
 | Android-style gate, against the **deployed** build | clean — 119 checks | **clean — 126 checks** |
-| Privacy scan | clean, 230 files | **clean, 231 tracked files** |
+| Privacy scan | clean, 230 files | **clean — 233 tracked files** (231 at `0899f18`, before these documentation commits) |
 | Tournament | 100 / 100 deterministic, 100 / 100 hybrid | **100 / 100 deterministic, 100 / 100 hybrid** |
 | Reintroductions proved, this round | — | **13** |
 

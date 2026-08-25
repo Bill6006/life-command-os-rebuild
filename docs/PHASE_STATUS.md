@@ -63,15 +63,15 @@ Two columns, because the phase has been verified twice: once at the first build
 and once after the round 1 repairs. The second column is the state of the
 deployed checkpoint now.
 
-| Gate                                     | First build (`160ec9a`)                   | After round 1 (`0899f18`)                        |
-| ---------------------------------------- | ----------------------------------------- | ------------------------------------------------ |
-| `npm run verify` from a clean checkout   | **PASS**                                  | **PASS** — format, lint, typecheck, tests, build |
-| Unit layer                               | 1,470 / 1,470 across 66 files             | **1,490 / 1,490** across 67 files                |
-| Browser, three widths                    | 528 / 528 at 360, 430 and 1,280px         | **537 / 537** — 179 each                         |
-| Android-style gate on the deployed build | clean — 119 checks                        | **clean — 126 checks** against the live Preview  |
-| Privacy scan                             | clean, 230 tracked files                  | **clean, 231 tracked files**                     |
-| Tournament                               | 100 / 100 deterministic, 100 / 100 hybrid | **100 / 100 deterministic, 100 / 100 hybrid**    |
-| Reintroductions proved                   | 22                                        | **13 more, 35 in total**                         |
+| Gate                                     | First build (`160ec9a`)                   | After round 1 (`0899f18`)                                                                       |
+| ---------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `npm run verify` from a clean checkout   | **PASS**                                  | **PASS** — format, lint, typecheck, tests, build                                                |
+| Unit layer                               | 1,470 / 1,470 across 66 files             | **1,490 / 1,490** across 67 files                                                               |
+| Browser, three widths                    | 528 / 528 at 360, 430 and 1,280px         | **537 / 537** — 179 each                                                                        |
+| Android-style gate on the deployed build | clean — 119 checks                        | **clean — 126 checks** against the live Preview                                                 |
+| Privacy scan                             | clean, 230 tracked files                  | **clean — 233 tracked files** (231 at the product checkpoint, before the documentation commits) |
+| Tournament                               | 100 / 100 deterministic, 100 / 100 hybrid | **100 / 100 deterministic, 100 / 100 hybrid**                                                   |
+| Reintroductions proved                   | 22                                        | **13 more, 35 in total**                                                                        |
 
 Seven test files: `goal-horizon-and-parts`, `commitment-windows`, `threads`,
 `deferral`, `growth-stage-and-occasion`, `instrument-recut`, `qa-82-round-1`,
