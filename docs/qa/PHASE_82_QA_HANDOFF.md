@@ -397,14 +397,16 @@ prompt for the **same Codex QA conversation** that wrote the report above.
 | --- | --- |
 | Repaired product checkpoint | `0899f18f6ed03110e4f0caaeadd4210382198458` (`0899f18`) — "QA-82 round 1: three findings, and the boundaries under them" |
 | Previous checkpoint | `160ec9adc7a7780319c81fc144fc835d86a94f06` — the build round 1 tested |
-| Deployed SHA at the time of writing | `0899f18f6ed03110e4f0caaeadd4210382198458`, read live from `preview/build-info.json` |
+| Deployed SHA when equivalence was last proved | `09cf8753ffa598938c2b18cd45d84b3e6b6f3ccf` (`09cf875`), read live from `preview/build-info.json` |
 | Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
-| Relationship | **PASS.** `node scripts/checkpoint-equivalence.mjs 0899f18 --deployed <build-info url>` — see the result recorded below. Never asserted as string equality (D-097); this repository redeploys on every push, including documentation-only ones, so the live SHA will be **past** `0899f18` by the commits that wrote this section. |
+| Relationship | **PASS.** `node scripts/checkpoint-equivalence.mjs 0899f18 --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json` reported seven files changed between `0899f18` and the deployed `09cf875` and **none of them bundle-relevant**: `docs/DECISION_LOG.md`, `docs/DEFECT_LEDGER.md`, `docs/PHASE_STATUS.md`, `docs/qa/PHASE_82_QA_HANDOFF.md`, `docs/qa/README.md`, `scripts/android-gate.mjs` and `tests/synthetic/decision-evidence.test.ts`. Never asserted as string equality (D-097). The commit carrying this row moves the live SHA once more, which is exactly what the checker exists to handle — run it yourself rather than comparing strings. |
 | Report this responds to | `docs/qa/PHASE_82_QA_HANDOFF.md` — the Round 1 section above, in this same file |
 
 **Read the deployed SHA live.** The documentation commits that carry this
 handoff are not bundle-relevant, and the equivalence checker is the instrument
-that says so.
+that says so. The Android gate was also re-run against the deployed `09cf875`
+after that proof and came back clean at 126 checks — the same result as against
+`0899f18`, which is what byte-equivalence predicts.
 
 ## What was repaired, and what the boundary was
 
@@ -643,11 +645,11 @@ retest handoff there specifies.
 Repaired product checkpoint:
 0899f18f6ed03110e4f0caaeadd4210382198458
 
-Deployed SHA at the time of writing:
-0899f18f6ed03110e4f0caaeadd4210382198458 — read it live from
+Deployed SHA when the builder last proved equivalence:
+09cf8753ffa598938c2b18cd45d84b3e6b6f3ccf — read it live from
 preview/build-info.json and prove checkpoint equivalence rather than string
-equality, per D-097. Documentation commits carrying this handoff will have
-moved the live SHA past the checkpoint.
+equality, per D-097. The documentation commits carrying this handoff move the
+live SHA past the checkpoint, which is exactly the case the checker handles.
 
 Preview:
 https://bill6006.github.io/life-command-os-rebuild/preview/
