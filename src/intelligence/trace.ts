@@ -42,6 +42,15 @@ export interface ProposedMove {
 export interface RankedMove {
   readonly id: string
   readonly sentence: string
+  /**
+   * How long the move takes, where it has a natural size — QA-82-003.
+   *
+   * The figure `time-fit` and `opportunity-cost` were both judging, which the
+   * trace could not show: a row said "would not fit before Adaya's school day"
+   * with nothing beside it to check that against. Undefined for a move with no
+   * fixed size, which is a real answer rather than a missing one.
+   */
+  readonly minutes: number | undefined
   readonly score: number
   readonly confidence: Confidence
   readonly dimensions: readonly Dimension[]

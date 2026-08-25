@@ -1,6 +1,6 @@
 import { CONCEPT, coreConcepts, type ConceptRegistry } from '../domain/concepts'
 import { coreDomains, DOMAIN, type DomainRegistry, type LifeDomainId } from '../domain/domains'
-import type { EntityIndex, EntityRef } from '../domain/entities'
+import type { EntityIndex, EntityRef, SemanticEntity } from '../domain/entities'
 import type { RecordId } from '../domain/ids'
 import {
   basisOf,
@@ -215,6 +215,20 @@ export interface Obligation {
   readonly endsAt: Instant
   /** Whether the span takes the owner's own time, or shapes his day at its edges. */
   readonly whose: 'mine' | 'theirs'
+  /**
+   * Whose span it is, when the record says — QA-82-001.
+   *
+   * A `theirs` window names somebody else's hours, and until this was carried
+   * the app had no way to ask *whose*. It matters because a person who is
+   * occupied is a person who is not here: the standing arrangement says his
+   * daughter is with him this week, and her school day says she is not with him
+   * between half past eight and three.
+   *
+   * Empty where the owner entered a window without naming anybody. That stays
+   * an honest gap rather than a guess (D-038) — an unattributed span of
+   * somebody else's time says nothing about any particular person.
+   */
+  readonly about: readonly EntityRef[]
   /** Owner-entered, recurring, or from a schedule the app was given. */
   readonly knownFrom: CommitmentWindowSource
   readonly source: RecordId
@@ -328,7 +342,46 @@ export interface Situation {
   readonly inHand: TimeInHand
   /** The parts of today still ahead, and how much of each is his — AUD-0004. */
   readonly laterToday: readonly LaterBlock[]
+  /**
+   * What the record says about whether she is with the owner.
+   *
+   * A standing arrangement, in every history the app has: a durable `context`
+   * saying she is with him, asked once and never re-asked (G-002). It is the
+   * answer to *whose week is this*, and it is **not** the answer to *is she in
+   * the room right now* — see {@link Situation.childHere}.
+   */
   readonly childPresent: Knowledge<boolean>
+  /**
+   * Whether she is actually here, this hour — QA-82-001.
+   *
+   * The two questions were one field, and the moment Phase 82 gave the app a
+   * school day the two meanings visibly disagreed: at ten o'clock on a
+   * Wednesday, inside a recorded 08:30-to-15:00 window, Now said *"Adaya is
+   * here"* and offered thirty unhurried minutes with her. Both halves came from
+   * the same durable boolean, and the fixture's own commentary called that hour
+   * "once the house is quiet".
+   *
+   * So this is the standing arrangement narrowed by her own day: she is here
+   * when the record says she is with him **and** no span of her own covers this
+   * moment. The obligation is part of its basis, so the filter that removes a
+   * move about her, and the evidence panel that explains why, both cite the
+   * thing that actually decided it.
+   *
+   * **It never invents presence.** An unknown arrangement stays unknown and a
+   * stated absence stays absent: an obligation can only ever take her out of
+   * the room, never put her in it.
+   */
+  readonly childHere: Knowledge<boolean>
+  /**
+   * The span that took her out of the room, when one did — QA-82-001.
+   *
+   * Carried rather than re-derived, because three surfaces need it and a
+   * fourth will: the filter says why the move was removed, the premise says
+   * where she is, and the evidence panel cites the span the reading rests on.
+   * Three separate searches through `commitments` would eventually name three
+   * different spans.
+   */
+  readonly childElsewhere: Obligation | undefined
   /**
    * Courses of action under way, and the ones that have stopped — AUD-0020.
    *
@@ -609,6 +662,7 @@ function collectObligations(view: MemoryView, moment: SituationMoment): readonly
         moment.zone,
       ),
       whose: record.whose,
+      about: record.entities,
       knownFrom: record.knownFrom,
       source: record.id,
     })
@@ -712,6 +766,61 @@ function timeInHand(
   if (!isUsable(until) || binding === undefined) return { minutes: said, before: undefined }
   if (isUsable(said) && said.value <= until.value) return { minutes: said, before: undefined }
   return { minutes: until, before: binding }
+}
+
+/** When a span ends, on the owner's own clock. One definition, four readers. */
+export function endsAtClock(obligation: Obligation, zone: TimeZoneId): string {
+  return localDateTimeAt(obligation.endsAt, zone).timeOfDay
+}
+
+/**
+ * Who, if anybody, is somewhere else right now — QA-82-001.
+ *
+ * Only a span of somebody else's time can take a person out of the room, and
+ * only when the record says whose span it is. An obligation of the owner's own
+ * says nothing about anybody but him, and an unattributed one says nothing
+ * about anybody at all.
+ */
+function occupiedNow(obligations: readonly Obligation[], now: Instant): readonly Obligation[] {
+  return obligations.filter(
+    (entry) => entry.whose === 'theirs' && entry.startsAt <= now && now < entry.endsAt,
+  )
+}
+
+/**
+ * The standing arrangement, narrowed by her own day — QA-82-001.
+ *
+ * **It can only ever subtract.** An unknown arrangement stays unknown, a stated
+ * absence stays absent, and no obligation can put somebody in the room. That
+ * asymmetry is the whole safety of the reading: the worst it can do is make the
+ * app quieter about her, and the thing it prevents is the app claiming she is
+ * in a room she is at school from.
+ *
+ * The obligation joins the basis, so every surface that cites this reading —
+ * the filter's reason, the evidence panel, the trace — names the school day
+ * rather than the custody record it narrowed.
+ */
+function narrowedByTheirOwnDay(
+  stated: Knowledge<boolean>,
+  person: SemanticEntity | undefined,
+  occupied: readonly Obligation[],
+  now: Instant,
+): { readonly knowledge: Knowledge<boolean>; readonly because: Obligation | undefined } {
+  if (person === undefined) return { knowledge: stated, because: undefined }
+  if (!isUsable(stated) || !stated.value) return { knowledge: stated, because: undefined }
+
+  const elsewhere = occupied.find((entry) =>
+    entry.about.some((ref) => ref.id === person.id && ref.kind === person.kind),
+  )
+  if (elsewhere === undefined) return { knowledge: stated, because: undefined }
+
+  return {
+    knowledge: inferred(false, now, confidence(OBLIGATION_CERTAINTY[elsewhere.knownFrom]), [
+      ...basisOf(stated),
+      elsewhere.source,
+    ]),
+    because: elsewhere,
+  }
 }
 
 /**
@@ -901,6 +1010,9 @@ function contextFor(
   block: DayBlock,
   isWeekend: boolean,
   strain: Knowledge<Strain>,
+  // Whether she was actually there, not whose week it was — QA-82-001. Two
+  // evenings resemble each other by who was in the house, and a standing
+  // arrangement is not an answer to that.
   childPresent: Knowledge<boolean>,
   // The time actually in hand rather than the answer he gave — AUD-0004. Two
   // twenty-minute evenings resemble each other whether the twenty minutes came
@@ -1025,6 +1137,22 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
   const until = untilNextObligation(commitments, moment.now)
   const inHand = timeInHand(usableMinutes, until.minutes, until.binding)
 
+  /*
+   * And who is where — QA-82-001.
+   *
+   * The standing arrangement says whose week this is; her own day says whether
+   * she is in the room. Worked out here, once, so that the generator, the
+   * filter, the premise and the evidence panel cannot disagree about it.
+   */
+  const child = entities.byKind('person').find((entity) => entity.domain === DOMAIN.fatherhood)
+  const elsewhere = narrowedByTheirOwnDay(
+    childPresent,
+    child,
+    occupiedNow(commitments, moment.now),
+    moment.now,
+  )
+  const childHere = elsewhere.knowledge
+
   // One pass over history for both: the duplication check reads the recent end
   // of it, and learning reads all of it against the situation being decided.
   const episodes = collectEpisodes(view, moment.zone)
@@ -1045,7 +1173,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     weekStartsOn: moment.weekStartsOn,
     block,
     isWeekend,
-    context: contextFor(block, isWeekend, capacity.strain, childPresent, inHand.minutes),
+    context: contextFor(block, isWeekend, capacity.strain, childHere, inHand.minutes),
     capacity,
     usableMinutes,
     commitments,
@@ -1053,6 +1181,8 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     minutesUntilNextObligation: until.minutes,
     inHand,
     childPresent,
+    childHere,
+    childElsewhere: elsewhere.because,
     socialEnergy,
     homeFriction,
     learningTopic,

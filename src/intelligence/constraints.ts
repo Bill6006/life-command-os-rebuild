@@ -6,7 +6,7 @@ import { addLocalDays, blockOf, localDayIdAt, type Instant } from '../domain/tim
 import { blockNoun, horizonWord } from './vocabulary'
 import type { Candidate } from './candidates'
 import { profileFor } from './moves'
-import { answersLimiter, type PriorMove, type Situation } from './situation'
+import { answersLimiter, endsAtClock, type PriorMove, type Situation } from './situation'
 
 /**
  * The constraint filter (canonical plan section 17.1, step 6).
@@ -264,18 +264,27 @@ export function applyConstraints(
       continue
     }
 
-    // Only a known absence removes a move about someone. Not knowing whether
-    // she is here is a question to ask, not a reason to rule the evening out.
-    const needsChild =
-      proposed.generator === 'fatherhood' && isUsable(situation.childPresent)
-        ? !situation.childPresent.value
-        : false
+    /*
+     * Only a known absence removes a move about someone. Not knowing whether
+     * she is here is a question to ask, not a reason to rule the evening out.
+     *
+     * `childHere` rather than `childPresent` — QA-82-001. The standing
+     * arrangement answers whose week this is; her own school day answers
+     * whether she is in the room, and the two disagree for six and a half hours
+     * of every weekday. The reason names the span rather than the arrangement,
+     * because the span is what actually decided it.
+     */
+    const here = situation.childHere
+    const needsChild = proposed.generator === 'fatherhood' && isUsable(here) ? !here.value : false
     if (needsChild) {
+      const elsewhere = situation.childElsewhere
       reject(
         proposed,
         'subject-not-available',
-        `she is not here ${horizonWord(situation.block)}`,
-        basisOf(situation.childPresent),
+        elsewhere === undefined
+          ? `she is not here ${horizonWord(situation.block)}`
+          : `${elsewhere.label} is on until ${endsAtClock(elsewhere, situation.zone)}`,
+        basisOf(here),
       )
       continue
     }

@@ -411,7 +411,17 @@ const careerCandidates: Generator = (situation) => {
 
 /** Fatherhood. Nothing here fires unless she is actually here. */
 const fatherhoodCandidates: Generator = (situation) => {
-  const present = situation.childPresent
+  /*
+   * Whether she is actually here, not whose week it is — QA-82-001.
+   *
+   * This read the standing arrangement and called it presence, so on a Wednesday
+   * at ten o'clock — inside a school day the owner had told the app about — it
+   * went on proposing thirty unhurried minutes with her. `childHere` is the same
+   * arrangement narrowed by her own day, and it can only ever subtract: an
+   * unknown arrangement stays unknown and this generator stays quiet, exactly
+   * as before.
+   */
+  const present = situation.childHere
   if (!isUsable(present) || !present.value) return []
 
   const child = firstOfKind(situation, 'person', DOMAIN.fatherhood)

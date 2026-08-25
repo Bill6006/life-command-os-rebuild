@@ -148,6 +148,7 @@ function ownerVisibleStrings(decision: Decision): readonly string[] {
   if (evidence !== undefined) {
     out.push(evidence.move, evidence.comparable, evidence.concluded, evidence.observed)
     out.push(evidence.context, evidence.mix, evidence.confidence.word, evidence.confidence.because)
+    out.push(...evidence.deferral)
     for (const condition of evidence.conditions) out.push(condition.label, condition.reading)
     for (const rate of evidence.rates) out.push(rate.measures, rate.withheld)
     for (const line of evidence.counterexamples) out.push(line.text)

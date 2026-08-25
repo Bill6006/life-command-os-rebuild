@@ -94,6 +94,8 @@ export function DayShape({ situation }: { situation: Situation }) {
           recurrence: { kind: 'weekly', days: draft.everyDay ? EVERY_DAY : WEEKDAYS },
           whose: seed.whose,
           domain: seed.domain,
+          // Who it takes away, so the engine can tell that it is her — QA-82-001.
+          about: seed.about(situation),
           // He described the shape of an ordinary week, once. Not this
           // particular day, and not a schedule the app was handed.
           knownFrom: 'recurring',

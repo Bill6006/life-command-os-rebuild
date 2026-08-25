@@ -26,7 +26,7 @@ import { daysSincePractice, growthStandingFor } from './growth'
 import { describeThreadPosition, threadFor } from './threads'
 import type { DimensionName, Evaluation } from './evaluate'
 import { beliefKey } from './learning'
-import { describeHours, SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
+import { describeHours, endsAtClock, SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
 import { entityValue } from './values'
 import { blockNoun, horizonWord } from './vocabulary'
 
@@ -127,12 +127,30 @@ export function describePremise(situation: Situation): string {
   const usable = situation.usableMinutes
   if (isUsable(usable)) clauses.push(`about ${Math.round(usable.value)} minutes free`)
 
-  const child = situation.childPresent
+  /*
+   * Whether she is here — QA-82-001, and the line the finding was written
+   * about.
+   *
+   * This read the standing arrangement, so a Wednesday at ten in the morning
+   * said "Adaya is here" while the owner's own school window said she was in a
+   * classroom. The premise is the sentence the owner checks the app against; a
+   * premise he can see out of the window is wrong about is worse than no
+   * premise. `childHere` is the arrangement narrowed by her own day.
+   *
+   * When a span is what took her out, the premise says which one. "Adaya is at
+   * school until 15:00" is a fact he can act on; "she is not here" is a fact he
+   * already had.
+   */
+  const child = situation.childHere
+  const person = situation.entities
+    .byKind('person')
+    .find((entity) => entity.domain === DOMAIN.fatherhood)
+  const her = person === undefined ? 'she' : person.label
+  const elsewhere = situation.childElsewhere
   if (isUsable(child) && child.value) {
-    const person = situation.entities
-      .byKind('person')
-      .find((entity) => entity.domain === DOMAIN.fatherhood)
-    clauses.push(person === undefined ? 'she is here' : `${person.label} is here`)
+    clauses.push(`${her} is here`)
+  } else if (elsewhere !== undefined) {
+    clauses.push(`${elsewhere.label} is on until ${endsAtClock(elsewhere, situation.zone)}`)
   }
 
   return `${clauses.join(', ')}.`

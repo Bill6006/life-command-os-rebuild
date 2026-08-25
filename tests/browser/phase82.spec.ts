@@ -95,6 +95,27 @@ test.describe('the deferral screen', () => {
     await expect(page.getByTestId('now-actions')).toHaveCount(0)
   })
 
+  test('says why later rather than now when the owner asks', async ({ page }) => {
+    /*
+     * QA-82-001's sibling finding, and the reason this file did not catch it:
+     * the deferral test above stopped at the headline. One tap lower, the panel
+     * that exists to answer *why this?* was answering it about the move — the
+     * conditions, the counts, the comparable occasions — and saying nothing at
+     * all about the only question a held decision raises.
+     */
+    await loadInQa(page, 'Before the house is up')
+    await go(page, 'Now')
+
+    await page.getByTestId('now-see-evidence').click()
+    const why = page.getByTestId('now-evidence-deferral')
+    await expect(why).toBeVisible()
+    // The block it is held for, and the room in it. Not "later" in general.
+    await expect(why).toContainText('the morning')
+    await expect(why).toContainText('not spoken for')
+    // And nothing arguing for doing it now under a sentence that says to wait.
+    await expect(why).not.toContainText('closes on its own')
+  })
+
   test('offers the move itself once the hour has come round', async ({ page }) => {
     // Held into the next block, and offered there. The deferral is bounded by
     // being a deferral to somewhere rather than to later in general.
@@ -124,6 +145,53 @@ test.describe('how the day is set up', () => {
     // beside the move, rather than in the eyebrow — that is the no-action
     // screen's slot.
     await expect(page.locator('.rows')).toContainText('About 10 minutes before Adaya’s school day.')
+  })
+
+  test('stops claiming she is here once her school day has started', async ({ page }) => {
+    /*
+     * QA-82-001, on the complete owner screen.
+     *
+     * This file loaded the school morning at twenty past eight and never moved
+     * the clock, so it only ever saw the ten minutes before the school run.
+     * Two hours later the same fixture had the app saying "Adaya is here" in
+     * the premise and offering thirty unhurried minutes with her, while the
+     * Life page beside it showed her school day running until three.
+     */
+    await loadInQa(page, 'A school morning')
+    await page.getByRole('button', { name: '+1 hour' }).click()
+    await page.getByRole('button', { name: '+1 hour' }).click()
+    await go(page, 'Now')
+
+    const premise = page.getByTestId('now-premise')
+    await expect(premise).not.toContainText('Adaya is here')
+    // Better than silence: where she is, and until when.
+    await expect(premise).toContainText('Adaya’s school day is on until 15:00')
+
+    // And nothing on the screen proposing time with someone who is at school.
+    await expect(page.locator('.primary-surface__headline')).not.toContainText('with Adaya')
+    await expect(page.locator('.rows')).not.toContainText('Adaya is here')
+  })
+
+  test('has her back, and the middle of the day free, either side of it', async ({ page }) => {
+    /*
+     * The half that would be easy to break while fixing the first. Her school
+     * day is hers: it must not be read as five hours of his own time being
+     * taken, and the moment it ends she is in the room again.
+     */
+    await loadInQa(page, 'A school morning')
+    for (let hour = 0; hour < 2; hour += 1) {
+      await page.getByRole('button', { name: '+1 hour' }).click()
+    }
+    await go(page, 'Now')
+    // Ten o'clock, the house quiet: the app must not fall silent about time.
+    await expect(page.getByTestId('now-premise')).not.toContainText('10 minutes free')
+
+    await page.goto(`${APP}#/qa`)
+    for (let hour = 0; hour < 6; hour += 1) {
+      await page.getByRole('button', { name: '+1 hour' }).click()
+    }
+    await go(page, 'Now')
+    await expect(page.getByTestId('now-premise')).toContainText('Adaya is here')
   })
 
   test('invites the two questions as an aside rather than as a form', async ({ page }) => {

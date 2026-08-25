@@ -48,6 +48,12 @@ function decideAt(now: Instant): Decision {
   return decide(buildView(loaded.snapshot, moment), moment)
 }
 
+function sentenceOf(decision: Decision, id: string): string {
+  const row = decision.trace.ranking.find((entry) => entry.id === id)
+  expect(row, `${id} was not ranked`).toBeDefined()
+  return row?.sentence ?? ''
+}
+
 function scoreOf(decision: Decision, id: string): number {
   const row = decision.trace.ranking.find((entry) => entry.id === id)
   expect(row, `${id} was not ranked`).toBeDefined()
@@ -69,12 +75,22 @@ describe('AUD-0004 — the same move, right at ten and wrong at twenty past eigh
     expect(later.situation.block).toBe(early.situation.block)
   })
 
-  it('finds the same body, the same topic and the same daughter at both', () => {
+  it('finds the same body, the same topic and the same arrangement at both', () => {
     // The only difference between the two decisions is the clock against the
     // school day. Everything the old engine could see is identical.
     expect(early.situation.capacity.strain).toEqual(later.situation.capacity.strain)
-    expect(early.situation.childPresent).toEqual(later.situation.childPresent)
     expect(early.situation.learningTopic.state).toBe(later.situation.learningTopic.state)
+    /*
+     * The arrangement, and only the arrangement — QA-82-001.
+     *
+     * This line used to be the whole assertion and it is why the finding
+     * survived a green suite: it said the two hours agreed about the daughter,
+     * which was true of the field and false of the day. Whose week it is has
+     * not changed at ten past eight and does not change at twenty past ten, and
+     * the app must never ask him again (section 62). Where she actually is
+     * absolutely does change, and the test below is the one that says so.
+     */
+    expect(early.situation.childPresent).toEqual(later.situation.childPresent)
   })
 
   it('will not put the lab in the ten minutes before her school day', () => {
@@ -108,10 +124,18 @@ describe('AUD-0004 — the same move, right at ten and wrong at twenty past eigh
   })
 
   it('trims a move to what is actually left before the obligation', () => {
-    const early30 = early.explanation?.rendered.sentence ?? ''
-    const later30 = later.explanation?.rendered.sentence ?? ''
-    expect(early30).toContain('10 minutes')
-    expect(later30).toContain('30 minutes')
+    /*
+     * Read off the same move at both hours — QA-82-001.
+     *
+     * It used to read the headline at each hour and assert "10 minutes" then
+     * "30 minutes". The second number came from *a different move* — half an
+     * hour with a daughter who was in a classroom — so a test about durations
+     * was holding a defect in place. The walk is proposed at both hours and is
+     * the same move, which is what makes the two numbers comparable at all.
+     */
+    const walk = 'health/move/routine:a-walk'
+    expect(sentenceOf(early, walk)).toContain('10 minutes')
+    expect(sentenceOf(later, walk)).toContain('25 minutes')
   })
 })
 

@@ -2350,6 +2350,21 @@ export interface DecisionEvidence {
   /** Current conditions the decision actually leaned on — never everything known. */
   readonly conditions: readonly ConditionLine[]
   /**
+   * Why later rather than now, on a held decision — QA-82-002.
+   *
+   * Empty on every other kind, and load-bearing on this one. A hold is the only
+   * decision where the sentence on Now is not a move, so *why this?* means
+   * something different: the owner is not asking why a walk, he is asking why
+   * not yet. The panel answered the first question and the screen was asking
+   * the second — the conditions, the counts and the comparable occasions were
+   * all about the move, and the deferral was nowhere on the panel that exists
+   * to explain the decision.
+   *
+   * Read off `decision.heldBecause`, which the arbiter wrote when it made the
+   * deferral. Nothing here is recomputed, so there is nothing to disagree with.
+   */
+  readonly deferral: readonly string[]
+  /**
    * How many comparable situations there were, in a sentence.
    *
    * There is deliberately no limiter here. Now already prints it directly under
@@ -2566,6 +2581,7 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
   return {
     move: explanation.rendered.sentence,
     conditions,
+    deferral: decision.heldBecause,
     comparable:
       alike.length === 0
         ? `Nothing in the record is much like ${here} yet.`

@@ -1,5 +1,6 @@
 import { createRecordFactory } from '../domain/build'
 import { DOMAIN, type LifeDomainId } from '../domain/domains'
+import type { EntityRef } from '../domain/entities'
 import { newRecordId, type RecordId } from '../domain/ids'
 import type {
   CommitmentRecurrence,
@@ -50,6 +51,16 @@ export interface CommitmentWindowInput {
   readonly domain: LifeDomainId
   /** How the app came to know it. See `CommitmentWindowSource`. */
   readonly knownFrom: CommitmentWindowRecord['knownFrom']
+  /**
+   * Whose span it is, by name — QA-82-001.
+   *
+   * `whose` says the span belongs to somebody other than the owner; this says
+   * who. Without it a school day was a shape in the day with nobody in it, so
+   * nothing downstream could work out that the person it takes away is the
+   * person a move was about. Empty is allowed and means the owner named a span
+   * without naming anybody in it, which stays a gap rather than a guess.
+   */
+  readonly about?: readonly EntityRef[]
 }
 
 export interface CommitmentMoment {
@@ -72,6 +83,7 @@ export function commitmentWindowRecord(
       ...(moment.recordedAt === undefined ? {} : { recordedAt: moment.recordedAt }),
       id,
       domains: [input.domain],
+      ...(input.about === undefined || input.about.length === 0 ? {} : { entities: input.about }),
     },
     {
       label: input.label,
@@ -169,6 +181,15 @@ export interface ScheduleSeed {
    * (D-075).
    */
   invite(situation: Situation): string
+  /**
+   * Who the span takes away, when it takes somebody away — QA-82-001.
+   *
+   * The school day is hers, and saying so on the record is what lets the engine
+   * know that a move about her cannot happen between half past eight and three.
+   * The working day takes the owner, who is not an entity in his own model, so
+   * that seed answers with nobody.
+   */
+  about(situation: Situation): readonly EntityRef[]
   readonly domain: LifeDomainId
   /** Whose time the span takes. See `CommitmentWindowRecord.whose`. */
   readonly whose: CommitmentWindowRecord['whose']
@@ -209,6 +230,12 @@ export const SCHEDULE_SEEDS: readonly ScheduleSeed[] = [
         .find((entity) => entity.domain === DOMAIN.fatherhood)
       return child === undefined ? 'the school day' : `${child.label}’s school day`
     },
+    about: (situation) => {
+      const child = situation.entities
+        .byKind('person')
+        .find((entity) => entity.domain === DOMAIN.fatherhood)
+      return child === undefined ? [] : [{ id: child.id, kind: child.kind }]
+    },
     domain: DOMAIN.fatherhood,
     // Hers, not his. He has to be somewhere when it starts and when it ends,
     // and the hours between are the freest stretch of his week.
@@ -221,6 +248,8 @@ export const SCHEDULE_SEEDS: readonly ScheduleSeed[] = [
     prompt: () => 'What are your working hours?',
     label: () => 'work',
     invite: () => 'your working hours',
+    // Nobody: it takes the owner, and the owner is not a row in his own model.
+    about: () => [],
     domain: DOMAIN.career,
     whose: 'mine',
     startsAt: 9 * 60,

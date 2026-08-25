@@ -152,6 +152,17 @@ export interface Decision {
    */
   readonly heldUntil: DayBlock | undefined
   /**
+   * Why later rather than now — QA-82-002.
+   *
+   * The arbiter's own grounds, carried through unchanged, and empty on every
+   * decision that is not a hold. It exists because a held decision's evidence
+   * panel was answering a question nobody asked: it listed what the *move*
+   * rested on, when the thing on screen was the app declining to offer that
+   * move yet. The grounds are written where the deferral is made
+   * (`arbitrate.ts`), so there is one account of it and the panel quotes it.
+   */
+  readonly heldBecause: readonly string[]
+  /**
    * Growth areas the evidence says have moved on, as questions (section 9).
    *
    * Not part of the decision and deliberately alongside it. Section 9 asks the
@@ -457,6 +468,7 @@ function rankingRows(selection: Selection, situation: Situation): readonly Ranke
     return {
       id: evaluation.candidate.id,
       sentence: rendered.ok ? rendered.rendered.sentence : 'could not be put into words',
+      minutes: evaluation.candidate.semantics.target.minutes,
       score: evaluation.score,
       confidence: evaluation.confidence,
       dimensions: evaluation.dimensions,
@@ -936,6 +948,7 @@ export function decide(
   let noAction: NoAction | undefined
   let state: MoveState | undefined
   let heldUntil: DayBlock | undefined
+  let heldBecause: readonly string[] = []
 
   /*
    * The app reads the room before it reads the ranking — AUD-0023.
@@ -1025,6 +1038,7 @@ export function decide(
       const rendered = renderRecommendation(semantics, situation.entities, held.until)
       if (rendered.ok) {
         heldUntil = held.until
+        heldBecause = held.because
         explanation = { ...result.explanation, semantics, rendered: rendered.rendered }
       }
     }
@@ -1075,6 +1089,7 @@ export function decide(
     state,
     noAction,
     heldUntil,
+    heldBecause,
     growth: growthSuggestions(situation),
     trace: {
       architecture,

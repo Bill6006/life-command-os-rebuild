@@ -964,6 +964,20 @@ function EvidencePanel({
 
       {!open ? null : (
         <div className="ev-detail" data-testid="now-evidence">
+          {/*
+            First, because on a held decision it is the question — QA-82-002.
+            The owner opened this under a sentence saying to wait; what he wants
+            is why not yet, and the conditions, counts and comparable occasions
+            below are all about the move rather than about the hour.
+          */}
+          {evidence.deferral.length === 0 ? null : (
+            <EvidenceNote title="Why later rather than now" testId="now-evidence-deferral">
+              {evidence.deferral.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </EvidenceNote>
+          )}
+
           {evidence.conditions.length === 0 ? null : (
             <EvidenceNote title={`What this rested on ${hereNowWord(block)}`}>
               {evidence.conditions.map((condition) => (

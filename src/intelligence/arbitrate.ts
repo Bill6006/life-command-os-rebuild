@@ -1,8 +1,24 @@
 import type { DayBlock } from '../domain/time'
 import { profileFor } from './moves'
 import { blockNoun } from './vocabulary'
+
+/** Sentence case for a phrase that is normally read mid-sentence. */
+function capitaliseFirst(phrase: string): string {
+  return phrase.charAt(0).toUpperCase() + phrase.slice(1)
+}
+
+/**
+ * A stretch of free time, in the unit a person would use for it.
+ *
+ * "about 300 minutes free" is a true sentence nobody says. The app already
+ * switches to hours once a figure is large enough to be read that way, and
+ * five hours is well past that.
+ */
+function freeTime(minutes: number): string {
+  return minutes >= 90 ? describeHours(minutes / 60) : `${Math.round(minutes)} minutes`
+}
 import type { Evaluation } from './evaluate'
-import type { Situation } from './situation'
+import { describeHours, type Situation } from './situation'
 
 /**
  * Global arbitration (canonical plan section 17.1 step 8, and 17.2).
@@ -131,6 +147,23 @@ export interface Deferral {
   readonly evaluation: Evaluation
   /** The part of today it is being held for. Always later, always today. */
   readonly until: DayBlock
+  /**
+   * What made it a deferral rather than a move — QA-82-002.
+   *
+   * Written here because here is where the deferral is decided. The evidence
+   * panel exists to answer *why this?*, and on a held decision the question it
+   * has to answer is *why later rather than now?* — which the held move's own
+   * `leansOn` list cannot answer, because that list is about the move and the
+   * question is about the hour. It ran the panel on a move it was not offering
+   * and left the actual reasoning nowhere on the screen.
+   *
+   * Each line is one of the conditions `heldForLater` actually tested, in the
+   * order it tested them, in the owner's words rather than the profile's. The
+   * panel prints them and does not recompute them: section 51 forbids a
+   * parallel explanation truth, and there is nothing here to disagree with
+   * because nothing here is derived twice.
+   */
+  readonly because: readonly string[]
 }
 
 export interface Selection {
@@ -327,5 +360,16 @@ function heldForLater(best: Evaluation, situation: Situation): Deferral | undefi
   const minutes = best.candidate.semantics.target.minutes
   if (next.free < Math.max(ROOM_IN_A_LATER_BLOCK, minutes ?? 0)) return undefined
 
-  return { evaluation: best, until: next.block }
+  return {
+    evaluation: best,
+    until: next.block,
+    // The three conditions above, in the order they were tested — QA-82-002.
+    because: [
+      `${capitaliseFirst(blockNoun(situation.block))} is not when this one goes well.`,
+      `${capitaliseFirst(blockNoun(next.block))} is the next part of today that suits it.`,
+      minutes === undefined
+        ? `There is room for it in ${blockNoun(next.block)} — about ${freeTime(next.free)} of it is not spoken for.`
+        : `There is room for it in ${blockNoun(next.block)} — about ${freeTime(next.free)} of it is not spoken for, and this takes ${minutes} minutes.`,
+    ],
+  }
 }

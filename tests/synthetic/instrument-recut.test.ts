@@ -143,13 +143,24 @@ describe('what still scores zero at full weight, and why each one may', () => {
         'The bottom of a positive-only scale. Abstaining would *reward* a move nothing raised, ' +
         'because every rival keeps its positive urgency in the mean.',
     },
+    /*
+     * Both of these were the old third band, and both changed wording and
+     * meaning in the QA-82-003 repair. `time-fit` now has four bands: the
+     * bottom one is −0.5 and is a move that does not fit at all, so it is no
+     * longer zero and no longer appears here. What is left at zero is the band
+     * either side of the line — a move that uses everything there is and no
+     * more.
+     */
     {
-      what: 'time-fit :: would not fit before Adaya’s school day',
-      because: 'The bottom of a positive-only scale, and a real finding about the hour.',
+      what: 'time-fit :: would use all the time before Adaya’s school day',
+      because:
+        'The bottom of the fitting range, and a real finding about the hour: it fits, with ' +
+        'nothing to spare. Not an absence, and no longer the same score as a move that ' +
+        'overruns the school run.',
     },
     {
-      what: 'time-fit :: would use most of the evening',
-      because: 'The same: the worst score `time-fit` has, not the absence of one.',
+      what: 'time-fit :: would use the rest of the evening',
+      because: 'The same reading with no obligation to name — it fits, and uses all of it.',
     },
     {
       what: 'immediate-benefit',

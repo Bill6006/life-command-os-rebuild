@@ -122,9 +122,18 @@ export function EvidenceLines({
   )
 }
 
-export function EvidenceNote({ title, children }: { title: string; children: ReactNode }) {
+export function EvidenceNote({
+  title,
+  children,
+  testId,
+}: {
+  title: string
+  children: ReactNode
+  /** Set only where a browser test has to find one block among several. */
+  testId?: string
+}) {
   return (
-    <div className="ev-block">
+    <div className="ev-block" {...(testId === undefined ? {} : { 'data-testid': testId })}>
       <p className="ev-block__title">{title}</p>
       <div className="ev-block__body">{children}</div>
     </div>
