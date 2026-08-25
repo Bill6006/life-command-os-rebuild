@@ -40,6 +40,18 @@ export type NoActionReason =
   /** Things survived, and none of them was worth doing. */
   | 'nothing-worth-doing'
   /**
+   * Two refusals in this block, so the app stopped offering — AUD-0023.
+   *
+   * The step before `enough-for-now`, and a different claim. Three passes mean
+   * the block is over. Two mean the app has been wrong twice about the same
+   * hour, and a third guess from the same ranking is very unlikely to be the
+   * one that lands: something it cannot see is in the way. The correct move is
+   * to stop guessing and ask, which is what the guide does alongside this — and
+   * when it has nothing worth asking, saying so plainly is still better than a
+   * third suggestion.
+   */
+  | 'not-landing'
+  /**
    * The owner has said no three times in this block — AUD-0023.
    *
    * Not a failure of the catalogue: things were proposed and one of them may

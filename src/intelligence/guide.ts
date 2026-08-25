@@ -3,10 +3,12 @@ import { localDayIdAt } from '../domain/time'
 import { buildView, type MemoryView } from '../memory/view'
 import type { ConceptRegistry } from '../domain/concepts'
 import { refusalsInBlock } from './constraints'
+import { profileFor } from './moves'
 import { awaitedReadings } from './derived'
 import {
   decide,
   probeSwings,
+  REFUSALS_BEFORE_ASKING,
   type Decision,
   type DecideOptions,
   type DecisionMoment,
@@ -49,9 +51,6 @@ import type { Swing } from './trace'
  * run of questions.
  */
 export const QUESTIONS_PER_DAY = 3
-
-/** How many refusals in one block before a question beats another suggestion. */
-export const REFUSALS_BEFORE_ASKING = 2
 
 /**
  * How much of a question has to be live before it is worth asking: half of it.
@@ -99,8 +98,24 @@ function worthATap(overturns: number, options: number): boolean {
  * expected opportunity loss and is not being asked to. It is a floor under one
  * class of harm.
  */
-function worthAskingAnyway(swing: Swing, concepts: ConceptRegistry): boolean {
+function worthAskingAnyway(swing: Swing, concepts: ConceptRegistry, standing: Decision): boolean {
   if (concepts.definitionFor(swing.concept).consequential !== true) return false
+  /*
+   * Only when there is something to be wrong *about* — QA-81-001's second-order
+   * effect.
+   *
+   * The harm D-111 names is precise: recommending exertion to a body in pain,
+   * or effort to someone severely short of rest. If the app is already
+   * proposing something light or restorative — half an hour with his daughter,
+   * an easier day — then asking about pain first buys nothing, and a floor
+   * under one class of harm becomes a question the owner cannot see the point
+   * of. Giving the capacity limiter a move of its own made almost every
+   * soreness answer flip the decision, so without this bound the exception
+   * fired on sixteen of twenty-one histories and section 47's "too many
+   * questions" gate would have been the next thing to fail.
+   */
+  const verb = standing.evaluation?.candidate.semantics.target.verb
+  if (verb === undefined || profileFor(verb).demand !== 'effortful') return false
   return swing.outcomes.some((outcome) => outcome.easier)
 }
 
@@ -203,7 +218,7 @@ function mostValuable(
      */
     const allowed =
       worthATap(scored.overturns, scored.options) ||
-      worthAskingAnyway(swing, concepts) ||
+      worthAskingAnyway(swing, concepts, decision) ||
       (relaxed && scored.overturns > 0)
     if (!allowed) continue
     if (bestRank === undefined || beats(scored, bestRank)) {

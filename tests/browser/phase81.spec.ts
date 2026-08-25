@@ -187,3 +187,65 @@ test.describe('stopping a recommendation family', () => {
     await expect(page.getByRole('link', { name: /Home/ }).first()).toBeVisible()
   })
 })
+
+// ---------------------------------------------------------------------------
+// AUD-0023 — the escalation, on the screen QA reproduced it on
+// ---------------------------------------------------------------------------
+
+test.describe('two refusals in one block', () => {
+  /*
+   * QA-81-004's reproduction, pressed rather than computed.
+   *
+   * "A week pointed at the house" is set at 19:30 on 2026-09-15, which is the
+   * hour of the report, so the laboratory lands on it directly. What was
+   * observed there: `Can't right now` twice, and the app answering with a third
+   * suggestion — "Spend the next 30 minutes with Adaya, phone away" — under
+   * "Nothing else worth asking right now".
+   *
+   * The unit suite proved the same sequence and was passing throughout, because
+   * it proved it on a fixture that happened to have a question available. This
+   * is here so the next version of that mistake is caught by a thumb.
+   */
+  test('stops offering and asks, instead of guessing a third time', async ({ page }) => {
+    await loadInQa(page, 'A week pointed at the house')
+    await goToNow(page)
+
+    const headline = page.locator('.primary-surface__headline')
+    await expect(headline).toContainText('kitchen')
+
+    const refuse = page.getByTestId('now-actions').getByRole('button', { name: "Can't right now" })
+    await refuse.click()
+    await expect(headline).not.toContainText('kitchen')
+
+    const second = await headline.textContent()
+    await refuse.click()
+
+    // Not a third move — and specifically not a third move about his daughter,
+    // which is the one of the three that costs him something to turn down.
+    await expect(headline).not.toHaveText(second ?? '')
+    await expect(headline).toContainText('not landing')
+    await expect(page.getByTestId('now-actions')).toHaveCount(0)
+    await expect(page.getByTestId('now-question')).toBeVisible()
+  })
+
+  test('looks again once he answers, and stops for good at the third', async ({ page }) => {
+    await loadInQa(page, 'A week pointed at the house')
+    await goToNow(page)
+
+    const headline = page.locator('.primary-surface__headline')
+    const refuse = page.getByTestId('now-actions').getByRole('button', { name: "Can't right now" })
+    await refuse.click()
+    await refuse.click()
+    await expect(headline).toContainText('not landing')
+
+    // The answer is the owner making visible the thing the app could not see,
+    // so the app looks again. Otherwise it asked for nothing.
+    await page.getByTestId('now-question').waitFor()
+    await page.locator('.now-options').getByRole('button').first().click()
+    await expect(page.getByTestId('now-actions')).toBeVisible()
+
+    await page.getByTestId('now-actions').getByRole('button', { name: "Can't right now" }).click()
+    await expect(headline).toContainText('Nothing then')
+    await expect(page.getByTestId('now-reason')).toContainText('part of the day')
+  })
+})

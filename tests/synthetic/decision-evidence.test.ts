@@ -4,6 +4,12 @@ import { DOMAIN } from '../../src/domain/domains'
 import { evidenceForDecision, MIN_FOR_A_RATE } from '../../src/intelligence/insights'
 import { createKit } from '../../src/synthetic/kit'
 import { SCENARIOS } from '../../src/synthetic/scenarios'
+import { civilDateFromDayId, instantAtLocal, localDayIdAt, timeZone } from '../../src/domain/time'
+import { decide } from '../../src/intelligence/engine'
+import { nextGuideStep } from '../../src/intelligence/guide'
+import { answerRecord } from '../../src/intelligence/questions'
+import { snapshotFromWire } from '../../src/memory/snapshot'
+import { buildView } from '../../src/memory/view'
 import { decideOn, loadScenario, ORPHAN_PRONOUNS } from './harness'
 
 /**
@@ -456,6 +462,186 @@ describe('AUD-0028 — two lines about one move that a reader can reconcile', ()
     for (const { id, reason } of reasonsAcrossTheLibrary()) {
       expect(reason, id).not.toMatch(/costs you the start of every evening/i)
     }
+  })
+})
+
+/**
+ * Every hour of every history, not one hour of each — QA-81-002.
+ *
+ * The finding was reproduced at 15:00 and held at evening and late night. It
+ * did not hold in the morning, which is the hour the library sweep above reads
+ * for that scenario, and is why a sweep that looked like coverage saw none of
+ * it.
+ */
+function reasonsAcrossEveryBlock(): readonly { id: string; block: string; reason: string }[] {
+  const rows: { id: string; block: string; reason: string }[] = []
+  for (const scenario of SCENARIOS) {
+    const loaded = snapshotFromWire(scenario.build())
+    const date = civilDateFromDayId(localDayIdAt(scenario.now, scenario.zone))
+    for (const hour of [6, 10, 15, 20, 23]) {
+      const now = instantAtLocal({ ...date, hour, minute: 0, second: 0 }, scenario.zone)
+      const moment = { now, zone: scenario.zone, weekStartsOn: scenario.weekStartsOn ?? 1 }
+      const decision = decide(buildView(loaded.snapshot, moment), moment)
+      const reason = decision.explanation?.rendered.reason
+      if (reason === undefined) continue
+      rows.push({ id: scenario.id, block: decision.situation.block, reason })
+    }
+  }
+  return rows
+}
+
+/**
+ * The claims a reason is not entitled to make about anything but the move on
+ * screen.
+ *
+ * Enumerated rather than gestured at, because "does not endorse the loser" is
+ * only a test if what counts as endorsing is written down. Each of these is a
+ * verdict — a statement that some option is the one to take — and the screen
+ * already carries exactly one of those, in the headline.
+ */
+const A_VERDICT =
+  /\b(the better call|the better choice|looks like the better|is the better|the right call|the best call|worth more than|makes more sense|still the one)\b/i
+
+describe('QA-81-002 — the trade-off never endorses what was set aside', () => {
+  it('does not call subnetting the better call while putting subnetting down', () => {
+    /*
+     * The exact reproduction. "A morning after three bad nights" at 15:00
+     * America/Denver, where the app chooses recovery over the CCNA session:
+     *
+     * > Take the rest of the afternoon as recovery — no subnetting session.
+     * > ... The week is pointed at the CCNA push, and subnetting still looks
+     * > like the better call.
+     *
+     * `costClause` was handed the chosen move's `target.object`, and for a
+     * `recover` move that object is the thing being put down. So the clause
+     * recommended, in the app's own voice, the move the app had just rejected —
+     * and the screen listed that same move under "Chosen over".
+     */
+    const scenario = SCENARIOS.find((entry) => entry.id === 'morning-after-bad-nights')
+    expect(scenario, 'the reproduction history is gone').toBeDefined()
+    expect(scenario!.zone, 'the reproduction moved zone').toBe(timeZone('America/Denver'))
+
+    const loaded = snapshotFromWire(scenario!.build())
+    const afternoon = instantAtLocal(
+      {
+        ...civilDateFromDayId(localDayIdAt(scenario!.now, scenario!.zone)),
+        hour: 15,
+        minute: 0,
+        second: 0,
+      },
+      scenario!.zone,
+    )
+    const moment = {
+      now: afternoon,
+      zone: scenario!.zone,
+      weekStartsOn: scenario!.weekStartsOn ?? 1,
+    }
+    const decision = decide(buildView(loaded.snapshot, moment), moment)
+
+    const reason = decision.explanation?.rendered.reason ?? ''
+    expect(decision.situation.block, 'the reproduction moved off its hour').toBe('afternoon')
+    expect(reason, 'the trade-off clause is gone rather than fixed').toMatch(
+      /the week is pointed at/i,
+    )
+    expect(reason, reason).not.toMatch(A_VERDICT)
+  })
+
+  it('makes no verdict about an alternative, at any hour of any history', () => {
+    /*
+     * The class, not the sentence. The defect was not the word "subnetting": it
+     * was a composed clause completing itself with a noun it had not derived
+     * from the thing the clause was about. Any such clause can name the loser,
+     * so what is held here is the whole rendered reason — and it is held at
+     * every block, because the finding was invisible at the one hour the
+     * library sweep reads.
+     */
+    const rows = reasonsAcrossEveryBlock()
+    expect(rows.length, 'the sweep found no reasons at all').toBeGreaterThan(20)
+    for (const row of rows) {
+      expect(row.reason, `${row.id} (${row.block}): ${row.reason}`).not.toMatch(A_VERDICT)
+    }
+  })
+
+  it('still says what the choice cost — the clause was repaired, not deleted', () => {
+    /*
+     * D-108's other half. "Says nothing" passes every falsehood test ever
+     * written, so the repair has to be held against the promise it was made
+     * under: AUD-0026 asks the app to name the trade, and section 6 lists it
+     * among the ten things Now must be able to show.
+     */
+    const rows = reasonsAcrossEveryBlock()
+    const traded = rows.filter((row) => /the week is pointed at|the goal you set/i.test(row.reason))
+    expect(traded.length, 'no history names a cost any more').toBeGreaterThan(0)
+
+    // And the half that says what was actually short, which is the clause that
+    // used to be occupied by a verdict.
+    const named = traded.filter((row) =>
+      /rest is what is short|the body is asking for less|there is not much of the day left|time away from it/i.test(
+        row.reason,
+      ),
+    )
+    expect(named.length, 'the cost is named with nothing on the other side of it').toBe(
+      traded.length,
+    )
+  })
+
+  it('names the cost even when nothing is short — AUD-0026', () => {
+    /*
+     * The half of this repair that the library cannot reach on its own.
+     *
+     * The first fix for QA-81-002 removed the noun *and* made the clause
+     * conditional on a limiter, reasoning that "this is against the week you
+     * set" is a complaint without something to set against it. Every unit test
+     * passed, because at no hour of any history in the library is
+     * `direction-fit` materially against with no limiter firing — measured, not
+     * assumed: the count is zero. The only thing that caught it was a browser
+     * test pressing the guide's answer, and one instrument that slow should not
+     * be the only one holding a sentence.
+     *
+     * So the state is built here: "Two ordinary weeks", where the honest answer
+     * is nothing to suggest until the owner says he has energy, and one tap
+     * turns it into a walk in a fortnight pointed at the house. The walk is
+     * still the right call and it still costs him the week's direction, and
+     * both of those belong on the screen.
+     */
+    const scenario = SCENARIOS.find((entry) => entry.id === 'quiet-fortnight')
+    expect(scenario, 'the history this is built on is gone').toBeDefined()
+
+    const loaded = snapshotFromWire(scenario!.build())
+    const moment = {
+      now: scenario!.now,
+      zone: scenario!.zone,
+      weekStartsOn: scenario!.weekStartsOn ?? (1 as const),
+    }
+
+    const asked = nextGuideStep(buildView(loaded.snapshot, moment), moment)
+    expect(asked.question?.spec.concept, 'the fixture no longer asks about energy').toBe(
+      CONCEPT.energy,
+    )
+    const plenty = asked.question!.options[asked.question!.options.length - 1]!
+
+    const answered = {
+      ...loaded.snapshot,
+      records: [
+        ...loaded.snapshot.records,
+        answerRecord(asked.question!.spec, plenty, moment, 'QA81002-1' as never),
+      ],
+    }
+    const decision = decide(buildView(answered, moment), moment)
+
+    expect(decision.kind, 'one answer no longer produces a move').toBe('move')
+    expect(decision.situation.limiter, 'this state is supposed to have nothing short').toBe(
+      undefined,
+    )
+    const direction = decision.evaluation?.dimensions.find((row) => row.name === 'direction-fit')
+    expect(
+      (direction?.value ?? 0) * (direction?.weight ?? 0),
+      'the week is no longer pointed away from this',
+    ).toBeLessThan(0)
+
+    const reason = decision.explanation?.rendered.reason ?? ''
+    expect(reason, reason).toMatch(/the week is pointed at/i)
+    expect(reason, reason).not.toMatch(A_VERDICT)
   })
 })
 

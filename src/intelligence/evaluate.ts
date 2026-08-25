@@ -600,6 +600,47 @@ function capacityFit(situation: Situation, profile: MoveProfile): Dimension {
     }
   }
 
+  /*
+   * A sore body and a short night are different readings — QA-81-001.
+   *
+   * They were being spent as one number. With rest in hand and a shoulder that
+   * hurts, this dimension marked a *light* move down by the same reasoning it
+   * used for a strained night, so half an hour with his daughter, phone away,
+   * scored as though it were asking something of a body that had nothing to
+   * give. It is not: soreness is a reading about **exertion**, and it has
+   * nothing to say about sitting with somebody.
+   *
+   * The consequence was visible the moment the capacity limiter gained a move
+   * of its own: a sore, well-rested father with Adaya in the house was told to
+   * start easing off, and "spend the next 30 minutes with Adaya, phone away"
+   * came second. Section 10 protects that move from being merged or made
+   * conditional; nothing protects it from being out-scored by a wrong reading,
+   * which is what this was.
+   *
+   * So soreness alone speaks about what it knows about. Effort is still marked
+   * down — that is the whole point of asking — a restorative move is still what
+   * a sore body is asking for, and a light one is neither helped nor hindered.
+   */
+  if (strain.value === 'none') {
+    if (profile.demand === 'effortful') {
+      return {
+        name: 'capacity-fit',
+        value: -0.55,
+        weight,
+        note: 'more than a sore body should be asked for',
+      }
+    }
+    if (profile.demand === 'restorative') {
+      return {
+        name: 'capacity-fit',
+        value: 0.4,
+        weight,
+        note: 'this is what a sore body is asking for',
+      }
+    }
+    return { name: 'capacity-fit', value: 0, weight, note: 'asks nothing of a sore body' }
+  }
+
   const level = strain.value === 'severe' ? 1 : 0.55
   if (profile.demand === 'restorative') {
     return {

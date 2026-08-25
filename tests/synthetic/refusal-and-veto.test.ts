@@ -5,6 +5,8 @@ import type { CanonicalRecord } from '../../src/domain/records'
 import {
   addLocalDays,
   blockOf,
+  civilDateFromDayId,
+  instantAtLocal,
   localDayIdAt,
   startOfLocalDay,
   timeZone,
@@ -13,8 +15,10 @@ import {
 import { forbidRecord, liftVetoRecord } from '../../src/intelligence/corrections'
 import { decide, type Decision } from '../../src/intelligence/engine'
 import { describePremise } from '../../src/intelligence/explain'
-import { nextGuideStep } from '../../src/intelligence/guide'
+import { nextGuideStep, QUESTIONS_PER_DAY } from '../../src/intelligence/guide'
+import { answerRecord } from '../../src/intelligence/questions'
 import { planLifecycle } from '../../src/intelligence/lifecycle'
+import { SHOWN_ENOUGH_TIMES_TODAY } from '../../src/intelligence/constraints'
 import type { ShownMove } from '../../src/intelligence/situation'
 import { snapshotFromWire } from '../../src/memory/snapshot'
 import type { StoreSnapshot } from '../../src/memory/store'
@@ -56,6 +60,36 @@ function open(id: string): Session {
   return { snapshot: loaded.snapshot, now: loaded.scenario.now, shown: [] }
 }
 
+/** The audit's hour: 19:30 on the day the scenario is set. */
+function eveningOf(id: string): Instant {
+  const loaded = loadScenario(id)
+  const zone = loaded.scenario.zone
+  const date = civilDateFromDayId(localDayIdAt(loaded.scenario.now, zone))
+  return instantAtLocal({ ...date, hour: 19, minute: 30, second: 0 }, zone)
+}
+
+/** A day's worth of questions already answered, earlier and elsewhere. */
+function spentQuestions(session: Session, zone = ZONE): readonly CanonicalRecord[] {
+  const moment = { now: session.now, zone, weekStartsOn: 1 as const }
+  const view = buildView(session.snapshot, moment)
+  const asked = nextGuideStep(view, moment)
+  if (asked.question === undefined) throw new Error('the guide is asking nothing to spend')
+  const option = asked.question.options[0]
+  if (option === undefined) throw new Error('a question with no answers')
+
+  // In the morning, so they are spent for the day and not replies to anything
+  // that happens this evening.
+  const date = civilDateFromDayId(localDayIdAt(session.now, zone))
+  return Array.from({ length: QUESTIONS_PER_DAY }, (_unused, index) =>
+    answerRecord(
+      asked.question!.spec,
+      option,
+      { now: instantAtLocal({ ...date, hour: 7, minute: index, second: 0 }, zone), zone },
+      ids(),
+    ),
+  )
+}
+
 function decideIn(session: Session, zone = ZONE): Decision {
   const moment = { now: session.now, zone, weekStartsOn: 1 as const, shown: session.shown }
   return decide(buildView(session.snapshot, moment), moment)
@@ -74,6 +108,21 @@ function refuse(session: Session, action: 'decline' | 'unable-now', zone = ZONE)
     recordedAt: session.now,
   })
   return { ...session, snapshot: withRecords(session.snapshot, planned.records) }
+}
+
+/** Answer whatever the guide is asking, the way the question buttons do. */
+function answer(session: Session, zone = ZONE): Session {
+  const moment = { now: session.now, zone, weekStartsOn: 1 as const, shown: session.shown }
+  const step = nextGuideStep(buildView(session.snapshot, moment), moment)
+  if (step.question === undefined) throw new Error('nothing on screen to answer')
+  const option = step.question.options[0]
+  if (option === undefined) throw new Error('a question with no answers')
+  return {
+    ...session,
+    snapshot: withRecords(session.snapshot, [
+      answerRecord(step.question.spec, option, { now: session.now, zone }, ids()),
+    ]),
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -123,9 +172,20 @@ describe('AUD-0023 — repeated refusals are read as a pattern', () => {
   })
 
   it('stops after the third refusal, and says so', () => {
+    /*
+     * Three refusals, by the only route to them there now is.
+     *
+     * Two refusals stop the offers (QA-81-004), so a third is only reachable if
+     * something re-opens them — and the thing that re-opens them is the owner
+     * answering the question the second refusal raised. That is not a
+     * workaround for the test; it is the escalation working. An app that stops
+     * at two and then treats an answer as nothing would have asked for no
+     * reason.
+     */
     let session = open('growth-evidence')
     for (let round = 0; round < 3; round += 1) {
-      if (decideIn(session).kind !== 'move') break
+      if (decideIn(session).kind !== 'move') session = answer(session)
+      expect(decideIn(session).kind, `nothing to refuse at round ${round + 1}`).toBe('move')
       session = refuse(session, 'unable-now')
     }
 
@@ -139,29 +199,123 @@ describe('AUD-0023 — repeated refusals are read as a pattern', () => {
 
   it('asks after the second refusal rather than offering a third suggestion', () => {
     /*
-     * Three refusals in a row is the clearest signal a person can send without
-     * typing, and the right reading of the second one is not "here is a third
-     * suggestion" — it is that something the app cannot see is in the way,
-     * which is precisely what a question is for.
+     * The audit's own sequence, on the audit's own history — QA-81-004.
+     *
+     * "A week pointed at the house" at 19:30, `Can't right now` twice. What
+     * followed used to be a third suggestion — "Spend the next 30 minutes with
+     * Adaya, phone away", with "Nothing else worth asking right now" beneath it
+     * — which is the app's third guess at an hour it had already been wrong
+     * about twice, and the one of the three that costs him something to refuse.
+     *
+     * An earlier version of this test proved only `growth-mixed-evidence`,
+     * where a question happened to be available anyway. It passed while the
+     * deployed reproduction fell through.
      */
-    let session = open('growth-mixed-evidence')
-    const moment = { now: session.now, zone: ZONE, weekStartsOn: 1 as const }
+    let session = { ...open('week-pointed-at-home'), now: eveningOf('week-pointed-at-home') }
+    const zone = ZONE
+    const moment = { now: session.now, zone, weekStartsOn: 1 as const }
 
-    const before = nextGuideStep(buildView(session.snapshot, moment), moment)
-    expect(before.kind, 'the fixture already asks, so this proves nothing').toBe('settled')
+    expect(decideIn(session, zone).kind, 'the history stopped proposing anything').toBe('move')
+    session = refuse(session, 'unable-now', zone)
+    expect(decideIn(session, zone).kind, 'one refusal already stops it').toBe('move')
+    session = refuse(session, 'unable-now', zone)
 
-    session = refuse(session, 'unable-now')
-    session = refuse(session, 'unable-now')
+    const after = decideIn(session, zone)
+    expect(after.kind, 'a third move was offered after two refusals').toBe('no-action')
+    expect(after.noAction?.reason).toBe('not-landing')
 
-    const after = nextGuideStep(buildView(session.snapshot, moment), moment)
-    expect(after.kind).toBe('question')
+    const asked = nextGuideStep(buildView(session.snapshot, moment), moment)
+    expect(asked.kind, 'it stopped offering and asked nothing').toBe('question')
+  })
+
+  it('never offers a third move, on any history that can be refused twice', () => {
+    /*
+     * Swept, because one history is an anecdote and the fall-through was found
+     * on a history the focused regression did not cover.
+     */
+    let reached = 0
+    for (const scenario of SCENARIOS) {
+      let session = open(scenario.id)
+      const zone = scenario.zone
+      if (decideIn(session, zone).kind !== 'move') continue
+      session = refuse(session, 'unable-now', zone)
+      if (decideIn(session, zone).kind !== 'move') continue
+      session = refuse(session, 'unable-now', zone)
+
+      reached += 1
+      const after = decideIn(session, zone)
+      expect(
+        after.explanation?.rendered.sentence ?? after.kind,
+        `${scenario.id} offered a third move after two refusals`,
+      ).toBe('no-action')
+      expect(after.noAction?.reason).toBe('not-landing')
+    }
+    expect(reached, 'no history can be refused twice, so this asserts nothing').toBeGreaterThan(0)
+  })
+
+  it('stops offering even when it has nothing left to ask', () => {
+    /*
+     * The honest fallback — AUD-0023's own words, and the half QA found
+     * untested: "using an honest fallback if no existing question changes the
+     * answer."
+     *
+     * Reached by spending the day's questions rather than by contriving a
+     * history with none, because the daily cap is a real and ordinary way to
+     * arrive here: three answers earlier in the day and the guide has nothing
+     * further it is willing to ask, whatever the situation would support.
+     *
+     * What must hold is that the app still stops. A screen that falls back to a
+     * third suggestion because it could not think of a question has learned
+     * nothing from being told no twice.
+     */
+    const zone = ZONE
+    let session = { ...open('week-pointed-at-home'), now: eveningOf('week-pointed-at-home') }
+    session = refuse(session, 'unable-now', zone)
+    session = refuse(session, 'unable-now', zone)
+    // The day's questions, spent in the morning — so they are a cap and not a
+    // reply to either of the refusals above.
+    session = { ...session, snapshot: withRecords(session.snapshot, spentQuestions(session, zone)) }
+
+    const moment = { now: session.now, zone, weekStartsOn: 1 as const }
+    const step = nextGuideStep(buildView(session.snapshot, moment), moment)
+    expect(step.kind, 'the cap is not biting, so this proves nothing').toBe('settled')
+
+    const after = decideIn(session, zone)
+    expect(after.kind, 'no question, so it offered a third move instead').toBe('no-action')
+    expect(after.noAction?.reason).toBe('not-landing')
+    // And the copy does not promise a question that is not there.
+    expect(`${after.noAction?.headline} ${after.noAction?.detail}`).not.toMatch(/question|ask/i)
+  })
+
+  it('takes the answer as the reason to look again', () => {
+    /*
+     * Why asking is worth anything.
+     *
+     * The escalation is "stop offering and ask", and an app that asked and then
+     * ignored the reply would be doing the more insulting version of the thing
+     * the audit caught. An answer is the owner making visible the thing the app
+     * could not see, and a changed picture earns a fresh look — which is also
+     * the only route by which a third refusal exists at all.
+     */
+    const zone = ZONE
+    let session = { ...open('week-pointed-at-home'), now: eveningOf('week-pointed-at-home') }
+    session = refuse(session, 'unable-now', zone)
+    session = refuse(session, 'unable-now', zone)
+    expect(decideIn(session, zone).noAction?.reason).toBe('not-landing')
+
+    session = answer(session, zone)
+    const reopened = decideIn(session, zone)
+    expect(reopened.kind, 'the answer changed nothing on screen').toBe('move')
+
+    session = refuse(session, 'unable-now', zone)
+    expect(decideIn(session, zone).noAction?.reason).toBe('enough-for-now')
   })
 
   it('starts again when the part of the day turns over', () => {
     // "Always a way back", and the way back is named in the copy: the block.
     let session = open('growth-evidence')
     for (let round = 0; round < 3; round += 1) {
-      if (decideIn(session).kind !== 'move') break
+      if (decideIn(session).kind !== 'move') session = answer(session)
       session = refuse(session, 'unable-now')
     }
     expect(decideIn(session).noAction?.reason).toBe('enough-for-now')
@@ -177,18 +331,31 @@ describe('AUD-0023 — repeated refusals are read as a pattern', () => {
 // ---------------------------------------------------------------------------
 
 describe('AUD-0025 — the app stops repeating itself within a day', () => {
-  /** One owner-local day, at the hours the audit actually swept. */
-  const HOURS_OF_A_DAY = [-13, -9.5, -5.5, 0]
+  /**
+   * The four hours of the audit's own sweep, owner-local.
+   *
+   * Local wall-clock rather than offsets from the scenario's `now`, because the
+   * finding is about a morning, a mid-morning, an afternoon and an evening —
+   * and an hour arithmetic away from `now` lands wherever `now` happens to be
+   * on each of twenty-one histories, which is not the same claim.
+   */
+  const HOURS_OF_A_DAY = [
+    { hour: 6, minute: 30 },
+    { hour: 10, minute: 30 },
+    { hour: 14, minute: 30 },
+    { hour: 19, minute: 30 },
+  ]
 
   /** What one history says across a day, with or without the ledger kept. */
   function acrossADay(id: string, keeping: boolean): readonly string[] {
     const loaded = loadScenario(id)
     const zone = loaded.scenario.zone
+    const date = civilDateFromDayId(localDayIdAt(loaded.scenario.now, zone))
     let shown: readonly ShownMove[] = []
     const said: string[] = []
 
-    for (const hours of HOURS_OF_A_DAY) {
-      const now = (loaded.scenario.now + hours * 3_600_000) as Instant
+    for (const time of HOURS_OF_A_DAY) {
+      const now = instantAtLocal({ ...date, ...time, second: 0 }, zone)
       const moment = { now, zone, weekStartsOn: 1 as const, shown }
       const decision = decide(buildView(loaded.snapshot, moment), moment)
       const move = decision.evaluation?.candidate.id
@@ -211,15 +378,21 @@ describe('AUD-0025 — the app stops repeating itself within a day', () => {
   it('stops giving the same answer at four hours of one day', () => {
     /*
      * "A week pointed at the house", Wednesday: the identical kitchen sentence
-     * at 06:30, 10:00, 14:00 and 19:00. Nothing is written when a screen renders
+     * at 06:30, 10:30, 14:30 and 19:30. Nothing is written when a screen renders
      * (D-043, and rightly), so a move shown and ignored left no trace and scored
      * "+0.20 — not offered lately" four hours later.
      *
      * Held against the same history without the ledger, because a history that
      * varies across the day may simply be varying with the hour.
+     *
+     * **This is the audit's history, not a neighbouring one** (QA-81-003). The
+     * first version of this test ran `rested-and-behind`, which varies on its
+     * own by mid-afternoon; it passed while the reproduction it claimed to hold
+     * still repeated the kitchen four times. A regression that reproduces
+     * something adjacent to the defect is not a regression.
      */
-    const kept = acrossADay('rested-and-behind', true)
-    const without = acrossADay('rested-and-behind', false)
+    const kept = acrossADay('week-pointed-at-home', true)
+    const without = acrossADay('week-pointed-at-home', false)
 
     expect(new Set(without).size, 'the history varies on its own, so this proves nothing').toBe(1)
     expect(new Set(kept).size, kept.join(' -> ')).toBeGreaterThan(1)
@@ -239,6 +412,56 @@ describe('AUD-0025 — the app stops repeating itself within a day', () => {
       if (kept > without) improved += 1
     }
     expect(improved, 'the ledger changed nothing anywhere').toBeGreaterThan(0)
+  })
+
+  it('does not tell him nothing suits when the truth is that he has read it', () => {
+    /*
+     * The falsehood the repair could have introduced.
+     *
+     * "There were things worth doing and none of them suit where you actually
+     * are" is a claim about the hour and the body. Once a day can end with every
+     * candidate held back for having already been on screen twice, that sentence
+     * becomes false in exactly the histories the repair creates: they suit fine,
+     * and he has read them. D-114 does not stop applying because the sentence is
+     * a no-action state rather than a recommendation.
+     */
+    let reached = 0
+    for (const scenario of SCENARIOS) {
+      const loaded = loadScenario(scenario.id)
+      const zone = loaded.scenario.zone
+      const date = civilDateFromDayId(localDayIdAt(loaded.scenario.now, zone))
+      let shown: readonly ShownMove[] = []
+
+      for (const time of HOURS_OF_A_DAY) {
+        const now = instantAtLocal({ ...date, ...time, second: 0 }, zone)
+        const moment = { now, zone, weekStartsOn: 1 as const, shown }
+        const decision = decide(buildView(loaded.snapshot, moment), moment)
+
+        const onlyBecauseRead =
+          decision.trace.rejected.length > 0 &&
+          decision.trace.rejected.every((row) => row.reason === 'just-covered')
+        if (decision.noAction !== undefined && onlyBecauseRead) {
+          reached += 1
+          expect(
+            `${decision.noAction.headline} ${decision.noAction.detail}`,
+            `${scenario.id} at ${time.hour}:00 blamed the hour for something he had already read`,
+          ).not.toMatch(/suit where you actually are/i)
+        }
+
+        const move = decision.evaluation?.candidate.id
+        if (move === undefined) continue
+        shown = [
+          ...shown.filter((entry) => entry.move !== move),
+          {
+            move,
+            dayId: decision.situation.dayId,
+            at: now,
+            count: (shown.find((entry) => entry.move === move)?.count ?? 0) + 1,
+          },
+        ]
+      }
+    }
+    expect(reached, 'no history ever runs out this way, so this asserts nothing').toBeGreaterThan(0)
   })
 
   it('never calls a move fresh once it has been on screen today', () => {
@@ -271,7 +494,7 @@ describe('AUD-0025 — the app stops repeating itself within a day', () => {
           move: move!,
           dayId: plain.situation.dayId,
           at: (now - 3_600_000) as Instant,
-          count: 3,
+          count: 1,
         },
       ],
     })
@@ -284,6 +507,49 @@ describe('AUD-0025 — the app stops repeating itself within a day', () => {
     expect(before?.note).toMatch(/not offered lately/i)
     expect(after?.note).toMatch(/already on screen/i)
     expect(after?.value ?? 0).toBeLessThan(before?.value ?? 0)
+  })
+
+  it('takes a move off the table once showing it again would be repeating', () => {
+    /*
+     * Where the ledger's two halves meet, and why there are two.
+     *
+     * One showing marks a move down — that is the test above, and it is the
+     * gentle half: the move stays on the table and can still win if the day
+     * really does still point at it. `SHOWN_ENOUGH_TIMES_TODAY` is the hard
+     * half, and it exists because marking down cannot promise an outcome. A
+     * move whose lead is wider than this dimension's whole range at its current
+     * weight goes on winning no matter how often it has been read, which is
+     * precisely what the audit caught (QA-81-003).
+     *
+     * So the second showing is discounted and the third does not happen.
+     */
+    const loaded = loadScenario('week-pointed-at-home')
+    const zone = loaded.scenario.zone
+    const now = loaded.scenario.now
+    const at = { now, zone, weekStartsOn: 1 as const }
+
+    const plain = decide(buildView(loaded.snapshot, at), at)
+    const move = plain.evaluation?.candidate.id
+    expect(move, 'the history no longer proposes anything to repeat').toBeDefined()
+
+    const twice = {
+      ...at,
+      shown: [
+        {
+          move: move!,
+          dayId: plain.situation.dayId,
+          at: (now - 3_600_000) as Instant,
+          count: SHOWN_ENOUGH_TIMES_TODAY,
+        },
+      ],
+    }
+    const after = decide(buildView(loaded.snapshot, twice), twice)
+
+    expect(after.evaluation?.candidate.id, 'the same move came back a third time').not.toBe(move)
+    expect(
+      after.trace.rejected.find((row) => row.candidate === move)?.explanation,
+      'it was dropped for some other reason than having been read already',
+    ).toMatch(/already on screen/i)
   })
 
   it('does not mark a move down for being on screen right now', () => {

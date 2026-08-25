@@ -23,7 +23,7 @@ import {
 import { CLOSE_ENOUGH_TO_MENTION } from './arbitrate'
 import type { DimensionName, Evaluation } from './evaluate'
 import { beliefKey } from './learning'
-import { describeHours, type Situation } from './situation'
+import { describeHours, SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
 import { entityValue } from './values'
 import { blockNoun, horizonWord } from './vocabulary'
 
@@ -199,16 +199,34 @@ export function composeReason(
   situation: Situation,
   entities: EntityIndex,
 ): string {
-  const object =
-    entities.labelFor(evaluation.candidate.semantics.target.object) ??
-    entities.labelFor(evaluation.candidate.semantics.subject) ??
-    ''
-
+  /*
+   * The clauses below take no noun — QA-81-002.
+   *
+   * They used to be handed one `object` string, taken from the winning
+   * candidate's `target.object`, and they wrote it into sentences that assumed
+   * it named the winning *move*. For most verbs those are the same thing. For
+   * `recover` they are opposites: its object is the study session being put
+   * down, so the app said **"The week is pointed at the CCNA push, and
+   * subnetting still looks like the better call"** while recommending that
+   * subnetting be skipped — with the subnetting move listed directly underneath
+   * as the one it had been chosen over.
+   *
+   * The class is wider than the sentence: **a composed clause that names an
+   * entity it did not derive from the thing the clause is about.** The repair is
+   * to stop handing these a noun that can name the wrong thing. Each is now
+   * written from what it can derive for itself — the week's own wording, and
+   * what the situation says is short — and names nothing else.
+   *
+   * They also stop announcing a verdict. Section 6 asks Now to show the relevant
+   * trade-off and AUD-0026 asks for the app arguing its case; "X is the better
+   * call" is the opposite of an argument, and it is the construction that made
+   * the defect possible.
+   */
   return (
     `${observedClause(evaluation) ?? whyNow(evaluation, situation, entities)}` +
-    `${learnedBandClause(evaluation, situation, object)}` +
+    `${learnedBandClause(evaluation, situation)}` +
     `${directionClause(evaluation, situation)}` +
-    `${costClause(evaluation, situation, object)}`
+    `${costClause(evaluation, situation)}`
   )
 }
 
@@ -286,16 +304,24 @@ function observedClause(evaluation: Evaluation): string | undefined {
  * would make the app sound unsure of everything, which is the opposite failure
  * and just as real.
  */
-function learnedBandClause(evaluation: Evaluation, situation: Situation, object: string): string {
+function learnedBandClause(evaluation: Evaluation, situation: Situation): string {
   const learned = situation.learning.effectFor(
     evaluation.candidate.semantics.target.verb,
     situation.context,
   )
   if (learned.summary === undefined) return ''
   if (learned.now > LITTLE_DIFFERENCE) return ''
-  // Named rather than pronominal, because a clause that says "it" and never
-  // says what "it" is about is the failure section 3 describes (DEF-0001).
-  return ` The last few times made little difference, and ${object} is still the best of what is here.`
+  /*
+   * No noun, and no pronoun either.
+   *
+   * A clause that says "it" and never says what "it" is about is the failure
+   * section 3 describes (DEF-0001); a clause handed a noun it did not derive is
+   * QA-81-002. Saying neither is available here, and it is the more accurate
+   * sentence anyway: what the ranking established is that nothing else that
+   * survived the filter fits better, which is a statement about the field
+   * rather than about any particular alternative.
+   */
+  return ' The last few times made little difference, and nothing else here fits better.'
 }
 
 /** The top of the band `learning.ts` calls "has made little difference". */
@@ -315,23 +341,65 @@ const LITTLE_DIFFERENCE = 0.6
  * owner's sovereignty (section 4.3) is better served by an owner who can see
  * what he is being asked to give up.
  */
-function costClause(evaluation: Evaluation, situation: Situation, object: string): string {
+function costClause(evaluation: Evaluation, situation: Situation): string {
   const against = (name: DimensionName): boolean => {
     const dimension = evaluation.dimensions.find((entry) => entry.name === name)
     if (dimension === undefined) return false
     return dimension.value * dimension.weight <= -MATERIALLY_MOVED_IT
   }
 
-  const named = capitalise(object)
+  /*
+   * Both halves, and the second half is never a verdict on the first.
+   *
+   * A trade-off is what was set against what overruled it. The clause used to
+   * complete itself with the *rejected* move — "and subnetting still looks like
+   * the better call" — under a recommendation to put subnetting down, because
+   * it was handed the chosen semantics' object and that object is the thing
+   * being set aside (QA-81-002). Nothing here names an alternative any more.
+   *
+   * What completes it instead is what the app actually read. When a limiter is
+   * firing, that is the honest and specific half. When none is, the cost still
+   * stands on its own — the week is pointed somewhere and this hour is not
+   * going there — and saying so is what AUD-0026 asked for. Silence in that
+   * case would have been a second defect wearing the first one's clothes: the
+   * one history built to demonstrate a trade-off would show none.
+   */
+  const short = whatIsShort(situation)
+  const overruling = short ?? 'this is time away from it'
+
   const weekly = situation.direction.weekly
   if (against('direction-fit') && weekly.state === 'set') {
-    return ` The week is pointed at ${weekly.wording}, and ${object} still looks like the better call.`
+    return ` The week is pointed at ${weekly.wording}, and ${overruling}.`
   }
   if (against('goal-fit')) {
-    return ` ${named} does nothing for the goal you set, and still looks like the better call.`
+    return ` The goal you set does not move, and ${overruling}.`
   }
-  if (against('protection')) return ` ${named} borrows a little from tomorrow.`
+  if (against('protection')) return ' Tomorrow pays a little.'
   return ''
+}
+
+/**
+ * What the situation says is actually short, in the words the clause needs.
+ *
+ * The other half of a trade-off: the app is overruling something the owner set,
+ * and the honest reason is the thing it is reading rather than the arithmetic
+ * that followed from it.
+ *
+ * Coverage is deliberately absent. A life area nobody has mentioned for seven
+ * weeks is not a reason to overrule this week's direction, and D-063 already
+ * establishes it as the weakest limiter there is.
+ */
+function whatIsShort(situation: Situation): string | undefined {
+  switch (situation.limiter?.kind) {
+    case 'recovery':
+      return 'rest is what is short'
+    case 'capacity':
+      return 'the body is asking for less'
+    case 'time':
+      return 'there is not much of the day left'
+    default:
+      return undefined
+  }
 }
 
 /**
@@ -414,6 +482,20 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
         return semantics.target.verb === 'recover'
           ? `You are ${describeHours(debt.value)} down over ${span}. ${capitalise(object)} will still be there tomorrow.`
           : `You are ${describeHours(debt.value)} down over ${span}.${instead}`
+      }
+
+      /*
+       * A sore body with a full night behind it reaches this branch with no
+       * shortfall to name, and "rest is the thing running short" is not what
+       * the app read — it read the reading the capacity limiter is raised from.
+       */
+      const soreness = situation.capacity.soreness
+      if (
+        leanedOn(evaluation, CONCEPT.soreness) &&
+        isUsable(soreness) &&
+        soreness.value >= SORE_ENOUGH_TO_EASE_OFF
+      ) {
+        return `The body is asking for less than usual.${instead}`
       }
 
       const energy = situation.capacity.energy

@@ -405,9 +405,41 @@ describe('the filter keeps its backstop', () => {
  * never being asked. This is the history that asks: three full nights, a body
  * that hurts, and the app naming "the body is asking for an easier day" on the
  * screen.
+ *
+ * **Adaya is in it on purpose.** An earlier version held nothing but the sleep
+ * and soreness readings, which meant no light move could be generated at all —
+ * so the assertion that a sore body says nothing about a light move passed by
+ * never meeting one, which is D-108's hole exactly. She is also the case QA
+ * named: closing the capacity gap must not end with a sore, well-rested father
+ * being told to ease off while half an hour with his daughter, phone away, sits
+ * behind it marked down by a reading about his shoulder.
  */
 function soreAndRested(hoursAgo: number) {
   const kit = createKit('DS', 'America/Denver', '2026-04-01T12:00:00Z')
+  const adaya = entityRef('person', 'Adaya')
+
+  const child = kit.entity({
+    kind: 'person',
+    label: 'Adaya',
+    domain: DOMAIN.fatherhood,
+    privacy: 'child-family-sensitive',
+  })
+
+  const custody = kit.record(
+    'context',
+    {
+      occurredAt: kit.local('2026-04-01', '09:00'),
+      domains: [DOMAIN.fatherhood],
+      entities: [adaya],
+    },
+    {
+      concept: CONCEPT.childPresent,
+      value: { type: 'boolean', value: true },
+      durability: 'durable',
+      validFrom: kit.local('2026-04-01', '09:00'),
+    },
+  )
+
   const nights = [7.5, 7.75, 8].map((value, offset) =>
     kit.record(
       'observation',
@@ -430,10 +462,16 @@ function soreAndRested(hoursAgo: number) {
   )
 
   return kit.document({
-    entities: [],
-    records: [...nights, sore],
+    entities: [child],
+    records: [custody, ...nights, sore],
     exportedAt: at('2026-04-15', '20:00'),
   })
+}
+
+/** How long before the tested hour a reading has to be to still be current. */
+function hoursBefore(time: string): number {
+  const [hour] = time.split(':')
+  return 20 - Number(hour ?? 20) + 0.25
 }
 
 describe('AUD-0003 — a named limiter has somewhere to go, at every hour', () => {
@@ -479,25 +517,35 @@ describe('AUD-0003 — a named limiter has somewhere to go, at every hour', () =
     }
   })
 
-  it('offers something restorative wherever recovery is what is in the way', () => {
+  it('offers something restorative wherever recovery or capacity is what is in the way', () => {
     /*
      * The invariant, and it is the thing to hold rather than any one sentence:
-     * **when recovery is the dominant limiter, a recovery-compatible option
-     * exists in every relevant day block.**
+     * **when recovery or capacity is the dominant limiter, a recovery-compatible
+     * option exists in every relevant day block.**
      *
-     * Swept over every scenario in the library at every block, and then over a
-     * constructed history at every block, because a sweep is only as wide as
-     * the states it can reach.
+     * It covers both kinds now. An earlier round of this phase held only
+     * `recovery` and recorded the `capacity` half as a named gap; independent QA
+     * read that as what it was — a test asserting the acceptance criterion is
+     * false — and it was right to (QA-81-001). An invariant stated without an
+     * exception does not acquire one by being documented.
+     *
+     * Swept over every scenario in the library at every block, and then over two
+     * constructed histories at every block, because the library reaches
+     * `recovery` at many hours and `capacity` at none: a sweep is only as wide
+     * as the states it can reach.
      */
     const offenders: string[] = []
 
     const check = (label: string, document: ReturnType<typeof nineHoursDown>, moment: Instant) => {
       const decision = decideOn(document, moment, ZONE)
-      if (decision.situation.limiter?.kind !== 'recovery') return
+      const kind = decision.situation.limiter?.kind
+      if (kind !== 'recovery' && kind !== 'capacity') return
       const restorative = generateCandidates(decision.situation).filter(
         (candidate) => profileFor(candidate.semantics.target.verb).demand === 'restorative',
       )
-      if (restorative.length === 0) offenders.push(`${label} (${decision.situation.block})`)
+      if (restorative.length === 0) {
+        offenders.push(`${label} (${kind}, ${decision.situation.block})`)
+      }
     }
 
     for (const scenario of SCENARIOS) {
@@ -509,35 +557,52 @@ describe('AUD-0003 — a named limiter has somewhere to go, at every hour', () =
 
     for (const { time } of EVERY_BLOCK) {
       check(`nine hours down at ${time}`, nineHoursDown(), at('2026-04-15', time))
+      // The soreness reading is kept inside its own freshness window, so the
+      // capacity limiter is actually raised at the hour being tested.
+      check(`sore and rested at ${time}`, soreAndRested(hoursBefore(time)), at('2026-04-15', time))
     }
 
     expect(offenders, 'a limiter the app names with nothing behind it').toEqual([])
   })
 
-  it('does not yet reach the capacity limiter, and the gap is on the record', () => {
+  it('reaches the capacity limiter at all, so the sweep above is not vacuous', () => {
+    // D-108: a guard that never meets the state it guards is not a guard, and
+    // no history in the library reaches this one.
+    const decision = decideOn(soreAndRested(1), at('2026-04-15', '20:00'), ZONE)
+    expect(decision.situation.limiter?.kind).toBe('capacity')
+    expect(decision.kind).toBe('move')
+    expect(profileFor(decision.evaluation!.candidate.semantics.target.verb).demand).toBe(
+      'restorative',
+    )
+  })
+
+  it('does not conclude anything about a light move from a sore body', () => {
     /*
-     * **A known hole, asserted rather than hidden.**
+     * The reading that made closing the gap dangerous, fixed rather than routed
+     * around — QA-81-001.
      *
-     * AUD-0003's invariant names `capacity` alongside `recovery`, and the same
-     * finding's implementation guidance says to gate the new verb on
-     * `strain !== 'none'` "exactly as the existing sleep generator does". Those
-     * two do not agree, and the gate is what this phase followed: widening it
-     * to the soreness reading the capacity limiter is raised from was tried and
-     * reverted, because it made a sore, well-rested father be told to ease off
-     * instead of spending half an hour with his daughter — a scoring-model
-     * change dressed as a copy fix, and not this phase's to make.
-     *
-     * So a body that hurts gets no restorative candidate. What this phase does
-     * about that instead is AUD-0031: the app asks before it prescribes
-     * exertion. This test fails the day somebody closes the gap, which is when
-     * the invariant above should widen to cover both kinds.
+     * `capacity-fit` spent soreness and sleep shortfall as one number, so with
+     * rest in hand and a shoulder that hurts it marked a *light* move down by
+     * the same reasoning it used for a strained night. Half an hour with his
+     * daughter, phone away, asks a sore shoulder for nothing at all.
      */
     const decision = decideOn(soreAndRested(1), at('2026-04-15', '20:00'), ZONE)
-    expect(decision.situation.limiter?.kind, 'the fixture no longer reaches it').toBe('capacity')
-
-    const restorative = generateCandidates(decision.situation).filter(
-      (candidate) => profileFor(candidate.semantics.target.verb).demand === 'restorative',
+    const light = generateCandidates(decision.situation).find(
+      (candidate) => profileFor(candidate.semantics.target.verb).demand === 'light',
     )
-    expect(restorative, 'the gap is closed — widen the invariant above').toEqual([])
+    expect(light, 'the fixture no longer holds a light move to be wrong about').toBeDefined()
+
+    const ranked = decision.trace.ranking.find((row) => row.id === light!.id)
+    const fit = ranked?.dimensions.find((dimension) => dimension.name === 'capacity-fit')
+    expect(fit?.value, 'a sore body was read as a reason against a light move').toBe(0)
+
+    // And effort is still marked down, which is the whole point of asking.
+    const effortful = generateCandidates(decision.situation).find(
+      (candidate) => profileFor(candidate.semantics.target.verb).demand === 'effortful',
+    )
+    expect(effortful, 'the fixture no longer holds an effortful move either').toBeDefined()
+    const row = decision.trace.ranking.find((entry) => entry.id === effortful!.id)
+    const penalty = row?.dimensions.find((entry) => entry.name === 'capacity-fit')
+    expect(penalty?.value ?? 0, 'a sore body stopped marking effort down').toBeLessThan(0)
   })
 })

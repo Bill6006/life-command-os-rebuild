@@ -2,7 +2,7 @@ import type { EntityRef } from '../domain/entities'
 import type { RecordId } from '../domain/ids'
 import { basisOf, isUsable } from '../domain/knowledge'
 import { renderRecommendation } from '../domain/recommendation'
-import { addLocalDays, blockOf, localDayIdAt } from '../domain/time'
+import { addLocalDays, blockOf, localDayIdAt, type Instant } from '../domain/time'
 import { blockNoun, horizonWord } from './vocabulary'
 import type { Candidate } from './candidates'
 import { profileFor } from './moves'
@@ -124,6 +124,37 @@ function refusedInThisBlock(prior: PriorMove, situation: Situation): boolean {
 }
 
 /**
+ * How many separate times a move may be put on screen and left before it stops
+ * being put there — QA-81-003.
+ *
+ * Twice is a coincidence. A third is the app not listening: the audit's own
+ * reproduction is the identical kitchen sentence at 06:30, 10:30, 14:30 and
+ * 19:30 of one day, on a history where nothing was pressed.
+ *
+ * The score penalty in `recent-duplication` is the gentler half of this and
+ * stays: it is what makes the second showing cheaper than the first. What it
+ * cannot do is guarantee an outcome, because a move whose lead is wider than
+ * that dimension's whole range at its current weight simply keeps winning — and
+ * re-cutting the weights is AUD-0035's job, not this phase's. So the promise
+ * the audit actually made is kept here, in the filter, where a bounded rule can
+ * keep it without touching the scoring model.
+ */
+export const SHOWN_ENOUGH_TIMES_TODAY = 2
+
+/**
+ * A move already put in front of the owner enough times today.
+ *
+ * The ledger is the surface's session note (D-118), not history: it holds only
+ * today, only moves that were actually rendered, and it is never evidence about
+ * whether a move works. This reads it for one purpose — deciding whether saying
+ * the same sentence again is listening or repeating.
+ */
+function shownEnoughToday(candidate: Candidate, situation: Situation): boolean {
+  const seen = (situation.shown ?? []).find((entry) => entry.move === candidate.id)
+  return (seen?.count ?? 0) >= SHOWN_ENOUGH_TIMES_TODAY
+}
+
+/**
  * How many times the owner has said no in this block — AUD-0023.
  *
  * Three refusals in a row is the clearest signal a person can send without
@@ -140,6 +171,22 @@ export function refusalsInBlock(situation: Situation): number {
     refusals += 1
   }
   return refusals
+}
+
+/**
+ * When the owner last said no in this block — QA-81-004.
+ *
+ * The engine needs the moment, not the count, to tell a reply from a record
+ * that happened to be written earlier in the same evening.
+ */
+export function lastRefusalInBlock(situation: Situation): Instant | undefined {
+  let latest: Instant | undefined
+  for (const prior of situation.recentMoves) {
+    if (prior.state !== 'declined' && prior.state !== 'unable-now') continue
+    if (!refusedInThisBlock(prior, situation)) continue
+    if (latest === undefined || prior.at > latest) latest = prior.at
+  }
+  return latest
 }
 
 export function applyConstraints(
@@ -225,6 +272,15 @@ export function applyConstraints(
     const settled = settledRecently(proposed, situation)
     if (settled !== undefined) {
       reject(proposed, 'just-covered', 'this one was already settled today', [settled])
+      continue
+    }
+
+    if (shownEnoughToday(proposed, situation)) {
+      reject(
+        proposed,
+        'just-covered',
+        `already on screen ${SHOWN_ENOUGH_TIMES_TODAY} times today and left`,
+      )
       continue
     }
 

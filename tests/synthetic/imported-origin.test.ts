@@ -689,22 +689,27 @@ describe('every insight kind the library produces declares its origin', () => {
     return { ...clone, records }
   }
 
+  /** One history, rewritten so its evidence comes from where the test says. */
+  function situationFor(
+    scenario: (typeof SCENARIOS)[number],
+    source: ProbeSource,
+    ownerRecord?: string,
+  ) {
+    const loaded = snapshotFromWire(rewritten(scenario.build(), source, ownerRecord))
+    if (!loaded.loaded) return undefined
+    const view = buildView(loaded.snapshot, { now: scenario.now, zone: scenario.zone })
+    return assembleSituation(view, {
+      now: scenario.now,
+      zone: scenario.zone,
+      weekStartsOn: 1,
+      domains: coreDomains,
+    })
+  }
+
   function situationsFor(source: ProbeSource, ownerRecord?: string) {
     return SCENARIOS.flatMap((scenario) => {
-      const loaded = snapshotFromWire(rewritten(scenario.build(), source, ownerRecord))
-      if (!loaded.loaded) return []
-      const view = buildView(loaded.snapshot, { now: scenario.now, zone: scenario.zone })
-      return [
-        {
-          id: scenario.id,
-          situation: assembleSituation(view, {
-            now: scenario.now,
-            zone: scenario.zone,
-            weekStartsOn: 1,
-            domains: coreDomains,
-          }),
-        },
-      ]
+      const situation = situationFor(scenario, source, ownerRecord)
+      return situation === undefined ? [] : [{ id: scenario.id, scenario, situation }]
     })
   }
 
@@ -749,7 +754,17 @@ describe('every insight kind the library produces declares its origin', () => {
      */
     const mixedKinds = new Set<string>()
 
-    for (const { situation } of situationsFor('legacy-import')) {
+    /*
+     * Rebuilt for the one history the card came from, not for all of them.
+     *
+     * QA-81-005. This inner loop used to re-derive every scenario in the library
+     * for every card with two cited records, and then throw away all but the one
+     * whose id matched — so the work was the square of the library's size, and
+     * three new fixtures were enough to take it past the five-second default and
+     * fail `npm run verify` on time rather than on meaning. The outer loop
+     * already knows which history it is holding.
+     */
+    for (const { scenario, situation } of situationsFor('legacy-import')) {
       for (const insight of insightsFor(situation).insights) {
         const cited = [
           ...insight.evidence.included,
@@ -759,15 +774,13 @@ describe('every insight kind the library produces declares its origin', () => {
         const ids = [...new Set(cited.map((line) => line.record))]
         if (ids.length < 2) continue
 
-        for (const { situation: mixedSituation } of situationsFor('legacy-import', ids[0])) {
-          const mixed = insightsFor(mixedSituation).insights.find(
-            (entry) => entry.id === insight.id,
-          )
-          if (mixed === undefined || !mixed.sources.includes('owner')) continue
-          expect(mixed.sources).toContain('legacy-import')
-          expect(originOfSources(mixed.sources), `${mixed.id} is mixed`).toBeUndefined()
-          mixedKinds.add(mixed.kind)
-        }
+        const mixedSituation = situationFor(scenario, 'legacy-import', ids[0])
+        if (mixedSituation === undefined) continue
+        const mixed = insightsFor(mixedSituation).insights.find((entry) => entry.id === insight.id)
+        if (mixed === undefined || !mixed.sources.includes('owner')) continue
+        expect(mixed.sources).toContain('legacy-import')
+        expect(originOfSources(mixed.sources), `${mixed.id} is mixed`).toBeUndefined()
+        mixedKinds.add(mixed.kind)
       }
     }
 

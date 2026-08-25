@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CONCEPT, coreConcepts } from '../../src/domain/concepts'
 import { decide } from '../../src/intelligence/engine'
+import { profileFor } from '../../src/intelligence/moves'
 import { answeredToday, nextGuideStep, QUESTIONS_PER_DAY } from '../../src/intelligence/guide'
 import { answerRecord, questionFor } from '../../src/intelligence/questions'
 import { DOMAIN } from '../../src/domain/domains'
@@ -458,23 +459,63 @@ describe('a two-option question can still be asked — DEF-0009', () => {
      * off, the guide settles, and with it on, the guide asks. Nothing else
      * differs between the two runs.
      */
-    const { scenario, snapshot } = open('durable-custody')
+    const { scenario, snapshot } = open('rested-and-behind')
     const at = moment(scenario)
 
     const ordinary = coreConcepts.extendedWith([
-      { ...coreConcepts.definitionFor(CONCEPT.sleepHours), consequential: false },
+      { ...coreConcepts.definitionFor(CONCEPT.soreness), consequential: false },
     ])
 
     const asked = nextGuideStep(buildView(snapshot, at), at)
     expect(asked.kind, 'the exception is not reaching this history').toBe('question')
-    expect(asked.question?.spec.concept).toBe(CONCEPT.sleepHours)
+    expect(asked.question?.spec.concept).toBe(CONCEPT.soreness)
+    // One answer in three, which is exactly the shape the share rule refuses.
     expect(asked.question?.outcomes.filter((outcome) => outcome.easier).length).toBe(1)
+    expect(asked.question?.outcomes.length).toBe(3)
 
     const withoutTheException = nextGuideStep(buildView(snapshot, at), {
       ...at,
       concepts: ordinary,
     })
     expect(withoutTheException.kind, 'the share rule has stopped biting').toBe('settled')
+  })
+
+  it('asks only when there is something to be wrong about — D-111', () => {
+    /*
+     * The bound that keeps the exception from becoming the rule. The harm
+     * D-111 names is recommending exertion to a body in pain; when the app is
+     * already proposing something light or restorative there is no such harm,
+     * and a floor under one class of harm would become a question the owner
+     * cannot see the point of.
+     *
+     * Without this, giving the capacity limiter a move of its own made almost
+     * every soreness answer flip the decision, and the exception fired on
+     * sixteen of twenty-one histories.
+     */
+    for (const entry of SCENARIOS) {
+      const loaded = snapshotFromWire(entry.build())
+      const at = { now: entry.now, zone: entry.zone, weekStartsOn: entry.weekStartsOn ?? 1 }
+      const view = buildView(loaded.snapshot, at)
+      const step = nextGuideStep(view, at)
+      if (step.kind !== 'question') continue
+      if (coreConcepts.definitionFor(step.question!.spec.concept).consequential !== true) continue
+
+      const standing = decide(view, at)
+      const outcomes = step.question?.outcomes ?? []
+      const overturns = outcomes.filter(
+        (outcome) =>
+          outcome.wouldChoose !==
+          (standing.evaluation?.candidate.id ??
+            `nothing (${standing.noAction?.reason ?? 'unknown'})`),
+      ).length
+      if (overturns * 2 >= outcomes.length) continue
+
+      const verb = standing.evaluation?.candidate.semantics.target.verb
+      expect(
+        verb === undefined ? undefined : profileFor(verb).demand,
+        `${entry.id} asked past the share rule with nothing effortful on the table`,
+      ).toBe('effortful')
+    }
   })
 
   it('never lets the exception ask in order to justify doing more — D-111', () => {

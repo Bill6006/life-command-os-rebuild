@@ -2,6 +2,7 @@ import type { ConceptRegistry } from '../domain/concepts'
 import type { DomainRegistry } from '../domain/domains'
 import { renderRecommendation } from '../domain/recommendation'
 import {
+  blockOf,
   civilDateFromDayId,
   DAY_BLOCKS,
   DEFAULT_WEEK_START,
@@ -25,26 +26,17 @@ import {
   type SemanticAdvisor,
 } from './advisor'
 import { arbitrate, type NoActionReason, type Selection } from './arbitrate'
-import { refusalsInBlock } from './constraints'
+import { lastRefusalInBlock, refusalsInBlock } from './constraints'
 import { generateCandidates, type Candidate } from './candidates'
 import { growthSuggestions, type GrowthSuggestion } from './growth'
-import { applyConstraints } from './constraints'
-
-/**
- * How many times the owner may say no in one block before the app stops asking.
- *
- * Two would make it sulky and four is not listening. Section 4.3 distinguishes
- * disagreement from inability and the app honours each individually; this is
- * the response to the *pattern*, which is the thing it had none of.
- */
-export const REFUSALS_BEFORE_STOPPING = 3
+import { applyConstraints, type Rejection } from './constraints'
 import { evaluateAll, withDimension, type Evaluation } from './evaluate'
 import { explain, type Explanation } from './explain'
 import { describeEvidenceMix, similarity } from './learning'
 import type { MoveState } from './lifecycle'
 import { profileFor } from './moves'
 import { outcomeWindowFor } from './outcomes'
-import { answerRecord, QUESTIONS } from './questions'
+import { answerRecord, GUIDE_PROVENANCE, QUESTIONS } from './questions'
 import {
   assembleSituation,
   type ShownMove,
@@ -60,6 +52,31 @@ import type {
   RankedMove,
   Swing,
 } from './trace'
+
+/**
+ * How many times the owner may say no in one block before the app stops asking.
+ *
+ * Two would make it sulky and four is not listening. Section 4.3 distinguishes
+ * disagreement from inability and the app honours each individually; this is
+ * the response to the *pattern*, which is the thing it had none of.
+ */
+export const REFUSALS_BEFORE_STOPPING = 3
+
+/**
+ * How many refusals in one block before the app stops offering and asks —
+ * AUD-0023, QA-81-004.
+ *
+ * This lived in `guide.ts` and governed only the bar a question had to clear,
+ * which left the escalation half-built: the guide relaxed its standard while
+ * the engine went on offering a third move, so a history with no counterfactual
+ * question fell straight through to "Spend the next 30 minutes with Adaya,
+ * phone away" and "Nothing else worth asking right now". Two refusals answered
+ * with a third guess is not an escalation.
+ *
+ * Both halves now read the same number, and it belongs here because the engine
+ * is where "stop offering" happens.
+ */
+export const REFUSALS_BEFORE_ASKING = 2
 
 /**
  * The engine (canonical plan sections 17.1 and 17.2).
@@ -647,9 +664,48 @@ function nothingForThisLimiter(situation: Situation): string | undefined {
  * is telling someone whose sleep debt is printed above the sentence that
  * nothing here says how the day is going.
  */
+/**
+ * Whether the owner has told the app anything since he last said no.
+ *
+ * Deliberately narrow: an answer to a question, inside the same block, no
+ * earlier than the refusal that stopped the offers. Anything looser and an
+ * unrelated record from earlier in the evening would look like a reply.
+ *
+ * At-or-after rather than strictly after, because the clock is not always
+ * moving. The QA laboratory pins a moment and drives the whole sequence at it,
+ * so the refusal and the answer to the question it raised carry the identical
+ * timestamp; under a strict comparison the reply would not count and the
+ * escalation could never be answered on the one surface it is tested on. A
+ * guide answer is only ever written in response to a question, and the app only
+ * asks this question once it has stopped offering, so a tie is a reply.
+ *
+ * **`probeSwings` depends on this, and the escalation depends on `probeSwings`.**
+ * A probe is a copy of the snapshot with one answer appended at the moment being
+ * decided; this function is what makes that answer count, which is what lets the
+ * probe land on a move rather than on the same silence. Tighten the comparison
+ * and every counterfactual after the second refusal collapses to "nothing would
+ * change" — the guide would go quiet at precisely the moment it is there for,
+ * and the app would stop offering without ever asking. That is half the defect
+ * QA-81-004 reported, restored.
+ */
+function answeredAfterLastRefusal(view: MemoryView, situation: Situation): boolean {
+  const since = lastRefusalInBlock(situation)
+  if (since === undefined) return false
+
+  for (const record of view.history.effective) {
+    if (record.provenance.writtenBy !== GUIDE_PROVENANCE.writtenBy) continue
+    if (record.occurredAt < since) continue
+    if (localDayIdAt(record.occurredAt, situation.zone) !== situation.dayId) continue
+    if (blockOf(record.occurredAt, situation.zone) !== situation.block) continue
+    return true
+  }
+  return false
+}
+
 function noActionCopy(
   reason: NoActionReason,
   situation: Situation,
+  rejected: readonly Rejection[] = [],
 ): { readonly headline: string; readonly detail: string } {
   switch (reason) {
     case 'nothing-worth-doing':
@@ -658,9 +714,46 @@ function noActionCopy(
         detail: `Nothing on the list is worth ${blockNoun(situation.block)} it would cost. That is a real answer.`,
       }
     case 'everything-ruled-out':
+      /*
+       * Why they were ruled out, when the reason is only that he has seen them.
+       *
+       * "None of them suit where you actually are" is a claim about the hour and
+       * the body. When every candidate was held back because it has already been
+       * on screen twice today (QA-81-003), that sentence is simply false: they
+       * suit fine, and he has read them already. The repair for one falsehood
+       * has no business introducing another.
+       */
+      if (rejected.length > 0 && rejected.every((row) => row.reason === 'just-covered')) {
+        return {
+          headline: 'Nothing new for today.',
+          detail:
+            'Everything this history has to suggest has already been in front of you today, and tomorrow starts again.',
+        }
+      }
       return {
         headline: `Nothing fits ${horizonWord(situation.block)}.`,
         detail: 'There were things worth doing and none of them suit where you actually are.',
+      }
+    case 'not-landing':
+      /*
+       * Two refusals in a row, answered with a question rather than a guess —
+       * AUD-0023, QA-81-004.
+       *
+       * What this replaces is a third suggestion. The audit's sequence is two
+       * `Can't right now` presses on "A week pointed at the house", and what
+       * followed them was "Spend the next 30 minutes with Adaya, phone away" —
+       * the app's third guess at an hour it had already been wrong about twice,
+       * and the one guess of the three that costs him something to refuse.
+       *
+       * The detail does not promise a question, because the guide may not have
+       * one worth asking; when it does, it renders directly beneath this. What
+       * is promised is the thing the app can actually keep: it has stopped
+       * guessing, and the block turning over is the way back.
+       */
+      return {
+        headline: 'This is not landing.',
+        detail:
+          'Twice now, so the next thing worth doing is not another suggestion. Nothing further until this part of the day is over.',
       }
     case 'enough-for-now':
       /*
@@ -772,16 +865,34 @@ export function decide(
    */
   const refusals = refusalsInBlock(situation)
 
+  /*
+   * And whether anything has been heard since — AUD-0023, QA-81-004.
+   *
+   * The escalation is "stop offering and ask", which is only an escalation if
+   * answering does something. Two refusals mean something the app cannot see is
+   * in the way; an answer is the owner making it visible, and a picture that
+   * changed deserves a fresh look rather than the same silence. It is also what
+   * keeps the third refusal reachable: without it, stopping at two would leave
+   * nothing to refuse a third time and `enough-for-now` could never be reached.
+   *
+   * A guide answer only, because that is what the app asked for. Logging a walk
+   * is not an answer to "what is in the way".
+   */
+  const heard = answeredAfterLastRefusal(view, situation)
+
   if (refusals >= REFUSALS_BEFORE_STOPPING) {
     noAction = { reason: 'enough-for-now', ...noActionCopy('enough-for-now', situation) }
     notes.push(`${refusals} refusals in this block, so nothing further was offered`)
+  } else if (refusals >= REFUSALS_BEFORE_ASKING && !heard) {
+    noAction = { reason: 'not-landing', ...noActionCopy('not-landing', situation) }
+    notes.push(`${refusals} refusals in this block, so the app stopped offering and asked instead`)
   } else if (selection.chosen === undefined) {
     const proposed = selection.noAction ?? 'nothing-worth-doing'
     const reason: NoActionReason =
       proposed === 'nothing-proposed' && currentPictureExists(situation)
         ? 'nothing-in-reach'
         : proposed
-    noAction = { reason, ...noActionCopy(reason, situation) }
+    noAction = { reason, ...noActionCopy(reason, situation, rejected) }
   } else {
     const result = explain(selection.chosen, selection.ranked[1], situation, selection.margin)
     if (result.ok) {
@@ -793,7 +904,7 @@ export function decide(
       // — D-018 exists precisely so this cannot become a vague sentence.
       noAction = {
         reason: 'everything-ruled-out',
-        ...noActionCopy('everything-ruled-out', situation),
+        ...noActionCopy('everything-ruled-out', situation, rejected),
       }
       notes.push(`the chosen move could not be put into words — ${result.problems.join(', ')}`)
     }
