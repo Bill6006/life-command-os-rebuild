@@ -362,6 +362,35 @@ describe('the document says what it does not know', () => {
     const text = compose('mostly-unknown', ['diagnostics']).text
     expect(text).toContain('Things the app knows it does not know')
   })
+
+  /**
+   * And never disowns something it has just stated \u2014 QA-82-005.
+   *
+   * The assertion above is why this file gave a false green: it asked whether
+   * an unknown section existed, which is true of a document that also
+   * contradicts itself. On the deployed build the review export printed
+   * *"Child here right now \u2014 No \u2014 Adaya's school day is on until 15:00"* under
+   * what it read to decide, and *"Child here right now \u2014 never answered"* under
+   * what it does not know, in one generated document that asks its reader to
+   * treat it as the source of truth.
+   *
+   * Read as a rule about the document rather than about the concept that
+   * caused it: whatever a section states a reading for, no later section may
+   * list as unanswered.
+   */
+  for (const { id, text } of EVERYTHING) {
+    it(`never answers a question and disowns it on ${id}`, () => {
+      const read = new Set(
+        [...text.matchAll(/^- (.+?) \u2014 .*\((?:explicit|inferred|stale); for /gm)].map((found) =>
+          found[1]!.trim(),
+        ),
+      )
+      const disowned = [...text.matchAll(/^- (.+?) \u2014 never answered$/gm)]
+        .map((found) => found[1]!.trim())
+        .filter((label) => read.has(label))
+      expect(disowned, 'stated as read, and listed as never answered').toEqual([])
+    })
+  }
 })
 
 describe('association is not worded as cause', () => {

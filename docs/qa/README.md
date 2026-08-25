@@ -309,7 +309,7 @@ both the first build and every repair round.
 
 **This rule applies to Claude only. Never write Max into a Codex block.**
 Codex's levels are Light, Medium, High, Extra High and Ultra — there is no
-"Max". Its top level, Ultra, is marked *"consumes usage limits faster"* and the
+"Max". Its top level, Ultra, is marked _"consumes usage limits faster"_ and the
 application will not switch to it under automation, so a retest handoff asking
 for Max stops the orchestrator with the level unset. It has happened twice.
 Independent QA keeps its own middle-level default, and a retest block should say

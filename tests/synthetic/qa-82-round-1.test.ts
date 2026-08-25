@@ -7,14 +7,20 @@ import {
   type Instant,
   type TimeZoneId,
 } from '../../src/domain/time'
-import { CONCEPT } from '../../src/domain/concepts'
+import { CONCEPT, createConceptRegistry } from '../../src/domain/concepts'
+import { conceptId } from '../../src/domain/windows'
 import { assembleDomainPageData, pageForDomain } from '../../src/features/life/domainPages'
 import type { Candidate } from '../../src/intelligence/candidates'
 import { SCHEDULE_SEEDS, commitmentWindowRecord } from '../../src/intelligence/commitments'
 import { applyConstraints } from '../../src/intelligence/constraints'
 import { decide, type Decision } from '../../src/intelligence/engine'
 import { describePremise } from '../../src/intelligence/explain'
-import { evidenceForDecision } from '../../src/intelligence/insights'
+import { composeExport } from '../../src/features/export/compose'
+import { SELECT_ALL } from '../../src/features/export/sections'
+import { assembleTimeline } from '../../src/features/timeline/timelineEntries'
+import { evidenceForDecision, insightsFor } from '../../src/intelligence/insights'
+import { assembleSituation } from '../../src/intelligence/situation'
+import { TEST_APP } from './exportHarness'
 import { isUsable } from '../../src/domain/knowledge'
 import { snapshotFromWire } from '../../src/memory/snapshot'
 import { buildView } from '../../src/memory/view'
@@ -60,6 +66,31 @@ function schoolMorningAt(time: string): Decision {
   // The fixture's own Wednesday, read at whatever hour the finding is about.
   const moment = { now: at(time, ZONE, SCHOOL_MORNING_NOW), zone: ZONE }
   return decide(buildView(loaded.snapshot, moment), moment)
+}
+
+/**
+ * A complete review export, at an hour of the school-morning day.
+ *
+ * Composed through the real composer with every section selected, because the
+ * finding is about two sections of one document disagreeing \u2014 reading either
+ * one alone is how it survived.
+ */
+function exportTextAt(time: string): string {
+  const loaded = snapshotFromWire(schoolMorning())
+  const moment = { now: at(time, ZONE, SCHOOL_MORNING_NOW), zone: ZONE, weekStartsOn: 1 as const }
+  const view = buildView(loaded.snapshot, moment)
+  const situation = assembleSituation(view, moment)
+  const composed = composeExport({
+    sections: [...SELECT_ALL, 'private'],
+    situation,
+    decision: decide(view, moment),
+    insights: insightsFor(situation),
+    timeline: assembleTimeline(situation),
+    source: 'owner',
+    app: TEST_APP,
+    composedAt: { at: moment.now, zone: ZONE },
+  })
+  return composed.text
 }
 
 function decideFor(scenario: Scenario, now: Instant): Decision {
@@ -283,6 +314,196 @@ describe('QA-82-001 — whose week it is, and where she actually is', () => {
       }
     }
     expect(invented, 'the narrowing may only ever subtract').toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// QA-82-005 \u2014 one document may not answer a question and disown it
+// ---------------------------------------------------------------------------
+
+describe('QA-82-005 \u2014 a worked-out fact is never something nobody answered', () => {
+  /**
+   * The report's own reproduction, on the surface it was found on.
+   *
+   * The review export printed "Child here right now \u2014 No \u2014 Adaya's school day
+   * is on until 15:00" under *What it read to decide that*, and then, in the
+   * same generated document, "Child here right now \u2014 never answered" under
+   * *Things the app knows it does not know*. The document explicitly asks
+   * another assistant to treat it as the source of truth, so a reader had no
+   * way to tell which of the two statements governed.
+   */
+  it('does not say the app never answered something it worked out', () => {
+    const text = exportTextAt('10:20')
+
+    expect(text, 'the export should carry the current reading').toContain(
+      'Child here right now \u2014 No \u2014 Adaya\u2019s school day is on until 15:00.',
+    )
+    expect(text, 'and must not also disown it').not.toContain(
+      'Child here right now \u2014 never answered',
+    )
+  })
+
+  /**
+   * The class, and it is deliberately not about the `derived` flag.
+   *
+   * A document that states a reading for a concept and lists that same concept
+   * as unanswered is contradicting itself, whatever produced the reading. Said
+   * that way, the rule also covers the next derived concept, a concept whose
+   * record is retracted mid-composition, and whatever else grows a second path
+   * into the unknown list. `derived` is why it happened; self-contradiction is
+   * what is forbidden.
+   */
+  it('never states a reading and lists the same concept as unanswered', () => {
+    const contradictions: string[] = []
+
+    for (const time of ['05:30', '08:20', '10:20', '16:00']) {
+      const text = exportTextAt(time)
+      /*
+       * The label is everything before the first em dash on a fact line; the
+       * value after it may contain more of them, which is why the match is
+       * non-greedy and anchored on the state in brackets at the end.
+       */
+      const read = new Set(
+        [...text.matchAll(/^- (.+?) — .*\((?:explicit|inferred|stale); for /gm)].map((found) =>
+          found[1]!.trim(),
+        ),
+      )
+      for (const match of text.matchAll(/^- (.+?) \u2014 never answered$/gm)) {
+        const label = match[1]!.trim()
+        if (read.has(label))
+          contradictions.push(`${time}: \u201c${label}\u201d both read and unanswered`)
+      }
+    }
+
+    expect(contradictions, 'one document answered a question and disowned it').toEqual([])
+  })
+
+  /**
+   * And the boundary itself, because the surfaces are the symptom.
+   *
+   * `coverage.ts` had its own exclusion and the export did not, which is the
+   * shape of a defect that comes back: the next surface to walk raw fact state
+   * would not know it needed one either. The one place that knows a concept
+   * cannot be recorded is the layer that resolves records, so that is where it
+   * is excluded \u2014 and this asserts it there rather than on any one screen.
+   */
+  it('never manufactures an unanswered fact for something no record can carry', () => {
+    const offenders: string[] = []
+
+    for (const scenario of SCENARIOS) {
+      const decision = decideFor(scenario, scenario.now)
+      const facts = decision.situation.view.facts
+      for (const definition of decision.situation.concepts.all()) {
+        if (definition.derived !== true) continue
+        if (facts.get(definition.id) !== undefined) {
+          offenders.push(`${scenario.id}: ${definition.id} has a raw fact entry`)
+        }
+        if (facts.inState('unknown').some((entry) => entry.definition.id === definition.id)) {
+          offenders.push(`${scenario.id}: ${definition.id} is listed as unknown`)
+        }
+        if (facts.questions.some((entry) => entry.definition.id === definition.id)) {
+          offenders.push(`${scenario.id}: ${definition.id} is something the guide would ask`)
+        }
+        for (const domain of decision.situation.coverage.domains) {
+          if (domain.concepts.some((row) => row.concept === definition.id)) {
+            offenders.push(`${scenario.id}: ${definition.id} is counted as coverage`)
+          }
+        }
+      }
+    }
+
+    expect(offenders, 'a derived concept reached a surface that asks the owner for it').toEqual([])
+  })
+
+  it('excludes any derived concept, not the one that happens to exist', () => {
+    /*
+     * The hole the first version of this guard had, found by reintroducing a
+     * narrower fix rather than by reading it.
+     *
+     * `family.child-here-now` is the only derived concept today, so an
+     * exclusion written as `id !== 'family.child-here-now'` passes every
+     * assertion above. That is the same mistake Round 2 caught in a different
+     * costume: a guard that would not notice the second member of the class.
+     *
+     * So the rule is exercised against a registry with a second derived
+     * concept invented for the purpose. Nothing records it either, and it must
+     * be absent from the raw fact layer for the same reason.
+     */
+    const invented = conceptId('made.up-derived')
+    const registry = createConceptRegistry().extendedWith([
+      {
+        id: invented,
+        label: 'Something worked out',
+        domain: DOMAIN.home,
+        derived: true,
+        freshness: { unit: 'durable' },
+        privacy: 'normal',
+        ask: { materialToDecision: false, askWhenStale: false },
+      },
+    ])
+
+    const loaded = snapshotFromWire(schoolMorning())
+    const moment = {
+      now: at('10:20', ZONE, SCHOOL_MORNING_NOW),
+      zone: ZONE,
+      weekStartsOn: 1 as const,
+    }
+    const view = buildView(loaded.snapshot, { ...moment, concepts: registry })
+
+    expect(view.facts.get(invented), 'a second derived concept still got an entry').toBeUndefined()
+    expect(
+      view.facts.inState('unknown').map((entry) => entry.definition.id),
+      'a second derived concept was listed as unanswered',
+    ).not.toContain(invented)
+    // And an ordinary invented concept is still seeded, so the exclusion is
+    // about being derived rather than about being new.
+    const ordinary = conceptId('made.up-ordinary')
+    const alsoRegistry = createConceptRegistry().extendedWith([
+      {
+        id: ordinary,
+        label: 'Something he could answer',
+        domain: DOMAIN.home,
+        freshness: { unit: 'durable' },
+        privacy: 'normal',
+        ask: { materialToDecision: false, askWhenStale: false },
+      },
+    ])
+    const alsoView = buildView(loaded.snapshot, { ...moment, concepts: alsoRegistry })
+    expect(alsoView.facts.get(ordinary)?.knowledge.state).toBe('unknown')
+  })
+
+  it('still says the app has not heard about the things it genuinely has not', () => {
+    /*
+     * The other half, and the one an over-broad fix would break. Excluding a
+     * concept from the unknown list is only safe because nothing can ever
+     * answer it. Every concept the owner *can* answer must still appear when
+     * nothing has been said about it \u2014 that list is what the guide asks from
+     * and what the export means by "things the app knows it does not know".
+     */
+    const text = exportTextAt('10:20')
+    expect(text).toContain('Things the app knows it does not know:')
+    expect(text).toContain('Soreness or pain \u2014 never answered')
+
+    const decision = schoolMorningAt('10:20')
+    const unknown = decision.situation.view.facts.inState('unknown')
+    expect(unknown.length, 'the honest unknowns are still there').toBeGreaterThan(5)
+  })
+
+  it('leaves a history with no child alone entirely', () => {
+    /*
+     * Round 3 confirmed this and it is asserted here so it stays true: with no
+     * fatherhood person in the record there is no derived row anywhere, and the
+     * durable arrangement is still a question the guide may ask.
+     */
+    const thin = SCENARIOS.find((scenario) => scenario.id === 'mostly-unknown')
+    expect(thin, 'the near-empty history should be in the library').toBeDefined()
+    const decision = decideFor(thin!, thin!.now)
+
+    expect(
+      decision.situation.considered.some((fact) => fact.concept === CONCEPT.childHere),
+      'nothing to derive from, so nothing derived',
+    ).toBe(false)
+    expect(decision.situation.view.facts.get(CONCEPT.childHere)).toBeUndefined()
   })
 })
 

@@ -220,6 +220,39 @@ test.describe('how the day is set up', () => {
     ).toHaveCount(0)
   })
 
+  test('does not disown the reading in the document it puts it in', async ({ page }) => {
+    /*
+     * QA-82-005, on the surface it was found on.
+     *
+     * The two screens above were repaired in round 2 and this file checked
+     * them. The review export is a third surface, built from raw fact state
+     * rather than from the decision, and it printed the derived reading under
+     * *what it read to decide* and the same concept under *what it does not
+     * know* \u2014 in one document that asks its reader to treat it as the source
+     * of truth.
+     */
+    await loadInQa(page, 'A school morning')
+    await page.getByRole('button', { name: '+1 hour' }).click()
+    await page.getByRole('button', { name: '+1 hour' }).click()
+
+    await page.goto(`${APP}#/data`)
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Data')
+    await page.getByRole('button', { name: 'Select all' }).click()
+
+    const text = page.getByTestId('export-text')
+    await expect(text).toBeVisible()
+    const said = await text.inputValue().catch(() => text.innerText())
+
+    expect(said).toContain(
+      'Child here right now \u2014 No \u2014 Adaya\u2019s school day is on until 15:00.',
+    )
+    expect(said).not.toContain('Child here right now \u2014 never answered')
+    // And the honest unknowns are still listed, which is the half an
+    // over-broad fix would quietly remove.
+    expect(said).toContain('Things the app knows it does not know:')
+    expect(said).toContain('\u2014 never answered')
+  })
+
   test('has her back, and the middle of the day free, either side of it', async ({ page }) => {
     /*
      * The half that would be easy to break while fixing the first. Her school

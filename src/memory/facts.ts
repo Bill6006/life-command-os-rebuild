@@ -209,8 +209,37 @@ export function resolveFacts(input: FactResolutionInput): FactState {
     if (concept !== undefined) malformedConcepts.add(concept)
   }
 
+  /*
+   * Every concept the owner could answer, plus anything a record mentions.
+   *
+   * The registry is seeded in so that a concept nothing has ever been said
+   * about still resolves to a **known** unknown — that is what lets the guide
+   * ask about it and the export say the app has not heard.
+   *
+   * **A derived concept is excluded, and this is the boundary QA-82-005 is
+   * about.** No record can ever carry one: the app works it out from concepts
+   * that are recorded. Seeding it here manufactured a permanent `unknown` for
+   * something the owner has no way to answer, and every surface that reads raw
+   * fact state then repeated it — the review export said *"Child here right now
+   * — never answered"* in the same document that had already printed *"Child
+   * here right now — No — Adaya's school day is on until 15:00"* two sections
+   * above.
+   *
+   * Excluding it here rather than in each of those surfaces is deliberate.
+   * `coverage.ts` had its own exclusion and the export did not, which is the
+   * shape of a defect that comes back: the next surface to walk this list will
+   * not know it needs one either. The one place that knows a concept cannot be
+   * recorded is the layer that resolves records.
+   *
+   * `evidence.keys()` still wins if a record somehow mentions one, because a
+   * fact the store actually holds is more real than the registry's opinion
+   * about it — and it would be a defect worth seeing rather than hiding.
+   */
   const conceptIds = new Set<ConceptId>([
-    ...concepts.all().map((definition) => definition.id),
+    ...concepts
+      .all()
+      .filter((definition) => definition.derived !== true)
+      .map((definition) => definition.id),
     ...evidence.keys(),
     ...malformedConcepts,
   ])
