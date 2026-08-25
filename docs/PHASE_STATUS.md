@@ -38,12 +38,12 @@ the ones written during the work are **D-114 … D-121**.
 
 ## Checkpoint
 
-|                      |                                                                                                                                                                                             |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Product checkpoint   | `PRODUCT_SHA` — the last commit that changes the bundle                                                                                                                                     |
-| Deployed Preview SHA | `DEPLOYED_SHA`                                                                                                                                                                              |
-| Relationship         | Proved with `node scripts/checkpoint-equivalence.mjs PRODUCT_SHA`, per D-097. Not asserted as string equality: this repository redeploys on every push, including a documentation-only one. |
-| Preview              | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                                                 |
+|                      |                                                                                                                                                                                                                                                |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product checkpoint   | `736a761` — the last commit that changes the bundle                                                                                                                                                                                            |
+| Deployed Preview SHA | `736a761d96b9b2d40c4042eb8977a7ebbaffbe92`                                                                                                                                                                                                     |
+| Relationship         | Proved with `node scripts/checkpoint-equivalence.mjs 736a761 --deployed <build-info url>`, which reported them equal, per D-097. Not asserted as string equality: this repository redeploys on every push, including a documentation-only one. |
+| Preview              | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                                                                                                    |
 
 ## Exact verification results
 
@@ -52,7 +52,7 @@ the ones written during the work are **D-114 … D-121**.
 | `npm run verify` from a clean checkout    | **PASS** — format, lint, typecheck, 1,310 unit tests across 59 files, build                |
 | Unit layer                                | **1,310 / 1,310** across 59 files (was 1,199 / 1,199 across 57)                            |
 | Browser, three widths                     | **489 / 489** at 360, 430 and 1,280px — 163 each                                           |
-| Android-style gate on the deployed build  | **ANDROID_RESULT**                                                                         |
+| Android-style gate on the deployed build  | **clean — 76 checks** (was 56; twenty of them are this phase’s own surfaces)               |
 | Privacy scan                              | clean, 216 tracked files                                                                   |
 | Block sweep, every scenario × every block | in `tests/synthetic/block-sweep.test.ts`, and by hand through the laboratory's own control |
 

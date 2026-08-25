@@ -6,140 +6,104 @@ Canonical plan section 43 for the workflow, section 58 for the report format.
 Independent QA is Codex (D-090); Claude builds. Every handoff ends with the
 model, the level, the conversation and a short copyable launcher (D-092).
 
-**Phase 8 — Legacy migration is GREEN.** Independent QA passed it on the fourth
-round; the closeout is in [`PHASE_STATUS.md`](PHASE_STATUS.md). Do not reopen it.
+**Phase 81 — correctness and truthfulness is implemented and is
+YELLOW — READY FOR INDEPENDENT QA.** Under D-077 the builder conversation may
+not approve its own phase. Twenty-two audit findings in six steps; the report is
+in [`PHASE_STATUS.md`](PHASE_STATUS.md) and the specification is section 6 of
+[`WHOLE_APP_INTELLIGENCE_AUDIT.md`](WHOLE_APP_INTELLIGENCE_AUDIT.md).
 
-**The sequence changed after Phase 8 closed.** A whole-app intelligence and
-product audit ([`WHOLE_APP_INTELLIGENCE_AUDIT.md`](WHOLE_APP_INTELLIGENCE_AUDIT.md),
-51 findings) and an independent review of it produced **D-109**: two initiatives
-now precede Phase 9. This handoff is the first of them.
+**QA rounds do not get new phase numbers.** A retest after a builder repair
+stays under **Phase 81** and goes to the **same** Codex conversation (D-109,
+D-092).
 
-```
-Phase 81   correctness and truthfulness       ← YOU ARE HERE.  22 findings, 6 steps
-Phase 82   structural intelligence skeleton      9 findings, 6 work packages
-Phase 9    visual coherence, motion, mobile      canonical section 54
-Later      intelligence: Reach, then Validity    20 findings, unnumbered until reached
-Phase 10   performance, PWA, reliability         canonical section 55, unchanged
-Phase 11   adversarial hardening · Phase 12  release
-```
-
-**The Phase 9 handoff that used to live in this file is superseded, not
-cancelled.** It is in git history and its carried-forward content is repeated
-below. Phase 9 runs after Phase 82.
-
-|                                       |                                                            |
-| ------------------------------------- | ---------------------------------------------------------- |
-| Last approved product checkpoint      | `1fc41cf` — the Phase 8 QA-tested build                    |
-| Deployed SHA at audit time            | `0eb920b` — **not expected** to match a checkpoint (D-097) |
-| Unit layer at Phase 8 close           | 1199 / 1199 across 57 files                                |
-| Browser at Phase 8 close              | 459 / 459 — 153 each at 360, 430 and 1280px                |
-| Governing decisions written for you   | **D-109 … D-113**, already in `DECISION_LOG.md`            |
-| Plan amendments already made          | section 61's copy example (D-110); change-log addendum     |
-| Independent QA (D-077) for this phase | `docs/qa/PHASE_81_QA_HANDOFF.md` (to be created by QA)     |
+|                                    |                                                                                 |
+| ---------------------------------- | ------------------------------------------------------------------------------- |
+| Product checkpoint                 | `736a761` — the last commit that changes the bundle                             |
+| Deployed Preview SHA               | `736a761d96b9b2d40c4042eb8977a7ebbaffbe92`                                      |
+| Relationship                       | proved with `scripts/checkpoint-equivalence.mjs`, never string equality (D-097) |
+| Preview                            | https://bill6006.github.io/life-command-os-rebuild/preview/                     |
+| Unit layer                         | 1,310 / 1,310 across 59 files (was 1,199 / 1,199 across 57)                     |
+| Browser                            | 489 / 489 — 163 each at 360, 430 and 1,280px                                    |
+| Android-style gate, deployed build | clean, 76 checks (was 56)                                                       |
+| `npm run verify` from a clean tree | PASS                                                                            |
+| Report path for this phase         | `docs/qa/PHASE_81_QA_HANDOFF.md` (to be created by QA)                          |
 
 ---
 
 ## NEXT ACTION
 
-- **System:** **Claude Code**
-- **Model:** current strongest Opus-class Claude coding model (or nearest current equivalent)
-- **Intelligence level:** **Max** — 22 interdependent semantics-and-copy changes with a stated
-  ordering constraint, three of which implement amendments to standing decisions. A lower tier
-  will fix the wording and leave the reasoning underneath it wrong, which is the exact failure
-  the audit is about.
-- **Conversation:** **NEW** — Phase 8's defect loop is closed and this phase should not inherit
-  eight rounds of legacy-import reasoning. Section 43 keeps a _retest_ in the conversation that
-  found the defects; a new phase starts fresh.
-- **Report path:** `docs/qa/PHASE_81_QA_HANDOFF.md` (to be created by QA)
+- **System:** **Codex** — independent QA (D-090)
+- **Model:** the strongest Codex model available for careful reading rather than
+  for search depth
+- **Reasoning level:** **High** — not Max. This phase changed what the app
+  _says_ on nine surfaces, and QA's hard work here is reading assembled screens
+  as a person and tracing each claim to its evidence. That is judgement rather
+  than depth of search. The one place to reach higher is if a discovered defect
+  turns out to be architectural — say so if it does.
+- **Conversation:** **NEW CODEX CONVERSATION REQUIRED FOR INDEPENDENCE** — the
+  builder's reasoning about why this is correct is exactly what must not be
+  inherited. The retest after any repair goes to that same conversation.
+- **Report path:** `docs/qa/PHASE_81_QA_HANDOFF.md`
 
 ## COPY/PASTE PROMPT
 
 ```text
-Continue the Life Command OS rebuild with Phase 81 — correctness and truthfulness.
+Independent QA — Phase 81, correctness and truthfulness. Round 1.
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Phase 8 — Legacy migration is GREEN. Do not reopen it. Phase 81 and Phase 82 now
-precede Phase 9 (D-109). You are Phase 81. Do not start Phase 82. Do not start
-Phase 9. Do not modify the orchestrator.
+Preview:
+https://bill6006.github.io/life-command-os-rebuild/preview/
 
-READ FIRST, IN FULL
+You are Codex running the independent QA protocol (D-077, D-090). The builder
+conversation may not approve its own phase, and you are not it. Do not repair
+application or product code: you may create or update only
+docs/qa/PHASE_81_QA_HANDOFF.md and narrowly scoped QA evidence artifacts.
 
-- docs/WHOLE_APP_INTELLIGENCE_AUDIT.md — this is your specification. Section 6 is
-  Phase 81. Section 9 is the implementation order. Section 10 is the
-  do-not-change list and it is not advisory. Section 0A explains why the plan
-  looks the way it does.
-- docs/CANONICAL_REBUILD_PLAN.md — sections 43 and 58 are the workflow and the
-  report format; 4.3, 4.4, 4.6, 6, 12, 19, 20, 61, 62, 63, 64 and 68 all
-  constrain this phase.
-- docs/DECISION_LOG.md — D-109 to D-113 were written for this phase. D-036 and
-  D-070 carry amendments you are implementing. D-018, D-021, D-030, D-031,
-  D-038, D-040, D-043, D-045, D-048, D-052, D-063, D-073, D-075, D-084, D-089
-  and D-091 all constrain it.
-- docs/DEFECT_LEDGER.md — DEF-0006, DEF-0016, DEF-0022, DEF-0026, DEF-0028,
-  DEF-0033, DEF-0039, DEF-0040 and DEF-0056 are the classes this phase is
-  finishing. Several findings are those classes surviving where nobody swept.
-- docs/ARCHITECTURE_BOUNDARIES.md
+Checkpoint
+- Product checkpoint: 736a761
+- Deployed Preview SHA: 736a761d96b9b2d40c4042eb8977a7ebbaffbe92
+- These are two facts, not one. Prove the relationship with
+  `node scripts/checkpoint-equivalence.mjs 736a761 --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json`
+  rather than by comparing strings. This repository redeploys on every push,
+  including a documentation-only one, so the deployed SHA may legitimately have
+  moved past the checkpoint by the time you read it — that is D-097 and DEF-0061
+  and it is not a reason to refuse to test.
 
-WHAT THIS PHASE IS
+WORK IN THIS ORDER — the order is the protocol (D-090)
 
-22 findings in 6 steps. Every one is a thing the app states that is untrue, or
-an action the plan promises that the interface lacks. Nothing here is a new
-capability, a new domain, or a new screen.
+1. SEALED COLD OWNER-USE. Open the deployed Preview at a normal Now and use it
+   as the owner would, BEFORE reading any repository document. Record what it
+   appears to claim, in its own words.
+2. CLAIM-TO-EVIDENCE. For each claim you wrote down, establish what it actually
+   rests on.
+3. SEMANTIC AND PRODUCT CORRECTNESS. Does the app mean what it says, and is what
+   it says worth saying.
+4. TARGETED PHASE ACCEPTANCE, now that the meaning is understood.
+5. TARGETED KNOWN-DEFECT REGRESSION for the surfaces this phase touched.
+6. ARCHITECTURE INSPECTION where a defect suggests the boundary is wrong rather
+   than the line.
+7. FULL-SUITE DUPLICATION ONLY ON A CONCRETE TRIGGER — a builder claim that does
+   not match observed behaviour, a suspected false green, or a change to the
+   test harness itself. Green builder tests are evidence; watching them go green
+   again buys nothing and costs the attention steps 1 and 2 need.
 
-Phase 9's review list includes copy and its gate is owner physical-phone
-approval. A sentence that is factually wrong does not become right by being well
-set. If these are not fixed first they get typeset, approved on a phone, and
-become the thing the design depends on.
+READ AFTER STEP 2, NOT BEFORE
 
-THE SIX STEPS, IN ORDER
+- docs/WHOLE_APP_INTELLIGENCE_AUDIT.md — section 6 is this phase's
+  specification, section 9 its implementation order, section 10 the
+  do-not-change list.
+- docs/PHASE_STATUS.md — the builder's own report, including what it says is
+  still open.
+- docs/DECISION_LOG.md — D-109 to D-113 were written before the code;
+  D-114 to D-121 were written during it and are the builder's own decisions,
+  which are the ones most worth disputing.
+- docs/DEFECT_LEDGER.md — DEF-0074 to DEF-0079 are this phase's entries.
+- docs/CANONICAL_REBUILD_PLAN.md sections 4.1, 4.3, 4.4, 4.5, 4.6, 6, 12, 19,
+  20, 22, 43, 58, 61, 62, 63, 64 and 68.
 
-81.0  THE INSTRUMENT — AUD-0008. Do this first; everything after is verified
-      with it. Two scenarios the library lacks: a morning with something to
-      decide, and a history containing a FAILED growth occasion. Plus a
-      block-sweep control in the QA laboratory that re-runs the loaded history
-      at all five day blocks and shows the five decisions side by side. Without
-      those two fixtures, gate items 2 and 3 below cannot be tested — which is
-      how they survived 1,199 green assertions.
-
-81.1  THE HORIZON — AUD-0002 first (the shared vocabulary), then AUD-0001 and
-      AUD-0036 which depend on it, plus AUD-0005. Do AUD-0002 first or the word
-      gets fixed in three places with three definitions. `whenPhrase` in
-      learning.ts:541 is already the correct helper; promote it, do not write a
-      second one. D-110 has already corrected the plan's own copy example.
-
-81.2  THE MORNING HAS AN ANSWER — AUD-0003, after AUD-0005. Lead with the
-      invariant: when recovery or capacity is the dominant limiter, a
-      recovery-compatible option must exist in every relevant day block. Word it
-      only from what is known. It must NOT defer anything to "tomorrow" — the
-      app has no model of what is coming, and inventing one is the same failure
-      this phase exists to fix.
-
-81.3  ADAYA — AUD-0048 and AUD-0049 together and FIRST within this step, then
-      AUD-0014, then AUD-0015(b) and AUD-0016 which depend on it, plus
-      AUD-0037. D-112 is the revised sufficiency rule and it is already written;
-      implement it exactly. No child-performance percentage threshold. Growth
-      changes stay PROPOSED and are never applied. THIS IS THE STEP TO DO FIRST
-      IF ONLY ONE GETS DONE.
-
-81.4  HONEST SENTENCES — AUD-0032, then AUD-0028 and AUD-0027 together (same
-      file, same mechanism), then AUD-0026 which depends on 0027, plus AUD-0033.
-      AUD-0027's second half needs the DEF-0006 rule widened from "concepts in
-      leansOn" to "concepts in leansOn plus dimensions that materially moved the
-      score" — record that in the decision log and prove the DEF-0006 regression
-      still bites afterwards. If in doubt, ship the association half only.
-
-81.5  INTERACTION — AUD-0025 (session-scoped ledger) first, then AUD-0023 and
-      AUD-0050's veto together, then AUD-0034, then AUD-0031 last. AUD-0031
-      implements D-111 and changes how often the guide fires across every
-      scenario, so verify it last. The shown-ledger must arrive at the engine as
-      an argument on the Situation — src/intelligence/ is pure and clock-free and
-      the guards enforce it.
-
-THE GATE
-
-Four acceptance items, all four of which currently FAIL:
+THE GATE — four acceptance items, all four of which failed before this phase
 
 1. No owner-visible string asserts the evening outside the evening, at any
    block, in any scenario.
@@ -152,99 +116,94 @@ Four acceptance items, all four of which currently FAIL:
 
 Plus the standing gates: npm run verify from a clean checkout, the browser suite
 at three widths, an Android-style pass on the deployed build, and the block
-sweep from 81.0 across every scenario at five blocks.
+sweep across every scenario at five blocks.
 
-DECISIONS ALREADY WRITTEN FOR YOU — DO NOT RE-DECIDE THEM
+THE INSTRUMENT THIS PHASE BUILT FOR YOU
 
-- D-109  Phase 81 and 82 precede Phase 9; canonical Phase 10 keeps its scope.
-- D-110  Owner-facing copy names the horizon the owner is in. Section 61 amended.
-- D-111  The narrow consequential-question exception. Amends D-036. KEEP IT
-         NARROW: consequential concepts only, only when the flip is toward LESS
-         action, the three-a-day cap unchanged, D-036's regression still in force.
-- D-112  Growth sufficiency reads the sequence, not the survivors. Amends D-070.
-- D-113  Move diversity is a named product outcome — for the LATER phase, not
-         this one. Do not add verbs or routines in Phase 81.
+The QA laboratory has a new control: **Sweep the day**, under "The whole day".
+It re-runs the loaded history at all five day blocks and shows the five
+decisions side by side without moving the clock. One press is the cheapest way
+to check gate items 1 and 2 on any history. Three new fixtures:
 
-STILL OPEN, AND NOT YOURS TO CLOSE
+- "A morning after three bad nights" — 10:00, nine hours short, his daughter in
+  the house. This is the reproduction the audit's most damaging finding is about.
+- "A Saturday morning with the day open" — 06:40, rested. The first history the
+  library has ever held in the early-morning block.
+- "Six chances, three managed" — two growth skills, one that alternates and one
+  that turned a corner. The first failed growth occasion the library has held.
 
-From the audit, five owner questions remain. Do not answer them, do not
-implement against them, and repeat them in your report:
+WHERE THE BUILDER THINKS IT IS WEAKEST — start here, and disagree freely
 
-  Q1  Adaya's age and normative references — blocks AUD-0018 only.
-  Q4  legacy evidence admissibility — blocks AUD-0030(b) only.
-  Q6  live model inference — D-025 stands.
-  Q7  which emotional dimensions exist — blocks AUD-0011's emotional half.
-  Q8  private evidence vs the concept registry — blocks AUD-0040.
+- The `capacity` limiter still has no restorative candidate. AUD-0003's
+  invariant names it; the same finding's implementation guidance says to gate
+  the new verb on strain exactly as the existing generator does. The builder
+  followed the gate and named the gap in a test rather than closing it. Judge
+  whether gate item 2 is met.
+- AUD-0027's refusal half is deliberately unshipped (D-115). Judge whether the
+  reasoning holds or whether the phase is incomplete.
+- The shown-ledger (D-118) does not change what "A week pointed at the house"
+  says at four hours of one day — the audit's own reproduction of AUD-0025.
+  Judge whether AUD-0025 is met.
+- D-111's exception changes how often the guide asks across every scenario.
+  Section 47 fails a phase on "too many questions". Judge it.
+- AUD-0005's own two columns contradict each other; the builder implemented the
+  Recommended-behaviour column. Judge which is right.
+- The copy is new on nine surfaces. Read whole screens, not asserted strings.
 
-Four carry forward unchanged from Phase 8:
+STILL OPEN FOR THE OWNER, AND NOT YOURS OR THE BUILDER'S TO CLOSE
 
-  1. the v297 ancestor export;
-  2. life-context-change mapping — "moved house", "custody changed";
-  3. the load-bearing literal NUL byte in derived record ids;
-  4. the archived skill-claim, faith-anchor and milestone-observation families.
+Q1 Adaya's age and normative references (blocks AUD-0018 only); Q4 legacy
+evidence admissibility (blocks AUD-0030(b) only); Q6 live model inference
+(D-025 stands); Q7 which emotional dimensions exist (blocks AUD-0011's
+emotional half); Q8 private evidence versus the concept registry (blocks
+AUD-0040). Repeat them in your report; do not answer them.
 
+Four carry forward unchanged from Phase 8: the v297 ancestor export;
+life-context-change mapping; the load-bearing literal NUL byte in derived record
+ids; the archived skill-claim, faith-anchor and milestone-observation families.
 Three deliberate non-features carry forward and are not gaps: no import from the
 QA laboratory, no partial import, no undo button.
 
-DO NOT CHANGE
+ONE KNOWN TRANSIENT, REPORTED AGAIN RATHER THAN RETRIED PAST
 
-Read section 10 of the audit in full before touching anything. It lists twenty-one
-things that look wrong and are right, several of which this phase's steps sit
-next to. In particular: all five lifecycle buttons stay always-drawn (D-052);
-"Something else" stays down-weighted rather than treated as a plain refusal;
-a refusal may still only reach owner-preference and never immediate-benefit;
-ACTION_FAMILIES stays empty; nothing is written when a screen renders (D-043);
-and emotional state does not get a numeric scale to make a domain machine-readable.
+One Playwright test per full local run fails at page.goto with net::ERR_ABORTED,
+on a different spec each time; on the builder's last full run it was
+tests/browser/legacy-import.spec.ts at 360px, and it passed alone immediately
+afterwards. Local dev-server flake rather than a product defect.
 
-ONE KNOWN TRANSIENT
+WRITE
 
-One Playwright test per full local run fails with page.goto net::ERR_ABORTED at
-navigation, on a different spec each time; the affected spec passes alone and CI
-retries green. Local dev-server flake, not a product defect. Fix it if cheap
-while you are in the browser layer; otherwise report it again rather than
-retrying past it.
+docs/qa/PHASE_81_QA_HANDOFF.md, to the contract in canonical plan section 43 and
+qa/README.md: phase; checkpoint SHA tested; deployed SHA tested and how the
+relationship was established; Android/mobile configuration; governing acceptance
+criteria; flows tested with PASS/FAIL each; exact reproductions for any defect;
+semantic, behavioural, privacy and mobile findings; blocking versus non-blocking;
+automated tests that gave false confidence; deferred items confirmed unchanged;
+overall PASS or FAIL.
 
-HOW TO WORK
-
-Follow section 43. Reach YELLOW — READY FOR INDEPENDENT QA, not GREEN: under
-D-077 this conversation may not approve its own phase. Keep D-097 checkpoint
-discipline — report the product checkpoint and the deployed SHA as two facts and
-prove the relationship with scripts/checkpoint-equivalence.mjs rather than by
-string comparison.
-
-D-108 applies to every regression you write: enumerate what "every" means in the
-body, assert the value rather than the container, reintroduce what the title
-names rather than the line the assertion touches, and treat a guard inside an
-assertion as a hole.
-
-Write copy guards as rules about what the copy may not claim, never as exact
-strings. An exact-string assertion proves a string is stable, not that it is
-right, and it fails for improvements.
-
-Do not modify anything at D:\Code\AI Coding Agents\Codax\Life App — owner
-decision D-001, absolute.
-
-End with D-082 and D-092: write the complete ready-to-paste QA prompt into
-docs/NEXT_PROMPT.md with the routing field **Phase:** 81 preserved, along with
-the model, the intelligence level, the CURRENT/NEW conversation routing and a
-short standalone launcher. QA rounds do not get new phase numbers.
+End with D-082 and D-092: the complete ready-to-paste next prompt in the same
+response, without waiting for another owner turn — to the builder conversation
+for repair on FAIL, or for the GREEN closeout on PASS — plus the model, the
+level, the conversation instruction and a short standalone launcher naming this
+repository and the exact MD file.
 ```
 
 ---
 
-**Model:** current strongest Opus-class Claude coding model (or nearest current
-equivalent)
-**Intelligence level:** Max
-**Conversation:** NEW Claude builder conversation
+**Model:** the strongest Codex model available
+**Intelligence level:** High
+**Conversation:** NEW Codex conversation — required for independence
 
 ```text
-Continue the Life Command OS rebuild.
+Run independent QA on the Life Command OS rebuild.
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Read docs/NEXT_PROMPT.md in full and execute the current handoff exactly as
-written. It is Phase 81.
+Read docs/NEXT_PROMPT.md in full and execute the current independent-QA handoff
+exactly as written. It is Phase 81, round 1.
 
 Do not ask me to paste the file contents.
 ```
+
+<!-- LCO_COMPLETE -->
