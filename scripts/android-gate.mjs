@@ -530,6 +530,116 @@ async function main() {
   check('and an Insights card drawn from it says so too', cardMarks > 0)
   await sideways('Insights, with imported history')
 
+  // ---- Phase 81: the sentences and the controls, on a phone -----------------
+  /*
+   * Every check here is a thing the audit found by *reading a screen* rather
+   * than by asserting a string, which is why they belong in this gate as well
+   * as in the suite: a control the owner has to find with a thumb, and copy
+   * that has to be true at the hour it is read.
+   */
+  const loadScenario = async (title) => {
+    await page.goto(`${BASE}#/qa`)
+    await page.waitForSelector('h1:has-text("QA")')
+    await page.getByRole('button', { name: new RegExp(title) }).tap()
+    await page.waitForSelector('.qa-scenario--active')
+  }
+  const openNow = async () => {
+    await page.locator('.nav').getByRole('button', { name: 'Now' }).tap()
+    await page.waitForSelector('h1:has-text("Now")')
+  }
+
+  await loadScenario('A morning after three bad nights')
+
+  const sweep = page.getByTestId('qa-sweep')
+  check('the laboratory offers a block sweep', (await sweep.count()) === 1)
+  await sweep.tap()
+  const sweptRows = await page.getByTestId('qa-sweep-rows').locator('.qa-sweep__row').count()
+  check('and it answers for all five parts of the day', sweptRows === 5, `${sweptRows} rows`)
+  await sideways('QA, block sweep open')
+
+  await openNow()
+  const morning = await page.locator('.screen').innerText()
+  check(
+    'a morning nine hours short of rest is not told to study',
+    /light day/i.test(morning),
+    morning.slice(0, 160),
+  )
+  check(
+    'and nothing on that screen claims it is the evening',
+    !/tonight|this evening/i.test(morning),
+    (morning.match(/[^.]*(tonight|this evening)[^.]*/i) ?? [''])[0],
+  )
+  await sideways('Now, a morning')
+
+  await loadScenario('Six chances, three managed')
+  await openNow()
+  const growth = await page.getByTestId('now-growth').innerText()
+  check(
+    'no run is claimed about a skill that never went well twice in a row',
+    !/ordering her own food/i.test(growth),
+    growth,
+  )
+  const growthEvidence = await page.getByTestId('now-growth-evidence').innerText()
+  check(
+    'and the occasions that went the other way are counted',
+    /needed a hand/i.test(growthEvidence),
+  )
+  check(
+    'with nothing that reads as a mark about a four-year-old',
+    !/%|\bscore\b|\brate\b|\bout of\b/i.test(`${growth} ${growthEvidence}`),
+    `${growth} ${growthEvidence}`,
+  )
+  await sideways('Now, a growth suggestion')
+
+  await loadScenario('A week pointed at the house')
+  await openNow()
+  check(
+    'stopping a recommendation family is not offered before a refusal',
+    (await page.getByTestId('now-stop').count()) === 0,
+  )
+  await page.getByRole('button', { name: "Can't right now" }).tap()
+  const stop = page.getByTestId('now-stop')
+  check('and is offered behind one', (await stop.count()) === 1)
+
+  const stopBox = await stop.boundingBox()
+  check(
+    'the stop control clears 44px of thumb',
+    stopBox !== null && stopBox.height >= 44,
+    stopBox === null ? 'not on screen' : `${Math.round(stopBox.height)}px tall`,
+  )
+
+  await stop.tap()
+  const confirm = await page.getByTestId('now-stop-confirm').innerText()
+  check('it names the move rather than saying "this"', /kitchen/i.test(confirm), confirm)
+  check('and says where it can be lifted', /lift it/i.test(confirm), confirm)
+  await sideways('Now, stopping a family')
+
+  await page.getByTestId('now-stop-move').tap()
+  await page.locator('.nav').getByRole('button', { name: 'Life' }).tap()
+  await page.waitForSelector('h1:has-text("Life")')
+  await page.getByRole('link', { name: /Home/ }).first().tap()
+  // The page's own heading, not any heading: `h1` is already on screen while
+  // Life is, so waiting for it resolves before the navigation has happened.
+  await page.waitForSelector('h1:has-text("Home & Environment")')
+  await page.waitForSelector('[data-testid="domain-veto"]', { timeout: 5000 }).catch(() => {})
+  const listed = await page.getByTestId('domain-veto').count()
+  check('the veto is listed on the area it was filed under', listed > 0)
+  const lift = page.getByTestId('domain-veto-lift').first()
+  const liftBox = await lift.boundingBox()
+  check(
+    'and lifting it clears 44px of thumb',
+    liftBox !== null && liftBox.height >= 44,
+    liftBox === null ? 'not on screen' : `${Math.round(liftBox.height)}px tall`,
+  )
+  await lift.tap()
+  // Appending a record is a round trip to IndexedDB, so the row leaves on the
+  // render after it rather than on the tap.
+  await page
+    .waitForSelector('[data-testid="domain-veto"]', { state: 'detached', timeout: 5000 })
+    .catch(() => {})
+  check('and it goes when lifted', (await page.getByTestId('domain-veto').count()) === 0)
+  await sideways('a domain page, standing vetoes')
+
   // ---- The rest of the app is still standing --------------------------------
   for (const destination of ['Now', 'Life', 'Timeline', 'Insights']) {
     await page.locator('.nav').getByRole('button', { name: destination }).tap()

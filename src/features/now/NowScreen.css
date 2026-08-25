@@ -165,7 +165,23 @@
   flex-direction: column;
 }
 
+/* "Stop suggesting that" — AUD-0050.
+ *
+ * A link in register and a target in size. It writes the most permanent thing
+ * the owner can say, so it does not sit next to the refusal buttons — and it
+ * still has to be reachable by a thumb rather than by a cursor, which is what
+ * the 44px the Android gate checks for is about (section 37). The padding is
+ * what makes an underlined phrase clear that, without turning it into a fifth
+ * button competing with the row above.
+ */
 .now-stop {
   margin-top: calc(var(--space-2) * -1);
   text-align: right;
+}
+
+.now-stop button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-2);
 }
