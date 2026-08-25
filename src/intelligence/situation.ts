@@ -84,6 +84,17 @@ export type Strain = 'severe' | 'moderate' | 'none'
 export const SLEEP_BASELINE_HOURS = 7.5
 
 /** How far back a running sleep shortfall is accumulated, in owner-local days. */
+/**
+ * When the body is asking for an easier day.
+ *
+ * Read by two places that must agree: this file raises the `capacity` limiter
+ * at it, and `candidates.ts` proposes a recovery move at it. A limiter the app
+ * names on screen while the generator that would answer it stays quiet is
+ * DEF-0016's shape exactly, and two copies of one threshold is how that happens
+ * without anybody deciding it (AUD-0003).
+ */
+export const SORE_ENOUGH_TO_EASE_OFF = 0.7
+
 export const SLEEP_DEBT_DAYS = 3
 
 export interface ConsideredFact {
@@ -425,7 +436,7 @@ function findLimiter(
   }
 
   const soreness = capacity.soreness
-  if (isUsable(soreness) && soreness.value >= 0.7) {
+  if (isUsable(soreness) && soreness.value >= SORE_ENOUGH_TO_EASE_OFF) {
     return {
       kind: 'capacity',
       label: LIMITER_LABEL.capacity,

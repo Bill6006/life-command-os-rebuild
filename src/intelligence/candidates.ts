@@ -13,7 +13,7 @@ import type {
 import type { ConceptId } from '../domain/windows'
 import { practiceEvidenceHasAged } from './growth'
 import { profileFor } from './moves'
-import type { Situation } from './situation'
+import { SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
 import { entityValue } from './values'
 
 /**
@@ -83,6 +83,7 @@ export const SLEEP_SUBJECT: EntityRef = entityRef('life-domain', 'sleep')
 export const WINDING_DOWN: EntityRef = entityRef('routine', 'winding down')
 export const A_WALK: EntityRef = entityRef('routine', 'a walk')
 export const EASING_OFF: EntityRef = entityRef('routine', 'easing off')
+export const A_LIGHT_DAY: EntityRef = entityRef('routine', 'a light day')
 
 function target(verb: ActionVerb, object: EntityRef, minutes: number | undefined): ActionTarget {
   return minutes === undefined ? { verb, object } : { verb, object, minutes }
@@ -195,19 +196,70 @@ type Generator = (situation: Situation) => readonly Candidate[]
  */
 const sleepCandidates: Generator = (situation) => {
   const strain = situation.capacity.strain
-  if (!isUsable(strain) || strain.value === 'none') return []
-  if (situation.block === 'morning' || situation.block === 'early-morning') return []
+  const soreness = situation.capacity.soreness
+  const strained = isUsable(strain) && strain.value !== 'none'
+  /*
+   * A body asking for an easier day is a limiter too, and it is the same
+   * limiter this generator answers — AUD-0003 leads with the invariant, and the
+   * invariant names `capacity` alongside `recovery`. `findLimiter` raises the
+   * capacity limiter at exactly this reading, so the two read one number rather
+   * than two that drift: a limiter the app names out loud while the generator
+   * that would answer it stays quiet is the whole shape of DEF-0016.
+   */
+  const sore = isUsable(soreness) && soreness.value >= SORE_ENOUGH_TO_EASE_OFF
+  if (!strained && !sore) return []
 
-  const evidence = [...basisOf(strain), ...basisOf(situation.capacity.sleepDebtHours)]
-  const leansOn: readonly ConceptId[] = [CONCEPT.sleepHours, CONCEPT.energy]
+  const evidence = [
+    ...basisOf(strain),
+    ...basisOf(situation.capacity.sleepDebtHours),
+    ...(sore ? basisOf(soreness) : []),
+  ]
+  const leansOn: readonly ConceptId[] = sore
+    ? [CONCEPT.sleepHours, CONCEPT.energy, CONCEPT.soreness]
+    : [CONCEPT.sleepHours, CONCEPT.energy]
 
-  // One move, not two. When there is a specific thing tonight would otherwise
-  // be spent on, naming it is the better sentence — section 4.6, a specific
-  // ordinary sentence beats an elegant generic one. Proposing both "wind down"
-  // and "no subnetting session tonight" is proposing the same evening twice and
-  // leaving the arbiter to pick between wordings.
+  /*
+   * The right recovery move for the hour — DEF-0016, and then AUD-0003.
+   *
+   * The afternoon used to get `protect-sleep`, which the filter then refused as
+   * a wrong-time-of-day move, so a man nine hours short of sleep at a quarter
+   * to six was told "Nothing fits tonight" and offered nothing. DEF-0016 added
+   * `ease-off` and swept every half hour **from noon to midnight**.
+   *
+   * The morning was never swept, and before noon this generator returned
+   * nothing at all. So on a morning where strain was severe the only candidates
+   * in existence were career moves; the filter removed the two heaviest as too
+   * strained, and the survivor was recommended. The screen named a nine-hour
+   * shortfall and then prescribed a study session — scenario G-005 holding in
+   * the evening and failing in the half of the day nobody looked at.
+   *
+   * The general rule this leaves, and the one the regression checks: a
+   * generator does not offer a move the hour rules out, and it does not fall
+   * silent at an hour that has a move of its own.
+   */
+  const morning = situation.block === 'morning' || situation.block === 'early-morning'
+  const verb: ActionVerb = morning
+    ? 'lighten-the-day'
+    : situation.block === 'late-night'
+      ? 'wind-down'
+      : situation.block === 'afternoon'
+        ? 'ease-off'
+        : 'protect-sleep'
+
+  /*
+   * One move, not two. When there is a specific thing tonight would otherwise
+   * be spent on, naming it is the better sentence — section 4.6, a specific
+   * ordinary sentence beats an elegant generic one. Proposing both "wind down"
+   * and "no subnetting session tonight" is proposing the same evening twice and
+   * leaving the arbiter to pick between wordings.
+   *
+   * The morning does not take this route. `recover` is about giving an evening
+   * over to rest, which is not something nine in the morning can offer, so the
+   * morning keeps its own move and names the competing topic in the reason
+   * instead — where it can be said without claiming the day is already spent.
+   */
   const topic = resolvedEntity(situation.learningTopic, situation)
-  if (topic !== undefined) {
+  if (topic !== undefined && !morning) {
     return [
       candidate(
         {
@@ -226,26 +278,6 @@ const sleepCandidates: Generator = (situation) => {
     ]
   }
 
-  /*
-   * The right recovery move for the hour — DEF-0016.
-   *
-   * The afternoon used to get `protect-sleep`, which the filter then refused as
-   * a wrong-time-of-day move, so a man nine hours short of sleep at a quarter
-   * to six was told "Nothing fits tonight" and offered nothing. The defect was
-   * not the refusal — the refusal is correct — it was proposing something that
-   * could only ever be refused, and having nothing else to put in its place.
-   *
-   * The general rule this leaves, and the one the regression checks: a
-   * generator does not offer a move the hour rules out. If it has nothing
-   * suitable it stays quiet, and the arbiter reports that honestly.
-   */
-  const verb =
-    situation.block === 'late-night'
-      ? 'wind-down'
-      : situation.block === 'afternoon'
-        ? 'ease-off'
-        : 'protect-sleep'
-
   return [
     candidate(
       {
@@ -253,15 +285,32 @@ const sleepCandidates: Generator = (situation) => {
         subject: SLEEP_SUBJECT,
         domain: DOMAIN.sleep,
         verb,
-        object: verb === 'ease-off' ? EASING_OFF : WINDING_DOWN,
+        object: RECOVERY_OBJECT[verb] ?? WINDING_DOWN,
         trigger: 'deficit',
         evidence,
-        leansOn,
-        proposedBecause: 'there is a running shortfall of rest',
+        /*
+         * The morning may name what today would otherwise have gone on, and it
+         * may do so only when the topic is actually known. DEF-0006's rule is
+         * that an explanation cites what the decision leaned on, so the
+         * permission and the fact have to arrive together or the sentence is
+         * rationalising the winner after the fact.
+         */
+        leansOn: morning && topic !== undefined ? [...leansOn, CONCEPT.learningTopic] : leansOn,
+        proposedBecause: strained
+          ? 'there is a running shortfall of rest'
+          : 'the body is asking for an easier day',
       },
       situation,
     ),
   ]
+}
+
+/** The routine each recovery verb is about. */
+const RECOVERY_OBJECT: Partial<Record<ActionVerb, EntityRef>> = {
+  'ease-off': EASING_OFF,
+  'lighten-the-day': A_LIGHT_DAY,
+  'wind-down': WINDING_DOWN,
+  'protect-sleep': WINDING_DOWN,
 }
 
 /** Career and learning. Needs a topic the owner is actually on. */

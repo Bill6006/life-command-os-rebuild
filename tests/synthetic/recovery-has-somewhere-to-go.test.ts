@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { CONCEPT } from '../../src/domain/concepts'
 import { DOMAIN } from '../../src/domain/domains'
 import { entityRef } from '../../src/domain/entities'
-import { blockOf, timeZone, type DayBlock, type Instant } from '../../src/domain/time'
+import { blockOf, instant, timeZone, type DayBlock, type Instant } from '../../src/domain/time'
 import { generateCandidates, type Candidate } from '../../src/intelligence/candidates'
 import { applyConstraints } from '../../src/intelligence/constraints'
 import { profileFor } from '../../src/intelligence/moves'
@@ -11,7 +11,7 @@ import { buildView } from '../../src/memory/view'
 import { snapshotFromWire } from '../../src/memory/snapshot'
 import { createKit } from '../../src/synthetic/kit'
 import { SCENARIOS } from '../../src/synthetic/scenarios'
-import { decideOn } from './harness'
+import { decideOn, loadScenario } from './harness'
 
 /**
  * DEF-0016 — a strained late afternoon has nowhere to go.
@@ -73,6 +73,48 @@ function buildDocument() {
   })
 }
 
+/**
+ * Twelve minutes, a rested body, and nothing in the history to spend them on.
+ *
+ * The remaining route to DEF-0017's branch: a limiter the engine can name out
+ * loud, and an empty catalogue underneath it. Nothing here is strained, so the
+ * recovery generator correctly stays quiet, and no topic, place or person means
+ * nothing else has a subject to be about.
+ */
+function noTimeLeft(saidAt: string) {
+  const kit = createKit('DT', 'America/Denver', '2026-04-01T12:00:00Z')
+  const nights = [7.5, 7.75, 8].map((value, offset) =>
+    kit.record(
+      'observation',
+      { occurredAt: kit.local(`2026-04-${13 + offset}`, '07:00'), domains: [DOMAIN.sleep] },
+      {
+        concept: CONCEPT.sleepHours,
+        value: { type: 'number', value, unit: 'hours' },
+        method: 'self-report',
+      },
+    ),
+  )
+
+  const minutes = kit.record(
+    'observation',
+    // In the block it is about. How much time there is expires at the boundary
+    // of the part of the day it was said in (AUD-0005), so a fixture that wants
+    // the time limiter at nine in the morning has to answer in the morning.
+    { occurredAt: kit.local('2026-04-15', saidAt), domains: [DOMAIN.direction] },
+    {
+      concept: CONCEPT.usableTimeTonight,
+      value: { type: 'duration', minutes: 12 },
+      method: 'self-report',
+    },
+  )
+
+  return kit.document({
+    entities: [],
+    records: [...nights, minutes],
+    exportedAt: kit.local('2026-04-15', '20:00'),
+  })
+}
+
 function at(dayId: string, time: string): Instant {
   return createKit('DF', 'America/Denver', '2026-04-01T12:00:00Z').local(dayId, time)
 }
@@ -96,10 +138,18 @@ describe('DEF-0016 — the late afternoon has a recovery move', () => {
     )
   })
 
-  it('never leaves a strained afternoon or evening with nothing', () => {
-    // Every half hour from noon to midnight. Recovery is the limiter at all of
-    // them, and from the afternoon onward there is always something to say.
-    for (let minutes = 12 * 60; minutes < 24 * 60; minutes += 30) {
+  it('never leaves a strained day with nothing, at any hour of it', () => {
+    /*
+     * **Midnight to midnight**, and the bound is the finding — AUD-0003.
+     *
+     * DEF-0016's own sweep started at noon, because the defect it was written
+     * for was an afternoon one. Everything before noon went unasked, and before
+     * noon the generator returned nothing at all: a man nine hours short of
+     * rest was handed a study session under a line naming the shortfall. A
+     * sweep that stops where the last defect stopped will only ever find the
+     * last defect.
+     */
+    for (let minutes = 0; minutes < 24 * 60; minutes += 30) {
       const hour = String(Math.floor(minutes / 60)).padStart(2, '0')
       const minute = String(minutes % 60).padStart(2, '0')
       const moment = at('2026-04-15', `${hour}:${minute}`)
@@ -114,8 +164,8 @@ describe('DEF-0016 — the late afternoon has a recovery move', () => {
 
   it('reports no wrong-time-of-day refusal on the way there', () => {
     // The symptom the owner saw was a refusal with nothing behind it. There is
-    // now no refusal to have nothing behind.
-    for (const time of ['13:00', '15:30', '17:45', '19:00', '22:30']) {
+    // now no refusal to have nothing behind, at any hour.
+    for (const time of ['01:00', '05:30', '09:00', '13:00', '15:30', '17:45', '19:00', '22:30']) {
       const decision = decideOn(nineHoursDown(), at('2026-04-15', time), ZONE)
       const refusals = decision.trace.rejected.filter((row) => row.reason === 'wrong-time-of-day')
       expect(
@@ -221,13 +271,26 @@ describe('DEF-0017 — the app does not call its own history silent', () => {
    * every recovery move belongs to an hour that had not arrived.
    */
   it('says nothing about the history being silent when it can name the limiter', () => {
-    for (const time of ['06:30', '09:00', '11:30']) {
-      const decision = decideOn(nineHoursDown(), at('2026-04-15', time), ZONE)
-      expect(decision.situation.limiter?.kind, time).toBe('recovery')
+    /*
+     * The branch DEF-0017 added, reached through the limiter that can still
+     * empty the catalogue. Twelve minutes left and nothing that fits is an
+     * honest state; claiming the history has not said how the day is going,
+     * with the shortfall printed directly above, is not.
+     *
+     * The morning used to be this test's case and is no longer: the morning has
+     * a move now (AUD-0003), which is the point.
+     */
+    for (const [saidAt, time] of [
+      ['06:20', '06:30'],
+      ['08:50', '09:00'],
+      ['12:50', '13:00'],
+      ['18:50', '19:00'],
+    ]) {
+      const decision = decideOn(noTimeLeft(saidAt ?? ''), at('2026-04-15', time ?? ''), ZONE)
+      expect(decision.situation.limiter?.kind, time).toBe('time')
+      expect(decision.kind, time).toBe('no-action')
       expect(decision.noAction?.detail, time).not.toMatch(/none of it says/i)
-      expect(decision.noAction?.detail, time).toBe(
-        'Nothing here would help much until you can actually rest.',
-      )
+      expect(decision.noAction?.detail, time).toBe('Nothing here would fit the time left.')
     }
   })
 
@@ -329,3 +392,145 @@ describe('the filter keeps its backstop', () => {
     expect(rejected[0]?.reason).toBe('wrong-time-of-day')
   })
 })
+
+// ---------------------------------------------------------------------------
+// AUD-0003 — the morning has an answer
+// ---------------------------------------------------------------------------
+
+/**
+ * Sore, rested, and nothing sleep-shaped to say about it.
+ *
+ * The `capacity` limiter fires nowhere in the scenario library, so an invariant
+ * about it swept over the library alone would be vacuous — it would pass by
+ * never being asked. This is the history that asks: three full nights, a body
+ * that hurts, and the app naming "the body is asking for an easier day" on the
+ * screen.
+ */
+function soreAndRested(hoursAgo: number) {
+  const kit = createKit('DS', 'America/Denver', '2026-04-01T12:00:00Z')
+  const nights = [7.5, 7.75, 8].map((value, offset) =>
+    kit.record(
+      'observation',
+      { occurredAt: kit.local(`2026-04-${13 + offset}`, '07:00'), domains: [DOMAIN.sleep] },
+      {
+        concept: CONCEPT.sleepHours,
+        value: { type: 'number', value, unit: 'hours' },
+        method: 'self-report',
+      },
+    ),
+  )
+
+  const sore = kit.record(
+    'observation',
+    {
+      occurredAt: instant(at('2026-04-15', '20:00') - hoursAgo * 3_600_000),
+      domains: [DOMAIN.health],
+    },
+    { concept: CONCEPT.soreness, value: { type: 'scale', value: 4, of: 5 }, method: 'self-report' },
+  )
+
+  return kit.document({
+    entities: [],
+    records: [...nights, sore],
+    exportedAt: at('2026-04-15', '20:00'),
+  })
+}
+
+describe('AUD-0003 — a named limiter has somewhere to go, at every hour', () => {
+  it('stops prescribing a study session to a man nine hours short of rest', () => {
+    /*
+     * The reproduction, verbatim from the audit: "Three broken nights, and a
+     * deadline", clock at 10:00 on a Tuesday. What the deployed build said was
+     * *"RECALL PRACTICE — Spend 10 minutes recalling subnetting before you
+     * reopen your notes"*, directly beneath *"Tuesday morning, 9 hours short on
+     * sleep"* and *"What is in the way — About 9 hours short of rest"*.
+     */
+    const morning = loadScenario('morning-after-bad-nights')
+    const decision = morning.decision()
+
+    expect(decision.situation.block).toBe('morning')
+    expect(decision.situation.limiter?.kind).toBe('recovery')
+    expect(decision.kind).toBe('move')
+
+    const verb = decision.explanation?.semantics.target.verb
+    expect(verb, decision.explanation?.rendered.sentence).toBe('lighten-the-day')
+    expect(profileFor(verb!).demand).toBe('restorative')
+  })
+
+  it('says only what it knows, and defers nothing to tomorrow', () => {
+    /*
+     * The wording rule the audit leads AUD-0003 with, and the reason it does:
+     * the app has no model of what is coming (AUD-0004), so a morning move that
+     * promised tomorrow would be the same confident wrongness the whole phase
+     * exists to remove.
+     */
+    const spoken = [
+      loadScenario('morning-after-bad-nights').decision(),
+      decideOn(nineHoursDown(), at('2026-04-15', '09:00'), ZONE),
+      decideOn(nineHoursDown(), at('2026-04-15', '05:30'), ZONE),
+    ].flatMap((decision) => [
+      decision.explanation?.rendered.sentence ?? '',
+      decision.explanation?.rendered.reason ?? '',
+    ])
+
+    for (const line of spoken) {
+      expect(line, 'a morning move that promised tomorrow').not.toMatch(/tomorrow/i)
+      expect(line, 'a morning move that named the evening').not.toMatch(/tonight|this evening/i)
+    }
+  })
+
+  it('offers something restorative wherever recovery or capacity is what is in the way', () => {
+    /*
+     * The invariant, and it is the thing to hold rather than any one sentence:
+     * **when recovery or capacity is the dominant limiter, a recovery-compatible
+     * option exists in every relevant day block.**
+     *
+     * Swept over every scenario in the library at every block, and then over two
+     * constructed histories, because the library reaches `recovery` at every
+     * hour and reaches `capacity` at none — an invariant about two limiter kinds
+     * that only ever tests one is half a guard.
+     */
+    const offenders: string[] = []
+
+    const check = (label: string, document: ReturnType<typeof nineHoursDown>, moment: Instant) => {
+      const decision = decideOn(document, moment, ZONE)
+      const kind = decision.situation.limiter?.kind
+      if (kind !== 'recovery' && kind !== 'capacity') return
+      const restorative = generateCandidates(decision.situation).filter(
+        (candidate) => profileFor(candidate.semantics.target.verb).demand === 'restorative',
+      )
+      if (restorative.length === 0)
+        offenders.push(`${label} (${kind}, ${decision.situation.block})`)
+    }
+
+    for (const scenario of SCENARIOS) {
+      const document = scenario.build()
+      for (const { time } of EVERY_BLOCK) {
+        check(`${scenario.id} at ${time}`, document, movedTo(scenario.now, time, scenario.zone))
+      }
+    }
+
+    for (const { time } of EVERY_BLOCK) {
+      check(`nine hours down at ${time}`, nineHoursDown(), at('2026-04-15', time))
+      // The sore reading is kept inside its own freshness window, so the
+      // capacity limiter is actually raised at the hour being tested.
+      check(`sore and rested at ${time}`, soreAndRested(hoursBefore(time)), at('2026-04-15', time))
+    }
+
+    expect(offenders, 'a limiter the app names with nothing behind it').toEqual([])
+  })
+
+  it('reaches the capacity limiter at all, so the sweep above is not vacuous', () => {
+    // D-108: a guard that never meets the state it guards is not a guard.
+    const decision = decideOn(soreAndRested(1), at('2026-04-15', '20:00'), ZONE)
+    expect(decision.situation.limiter?.kind).toBe('capacity')
+    expect(decision.kind).toBe('move')
+    expect(profileFor(decision.explanation!.semantics.target.verb).demand).toBe('restorative')
+  })
+})
+
+/** How long before the tested hour a reading has to be to still be current. */
+function hoursBefore(time: string): number {
+  const [hour] = time.split(':')
+  return 20 - Number(hour ?? 20) + 0.25
+}

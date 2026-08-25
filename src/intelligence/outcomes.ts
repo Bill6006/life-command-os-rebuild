@@ -420,6 +420,14 @@ const OUTCOME_QUESTIONS: Record<ActionVerb, Partial<Record<OutcomeAspect, Aspect
       answers: EFFECT_ANSWERS,
     },
   },
+  'lighten-the-day': {
+    // Asked the following morning, which is why it is in the past tense and
+    // about a whole day rather than about the hours after it.
+    effect: {
+      prompt: ({ object }) => `How much did ${object} do for yesterday?`,
+      answers: EFFECT_ANSWERS,
+    },
+  },
   'time-with': {
     effect: {
       prompt: ({ object }) => `How much did the time with ${object} do for you both?`,

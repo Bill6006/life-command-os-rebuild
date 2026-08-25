@@ -75,6 +75,16 @@ export const STANDING_ENTITIES: readonly SemanticEntity[] = [
     privacy: 'normal',
     createdAt: ALWAYS,
   }),
+  // And the morning's, which is a third thing again — AUD-0003. Easing off is
+  // lowering the bar for the hours that are left; this is deciding what goes
+  // into a day that has not started.
+  createEntity({
+    kind: 'routine',
+    label: 'a light day',
+    domain: DOMAIN.sleep,
+    privacy: 'normal',
+    createdAt: ALWAYS,
+  }),
 ]
 
 /**

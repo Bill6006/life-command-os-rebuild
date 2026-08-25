@@ -233,6 +233,33 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     measures: CONCEPT.energy,
     affects: CONCEPT.energy,
   },
+  'lighten-the-day': {
+    demand: 'restorative',
+    /*
+     * Worth less right now than easing off in the afternoon and more tomorrow,
+     * because that is what it is: the afternoon's version lowers the bar for
+     * the hours that are left, and this one protects a whole day that has not
+     * been spent yet — including the night at the end of it.
+     */
+    now: 0.4,
+    tomorrow: 0.75,
+    friction: 0.1,
+    size: undefined,
+    suits: ['early-morning', 'morning'],
+    // Not the afternoon: `ease-off` is the better sentence after noon, and two
+    // recovery moves competing for one day is one wording too many (DEF-0016's
+    // own reasoning, applied to the block on the other side of it).
+    refuses: ['afternoon', 'evening', 'late-night'],
+    /*
+     * "Did today stay light?" has no answer at twenty past nine in the morning.
+     * It has one the next morning, which is the window `protect-sleep` and
+     * `wind-down` already use for the same reason.
+     */
+    outcome: IN_THE_MORNING,
+    aspects: ['effect'],
+    measures: CONCEPT.energy,
+    affects: CONCEPT.energy,
+  },
   'time-with': {
     demand: 'light',
     now: 0.8,

@@ -21,7 +21,8 @@ import {
 } from '../domain/time'
 import type { DimensionName, Evaluation } from './evaluate'
 import { beliefKey } from './learning'
-import { describeHours, type Situation } from './situation'
+import { describeHours, SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
+import { entityValue } from './values'
 import { blockNoun, horizonWord } from './vocabulary'
 
 /**
@@ -225,16 +226,50 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
     case 'deficit': {
       const debt = situation.capacity.sleepDebtHours
       const nights = situation.capacity.nightsSeen
+
+      /*
+       * What today would otherwise have gone on, named — AUD-0003.
+       *
+       * The morning move's own sentence is about the shape of a day rather than
+       * about any one thing in it, so the particular lives here: section 4.6's
+       * specific ordinary sentence, and the audit's own wording for this case.
+       *
+       * It defers nothing. "Today is not the day for it" is a statement about
+       * today; the app has no model of what is coming (AUD-0004), so naming
+       * tomorrow here would be the confident wrongness this phase exists to
+       * remove. Only when the decision actually leaned on the topic, which is
+       * DEF-0006's rule and is why the generator adds the concept and this
+       * clause's permission together.
+       */
+      const studying = studiedSubject(evaluation, situation, entities)
+      const instead = studying === undefined ? '' : ` Today is not the day for ${studying}.`
+
       if (leanedOn(evaluation, CONCEPT.sleepHours) && isUsable(debt) && debt.value >= 1) {
         const span = nights <= 1 ? 'last night' : `the last ${nights} nights`
         return semantics.target.verb === 'recover'
           ? `You are ${describeHours(debt.value)} down over ${span}. ${capitalise(object)} will still be there tomorrow.`
-          : `You are ${describeHours(debt.value)} down over ${span}.`
+          : `You are ${describeHours(debt.value)} down over ${span}.${instead}`
       }
+
+      /*
+       * A sore body with a full night behind it reaches this branch with no
+       * shortfall to name, and "rest is the thing running short" is not what
+       * the app read. It read the reading the capacity limiter is raised from.
+       */
+      const soreness = situation.capacity.soreness
+      if (
+        leanedOn(evaluation, CONCEPT.soreness) &&
+        isUsable(soreness) &&
+        soreness.value >= SORE_ENOUGH_TO_EASE_OFF
+      ) {
+        return `The body is asking for less than usual.${instead}`
+      }
+
       const energy = situation.capacity.energy
-      if (isUsable(energy))
-        return `There is not much left in the tank ${horizonWord(situation.block)}.`
-      return 'Rest is the thing running short.'
+      if (isUsable(energy)) {
+        return `There is not much left in the tank ${horizonWord(situation.block)}.${instead}`
+      }
+      return `Rest is the thing running short.${instead}`
     }
 
     case 'recent-struggle': {
@@ -338,6 +373,27 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
     case 'nothing-better':
       return `Nothing else is pressing, and ${object} pays back tomorrow.`
   }
+}
+
+/**
+ * The topic today would otherwise have gone on, when the app may say so.
+ *
+ * Three things have to be true and each one is a separate rule: the move is the
+ * morning's recovery move, the decision leaned on the topic (DEF-0006), and the
+ * topic actually resolves to something with a name (D-018). A missing name
+ * produces nothing rather than a sentence about "it".
+ */
+function studiedSubject(
+  evaluation: Evaluation,
+  situation: Situation,
+  entities: EntityIndex,
+): string | undefined {
+  if (evaluation.candidate.semantics.target.verb !== 'lighten-the-day') return undefined
+  if (!leanedOn(evaluation, CONCEPT.learningTopic)) return undefined
+  const topic = situation.learningTopic
+  if (!isUsable(topic)) return undefined
+  const ref = entityValue(topic.value)
+  return ref === undefined ? undefined : entities.labelFor(ref)
 }
 
 function capitalise(text: string): string {

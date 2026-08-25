@@ -249,9 +249,14 @@ describe('the engine’s own vocabulary', () => {
      * The list is meant to be short and to be argued over when it grows.
      * `easing off` arrived with DEF-0016's repair: the afternoon had no
      * recovery move at all, and a move needs a subject to be a sentence.
+     * `a light day` arrived with AUD-0003's, for the same reason one block
+     * earlier — and it is a third routine rather than a re-wording of the
+     * second, because easing off lowers the bar for the hours that are left and
+     * this decides what goes into a day that has not started.
      */
     expect(STANDING_ENTITIES.map((entity) => entity.id).sort()).toEqual([
       'life-domain:sleep',
+      'routine:a-light-day',
       'routine:a-walk',
       'routine:easing-off',
       'routine:winding-down',

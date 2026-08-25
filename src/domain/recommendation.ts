@@ -27,6 +27,7 @@ export const ACTION_VERBS = [
   'wind-down',
   'recover',
   'ease-off',
+  'lighten-the-day',
   'time-with',
   'growth-opportunity',
   'reach-out',
@@ -185,6 +186,34 @@ const TEMPLATES: Record<ActionVerb, VerbTemplate> = {
     needsPerson: false,
     action: ({ object }) => `Start ${object} now — the rest of today can be a light one.`,
     followUp: ({ object }) => `Did the rest of the day stay easy after ${object}?`,
+  },
+  /*
+   * The morning's recovery move — AUD-0003.
+   *
+   * `protect-sleep` and `wind-down` refuse every block before six and
+   * `ease-off` suits only the afternoon, all correctly: telling someone at nine
+   * in the morning to start winding down for the night is worse than saying
+   * nothing. But when those three were the whole catalogue, a man the app had
+   * just told was nine hours short of rest was offered a study session, because
+   * the only candidates that could exist before noon were effortful ones.
+   *
+   * What the morning can honestly offer is not "sleep more now" — the night has
+   * gone. After chronic restriction, deficits accumulate and recovery takes
+   * several unrestricted nights (Van Dongen et al., *Sleep* 26(2):117–126,
+   * 2003), and self-rated sleepiness under-reports the impairment, so the app
+   * cannot read this off how he seems. The honest move is *don't put the hard
+   * thing in today*.
+   *
+   * **It defers nothing to tomorrow**, and that is deliberate: the app has no
+   * model of what is coming (AUD-0004), so naming tomorrow would be the same
+   * confident wrongness this whole phase exists to remove. Deferral becomes
+   * available later, through `hold`, once there is a real later block to name.
+   */
+  'lighten-the-day': {
+    label: 'Lighten the day',
+    needsPerson: false,
+    action: ({ object }) => `Set today up as ${object} — nothing heavy needs to go in.`,
+    followUp: ({ object }) => `Did today stay ${object}?`,
   },
   'time-with': {
     label: 'Time with someone',

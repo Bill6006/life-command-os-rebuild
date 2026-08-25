@@ -370,6 +370,7 @@ const PATTERN_NAME: Record<ActionVerb, (object: string | undefined) => string> =
   'wind-down': () => 'Winding down',
   recover: () => 'Taking a recovery night',
   'ease-off': () => 'Easing off for the rest of the day',
+  'lighten-the-day': () => 'Keeping a day light',
   'time-with': (o) => (o === undefined ? 'Unhurried time with someone' : `Time with ${o}`),
   // The skill label already carries whose it is — DEF-0027, which is why the
   // person is not named a second time here.
