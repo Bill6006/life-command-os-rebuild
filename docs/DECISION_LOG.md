@@ -4405,3 +4405,114 @@ longer said.
 anything, so the regression walks the approach to an obligation minute by
 minute and asserts that all four bands are reached. That is D-139's rule applied
 to a scale rather than to a sentence catalogue.
+
+---
+
+## D-143 — What the app was told and what the app worked out are two rows, and the registry says which
+
+**Phase:** 82 (QA round 2) · **Status:** Active — registry rule, completing D-140
+
+D-140 said a durable arrangement and a current reading are two concepts. This
+says where the second one has to live: **in the concept registry**, marked
+`derived`, so that every surface which renders the registry gets both — and so
+that a surface written next year gets both without knowing anything about school
+days.
+
+**What this was learned from.** D-140's repair reached the generator, the
+filter, the premise and the learning context, and the round 1 tests asserted
+exactly those. Round 2 opened the two screens nobody had opened: the QA fact
+ledger and the Fatherhood page's "What the app currently believes". Both render
+the registry rather than the decision, and at ten past ten on a Wednesday both
+still said _"Child with the owner — yes — for whether she is here today"_, one
+tap from a Now screen that had just been repaired to say her school day ran
+until three.
+
+**The lesson is about the shape of the repair, not about a missed file.** Fixing
+consumers one at a time cannot finish, because a generic renderer is not a
+consumer — it is a loop over the registry, and the registry was still telling it
+the wrong thing. **A concept's label and its stated purpose are owner-facing
+copy**, and they were the last place the old meaning was written down.
+
+**Three rules travel with the flag**, and each is a real hazard rather than
+tidiness:
+
+- **Never asked.** There is no question spec and there must not be one.
+  `guide.ts` cannot ask what has none, and the owner does not answer the app's
+  own conclusions on its behalf.
+- **Never counted as coverage.** Nothing writes a record for a derived concept,
+  so measuring how long it has been since one would report permanent neglect of
+  a fact he cannot supply, and start prodding him about it. That is DEF-0015's
+  failure arriving from a new direction.
+- **Never corrected directly.** The domain page renders it read-only and points
+  at the fact it rests on. A correction typed on a conclusion writes a record
+  nothing reads, and on that page it would read as changing the arrangement
+  underneath it.
+
+**And a derived row states what it rests on.** "No" is a true row and a useless
+one; _"No — Adaya's school day is on until 15:00"_ is the row the owner can act
+on. A conclusion shown without its grounds is the app asking to be trusted.
+
+---
+
+## D-144 — A sentence about a quantity is checked against the quantity, not against the band that produced it
+
+**Phase:** 82 (QA round 2) · **Status:** Active — evaluator rule, sharpening D-142
+
+D-142 said a scoring band states one fact or it is two bands. This says how to
+tell whether it does: **the sentence is compared with the figures it is a claim
+about**, and where a band's words are about minutes, the band's boundary is a
+comparison of minutes rather than of a ratio.
+
+**What this was learned from.** D-142's repair split "does not fit" off the top
+of a band and left the rest of it — everything from four-fifths of the window to
+all of it — saying _"would use all the time before Adaya's school day"_. At
+eighteen minutes past eight, with twelve minutes before her school day, a
+ten-minute move carried that sentence directly above `opportunity-cost` saying
+it takes about 83 percent. Two of the app's own numbers about one move, one row
+apart, disagreeing.
+
+**The guard failed for a reason worth keeping.** It asked two questions — are
+the four note strings reachable, and does "would not fit" agree with an overrun
+— and both had the right answer. It could not check "all", because "all" was a
+claim about a quantity and the test only knew how to compare strings and bands.
+So the rule now is that **every reachable note is checked against the numbers
+the app prints beside it**: "all" means every minute, "most" means more than
+half and not all, "would not fit" means more than there is.
+
+**Bands that genuinely are about proportion keep a ratio.** "Fits comfortably"
+and "fits" are claims about how much room is left over, and a share is the right
+instrument for those. The mistake was using one instrument for both kinds of
+sentence because they lived in one function.
+
+---
+
+## D-145 — A requirement and the design that meets it may not be the same number
+
+**Phase:** 82 (QA round 2) · **Status:** Active — product and instrument rule
+
+Where a gate asserts a minimum, the product clears it with margin, and the
+margin is stated once as a token rather than repeated as a literal. A design
+that sits exactly on a minimum has not met it; it is level with it, and which
+side of it a given render lands on is decided by rounding.
+
+**What this was learned from.** Every touch target in the app was declared
+`min-height: 2.75rem` — 44px — and the deployed Android gate asserted `>= 44`.
+At a device pixel ratio of 3 the growth-stage control measured
+`44.00006103515625`. One deployed run reported 126 checks clean; the next
+reported 125, on the same bytes and the same control. It was never a flaky test.
+
+**The instrument half is the same rule turned around.** One number, read by the
+check's name, its predicate and its diagnostic. The gate had three: two checks
+were _named_ for 44 and asserted 40, four asserted 44, and every one of them
+printed the measurement through `Math.round` — so the failing run's own
+diagnostic reported the control as "44px tall" beside a predicate that had just
+rejected it for being under 44. A gate whose report and whose test state
+different numbers cannot be acted on, only re-run.
+
+**And a literal repeated is a literal free to drift.** The token guard found two
+siblings on its first run: one control written as `44px` instead of `2.75rem` —
+the same number in a different unit, which is how a sweep for one misses the
+other — and one written as `2.25rem`, thirty-six pixels, under a comment
+asserting it was a real touch target. The comment was the whole defence and it
+was wrong by eight pixels. That control is on the shell, reachable from every
+screen in the product, and nothing had ever measured it.

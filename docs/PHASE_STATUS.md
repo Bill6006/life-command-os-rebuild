@@ -24,11 +24,13 @@ reopens Phase 4 or any completed phase.
 
 # Phase 82 — The structural intelligence skeleton
 
-**Status: YELLOW — READY FOR INDEPENDENT QA, ROUND 2.**
+**Status: YELLOW — READY FOR INDEPENDENT QA, ROUND 3.**
 
-Round 1 returned FAIL with three findings. They are repaired, the repaired
-checkpoint is deployed, and the retest handoff is written — so the phase is back
-where it was, awaiting an independent verdict rather than holding one.
+Round 1 returned FAIL with three findings; round 2 closed one of them and found
+two of the repairs incomplete, plus a defect in the mobile gate itself. All are
+now repaired, the repaired checkpoint is deployed, and the retest handoff is
+written — so the phase is back where it was, awaiting an independent verdict
+rather than holding one.
 
 Not GREEN, and not this conversation's to make GREEN. Owner decision D-077: a
 builder conversation may not approve its own phase, and nothing concluded while
@@ -63,15 +65,15 @@ Two columns, because the phase has been verified twice: once at the first build
 and once after the round 1 repairs. The second column is the state of the
 deployed checkpoint now.
 
-| Gate                                     | First build (`160ec9a`)                   | After round 1 (`0899f18`)                                                                       |
-| ---------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `npm run verify` from a clean checkout   | **PASS**                                  | **PASS** — format, lint, typecheck, tests, build                                                |
-| Unit layer                               | 1,470 / 1,470 across 66 files             | **1,490 / 1,490** across 67 files                                                               |
-| Browser, three widths                    | 528 / 528 at 360, 430 and 1,280px         | **537 / 537** — 179 each                                                                        |
-| Android-style gate on the deployed build | clean — 119 checks                        | **clean — 126 checks** against the live Preview                                                 |
-| Privacy scan                             | clean, 230 tracked files                  | **clean — 233 tracked files** (231 at the product checkpoint, before the documentation commits) |
-| Tournament                               | 100 / 100 deterministic, 100 / 100 hybrid | **100 / 100 deterministic, 100 / 100 hybrid**                                                   |
-| Reintroductions proved                   | 22                                        | **13 more, 35 in total**                                                                        |
+| Gate                                     | First build (`160ec9a`)                   | After round 1 (`0899f18`)                 | After round 2 (`da1a4ee`)                        |
+| ---------------------------------------- | ----------------------------------------- | ----------------------------------------- | ------------------------------------------------ |
+| `npm run verify` from a clean checkout   | **PASS**                                  | **PASS**                                  | **PASS** — format, lint, typecheck, tests, build |
+| Unit layer                               | 1,470 / 1,470 across 66 files             | 1,490 / 1,490 across 67 files             | **1,498 / 1,498** across 67 files                |
+| Browser, three widths                    | 528 / 528 at 360, 430 and 1,280px         | 537 / 537 — 179 each                      | **540 / 540** — 180 each                         |
+| Android-style gate on the deployed build | clean — 119 checks                        | clean — 126 checks                        | **clean — 132 checks**                           |
+| Privacy scan                             | clean, 230 tracked files                  | clean — 233 tracked files                 | **clean — 234 tracked files**                    |
+| Tournament                               | 100 / 100 deterministic, 100 / 100 hybrid | 100 / 100 deterministic, 100 / 100 hybrid | **100 / 100 deterministic, 100 / 100 hybrid**    |
+| Reintroductions proved                   | 22                                        | 13                                        | **14 more, 49 in total**                         |
 
 Seven test files: `goal-horizon-and-parts`, `commitment-windows`, `threads`,
 `deferral`, `growth-stage-and-occasion`, `instrument-recut`, `qa-82-round-1`,
@@ -117,6 +119,49 @@ trying to be, and each fails against a reintroduction.
 **Every PASS from round 1 is preserved and every deferral stands.** Nothing in
 this repair reopens a package, and the three items QA deferred to Phase 9 are
 untouched.
+
+## Independent QA — round 2
+
+**FAIL**, and a more useful failure than round 1's. QA-82-002 closed outright.
+The other two came back not as new findings but as **the same class surviving in
+a place the first repair did not reach**, which is the most valuable thing an
+independent round can tell a builder. A fourth finding was against the mobile
+gate itself.
+
+- **QA-82-001 persists → DEF-0089 reopened.** Round 1 repaired every consumer
+  that makes a decision and left the concept's own identity alone. Every surface
+  that renders the _registry_ rather than the decision — the QA fact ledger, the
+  Fatherhood page's belief panel, the export — went on printing the durable
+  custody record as the answer to _whether she is here today_. Repairing readers
+  one at a time cannot finish, because a generic renderer is a loop over the
+  registry rather than a reader. The registry now carries two concepts: the
+  arrangement, relabelled to mean what it stores, and the reading, marked
+  `derived` so it is never asked, never counted as coverage, and never
+  corrected. **D-143.**
+- **QA-82-003 persists → DEF-0091 reopened.** Round 1's band said "would use all
+  the time" about everything from four-fifths of the window to all of it, so a
+  ten-minute move in a twelve-minute window carried that sentence above
+  `opportunity-cost` saying 83 percent. The top three bands are now decided by
+  comparing the two minute figures the sentence is a claim about. **D-144.**
+- **QA-82-004 → DEF-0092.** The deployed gate finished 125/126 for QA and
+  126/126 here, on the same bytes. Every touch target in the app was declared at
+  exactly the 44px the gate asserts, so at a device pixel ratio of 3 a control
+  measured `44.00006` and which side of the line it fell on was decided by
+  rounding. One token, 48px, and a gate whose name, predicate and diagnostic
+  state one number and report it unrounded. **D-145.**
+
+**The class guard for QA-82-004 found two siblings on its first run**, and both
+were real. One control was written `44px` rather than `2.75rem` — the same
+number in a different unit, which is how a sweep for one misses the other. The
+other was `2.25rem`, thirty-six pixels, under a comment asserting it was a real
+touch target; it sits on the shell and is reachable from every screen in the
+product, and nothing had ever measured it. That is **DEF-0093**, and it is the
+argument for the token.
+
+**Every round 2 PASS is preserved and every deferral stands.** QA-82-002 was not
+touched. No package was reopened, and the owner questions, Phase 8
+carry-forwards, deliberate non-features and audit-section-10 do-not-change items
+are unchanged.
 
 ## The six packages
 
@@ -314,14 +359,19 @@ assertion proves a string is stable rather than right and fails for
 improvements. If QA wants the wording frozen, that is a decision to take
 deliberately rather than by accident.
 
-**One non-reproducing browser failure was seen and is reported rather than
-hidden.** In one full three-width run, `qa-lab.spec.ts` — "gives him his history
-back and keeps it — Empty the laboratory, from QA" — failed at desktop. It
-passes in isolation, passed in the immediately preceding full run and in the one
-after, and the test is timing-sensitive by construction: it waits 1,500ms for
-in-flight laboratory work to land and then asserts none of it reached the
-screen. It is the same rotating class the round 1 QA report documented. No
-product assertion about this phase's surfaces was involved.
+**The rotating browser transient is real, and it is reported rather than
+hidden.** It has now been seen twice in this phase, in different tests, and
+neither occurrence ran a product assertion. In one round 1 run, `qa-lab.spec.ts`
+— "gives him his history back and keeps it — Empty the laboratory, from QA" —
+failed at desktop; that test waits 1,500ms for in-flight laboratory work to land
+and is timing-sensitive by construction. In one round 2 run, `phase82.spec.ts`
+— "lists it on Life and stops it in one tap" — failed at mobile-small inside
+`page.goto` itself with `net::ERR_ABORTED`, before any assertion. Both pass in
+isolation and in the runs either side of them. This is the class the round 1 QA
+report documented, and it is a property of the harness rather than of the
+product — but it is worth saying plainly that **it makes a single green run
+weaker evidence than it looks**, which is why the counts below name the run they
+came from.
 
 **The re-cut did not separate a genuinely near-tied field, and cannot.** The
 audit's worked example is three candidates inside three thousandths. They are

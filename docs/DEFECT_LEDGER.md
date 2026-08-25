@@ -39,9 +39,77 @@ None.
 
 ## Fixed
 
-### DEF-0089 — a standing custody arrangement was read as a claim that she was in the room
+### DEF-0092 — every touch target was specified at exactly the size the gate measures against
 
 - Status: Fixed
+- Severity: Major — a mobile gate that reports a different result on the same
+  bytes cannot be acted on, and it hid a real undersized control (DEF-0093)
+- Found in: Phase 82 / `0899f18`
+- Found by: independent QA round 2 — QA-82-004
+- Class: **a threshold and the thing it measures written as the same number.**
+  Fifteen declarations of `min-height: 2.75rem` — 44px — against an Android gate
+  asserting `>= 44`. At a device pixel ratio of 3 the measured height of the
+  growth-stage control came back as `44.00006103515625`, so which side of the
+  requirement it landed on was decided by subpixel layout rather than by the
+  design. It is not a flaky test; it is a design with no margin, measured
+  exactly.
+- Reproduction: the deployed Android gate against `8e2e588` exited non-zero at
+  125/126 for QA on "the growth stage clears 44px of thumb". The same command
+  against the same deployment reported 126/126 here. Measured directly, the
+  control is `min-height: 44px` rendering at `44.00006103515625`.
+- Root cause: two, and they compound. The product wrote the accepted minimum as
+  its own target size, in fifteen places, so there was no margin anywhere. The
+  gate then stated three different numbers for one standard: two checks were
+  _named_ "clears 44px of thumb" and asserted `>= 40`, four asserted `>= 44`,
+  and every one of them printed the measurement through `Math.round` — so the
+  failing run's own diagnostic said the control was "44px tall" beside a
+  predicate that had just rejected it for being under 44.
+- Regression: `tests/unit/architecture-guards.test.ts` — "clears the gate's own
+  threshold with room to spare" reads `--touch-target` out of `tokens.css` and
+  `THUMB` out of `android-gate.mjs` and requires the first to be strictly
+  greater; "is the only place a target size is written down" sweeps every
+  stylesheet; "the gate reports the measurement it tested, unrounded" forbids a
+  rounded height in a threshold diagnostic and a hand-written threshold beside
+  the named one. Five reintroductions run, all five fail.
+- Siblings: found by the guard on its first run, and both were real. One control
+  was declared `min-height: 44px` rather than `2.75rem` — the same number in a
+  different unit, which is how a sweep for one misses the other — and one was
+  36px under a comment claiming it was a real touch target (DEF-0093). Every
+  target now reads `var(--touch-target)`, which is 48px.
+- Note on the choice of 48: it is the comfortable-target size in the mobile
+  guidelines and it clears the gate's 44 by four pixels, which is the smallest
+  margin that cannot be erased by rounding at any device pixel ratio the app is
+  likely to meet.
+- Fixed in: the checkpoint that closes QA round 2
+
+### DEF-0093 — the control on every screen was 36px, under a comment saying it was a real target
+
+- Status: Fixed
+- Severity: Major — an undersized target on the app shell, reachable from every
+  screen in the product
+- Found in: Phase 82 / `0899f18`
+- Found by: the class guard written for DEF-0092, on its first run
+- Class: DEF-0092's, and the reason that class matters. `.topbar__more` carried
+  `min-height: 2.25rem` — 36px — with the comment _"Section 37 — a real touch
+  target, not a 16px glyph in a corner."_ The comment was the whole defence, and
+  it was wrong by eight pixels.
+- Reproduction: the overflow control in the top bar, at any width. Nothing
+  measured it: the Android gate checks the controls the phase under test added,
+  and this one has been there since Phase 2.
+- Root cause: the number was written by hand rather than read from anywhere, so
+  it was free to be any number, and the comment beside it was never checked
+  against it. That is exactly what the token exists to stop.
+- Regression: `tests/unit/architecture-guards.test.ts` — "is the only place a
+  target size is written down". Reintroducing `2.25rem` fails it.
+- Siblings: the sweep is the check. Every `min-height` and `min-width` on a
+  control in every stylesheet now reads the token or fails the build.
+- Fixed in: the checkpoint that closes QA round 2
+
+### DEF-0089 — a standing custody arrangement was read as a claim that she was in the room
+
+- Status: Fixed — **reopened once.** Round 2 found the repair had reached the
+  decision path and none of the surfaces that render the concept registry. What
+  round 1 did is recorded first; the round 2 half follows it.
 - Severity: Blocker — a false statement about where the owner's daughter is, on
   the primary surface, at a moment he can see out of the window is wrong
 - Found in: Phase 82 / `160ec9a`
@@ -85,6 +153,44 @@ None.
   full-custody week he is most able to do something, which is the opposite of
   what AUD-0004 asked for. Asserted directly.
 - Fixed in: the checkpoint that closes QA round 1
+- **Round 2 — what the first repair missed.** The class was stated as "one field
+  carrying two meanings, and every consumer believing the wrong one", and then
+  only the consumers that make a _decision_ were repaired: the generator, the
+  filter, the premise and the learning context. The concept's own identity was
+  left exactly as it was — labelled `Child with the owner`, read `for whether
+she is here today` — so every surface that renders the registry rather than
+  the decision went on presenting the durable custody record as the answer to
+  where she was. On the deployed build at 10:20 the QA laboratory's fact ledger
+  read _"Child with the owner · known — yes — for whether she is here today"_
+  and the Fatherhood page read _"Child with the owner — yes"_, one tap from a
+  Now screen that had just been repaired to say her school day ran until three.
+  A registry is a generic surface: repairing the readers one at a time cannot
+  reach it, and there is no list of readers to finish, because the next one has
+  not been written yet.
+- **Round 2 — the repair.** The identity is now two concepts.
+  `family.child-present` is relabelled `Child in the owner’s care today` and
+  read `for whether she is in your care today`, which is the question the guide
+  actually asks and the answer the durable record actually holds — she is in his
+  care all day on a day that is his, school included. `family.child-here-now`
+  — `Child here right now` — is the narrowed reading, carried on the decision
+  and rendered by the same generic surfaces, and it names the span: _"No —
+  Adaya’s school day is on until 15:00."_ `ConceptDefinition.derived` is what
+  makes the second one safe: never asked (no question spec, and `guide.ts`
+  cannot ask what has none), never counted as coverage (nothing writes a record
+  for it, so measuring its age would report permanent neglect of a fact the
+  owner cannot supply — DEF-0015's class), and never correctable (a correction
+  typed on a conclusion would write a record nothing reads, and on that page
+  would read as changing the arrangement underneath).
+- **Round 2 — regression.** `tests/synthetic/qa-82-round-1.test.ts` — "shows the
+  arrangement and the reading as two different things", "puts the reading on the
+  Fatherhood page beside the arrangement", "never shows a presence claim the
+  decision does not hold"; `tests/browser/phase82.spec.ts` — "says the same
+  thing about her on the fact ledger and the domain page"; and six new checks in
+  the deployed Android gate. Six reintroductions run, all six fail.
+- **Round 2 — siblings.** The export composer renders `usedFor` from the same
+  facts and is fixed by the same change. `life-domain.spec.ts` was correcting
+  the arrangement through the old label and now names the new one, which is the
+  point: the row he corrects is the one he answered.
 
 ### DEF-0090 — the evidence panel for a held decision explained the move it was not offering
 
@@ -127,7 +233,8 @@ None.
 
 ### DEF-0091 — a move that fitted exactly was told it would not fit
 
-- Status: Fixed
+- Status: Fixed — **reopened once.** Round 2 found the near-fit sibling
+  surviving inside the band round 1 created.
 - Severity: Major — the app contradicting its own figure, in the trace the
   inspector reads and the score the ranking uses
 - Found in: Phase 82 / `160ec9a`
@@ -163,6 +270,28 @@ None.
   minutes. Three minutes before the school run, a five-minute move arrives at
   the evaluator with three minutes to do it in.
 - Fixed in: the checkpoint that closes QA round 1
+- **Round 2 — what the first repair missed.** Round 1 split "does not fit" off
+  the top of the band and left everything from four-fifths to all of it saying
+  _"would use all the time before Adaya's school day"_. At 08:18, with twelve
+  minutes before her school day and a ten-minute recall session,
+  `opportunity-cost` said the move takes about 83 percent and `time-fit` said it
+  would use all of it — two of the app's own figures about one move, one row
+  apart. The reason the round 1 guard could not see it is worth writing down:
+  it compared the words against the minutes only for "would not fit", because
+  "all" was not a claim it knew how to check, and it separately asserted that
+  four note strings were reachable. Both questions had the right answer.
+- **Round 2 — the repair.** Five bands, and the top three are decided by
+  comparing the two figures the sentence is actually about rather than by the
+  ratio: `minutes > left` does not fit, `minutes === left` uses all of it, and
+  the rest of the near range uses most of it. Only "fits" and "fits comfortably"
+  — which genuinely are claims about proportion — are still chosen by the share.
+  The score judgement from round 1 is deliberately unchanged.
+- **Round 2 — regression.** `tests/synthetic/qa-82-round-1.test.ts` — "says
+  \"all\" only when the move uses every minute there is" (the report's own
+  10-of-12 reproduction) and "never disagrees with the percentage printed beside
+  it", which checks each sentence against the percentage the app prints one row
+  below it, swept minute by minute through the approach and then across the
+  library. Three reintroductions run, all three fail.
 
 ### DEF-0087 — the trigger that means "nothing raised this" asserted that nothing else was pressing
 

@@ -983,6 +983,9 @@ async function main() {
    * nothing about the repair, and went on printing the durable arrangement as
    * the answer to whether she was here.
    */
+  // The ledger lives on the laboratory screen, and the clock stays where it was.
+  await page.goto(`${BASE}#/qa`)
+  await page.waitForSelector('h1:has-text("QA")')
   const ledger = await page.getByTestId('qa-facts').innerText()
   check(
     'the fact ledger separates whose day it is from where she is',
@@ -1012,10 +1015,6 @@ async function main() {
   check('and offers no correction on a thing the app worked out', !/Not right\?/.test(presence))
   await sideways('Fatherhood, inside the school window')
 
-  await page.goto(`${BASE}#/qa`)
-  await page.waitForSelector('h1:has-text("QA")')
-  await page.getByRole('button', { name: new RegExp('A school morning') }).tap()
-  await page.waitForSelector('.qa-scenario--active')
   await openNow()
   await sideways('Now, inside the school window')
 
