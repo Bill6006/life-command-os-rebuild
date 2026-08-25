@@ -24,13 +24,13 @@ specification is section 7 of
 
 |                                    |                                                                                 |
 | ---------------------------------- | ------------------------------------------------------------------------------- |
-| Product checkpoint                 | `befcb70` — the last commit that changes the bundle                             |
+| Product checkpoint                 | `160ec9a` — the last commit that changes the bundle                             |
 | Deployed Preview SHA               | may have moved past the checkpoint by the docs commits — **read it live**       |
 | Relationship                       | proved with `scripts/checkpoint-equivalence.mjs`, never string equality (D-097) |
 | Preview                            | https://bill6006.github.io/life-command-os-rebuild/preview/                     |
 | Unit layer                         | 1,470 / 1,470 across 66 files (was 1,332 across 60)                             |
 | Browser                            | 528 / 528 — 176 each at 360, 430 and 1,280px (was 501)                          |
-| Android-style gate, deployed build | see PHASE_STATUS.md — run against the deployed build after the deploy           |
+| Android-style gate, deployed build | clean, 119 checks against the live Preview (was 93)                             |
 | `npm run verify` from a clean tree | PASS                                                                            |
 | Tournament, re-baselined           | 100 / 100 deterministic, 100 / 100 hybrid, under a widened rubric               |
 | Report path for this phase         | `docs/qa/PHASE_82_QA_HANDOFF.md` — new file                                     |
@@ -71,11 +71,11 @@ docs/qa/PHASE_82_QA_HANDOFF.md and narrowly scoped QA evidence artifacts.
 
 CHECKPOINT
 
-- Product checkpoint: befcb70
+- Product checkpoint: 160ec9a
 - Deployed Preview SHA: read it live from
   https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
 - These are two facts, not one. Prove the relationship with
-  `node scripts/checkpoint-equivalence.mjs befcb70 --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json`
+  `node scripts/checkpoint-equivalence.mjs 160ec9a --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json`
   rather than by comparing strings. This repository redeploys on every push,
   including a documentation-only one, so the deployed SHA may legitimately have
   moved past the checkpoint by the time you read it — that is D-097 and DEF-0061

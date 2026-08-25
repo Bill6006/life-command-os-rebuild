@@ -821,6 +821,143 @@ async function main() {
   )
   await sideways('Now, the third hour of one day')
 
+  /*
+   * ------------------------------------------------------------------------
+   * Phase 82 — the structural skeleton, on a handset
+   * ------------------------------------------------------------------------
+   *
+   * Five packages end in something the owner has to find with a thumb, and
+   * every one of them is new. A course he can stop, a deferral with nothing to
+   * press, a day he can describe, a stage he can put back, and a date on a goal
+   * that had none. The suite checks that they exist at three widths; this
+   * checks that they are usable on a phone against the deployed bytes, which is
+   * the distinction Phase 4 paid five defects to learn.
+   */
+
+  // ---- A course under way, and the one tap that stops it — AUD-0020 ---------
+  await loadScenario('Two sessions in')
+  await openNow()
+  const partOf = await page.locator('.screen').innerText()
+  check(
+    'Now says which course the move belongs to',
+    /Part of/.test(partOf) && /Three sessions on subnetting/.test(partOf),
+  )
+  check('and where in it, in words rather than a share', /third of three/.test(partOf))
+  check('with no percentage anywhere on the screen', !/%/.test(partOf))
+  await sideways('Now, a move inside a course')
+
+  await page.locator('.nav').getByRole('button', { name: 'Life' }).tap()
+  await page.waitForSelector('h1:has-text("Life")')
+  const stopControl = page.getByTestId('life-thread-stop')
+  check('Life lists the course', (await stopControl.count()) === 1)
+  const threadStopBox = await stopControl.boundingBox()
+  check(
+    'and the stop clears 44px of thumb',
+    threadStopBox !== null && threadStopBox.height >= 44,
+    threadStopBox === null ? 'not on screen' : `${Math.round(threadStopBox.height)}px tall`,
+  )
+  await stopControl.tap()
+  await page.waitForSelector('[data-testid="life-threads-past"]')
+  const stoppedThread = await page.getByTestId('life-threads-past').innerText()
+  check(
+    'stopping it leaves it visible rather than vanishing',
+    /Three sessions on subnetting/.test(stoppedThread) && /Stopped/.test(stoppedThread),
+    stoppedThread.replace(/\s+/g, ' ').trim(),
+  )
+  await openNow()
+  check(
+    'and Now stops naming it the moment it is stopped',
+    !/Part of/.test(await page.locator('.screen').innerText()),
+  )
+  await sideways('Life, a course stopped')
+
+  // ---- The fifth state — AUD-0024 ------------------------------------------
+  await loadScenario('Before the house is up')
+  const held = await nowHeadline()
+  const heldScreen = await page.locator('.screen').innerText()
+  check(
+    'a deferral names the part of today it is holding for',
+    /The morning suits/.test(held),
+    held,
+  )
+  check(
+    'and says what is being held and why later is better',
+    /has the room/.test(heldScreen) && /Adaya/.test(heldScreen),
+  )
+  check(
+    'and offers nothing to press, because there is nothing to start',
+    (await page.getByTestId('now-actions').count()) === 0,
+  )
+  await sideways('Now, a deferral')
+
+  // ---- The shape of the day — AUD-0004 -------------------------------------
+  await loadScenario('A school morning')
+  await openNow()
+  const squeezed = await page.locator('.screen').innerText()
+  check(
+    'the time limiter says what the time is short of',
+    /minutes before Adaya/.test(squeezed),
+    (squeezed.match(/About \d+ minutes before [^.]*\./) ?? ['not found'])[0],
+  )
+  await page.locator('.nav').getByRole('button', { name: 'Life' }).tap()
+  await page.waitForSelector('h1:has-text("Life")')
+  const dayShape = await page.getByTestId('day-shape-list').innerText()
+  check(
+    'and Life reads the obligation back in the owner’s own words',
+    /08:30 to 15:00, weekdays/.test(dayShape),
+    dayShape.replace(/\s+/g, ' ').trim(),
+  )
+  await sideways('Life, the day’s shape')
+
+  // ---- A stage on a child’s skill, set and unset — AUD-0015(a) --------------
+  await loadScenario('Three times running, and the app noticed')
+  await page.locator('.nav').getByRole('button', { name: 'Life' }).tap()
+  await page.waitForSelector('h1:has-text("Life")')
+  await page.getByRole('link', { name: 'Fatherhood / Family' }).tap()
+  await page.waitForSelector('h1:has-text("Fatherhood")')
+  const stage = page.getByTestId('domain-skill-stage')
+  const stageBox = await stage.boundingBox()
+  check(
+    'the growth stage clears 44px of thumb',
+    stageBox !== null && stageBox.height >= 44,
+    stageBox === null ? 'not on screen' : `${Math.round(stageBox.height)}px tall`,
+  )
+  await stage.tap()
+  await page.waitForSelector('[data-testid="domain-skill"]:has-text("Settled")')
+  check('one tap settles it', true)
+  await page.getByTestId('domain-skill-stage').tap()
+  await page.waitForSelector('[data-testid="domain-skill"]:has-text("Being worked on")')
+  check('and one tap puts it back — it is never permanent', true)
+  const skillRow = await page.getByTestId('domain-skill').innerText()
+  check(
+    'and nothing on the row grades her',
+    !/%|percent|score|rank|grade/i.test(skillRow),
+    skillRow.replace(/\s+/g, ' ').trim(),
+  )
+  await sideways('Fatherhood, a growth stage')
+
+  // ---- A goal with a date and pieces — AUD-0046, AUD-0021 -------------------
+  await loadScenario('A week pointed at the house')
+  await page.locator('.nav').getByRole('button', { name: 'Life' }).tap()
+  await page.waitForSelector('h1:has-text("Life")')
+  await page.getByRole('link', { name: 'Career & Learning' }).tap()
+  await page.waitForSelector('h1:has-text("Career")')
+  const trajectory = await page.getByTestId('domain-goal-trajectory').innerText()
+  check(
+    'the goal says how many pieces have moved and when the date is',
+    /pieces/.test(trajectory) && /date you set/.test(trajectory),
+    trajectory.replace(/\s+/g, ' ').trim(),
+  )
+  check('in counts, never a share', !/%|percent|score/i.test(trajectory))
+  check(
+    'and the date control is closed until it is asked for',
+    (await page.getByTestId('domain-goal-date').count()) === 0,
+  )
+  await page.getByTestId('domain-goal-open').tap()
+  await page.waitForSelector('[data-testid="domain-goal-date"]')
+  check('and opens on a tap', true)
+  await sideways('Career, a goal with a date')
+
   // ---- The rest of the app is still standing --------------------------------
   for (const destination of ['Now', 'Life', 'Timeline', 'Insights']) {
     await page.locator('.nav').getByRole('button', { name: destination }).tap()

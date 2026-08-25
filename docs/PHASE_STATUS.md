@@ -44,26 +44,26 @@ audit's own reasons for excluding each are unchanged.
 
 ## Checkpoint
 
-|                      |                                                                                                                                               |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Product checkpoint   | `PLACEHOLDER_SHA`                                                                                                                             |
-| Deployed Preview SHA | `PLACEHOLDER_DEPLOYED`                                                                                                                        |
-| Relationship         | Proved with `node scripts/checkpoint-equivalence.mjs <checkpoint> --deployed <build-info url>`, per D-097. Never asserted as string equality. |
-| Independent QA       | **Required.** Not yet run. Report will be written to [`qa/PHASE_82_QA_HANDOFF.md`](qa/PHASE_82_QA_HANDOFF.md)                                 |
-| Owner phone test     | Required — owner-visible behaviour changed on Now, on Life and on two domain pages                                                            |
-| Preview              | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                   |
+|                      |                                                                                                                                                                                                                                                                                               |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product checkpoint   | `160ec9a` — the last commit that changes the bundle                                                                                                                                                                                                                                           |
+| Deployed Preview SHA | past the checkpoint by the commits that wrote these docs — **read it live**                                                                                                                                                                                                                   |
+| Relationship         | Proved with `node scripts/checkpoint-equivalence.mjs 160ec9a --deployed <build-info url>`, per D-097. Never asserted as string equality: this repository redeploys on every push, including a documentation-only one, and two files differed at the time of writing, neither bundle-relevant. |
+| Independent QA       | **Required.** Not yet run. Report will be written to [`qa/PHASE_82_QA_HANDOFF.md`](qa/PHASE_82_QA_HANDOFF.md)                                                                                                                                                                                 |
+| Owner phone test     | Required — owner-visible behaviour changed on Now, on Life and on two domain pages                                                                                                                                                                                                            |
+| Preview              | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                                                                                                                                                   |
 
 ## Exact verification results
 
-| Gate                                     | Result                                                                      |
-| ---------------------------------------- | --------------------------------------------------------------------------- |
-| `npm run verify` from a clean checkout   | **PASS** — format, lint, typecheck, 1,470 unit tests across 66 files, build |
-| Unit layer                               | **1,470 / 1,470** across 66 files (was 1,332 across 60)                     |
-| Browser, three widths                    | **PLACEHOLDER_BROWSER**                                                     |
-| Android-style gate on the deployed build | **PLACEHOLDER_ANDROID**                                                     |
-| Privacy scan                             | clean, 230 tracked files                                                    |
-| Tournament, re-run and re-baselined      | **100 / 100 deterministic, 100 / 100 hybrid** under the widened rubric      |
-| Reintroductions proved                   | **22** — every regression this phase added, plus gate item 6's two          |
+| Gate                                     | Result                                                                                                                 |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `npm run verify` from a clean checkout   | **PASS** — format, lint, typecheck, 1,470 unit tests across 66 files, build                                            |
+| Unit layer                               | **1,470 / 1,470** across 66 files (was 1,332 across 60)                                                                |
+| Browser, three widths                    | **528 / 528** at 360, 430 and 1,280px — 176 each (was 501)                                                             |
+| Android-style gate on the deployed build | **clean — 119 checks** against the live Preview (was 93; the 26 new ones press this phase’s own surfaces on a handset) |
+| Privacy scan                             | clean, 230 tracked files                                                                                               |
+| Tournament, re-run and re-baselined      | **100 / 100 deterministic, 100 / 100 hybrid** under the widened rubric                                                 |
+| Reintroductions proved                   | **22** — every regression this phase added, plus gate item 6's two                                                     |
 
 Six new test files: `goal-horizon-and-parts`, `commitment-windows`, `threads`,
 `deferral`, `growth-stage-and-occasion`, `instrument-recut`, and a browser suite
