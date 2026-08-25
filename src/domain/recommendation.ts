@@ -224,10 +224,23 @@ const TEMPLATES: Record<ActionVerb, VerbTemplate> = {
         : `Spend the next ${minutes} minutes with ${object}, phone away.`,
     followUp: ({ object }) => `How did time with ${object} go?`,
   },
+  /*
+   * The move sits on the parent, not on the child — AUD-0016, section 4.4.
+   *
+   * "Give Adaya a chance at ordering her own food" asks him to test her. The
+   * applicable evidence is about ordinary development rather than treatment:
+   * scaffolding is the adult pitching assistance slightly ahead of the child's
+   * current competence and handing back responsibility as she takes it (Wood,
+   * Bruner & Ross, *J. Child Psychol. Psychiatry* 17(2):89–100, 1976), and
+   * autonomy support is encouraging self-initiation and giving choice rather
+   * than applying pressure (Grolnick & Ryan, *JPSP* 57(2):143–154, 1989). Both
+   * describe something the **father** does, and letting her lead is a move he
+   * can make.
+   */
   'growth-opportunity': {
     label: 'Growth opportunity',
     needsPerson: true,
-    action: ({ object, person }) => `Give ${person ?? ''} a chance at ${object} today.`,
+    action: ({ object, person }) => `Let ${person ?? ''} take the lead on ${object} today.`,
     followUp: ({ object, person }) => `How did ${person ?? ''} do with ${object}?`,
   },
   'reach-out': {

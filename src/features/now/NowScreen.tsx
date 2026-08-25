@@ -762,6 +762,23 @@ function GrowthPanel({
       <p className="now-question" data-testid="now-growth">
         {suggestion.headline} Worth calling that settled?
       </p>
+      {/*
+        The evidence under the claim, in his own words — AUD-0049.
+
+        Everywhere else the app is careful about this: a learned belief carries
+        a sample count, an association states its comparison group and refuses
+        to speak below it, an insight card carries how sure it is. The claim
+        about his daughter's development — the highest-stakes claim in the
+        product — carried none of that, and was offered as a binary. What it
+        carries now is ordinary evidence rather than a confidence label,
+        because a badge attached to a sentence about a four-year-old is a score
+        about a four-year-old whatever the word on it says.
+      */}
+      {suggestion.occasionsSummary === undefined ? null : (
+        <p className="note" data-testid="now-growth-evidence">
+          {suggestion.occasionsSummary}
+        </p>
+      )}
       <div className="now-options">
         <button
           type="button"

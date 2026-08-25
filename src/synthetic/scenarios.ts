@@ -2746,21 +2746,27 @@ function saturdayMorningOpen(): Scenario {
  * them.
  *
  * The occasions alternate on purpose and the last one is a partial on purpose.
- * Both halves of D-112 are visible here: the sequence is what the evidence is,
- * and the most recent contrary occasion is able to hold the suggestion back on
- * its own.
+ *
+ * A second skill runs alongside it, and the pair is the test — the same reason
+ * G-005 is built in pairs. Shoes went badly twice and then well three times
+ * running: the app may say so, and must say how many earlier goes needed a
+ * hand. Ordering never went well twice in a row: the app may say nothing at
+ * all. One history, both halves of D-112, and neither reading is reachable by a
+ * rule that only counts the occasions that went well.
  */
 function growthMixedEvidence(): Scenario {
   const kit = createKit('GU', 'America/Denver', '2026-05-01T12:00:00Z')
   const nextId = sequentialRecordIds('GUX')
   const adaya = entityRef('person', 'Adaya')
   const ordering = entityRef('development-skill', 'ordering her own food')
+  const shoes = entityRef('development-skill', 'getting her shoes on')
   const now = kit.local('2026-06-25', '18:20')
 
   return {
     id: 'growth-mixed-evidence',
     title: 'Six chances, three managed',
-    summary: 'Six occasions at one skill, alternating, and the most recent one needed a hand.',
+    summary:
+      'One skill that alternates, one that turned a corner, and the difference said out loud.',
     proves: 'D-112 — the app reads the sequence rather than the survivors.',
     zone: kit.zone,
     now,
@@ -2774,6 +2780,13 @@ function growthMixedEvidence(): Scenario {
       const skill = kit.entity({
         kind: 'development-skill',
         label: 'ordering her own food',
+        domain: DOMAIN.fatherhood,
+        privacy: 'child-family-sensitive',
+        links: [{ relation: 'about-person', target: adaya.id }],
+      })
+      const secondSkill = kit.entity({
+        kind: 'development-skill',
+        label: 'getting her shoes on',
         domain: DOMAIN.fatherhood,
         privacy: 'child-family-sensitive',
         links: [{ relation: 'about-person', target: adaya.id }],
@@ -2843,12 +2856,30 @@ function growthMixedEvidence(): Scenario {
         { on: '2026-06-23', result: 'part' as const },
       ]
 
+      // Two bad goes, then three in a row. The run is real, and so are the
+      // two that came before it.
+      const shoeOccasions = [
+        { on: '2026-06-05', result: 'part' as const },
+        { on: '2026-06-08', result: 'part' as const },
+        { on: '2026-06-12', result: 'all' as const },
+        { on: '2026-06-17', result: 'all' as const },
+        { on: '2026-06-22', result: 'all' as const },
+      ]
+
       const past = pastEpisodeRecords(
         kit,
-        occasions.map(({ on, result }) => ({
+        [
+          ...occasions.map(({ on, result }) => ({
+            subject: ordering,
+            object: ordering,
+            on,
+            result,
+          })),
+          ...shoeOccasions.map(({ on, result }) => ({ subject: shoes, object: shoes, on, result })),
+        ].map(({ subject, object, on, result }) => ({
           verb: 'growth-opportunity' as const,
-          object: ordering,
-          subject: ordering,
+          object,
+          subject,
           domain: DOMAIN.fatherhood,
           on,
           at: '12:30',
@@ -2860,7 +2891,7 @@ function growthMixedEvidence(): Scenario {
       )
 
       return kit.document({
-        entities: [child, skill],
+        entities: [child, skill, secondSkill],
         records: [present, ...nights, energy, time, ...past],
         exportedAt: now,
       })

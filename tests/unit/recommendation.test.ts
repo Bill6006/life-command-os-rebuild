@@ -176,7 +176,7 @@ describe('a person comes from the model, never from a pronoun', () => {
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.rendered.sentence).toBe(
-      'Give Adaya a chance at ordering food independently today.',
+      'Let Adaya take the lead on ordering food independently today.',
     )
     expect(result.rendered.followUp).toBe('How did Adaya do with ordering food independently?')
   })

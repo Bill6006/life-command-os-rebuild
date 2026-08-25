@@ -222,6 +222,37 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
   const subject = entities.labelFor(semantics.subject) ?? ''
   const object = entities.labelFor(semantics.target.object) ?? subject
 
+  /*
+   * The growth move answers for itself — AUD-0015(b) and AUD-0016.
+   *
+   * Two defects met here, and both came from one table being keyed on the
+   * trigger alone while the candidates under it have different kinds of
+   * subject.
+   *
+   * The `opportunity-window` branch below is written for a *person*: "Adaya is
+   * here and there are about 120 minutes. That window closes on its own." When
+   * a growth candidate carried that trigger the subject was the **skill**, and
+   * the app said *"Ordering her own food is here and there are about 120
+   * minutes"* — a sentence that destroys trust in one reading, because it is
+   * obviously machine-generated about a child.
+   *
+   * The `stale-evidence` branch is worse for being accurate: *"Nothing has come
+   * in about ordering her own food for a while"* is the app telling a father to
+   * put his daughter in a testing situation because **its own data is old**.
+   * Section 8's "a child's developmental skill may need periodic evidence" is a
+   * *coverage* rule, and coverage was allowed to become the *motive*. Coverage
+   * may still raise the candidate — the urgency is unchanged — and the sentence
+   * now names the opportunity rather than the record, framed on the parent
+   * (section 4.4).
+   */
+  if (semantics.target.verb === 'growth-opportunity') {
+    const person = entities.linked(semantics.subject.id, 'about-person')?.label
+    if (person !== undefined) {
+      return `${person} is here, and this is one she can lead if there is room for it.`
+    }
+    return `There is room for ${object} to be led rather than done for her.`
+  }
+
   switch (semantics.whyNow.trigger) {
     case 'deficit': {
       const debt = situation.capacity.sleepDebtHours

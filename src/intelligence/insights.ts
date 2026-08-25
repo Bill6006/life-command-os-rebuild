@@ -2109,6 +2109,23 @@ export function insightsFor(situation: Situation): InsightsReport {
 
   for (const [verb, episodes] of episodesByVerb(situation)) {
     /*
+     * Growth has its own sufficiency rule, and two of them on one screen is a
+     * contradiction — AUD-0037.
+     *
+     * `GROWTH_OCCASIONS` is 3 and `MIN_FOR_A_RATE` is 4, and they measure
+     * different quantities: how many occasions before the app asks whether
+     * something about *her* has changed, and how many before it can state a
+     * rate about what follows a *move*. The owner does not know that. At one
+     * instant, in one build, about one skill, Now asked him to conclude she had
+     * mastered it while Insights said the evidence needed one more occasion —
+     * and whichever he read second undermined the first.
+     *
+     * Excluding the verb rather than relabelling both: `growth.ts` decides
+     * sufficiency here, the growth suggestion carries its own evidence line
+     * (AUD-0049), and nothing is lost.
+     */
+    if (verb === 'growth-opportunity') continue
+    /*
      * **One card per move about what happens when you do it.**
      *
      * Each of these four answers the same owner question — *how does this
