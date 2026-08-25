@@ -24,10 +24,28 @@ import type { Situation } from './situation'
 export type NoActionReason =
   /** Nothing was proposed at all — the history is too thin to suggest from. */
   | 'nothing-proposed'
+  /**
+   * Nothing was proposed, and the history is not the reason — AUD-0034.
+   *
+   * The fourth reason DEF-0017 established the need for and did not add. A
+   * rested seven o'clock and every evening his daughter is away both landed on
+   * `nothing-proposed`, which renders as "Nothing to suggest just yet" — the
+   * app saying it is not ready, to a man who has given it plenty. The honest
+   * admission is a different one and a more useful one: there is nothing *here*
+   * that the app knows how to help with.
+   */
+  | 'nothing-in-reach'
   /** Everything proposed was ruled out by the situation. */
   | 'everything-ruled-out'
   /** Things survived, and none of them was worth doing. */
   | 'nothing-worth-doing'
+  /**
+   * The owner has said no three times in this block — AUD-0023.
+   *
+   * Not a failure of the catalogue: things were proposed and one of them may
+   * well have been worth doing. It is the app reading the room.
+   */
+  | 'enough-for-now'
 
 /**
  * Close enough to be worth saying so in the trace.

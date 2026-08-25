@@ -13,7 +13,7 @@ import type {
 import type { ConceptId } from '../domain/windows'
 import { practiceEvidenceHasAged } from './growth'
 import { profileFor } from './moves'
-import { SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
+import type { Situation } from './situation'
 import { entityValue } from './values'
 
 /**
@@ -196,27 +196,27 @@ type Generator = (situation: Situation) => readonly Candidate[]
  */
 const sleepCandidates: Generator = (situation) => {
   const strain = situation.capacity.strain
-  const soreness = situation.capacity.soreness
-  const strained = isUsable(strain) && strain.value !== 'none'
   /*
-   * A body asking for an easier day is a limiter too, and it is the same
-   * limiter this generator answers — AUD-0003 leads with the invariant, and the
-   * invariant names `capacity` alongside `recovery`. `findLimiter` raises the
-   * capacity limiter at exactly this reading, so the two read one number rather
-   * than two that drift: a limiter the app names out loud while the generator
-   * that would answer it stays quiet is the whole shape of DEF-0016.
+   * Gated on strain, exactly as it always was — AUD-0003's own instruction.
+   *
+   * The invariant AUD-0003 leads with names `capacity` alongside `recovery`,
+   * and the finding's implementation guidance says in as many words to gate the
+   * new verb on `strain !== 'none'` "exactly as the existing sleep generator
+   * does". Widening the gate to the soreness reading the `capacity` limiter is
+   * raised from was tried and reverted: it made a sore, well-rested father be
+   * told to ease off instead of spending half an hour with his daughter, which
+   * is a scoring change dressed as a copy fix and is not this phase's to make.
+   *
+   * So the `capacity` limiter is left without a move of its own, deliberately
+   * and on the record. `tests/synthetic/recovery-has-somewhere-to-go.test.ts`
+   * names the gap rather than hiding it, and AUD-0031's question path is what
+   * this phase actually does about a sore body: the app asks before it
+   * prescribes exertion.
    */
-  const sore = isUsable(soreness) && soreness.value >= SORE_ENOUGH_TO_EASE_OFF
-  if (!strained && !sore) return []
+  if (!isUsable(strain) || strain.value === 'none') return []
 
-  const evidence = [
-    ...basisOf(strain),
-    ...basisOf(situation.capacity.sleepDebtHours),
-    ...(sore ? basisOf(soreness) : []),
-  ]
-  const leansOn: readonly ConceptId[] = sore
-    ? [CONCEPT.sleepHours, CONCEPT.energy, CONCEPT.soreness]
-    : [CONCEPT.sleepHours, CONCEPT.energy]
+  const evidence = [...basisOf(strain), ...basisOf(situation.capacity.sleepDebtHours)]
+  const leansOn: readonly ConceptId[] = [CONCEPT.sleepHours, CONCEPT.energy]
 
   /*
    * The right recovery move for the hour — DEF-0016, and then AUD-0003.
@@ -296,9 +296,7 @@ const sleepCandidates: Generator = (situation) => {
          * rationalising the winner after the fact.
          */
         leansOn: morning && topic !== undefined ? [...leansOn, CONCEPT.learningTopic] : leansOn,
-        proposedBecause: strained
-          ? 'there is a running shortfall of rest'
-          : 'the body is asking for an easier day',
+        proposedBecause: 'there is a running shortfall of rest',
       },
       situation,
     ),

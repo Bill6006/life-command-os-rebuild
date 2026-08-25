@@ -170,6 +170,13 @@ export interface OwnerPreference {
   readonly stance: 'prefers' | 'avoids' | 'forbids'
   readonly statement: string
   readonly source: RecordId
+  /**
+   * Which life areas it was filed under, so a Life page can list and lift it.
+   *
+   * A veto the owner cannot find again is worse than none (AUD-0050), and the
+   * page that shows an area is where he would look for a rule about it.
+   */
+  readonly domains: readonly LifeDomainId[]
 }
 
 export interface ActiveConstraint {
@@ -210,6 +217,16 @@ export interface Situation {
   readonly preferences: readonly OwnerPreference[]
   readonly constraints: readonly ActiveConstraint[]
   readonly recentMoves: readonly PriorMove[]
+  /**
+   * Moves already put in front of the owner today, handed down by the surface.
+   *
+   * Read by `recent-duplication` and by nothing else. The architecture guard
+   * fails the build if `learning.ts`, `insights.ts`, `association.ts` or the
+   * Timeline reaches it: ignoring a suggestion is the most common response
+   * there is, and it is not an outcome, not an episode, and not evidence about
+   * whether a move works.
+   */
+  readonly shown: readonly ShownMove[]
   /** What this owner's own outcomes have taught the engine (section 20). */
   readonly learning: LearningIndex
   readonly considered: readonly ConsideredFact[]
@@ -219,10 +236,39 @@ export interface Situation {
   readonly view: MemoryView
 }
 
+/**
+ * A move the surface has already put in front of the owner today — AUD-0025.
+ *
+ * **Plain data on the moment, and that placement is the whole design.** D-043
+ * settled that nothing is written when a screen renders: a row per render would
+ * be unreadable within a week, would poison the duplication check, and would
+ * become learning evidence about an evening nothing happened in. That reasoning
+ * is untouched and this is not a record — it is a session-scoped, non-durable
+ * note the *surface* keeps and hands down, so it never reaches backup, Timeline
+ * or the learning index.
+ *
+ * It arrives as an argument because `src/intelligence/` is pure and clock-free
+ * (`docs/ARCHITECTURE_BOUNDARIES.md`): the moment is an argument so that time
+ * travel reaches the engine rather than stopping at the screen that offers it,
+ * and a lookup reached for from inside the engine would breach that invisibly —
+ * it is not a directory violation, so the existing guard would not fire.
+ */
+export interface ShownMove {
+  /** The candidate's own id, which is `generator/verb/object`. */
+  readonly move: string
+  readonly dayId: LocalDayId
+  /** When it was last put on screen. */
+  readonly at: Instant
+  /** How many separate moments it has been put there. */
+  readonly count: number
+}
+
 export interface SituationMoment {
   readonly now: Instant
   readonly zone: TimeZoneId
   readonly weekStartsOn: WeekStartDay
+  /** What the surface has already shown today, if it is keeping count. */
+  readonly shown?: readonly ShownMove[]
   readonly domains?: DomainRegistry
   readonly concepts?: ConceptRegistry
 }
@@ -532,6 +578,7 @@ function collectPreferences(view: MemoryView): readonly OwnerPreference[] {
       stance: record.stance,
       statement: record.statement,
       source: record.id,
+      domains: record.domains,
     })
   }
   return preferences
@@ -646,6 +693,9 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     limiter: findLimiter(capacity, usableMinutes, coverage, block),
     preferences: collectPreferences(view),
     constraints: collectConstraints(view, moment.now),
+    shown: (moment.shown ?? []).filter(
+      (entry) => entry.dayId === local.dayId && entry.at < moment.now,
+    ),
     recentMoves: collectRecentMoves(
       episodes,
       addLocalDays(moment.now, -3, moment.zone),

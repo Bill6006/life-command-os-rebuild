@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CONCEPT } from '../../src/domain/concepts'
+import { CONCEPT, coreConcepts } from '../../src/domain/concepts'
 import { decide } from '../../src/intelligence/engine'
 import { answeredToday, nextGuideStep, QUESTIONS_PER_DAY } from '../../src/intelligence/guide'
 import { answerRecord, questionFor } from '../../src/intelligence/questions'
@@ -371,10 +371,19 @@ function beforeTheArrangementIsKnown() {
     privacy: 'child-family-sensitive',
   })
 
+  /*
+   * The nights are the three before this afternoon, not a month before it.
+   *
+   * The fixture exists to ask whether a two-option question can be asked, and
+   * a month-old sleep reading now makes the app ask about sleep first (D-111,
+   * and rightly — it would otherwise recommend effort to somebody it has not
+   * asked). Holding sleep current is what keeps this history about the thing it
+   * was written to be about.
+   */
   const nights = [16, 17, 18].map((day) =>
     kit.record(
       'observation',
-      { occurredAt: kit.local(`2026-03-${day}`, '07:00'), domains: [DOMAIN.sleep] },
+      { occurredAt: kit.local(`2026-04-${day}`, '07:00'), domains: [DOMAIN.sleep] },
       {
         concept: CONCEPT.sleepHours,
         value: { type: 'number', value: 7, unit: 'hours' },
@@ -437,12 +446,81 @@ describe('a two-option question can still be asked — DEF-0009', () => {
     expect(together.explanation?.instead).toContain('walk')
   })
 
-  it('still refuses a question only one answer in four would move', () => {
-    // The half rule has to keep doing DEF-0008's job. Sleep in this history
-    // moves the answer on one option of four; it is not asked.
+  it('still refuses a one-in-four question about an ordinary concept — D-036', () => {
+    /*
+     * The half rule keeps doing DEF-0008's job, and D-111 says so explicitly:
+     * "a one-in-four question is still not asked for every concept not marked
+     * consequential, and that is asserted directly rather than assumed".
+     *
+     * Asserted by holding the history still and moving the flag. On this
+     * evening the sleep question turns the answer on one option of four, which
+     * is exactly the shape the share rule refuses — so with `consequential`
+     * off, the guide settles, and with it on, the guide asks. Nothing else
+     * differs between the two runs.
+     */
     const { scenario, snapshot } = open('durable-custody')
     const at = moment(scenario)
-    expect(stepOn(snapshot, at).kind).toBe('settled')
+
+    const ordinary = coreConcepts.extendedWith([
+      { ...coreConcepts.definitionFor(CONCEPT.sleepHours), consequential: false },
+    ])
+
+    const asked = nextGuideStep(buildView(snapshot, at), at)
+    expect(asked.kind, 'the exception is not reaching this history').toBe('question')
+    expect(asked.question?.spec.concept).toBe(CONCEPT.sleepHours)
+    expect(asked.question?.outcomes.filter((outcome) => outcome.easier).length).toBe(1)
+
+    const withoutTheException = nextGuideStep(buildView(snapshot, at), {
+      ...at,
+      concepts: ordinary,
+    })
+    expect(withoutTheException.kind, 'the share rule has stopped biting').toBe('settled')
+  })
+
+  it('never lets the exception ask in order to justify doing more — D-111', () => {
+    /*
+     * The bound that keeps this narrow. The exception exists so the app can ask
+     * before prescribing exertion; it is not a licence to ask its way into a
+     * bigger suggestion. Every question the guide asks past the share rule has
+     * to have at least one answer that leaves the app asking *less*.
+     */
+    for (const entry of SCENARIOS) {
+      const loaded = snapshotFromWire(entry.build())
+      const at = { now: entry.now, zone: entry.zone, weekStartsOn: entry.weekStartsOn ?? 1 }
+      const step = nextGuideStep(buildView(loaded.snapshot, at), at)
+      if (step.kind !== 'question') continue
+      const outcomes = step.question?.outcomes ?? []
+      const standing = decide(buildView(loaded.snapshot, at), at)
+      const overturns = outcomes.filter(
+        (outcome) =>
+          outcome.wouldChoose !==
+          (standing.evaluation?.candidate.id ??
+            `nothing (${standing.noAction?.reason ?? 'unknown'})`),
+      ).length
+      if (overturns * 2 >= outcomes.length) continue
+      expect(
+        outcomes.some((outcome) => outcome.easier),
+        `${entry.id} asked past the share rule with nothing easier behind it`,
+      ).toBe(true)
+    }
+  })
+
+  it('does not raise how much it asks across the library — section 47', () => {
+    /*
+     * D-111's last bound, and section 47 fails a phase outright on "too many
+     * questions". The exception applies to two concepts and only toward less
+     * action; the daily cap is untouched. What has to hold across the library
+     * is that the app still opens on a decision far more often than on a
+     * question.
+     */
+    const asking = SCENARIOS.filter((entry) => {
+      const loaded = snapshotFromWire(entry.build())
+      const at = { now: entry.now, zone: entry.zone, weekStartsOn: entry.weekStartsOn ?? 1 }
+      return nextGuideStep(buildView(loaded.snapshot, at), at).kind === 'question'
+    })
+    expect(asking.length, asking.map((entry) => entry.id).join(', ')).toBeLessThanOrEqual(
+      Math.floor(SCENARIOS.length / 2),
+    )
   })
 })
 

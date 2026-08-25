@@ -1,12 +1,14 @@
 import { createRecordFactory } from '../domain/build'
 import { coreConcepts, type ConceptRegistry } from '../domain/concepts'
 import type { LifeDomainId } from '../domain/domains'
-import type { EntityIndex } from '../domain/entities'
+import type { EntityIndex, EntityRef } from '../domain/entities'
 import { newRecordId, type RecordId } from '../domain/ids'
 import { verbLabel, type ActionVerb } from '../domain/recommendation'
 import type {
   BeliefCorrectionRecord,
   ContextRecord,
+  CorrectionRecord,
+  PreferenceRecord,
   CoverageUpdateRecord,
   DomainUpdateRecord,
   EvidenceStrength,
@@ -101,6 +103,72 @@ export function beliefCorrectionRecord(
       id,
     },
     { belief, stance, reason },
+  )
+}
+
+/**
+ * "Stop suggesting this" — section 4.3's sixth owner action, AUD-0050.
+ *
+ * Section 4.3 is a non-negotiable product principle and it lists **explicitly
+ * forbid a recommendation family** among the things the owner can do. The
+ * enforcement has always been complete — `vetoFor` in `constraints.ts` handles
+ * the domain-level case and cites section 4.3 by name — and no control anywhere
+ * in the product could produce the record it enforces. The interface offered
+ * five of the six actions, and the one it could not express was *stop*.
+ *
+ * A decline is deliberately not this. `owner-preference` treats a refusal as
+ * the owner exercising sovereignty rather than as a verdict on the move
+ * (`learning.ts`), so the move comes back with a slightly lower score — which
+ * is right for a decline, and is why fourteen refusals in the record still ended
+ * with the app suggesting the same walk.
+ *
+ * Nothing here decides anything: it shapes a record, and `vetoFor` was already
+ * reading it.
+ */
+export function forbidRecord(
+  about: EntityRef,
+  statement: string,
+  moment: CorrectionMoment,
+  domains: readonly LifeDomainId[] = [],
+  id: RecordId = newRecordId(),
+): PreferenceRecord {
+  const build = createRecordFactory({ zone: moment.zone, provenance: LIFE_PAGE_PROVENANCE })
+  return build(
+    'preference',
+    {
+      occurredAt: moment.now,
+      ...(moment.recordedAt === undefined ? {} : { recordedAt: moment.recordedAt }),
+      id,
+      ...(domains.length === 0 ? {} : { domains }),
+      entities: [about],
+    },
+    { about, stance: 'forbids', statement },
+  )
+}
+
+/**
+ * Lifting one, which is the half that makes the first half safe.
+ *
+ * A veto is the most permanent thing the owner can do and the easiest to do by
+ * accident on a phone, so **a veto he cannot find again is worse than none**.
+ * It is a retraction rather than a second preference: he is withdrawing the
+ * entry, not stating a milder one, and `correction` is the kind that exists for
+ * exactly the case where there is nothing to put in its place.
+ */
+export function liftVetoRecord(
+  veto: RecordId,
+  moment: CorrectionMoment,
+  id: RecordId = newRecordId(),
+): CorrectionRecord {
+  const build = createRecordFactory({ zone: moment.zone, provenance: LIFE_PAGE_PROVENANCE })
+  return build(
+    'correction',
+    {
+      occurredAt: moment.now,
+      ...(moment.recordedAt === undefined ? {} : { recordedAt: moment.recordedAt }),
+      id,
+    },
+    { corrects: veto, reason: 'The owner lifted this' },
   )
 }
 

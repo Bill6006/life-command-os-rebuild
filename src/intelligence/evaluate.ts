@@ -645,17 +645,37 @@ function recentDuplication(candidate: Candidate, situation: Situation): Dimensio
     else sameShape += 1
   }
 
-  if (sameThing === 0 && sameShape === 0) {
+  /*
+   * And the times it was shown and ignored — AUD-0025.
+   *
+   * Ignoring is a response, and it is the most common one. `recentMoves` is
+   * built from recorded `action-recommendation` records, which is to say only
+   * the moves the owner *responded to* — so a move shown at half past six and
+   * left produced no trace at all, and at ten the same morning it scored "+0.20
+   * — not offered lately". That is what produced the most visible repetition in
+   * the product: the identical kitchen sentence at four separate hours of one
+   * day.
+   *
+   * The ledger is the surface's, not the store's (D-043 is untouched), and it
+   * only ever holds today.
+   */
+  const shownToday = (situation.shown ?? [])
+    .filter((entry) => entry.move === candidate.id)
+    .reduce((total, entry) => total + entry.count, 0)
+
+  if (sameThing === 0 && sameShape === 0 && shownToday === 0) {
     return { name: 'recent-duplication', value: 0.2, weight, note: 'not offered lately' }
   }
   return {
     name: 'recent-duplication',
-    value: scaled(-0.5 * sameThing - 0.2 * sameShape),
+    value: scaled(-0.5 * sameThing - 0.2 * sameShape - 0.35 * shownToday),
     weight,
     note:
-      sameThing > 0
-        ? `offered ${sameThing === 1 ? 'once' : `${sameThing} times`} in the last few days`
-        : 'something like this was offered recently',
+      shownToday > 0
+        ? `already on screen ${shownToday === 1 ? 'once' : `${shownToday} times`} today`
+        : sameThing > 0
+          ? `offered ${sameThing === 1 ? 'once' : `${sameThing} times`} in the last few days`
+          : 'something like this was offered recently',
   }
 }
 

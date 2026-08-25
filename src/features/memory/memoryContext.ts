@@ -4,6 +4,7 @@ import type { Instant, TimeZoneId, WeekStartDay } from '../../domain/time'
 import type { ValidationIssue } from '../../domain/validation'
 import type { RestoreOutcome, RestorePlan } from '../../memory/restore'
 import type { StoreBackend, StoreSnapshot } from '../../memory/store'
+import type { ShownMove } from '../../intelligence/situation'
 import type { MemoryView } from '../../memory/view'
 import type { HistorySource } from './projection'
 
@@ -118,6 +119,26 @@ export interface MemoryContextValue {
    * already seen what he is about to do.
    */
   restoreOwner(plan: RestorePlan): Promise<RestoreOutcome>
+
+  /**
+   * Moves this session has already put on screen today — AUD-0025.
+   *
+   * **Not history, and deliberately not durable.** D-043 settled that nothing
+   * is written when a screen renders, and every reason it gives still holds: a
+   * row per render would be unreadable within a week, would poison the
+   * duplication check, and would become learning evidence about an evening
+   * nothing happened in. What was missing was something cheaper — ignoring a
+   * suggestion is a response, and the most common one, and the app could not
+   * count it at all. So it repeated itself: the identical kitchen sentence at
+   * four separate hours of one day.
+   *
+   * It lives here because the surface is what knows a screen was rendered, and
+   * it travels down to the engine as an argument on the moment. It never
+   * reaches the store, the backup, the content fingerprint or Timeline.
+   */
+  readonly shown: readonly ShownMove[]
+  /** Record that a move is on screen at the current moment. Idempotent. */
+  noteShown(move: string): void
 
   readonly now: Instant
   readonly zone: TimeZoneId

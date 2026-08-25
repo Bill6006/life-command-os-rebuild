@@ -1,6 +1,8 @@
 import type { CanonicalRecord } from '../domain/records'
 import { localDayIdAt } from '../domain/time'
 import { buildView, type MemoryView } from '../memory/view'
+import type { ConceptRegistry } from '../domain/concepts'
+import { refusalsInBlock } from './constraints'
 import { awaitedReadings } from './derived'
 import {
   decide,
@@ -48,6 +50,9 @@ import type { Swing } from './trace'
  */
 export const QUESTIONS_PER_DAY = 3
 
+/** How many refusals in one block before a question beats another suggestion. */
+export const REFUSALS_BEFORE_ASKING = 2
+
 /**
  * How much of a question has to be live before it is worth asking: half of it.
  *
@@ -69,12 +74,42 @@ function worthATap(overturns: number, options: number): boolean {
   return options > 0 && overturns * 2 >= options
 }
 
+/**
+ * The narrow exception — D-111, AUD-0031.
+ *
+ * The share rule above measures the fraction of a question's answers that would
+ * switch the decision, and it is a better proxy than the flat count it replaced.
+ * It is still a proxy for the wrong quantity. The value of a question is the
+ * expected reduction in loss, which depends on **how bad it is to be wrong**,
+ * and the two diverge exactly where it matters: recommending a 25-minute walk
+ * to a man who is quite sore is a harmful error, and a one-in-three chance of
+ * it is obviously worth one tap. The share rule is blind to the asymmetry
+ * because it counts answers rather than weighing consequences.
+ *
+ * Three bounds, and they are the point rather than the caveat.
+ *
+ * - Only a concept the registry marks `consequential`. Two do.
+ * - Only when an answer would flip the recommendation toward **less** action —
+ *   no action, or a move that asks less of him. It is not a licence to ask in
+ *   order to justify doing more.
+ * - The daily cap is untouched, and D-036's share rule remains the default for
+ *   every other concept, with its regression still in force.
+ *
+ * **This is not a probability model.** The app cannot honestly compute an
+ * expected opportunity loss and is not being asked to. It is a floor under one
+ * class of harm.
+ */
+function worthAskingAnyway(swing: Swing, concepts: ConceptRegistry): boolean {
+  if (concepts.definitionFor(swing.concept).consequential !== true) return false
+  return swing.outcomes.some((outcome) => outcome.easier)
+}
+
 export interface GuideQuestion {
   readonly spec: QuestionSpec
   readonly prompt: string
   readonly options: readonly QuestionOption[]
   /** What the answers would lead to. Shown in QA, not to the owner. */
-  readonly outcomes: readonly { readonly answer: string; readonly wouldChoose: string }[]
+  readonly outcomes: Swing['outcomes']
 }
 
 export interface GuideStep {
@@ -100,7 +135,11 @@ export interface GuideStep {
  * somewhere other than where the engine currently stands, because a decision
  * most answers would overturn is a decision resting on very little.
  */
-function mostValuable(swings: readonly Swing[], decision: Decision): Swing | undefined {
+function mostValuable(
+  swings: readonly Swing[],
+  decision: Decision,
+  relaxed: boolean,
+): Swing | undefined {
   const standing =
     decision.evaluation?.candidate.id ?? `nothing (${decision.noAction?.reason ?? 'unknown'})`
   const order = QUESTIONS.map((question) => question.concept)
@@ -150,10 +189,23 @@ function mostValuable(swings: readonly Swing[], decision: Decision): Swing | und
   let best: Swing | undefined
   let bestRank: ReturnType<typeof rank> | undefined
 
+  const concepts = decision.situation.concepts
+
   for (const swing of swings) {
     if (!swing.changesTheAnswer) continue
     const scored = rank(swing)
-    if (!worthATap(scored.overturns, scored.options)) continue
+    /*
+     * Three ways past the share rule, and each is written down where it is
+     * decided. The default is D-036's share. `worthAskingAnyway` is D-111's
+     * narrow exception. `relaxed` is AUD-0023: after two refusals in one block,
+     * the refusals *are* the evidence that the app is missing something, and a
+     * question is a better answer to them than a third suggestion.
+     */
+    const allowed =
+      worthATap(scored.overturns, scored.options) ||
+      worthAskingAnyway(swing, concepts) ||
+      (relaxed && scored.overturns > 0)
+    if (!allowed) continue
     if (bestRank === undefined || beats(scored, bestRank)) {
       best = swing
       bestRank = scored
@@ -293,7 +345,17 @@ export function nextGuideStep(
   }
 
   const swings = probeSwings(view, moment, options, decision)
-  const worthAsking = mostValuable(swings, decision)
+  /*
+   * After the second refusal in a block the app stops holding out for a
+   * decision-flipping question — AUD-0023.
+   *
+   * Three refusals in a row is the clearest signal a person can send without
+   * typing, and the correct reading of the second one is not "here is a third
+   * suggestion". It is that something the app cannot see is in the way, which
+   * is precisely the situation a question is for.
+   */
+  const relaxed = refusalsInBlock(decision.situation) >= REFUSALS_BEFORE_ASKING
+  const worthAsking = mostValuable(swings, decision, relaxed)
 
   if (worthAsking === undefined) {
     /*

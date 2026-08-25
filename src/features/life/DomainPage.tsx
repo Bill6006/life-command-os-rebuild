@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { Panel, Screen } from '../../components/ui'
 import type { LifeDomainId } from '../../domain/domains'
 import type { FactValue, GoalStatus } from '../../domain/records'
+import type { RecordId } from '../../domain/ids'
 import { localDayIdAt, localDaysBetween, systemClock } from '../../domain/time'
 import type { ConceptId } from '../../domain/windows'
 import {
@@ -10,6 +11,7 @@ import {
   domainStatusCorrectionRecord,
   factCorrectionRecord,
   goalCorrectionRecord,
+  liftVetoRecord,
 } from '../../intelligence/corrections'
 import type { QuestionOption } from '../../intelligence/questions'
 import {
@@ -92,6 +94,16 @@ export function DomainPage({ page }: { page: LifePage }) {
     },
     [memory],
   )
+
+  const liftVeto = (record: RecordId) => {
+    append(() => [
+      liftVetoRecord(record, {
+        now: memory.now,
+        zone: memory.zone,
+        recordedAt: systemClock().now(),
+      }),
+    ])
+  }
 
   if (!memory.ready) {
     return (
@@ -273,6 +285,40 @@ export function DomainPage({ page }: { page: LifePage }) {
                   No longer this
                 </button>
               </div>
+            </div>
+          ))}
+        </Panel>
+      )}
+
+      {data.vetoes.length === 0 ? null : (
+        <Panel title="Things you have stopped">
+          {/*
+            Listed and liftable — AUD-0050.
+
+            Section 4.3 gives the owner the right to forbid a recommendation
+            family, and the enforcement for it has always been complete and
+            unreachable. Now that it is reachable, the other half matters more
+            than the first: a veto he cannot find again is worse than none, and
+            "the area is still here" has to be said out loud because section 4.1
+            forbids a domain-off switch and this is not one.
+          */}
+          <p className="note">
+            Nothing here is switched off. These areas keep their pages, their coverage and their
+            history — what has stopped is being asked to do something about them.
+          </p>
+          {data.vetoes.map((veto) => (
+            <div key={veto.record} className="domain-veto" data-testid="domain-veto">
+              <p className="domain-veto__statement">{veto.statement}</p>
+              <button
+                type="button"
+                className="domain-correction__cancel"
+                disabled={busy}
+                aria-label={`Lift: ${veto.statement}`}
+                onClick={() => liftVeto(veto.record)}
+                data-testid="domain-veto-lift"
+              >
+                Start suggesting it again
+              </button>
             </div>
           ))}
         </Panel>

@@ -3,6 +3,7 @@ import { countOf } from '../../domain/counts'
 import type { CanonicalRecord } from '../../domain/records'
 import {
   instant,
+  localDayIdAt,
   systemClock,
   DEFAULT_WEEK_START,
   type Instant,
@@ -11,6 +12,7 @@ import {
 } from '../../domain/time'
 import type { ValidationIssue } from '../../domain/validation'
 import { derivedOutcomeRecords } from '../../intelligence/derived'
+import type { ShownMove } from '../../intelligence/situation'
 import { nextOutcomeDueAt } from '../../intelligence/outcomes'
 import { indexedDbAvailable, openIndexedDbStore } from '../../memory/indexedDbStore'
 import { createMemoryStore } from '../../memory/memoryStore'
@@ -556,6 +558,41 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     setTravelled(true)
   }, [])
 
+  /*
+   * What has already been put in front of the owner today — AUD-0025.
+   *
+   * Session-scoped and non-durable on purpose. D-107's rule is that nothing
+   * about the transport may enter the identity of the thing transported, and
+   * the same reasoning applies here in a smaller way: this is a fact about
+   * *screens*, not about the owner's life, and it must not be able to reach a
+   * backup, a fingerprint or an export. Rebuilding it per session is enough for
+   * the thing it is for, which is within-day repetition.
+   *
+   * A ref rather than state, because noting a render must not itself cause one:
+   * the decision is recomputed when the clock moves, and the entry is stamped
+   * with the moment it was shown at, so the move on screen is never penalised
+   * for being on screen right now.
+   */
+  const shownLedger = useRef(new Map<string, ShownMove>())
+  const [shown, setShown] = useState<readonly ShownMove[]>([])
+
+  const noteShown = useCallback(
+    (move: string) => {
+      const dayId = localDayIdAt(now, zone)
+      const key = `${move}|${dayId}`
+      const held = shownLedger.current.get(key)
+      if (held !== undefined && held.at === now) return
+      shownLedger.current.set(key, {
+        move,
+        dayId,
+        at: now,
+        count: (held?.count ?? 0) + 1,
+      })
+      setShown([...shownLedger.current.values()])
+    },
+    [now, zone],
+  )
+
   const returnToNow = useCallback(() => {
     setNow(clock.now())
     setZone(clock.zone())
@@ -659,6 +696,8 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     ownerMoment,
     canRestore: source === 'owner',
     restoreOwner,
+    shown,
+    noteShown,
     now,
     zone,
     weekStartsOn,

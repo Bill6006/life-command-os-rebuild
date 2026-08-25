@@ -1,11 +1,16 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Panel, PrimarySurface, Row, Rows, Screen } from '../../components/ui'
 import type { RecordId } from '../../domain/ids'
 import type { RecommendationSemantics } from '../../domain/recommendation'
 import { localDateTimeAt, systemClock, type DayBlock } from '../../domain/time'
-import { beliefCorrectionRecord, describeBelief } from '../../intelligence/corrections'
+import { entityRef } from '../../domain/entities'
+import {
+  beliefCorrectionRecord,
+  describeBelief,
+  forbidRecord,
+} from '../../intelligence/corrections'
 import { decide, type Decision } from '../../intelligence/engine'
-import type { Explanation } from '../../intelligence/explain'
+import { describePremise, type Explanation } from '../../intelligence/explain'
 import { evidenceForDecision, type DecisionEvidence } from '../../intelligence/insights'
 import { nextGuideStep } from '../../intelligence/guide'
 import { growthAnswerRecords, type GrowthSuggestion } from '../../intelligence/growth'
@@ -169,11 +174,36 @@ export function NowScreen() {
   const inFlight = useRef(false)
 
   const moment = useMemo(
-    () => ({ now: memory.now, zone: memory.zone, weekStartsOn: memory.weekStartsOn }),
-    [memory.now, memory.zone, memory.weekStartsOn],
+    () => ({
+      now: memory.now,
+      zone: memory.zone,
+      weekStartsOn: memory.weekStartsOn,
+      // What this session has already put on screen today — AUD-0025. It comes
+      // down as data on the moment because the engine is pure and clock-free,
+      // and reaching for a ledger from inside it would breach that invisibly.
+      shown: memory.shown,
+    }),
+    [memory.now, memory.zone, memory.weekStartsOn, memory.shown],
   )
 
   const decision = useMemo(() => decide(memory.view, moment), [memory.view, moment])
+
+  /*
+   * Note that this move was put in front of him, and note it after the render.
+   *
+   * D-043 is untouched: nothing is written. This is the session's own count of
+   * what has been on screen, and it is stamped with the moment it was shown at
+   * — so the move currently up is never marked down for being up. It starts
+   * counting against itself only once the clock has moved on, which is exactly
+   * the case the audit reproduced: the identical sentence at 06:30, 10:00,
+   * 14:00 and 19:00 of one day.
+   */
+  const onScreen = decision.evaluation?.candidate.id
+  const { noteShown } = memory
+  useEffect(() => {
+    if (onScreen === undefined) return
+    noteShown(onScreen)
+  }, [onScreen, noteShown])
 
   // The guide re-runs the decision under each possible answer, so it is real
   // work — worth doing once per history rather than once per render.
@@ -263,6 +293,39 @@ export function NowScreen() {
     ])
   }
 
+  /*
+   * "Stop suggesting this" — section 4.3's sixth action, AUD-0050.
+   *
+   * Behind the decline rather than beside it, and behind a confirmation, because
+   * a veto is the most permanent thing the owner can do and the easiest to do by
+   * accident on a phone. It is offered only once he has already refused this
+   * move today, so it is never the first thing a thumb finds.
+   *
+   * Two scopes, and the wider one says what it is. Forbidding an area suppresses
+   * *recommendations* from it and leaves the area in the model, in coverage and
+   * on Life — section 4.1 forbids a domain-off switch, and this is not one.
+   */
+  const forbid = (semantics: RecommendationSemantics, scope: 'move' | 'area') => {
+    const entities = decision.situation.entities
+    const object = entities.labelFor(semantics.target.object) ?? 'this'
+    const area = decision.situation.domains.labelFor(semantics.domain)
+    append(() => [
+      scope === 'move'
+        ? forbidRecord(
+            semantics.target.object,
+            `Stop suggesting ${object}`,
+            { now: memory.now, zone: memory.zone, recordedAt: systemClock().now() },
+            [semantics.domain],
+          )
+        : forbidRecord(
+            entityRef('life-domain', semantics.domain),
+            `Stop suggesting anything from ${area}`,
+            { now: memory.now, zone: memory.zone, recordedAt: systemClock().now() },
+            [semantics.domain],
+          ),
+    ])
+  }
+
   const answerGrowth = (suggestion: GrowthSuggestion, agreed: boolean) => {
     // Both answers are recorded, and both are read. Agreeing writes what
     // changed; "not yet" writes that the area was looked at by the person who
@@ -310,12 +373,28 @@ export function NowScreen() {
       )}
 
       {explanation === undefined ? (
-        <PrimarySurface
-          eyebrow={decision.situation.limiter?.summary ?? 'Nothing pressing'}
-          headline={decision.noAction?.headline ?? 'Nothing to suggest.'}
-        >
-          <p data-testid="now-reason">{decision.noAction?.detail}</p>
-        </PrimarySurface>
+        <>
+          {/*
+            The line that says where he is, in every state — AUD-0023, AUD-0034.
+
+            It was rendered only when there was a move, so on the screens with
+            the least on them — three passes in a row, or an evening the app has
+            nothing for — the one piece of orientation the screen offers
+            disappeared at the moment it was most needed. It is a statement about
+            the situation rather than about the decision, and it is true whether
+            or not there is one.
+          */}
+          <p className="now-premise" data-testid="now-premise">
+            {describePremise(decision.situation)}
+          </p>
+
+          <PrimarySurface
+            eyebrow={decision.situation.limiter?.summary ?? 'Nothing pressing'}
+            headline={decision.noAction?.headline ?? 'Nothing to suggest.'}
+          >
+            <p data-testid="now-reason">{decision.noAction?.detail}</p>
+          </PrimarySurface>
+        </>
       ) : (
         <>
           <p className="now-premise" data-testid="now-premise">
@@ -333,6 +412,14 @@ export function NowScreen() {
             state={decision.state ?? 'shown'}
             disabled={busy}
             onAct={act(explanation.semantics, decision.situation)}
+          />
+
+          <StopSuggesting
+            refused={decision.state === 'declined' || decision.state === 'unable-now'}
+            move={explanation.rendered.sentence}
+            area={decision.situation.domains.labelFor(explanation.semantics.domain)}
+            disabled={busy}
+            onForbid={(scope) => forbid(explanation.semantics, scope)}
           />
 
           <DetailPanel
@@ -744,6 +831,83 @@ function EvidencePanel({
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * The sixth owner action, two taps behind the fifth — AUD-0050.
+ *
+ * It appears only after this move has already been refused today, which is what
+ * keeps it away from a thumb aiming at "Not today", and it asks again before it
+ * writes anything. A veto is permanent until he lifts it, and where he lifts it
+ * is named here rather than left for him to find.
+ */
+function StopSuggesting({
+  refused,
+  move,
+  area,
+  disabled,
+  onForbid,
+}: {
+  refused: boolean
+  move: string
+  area: string
+  disabled: boolean
+  onForbid: (scope: 'move' | 'area') => void
+}) {
+  const [asking, setAsking] = useState(false)
+  if (!refused) return null
+
+  if (!asking) {
+    return (
+      <p className="now-stop">
+        <button
+          type="button"
+          className="now-linkish"
+          disabled={disabled}
+          aria-label={`Stop suggesting: ${move}`}
+          onClick={() => setAsking(true)}
+          data-testid="now-stop"
+        >
+          Stop suggesting this
+        </button>
+      </p>
+    )
+  }
+
+  return (
+    <Panel title="Stop suggesting this">
+      <p className="now-question" data-testid="now-stop-confirm">
+        This stays off until you lift it, and you can lift it on the {area} page.
+      </p>
+      <div className="now-options">
+        <button
+          type="button"
+          className="now-option"
+          disabled={disabled}
+          onClick={() => onForbid('move')}
+          data-testid="now-stop-move"
+        >
+          Just this one
+        </button>
+        <button
+          type="button"
+          className="now-option"
+          disabled={disabled}
+          onClick={() => onForbid('area')}
+          data-testid="now-stop-area"
+        >
+          Anything from {area}
+        </button>
+        <button type="button" className="now-option" onClick={() => setAsking(false)}>
+          Cancel
+        </button>
+      </div>
+      <p className="note">
+        {area} stays in the app either way — it keeps its page, its coverage and its history. What
+        stops is being asked to do something about it.
+      </p>
+    </Panel>
   )
 }
 

@@ -479,28 +479,25 @@ describe('AUD-0003 — a named limiter has somewhere to go, at every hour', () =
     }
   })
 
-  it('offers something restorative wherever recovery or capacity is what is in the way', () => {
+  it('offers something restorative wherever recovery is what is in the way', () => {
     /*
      * The invariant, and it is the thing to hold rather than any one sentence:
-     * **when recovery or capacity is the dominant limiter, a recovery-compatible
-     * option exists in every relevant day block.**
+     * **when recovery is the dominant limiter, a recovery-compatible option
+     * exists in every relevant day block.**
      *
-     * Swept over every scenario in the library at every block, and then over two
-     * constructed histories, because the library reaches `recovery` at every
-     * hour and reaches `capacity` at none — an invariant about two limiter kinds
-     * that only ever tests one is half a guard.
+     * Swept over every scenario in the library at every block, and then over a
+     * constructed history at every block, because a sweep is only as wide as
+     * the states it can reach.
      */
     const offenders: string[] = []
 
     const check = (label: string, document: ReturnType<typeof nineHoursDown>, moment: Instant) => {
       const decision = decideOn(document, moment, ZONE)
-      const kind = decision.situation.limiter?.kind
-      if (kind !== 'recovery' && kind !== 'capacity') return
+      if (decision.situation.limiter?.kind !== 'recovery') return
       const restorative = generateCandidates(decision.situation).filter(
         (candidate) => profileFor(candidate.semantics.target.verb).demand === 'restorative',
       )
-      if (restorative.length === 0)
-        offenders.push(`${label} (${kind}, ${decision.situation.block})`)
+      if (restorative.length === 0) offenders.push(`${label} (${decision.situation.block})`)
     }
 
     for (const scenario of SCENARIOS) {
@@ -512,25 +509,35 @@ describe('AUD-0003 — a named limiter has somewhere to go, at every hour', () =
 
     for (const { time } of EVERY_BLOCK) {
       check(`nine hours down at ${time}`, nineHoursDown(), at('2026-04-15', time))
-      // The sore reading is kept inside its own freshness window, so the
-      // capacity limiter is actually raised at the hour being tested.
-      check(`sore and rested at ${time}`, soreAndRested(hoursBefore(time)), at('2026-04-15', time))
     }
 
     expect(offenders, 'a limiter the app names with nothing behind it').toEqual([])
   })
 
-  it('reaches the capacity limiter at all, so the sweep above is not vacuous', () => {
-    // D-108: a guard that never meets the state it guards is not a guard.
+  it('does not yet reach the capacity limiter, and the gap is on the record', () => {
+    /*
+     * **A known hole, asserted rather than hidden.**
+     *
+     * AUD-0003's invariant names `capacity` alongside `recovery`, and the same
+     * finding's implementation guidance says to gate the new verb on
+     * `strain !== 'none'` "exactly as the existing sleep generator does". Those
+     * two do not agree, and the gate is what this phase followed: widening it
+     * to the soreness reading the capacity limiter is raised from was tried and
+     * reverted, because it made a sore, well-rested father be told to ease off
+     * instead of spending half an hour with his daughter — a scoring-model
+     * change dressed as a copy fix, and not this phase's to make.
+     *
+     * So a body that hurts gets no restorative candidate. What this phase does
+     * about that instead is AUD-0031: the app asks before it prescribes
+     * exertion. This test fails the day somebody closes the gap, which is when
+     * the invariant above should widen to cover both kinds.
+     */
     const decision = decideOn(soreAndRested(1), at('2026-04-15', '20:00'), ZONE)
-    expect(decision.situation.limiter?.kind).toBe('capacity')
-    expect(decision.kind).toBe('move')
-    expect(profileFor(decision.explanation!.semantics.target.verb).demand).toBe('restorative')
+    expect(decision.situation.limiter?.kind, 'the fixture no longer reaches it').toBe('capacity')
+
+    const restorative = generateCandidates(decision.situation).filter(
+      (candidate) => profileFor(candidate.semantics.target.verb).demand === 'restorative',
+    )
+    expect(restorative, 'the gap is closed — widen the invariant above').toEqual([])
   })
 })
-
-/** How long before the tested hour a reading has to be to still be current. */
-function hoursBefore(time: string): number {
-  const [hour] = time.split(':')
-  return 20 - Number(hour ?? 20) + 0.25
-}

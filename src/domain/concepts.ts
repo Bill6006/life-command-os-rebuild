@@ -129,6 +129,32 @@ export interface ConceptDefinition {
    */
   readonly tracked?: TrackedReading
   /**
+   * Whether being wrong about this is worse than asking about it — D-111.
+   *
+   * The share rule in `guide.ts` measures the fraction of a question's answers
+   * that would switch the decision. The *value* of a question is the expected
+   * reduction in loss, which depends on how bad it is to be wrong, and those two
+   * diverge exactly where it matters: on the default history the app's own probe
+   * read *"3 of 4 could change the answer, and none on enough of their answers
+   * to be worth a tap"*, and it then recommended a 25-minute walk to a man it
+   * had not asked about pain. One in three answers to "anything sore?" stops it.
+   * A one-in-three chance of prescribing exertion to someone who is quite sore
+   * is worth one tap.
+   *
+   * **Narrow, and the narrowness is the decision.** It applies to concepts
+   * marked here rather than to any question that feels important; it applies
+   * only when an answer would flip the recommendation toward *less* action, so
+   * it is never a licence to ask in order to justify doing more; and the daily
+   * cap is unchanged. D-036's share rule remains the default for everything
+   * else, and its regression remains in force.
+   *
+   * Two concepts qualify today, and both for the same reason: the app cannot
+   * infer either from how he seems. Nothing measures whether a shoulder hurts,
+   * and self-rated sleepiness under-reports the impairment of chronic sleep
+   * restriction (Van Dongen et al., *Sleep* 26(2):117–126, 2003).
+   */
+  readonly consequential?: boolean
+  /**
    * Where this concept disagrees with the default table, and why.
    *
    * Absent means the defaults are fine. An entry here is a claim about this
@@ -217,6 +243,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     tracked: 'number',
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
+    // Recommending effort to someone severely short of rest — D-111.
+    consequential: true,
     /*
      * The case D-059 is named for, and the one place the owner is outranked.
      *
@@ -269,6 +297,10 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     tracked: 'scale',
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
+    // Recommending exertion to a body in pain — D-111, and the case it is
+    // named for. This is the single most likely way the app gives genuinely
+    // bad advice.
+    consequential: true,
     // Nothing measures whether a shoulder hurts.
     reliability: { owner: 1, device: 0.35, derived: 0.3, model: 0.2 },
   },

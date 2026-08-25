@@ -315,12 +315,49 @@ function recentChanges(
 
 // ---------------------------------------------------------------------------
 
+/**
+ * A standing "stop suggesting this", and where to lift it — AUD-0050.
+ *
+ * A veto is the most permanent thing the owner can do, so **a veto he cannot
+ * find again is worse than none**. It is listed on the page for the area it was
+ * filed under, which is where somebody looking for a rule about that area would
+ * look.
+ */
+export interface StandingVeto {
+  readonly record: RecordId
+  /** What he said, in his own words as the control wrote them. */
+  readonly statement: string
+  /** Whether it stops one thing or everything from an area. */
+  readonly scope: 'move' | 'area'
+  readonly at: Instant
+}
+
 export interface DomainPageData {
   readonly page: LifePage
   readonly coverage: readonly DomainCoverage[]
   readonly readings: readonly ConceptReading[]
   readonly goals: readonly DomainGoal[]
+  readonly vetoes: readonly StandingVeto[]
   readonly recentChanges: readonly RecentChange[]
+}
+
+function vetoesFor(
+  situation: Situation,
+  domains: readonly LifeDomainId[],
+): readonly StandingVeto[] {
+  const out: StandingVeto[] = []
+  for (const record of situation.view.history.effective) {
+    if (record.kind !== 'preference') continue
+    if (record.stance !== 'forbids') continue
+    if (!record.domains.some((domain) => domains.includes(domain))) continue
+    out.push({
+      record: record.id,
+      statement: record.statement,
+      scope: record.about.kind === 'life-domain' ? 'area' : 'move',
+      at: record.occurredAt,
+    })
+  }
+  return out.sort((a, b) => b.at - a.at)
 }
 
 export function assembleDomainPageData(situation: Situation, page: LifePage): DomainPageData {
@@ -333,6 +370,7 @@ export function assembleDomainPageData(situation: Situation, page: LifePage): Do
     coverage,
     readings: conceptReadings(situation, page.domains),
     goals: goalsFor(situation, page.domains),
+    vetoes: vetoesFor(situation, page.domains),
     recentChanges: recentChanges(situation, page.domains),
   }
 }

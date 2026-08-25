@@ -217,3 +217,19 @@
     transform: none;
   }
 }
+
+.domain-veto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.domain-veto__statement {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}

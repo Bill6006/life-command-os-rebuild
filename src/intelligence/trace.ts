@@ -62,6 +62,15 @@ export interface Swing {
   readonly outcomes: readonly {
     readonly answer: string
     readonly wouldChoose: string
+    /**
+     * Whether this answer would move the app toward asking *less* of him.
+     *
+     * D-111's bound, measured rather than assumed. The exception exists so the
+     * app can ask before prescribing exertion to a body in pain; it is not a
+     * licence to ask in order to justify doing more, and the only way to hold
+     * that line is to know which direction each answer points.
+     */
+    readonly easier: boolean
   }[]
 }
 

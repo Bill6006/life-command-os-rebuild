@@ -25,9 +25,19 @@ import {
   type SemanticAdvisor,
 } from './advisor'
 import { arbitrate, type NoActionReason, type Selection } from './arbitrate'
+import { refusalsInBlock } from './constraints'
 import { generateCandidates, type Candidate } from './candidates'
 import { growthSuggestions, type GrowthSuggestion } from './growth'
 import { applyConstraints } from './constraints'
+
+/**
+ * How many times the owner may say no in one block before the app stops asking.
+ *
+ * Two would make it sulky and four is not listening. Section 4.3 distinguishes
+ * disagreement from inability and the app honours each individually; this is
+ * the response to the *pattern*, which is the thing it had none of.
+ */
+export const REFUSALS_BEFORE_STOPPING = 3
 import { evaluateAll, withDimension, type Evaluation } from './evaluate'
 import { explain, type Explanation } from './explain'
 import { describeEvidenceMix, similarity } from './learning'
@@ -35,7 +45,12 @@ import type { MoveState } from './lifecycle'
 import { profileFor } from './moves'
 import { outcomeWindowFor } from './outcomes'
 import { answerRecord, QUESTIONS } from './questions'
-import { assembleSituation, type Situation, type SituationMoment } from './situation'
+import {
+  assembleSituation,
+  type ShownMove,
+  type Situation,
+  type SituationMoment,
+} from './situation'
 import { blockNoun, horizonWord } from './vocabulary'
 import type {
   DecisionTrace,
@@ -80,6 +95,8 @@ export interface DecisionMoment {
   readonly now: Instant
   readonly zone: TimeZoneId
   readonly weekStartsOn?: WeekStartDay
+  /** What the surface has already shown today — AUD-0025. Data, never a lookup. */
+  readonly shown?: readonly ShownMove[]
   readonly domains?: DomainRegistry
   readonly concepts?: ConceptRegistry
 }
@@ -117,6 +134,7 @@ function momentOf(moment: DecisionMoment): SituationMoment {
     now: moment.now,
     zone: moment.zone,
     weekStartsOn: moment.weekStartsOn ?? DEFAULT_WEEK_START,
+    ...(moment.shown === undefined ? {} : { shown: moment.shown }),
     ...(moment.domains === undefined ? {} : { domains: moment.domains }),
     ...(moment.concepts === undefined ? {} : { concepts: moment.concepts }),
   }
@@ -231,7 +249,7 @@ export function probeSwings(
     const entry = view.facts.get(question.concept)
     if (entry === undefined || !entry.worthAsking) continue
 
-    const outcomes: { answer: string; wouldChoose: string }[] = []
+    const outcomes: { answer: string; wouldChoose: string; easier: boolean }[] = []
     for (const option of question.options(actual.situation)) {
       const record = answerRecord(
         question,
@@ -252,7 +270,11 @@ export function probeSwings(
         moment,
         inner,
       )
-      outcomes.push({ answer: option.label, wouldChoose: chosenIdOf(probed) })
+      outcomes.push({
+        answer: option.label,
+        wouldChoose: chosenIdOf(probed),
+        easier: asksLessThan(probed, actual),
+      })
     }
 
     const distinct = new Set(outcomes.map((outcome) => outcome.wouldChoose))
@@ -265,6 +287,24 @@ export function probeSwings(
   }
 
   return swings
+}
+
+/**
+ * Whether one answer would leave the app asking less of the owner than it is.
+ *
+ * Ordered by what a move *demands*, which is the property the whole arbitration
+ * turns on and the one that is not learned: no action asks least, then a
+ * restorative move, then a light one, then an effortful one. A probe that lands
+ * on nothing is the easiest outcome there is.
+ */
+function asksLessThan(probed: Decision, actual: Decision): boolean {
+  const cost = (decision: Decision): number => {
+    const verb = decision.evaluation?.candidate.semantics.target.verb
+    if (verb === undefined) return 0
+    const demand = profileFor(verb).demand
+    return demand === 'restorative' ? 1 : demand === 'light' ? 2 : 3
+  }
+  return cost(probed) < cost(actual)
 }
 
 // ---------------------------------------------------------------------------
@@ -622,6 +662,45 @@ function noActionCopy(
         headline: `Nothing fits ${horizonWord(situation.block)}.`,
         detail: 'There were things worth doing and none of them suit where you actually are.',
       }
+    case 'enough-for-now':
+      /*
+       * Three refusals in a row, answered — AUD-0023.
+       *
+       * The screen this replaces is the one the audit found: the same move
+       * coming back badged "You said not right now", and a fourth press
+       * changing nothing at all. Section 4.3 gives the owner the right to
+       * postpone, to say can't-now and to ask for something else, and the app
+       * honoured each of those individually while having no response to the
+       * pattern. This is the response.
+       *
+       * The way back is a real one and is named: the block turns over, and
+       * nothing here is a veto — that is a separate thing he can choose
+       * (AUD-0050) and it is not what three taps mean.
+       */
+      return {
+        headline: 'Nothing then.',
+        detail:
+          'Three passes in a row is an answer. Nothing more will be put in front of you until this part of the day is over.',
+      }
+    case 'nothing-in-reach':
+      /*
+       * AUD-0034, and D-038's line drawn carefully.
+       *
+       * "Nothing to suggest just yet" reads as the app not being ready, and it
+       * was what a rested man got at seven in the morning and what a father got
+       * on the three evenings his daughter is away. "Just yet" implies
+       * something is coming; nothing is. And the honest sentence is not "I have
+       * nothing to suggest" — it is that there is nothing *here* the app knows
+       * how to help with, which is a different admission and a more useful one.
+       *
+       * What it must not say is that the evening is quiet. That would be
+       * asserting an absence from ignorance, which is exactly D-038's error.
+       */
+      return {
+        headline: 'Nothing here to push you toward.',
+        detail:
+          'The picture is current. None of the areas this app can act in has anything in it right now, which is about its reach rather than about your evening.',
+      }
     case 'nothing-proposed': {
       if (situation.view.history.all.length === 0) {
         return {
@@ -639,6 +718,22 @@ function noActionCopy(
       }
     }
   }
+}
+
+/**
+ * Whether the app can actually see this moment, or only the history behind it.
+ *
+ * The split AUD-0034 asks for. "There is plenty of history here, and none of it
+ * says how today is going" is true and useful when the readings have all aged
+ * out; it is simply false when three of them came in this morning. Counted over
+ * the facts the situation actually assembled, so it moves with what the engine
+ * read rather than with how many rows are in the store.
+ */
+const ENOUGH_TO_SEE_BY = 3
+
+function currentPictureExists(situation: Situation): boolean {
+  const known = situation.considered.filter((fact) => fact.state !== 'unknown').length
+  return known >= ENOUGH_TO_SEE_BY
 }
 
 export function decide(
@@ -668,8 +763,24 @@ export function decide(
   let noAction: NoAction | undefined
   let state: MoveState | undefined
 
-  if (selection.chosen === undefined) {
-    const reason = selection.noAction ?? 'nothing-worth-doing'
+  /*
+   * The app reads the room before it reads the ranking — AUD-0023.
+   *
+   * Deliberately after arbitration rather than instead of it: the trace still
+   * shows what would have been chosen, so the inspector can say what the owner
+   * turned down without the owner being shown a fourth thing to turn down.
+   */
+  const refusals = refusalsInBlock(situation)
+
+  if (refusals >= REFUSALS_BEFORE_STOPPING) {
+    noAction = { reason: 'enough-for-now', ...noActionCopy('enough-for-now', situation) }
+    notes.push(`${refusals} refusals in this block, so nothing further was offered`)
+  } else if (selection.chosen === undefined) {
+    const proposed = selection.noAction ?? 'nothing-worth-doing'
+    const reason: NoActionReason =
+      proposed === 'nothing-proposed' && currentPictureExists(situation)
+        ? 'nothing-in-reach'
+        : proposed
     noAction = { reason, ...noActionCopy(reason, situation) }
   } else {
     const result = explain(selection.chosen, selection.ranked[1], situation, selection.margin)

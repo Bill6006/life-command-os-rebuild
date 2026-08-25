@@ -2,11 +2,11 @@ import type { EntityRef } from '../domain/entities'
 import type { RecordId } from '../domain/ids'
 import { basisOf, isUsable } from '../domain/knowledge'
 import { renderRecommendation } from '../domain/recommendation'
-import { addLocalDays } from '../domain/time'
+import { addLocalDays, blockOf, localDayIdAt } from '../domain/time'
 import { blockNoun, horizonWord } from './vocabulary'
 import type { Candidate } from './candidates'
 import { profileFor } from './moves'
-import type { Situation } from './situation'
+import type { PriorMove, Situation } from './situation'
 
 /**
  * The constraint filter (canonical plan section 17.1, step 6).
@@ -71,6 +71,22 @@ function vetoFor(candidate: Candidate, situation: Situation): RecordId | undefin
     if (about?.kind === 'life-domain' && about.domain === candidate.semantics.domain) {
       return preference.source
     }
+    /*
+     * And when the area is not an entity anybody has written down — AUD-0050.
+     *
+     * The enforcement above needs a resolvable `life-domain` entity, and the
+     * only one that has ever existed is sleep: the engine deliberately names
+     * its own routines and never the owner's life (D-021), so there is no
+     * entity for "Health & Physical Capacity" and there should not be one just
+     * to hold a veto. The record already says which areas it was filed under,
+     * which is the same fact without the invented noun.
+     */
+    if (
+      preference.about.kind === 'life-domain' &&
+      preference.domains.includes(candidate.semantics.domain)
+    ) {
+      return preference.source
+    }
   }
   return undefined
 }
@@ -84,8 +100,46 @@ function settledRecently(candidate: Candidate, situation: Situation): RecordId |
     // A decline is disagreement, not proof the move is useless (section 20) —
     // but repeating it the same evening is not listening either.
     if (prior.state === 'completed' || prior.state === 'declined') return prior.source
+    /*
+     * And "can't right now" holds for the block it was said in — AUD-0023.
+     *
+     * It was not held at all, which is what jammed the decline loop. Three
+     * presses of **Can't right now** on a Saturday afternoon rotated through
+     * three candidates and then came back to the first, badged "You said not
+     * right now", and a fourth press changed nothing at all: the only move on
+     * offer was one the owner had explicitly declined, and no button did
+     * anything.
+     *
+     * A block rather than a day, because it is a statement about now rather
+     * than a verdict — "I can't do that at four" says nothing about eight.
+     */
+    if (prior.state === 'unable-now' && refusedInThisBlock(prior, situation)) return prior.source
   }
   return undefined
+}
+
+function refusedInThisBlock(prior: PriorMove, situation: Situation): boolean {
+  if (localDayIdAt(prior.at, situation.zone) !== situation.dayId) return false
+  return blockOf(prior.at, situation.zone) === situation.block
+}
+
+/**
+ * How many times the owner has said no in this block — AUD-0023.
+ *
+ * Three refusals in a row is the clearest signal a person can send without
+ * typing, and the correct reading of it is not "here is a fourth suggestion".
+ * Counted here rather than in `arbitrate` because it is a reading of the
+ * situation, and counted per block rather than per day because it is about the
+ * stretch of time he is in.
+ */
+export function refusalsInBlock(situation: Situation): number {
+  let refusals = 0
+  for (const prior of situation.recentMoves) {
+    if (prior.state !== 'declined' && prior.state !== 'unable-now') continue
+    if (!refusedInThisBlock(prior, situation)) continue
+    refusals += 1
+  }
+  return refusals
 }
 
 export function applyConstraints(

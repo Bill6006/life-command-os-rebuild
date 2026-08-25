@@ -3658,3 +3658,153 @@ Excluding the verb rather than relabelling both, because `growth.ts` decides suf
 the growth suggestion now carries its own evidence line (D-112, AUD-0049) — so nothing is lost.
 The exclusion is keyed on the verb rather than on whether a suggestion happens to be standing,
 because otherwise the contradiction returns the moment he answers.
+
+---
+
+## D-118 — What has merely been on screen is the surface's note, not the owner's history
+
+**Phase:** 81 · **Status:** Active — builder decision, AUD-0025
+
+A session-scoped ledger records which moves have been put in front of the owner today: one entry
+per move per owner-local day, holding the moment it was last shown and a count. It lives in the
+surface, it is rebuilt every session, and it reaches the engine **as data on the moment** —
+`Situation.shown` — read by `recent-duplication` and by nothing else.
+
+**Why it exists.** Ignoring a suggestion is a response and it is the most common one, and the app
+could not count it at all. `recent-duplication` reads `situation.recentMoves`, which is built from
+recorded `action-recommendation` records — only the moves he _responded to_ — so a move shown at
+06:30 and left produced no trace, and at 10:00 the same morning it scored **"+0.20 — not offered
+lately"**. That is a false statement inside the ranking, and it produced the most visible
+repetition in the product: the identical kitchen sentence at four separate hours of one day.
+
+**Why it is not a record. D-043 is untouched and every reason it gives still holds:** a row per
+render would be unreadable within a week, would poison the duplication check, and would become
+learning evidence about an evening nothing happened in. What was missing was something cheaper
+than a record, not a reason to write one.
+
+**Three properties, and each is guarded rather than remembered.**
+
+- **It is not evidence.** `learning.ts`, `insights.ts`, `association.ts` and every Timeline
+  surface are forbidden from reading it; `tests/unit/architecture-guards.test.ts` fails the build
+  on any of them, and asserts that the duplication check really does read it.
+- **It is not the owner's history.** No module under `src/memory/` and nothing in the export path
+  may know it exists. D-107's rule in a smaller key: a backup that carried it, or a fingerprint
+  that hashed it, would make one owner's two sessions produce two different backups of one
+  history.
+- **It is an argument, never a lookup.** `src/intelligence/` is pure and clock-free
+  (`ARCHITECTURE_BOUNDARIES.md`) — the moment is an argument so that time travel reaches the
+  engine rather than stopping at the screen that offers it. Reaching for a ledger from inside the
+  engine would breach that _invisibly_: it is not a directory violation, so the existing guard
+  would not fire.
+
+**An entry is stamped with the moment it was shown at, and the situation reads only entries
+strictly earlier than the moment being decided.** Otherwise noting a render would change the
+render, and the screen would oscillate between two moves each marking the other down.
+
+**What this does not fix, and it is worth writing down.** The penalty is real and it grows with
+each showing, and on several histories it changes what the app says across a day. On "A week
+pointed at the house" — the audit's own reproduction — the kitchen still wins at every hour,
+because its lead is larger than the whole range of this dimension at its current weight. Whether
+`recent-duplication` is weighted correctly against the rest of the ranking is **AUD-0035's
+question**, and answering it here would be re-cutting the scoring instrument inside a
+truthfulness phase.
+
+---
+
+## D-119 — Three refusals in a block is an answer
+
+**Phase:** 81 · **Status:** Active — builder decision, AUD-0023
+
+Within one day block: a move that has been refused is not offered again; after the second refusal
+the guide may ask a question the share rule would have refused; after the third the app stops
+offering and says so. The block turning over starts it again, and the copy says that is what
+happens.
+
+**Why:** section 4.3 gives the owner the right to postpone, to say can't-now and to ask for
+another option, and the app honoured each of those individually while having **no response to the
+pattern**. The audit's reproduction: Can't right now ×1 → the walk. ×2 → the growth opportunity.
+×3 → back to _"Spend the next 30 minutes with Adaya, phone away"_, badged _"You said not right
+now"_. ×4 → identical screen, no button doing anything. Three refusals in a row is the clearest
+signal a person can send without typing, and the correct reading of it is not "here is a fourth
+suggestion".
+
+**Why a block rather than a day.** "I can't do that right now" is a statement about now, not a
+verdict — it says nothing about eight o'clock. A decline still holds for the day, which is what
+`settledRecently` already did and is unchanged; an unable-now now holds for the stretch of time it
+was said in, which is what it means.
+
+**Why two before asking and three before stopping.** Two would make the app sulky and four is not
+listening. The second refusal is where the evidence stops being about the move and starts being
+about something the app cannot see, which is what a question is for.
+
+**What this is not:** a veto. Stopping for a block is not "never suggest this again", and the copy
+must not read as though it were — that is a separate thing the owner chooses (AUD-0050, D-120).
+
+---
+
+## D-120 — The sixth owner action is a control, and lifting it is half of it
+
+**Phase:** 81 · **Status:** Active — builder decision, AUD-0050
+
+Now gains **"Stop suggesting this"**, behind a refusal and behind a confirmation, writing a
+`preference` with `stance: 'forbids'` scoped either to the move's object or to its life area. The
+relevant domain page lists every standing veto and lifts one in a tap.
+
+**Why:** section 4.3 is a non-negotiable product principle and it lists _explicitly forbid a
+recommendation family_ among the things the owner can do. The enforcement has always been
+complete — `vetoFor` handles the domain-level case and cites section 4.3 by name — and **no
+control anywhere in the product could produce the record it enforces**. The interface offered five
+of the six actions, and the one it could not express was _stop_. In one history the probe read
+_"owner-preference −0.40 — passed on 14 times before in situations like this"_, and the app
+recommended the walk anyway, as the only candidate.
+
+**Why a decline is not this, and must not become this.** `owner-preference` deliberately treats a
+refusal as the owner exercising sovereignty rather than as a verdict on the move (D-045, section
+20), so a refused move comes back with a slightly lower score. That is right for a decline, and it
+is exactly why there had to be a separate way to say never.
+
+**The bounds.**
+
+- **Two taps and a confirmation.** A veto is the most permanent thing the owner can do and the
+  easiest to do by accident on a phone, so it appears only after he has already refused the move
+  and asks again before writing anything.
+- **Listed and liftable, or it should not exist.** A veto he cannot find again is worse than none.
+  The confirmation names the page it can be lifted on.
+- **An area veto is not a domain-off switch**, which section 4.1 forbids. It suppresses
+  _recommendations_; the area keeps its page, its coverage, its history and its place in the
+  model, and the copy says so on both screens.
+- **Lifting is a retraction, not a milder preference.** He is withdrawing the entry rather than
+  stating something weaker, and `correction` is the kind that exists for exactly the case where
+  there is nothing to put in its place.
+
+**One implementation note worth recording.** `vetoFor` enforced an area veto by resolving the
+preference's subject to a `life-domain` entity, and the only such entity that has ever existed is
+sleep — because the engine deliberately names its own routines and never the owner's life (D-021).
+Rather than invent ten entities to hold ten possible vetoes, the enforcement also reads the areas
+the record was filed under, which is the same fact without the invented noun.
+
+---
+
+## D-121 — Silence says what the app cannot do, not that it is not ready
+
+**Phase:** 81 · **Status:** Active — builder decision, AUD-0034
+
+`nothing-proposed` splits again. Where the app has a current picture of the moment and still has
+nothing to propose, it says so — _"Nothing here to push you toward"_ — and names the limit as its
+own reach. Where the history genuinely has not told it how the day is going, the old sentence
+stands. The line describing where the owner is now renders in **every** no-action state.
+
+**Why:** _"Nothing to suggest just yet"_ reads as the app not being ready, and it was what a
+rested man got at seven in the morning and what a father got on the three evenings his daughter is
+away. "Just yet" implies something is coming; nothing is. And it was the wrong diagnosis: the
+honest sentence is not "I have nothing to suggest", it is that there is nothing _here_ the app
+knows how to help with — a different admission and a more useful one.
+
+**The line this must not cross is D-038's.** The new branch must not claim the evening is quiet
+when the truth is that the app has no vocabulary for it — that is asserting an absence from
+ignorance. So it names the reach rather than the evening, and a guard asserts it.
+
+**On the situation line.** It was rendered only when there was a move, so on the screens with the
+least on them the one piece of orientation the screen offers vanished at the moment it was most
+needed. It is a statement about the situation rather than about the decision, and it is true
+whether or not there is one.

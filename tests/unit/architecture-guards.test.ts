@@ -1109,6 +1109,73 @@ describe('the owner is not asked to do the app’s thinking — D-089', () => {
   })
 })
 
+describe('the shown-ledger is not history — AUD-0025, D-043', () => {
+  /*
+   * D-043 settled that nothing is written when a screen renders, and every
+   * reason it gives still holds: a row per render would be unreadable within a
+   * week, would poison the duplication check, and would become learning evidence
+   * about an evening nothing happened in.
+   *
+   * What was missing was cheaper — ignoring a suggestion is a response, and the
+   * most common one, and the app could not count it at all. So it repeated
+   * itself. The count is the surface's, it is session-scoped and non-durable,
+   * and it arrives at the engine as an argument on the moment.
+   *
+   * Two things have to stay true and neither is the sort of thing a person
+   * remembers: the ledger must not become evidence, and it must not become part
+   * of the owner's history.
+   */
+  const READS_HISTORY = [
+    'src/intelligence/learning.ts',
+    'src/intelligence/insights.ts',
+    'src/intelligence/association.ts',
+    'src/features/timeline/timelineEntries.ts',
+    'src/features/timeline/TimelineScreen.tsx',
+    'src/features/history/describe.ts',
+  ]
+
+  it('is reachable from the duplication check and from nowhere else', () => {
+    const offenders: string[] = []
+    for (const file of [...INTELLIGENCE, ...FEATURES]) {
+      const path = repoPath(file)
+      if (!READS_HISTORY.includes(path)) continue
+      const code = readCode(file)
+      if (/\bsituation\.shown\b|\bShownMove\b/.test(code)) {
+        offenders.push(`${path} reads what has merely been on screen`)
+      }
+    }
+    expect(offenders, 'a render became evidence').toEqual([])
+
+    // And the positive half: the one reader really does read it.
+    expect(readCode(join(ROOT, 'src/intelligence/evaluate.ts'))).toContain('situation.shown')
+  })
+
+  it('is looking at files that exist', () => {
+    const known = new Set([...INTELLIGENCE, ...FEATURES].map((file) => repoPath(file)))
+    for (const path of READS_HISTORY) {
+      expect(known.has(path), path).toBe(true)
+    }
+  })
+
+  it('never reaches the store, a backup or an export', () => {
+    /*
+     * D-107's rule in a smaller key: nothing about the transport may enter the
+     * identity of the thing transported. This is a fact about *screens*, and a
+     * backup that carried it — or a fingerprint that hashed it — would make one
+     * owner's two sessions produce two different backups of one history.
+     */
+    const offenders: string[] = []
+    for (const file of [...sourceFiles('src/memory'), ...FEATURES]) {
+      const path = repoPath(file)
+      if (!path.startsWith('src/memory/') && !path.includes('/export/')) continue
+      if (/\bShownMove\b|\bshownLedger\b/.test(readCode(file))) {
+        offenders.push(`${path} knows what has been on screen`)
+      }
+    }
+    expect(offenders, 'a session note reached the owner’s own records').toEqual([])
+  })
+})
+
 describe('a figure never reaches a screen without what it measures', () => {
   /*
    * Canonical plan section 51, and DEF-0020's second form.

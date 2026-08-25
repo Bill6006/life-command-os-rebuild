@@ -23,7 +23,7 @@ import {
 import { CLOSE_ENOUGH_TO_MENTION } from './arbitrate'
 import type { DimensionName, Evaluation } from './evaluate'
 import { beliefKey } from './learning'
-import { describeHours, SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
+import { describeHours, type Situation } from './situation'
 import { entityValue } from './values'
 import { blockNoun, horizonWord } from './vocabulary'
 
@@ -414,20 +414,6 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
         return semantics.target.verb === 'recover'
           ? `You are ${describeHours(debt.value)} down over ${span}. ${capitalise(object)} will still be there tomorrow.`
           : `You are ${describeHours(debt.value)} down over ${span}.${instead}`
-      }
-
-      /*
-       * A sore body with a full night behind it reaches this branch with no
-       * shortfall to name, and "rest is the thing running short" is not what
-       * the app read. It read the reading the capacity limiter is raised from.
-       */
-      const soreness = situation.capacity.soreness
-      if (
-        leanedOn(evaluation, CONCEPT.soreness) &&
-        isUsable(soreness) &&
-        soreness.value >= SORE_ENOUGH_TO_EASE_OFF
-      ) {
-        return `The body is asking for less than usual.${instead}`
       }
 
       const energy = situation.capacity.energy
