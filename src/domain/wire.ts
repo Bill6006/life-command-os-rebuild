@@ -11,14 +11,18 @@ import { isEntityId, isRecordId, type EntityId, type RecordId } from './ids'
 import { PRIVACY_CLASSES } from './privacy'
 import {
   ACTION_VERBS,
+  isActionVerb,
   WHY_NOW_TRIGGERS,
   type ActionTarget,
+  type ActionVerb,
   type RecommendationSemantics,
   type WhyNowContext,
 } from './recommendation'
 import {
   COMMITMENT_WINDOW_SOURCES,
   OUTCOME_ASPECTS,
+  THREAD_KINDS,
+  THREAD_STATES,
   PROVENANCE_SOURCES,
   RECORD_KINDS,
   type CanonicalRecord,
@@ -274,6 +278,27 @@ function readRecurrence(reader: Reader, key: string): CommitmentRecurrence | und
   return parsed
 }
 
+/**
+ * The moves a thread counts, read strictly — AUD-0020.
+ *
+ * A verb this build does not know is a malformed row rather than a step that
+ * quietly never matches: a thread whose moves silently emptied would sit in the
+ * owner's list looking live and influence nothing.
+ */
+function readActionVerbs(reader: Reader, key: string): readonly ActionVerb[] | undefined {
+  const list = readArray(reader, key)
+  if (list === undefined) return undefined
+  const out: ActionVerb[] = []
+  for (const [position, entry] of list.entries()) {
+    if (!isActionVerb(entry)) {
+      note(reader, `${key}[${position}]`, 'not an action verb this build knows')
+      continue
+    }
+    out.push(entry)
+  }
+  return out.length === list.length ? out : undefined
+}
+
 /** Minutes into the owner-local day: a whole number inside one day. */
 function readDayMinute(reader: Reader, key: string): number | undefined {
   const value = readNumber(reader, key)
@@ -448,6 +473,18 @@ function readPayload(reader: Reader, kind: RecordKind): Record<string, unknown> 
         recurrence: readRecurrence(reader, 'recurrence'),
         whose: readEnum(reader, 'whose', ['mine', 'theirs'] as const),
         knownFrom: readEnum(reader, 'knownFrom', COMMITMENT_WINDOW_SOURCES),
+      }
+    case 'thread':
+      return {
+        thread: readEnum(reader, 'thread', THREAD_KINDS),
+        subject: readEntityRefFrom(reader, 'subject'),
+        intent: readString(reader, 'intent'),
+        steps: readNumber(reader, 'steps'),
+        moves: readActionVerbs(reader, 'moves'),
+        state: readEnum(reader, 'state', THREAD_STATES),
+        expiresOn:
+          parseLocalDayId(raw(reader, 'expiresOn')) ??
+          note(reader, 'expiresOn', 'expected an owner-local day id'),
       }
     case 'preference':
       return {
@@ -869,6 +906,16 @@ function payloadOut(record: CanonicalRecord): Record<string, unknown> {
             : { kind: 'weekly', days: [...record.recurrence.days] },
         whose: record.whose,
         knownFrom: record.knownFrom,
+      }
+    case 'thread':
+      return {
+        thread: record.thread,
+        subject: refOut(record.subject),
+        intent: record.intent,
+        steps: record.steps,
+        moves: [...record.moves],
+        state: record.state,
+        expiresOn: record.expiresOn,
       }
     case 'preference':
       return { about: refOut(record.about), stance: record.stance, statement: record.statement }

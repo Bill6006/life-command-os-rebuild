@@ -304,7 +304,22 @@ describe('AUD-0021 — no percentage about the owner reaches any surface', () =>
    * carried one would print "0%" under a man's certification without any
    * sentence here containing a `%`.
    */
-  const FORBIDDEN = [/%/, /\bpercent/i, /\bscore\b/i, /\bon track\b/i, /\bbehind schedule\b/i]
+  const FORBIDDEN = [
+    /%/,
+    /\bpercent/i,
+    /\bscore\b/i,
+    /\bon track\b/i,
+    /\bbehind schedule\b/i,
+    /*
+     * And DEF-0012's rule, because this is where the `goal-behind` sentence is
+     * read. `no-hidden-genericity.test.ts` sweeps the scenario library and no
+     * history in it puts a behind goal in front of the owner, so that sweep
+     * names this trigger as one it does not reach — and points here. An absence
+     * may not be asserted from ignorance on this sentence either.
+     */
+    /nothing (?:else|more) is pressing/i,
+    /nothing more pressing/i,
+  ]
 
   it('says counts and a date and nothing that grades him', () => {
     const offenders: string[] = []

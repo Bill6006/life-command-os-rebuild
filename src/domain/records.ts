@@ -2,7 +2,7 @@ import type { LifeDomainId } from './domains'
 import type { EntityRef } from './entities'
 import type { RecordId } from './ids'
 import type { PrivacyClass } from './privacy'
-import type { RecommendationSemantics } from './recommendation'
+import type { ActionVerb, RecommendationSemantics } from './recommendation'
 import type { DayBlock, Instant, IsoWeekday, LocalDayId, TimeZoneId } from './time'
 import type { ConceptId, DueWindow, ObservationWindow } from './windows'
 
@@ -39,6 +39,20 @@ export const RECORD_KINDS = [
    * were the same morning and got the same answer.
    */
   'commitment-window',
+  /**
+   * A named course of action over days or weeks — AUD-0020.
+   *
+   * The one structure the audit calls its highest-leverage change. Every
+   * recommendation before this was a fresh function of the situation:
+   * `decide()` had no way to express "this, then that", "we are three weeks
+   * into a push" or "this is not working, try something else". Recovery was
+   * always one night, study had no schedule, growth had no next rung, and the
+   * same sentence could repeat for nine evenings — six separate findings, and
+   * one missing structure.
+   *
+   * A thread does not decide. It is one more input to the same pipeline.
+   */
+  'thread',
   'preference',
   'decision',
   'action-recommendation',
@@ -324,6 +338,77 @@ export type CommitmentWindowRecord = Record_<
   }
 >
 
+/**
+ * The three courses of action the app knows how to run — AUD-0020.
+ *
+ * **Bounded to exactly three, with no generic creation control**, and the bound
+ * is what keeps this a strategic skeleton rather than a project-management
+ * subsystem. Each one answers a finding the audit raised separately: a recovery
+ * run because recovery was always one night (AUD-0009), a study schedule
+ * because studying had none (AUD-0010), and a growth ladder because a
+ * developmental skill had no next rung (AUD-0015a).
+ *
+ * A fourth belongs to a phase that decides to add one, in writing.
+ */
+export const THREAD_KINDS = ['recovery-run', 'study-schedule', 'growth-ladder'] as const
+
+export type ThreadKind = (typeof THREAD_KINDS)[number]
+
+export function isThreadKind(value: unknown): value is ThreadKind {
+  return typeof value === 'string' && (THREAD_KINDS as readonly string[]).includes(value)
+}
+
+export const THREAD_STATES = ['running', 'paused', 'done', 'abandoned'] as const
+
+export type ThreadState = (typeof THREAD_STATES)[number]
+
+/**
+ * A course of action the owner can see and stop — AUD-0020.
+ *
+ * **A hidden plan is worse than no plan**, which is why every field here is
+ * something a surface can render: what it is about, what it is for, how many
+ * occasions it expects, and when it gives up on its own.
+ *
+ * ## Why the moves are stored rather than looked up
+ *
+ * The kind already implies them, and a table keyed on the kind would be shorter.
+ * But a thread outlives a release: a record written this month and read next
+ * year must still mean what it meant, and a table that changed underneath it
+ * would silently re-scope a plan the owner agreed to. The same reasoning as
+ * `DecisionContext` — what the app could see is written down at the time and
+ * never re-derived.
+ *
+ * ## State changes are new records
+ *
+ * Pausing, finishing or abandoning a thread writes a new `thread` record with
+ * `supersedes` set, exactly as a goal correction does. Nothing is edited, and
+ * the course the owner set out on stays legible after he stops it.
+ */
+export type ThreadRecord = Record_<
+  'thread',
+  {
+    readonly thread: ThreadKind
+    /** What it is about: a topic, a skill, the life area rest belongs to. */
+    readonly subject: EntityRef
+    /** What it is for, in the owner's register. Rendered exactly. */
+    readonly intent: string
+    /** How many occasions the plan expects. Small — two to four. */
+    readonly steps: number
+    /** Which moves count toward it. Anything else is not part of this thread. */
+    readonly moves: readonly ActionVerb[]
+    readonly state: ThreadState
+    /**
+     * The owner-local day it stops applying, whatever has happened by then.
+     *
+     * **A thread must expire on its own**, and AUD-0020 names the risk this
+     * answers: a plan that outlives its usefulness becomes nagging, and this
+     * app's whole personality depends on not nagging. The date is set when the
+     * thread starts and never extended.
+     */
+    readonly expiresOn: LocalDayId
+  }
+>
+
 export type PreferenceRecord = Record_<
   'preference',
   {
@@ -531,6 +616,7 @@ export type CanonicalRecord =
   | GoalRecord
   | CommitmentRecord
   | CommitmentWindowRecord
+  | ThreadRecord
   | PreferenceRecord
   | DecisionRecord
   | ActionRecommendationRecord

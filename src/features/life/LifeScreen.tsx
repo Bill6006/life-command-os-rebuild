@@ -7,6 +7,7 @@ import { originOfSources } from '../history/origin'
 import { useMemory } from '../memory/memoryContext'
 import { DayShape } from './DayShape'
 import { pageForDomain } from './domainPages'
+import { Threads } from './Threads'
 import { GROUP_ORDER, standingFor } from './standing'
 import './LifeScreen.css'
 
@@ -215,6 +216,14 @@ export function LifeScreen() {
             is to report, and this is the one thing on the page he is invited to
             add. Two questions, answered once, never re-asked.
           */}
+          {/*
+            Courses under way, and the one tap that stops them — AUD-0020.
+
+            Above the day's shape because it is the part of the model most
+            likely to be doing something the owner has forgotten agreeing to.
+          */}
+          {situation === undefined ? null : <Threads situation={situation} />}
+
           {situation === undefined ? null : <DayShape situation={situation} />}
 
           <Panel title="Why this is here">

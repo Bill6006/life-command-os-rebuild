@@ -8,6 +8,7 @@ import { profileFor, type MoveProfile } from './moves'
 import { blockNoun, hereNowWord, horizonWord } from './vocabulary'
 import type { GoalHorizon } from './direction'
 import { answersLimiter, type Situation } from './situation'
+import { describeThreadPosition, threadFor } from './threads'
 
 /**
  * The candidate evaluator (canonical plan sections 17.1 step 7, and 19).
@@ -36,6 +37,15 @@ export type DimensionName =
   | 'bottleneck-fit'
   | 'direction-fit'
   | 'goal-fit'
+  /**
+   * Whether this move is the next step of a course already under way — AUD-0020.
+   *
+   * The nineteenth dimension, and the one the whole thread structure reaches a
+   * decision through. It abstains — zero value at zero weight — for every move
+   * that belongs to no live thread, which is nearly all of them, so a history
+   * with no plan in it ranks exactly as it did before threads existed.
+   */
+  | 'thread-fit'
   | 'urgency'
   | 'immediate-benefit'
   | 'next-day-effect'
@@ -105,6 +115,22 @@ const WEIGHTS: Record<DimensionName, number> = {
   // which is exactly what section 21 asks of it.
   'direction-fit': 1.8,
   'goal-fit': 1,
+  /*
+   * Below `bottleneck-fit`, and that ordering is a gate item rather than a
+   * preference — AUD-0020 names it as the first mitigation and section 7's gate
+   * asserts it directly.
+   *
+   * A plan may not out-argue what is actually in the way. A man nine hours
+   * short of rest is nine hours short of rest whether or not he agreed three
+   * weeks ago to a run of study sessions, and a thread that could beat the
+   * recovery limiter would be the app nagging him with his own past intentions
+   * — which is the failure mode AUD-0020 calls out about itself.
+   *
+   * Level with `goal-fit`, which is the honest comparison: a course under way
+   * and a goal the move serves are the same kind of claim about direction, and
+   * neither is a reading of tonight.
+   */
+  'thread-fit': 1,
   urgency: 1,
   'immediate-benefit': 1,
   'next-day-effect': 0.8,
@@ -379,6 +405,41 @@ function horizonNote(note: string, horizon: GoalHorizon | undefined): string {
   if (horizon.passed) return `${note}, and the date you set has gone`
   if (horizon.daysRemaining <= GOAL_CLOSING_DAYS) return `${note}, and the date is close`
   return `${note}, and the date is still a way off`
+}
+
+/**
+ * Whether this move is an occasion of a course already under way — AUD-0020.
+ *
+ * Two states, and the second is nearly every move.
+ *
+ * **It counts toward a live thread**, and scores full. A run of recovery nights
+ * that has had one is asking for the second, and nothing else the app can say
+ * about tonight carries that.
+ *
+ * **It belongs to no live thread**, and abstains at zero weight. D-048's rule:
+ * a dimension with nothing to say must cost nothing to have. A history with no
+ * course in it — every history until the owner starts one — ranks exactly as it
+ * did before this dimension existed, which is what makes adding a nineteenth
+ * dimension safe to do in the same phase as the re-cut.
+ *
+ * "Live" is doing the work in that sentence. A paused, finished, abandoned or
+ * expired thread is still in the record and still on Life; what it stops doing
+ * is pulling. That single condition is the whole of AUD-0020's anti-nagging
+ * mitigation.
+ */
+function threadFit(candidate: Candidate, situation: Situation): Dimension {
+  const thread = threadFor(situation.threads, candidate.semantics.target)
+
+  if (thread === undefined) {
+    return { name: 'thread-fit', value: 0, weight: 0, note: 'belongs to no course under way' }
+  }
+
+  return {
+    name: 'thread-fit',
+    value: 1,
+    weight: WEIGHTS['thread-fit'],
+    note: `${lowerFirst(thread.intent)} — ${lowerFirst(describeThreadPosition(thread))}`,
+  }
 }
 
 function urgency(candidate: Candidate): Dimension {
@@ -989,6 +1050,7 @@ export function evaluateCandidate(candidate: Candidate, situation: Situation): E
     ),
     directionFit(candidate, situation),
     goalFit(candidate, situation),
+    threadFit(candidate, situation),
     urgency(candidate),
     immediateBenefit(candidate, situation),
     nextDayEffect(candidate, situation),

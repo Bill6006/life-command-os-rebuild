@@ -154,3 +154,43 @@
   flex-wrap: wrap;
   gap: var(--space-2);
 }
+
+/*
+ * Courses under way — AUD-0020.
+ *
+ * Counts and a sentence, never a bar. A progress bar over a man's recovery week
+ * is a score about his week whatever the intent (section 22), and the stop
+ * control is the most important thing on the row rather than the smallest.
+ */
+.life-threads {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.life-threads--past {
+  margin-top: var(--space-3);
+  opacity: 0.7;
+}
+
+.life-thread {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.life-thread:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.life-thread__intent {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-base);
+}
+
+.life-thread__standing {
+  margin: var(--space-1) 0 var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}

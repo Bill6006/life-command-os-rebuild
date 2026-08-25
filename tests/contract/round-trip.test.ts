@@ -115,6 +115,20 @@ const minimal: Record<RecordKind, CanonicalRecord> = {
       knownFrom: 'owner-entered',
     },
   ),
+  // A thread at its simplest: one course, one subject, a count and a date.
+  thread: record(
+    'thread',
+    { occurredAt: T },
+    {
+      thread: 'study-schedule',
+      subject: subnetting,
+      intent: 'Three sessions on subnetting',
+      steps: 3,
+      moves: ['recall-practice'],
+      state: 'running',
+      expiresOn: localDayId({ year: 2026, month: 10, day: 1 }),
+    },
+  ),
   preference: record(
     'preference',
     { occurredAt: T },
@@ -262,6 +276,21 @@ const full: Record<RecordKind, CanonicalRecord> = {
       knownFrom: 'recurring',
     },
   ),
+  // And a stopped one, which is a new record superseding the running one — a
+  // thread is never edited, so the course he set out on stays legible.
+  thread: record(
+    'thread',
+    { occurredAt: T, domains: [DOMAIN.career], entities: [subnetting] },
+    {
+      thread: 'study-schedule',
+      subject: subnetting,
+      intent: 'Three sessions on subnetting',
+      steps: 3,
+      moves: ['recall-practice', 'review-weak-topic', 'hands-on-lab'],
+      state: 'abandoned',
+      expiresOn: localDayId({ year: 2026, month: 10, day: 1 }),
+    },
+  ),
   preference: record(
     'preference',
     { occurredAt: T, domains: [DOMAIN.privateHealth] },
@@ -368,7 +397,7 @@ function throughJson(value: unknown): unknown {
 
 describe('canonical records round-trip without loss', () => {
   it('covers every record kind the plan lists', () => {
-    expect(RECORD_KINDS).toHaveLength(21)
+    expect(RECORD_KINDS).toHaveLength(22)
     expect(Object.keys(minimal).sort()).toEqual([...RECORD_KINDS].sort())
     expect(Object.keys(full).sort()).toEqual([...RECORD_KINDS].sort())
   })

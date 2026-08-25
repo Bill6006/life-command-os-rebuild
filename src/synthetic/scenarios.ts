@@ -2,8 +2,8 @@ import { CONCEPT } from '../domain/concepts'
 import { DOMAIN, type LifeDomainId } from '../domain/domains'
 import { entityRef, type SemanticEntity } from '../domain/entities'
 import { sequentialRecordIds } from '../domain/ids'
-import type { CanonicalRecord, DecisionContext } from '../domain/records'
-import { timeZone } from '../domain/time'
+import type { CanonicalRecord, DecisionContext, ThreadState } from '../domain/records'
+import { addLocalDaysToDayId, localDayId, timeZone } from '../domain/time'
 import { dueWindow } from '../domain/windows'
 import type { SnapshotWire } from '../memory/snapshot'
 import { createKit, pastEpisodeRecords, type Scenario } from './kit'
@@ -3133,7 +3133,169 @@ function schoolMorningScenario(): Scenario {
   }
 }
 
+// ---------------------------------------------------------------------------
+// A course under way — AUD-0020
+// ---------------------------------------------------------------------------
+
+export const THREAD_ZONE = timeZone('America/Denver')
+
+/** A Wednesday evening, two sessions into a three-session push. */
+export const THREAD_NOW = createKit('TH', 'America/Denver', '2026-06-01T12:00:00Z').local(
+  '2026-09-16',
+  '20:00',
+)
+
+export interface ThreadScenarioOptions {
+  /** How many of the three sessions the record shows were actually finished. */
+  readonly sessionsDone?: number
+  /** Whether the body has anything in the way. `severe` is the gate's case. */
+  readonly strain?: 'none' | 'severe'
+  readonly state?: ThreadState
+  /** Owner-local days before the evening that the course was started. */
+  readonly startedDaysAgo?: number
+  /** Days from the start before it stops applying. The shape's own figure by default. */
+  readonly lastsDays?: number
+}
+
+/**
+ * One evening, two sessions into a push, with everything else held still.
+ *
+ * The instrument for AUD-0020, and the same one G-008 uses for direction: a
+ * fixed history with exactly one thing varying. What changes here is the course
+ * — how far into it, what state it is in, whether it has run out — and, for the
+ * gate's second item, whether the owner's body has something to say.
+ */
+export function runningThread(options: ThreadScenarioOptions = {}): SnapshotWire {
+  const kit = createKit('TH', 'America/Denver', '2026-06-01T12:00:00Z')
+  const nextId = sequentialRecordIds('THS')
+  const subnetting = entityRef('learning-topic', 'subnetting')
+  const startedDaysAgo = options.startedDaysAgo ?? 10
+  const startedOn = addLocalDaysToDayId(
+    localDayId({ year: 2026, month: 9, day: 16 }),
+    -startedDaysAgo,
+  )
+  const lasts = options.lastsDays ?? 28
+  const sessionsDone = options.sessionsDone ?? 2
+  const strained = options.strain === 'severe'
+
+  const topic = kit.entity({
+    kind: 'learning-topic',
+    label: 'subnetting',
+    domain: DOMAIN.career,
+    privacy: 'normal',
+  })
+
+  const thread = kit.record(
+    'thread',
+    {
+      occurredAt: kit.local(startedOn, '20:00'),
+      domains: [DOMAIN.career],
+      entities: [subnetting],
+    },
+    {
+      thread: 'study-schedule',
+      subject: subnetting,
+      intent: 'Three sessions on subnetting',
+      steps: 3,
+      moves: ['recall-practice', 'review-weak-topic', 'hands-on-lab'],
+      state: options.state ?? 'running',
+      expiresOn: addLocalDaysToDayId(startedOn, lasts),
+    },
+  )
+
+  const studying = kit.record(
+    'observation',
+    {
+      occurredAt: kit.local('2026-09-14', '20:00'),
+      domains: [DOMAIN.career],
+      entities: [subnetting],
+    },
+    {
+      concept: CONCEPT.learningTopic,
+      value: { type: 'entity', value: subnetting },
+      method: 'self-report',
+    },
+  )
+
+  // Far enough back that the three-day duplication window has nothing to say,
+  // so what moves the ranking is the course rather than the calendar.
+  const SESSION_DAYS = ['2026-09-08', '2026-09-10', '2026-09-12']
+  const sessions = pastEpisodeRecords(
+    kit,
+    SESSION_DAYS.slice(0, Math.max(0, Math.min(3, sessionsDone))).map((on) => ({
+      verb: 'recall-practice' as const,
+      object: subnetting,
+      domain: DOMAIN.career,
+      on,
+      at: '20:00',
+      context: {
+        block: 'evening' as const,
+        weekend: false,
+        strain: 'none' as const,
+        usableMinutes: 60,
+      },
+      ending: 'completed' as const,
+      effect: 'some' as const,
+    })),
+    nextId,
+  )
+
+  const hours = strained ? [4, 4.25, 4] : [8, 8.25, 8]
+  const nights = hours.map((value, offset) =>
+    kit.record(
+      'observation',
+      { occurredAt: kit.local(`2026-09-${14 + offset}`, '07:00'), domains: [DOMAIN.sleep] },
+      {
+        concept: CONCEPT.sleepHours,
+        value: { type: 'number', value, unit: 'hours' },
+        method: 'self-report',
+      },
+    ),
+  )
+
+  const energy = kit.record(
+    'observation',
+    { occurredAt: kit.local('2026-09-16', '18:00'), domains: [DOMAIN.health] },
+    {
+      concept: CONCEPT.energy,
+      value: { type: 'scale', value: strained ? 1 : 4, of: 5 },
+      method: 'self-report',
+    },
+  )
+
+  const time = kit.record(
+    'observation',
+    { occurredAt: kit.local('2026-09-16', '19:30'), domains: [DOMAIN.direction] },
+    {
+      concept: CONCEPT.usableTimeTonight,
+      value: { type: 'duration', minutes: 60 },
+      method: 'self-report',
+    },
+  )
+
+  return kit.document({
+    entities: [topic],
+    records: [thread, studying, ...sessions, ...nights, energy, time],
+    exportedAt: THREAD_NOW,
+  })
+}
+
+function studyThreadScenario(): Scenario {
+  return {
+    id: 'study-thread',
+    title: 'Two sessions in',
+    summary:
+      'A Wednesday evening, ten days into a three-session push on subnetting, with two of them behind him.',
+    proves:
+      'AUD-0020 — a recommendation is a move in a plan rather than a fresh guess. The card says which course it belongs to and where in it, and Life can stop the whole thing in one tap.',
+    zone: THREAD_ZONE,
+    now: THREAD_NOW,
+    build: () => runningThread(),
+  }
+}
+
 export const SCENARIOS: readonly Scenario[] = [
+  studyThreadScenario(),
   schoolMorningScenario(),
   subnettingStruggle(),
   sleepDeficitAgainstCareer(),

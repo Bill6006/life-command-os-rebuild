@@ -537,9 +537,21 @@ describe('there is exactly one arbitration path', () => {
    * is assembled by `situation.ts` and spent by the evaluator, and a surface
    * reaches that the same way it reaches everything else.
    */
+  /*
+   * `threads` joined in Phase 82. It is a projection and two record builders:
+   * which courses are under way, which move belongs to which, and what to append
+   * when the owner starts or stops one. It ranks nothing and selects nothing.
+   *
+   * The import list is the wrong instrument for what AUD-0020 actually needs
+   * guarded — "nothing outside `arbitrate.ts` selects a move because a thread
+   * said so" is a claim about *where a thread reaches a decision*, not about
+   * which directory imported which file. It has its own test below, and that
+   * test is the one the phase gate names.
+   */
   const OPEN_TO_SURFACES = [
     'engine',
     'commitments',
+    'threads',
     'guide',
     'questions',
     'trace',
@@ -577,6 +589,98 @@ describe('there is exactly one arbitration path', () => {
       }
     }
     expect(offenders, 'a surface may ask the engine, and may not do the deciding').toEqual([])
+  })
+
+  it('lets a thread reach a decision in exactly one place — AUD-0020', () => {
+    /*
+     * The gate item, and it is a stronger claim than "no feature imports the
+     * evaluator": **a thread influences the score and never the choice.**
+     *
+     * AUD-0020's own tests-required says it in those words — "an architecture
+     * guard asserting nothing outside `arbitrate.ts` selects a move because a
+     * thread said so" — and the failure it is written against is a real one
+     * with a name: `engine.ts` already contains one deliberate override of the
+     * ranking (`continuing`, D-049), so a second one is a plausible thing for
+     * somebody to add, it would look reasonable, and no existing guard would
+     * see it.
+     *
+     * Three assertions, and each is a different way for the rule to break.
+     */
+    const offenders: string[] = []
+    const THREAD_SYMBOLS = /\bthreadFor\b|\bActiveThread\b|\bactiveThreads\b|situation\.threads/
+
+    // 1. The chooser does not know threads exist. It cannot promote, tiebreak
+    //    or rescue a move because a plan wanted it.
+    for (const file of ['src/intelligence/arbitrate.ts', 'src/intelligence/engine.ts']) {
+      const code = readCode(join(ROOT, file))
+      const found = THREAD_SYMBOLS.exec(code)
+      if (found !== null) offenders.push(`${file}: reads ${found[0]}`)
+      if (/from '\.\/threads'/.test(code)) offenders.push(`${file}: imports threads`)
+    }
+
+    // 2. Inside the engine, a thread reaches a ranking in one file and a
+    //    sentence in one other. `evaluate.ts` scores it; `explain.ts` says
+    //    which course a move belongs to, which is what stops a thread being a
+    //    hidden reason. Nothing else may look.
+    /*
+     * Four, and each is a different job.
+     *
+     * `situation.ts` assembles them, `threads.ts` is them, `evaluate.ts` scores
+     * one dimension from them, and `explain.ts` says which course a move
+     * belongs to — which is what stops a thread being a hidden reason.
+     *
+     * `lifecycle.ts` is the fifth and the one worth arguing about. It reads a
+     * thread only to *write* one: a decline pauses the course the move belonged
+     * to, which is AUD-0020's own mitigation and belongs beside the decline
+     * record rather than on whichever screen happened to send it. It chooses
+     * nothing — that is the line `docs/ARCHITECTURE_BOUNDARIES.md` draws
+     * between deciding and recording, and the same reason `outcomes` and
+     * `corrections` are open while `learning` is not.
+     *
+     * The list is short on purpose. Adding to it is an edit somebody makes
+     * deliberately, with a sentence saying why, which is the whole value of the
+     * guard.
+     */
+    const ALLOWED_READERS = [
+      'evaluate.ts',
+      'explain.ts',
+      'situation.ts',
+      'threads.ts',
+      'lifecycle.ts',
+    ]
+    for (const file of sourceFiles('src/intelligence')) {
+      const name = file.split(sep).pop() ?? ''
+      if (ALLOWED_READERS.includes(name)) continue
+      const code = readCode(file)
+      if (/from '\.\/threads'/.test(code)) offenders.push(`${repoPath(file)}: imports threads`)
+    }
+
+    // 3. And the positive half, so the three above are not passing because the
+    //    dimension quietly stopped existing.
+    const evaluator = readCode(join(ROOT, 'src/intelligence/evaluate.ts'))
+    expect(evaluator, 'the thread dimension is gone').toContain("name: 'thread-fit'")
+    expect(evaluator, 'thread-fit no longer reads the situation’s threads').toContain('threadFor(')
+
+    expect(offenders, 'a thread reached a decision outside the ranking').toEqual([])
+  })
+
+  it('weighs a thread below what is actually in the way — AUD-0020', () => {
+    /*
+     * Gate item two, asserted where the numbers are rather than through a
+     * scenario that happens to come out right. AUD-0020 names this as the first
+     * mitigation of its own biggest risk: a plan that could beat a body needing
+     * rest is the app nagging the owner with his own past intentions.
+     *
+     * `tests/synthetic/threads.test.ts` asserts the consequence on a real
+     * evening. This asserts the instrument.
+     */
+    const code = readCode(join(ROOT, 'src/intelligence/evaluate.ts'))
+    const weightOf = (name: string): number => {
+      const found = new RegExp(`'${name}': ([0-9.]+),`).exec(code)
+      expect(found, `no weight for ${name}`).not.toBeNull()
+      return Number(found?.[1])
+    }
+    expect(weightOf('thread-fit')).toBeLessThan(weightOf('bottleneck-fit'))
   })
 
   it('keeps Insights an interpretation of history rather than a second brain', () => {

@@ -48,6 +48,7 @@ import {
   type GoalPart,
 } from './direction'
 import { buildLearning, type LearningIndex } from './learning'
+import { activeThreads, type ActiveThread } from './threads'
 import { collectEpisodes, type Episode, type MoveState } from './lifecycle'
 import type { MoveProfile } from './moves'
 import { booleanValue, hoursValue, minutesValue, narrowKnowledge, ratioValue } from './values'
@@ -303,6 +304,15 @@ export interface Situation {
    */
   readonly inHand: TimeInHand
   readonly childPresent: Knowledge<boolean>
+  /**
+   * Courses of action under way, and the ones that have stopped — AUD-0020.
+   *
+   * Every thread in the record, not only the live ones: Life lists what has
+   * been paused and what has expired, and a second read of the same history to
+   * find them would be a second answer to the same question. `live` on each one
+   * is what decides whether it pulls.
+   */
+  readonly threads: readonly ActiveThread[]
   readonly socialEnergy: Knowledge<number>
   readonly homeFriction: Knowledge<FactValue>
   readonly learningTopic: Knowledge<FactValue>
@@ -960,6 +970,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     learningTopic,
     direction: resolveDirection(view, moment, domains),
     coverage,
+    threads: activeThreads(view, episodes, { now: moment.now, zone: moment.zone }),
     limiter: findLimiter(capacity, inHand, coverage, block),
     preferences: collectPreferences(view),
     constraints: collectConstraints(view, moment.now),
@@ -985,6 +996,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
 }
 
 export type { ActiveGoal, DirectionState, GoalHorizon, GoalPart }
+export type { ActiveThread }
 /*
  * Re-exported so a Life page can read a goal's trajectory through the same door
  * it already reads the situation through — AUD-0021.

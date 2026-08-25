@@ -22,6 +22,7 @@ import {
 } from '../domain/time'
 import { CLOSE_ENOUGH_TO_MENTION } from './arbitrate'
 import { describeGoalTrajectory } from './direction'
+import { describeThreadPosition, threadFor } from './threads'
 import type { DimensionName, Evaluation } from './evaluate'
 import { beliefKey } from './learning'
 import { describeHours, SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
@@ -648,8 +649,29 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
     case 'stale-evidence':
       return `Nothing has come in about ${object} for a while.`
 
+    /*
+     * The trigger that means the app has nothing particular to point at.
+     *
+     * It used to render *"Nothing else is pressing, and X pays back tomorrow"*,
+     * which is DEF-0012's exact class wearing a third set of clothes: an
+     * absence asserted from ignorance. "Nothing else is pressing" reads as a
+     * finding about the owner's life and is a statement about how little the
+     * engine could see — the same sentence, in the same file, that was removed
+     * from the `good-conditions` branch and from the walk's reason before it.
+     *
+     * It survived because no scenario in the library reached it. Phase 82's
+     * thread history is the first one with a career move and no career goal,
+     * and it printed the sentence on the first run. `tests/synthetic/
+     * no-hidden-genericity.test.ts` now enumerates which triggers the library
+     * actually reaches, so the next unreached branch is named rather than
+     * quietly trusted.
+     *
+     * What is left claims nothing about what else exists. The subject being
+     * open is a fact from the record; whether anything else was pressing is not
+     * a question this trigger was ever answering.
+     */
     case 'nothing-better':
-      return `Nothing else is pressing, and ${object} pays back tomorrow.`
+      return `${capitalise(object)} is the one you have open.`
   }
 }
 
@@ -709,6 +731,7 @@ export const AHEAD_BECAUSE: Record<DimensionName, (block: DayBlock) => string> =
   'bottleneck-fit': () => 'Answers what is actually in the way.',
   'direction-fit': () => 'Closer to what the week is about.',
   'goal-fit': () => 'Serves the goal you set.',
+  'thread-fit': () => 'The next step of something already under way.',
   urgency: () => 'The more pressing of the two.',
   'immediate-benefit': (block) => `Worth more ${horizonWord(block)}.`,
   'next-day-effect': () => 'Pays back more tomorrow.',
@@ -769,6 +792,20 @@ export interface Explanation {
   readonly restsOn: string | undefined
   /** The belief `restsOn` states, so the owner has something to disagree with. */
   readonly restsOnBelief: string | undefined
+  /**
+   * Which course this move belongs to, and where in it — AUD-0020.
+   *
+   * **A thread must never be a hidden reason.** It moves the ranking, so the
+   * owner has to be able to see it at the moment he is deciding whether to do
+   * the thing: *"Three recovery nights in a row — second of three. One to go."*
+   * The alternative is an app that quietly weights a suggestion because of
+   * something he agreed to three weeks ago and does not mention it, which is
+   * the failure AUD-0020 names about its own structure.
+   *
+   * Absent on every move that belongs to no live course, which is nearly all of
+   * them.
+   */
+  readonly partOf: string | undefined
 }
 
 /** The dimension the winner most out-scored the runner-up on, as a phrase. */
@@ -801,6 +838,16 @@ function aheadBecause(
   }
 
   return AHEAD_BECAUSE[best.name](block)
+}
+
+/** The course a move belongs to, as one line, or nothing — AUD-0020. */
+function partOfThread(
+  situation: Situation,
+  semantics: RecommendationSemantics,
+): string | undefined {
+  const thread = threadFor(situation.threads, semantics.target)
+  if (thread === undefined) return undefined
+  return `${thread.intent} — ${lowerFirst(describeThreadPosition(thread))}`
 }
 
 export type ExplanationResult =
@@ -895,6 +942,7 @@ export function explain(
       restsOn: learned.summary,
       restsOnBelief:
         learned.summary === undefined ? undefined : beliefKey('effect', semantics.target.verb),
+      partOf: partOfThread(situation, semantics),
     },
   }
 }

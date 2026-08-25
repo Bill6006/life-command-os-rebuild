@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { CONCEPT } from '../../src/domain/concepts'
 import { isUsable } from '../../src/domain/knowledge'
 import { DAY_BLOCKS } from '../../src/domain/time'
-import { renderRecommendation } from '../../src/domain/recommendation'
+import { renderRecommendation, WHY_NOW_TRIGGERS } from '../../src/domain/recommendation'
 import { AHEAD_BECAUSE } from '../../src/intelligence/explain'
 import { profileFor } from '../../src/intelligence/moves'
 import { decide, type Decision } from '../../src/intelligence/engine'
@@ -411,6 +411,62 @@ describe('the reason only cites what the decision leaned on — DEF-0006', () =>
         expect(line.text, `${entry.id} ${line.what}`).not.toMatch(/nothing more pressing/i)
         expect(line.text, `${entry.id} ${line.what}`).not.toMatch(/nothing else is pressing/i)
       }
+    }
+  })
+
+  it('names which why-now triggers the library actually reaches — DEF-0012', () => {
+    /*
+     * The check the sweep above was missing, and Phase 82 is how it was found.
+     *
+     * `nothing-better` rendered *"Nothing else is pressing, and X pays back
+     * tomorrow"* for three phases. It is the same absence-from-ignorance the
+     * two assertions above forbid by name, in the same file those two were
+     * repaired in — and every run passed, because no history in the library
+     * reached the branch. The first scenario with a career move and no career
+     * goal printed it immediately.
+     *
+     * So the sweep now says out loud what it covers. A trigger nothing reaches
+     * is not a trigger that is fine; it is a sentence nobody has read. Adding a
+     * scenario that reaches one moves it out of the unreached list, and adding
+     * a trigger the library cannot reach fails here rather than shipping
+     * unexamined copy — which is D-108's first check applied to a set the tests
+     * had been quietly sampling.
+     */
+    const reached = new Set<string>()
+    for (const entry of everythingSpoken) {
+      const trigger = entry.decision.evaluation?.candidate.semantics.whyNow.trigger
+      if (trigger !== undefined) reached.add(trigger)
+    }
+
+    /*
+     * The one the library does not put in front of the owner, and where it is
+     * covered instead.
+     *
+     * `goal-behind` needs a goal carrying both a date and named pieces that
+     * actually measure behind (AUD-0046), and the only history with one is
+     * `week-pointed-at-home`, whose evening is decided by the weekly direction
+     * rather than by the career move. Its sentence is not unread —
+     * `tests/synthetic/goal-horizon-and-parts.test.ts` renders it across four
+     * combinations of horizon and pieces and holds it to the same rule as
+     * everything here — but it is not read *from this library*, and that is a
+     * different statement worth writing down rather than leaving to be assumed.
+     */
+    const NOT_REACHED: readonly string[] = ['goal-behind']
+
+    const unexpected = [...reached].filter((trigger) => NOT_REACHED.includes(trigger))
+    const missing = NOT_REACHED.filter((trigger) => !reached.has(trigger))
+
+    expect(
+      unexpected,
+      'a trigger listed as unreached is now reached — take it off the list',
+    ).toEqual([])
+    expect(missing, 'the list of unreached triggers is out of date').toEqual(NOT_REACHED)
+
+    // And the positive half: everything not on that list is genuinely read by
+    // somebody, so the two assertions above are sweeping real sentences.
+    for (const trigger of WHY_NOW_TRIGGERS) {
+      if (NOT_REACHED.includes(trigger)) continue
+      expect([...reached], `no scenario reaches "${trigger}"`).toContain(trigger)
     }
   })
 

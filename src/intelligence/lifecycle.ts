@@ -11,6 +11,7 @@ import {
 import { localDayIdAt, type Instant, type LocalDayId, type TimeZoneId } from '../domain/time'
 import type { MemoryView } from '../memory/view'
 import type { Situation } from './situation'
+import { setThreadStateRecord, threadFor } from './threads'
 
 /**
  * The recommendation lifecycle (canonical plan sections 20 and 48).
@@ -350,6 +351,24 @@ export function planLifecycle(request: LifecycleRequest): LifecyclePlan {
           ...(request.reason === undefined ? {} : { reason: request.reason }),
         }),
       )
+      /*
+       * And the course this move belonged to stops — AUD-0020.
+       *
+       * "Any decline of a thread move must be able to end the thread" is one of
+       * the finding's own mitigations, and it is here rather than on the screen
+       * on purpose: a surface that forgot it would leave the owner saying no to
+       * the same plan every evening, which is precisely the nagging the whole
+       * structure is fenced against.
+       *
+       * Paused rather than abandoned, because a decline is disagreement with
+       * *tonight* and not a verdict on the plan (section 20, D-038). It stops
+       * pulling immediately, it stays on Life, and he can pick it up again.
+       *
+       * `unable-now` and `try-another` deliberately do not do this. One is a
+       * fact about the evening and the other is a request for a different
+       * suggestion; neither is him saying the course is wrong.
+       */
+      records.push(...paused(situation, view, target, envelope.recordedAt, request.nextId))
       break
     case 'try-another':
       // A request for a different suggestion, not a judgement on this one.
@@ -369,6 +388,34 @@ export function planLifecycle(request: LifecycleRequest): LifecyclePlan {
   }
 
   return { records, recommendation, noChange: undefined }
+}
+
+/**
+ * The record that pauses whichever course this move belonged to, if any.
+ *
+ * Empty for every move that belongs to no live thread, which is nearly all of
+ * them — so nothing about an ordinary decline changes.
+ */
+function paused(
+  situation: Situation,
+  view: MemoryView,
+  target: ActionTarget,
+  recordedAt: Instant,
+  nextId: (() => RecordId) | undefined,
+): readonly CanonicalRecord[] {
+  const thread = threadFor(situation.threads, target)
+  if (thread === undefined) return []
+  const previous = view.history.byId(thread.source)
+  if (previous === undefined || previous.kind !== 'thread') return []
+  return [
+    setThreadStateRecord(
+      thread,
+      'paused',
+      previous,
+      { now: situation.at, zone: situation.zone, recordedAt },
+      nextId?.(),
+    ),
+  ]
 }
 
 export function readable(state: MoveState): string {

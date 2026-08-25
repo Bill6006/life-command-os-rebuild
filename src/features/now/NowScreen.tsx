@@ -35,6 +35,7 @@ import {
   type QuestionSpec,
 } from '../../intelligence/questions'
 import type { Situation } from '../../intelligence/situation'
+import { startThreadRecord, threadOfferFor, type ThreadOffer } from '../../intelligence/threads'
 import { hereNowWord, horizonWord } from '../../intelligence/vocabulary'
 import { isPreview, isProduction } from '../../platform/buildInfo'
 import { hashForDestination } from '../../platform/routing'
@@ -349,6 +350,32 @@ export function NowScreen() {
     ])
   }
 
+  /*
+   * Starting a course — AUD-0020.
+   *
+   * One tap, beside the move it would be the first occasion of. There is no
+   * generic thread-creation control anywhere in the app: each of the three
+   * kinds is offered in the one situation it answers, which is what keeps this
+   * a strategic skeleton rather than a project-management subsystem.
+   *
+   * It writes a record and nothing else. What that record does to a decision
+   * happens later, in the ranking, through `thread-fit` — a thread never
+   * bypasses the arbiter.
+   */
+  const startThread = (offer: ThreadOffer) => {
+    append(() => [
+      startThreadRecord(
+        {
+          kind: offer.kind,
+          subject: offer.subject,
+          subjectLabel: offer.subjectLabel,
+          domain: offer.domain,
+        },
+        { now: memory.now, zone: memory.zone, recordedAt: systemClock().now() },
+      ),
+    ])
+  }
+
   const answerGrowth = (suggestion: GrowthSuggestion, agreed: boolean) => {
     // Both answers are recorded, and both are read. Agreeing writes what
     // changed; "not yet" writes that the area was looked at by the person who
@@ -365,6 +392,24 @@ export function NowScreen() {
 
   const local = localDateTimeAt(memory.now, memory.zone)
   const explanation = decision.explanation
+
+  /*
+   * Whether a course is worth offering beside this move.
+   *
+   * Worked out here rather than on the `Decision`, and the placement is the
+   * point: `engine.ts` knows nothing about threads at all
+   * (`tests/unit/architecture-guards.test.ts` fails the build if it learns), so
+   * there is no way for a course to reach the chosen move except through the
+   * ranking. An offer is a question on a screen, not a recommendation.
+   */
+  const threadOffer =
+    explanation === undefined
+      ? undefined
+      : threadOfferFor(
+          decision.situation.threads,
+          explanation.semantics.target,
+          explanation.rendered.subjectLabel,
+        )
 
   return (
     <Screen title="Now">
@@ -490,6 +535,21 @@ export function NowScreen() {
           suggestion={decision.growth[0]}
           disabled={busy}
           onAnswer={(agreed) => answerGrowth(decision.growth[0]!, agreed)}
+        />
+      )}
+
+      {/*
+        Something worth keeping going — AUD-0020.
+
+        Only when there is nothing about his daughter to answer first, and only
+        one at a time, for the same reason the guide asks one question at a
+        time: this screen is read with one thumb and a spare minute.
+      */}
+      {decision.growth[0] !== undefined || threadOffer === undefined ? null : (
+        <ThreadOfferPanel
+          offer={threadOffer}
+          disabled={busy}
+          onStart={() => startThread(threadOffer)}
         />
       )}
 
@@ -661,6 +721,15 @@ function DetailPanel({
   onCorrect: (belief: string) => void
 }) {
   const rows = [
+    /*
+      Which course this belongs to — AUD-0020.
+
+      First, and above the limiter, because it is the part of the reason the
+      owner cannot work out from the sentence itself. A thread moves the
+      ranking; **a hidden plan is worse than no plan**, so the app says which
+      one and where in it, every time one applies.
+    */
+    explanation.partOf === undefined ? undefined : { label: 'Part of', value: explanation.partOf },
     explanation.limiter === undefined
       ? undefined
       : { label: explanation.limiter.label, value: explanation.limiter.summary },
@@ -1068,6 +1137,49 @@ function GuidePanel({
             {option.label}
           </button>
         ))}
+      </div>
+    </Panel>
+  )
+}
+
+/**
+ * A course the app could keep going, offered as a question — AUD-0020.
+ *
+ * The same shape and the same discipline as the growth panel above it: the app
+ * proposes, the owner answers, and nothing is written until he does. What is
+ * different is what a yes means — it changes what gets suggested over the next
+ * days rather than recording something about the past — so the panel says what
+ * the course actually is before he agrees to it, and Life is where he stops it.
+ *
+ * There is no "not now" button, and its absence is deliberate. Ignoring the
+ * offer already means no; a second control would make declining a plan a thing
+ * he has to do, which is the burden section 4.5 constrains.
+ */
+function ThreadOfferPanel({
+  offer,
+  disabled,
+  onStart,
+}: {
+  offer: ThreadOffer
+  disabled: boolean
+  onStart: () => void
+}) {
+  return (
+    <Panel title="Something worth keeping going">
+      <p className="now-question" data-testid="now-thread-offer">
+        {offer.offer}
+      </p>
+      <p className="note">{offer.intent}. You can stop it any time from Life.</p>
+      <div className="now-options">
+        <button
+          type="button"
+          className="now-option"
+          disabled={disabled}
+          data-testid="now-thread-start"
+          onClick={onStart}
+        >
+          Yes, keep it going
+        </button>
       </div>
     </Panel>
   )
