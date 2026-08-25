@@ -1261,8 +1261,10 @@ is QA's to design.
 
 **Model:** Claude Opus-class is the builder's; **QA runs on Codex**, per D-090.
 
-**Intelligence level:** Max — the audit campaign's repair rounds are classified
-as cross-system semantic work by the owner decision in `docs/qa/README.md`.
+**Intelligence level:** High — the Max classification in `docs/qa/README.md`
+covers the **builder's** repair rounds, not QA's. A retest is reading a screen
+as a person and tracing a claim to its evidence: judgement rather than depth of
+search, which is what the middle-level default is for.
 
 **Conversation:** SAME — the Codex QA conversation that wrote Rounds 1 and 2.
 

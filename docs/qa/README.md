@@ -305,8 +305,19 @@ Recommend the **lowest level appropriate to the work**, not Max by default.
 
 Every builder step in the whole-app intelligence audit campaign — Phase 81,
 Phase 82 and any further phase created by its adjudication — is **Max**, on
-both the first build and every repair round. Independent QA keeps its own
-middle-level default; this rule is about the builder.
+both the first build and every repair round.
+
+**This rule applies to Claude only. Never write Max into a Codex block.**
+Codex's levels are Light, Medium, High, Extra High and Ultra — there is no
+"Max". Its top level, Ultra, is marked *"consumes usage limits faster"* and the
+application will not switch to it under automation, so a retest handoff asking
+for Max stops the orchestrator with the level unset. It has happened twice.
+Independent QA keeps its own middle-level default, and a retest block should say
+**High** unless there is a stated reason to say otherwise.
+
+The two blocks a QA report carries are for different systems: the repair block
+is Claude's and takes Max; the retest block is Codex's and does not. Copying the
+level from one into the other is the mistake to avoid.
 
 It is not an exception to the rule above, it is a classification under it.
 These findings are _"difficult cross-system semantics"_: temporal reasoning that
