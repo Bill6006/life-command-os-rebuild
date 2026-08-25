@@ -3,6 +3,7 @@ import { DOMAIN } from '../../src/domain/domains'
 import {
   localAdvisor,
   MAX_NUDGE,
+  nudgeBoundFor,
   validateAdvice,
   type AdvisorReply,
   type SemanticAdvisor,
@@ -194,9 +195,47 @@ describe('an advisor cannot overturn a decision', () => {
   })
 
   it('records the adjustment it was actually allowed, not the one it asked for', () => {
+    /*
+     * The bound is the field's now, not a constant — AUD-0039.
+     *
+     * `MAX_NUDGE` was chosen against an assumed score range, and on the range
+     * the evaluator actually produced it would have reversed most rankings the
+     * audit observed. What is allowed on this decision is a quarter of this
+     * decision's own spread, capped at the old absolute — so the number in the
+     * trace is derived rather than fixed, and what is asserted is the property:
+     * the advisor asked for −50 and was allowed a fraction of the field.
+     */
     const applied = attacked.trace.notes.find((note) => note.includes('moved'))
-    expect(applied).toContain(`-${MAX_NUDGE.toFixed(2)}`)
     expect(applied).not.toContain('-50')
+
+    const scores = attacked.trace.ranking.map((row) => row.score)
+    const bound = nudgeBoundFor(scores)
+    expect(bound).toBeGreaterThan(0)
+    expect(bound).toBeLessThanOrEqual(MAX_NUDGE)
+    expect(applied).toContain(`-${bound.toFixed(2)}`)
+  })
+
+  it('cannot turn over a contest wider than half the field — AUD-0039', () => {
+    /*
+     * The sentence the old comment made, now a property rather than a hope.
+     *
+     * A nudge reaches a quarter of the spread, so two candidates can be moved
+     * past each other only if they were inside **half** the spread to begin
+     * with — one lifted a quarter and the other dropped a quarter. Asserted on
+     * the arithmetic rather than on a scenario, because it is a claim about
+     * every possible field and not about the ones the library happens to hold.
+     */
+    for (const spread of [0.01, 0.05, 0.1, 0.3, 1, 2]) {
+      const bound = nudgeBoundFor([spread, 0])
+      expect(2 * bound, `spread ${spread}`).toBeLessThanOrEqual(spread / 2 + 1e-9)
+    }
+  })
+
+  it('has nothing to reach with when there is no contest at all', () => {
+    // One candidate is not a close call, it is the only call — and an opinion
+    // about a margin that does not exist is an opinion about nothing.
+    expect(nudgeBoundFor([0.4])).toBe(0)
+    expect(nudgeBoundFor([])).toBe(0)
   })
 })
 

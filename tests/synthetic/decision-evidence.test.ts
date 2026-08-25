@@ -257,7 +257,34 @@ describe('an evening with a month behind it', () => {
 })
 
 describe('an evening where the same move goes differently by context', () => {
-  const { evidence } = evidenceOn('long-run')
+  /*
+   * The same nine months, read on the Friday and on the Saturday — AUD-0035.
+   *
+   * Clearing the kitchen helped on all six weekday evenings and on two of six
+   * weekends, and 2026-11-14 is a Saturday. Before the re-cut the app picked
+   * the kitchen on both, because 5.3 units of dead weight compressed every
+   * candidate toward the middle and the ordering came out of the compression
+   * rather than out of the evidence. It now picks the kitchen on the Friday and
+   * something else on the Saturday — which is the app acting on the very split
+   * the panel below describes, on a history built to have one.
+   *
+   * So the panel is read on the day it belongs to. That is not a convenience:
+   * the evidence panel explains the move on screen, and on the Saturday the
+   * kitchen is not the move on screen.
+   */
+  const kit = createKit('LRE', 'America/Denver', '2026-01-01T12:00:00Z')
+  const loaded = loadScenario('long-run')
+  const friday = kit.local('2026-11-13', '19:30')
+  const onFriday = decide(loaded.viewAt(friday), { now: friday, zone: loaded.scenario.zone })
+  const evidence = evidenceForDecision(onFriday)
+
+  it('picks the move whose record says it works on a day like this one', () => {
+    expect(onFriday.evaluation?.candidate.semantics.target.verb).toBe('reset-space')
+    // And not on the Saturday, where the same record says it mostly does not.
+    expect(
+      loadScenario('long-run').decision().evaluation?.candidate.semantics.target.verb,
+    ).not.toBe('reset-space')
+  })
 
   it('says where it goes better, and says which set that figure is over', () => {
     /*
@@ -273,7 +300,7 @@ describe('an evening where the same move goes differently by context', () => {
     expect(evidence?.context).toMatch(/weekend/)
     // And which side tonight is on, which is the clause that makes the app's
     // own conclusion legible against the plain tally above it.
-    expect(evidence?.context).toMatch(/This evening is at the weekend\./)
+    expect(evidence?.context).toMatch(/This evening is on a weekday\./)
   })
 
   it('names the counterexamples rather than averaging them into the figure', () => {
@@ -461,7 +488,20 @@ describe('AUD-0028 — two lines about one move that a reader can reconcile', ()
     expect(month.explanation?.rendered.reason).toBeDefined()
     expect(months.explanation?.rendered.reason).toBeDefined()
     expect(months.explanation?.rendered.reason).not.toBe(month.explanation?.rendered.reason)
-    expect(months.explanation?.rendered.reason).toMatch(/made little difference/i)
+
+    /*
+     * And the learned-band clause, read on the evening the move is on screen.
+     *
+     * Both histories are about clearing the kitchen, and after the re-cut the
+     * nine-month one no longer offers it on a Saturday — because its own record
+     * says the move mostly does not land at the weekend (AUD-0035). The clause
+     * is what it always was; the evening it appears on is the weekday one.
+     */
+    const kit = createKit('LRC', 'America/Denver', '2026-01-01T12:00:00Z')
+    const loaded = loadScenario('long-run')
+    const friday = kit.local('2026-11-13', '19:30')
+    const onFriday = decide(loaded.viewAt(friday), { now: friday, zone: loaded.scenario.zone })
+    expect(onFriday.explanation?.rendered.reason).toMatch(/made little difference/i)
   })
 
   it('asserts nothing causal about his own evenings', () => {

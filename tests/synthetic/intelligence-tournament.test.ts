@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { DOMAIN, type LifeDomainId } from '../../src/domain/domains'
-import { ARCHITECTURES, decide, type ArchitectureId } from '../../src/intelligence/engine'
+import { sequentialRecordIds } from '../../src/domain/ids'
+import {
+  ARCHITECTURES,
+  decide,
+  sweepDayBlocks,
+  type ArchitectureId,
+  type SweptBlock,
+} from '../../src/intelligence/engine'
+import { planLifecycle } from '../../src/intelligence/lifecycle'
+import { profileFor } from '../../src/intelligence/moves'
+import type { Scenario } from '../../src/synthetic/kit'
 import { buildView } from '../../src/memory/view'
 import { snapshotFromWire } from '../../src/memory/snapshot'
 import { SCENARIOS } from '../../src/synthetic/scenarios'
@@ -132,7 +142,106 @@ function scoreOne(architecture: ArchitectureId, expectation: Expectation): Card 
     )
   }
 
+  /*
+   * The three the audit added — AUD-0039(b).
+   *
+   * The original rubric measured things the deterministic layer is already good
+   * at: decides the right kind of thing, reaches the same answer twice, explains
+   * itself, keeps the noun, lands in the expected life area. It contained
+   * nothing a model would be uniquely good at and rules uniquely bad at — which
+   * is exactly the class this audit is full of — so "no difference" was weak
+   * evidence of equivalence rather than strong evidence.
+   *
+   * These three are the classes the audit found by reading the deployed build:
+   * a five-hour morning treated as one moment, the identical sentence at four
+   * separate hours of one day, and an approach that is never abandoned. They
+   * are checked on the same histories at every hour rather than at the one hour
+   * each was written for, which is what makes them able to fail.
+   */
+  const day = sweepDayBlocks(buildView(loaded.snapshot, moment), moment, { architecture })
+
+  check('gets the hour right', day.every(suitsItsOwnHour))
+  check('does not repeat itself across the day', saysSomethingNew(day))
+  check('notices when an approach is not landing', stopsAfterRefusals(scenario, architecture))
+
   return { profile: expectation.id, chosen, sentence, reason, points, outOf, missed }
+}
+
+/**
+ * Whether the app offered a move the hour actually suits — AUD-0039(b).
+ *
+ * Not "was it allowed": the filter already removes what a block refuses. This
+ * is the stronger question the audit asks, and the one a deep-work task on a
+ * school morning fails: a move that is merely *tolerated* by the hour should be
+ * held for an hour that suits it, or not offered.
+ *
+ * Saying nothing passes, and so does a deferral. Both are the app declining to
+ * put the wrong thing in the wrong hour, which is the behaviour being measured.
+ */
+function suitsItsOwnHour(swept: SweptBlock): boolean {
+  const decision = swept.decision
+  if (decision.kind !== 'move') return true
+  const verb = decision.evaluation?.candidate.semantics.target.verb
+  if (verb === undefined) return false
+  return profileFor(verb).suits.includes(swept.block)
+}
+
+/**
+ * Whether the day contains more than one answer — AUD-0039(b).
+ *
+ * Counted over the hours the app actually offers something. A history it has
+ * nothing to say about says nothing at every hour, and that is one honest
+ * answer repeated rather than the defect: the audit's complaint is about four
+ * *suggestions* being the same sentence, not about a near-empty store being
+ * consistently empty.
+ */
+function saysSomethingNew(day: readonly SweptBlock[]): boolean {
+  const spoken = day
+    .filter((swept) => swept.decision.kind === 'move' || swept.decision.kind === 'hold')
+    .map((swept) => swept.decision.explanation?.rendered.sentence ?? '?')
+  if (spoken.length <= 1) return true
+  return new Set(spoken).size > 1
+}
+
+/**
+ * Whether the app stops when an approach is plainly not landing — AUD-0039(b).
+ *
+ * Three refusals in one block, and the question is whether anything changes.
+ * The audit's own example is a topic still un-reviewed six days later with the
+ * same sentence offered every evening: nothing said "this is the third time",
+ * nothing escalated, nothing gave up.
+ *
+ * A history that offers nothing to refuse passes: there is no approach to
+ * abandon, which is a different state and not a failure.
+ */
+function stopsAfterRefusals(scenario: Scenario, architecture: ArchitectureId): boolean {
+  const loaded = snapshotFromWire(scenario.build())
+  const moment = { now: scenario.now, zone: scenario.zone }
+  let snapshot = loaded.snapshot
+  let first: string | undefined
+
+  for (let round = 0; round < 3; round += 1) {
+    const view = buildView(snapshot, moment)
+    const decision = decide(view, moment, { architecture })
+    const explanation = decision.explanation
+    if (explanation === undefined) return true
+    if (first === undefined) first = explanation.rendered.sentence
+
+    const planned = planLifecycle({
+      view,
+      situation: decision.situation,
+      semantics: explanation.semantics,
+      action: 'decline',
+      recordedAt: (moment.now + (round + 1) * 1000) as typeof moment.now,
+      nextId: sequentialRecordIds(`TRN${round}`),
+    })
+    snapshot = { ...snapshot, records: [...snapshot.records, ...planned.records] }
+  }
+
+  const after = decide(buildView(snapshot, moment), moment, { architecture })
+  // Either it has stopped offering, or it is offering something else. What it
+  // may not do is come back with the same sentence a fourth time.
+  return after.explanation?.rendered.sentence !== first
 }
 
 function runFor(architecture: ArchitectureId): readonly Card[] {

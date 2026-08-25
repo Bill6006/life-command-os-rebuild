@@ -20,6 +20,7 @@ import type { StoreSnapshot } from '../memory/store'
 import { buildView, type MemoryView } from '../memory/view'
 import {
   localAdvisor,
+  nudgeBoundFor,
   situationNotes,
   validateAdvice,
   type CandidateDigest,
@@ -211,7 +212,15 @@ function takeAdvice(
     }
   }
 
-  const { nudges, refused } = validateAdvice(reply, candidates)
+  /*
+   * How far the advice may reach, from the field it is about — AUD-0039.
+   *
+   * Measured on the deterministic ranking, before any nudge is applied, so the
+   * bound is a property of what the rules concluded rather than of what the
+   * advisor would like them to have concluded.
+   */
+  const bound = nudgeBoundFor(evaluations.map((evaluation) => evaluation.score))
+  const { nudges, refused } = validateAdvice(reply, candidates, bound)
   const byCandidate = new Map(nudges.map((nudge) => [nudge.candidate, nudge]))
 
   const notes: string[] = []
@@ -755,6 +764,29 @@ export function noActionCopy(
           headline: 'Nothing new for today.',
           detail:
             'Everything this history has to suggest has already been in front of you today, and tomorrow starts again.',
+        }
+      }
+      /*
+       * The same fact, on an hour that also ruled some things out.
+       *
+       * The branch above required *every* rejection to be repetition, and that
+       * `every` turned out to be the fragile part: the moment one more move
+       * refused the late night — `recall-practice`, found by the widened
+       * tournament rubric in Phase 82 — a screen that had been saying "these
+       * have already been in front of you" started saying "none of them suit
+       * where you actually are" instead. Which is the falsehood QA-81-006 was
+       * repaired for, arriving through a change three files away.
+       *
+       * So the rule is stated as what it always meant: **if anything was
+       * withheld for having been seen, that is the fact worth saying**, and the
+       * hour is mentioned rather than blamed. The condition is now about the
+       * presence of the reason rather than about the absence of every other
+       * one, which is what stops the next unrelated change breaking it.
+       */
+      if (rejected.some((row) => row.reason === 'just-covered')) {
+        return {
+          headline: `Nothing new ${horizonWord(situation.block)}.`,
+          detail: `What would have helped has already been in front of you today, and the rest is wrong for ${blockNoun(situation.block)}.`,
         }
       }
       /*

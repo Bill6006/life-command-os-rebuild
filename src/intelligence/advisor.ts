@@ -74,13 +74,47 @@ export interface SemanticAdvisor {
 }
 
 /**
- * The most an advisor can move a candidate.
+ * The most an advisor can move a candidate, as a share of the field it is
+ * judging — AUD-0039.
  *
- * Chosen so that a nudge can settle a close contest and cannot reverse a
- * decided one. The deterministic layer stays responsible for the outcome; the
- * advisor is allowed to have an opinion about the margin.
+ * ## What was wrong with a number
+ *
+ * The comment above this used to say a nudge "can settle a close contest and
+ * cannot reverse a decided one", and 0.06 was chosen against an assumed score
+ * range. On the range the evaluator actually produced, an ordinary evening's
+ * whole ranked field spanned 0.137 to −0.023 and the top two were 0.002 apart:
+ * **0.06 was large on that scale** and would have reversed most rankings the
+ * audit observed. The fence was calibrated against a scale nobody had measured,
+ * and AUD-0035 was about to change the real one.
+ *
+ * ## What it is now
+ *
+ * A quarter of the ranked spread. Two candidates can therefore be moved past
+ * each other only if they were inside **half** the spread to begin with —
+ * one nudged up by a quarter and the other down by a quarter — so the sentence
+ * the old comment made is now a property rather than a hope: a decided contest
+ * is one whose gap exceeds half the field, and no advice can turn it over.
+ *
+ * The ceiling stays, and it is the old absolute. A very wide field must not buy
+ * a very large opinion: the advisor is allowed to settle a margin, never to
+ * become a dimension in its own right.
  */
+export const MAX_NUDGE_SHARE = 0.25
+
+/** The most a nudge may ever be, however wide the field. The old absolute. */
 export const MAX_NUDGE = 0.06
+
+/**
+ * The bound for one decision, from the spread of the field being judged.
+ *
+ * A field with one candidate has no spread and no contest to settle, so the
+ * bound is zero: there is nothing for an opinion to be about.
+ */
+export function nudgeBoundFor(scores: readonly number[]): number {
+  if (scores.length < 2) return 0
+  const spread = Math.max(...scores) - Math.min(...scores)
+  return Math.min(MAX_NUDGE, MAX_NUDGE_SHARE * Math.max(0, spread))
+}
 
 const MAX_REASON_LENGTH = 160
 
@@ -116,6 +150,15 @@ export interface ValidatedAdvice {
 export function validateAdvice(
   reply: AdvisorReply | undefined,
   candidates: readonly Candidate[],
+  /**
+   * How far a nudge may reach on this decision — AUD-0039.
+   *
+   * Passed in rather than read from a constant, because it is a property of the
+   * ranked field rather than of the advisor. Defaults to the absolute ceiling
+   * so a caller that has no field to measure — a guardrail test poking the
+   * validator directly — still gets the old, stricter behaviour.
+   */
+  bound: number = MAX_NUDGE,
 ): ValidatedAdvice {
   if (reply === undefined) return { nudges: [], refused: [] }
 
@@ -168,7 +211,7 @@ export function validateAdvice(
       candidate: id,
       // Clamped rather than refused: an over-large number is an advisor
       // overreaching, not an advisor malfunctioning, and the cap is the answer.
-      adjustment: Math.max(-MAX_NUDGE, Math.min(MAX_NUDGE, nudge.adjustment)),
+      adjustment: Math.max(-bound, Math.min(bound, nudge.adjustment)),
       because: nudge.because.trim(),
     })
   }

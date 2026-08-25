@@ -190,10 +190,24 @@ function scaled(value: number): number {
 function bottleneckFit(situation: Situation, profile: MoveProfile, friction: number): Dimension {
   const limiter = situation.limiter
   if (limiter === undefined) {
+    /*
+     * Abstains — AUD-0035, and it is the heaviest of the three.
+     *
+     * "Nothing is in the way" is not a judgement about this move; it is the
+     * absence of a judgement. At weight 2.5 it was contributing a fifth of the
+     * whole instrument as zero on every evening with no limiter, dividing every
+     * candidate's score by roughly 1.5 and compressing the field into noise —
+     * an observed evening ranked 0.137 / 0.135 / 0.134, three candidates inside
+     * three thousandths, decided by rounding.
+     *
+     * D-048 already established the rule for `follow-through` and recorded that
+     * the older dimensions were left alone because re-cutting them means
+     * re-running the tournament. This is the phase that can.
+     */
     return {
       name: 'bottleneck-fit',
       value: 0,
-      weight: WEIGHTS['bottleneck-fit'],
+      weight: 0,
       note: 'nothing in particular is in the way',
     }
   }
@@ -218,10 +232,12 @@ function bottleneckFit(situation: Situation, profile: MoveProfile, friction: num
    * says what has gone quiet whenever the chosen move is not about it.
    */
   if (limiter.kind === 'coverage') {
+    // Abstains for the same reason, and the comment above already says why a
+    // quiet area is not in the way of anything: it is the app's own blind spot.
     return {
       name: 'bottleneck-fit',
       value: 0,
-      weight: WEIGHTS['bottleneck-fit'],
+      weight: 0,
       note: 'nothing is in the way — an area has just gone quiet',
     }
   }
@@ -274,7 +290,14 @@ function directionFit(candidate: Candidate, situation: Situation): Dimension {
         : weekly.state === 'expired'
           ? `“${weekly.wording}” belonged to an earlier week`
           : `“${weekly.wording}” does not name a life area, so it pulls nowhere`
-    return { name: 'direction-fit', value: 0, weight, note }
+    /*
+     * Abstains — AUD-0035. A week with no direction set, a direction that
+     * belonged to an earlier week, and a direction that names no life area are
+     * all the same thing to a ranking: nothing to say. Scoring them as zero at
+     * weight 1.8 marked every move down for the owner not having stated a
+     * direction, which is not a fact about any move.
+     */
+    return { name: 'direction-fit', value: 0, weight: 0, note }
   }
 
   const matches = weekly.category === candidate.semantics.domain
@@ -355,10 +378,12 @@ function goalFit(candidate: Candidate, situation: Situation): Dimension {
     named ?? situation.direction.goals.find((entry) => entry.domain === candidate.semantics.domain)
 
   if (goal === undefined) {
+    // Abstains — AUD-0035. No goal in this area is a fact about the area rather
+    // than about the move, and the move should not pay for it.
     return {
       name: 'goal-fit',
       value: 0,
-      weight: WEIGHTS['goal-fit'],
+      weight: 0,
       note: 'no active goal in this area',
     }
   }

@@ -71,14 +71,57 @@ function situationsByBlock(): Map<DayBlock, Situation> {
   return byBlock
 }
 
-/** The three shapes of rejection list the `everything-ruled-out` copy reads. */
+/** The four shapes of rejection list the `everything-ruled-out` copy reads. */
 const REJECTIONS: Record<string, readonly Rejection[]> = {
   none: [],
   'all-read': [{ candidate: 'a', reason: 'just-covered', explanation: '', evidence: [] }],
+  /*
+   * Something withheld for having been seen, on an hour that also ruled things
+   * out — Phase 82.
+   *
+   * The `all-read` branch above required *every* rejection to be repetition,
+   * and that `every` was the fragile part: one more move refusing the late
+   * night was enough to send this state to "none of them suit where you
+   * actually are", which is the falsehood QA-81-006 repaired. This shape is
+   * that state, so the sentence has a reader.
+   */
+  mixed: [
+    { candidate: 'a', reason: 'just-covered', explanation: '', evidence: [] },
+    { candidate: 'b', reason: 'wrong-time-of-day', explanation: '', evidence: [] },
+  ],
   displaced: [
     { candidate: 'a', reason: 'wrong-time-of-day', explanation: '', evidence: [] },
     { candidate: 'b', reason: 'not-instead-of-that', explanation: '', evidence: [] },
   ],
+}
+
+/** What the mixed shape says, per block. Bare nouns, and never the evening. */
+const MIXED: Record<string, { readonly headline: string; readonly detail: string }> = {
+  'early-morning': {
+    headline: 'Nothing new today.',
+    detail:
+      'What would have helped has already been in front of you today, and the rest is wrong for the early morning.',
+  },
+  morning: {
+    headline: 'Nothing new today.',
+    detail:
+      'What would have helped has already been in front of you today, and the rest is wrong for the morning.',
+  },
+  afternoon: {
+    headline: 'Nothing new today.',
+    detail:
+      'What would have helped has already been in front of you today, and the rest is wrong for the afternoon.',
+  },
+  evening: {
+    headline: 'Nothing new tonight.',
+    detail:
+      'What would have helped has already been in front of you today, and the rest is wrong for the evening.',
+  },
+  'late-night': {
+    headline: 'Nothing new tonight.',
+    detail:
+      'What would have helped has already been in front of you today, and the rest is wrong for the night.',
+  },
 }
 
 interface Row {
@@ -141,6 +184,13 @@ const EXPECTED: readonly Row[] = [
   {
     block: 'early-morning',
     reason: 'everything-ruled-out',
+    rejections: 'mixed',
+    headline: MIXED['early-morning']!.headline,
+    detail: MIXED['early-morning']!.detail,
+  },
+  {
+    block: 'early-morning',
+    reason: 'everything-ruled-out',
     rejections: 'displaced',
     headline: 'Nothing to add today.',
     detail: DISPLACED,
@@ -195,6 +245,13 @@ const EXPECTED: readonly Row[] = [
     rejections: 'all-read',
     headline: 'Nothing new for today.',
     detail: ALL_READ,
+  },
+  {
+    block: 'morning',
+    reason: 'everything-ruled-out',
+    rejections: 'mixed',
+    headline: MIXED['morning']!.headline,
+    detail: MIXED['morning']!.detail,
   },
   {
     block: 'morning',
@@ -257,6 +314,13 @@ const EXPECTED: readonly Row[] = [
   {
     block: 'afternoon',
     reason: 'everything-ruled-out',
+    rejections: 'mixed',
+    headline: MIXED['afternoon']!.headline,
+    detail: MIXED['afternoon']!.detail,
+  },
+  {
+    block: 'afternoon',
+    reason: 'everything-ruled-out',
     rejections: 'displaced',
     headline: 'Nothing to add today.',
     detail: DISPLACED,
@@ -315,6 +379,13 @@ const EXPECTED: readonly Row[] = [
   {
     block: 'evening',
     reason: 'everything-ruled-out',
+    rejections: 'mixed',
+    headline: MIXED['evening']!.headline,
+    detail: MIXED['evening']!.detail,
+  },
+  {
+    block: 'evening',
+    reason: 'everything-ruled-out',
     rejections: 'displaced',
     headline: 'Nothing to add tonight.',
     detail: DISPLACED,
@@ -369,6 +440,13 @@ const EXPECTED: readonly Row[] = [
     rejections: 'all-read',
     headline: 'Nothing new for today.',
     detail: ALL_READ,
+  },
+  {
+    block: 'late-night',
+    reason: 'everything-ruled-out',
+    rejections: 'mixed',
+    headline: MIXED['late-night']!.headline,
+    detail: MIXED['late-night']!.detail,
   },
   {
     block: 'late-night',

@@ -34,6 +34,12 @@ function decideWith(options: WeekDirectionOptions) {
 
 const noDirection = decideWith({})
 
+/** What `direction-fit` contributed to whatever was chosen. */
+function decision0Fit(decision: ReturnType<typeof decideWith>): number | undefined {
+  const top = decision.trace.ranking[0]
+  return top?.dimensions.find((dimension) => dimension.name === 'direction-fit')?.value
+}
+
 describe('G-008 — the category is stored, not guessed', () => {
   it('carries the life area and the owner’s own words for it', () => {
     const decision = decideWith({ direction: { named: DOMAIN.home, wording: 'a calmer house' } })
@@ -53,22 +59,33 @@ describe('G-008 — the category is stored, not guessed', () => {
 })
 
 describe('G-008 — arbitration follows the real direction', () => {
-  it('lands on the career move when no direction is set', () => {
-    // Stated first because everything below is measured against it. With a live
-    // exam goal, an hour free and rest in hand, the career rep is what this
-    // history is worth on its own merits — which is what gives the three
-    // non-career directions below something to actually overturn.
-    expect(chosenDomain(noDirection)).toBe(DOMAIN.career)
+  it('lands on time with his daughter when no direction is set', () => {
+    /*
+     * Stated first because everything below is measured against it, and it
+     * moved in Phase 82 — AUD-0035.
+     *
+     * The baseline used to be the career rep, and it was there partly by
+     * artefact: `goal-fit` returned zero **at full weight** for every move in
+     * an area with no goal, so the fatherhood move was marked down for the
+     * owner not having set a goal about his daughter. That is not a fact about
+     * the move, and the dimension now abstains.
+     *
+     * What is left is the honest reading of this evening: she is here, there is
+     * an hour, and rest is in hand. The two are within a hundredth of each
+     * other — which is what makes this history a good instrument for the
+     * direction, and is why the app says out loud that it was close.
+     */
+    expect(chosenDomain(noDirection)).toBe(DOMAIN.fatherhood)
   })
 
   const cases: readonly { readonly domain: LifeDomainId; readonly wording: string }[] = [
     { domain: DOMAIN.home, wording: 'a calmer house' },
-    { domain: DOMAIN.fatherhood, wording: 'more time with Adaya' },
+    { domain: DOMAIN.career, wording: 'the CCNA push' },
     { domain: DOMAIN.health, wording: 'moving every day' },
   ]
 
   for (const { domain, wording } of cases) {
-    it(`a week pointed at ${domain} chooses a ${domain} move instead of the career one`, () => {
+    it(`a week pointed at ${domain} chooses a ${domain} move instead of the baseline`, () => {
       const decision = decideWith({ direction: { named: domain, wording } })
       expect(decision.kind).toBe('move')
       expect(chosenDomain(decision)).toBe(domain)
@@ -76,13 +93,33 @@ describe('G-008 — arbitration follows the real direction', () => {
     })
   }
 
-  it('leaves the career move standing when the week really is about career', () => {
-    const decision = decideWith({ direction: { named: DOMAIN.career, wording: 'the CCNA push' } })
-    expect(chosenDomain(decision)).toBe(DOMAIN.career)
+  it('does the work even where the winner is the one it was already going to be', () => {
+    /*
+     * The case the loop above cannot make: a week pointed at fatherhood chooses
+     * the same move as no week at all, so "it changed the answer" proves
+     * nothing. What it changed is the *margin* — the direction is a reason
+     * rather than a coincidence, and the app is no longer picking between
+     * near-equals.
+     */
+    const pointed = decideWith({
+      direction: { named: DOMAIN.fatherhood, wording: 'more time with Adaya' },
+    })
+    expect(chosenDomain(pointed)).toBe(DOMAIN.fatherhood)
+
+    const marginOf = (decision: ReturnType<typeof decideWith>): number => {
+      const ranked = decision.trace.ranking
+      return (ranked[0]?.score ?? 0) - (ranked[1]?.score ?? 0)
+    }
+    expect(marginOf(pointed)).toBeGreaterThan(marginOf(noDirection))
+
+    const fit = decision0Fit(pointed)
+    expect(fit, 'the direction contributed nothing to the winner').toBe(1)
   })
 
   it('reaches four different answers from one history', () => {
-    const chosen = [...cases, { domain: DOMAIN.career, wording: 'the CCNA push' }].map(
+    // The strongest claim in the file, and the one a single hardcoded mapping
+    // could not satisfy: one evening, four directions, four different moves.
+    const chosen = [...cases, { domain: DOMAIN.fatherhood, wording: 'more time with Adaya' }].map(
       ({ domain, wording }) => chosenId(decideWith({ direction: { named: domain, wording } })),
     )
     expect(new Set(chosen).size).toBe(4)

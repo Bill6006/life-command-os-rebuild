@@ -61,31 +61,71 @@ export type NoActionReason =
   | 'enough-for-now'
 
 /**
- * Close enough to be worth saying so in the trace.
+ * A move has to be worth making — and the bar is re-derived, not carried across.
  *
- * Only a note. An earlier version used a window like this in the comparator
- * itself, treating anything inside it as a tie to be settled on friction — and
- * that comparator was not transitive: with three moves two hundredths apart,
- * the first could tie the second and the second tie the third while the first
- * beat the third outright, which leaves the sort order up to the engine's
- * implementation. A reproducible trace cannot be built on that, and friction is
- * already one of the dimensions, so counting it twice was wrong anyway.
+ * ## Why it moved
+ *
+ * `WORTH_DOING` was 0.05 on a scale that no longer exists. Three dimensions
+ * worth 5.3 of about 15.8 weight units returned zero **at full weight** on an
+ * ordinary evening, dividing every candidate's score by roughly one and a half
+ * — so the same absolute bar was a far harder bar on a directionless evening
+ * than on a directed one, and "nothing worth doing" was systematically more
+ * likely exactly when the app had least context (AUD-0035). Those three now
+ * abstain, and carrying the old number across would have quietly lowered the
+ * bar by the same factor.
+ *
+ * ## Where this one comes from
+ *
+ * **The behaviour the owner has already approved, re-expressed on a scale that
+ * means the same thing everywhere.** A score is a weighted mean, and the old
+ * one was taken over a denominator carrying between 3.5 and 5.3 units of forced
+ * zero depending on how much context a history happened to have. Measured
+ * across the library, the same decisions land between 1.29 and 1.51 times
+ * higher once the dead weight is gone — so the old bar of 0.05 corresponds to
+ * somewhere between 0.064 and 0.076, and **which of those it corresponds to
+ * depends on the history**, which is the defect stated as a translation
+ * problem.
+ *
+ * The bar is set at the bottom of that range and rounded down. Setting it at
+ * the top would have raised the bar hardest for the histories with least
+ * context — AUD-0035's own complaint with the sign flipped — and the app would
+ * have gone quieter on exactly the evenings it was already too quiet on.
+ *
+ * Checked rather than assumed: `tests/synthetic/instrument-recut.test.ts` holds
+ * the two properties that matter. Every history that moved before still moves,
+ * and the bar behaves identically on a directed and an undirected evening with
+ * otherwise identical facts — which is the thing the old bar could not do.
  */
-export const CLOSE_ENOUGH_TO_MENTION = 0.02
-
-/** A move has to be worth making. Anything at or below this is not. */
-export const WORTH_DOING = 0.05
+export const WORTH_DOING = 0.06
 
 /**
- * A move worth doing, and worth doing later rather than now — AUD-0024.
+ * Close enough to be worth saying so — AUD-0033, re-derived under AUD-0035.
  *
- * The one answer that is neither "do this" nor "do nothing", and the one the
- * app could not give: `hold` has been in `ACTION_VERBS` with a full move
- * profile and its own templates since Phase 1, and no generator produced it.
- * Section 19 lists "wait" among valid decisions; what existed instead was
- * `nothing-worth-doing`, which means "nothing is good enough" rather than "not
- * now", and only one of those is useful at half past seven on a school morning.
+ * **Half the bar**, and the derivation is the point: a gap smaller than half
+ * of what a move needs in order to be worth doing at all is not a difference
+ * the app should present as a decision. Two candidates that close are two
+ * answers, and the owner is told so.
+ *
+ * It stays absolute, and it may now do so honestly. AUD-0033's complaint was
+ * that an absolute threshold sat on a scale that moved with how many dimensions
+ * happened to be inert — "it should be relative to the spread of the ranked
+ * field, **or the two must be fixed together**". The two have now been fixed
+ * together, so the scale means the same thing on a directed and an undirected
+ * evening and a fixed figure means the same thing on both.
+ *
+ * `MAX_NUDGE` went the other way, and for a different reason: it is a bound on
+ * an outside opinion rather than a reading of the app's own field, so it is
+ * expressed against the spread it is not allowed to overturn (AUD-0039).
+ *
+ * Only a note in the trace and one line on Now. An earlier version used a
+ * window like this in the comparator itself, treating anything inside it as a
+ * tie to be settled on friction — and that comparator was not transitive: with
+ * three moves two hundredths apart, the first could tie the second and the
+ * second tie the third while the first beat the third outright, which leaves
+ * the sort order up to the engine's implementation.
  */
+export const CLOSE_ENOUGH_TO_MENTION = WORTH_DOING / 2
+
 export interface Deferral {
   /** The move being held. It is a real ranked candidate, not a placeholder. */
   readonly evaluation: Evaluation

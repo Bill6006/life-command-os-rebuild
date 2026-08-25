@@ -149,7 +149,24 @@ export const MOVE_PROFILES: Record<ActionVerb, MoveProfile> = {
     friction: 0.25,
     size: 10,
     suits: ALL_DAY,
-    refuses: [],
+    /*
+     * Not at eleven at night — found by the widened tournament rubric,
+     * AUD-0039(b).
+     *
+     * This was the only move in the table that refused no hour at all, and it
+     * reads as an oversight rather than a decision: every sibling that suits
+     * the same three blocks refuses the late night, and the reason is the same
+     * for all of them. A ten-minute recall session is light, so `protection`
+     * has nothing to say about it, and the deferral path has nowhere to defer
+     * to once the last block of the day has started — so the only thing that
+     * could have stopped it was this line, and it was empty.
+     *
+     * The rubric found it because it was widened to ask "does it get the hour
+     * right" at every hour rather than at the one each history was written for,
+     * which is precisely the class AUD-0039 says the old rubric could not
+     * detect.
+     */
+    refuses: ['late-night'],
     outcome: SOON,
     aspects: ['effect'],
     measures: CONCEPT.learningTopic,
