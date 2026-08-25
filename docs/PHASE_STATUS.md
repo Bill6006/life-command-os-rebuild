@@ -71,7 +71,7 @@ deployed checkpoint now.
 | Unit layer                               | 1,470 / 1,470 across 66 files             | 1,490 / 1,490 across 67 files             | **1,498 / 1,498** across 67 files                |
 | Browser, three widths                    | 528 / 528 at 360, 430 and 1,280px         | 537 / 537 — 179 each                      | **540 / 540** — 180 each                         |
 | Android-style gate on the deployed build | clean — 119 checks                        | clean — 126 checks                        | **clean — 132 checks**                           |
-| Privacy scan                             | clean, 230 tracked files                  | clean — 233 tracked files                 | **clean — 234 tracked files**                    |
+| Privacy scan                             | clean, 230 tracked files                  | clean — 233 tracked files                 | **clean — 233 tracked files**                    |
 | Tournament                               | 100 / 100 deterministic, 100 / 100 hybrid | 100 / 100 deterministic, 100 / 100 hybrid | **100 / 100 deterministic, 100 / 100 hybrid**    |
 | Reintroductions proved                   | 22                                        | 13                                        | **14 more, 49 in total**                         |
 

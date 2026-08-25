@@ -1165,7 +1165,7 @@ there.
 | Unit / synthetic / contract / adversarial | 1,470 across 66 files | 1,490 across 67 files | **1,498 / 1,498 across 67 files** |
 | Browser, three widths (360, 430, 1,280px) | 528 / 528 | 537 / 537 | **540 / 540 — 180 each** |
 | Android-style gate, against the **deployed** build | clean — 119 | clean — 126 | **clean — 132 checks, in one run** |
-| Privacy scan | clean, 230 | clean, 233 | **clean — 234 tracked files** |
+| Privacy scan | clean, 230 | clean, 233 | **clean — 233 tracked files** |
 | Tournament | 100/100 and 100/100 | 100/100 and 100/100 | **100 / 100 deterministic, 100 / 100 hybrid** |
 | Reintroductions proved, this round | — | 13 | **14** |
 
