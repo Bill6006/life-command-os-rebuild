@@ -82,9 +82,8 @@ audit's own reasons for excluding each are unchanged.
 
 ## Exact verification results
 
-Five columns, because the phase has been verified five times: at the first
-build and after each round of repairs. Every figure names the head it was
-measured on, which is D-147 and the reason the last column exists.
+Four columns, for the four most recent verifications. Every figure names the
+head it was measured on, which is D-147 and the reason the last row exists.
 
 | Gate                                                    | Round 2 (`da1a4ee`)   | Round 3 (`5936fe2`)   | Round 4 (`1205402`)   | Round 5 (`dab8c2e`)                                              |
 | ------------------------------------------------------- | --------------------- | --------------------- | --------------------- | ---------------------------------------------------------------- |
