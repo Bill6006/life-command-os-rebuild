@@ -4593,3 +4593,100 @@ rather than as a habit:
 at `abc1234`" is a claim the next reader can verify in a second, which is the
 whole point of D-097's insistence on reading the deployed SHA live rather than
 asserting it.
+
+---
+
+## D-148 — A section of a document is inside the document, and inherits what it may say
+
+**Phase:** 82 (QA round 4) · **Status:** Active
+
+D-098 said an excluded area is excluded from the metadata as well as the
+detail. It was implemented in the sections that had been thought about.
+`diagnosticsSection` was the one builder that took only the request and never
+looked at the `ExportHeader` it was handed, so it reported what the **store**
+holds rather than what the **document** may describe: whole-store record,
+entity, day and week counts, the complete supersession issue list, and every
+entry in `facts.inState('unknown')`.
+
+With Private / Sexual Health left out, one library history therefore disclosed
+its withheld record twice — `19 records` where the same history without it says
+`18`, and `Recent private pattern — never answered`, which names the area and
+states that nothing is known in it (QA-82-007). Diagnostics is reached by
+**Select all** and is not consent to include the private section, so this was
+the document one tap produced.
+
+**The rule:** a section may not describe the store. It describes the document,
+and the header is what says which. Concretely, and each of these was a separate
+leak the class guard found:
+
+- **Counts are of what may be described**, and say so before they are given —
+  D-098's other half is that a document is read in order, so a qualifier after
+  the figures does not repair them.
+- **A concept is withheld on either of its two privacy facts**, its area or its
+  own class. Reading only the area leaks a private-classed concept filed
+  elsewhere, which is the narrow-by-id mistake of D-146 one field over.
+- **A page of the history is taken from what may be shown, before it is
+  counted.** Filtering after `assembleTimeline` had chosen its forty entries
+  let a withheld record consume a slot, so the section rendered thirty-nine and
+  two histories lost a whole day off the end. The withheld record was
+  observable from the length of a list that never mentioned it.
+- **A row that could not be read is the one thing whose area is unknowable**, so
+  its own claim is trusted in one direction only: a row saying it is private is
+  not counted, and a row saying nothing about itself still is. It can subtract
+  and never add, so a corrupt row cannot force a real entry to be disclosed,
+  and a storage fault is not hidden behind a privacy promise.
+
+**And the guard is a property of the artefact, not of the section that leaked.**
+Two stores differing by exactly one private thing must compose the same
+document. That covers the header, the trace, the issue list and whatever
+section is added next — none of which the defect was found in, and any of which
+could have carried it.
+
+**What this does not do.** Discretion stays a display decision and never a
+storage decision (section 11): the private record is still in the store, still
+resolves, and still reaches the fact layer. Turning the section on restores the
+detail _and_ the metadata. Nothing here wires private evidence into
+intelligence, and Q8 is not answered by it.
+
+---
+
+## D-149 — Not knowing has six reasons, and one place says how each of them reads
+
+**Phase:** 82 (QA round 4) · **Status:** Active
+
+`UnknownReason` exists because the six ways of not knowing are not the same
+thing. Two surfaces then chose their own sentence from `state === 'unknown'`
+alone, and both chose the same one: **"never answered"**, which is true of
+exactly one of the six.
+
+So the review export said it of a soreness reading the owner gave at 06:41 and
+withdrew at 06:55 — in a document that printed `Withdrew an earlier entry`
+three sections above (QA-82-008). `insights.ts` said it from the other
+direction: `coverageCards` reads `lastEvidenceAt`, which is undefined for
+**every** unknown reason rather than only for the one that means nobody ever
+asked.
+
+**The rule:** how an unknown reads is written down once, beside the type, as a
+`Record<UnknownReason, string>`. A seventh reason is then a compile error in one
+file rather than a seventh thing that silently reads as never having been
+asked — the fallback was the whole behaviour, which is why removing the
+fallback is the fix rather than adding a case to it.
+
+**Four of the six sit on top of an answer the record holds** — withdrawn,
+contradicted, lapsed, unreadable — and only `never-observed` is a claim about
+the whole history. That is the distinction the sentence was destroying, and it
+is why this is a truthfulness rule rather than a copy preference.
+
+**The note carries the specifics** the fact layer left: which records
+disagreed, that the only rows were unreadable, that the only records for this
+concept are still in the future. That last one is why the phrases are about
+being _answered_ rather than about the record being empty — a concept whose only
+record is dated tomorrow genuinely has never been answered, and the note is what
+stops that reading as a life with no gaps in it.
+
+**What this does not do.** It does not shorten the list. Every concept the owner
+can actually answer still appears when nothing has been said about it; an
+over-broad fix here would quietly empty the list the guide asks from, and the
+regression asserts that as loudly as it asserts the reasons. `ConsideredFact`'s
+own `not known — <reason>` on the QA inspector is untouched: QA named it as
+already preserving the distinction, and it does.

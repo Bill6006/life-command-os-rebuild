@@ -1041,6 +1041,52 @@ async function main() {
   )
   await sideways('Data, the export inside the school window')
 
+  /*
+   * And the two things that document says about itself — QA-82-007 and
+   * QA-82-008.
+   *
+   * Both are read on the handset from the document one tap produces, because
+   * both were found by reading a whole generated export rather than by
+   * checking a string in it. `Select all` reaches Diagnostics and deliberately
+   * does not reach the private section, so the leak was on by default.
+   */
+  await loadScenario('Two ordinary weeks')
+  await page.goto(`${BASE}#/data`)
+  await page.waitForSelector('h1:has-text("Data")')
+  await page.getByRole('button', { name: 'Select all' }).tap()
+  const withPrivateOff = await page.getByTestId('export-text').inputValue()
+  check(
+    'the export leaves the private area out, and says so',
+    /The Private \/ Sexual Health section is left out\./.test(withPrivateOff),
+  )
+  check(
+    'and says nothing about it under diagnostics either',
+    !/Recent private pattern/.test(withPrivateOff) && !/Private entry/.test(withPrivateOff),
+  )
+  check(
+    'while still reporting the record it may describe',
+    /Every count below is of the part of the record this document may describe/.test(
+      withPrivateOff,
+    ) && /- Records still standing after corrections: \d+/.test(withPrivateOff),
+  )
+  await sideways('Data, the private area left out')
+
+  await loadScenario('One answer, and a lot of silence')
+  await page.goto(`${BASE}#/data`)
+  await page.waitForSelector('h1:has-text("Data")')
+  await page.getByRole('button', { name: 'Select all' }).tap()
+  const withdrawn = await page.getByTestId('export-text').inputValue()
+  check(
+    'a withdrawn answer is not one that was never given',
+    /Soreness or pain — answered once, and the answer was withdrawn/.test(withdrawn) &&
+      !/Soreness or pain — never answered/.test(withdrawn),
+  )
+  check(
+    'and something nobody has been asked still reads that way',
+    /— never answered/.test(withdrawn),
+  )
+  await sideways('Data, why it does not know')
+
   await openNow()
   await sideways('Now, inside the school window')
 

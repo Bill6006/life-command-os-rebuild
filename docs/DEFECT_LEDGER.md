@@ -39,6 +39,122 @@ None.
 
 ## Fixed
 
+### DEF-0096 — a document that left the private area out still reported its size
+
+- Status: Fixed
+- Severity: Blocker — the participation fact a private record's discretion
+  exists to protect, disclosed under an explicit promise not to, in the document
+  **Select all** produces
+- Found in: Phase 82 / `da31c6d`
+- Found by: independent QA round 4 — QA-82-007
+- Class: **a section that describes the store rather than the document.** Every
+  other builder takes the `ExportHeader` and asks what this document may
+  describe; `diagnosticsSection` took only the request. So the rule in D-098 was
+  implemented in the places that had been thought about and absent in the one
+  that had not — the third time this phase that a boundary was correct where it
+  was looked at.
+- Reproduction: load **Two ordinary weeks** on the deployed Preview, open
+  More → Exports, press **Select all**, and leave Private / Sexual Health
+  unchecked. The document promises _"Nothing below says anything about that area
+  in either direction"_ and then reports `Store: 19 records` where the same
+  history without its one private record reports `18`, `Records still standing
+after corrections: 19` against `18`, and `Recent private pattern — never
+answered`. The label appears in **23 of 24** library histories; the exception
+  is the one where the private fact is actually known.
+- Root cause: `diagnosticsSection(request)` read `snapshot.records`,
+  `snapshot.entities`, `summary.effective`, `summary.displaced`,
+  `summary.byLocalDay`, `history.issues` and `facts.inState('unknown')`
+  directly. Separately, `historySection` filtered the private rows out of a page
+  `assembleTimeline` had already chosen from the whole history, so a withheld
+  record consumed one of the forty slots and the section rendered thirty-nine.
+- Regression: `tests/synthetic/qa-82-round-4.test.ts` — "composes the same
+  document with the private record and without it", "holds for every history in
+  the library, not only the one that has a private record", "counts no private
+  entity, and no unreadable row that says it is private", "reports no tangle
+  that only a withheld record is in", "names no private concept, and not merely
+  the one private concept there is", "withholds a private concept filed outside
+  the private area", "still says the counts, and still says what it is not
+  counting", "gives all of it back when the owner asks for it deliberately",
+  "leaves the owner's own raw memory alone";
+  `tests/synthetic/export-honesty.test.ts` — "says nothing about the private
+  area on <id>", per scenario, with the forbidden labels read from the registry;
+  `tests/browser/phase82.spec.ts` — "says nothing about the area it says it is
+  leaving out"; and four new deployed Android checks. Eight reintroductions run,
+  all eight fail.
+- Siblings: enumerated rather than searched for, and the paired-history property
+  is what enumerated them. Two were found that QA had not named and that no
+  existing test could see: the **timeline page**, above, and the **supersession
+  issue list**, where a dangling reference on a withheld record reported that
+  there is an entry in the area the document had just promised to be silent
+  about. `coverageSection` and `historySection` already consulted the header;
+  `coverageCards` in `insights.ts` already excluded the private domain of its
+  own accord.
+- Note on what the guard could not see at first: the reintroduction that removes
+  the issue-list filter **passed**. No library history has a supersession
+  problem involving a private record, so the list could be left reading the
+  whole history and nothing noticed — DEF-0094's shape one field over, found by
+  running the mutation rather than by reading the test. The guard now constructs
+  that history.
+- Note on the repair QA forbade: private facts are not suppressed in the owner's
+  raw memory, diagnostics are not removed, and the exclusion promise is not
+  weakened. Section 11's rule that discretion is a display decision and never a
+  storage decision is intact, and the counts survive with a sentence saying what
+  they are of — stated before them, because a document is read in order.
+- Fixed in: the checkpoint that closes QA round 4
+
+### DEF-0097 — six ways of not knowing were printed as one
+
+- Status: Fixed
+- Severity: Major — a document contradicting itself about whether a question was
+  ever asked, on a surface that asks its reader to treat it as the source of
+  truth
+- Found in: Phase 82 / `da31c6d`
+- Found by: independent QA round 4 — QA-82-008
+- Class: **a fallback that is the whole behaviour.** `UnknownReason`
+  distinguishes never-observed, retracted, contradicted, lapsed, not-applicable
+  and malformed; two surfaces rendered `state === 'unknown'` as one sentence and
+  never read the reason at all. Four of the six sit on top of an answer the
+  record actually holds, so the sentence was false for four of them.
+- Reproduction: load **One answer, and a lot of silence** at 07:00 and compose an
+  export with Now, Recent record and Diagnostics. The same document says
+  `Withdrawn: Withdrew an earlier entry — Tapped the wrong row`,
+  `Soreness or pain — not known — retracted` under what it read to decide, and
+  `Soreness or pain — never answered` under what it does not know. **Second
+  thoughts, kept honestly** loses its retracted emotional-state reason the same
+  way.
+- Root cause: the loop over `facts.inState('unknown')` in `diagnosticsSection`
+  hard-coded `never answered` and discarded `Knowledge.reason`. In
+  `insights.ts`, `coverageCards` reached the same sentence from a different
+  field: `lastEvidenceAt` is undefined for every unknown reason, not only for
+  the one that means nobody ever asked.
+- Regression: `tests/synthetic/qa-82-round-4.test.ts` — "reads every reason as a
+  different thing", "keeps the specifics the fact layer left, and the future-only
+  note", "never calls a withdrawn answer one that was never given", "never says
+  it of any library history, for any reason but the one", "reaches contradicted,
+  lapsed and malformed through real records", "leaves the honest unknown list
+  full", "says the same thing on Insights as in the document";
+  `tests/unit/architecture-guards.test.ts` — "is a table over the reasons, so a
+  new reason cannot be forgotten", "is not hand-written anywhere else", "bites on
+  a reintroduction of the sentence it forbids";
+  `tests/browser/phase82.spec.ts` — "says why it does not know, rather than one
+  sentence for every reason"; and two new deployed Android checks. Four
+  reintroductions run, all four fail.
+- Siblings: `insights.ts` was found by asking who else turns "no evidence" into
+  a sentence, and it is the only other one. The QA laboratory's fact browser and
+  `ConsideredFact.reading` already carry the reason and are untouched — QA named
+  both as preserving the distinction. `describeUnknown` is now the only place
+  the sentence is written, and an architecture guard fails the build if a
+  surface composes its own.
+- Note on the three reasons the library never produces: contradicted, lapsed and
+  malformed are reached in the regression through **real record resolution** —
+  two readings at one instant, an expired bounded context, an unreadable row —
+  rather than by handing the composer a `Knowledge`. A test that injects the
+  state proves the sentence and not the path to it.
+- Note on what was deliberately not shortened: the unknown list. Naming a reason
+  must not remove a line, and the regression walks every concept the owner can
+  answer to assert it is still there.
+- Fixed in: the checkpoint that closes QA round 4
+
 ### DEF-0094 — the review export said the app had never answered a question it had just answered
 
 - Status: Fixed

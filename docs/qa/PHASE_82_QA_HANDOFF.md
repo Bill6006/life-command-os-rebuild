@@ -1877,4 +1877,765 @@ on PASS or FAIL, and end with the complete next handoff and a short launcher.
 Do not ask me to paste the file contents.
 ```
 
+---
+
+# Independent QA — Phase 82, Round 4
+
+**Date:** 2026-08-25. **Reviewer:** Codex, independent QA.
+
+**Overall result: FAIL. Phase 82 remains YELLOW. Do not start Phase 9.**
+
+The two findings handed to this round are repaired: **QA-82-005 and
+QA-82-006 PASS**. The derived reading no longer becomes an answerable raw
+unknown, and the exact handed-off head passes aggregate verification and CI.
+Reading the entire deployed export, including the required no-child history,
+exposed two other defects in the same diagnostic boundary: **QA-82-007** leaks
+private participation metadata despite exclusion; **QA-82-008** rewrites the
+reason an answer is unknown as though it had never been supplied.
+
+These are existing export defects found by the requested end-to-end retest,
+not claims that the latest `facts.ts` change introduced them. They are not a
+request to reopen the deferred Reach package or answer Q8.
+
+## Identity, isolation and method
+
+| Item | Independently checked result |
+| --- | --- |
+| Product checkpoint | `5936fe2b7604bf2e318e97e80aa5ce9e5c8e7559` (`5936fe2`) |
+| Handed-off tracked HEAD | `da31c6dd80c3f40dd5ae51541b7a05a9018bfad3` (`da31c6d`) |
+| Deployed Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Live build-info and rendered build | `da31c6dd80c3f40dd5ae51541b7a05a9018bfad3`; built `2026-08-25T20:50:40.023Z` |
+| Checkpoint equivalence | **PASS** via `scripts/checkpoint-equivalence.mjs 5936fe2 --deployed .../preview/build-info.json`. The five post-checkpoint files are three governing documents, this report and the Android gate; none is bundle-relevant. This is equivalence, not SHA equality. |
+| Exact-head CI | **PASS** — [run 32897566853](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/32897566853), completed/success at `da31c6d`. Checkpoint CI run `32896041771` is also green. |
+| Clean-clone aggregate | **PASS** — detached `da31c6d` in `C:\Users\tyree\AppData\Local\Temp\lco-phase82-round4-2bf92daf2df847118a8bd4a4899f3b21`; `npm ci`, then the actual aggregate `npm run verify`, exit 0. |
+| Independent UI inspection | Deployed in-app browser at 430 × 932. Whole school and no-child exports read, not just presence checks on selected strings. |
+| Android-style deployed gate | Galaxy S24-class; Android 14 Chrome UA; 360 × 780 CSS px; DPR 3; mobile and touch enabled. **136/136 in one run**, against live `da31c6d`; no retry and no console errors. This is emulation, not a physical handset. |
+| Writes | Only this report and the QA-only probe linked below. No product, governing-status or builder test changes, no commit, no deployment. The unrelated pre-existing `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was left untouched. |
+
+The full browser matrix was duplicated because the Phase 82 browser test and
+Android harness changed, and because the whole-document inspection found
+false-green coverage. Aggregate verification from a clean clone was explicitly
+required by this handoff. The earlier failed head's component results were not
+substituted for this head's aggregate result.
+
+Interactive in-app use stayed in synthetic laboratory histories; the automated
+contexts used isolated synthetic test stores. No real owner records were
+edited. Read-only DOM/text evidence and the executable probe are
+the retained evidence; the in-app screenshot call returned "Unable to capture
+screenshot", so no new screenshot is claimed.
+
+## Retest and preserved-flow results
+
+| Requirement or flow | Round 4 result |
+| --- | --- |
+| QA-82-005 — raw derived exclusion | **PASS.** At school 10:20, the ledger carries `Child here right now · inferred` / `No — Adaya’s school day is on until 15:00.` Raw facts have 4 known and 11 genuine unknown entries, with no derived entry. The question list has five ordinary questions and no derived question. |
+| QA-82-005 — all consumers and completeness | **PASS for the derived boundary.** Source consumers were enumerated: raw facts, export, QA fact browser and question list; direct registry walkers in coverage and domain pages; Insights' coverage path. The independent probe verifies derived exclusion and retention of every ordinary registered concept across all 24 scenarios. Privacy scoping and the wording of unknown reasons fail separately below. |
+| School export and family page | **PASS for QA-82-001/005.** One current inferred reading with its school basis; no `Child here right now — never answered`. Fatherhood keeps the durable care fact as yes, offers its correction, and makes the derived row read-only. Opening the care correction exposes Yes / Not today / Cancel; it was cancelled without writing. |
+| No-child history | **PASS for QA-82-005.** `One answer, and a lot of silence` has zero entities, 1 known and 14 unknown raw facts, no derived ledger/export/domain row, and eight available questions including the care-arrangement question. Fatherhood retains its two ordinary Add this controls. |
+| Insights / coverage | **PASS for the derived boundary.** School Fatherhood is current, not neglected; Insights makes no unsupported claim or derived-answer request. Direct coverage assertions remain green for every scenario. |
+| QA-82-006 — release gates | **PASS.** Clean-clone format, lint, typecheck, tests and build all finish in the aggregate command; exact-head CI is green. |
+| QA-82-002 — deferral evidence | **PASS.** Deployed 05:30 hold names the morning, exposes why the early morning is unsuitable, identifies the next suitable block and about five free hours for a thirty-minute move. No start controls appear. `heldBecause` still comes from arbitration rather than another decision path. |
+| QA-82-003 — five time-fit bands | **PASS.** All exact/near/overrun and cross-dimension assertions pass, including exact 10/10 and 6/6, near 10/12 and overrun 5/3; no scoring or wording branch changed in this repair. |
+| QA-82-004 — touch margin and instrument | **PASS.** The app token remains 48px, the named gate threshold 44px, and the diagnostic uses two decimal places. The deployed touch checks pass once without rounding a miss into a pass. |
+| Threads | **PASS.** Deployed `Two sessions in` shows third of three and its Part of explanation. One Life tap stops it; Now immediately removes Part of and the thread-specific rationale. Existing arbiter-only, new-offer, expiry and dominant-recovery regressions pass. |
+| Growth, goals and earlier non-export flows | **PASS.** Two-step growth outcome and reversible stage, goal date/parts/counts, no child score or percentage, no-action states, block sweep, stable lifecycle controls, owner/test isolation and backup/import gates remain green. The Android run exercises the owner surfaces as well as the focused and full suites. |
+| Private export exclusion | **FAIL — QA-82-007.** Private detail remains off, but private unknown-state and store aggregates cross the exclusion through Diagnostics. |
+| Unknown-reason honesty | **FAIL — QA-82-008.** Retracted, contradicted, lapsed and malformed evidence all become `never answered` in Diagnostics. |
+
+## QA-82-007 — a private-excluded export still discloses private participation metadata
+
+**Severity: Blocker — privacy/exclusion contract.** Governing rule: **D-098**;
+an excluded area is excluded from metadata as well as detail. Diagnostics is
+selected by default and by Select all; it is not separate consent to include
+Private / Sexual Health.
+
+### Exact deployed reproduction A: the absence is disclosed
+
+1. Load **A school morning** in QA and press **+1 hour** twice, reaching 10:20.
+2. Open More → **Exports, backup and restore**.
+3. Leave Diagnostics selected and **Private / Sexual Health unchecked**.
+4. Read the export's privacy promise and its final unknown list.
+
+The document promises:
+
+```text
+Nothing below says anything about that area in either direction.
+```
+
+But Diagnostics states:
+
+```text
+Things the app knows it does not know:
+...
+- Recent private pattern — never answered
+```
+
+The unchecked state was read directly from the rendered checkbox. The same
+line appears in **23 of 24** library exports with the private section off. The
+exception is **Two ordinary weeks**, which actually has a private reading.
+Unknown participation is itself a state of the excluded area, not an innocuous
+generic exclusion notice.
+
+### Exact deployed reproduction B: the hidden record changes visible metadata
+
+Load **Two ordinary weeks**, then open the same private-off export. Its header
+correctly reports **18 entries** and omits the private area; Diagnostics prints:
+
+```text
+- Store: 19 records, 1 entity, 0 unreadable rows, schema 1
+- Records still standing after corrections: 19
+```
+
+The independent paired-history probe removes only this fixture's one private
+record, leaving all public history, clock, selection and build inputs identical.
+The private-off export then changes those two counts to **18** and adds
+`Recent private pattern — never answered`. The rest of the document is
+identical. Thus the withheld record's presence is observable from the document
+even though its text is absent. Explicitly enabling Private still includes its
+detail, as it should; the defect is not the opt-in path.
+
+**Boundary evidence:** `diagnosticsSection()` in
+`src/features/export/compose.ts` does not receive/use `ExportHeader` and never
+consults the private selection. It renders full snapshot/summary aggregates and
+all raw unknown facts. Other sections use scoped records or domain inclusion.
+The same risk covers derived counts, dates, issue references and other
+diagnostic material influenced solely by excluded records; the two exact
+count differences and the label above are independently demonstrated, not an
+assertion that every possible sibling has already been reproduced.
+
+**Acceptance:** private-off exports must not reveal private detail, whether a
+private concept was answered, participation, or private-only metadata through
+any selected section, Diagnostics included. Exercise paired histories that
+differ only in private records, and all private knowledge states. Preserve
+useful public diagnostics and complete in-scope ordinary unknowns. Explicit
+private opt-in must still work. Do not "repair" this by suppressing private
+facts in the owner's raw memory, removing all diagnostics, or weakening the
+exclusion promise. Q8 and AUD-0040 remain deferred: neither is needed to honor
+an already-active export privacy rule.
+
+## QA-82-008 — current uncertainty is relabelled as never having been answered
+
+**Severity: Major / phase-blocking semantic defect.** This is a second
+whole-document contradiction in the exact no-child history required by Round 4.
+
+### Exact deployed reproduction
+
+1. Load **One answer, and a lot of silence** in QA at its initial 07:00.
+2. Expand **What the system believes**. Soreness is `unknown — retracted`.
+3. Open More → **Exports, backup and restore**, with Now, Recent record and
+   Diagnostics included.
+4. Read the following sections together:
+
+```text
+What it read to decide that:
+- Soreness or pain — not known — retracted (unknown; for whether the body is asking for a break)
+
+Recent record:
+- Withdrawn: Withdrew an earlier entry — Tapped the wrong row
+
+Things the app knows it does not know:
+- Soreness or pain — never answered
+```
+
+The record is not absent: a 06:41 soreness answer was withdrawn at 06:55. The
+current state is honestly unknown, but the claim that it was never answered is
+false. **Second thoughts, kept honestly** also loses its retracted emotional-state
+reason. Independently constructed conflicting observations, an expired bounded
+context and an unreadable observation reach `contradicted`, `lapsed` and
+`malformed` respectively through real fact resolution, and all three are
+likewise exported as `never answered`.
+
+**Boundary evidence:** the loop over `facts.inState('unknown')` in
+`diagnosticsSection()` hard-codes `never answered` for every entry and discards
+`Knowledge.reason`. `UnknownReason` explicitly distinguishes never-observed,
+retracted, contradicted, lapsed, not-applicable and malformed. The QA browser
+and the decision fact ledger preserve that distinction; Diagnostics does not.
+
+**Acceptance:** carry the actual reason for uncertainty into the exported
+document in honest language. A withdrawn, conflicting, expired or unreadable
+answer is not a never-supplied answer. Keep those genuinely unresolved concepts
+in the list; do not hide them to make a contradiction assertion pass. Enumerate
+the reason class and preserve current-versus-historical truth, including the
+future-only note where relevant, without inventing facts or adding questions.
+
+## Independent executable evidence and false-green tests
+
+QA-only evidence: [`evidence/phase82-round4-export-probe.ts`](evidence/phase82-round4-export-probe.ts).
+
+```text
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+```
+
+At `da31c6d` this deliberately exits **1** after reporting:
+
+- **PASS:** all 24 scenarios exclude derived concepts from raw facts and
+  coverage while retaining every ordinary registered concept;
+- **PASS:** school 10:20 retains its derived reading, with 11 genuine unknowns;
+- **PASS:** no-child history has no derived row and keeps care askable;
+- **PASS:** private detail appears only with explicit opt-in;
+- **FAIL QA-82-007:** 23 private unknown-state leaks, plus the paired-history
+  diagnostic count and participation differences;
+- **FAIL QA-82-008:** two library retractions and three constructed sibling
+  reasons are relabelled never answered.
+
+This probe is not wired into the builder's green suite and makes no persistent
+data changes. Its own Prettier, ESLint and standalone strict TypeScript checks
+pass.
+
+The existing tests give specific false confidence:
+
+1. `export-honesty.test.ts`'s private-exclusion guard uses **only
+   quiet-fortnight**, where the private fact is already known. Its forbidden
+   words list includes the domain's names and the generic private placeholder,
+   but not private concept labels; it does not compare private-only changes to
+   aggregate metadata. It passes both observed leaks.
+2. The new per-scenario "never answers a question and disowns it" guard only
+   collects **explicit/inferred/stale** reading lines. A line stating
+   **unknown; retracted** is outside its matching set, so the same document can
+   describe that retraction and still call it never answered.
+3. The new Phase 82 browser row and four new Android checks correctly catch
+   the old child-derived contradiction, but check neither privacy-filtered
+   unknowns nor the reasons those unknowns carry. Their green results are
+   retained, not represented as full export correctness.
+4. The static privacy scan checks tracked content, not runtime information
+   flow through a generated export. Its clean result does not adjudicate
+   QA-82-007.
+
+The builder's four reported reintroductions and their matching assertions were
+inspected: raw seeding, narrow-by-id exclusion with a second invented derived
+concept, removal of the carried derived reading, and removal of coverage's
+separate registry guard. All corresponding repaired-tree assertions pass. This
+round **did not replay the four mutations** and does not present their reported
+14/228, 1/30, 3/30 and 1/30 results as independent measurements. Their scope
+does not test either new finding; all four can fail correctly while both survive.
+
+## Standing gates
+
+| Gate | Round 4 result, at handed-off `da31c6d` unless stated |
+| --- | --- |
+| Clean-clone aggregate `npm run verify` | **PASS** — format, lint, typecheck, tests, production build; exit 0 |
+| Unit / synthetic / contract / adversarial | **1,528/1,528 in 67 files** |
+| Tournament | **100/100 deterministic; 100/100 hybrid**; same decisions |
+| Complete browser matrix | **PASS — 543/543**, 181 each at 360, 430 and 1,280px, from the clean `da31c6d` clone; 16.8 minutes, exit 0, no retry or transient |
+| Deployed Android gate | **136/136**, one run at live `da31c6d`, no console errors |
+| Static privacy scan | **PASS — 233 tracked files**; not a runtime export privacy pass |
+| Product/deployment equivalence | **PASS**, `5936fe2` → live `da31c6d` |
+| Exact-head CI | **PASS — 32897566853**; checkpoint CI also green |
+| Independent export acceptance probe | **FAIL — QA-82-007 and QA-82-008**, with the repaired derived boundary passing |
+
+The only build warning is the existing bundle chunk-size warning. The
+deployment-reader commands needed this environment's temporary Node TLS
+verification override; that was confined to the command process and did not
+change repository or browser security settings.
+
+## Deferrals, non-features and do-not-change review
+
+Owner questions **Q1, Q4, Q6, Q7 and Q8 remain unanswered**. The Phase 8
+carry-forwards remain: v297 ancestor export; life-context-change mapping; the
+literal NUL byte in derived record ids; archived skill-claim, faith-anchor and
+milestone-observation families. The weighted-mean/denominator adjudication,
+`WORTH_DOING`, three full-weight zeroes and the two named fixture-hardening gaps
+remain as previously adjudicated, not newly approved forever.
+
+No QA-laboratory import, partial import or undo was introduced. No generic
+thread creation, calendar, third schedule question, percentage or progress bar
+was introduced. **AUD-0040, AUD-0045 and AUD-0047 remain out of scope.** The
+new privacy finding enforces D-098 on a current export; it does not wire private
+evidence into intelligence or settle Q8.
+
+All **21 audit-section-10 do-not-change items** were reread and compared with
+the narrow repair diff and regression/owner-flow evidence. In particular:
+stable five-button lifecycle, separate time-with, refusal sovereignty, association
+thresholds and empty pooling, growth proposal-not-application, weak stale
+coverage, no writes on render, subject identity, timezone/week/DST handling,
+legitimate no-action, honest legacy archiving and entity identity, no emotional
+score, custody/faith roles, grouped Life, sleep-derived safeguards, counterfactual
+guide and the full QA laboratory remain intact. The prior general export
+privacy PASS is qualified by **QA-82-007**, not silently carried forward.
+
+## Complete next handoff — Round 4 FAIL to the original builder
+
+**Model:** Claude Opus-class — repair requires reasoning across privacy scope,
+record history and a document's claims rather than a label-only change.
+
+**Intelligence level:** Max — this remains builder work in the whole-app audit
+campaign, whose explicit level rule applies to every builder repair step.
+
+**Conversation:** CURRENT — the original Phase 82 Claude builder conversation;
+it retains the governing decisions and repair history. Round 5 returns to this
+same Codex QA conversation.
+
+```text
+Continue the Life Command OS rebuild as the original Phase 82 builder.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full and execute its current Round 4
+FAIL repair handoff. Read docs/qa/README.md and the governing requirements
+needed for the repairs. Do not ask the owner to paste any file contents.
+
+Keep Phase 82 YELLOW. Do not start Phase 9 or perform GREEN closeout.
+
+QA tested product checkpoint 5936fe2b7604bf2e318e97e80aa5ce9e5c8e7559 through
+bundle-equivalent handed-off/deployed head
+da31c6dd80c3f40dd5ae51541b7a05a9018bfad3. QA-82-005 and QA-82-006 pass.
+There are two new blocking/material export findings:
+
+- QA-82-007: with Private / Sexual Health excluded, Diagnostics exposes
+  private unknown-state labels and raw store/summary metadata. Enforce D-098
+  throughout the selected document, including Diagnostics, while preserving
+  public diagnostics, in-scope genuine unknowns and explicit private opt-in.
+- QA-82-008: every unknown is printed as never answered, even when it is
+  retracted, contradicted, lapsed or malformed. Preserve the actual reason and
+  current-versus-historical truth; do not empty the unknown list.
+
+Run the QA-only read-only reproduction:
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+Its exit 1 on the tested head is expected evidence of the two findings.
+
+Follow canonical section 42 / D-108: reproduce first, identify the whole
+class and all sibling consumers, add semantic regressions, prove each fails
+when its defect is reintroduced, repair the root boundary, then rerun the full
+gate. Name any mutation that initially passes and widen the guard before
+claiming proof. Do not merely blacklist one concept label or replace one
+phrase without preserving the underlying privacy and knowledge distinctions.
+
+Preserve every Round 4 pass and all earlier passes not explicitly qualified
+by the new findings. Preserve all open owner questions, Phase 8 carry-forwards,
+deliberate non-features, AUD-0040/0045/0047 deferrals, instrument adjudications
+and all 21 audit-section-10 do-not-change rules. Do not implement Reach or
+answer Q8 as part of honoring the current export exclusion.
+
+QA owns its report and evidence; do not rewrite the QA findings or weaken its
+probe to hide a failure. Append your builder response and the complete Round 5
+retest handoff in the established manner, leaving this report intact.
+
+Finish on the exact commit you hand off: complete the final tracked changes,
+run aggregate npm run verify from a clean clone of that head, require CI green
+at that SHA, run the full browser matrix and deployed Android gate, privacy
+scan and tournament, and report exact counts and every transient honestly.
+Deploy the repaired checkpoint; read live build-info and prove checkpoint
+equivalence with the repository script rather than asserting SHA equality.
+
+Hand Round 5 to the SAME Codex QA conversation, with the tested checkpoint,
+deployed SHA, verification and reintroduction results, complete retest prompt,
+and D-092 model / level / conversation / short copyable launcher. Do not make
+the owner ask for another handoff. Do not start Phase 9.
+```
+
+### Short launcher
+
+**Model:** Claude Opus-class. **Level:** Max. **Conversation:** CURRENT — the
+original Phase 82 Claude builder conversation.
+
+```text
+Continue the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full and execute the current Phase 82
+Round 4 FAIL repair handoff exactly as written. Keep Phase 82 YELLOW and do
+not start Phase 9. Return the repaired checkpoint to the same Codex QA
+conversation for Round 5.
+
+Do not ask me to paste the file contents.
+```
+
+<!-- LCO_COMPLETE -->
+
+---
+
+# Round 4 repair — builder response, and the Round 5 retest handoff
+
+**Written by:** the original Phase 82 Claude builder conversation, in response to
+the Round 4 FAIL above. The Round 1, 2, 3 and 4 reports are unchanged; nothing
+above this line was edited, and the QA probe was neither weakened nor rewritten.
+
+**Phase status:** **YELLOW**, unchanged. D-077 stands. Phase 9 has not been
+started, and no owner-use-review adjudication has been begun.
+
+## Build to retest
+
+| Fact | Result |
+| --- | --- |
+| Repaired product checkpoint | `1205402d964294154780aba468a896eb0ae58f44` (`1205402`) — "QA-82 round 4: what a document may say, and why it does not know" |
+| Previous checkpoints | `5936fe2` (round 3), `da1a4ee` (round 2), `0899f18` (round 1), `160ec9a` (first build) |
+| Deployed SHA | `1205402` at the moment the Android gate below ran — the Preview served the checkpoint exactly. **Read it live** from `preview/build-info.json`: the documentation commit carrying this section moves it past the checkpoint, which is the case the equivalence checker exists for |
+| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Relationship | **PASS** — the exact result is recorded below. Never asserted as string equality (D-097). |
+| CI | **green at the product checkpoint `1205402` — run [32931469581](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/32931469581)**. The documentation commit carrying this section runs again on push; the aggregate `npm run verify` was run from a clean clone of **that** head and CI was confirmed green at it before this handoff was declared finished (D-147). A section cannot name its own SHA, so `gh run list --commit <head>` is how you check that claim rather than take it |
+| Report this responds to | the Round 4 section above, in this same file |
+| QA's own probe | `npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts` — reproduced at `da31c6d` before anything was changed, and now **exits 0**. Committed **unchanged**, in the documentation commit, so the Round 4 report's own link resolves and a clean clone can run it. Not weakened and not rewritten |
+
+## What Round 4 got right, and what it changes about the repair
+
+Round 4 is the first round whose findings are **not** a sibling of a defect an
+earlier round reported. QA-82-005 and QA-82-006 are closed, and the two new
+findings are pre-existing export defects the round's own instruction — read the
+whole document, including the no-child history — was what surfaced. That
+matters for how they were repaired: neither is a regression from the round 3
+change, so neither could be fixed by looking at what the round 3 change touched.
+
+What is the same as the three previous rounds is the shape. Both findings are a
+rule that had been implemented in the places somebody had thought about:
+
+- **D-098 has said since Phase 7** that an excluded area is excluded from the
+  metadata as well as the detail. `coverageSection` consulted the header;
+  `historySection` consulted the header; `overviewSection` consulted the header.
+  `diagnosticsSection` was handed the header and never looked at it.
+- **`UnknownReason` has distinguished six ways of not knowing since Phase 1.**
+  The QA inspector reads them; `ConsideredFact.reading` carries them. Two
+  surfaces rendered `state === 'unknown'` as one sentence, and the sentence they
+  chose is true of one of the six.
+
+So the repairs are made at the boundary, and the two guards are written as
+properties of the artefact rather than as assertions about the section that
+leaked. **That is what found the siblings**: two of the four things repaired
+under QA-82-007 are not in `diagnosticsSection` at all, and neither was named by
+QA.
+
+## QA-82-007 → DEF-0096. D-148
+
+**The rule.** A section does not describe the store. It describes the document,
+and the `ExportHeader` is what says which.
+
+**Four leaks under one rule**, each proved separately because each is a place a
+future section could repeat:
+
+- **The counts.** `Store: 19 records`, `Records still standing after
+  corrections: 19`, `Replaced or withdrawn`, `Local days covered` and the entity
+  count were all whole-store figures. They are now of the records the document
+  may describe, and the document **says so before it gives them** — D-098's
+  other half is that a document is read in order, so a qualifier printed after
+  the figures does not repair them.
+- **The unknown list.** Filtered by a predicate that reads a concept's **two**
+  privacy facts, its area and its own class. Reading only the area leaks a
+  private-classed concept filed under Home, which is D-146's narrow-by-id
+  mistake one field over; both mutations are proved below.
+- **The page of the history**, which QA did not name and which nothing could
+  have seen without the paired-history property. `historySection` filtered
+  private rows out of a page `assembleTimeline` had already chosen from the
+  whole history, so a withheld record consumed one of the forty slots. Said
+  precisely, because it matters for how you reproduce it: no library history
+  both holds a private record and exceeds the forty-entry page, so this needs a
+  long history with one private record in it. Given that — `long-run` and
+  `observed-evenings` with one private observation injected — the document
+  renders **39 entries** where the same history without that record renders 40,
+  and loses a whole day off the end (`3 September 2026`, and the sleep reading
+  on it). The withheld record was observable from the length of a list that
+  never mentioned it. `assembleTimeline` now takes a `TimelineScope`, applied
+  **before** the limit.
+- **The supersession issue list**, also unnamed. A dangling reference on a
+  withheld record reported that there is an entry in the area the document had
+  just promised to be silent about. The ids are opaque; the line's existence is
+  the disclosure.
+
+**The one thing that is deliberately still counted** is an unreadable row that
+says nothing about its area. A row that failed to parse cannot be placed in an
+area, and dropping it would hide a storage fault behind a privacy promise. A row
+whose raw text *claims* to be private is not counted — and that claim is trusted
+**in one direction only**, so it can subtract and never add. A corrupt row
+therefore cannot force a real private entry to be disclosed. This is the same
+asymmetry `childHere` is built on, and it is stated here so QA can disagree with
+it.
+
+**What the deployed export now says**, with Private / Sexual Health left out:
+
+```text
+- Build: … (preview), built …
+- Architecture used for this decision: …
+
+Every count below is of the part of the record this document may describe.
+Private / Sexual Health was left out, so nothing here counts it, names anything
+in it, or says whether anything is recorded in it at all.
+
+- Store: 18 records, 1 entity, 0 unreadable rows, schema 1
+- Records still standing after corrections: 18
+```
+
+Composed from the same history with its one private record removed, the document
+is **byte-identical**.
+
+**Preserved, and asserted rather than assumed.** The private record is still in
+the store, still resolves, and still reaches the fact layer — discretion is a
+display decision and never a storage decision (section 11). Turning the section
+on restores the detail *and* the counts. The public diagnostics are all still
+there. Q8 is not answered and no private evidence is wired into intelligence.
+
+## QA-82-008 → DEF-0097. D-149
+
+**The rule.** How an unknown reads is written down once, beside the type, as a
+`Record<UnknownReason, string>` — so a seventh reason is a compile error in one
+file rather than a seventh thing that silently reads as never having been asked.
+The fallback was the whole behaviour, which is why removing it is the fix rather
+than adding a case to it.
+
+| Reason | How the document reads it |
+| --- | --- |
+| `never-observed` | never answered |
+| `retracted` | answered once, and the answer was withdrawn |
+| `contradicted` | answered more than once, and nothing separates the answers |
+| `lapsed` | answered for a period that has since ended |
+| `not-applicable` | does not apply here |
+| `malformed` | unreadable |
+
+The note carries the specifics the fact layer left, in parentheses. That is what
+keeps `Cash buffer — never answered (the only records for this are in the
+future)` honest: a concept whose only record is dated tomorrow genuinely has
+never been answered, and without the note the line reads as a life with no gaps
+in it.
+
+**The sibling QA did not name.** `coverageCards` in `src/intelligence/insights.ts`
+reached the same false sentence from a different field: it branches on
+`lastEvidenceAt`, which is `undefined` for **every** unknown reason and not only
+for the one that means nobody ever asked. A standing concept the owner answered
+and withdrew, inside an area quiet for some other reason, read there as one he
+had never been asked about. `ConceptCoverage` now carries the reason and the
+line is written by the same function. The library never reaches that branch, so
+the regression **constructs** the history: career is already quiet in
+`career-gone-quiet`, and a second standing career concept is invented, stated and
+withdrawn.
+
+**Preserved.** The unknown list is not shortened — naming a reason must not
+remove a line, and the regression walks every concept the owner can answer to
+assert it is still there. `ConsideredFact.reading`'s `not known — retracted` on
+the QA inspector and in *what it read to decide* is untouched; QA named it as
+already preserving the distinction, and it does.
+
+## The tests Round 4 named as false greens
+
+| Named | What it asserts now |
+| --- | --- |
+| `export-honesty.test.ts`'s private guard used **only quiet-fortnight**, where the private fact is already known, and a forbidden-words list that did not include concept labels | The forbidden labels are **read from the registry** rather than written down, so a private concept added tomorrow is covered on the day it is added — and the scan runs on **every** history, private-off, which is where the leak lived. Plus the paired-history property, which is a rule about the whole document rather than a list of words |
+| the new per-scenario "never answers a question and disowns it" guard collected only explicit/inferred/stale readings and matched `— never answered`, so `unknown; retracted` fell outside it | It finds the unknown block by its heading and reads every line in it, whatever the reason. The same widening is applied to the copy of that guard in `qa-82-round-1.test.ts` |
+| the Phase 82 browser row and four Android checks caught the old contradiction but checked neither privacy-filtered unknowns nor the reasons they carry | Two new browser cases and six new deployed Android checks read the private-off document and the withdrawn-answer document on the handset |
+| the static privacy scan checks tracked content, not runtime information flow | Unchanged, and **it is still not a runtime pass** — QA is right about that. The runtime pass is the paired-history property, which is the instrument that was missing |
+
+Round 4 also declined to replay the four round 3 mutations and said their scope
+does not test either finding. That is correct, and this round did not treat them
+as evidence for anything. All four remain in the tree and still fail.
+
+## Exact verification results
+
+Every figure names the head it was measured on — D-147.
+
+| Gate | Round 3 (`5936fe2`) | Round 4 (`1205402`) |
+| --- | --- | --- |
+| Aggregate `npm run verify` from a clean clone of the tracked head | PASS | **PASS** — format, lint, typecheck, tests, build; exit 0, at the checkpoint and again at the handed-off head |
+| Unit / synthetic / contract / adversarial | 1,528 across 67 files | **1,574 / 1,574 across 68 files** |
+| Browser, three widths (360, 430, 1,280px) | 543 / 543 | **549 / 549 — 183 each** |
+| Android-style gate, against the **deployed** build | clean — 136 | **clean — 143 checks, in one run** |
+| Privacy scan | clean, 233 | **clean — 234 tracked files** at `1205402`; 235 at the documentation head, which adds QA's own probe |
+| Tournament | 100/100 and 100/100 | **100 / 100 deterministic, 100 / 100 hybrid** |
+| CI at the head being handed off | green at `5936fe2` | **green** — run `32931469581` at the checkpoint `1205402`, and confirmed green again at the documentation head |
+| QA's own round 4 probe | exit 1 | **exit 0**, unmodified |
+| Reintroductions proved, this round | 4 | **12** |
+
+One new test file: `tests/synthetic/qa-82-round-4.test.ts`, 19 tests.
+
+**One honest note about the local tree, reported rather than smoothed over.**
+`npm run format:check` on this working directory warns on
+`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md`. That file is **untracked** and is not
+this conversation's — Round 4 recorded leaving it untouched, and it is left
+untouched here for the same reason. It is not in the tracked head, so it is not
+in the clean clone and not in CI, and neither the aggregate verify above nor the
+CI run is affected by it. It is named here rather than silently formatted
+because D-147 exists precisely because an unmentioned documentation state was
+once reported as green.
+
+## Every reintroduction, and its result
+
+Twelve mutations, each applied to the repaired tree, the named suites run, the
+tree restored. Twelve failures. The focused set is
+`qa-82-round-4`, `export-honesty`, `qa-82-round-1`, `architecture-guards`,
+`timeline` and `insights` — **391 assertions green on the repaired tree.**
+
+| # | Reintroduced defect | Result |
+| --- | --- | --- |
+| 1 | QA-82-007 (a) diagnostics counts the whole store again | **FAILS** — 3 of 391, including "composes the same document with the private record and without it" and "still says the counts, and still says what it is not counting" |
+| 2 | QA-82-007 (b) the unknown list is not filtered by concept | **FAILS** — 27 of 391, including 23 of the per-scenario "says nothing about the private area on …" rows |
+| 3 | QA-82-007 (c) the concept predicate reads only the area, not the class | **FAILS** — 1 of 391: "withholds a private concept filed outside the private area" |
+| 4 | QA-82-007 (d) the exclusion is scoped to the one private concept there is | **FAILS** — 2 of 391: "names no private concept, and not merely the one private concept there is"; "withholds a private concept filed outside the private area" |
+| 5 | QA-82-007 (e) the entity count is unscoped | **FAILS** — 1 of 391: "counts no private entity, and no unreadable row that says it is private" |
+| 6 | QA-82-007 (f) an unreadable row that says it is private is counted anyway | **FAILS** — 1 of 391: same |
+| 7 | QA-82-007 (g) the history page is filtered after the page is counted | **FAILS** — 5 of 391, including two Phase 7 assertions — "names the private area nowhere in the document when it is left out" — that had never seen it |
+| 8 | QA-82-007 (h) the issue list is unscoped | **FAILS** — 1 of 391: "reports no tangle that only a withheld record is in". **This one passed before the guard was widened**, and is the reason it was |
+| 9 | QA-82-008 (a) the document hard-codes never answered again | **FAILS** — 5 of 391, including "is not hand-written anywhere else" |
+| 10 | QA-82-008 (b) Insights hard-codes never answered again | **FAILS** — 2 of 391: "says the same thing on Insights as in the document"; "is not hand-written anywhere else" |
+| 11 | QA-82-008 (c) the reason table drops the specifics the fact layer left | **FAILS** — 1 of 391: "keeps the specifics the fact layer left, and the future-only note" |
+| 12 | QA-82-008 (d) a withdrawn answer shares the never-answered sentence | **FAILS** — 4 of 391, including "reads every reason as a different thing" |
+
+**Mutation 8 passed on its first run, and that is the third time this phase.**
+No library history has a supersession problem involving a private record, so the
+issue list could be left reading the whole history and every other assertion
+still passed — DEF-0094's shape one field over. Found by running the mutation
+rather than by reading the test. The guard now builds that history.
+
+**One mutation was rewritten because it proved nothing.** The narrow-by-id fix
+was first written as `definition.id !== CONCEPT.privatePattern`, which does not
+compile in `compose.ts` — so it failed a module load rather than an assertion.
+It is recorded above in the form that compiles and is genuinely wrong.
+
+## Preserved, unchanged
+
+- **Every Round 4 PASS**, and every earlier pass not qualified by the two new
+  findings. QA-82-001 through QA-82-006, the nine acceptance items, the thread
+  guards, the child no-grading guard, the school window freeing the middle hours
+  and the five time-fit bands are all still asserted and still green.
+- **All deferrals and open owner questions.** Q1, Q4, Q6, Q7, Q8 remain open and
+  unanswered. The Phase 8 carry-forwards are unchanged, including the literal
+  NUL byte in derived record ids.
+- **The deliberate non-features.** No QA-laboratory import, partial import or
+  undo; no generic thread creation, calendar or third schedule question; no
+  percentage or progress bar.
+- **AUD-0040, AUD-0045 and AUD-0047** remain out of scope; the new privacy
+  repair enforces D-098 on a document and does not implement Reach.
+- **All 21 audit-section-10 do-not-change items**, reread against this diff.
+  Timeline the screen still keeps the private row and withholds its detail,
+  which is the case D-098 explicitly says this rule does *not* cover.
+
+## Documents updated
+
+- `docs/PHASE_STATUS.md` — **YELLOW — READY FOR INDEPENDENT QA, ROUND 5**, a
+  five-column verification table and a round 4 section.
+- `docs/DECISION_LOG.md` — **D-148** (a section of a document is inside the
+  document, and inherits what it may say), **D-149** (not knowing has six
+  reasons, and one place says how each of them reads).
+- `docs/DEFECT_LEDGER.md` — **DEF-0096** and **DEF-0097**.
+
+## What Round 5 should press hardest
+
+The builder's own view of where this is most likely to still be wrong. Round 5
+is QA's to design.
+
+1. **The unreadable-row exception.** It is the one place a private thing can
+   still change a count, and the reasoning for it is written above rather than
+   hidden. If QA thinks a row claiming to be private should still be counted, or
+   that one saying nothing should not be, say so — it is a judgement, not a
+   proof.
+2. **The paired-history property against a history QA builds.** The one it is
+   proved on injects a single private observation. A private *entity* with
+   records under it, a private record that participates in a learned
+   relationship, or a private record recent enough to change the decision would
+   all press it harder than the library can.
+3. **Whether any other surface composes its own sentence for an unknown.** The
+   architecture guard forbids a rendered fact line, not the words, so a surface
+   that phrases it differently would pass. The Life domain pages say "Not known
+   yet." for every reason, which is a claim about *now* and is deliberately left
+   alone — disagree if that reads as the same defect.
+4. **The export end to end on a handset with the private section deliberately
+   on**, which is the direction an over-broad privacy fix breaks.
+5. **The aggregate gate at the head you are handed**, and the untracked
+   owner-review file named above — confirm it is genuinely absent from the clean
+   clone rather than taking this section's word for it.
+
+---
+
+## Retest handoff — Phase 82, round 5
+
+**Model:** Claude Opus-class is the builder's; **QA runs on Codex**, per D-090.
+
+**Intelligence level:** High.
+
+**Conversation:** SAME — the Codex QA conversation that wrote Rounds 1, 2, 3
+and 4.
+
+```text
+Continue independent QA of the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You wrote the Phase 82 Round 1, 2, 3 and 4 reports in
+docs/qa/PHASE_82_QA_HANDOFF.md. Round 4 returned FAIL: QA-82-005 and QA-82-006
+passed, and two new export findings were raised — QA-82-007, private
+participation metadata surviving the exclusion through Diagnostics, and
+QA-82-008, every unknown printed as never answered. Both are repaired and a
+repaired checkpoint is deployed.
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full — your four reports and the
+builder's Round 4 repair response beneath them — and run Round 5 exactly as the
+retest handoff there specifies.
+
+Repaired product checkpoint:
+1205402d964294154780aba468a896eb0ae58f44
+
+Deployed SHA when the builder last proved equivalence:
+1205402d964294154780aba468a896eb0ae58f44 — the Preview served the checkpoint exactly at that moment. Read
+it live from preview/build-info.json and prove checkpoint equivalence rather
+than string equality, per D-097. The documentation commit carrying this handoff
+moves the live SHA past the checkpoint, which is the case the checker exists
+for.
+
+Preview:
+https://bill6006.github.io/life-command-os-rebuild/preview/
+
+Verify against the deployed build, not the local tree:
+
+- QA-82-007. With Private / Sexual Health excluded, no selected section may
+  disclose private detail, whether a private concept was answered,
+  participation, or private-only metadata — Diagnostics included. Exercise
+  paired histories that differ only in private records, and all private
+  knowledge states. Confirm the public diagnostics survive, that the in-scope
+  genuine unknowns are complete, and that explicit private opt-in still returns
+  the detail and the counts. The builder judged one exception deliberately: an
+  unreadable row whose raw text does not claim to be private is still counted,
+  because a row that could not be parsed cannot be placed in an area. The
+  reasoning is in the repair response; disagree with it if you think it is
+  wrong.
+- QA-82-008. Every unknown must read as the reason it actually is — withdrawn,
+  contradicted, lapsed, unreadable, not applicable, or never answered — with
+  the fact layer's note preserved, including the future-only note. The list
+  must not be shortened to make that pass.
+
+Your own probe is the first thing to run:
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+It was reproduced at da31c6d before anything was changed and now exits 0. It
+was not modified; check that.
+
+Re-verify every PASS from Rounds 1, 2, 3 and 4 rather than assuming it
+survived, and confirm every deferral, out-of-scope finding and
+audit-section-10 do-not-change rule is unchanged.
+
+Builder's counts to check rather than trust, each named against its head:
+aggregate verify PASS from a clean clone of the head you are handed, and CI
+green at the checkpoint 1205402 (run 32931469581) and again at that head;
+1,574 unit tests across 68 files; 549 / 549 browser at 360, 430 and
+1,280px; the deployed Android gate clean at 143 checks in one run;
+privacy scan; tournament 100/100 deterministic and 100/100 hybrid; 12
+reintroductions proved, one of which passed before its guard was widened and is
+recorded as such.
+
+One honest note: npm run format:check on the builder's working directory warns
+on the untracked docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, which is not in the
+tracked head and therefore not in the clean clone or in CI. It was left
+untouched, as you left it.
+
+Write your Round 5 result into docs/qa/PHASE_82_QA_HANDOFF.md as a new section,
+on PASS or FAIL, and end with the complete next handoff and a short launcher.
+
+Do not ask me to paste the file contents.
+```
+
+### Short launcher
+
+**Model:** the strongest Codex model available. **Level:** High.
+**Conversation:** SAME — the Codex QA conversation that wrote Rounds 1 to 4.
+
+```text
+Continue independent QA of the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full and run Phase 82 Round 5 exactly as
+the retest handoff at the end of it specifies. You wrote Rounds 1 to 4 in that
+file; the builder has repaired QA-82-007 and QA-82-008 and deployed a repaired
+checkpoint. Keep Phase 82 YELLOW unless it passes.
+
+Do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->
