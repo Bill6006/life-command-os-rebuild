@@ -3943,6 +3943,40 @@ Every figure names the head it was measured on — D-147.
 
 One new test file: `tests/synthetic/qa-82-round-6.test.ts`, 9 tests.
 
+**Checkpoint equivalence, run after the documentation commit was deployed** —
+the only moment it says anything, because before it the live SHA and the
+checkpoint were the same string:
+
+```text
+$ node scripts/checkpoint-equivalence.mjs 2cdeb4b \
+    --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Deployed SHA read live from …/preview/build-info.json:
+2274a592e277b555c51445edb6b0b281100c66b9
+
+6 file(s) changed between 2cdeb4b and 2274a59…, none of them bundle-relevant:
+  - docs/DECISION_LOG.md
+  - docs/DEFECT_LEDGER.md
+  - docs/PHASE_STATUS.md
+  - docs/qa/PHASE_82_QA_HANDOFF.md
+  - docs/qa/evidence/phase82-round6-mutations.mjs
+  - docs/qa/evidence/phase82-round6-privacy-probe.ts
+
+Bundle-equivalent: the deployed build at 2274a59… serves the same bytes as
+2cdeb4b.
+```
+
+Run it yourself rather than comparing these strings: the commit carrying this
+paragraph moves the live SHA once more, and that is the case the checker exists
+for.
+
+**The D-147 finishing sequence, in the order it requires.** The last commit was
+made; the tracked head was cloned into an empty directory; `npm ci` and then the
+**aggregate** `npm run verify` were run there and exited 0; CI was waited for and
+finished green at that same SHA; and all three of QA's probes were run from that
+clean clone and exited 0. Only then were these counts written down. The clean
+clone was confirmed not to contain the untracked owner-review file named above.
+
 **On the browser transient, reported rather than smoothed over — and no clean
 run was obtained.** Two full matrix runs were made and **both finished 548 / 549**,
 failing a different test each time with the same error:
