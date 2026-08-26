@@ -1671,3 +1671,64 @@ describe('a touch target is bigger than the smallest allowed target', () => {
     )
   })
 })
+
+describe('how not knowing reads is written down once', () => {
+  /*
+   * QA-82-008. `UnknownReason` distinguishes six ways of not knowing, and two
+   * surfaces then chose their own sentence from `state === 'unknown'` alone.
+   * Both chose "never answered", which is true of exactly one of the six: the
+   * review export said it of a soreness reading the owner gave at 06:41 and
+   * withdrew at 06:55, in a document that printed the withdrawal three
+   * sections above.
+   *
+   * The repair is one exhaustive table beside the type, so this asserts the
+   * property that makes it hold — that nobody else writes those words. A
+   * seventh reason is then a compile error in one file rather than a seventh
+   * thing that silently reads as never having been asked.
+   */
+  const HOME = 'src/domain/knowledge.ts'
+
+  it('is a table over the reasons, so a new reason cannot be forgotten', () => {
+    const home = readFileSync(join(ROOT, HOME), 'utf8')
+    expect(home, 'the sentences should be keyed by the reason itself').toContain(
+      'Record<UnknownReason, string>',
+    )
+    expect(home).toContain('export function describeUnknown')
+  })
+
+  it('is not hand-written anywhere else', () => {
+    const offenders: string[] = []
+    for (const file of [...MEANING_LAYER, ...FEATURES, ...LEGACY]) {
+      if (repoPath(file) === HOME) continue
+      for (const literal of literalsOf(file)) {
+        /*
+         * The sentence, not the words. "Never answered" is also how the QA
+         * laboratory's own headings and this repo's prose talk about the idea,
+         * and a scan that forbade the phrase everywhere would be a rule about
+         * vocabulary rather than about who decides what an unknown reads as.
+         * What is forbidden is a **rendered fact line**: a label, an em dash
+         * and one of the six meanings, composed anywhere but the table.
+         */
+        if (
+          /\$\{[^}]*\b(?:label|concept\.label|definition\.label)[^}]*\}\s*—\s*never answered/.test(
+            literal,
+          )
+        ) {
+          offenders.push(`${repoPath(file)}: ${literal.slice(0, 80)}`)
+        }
+      }
+    }
+    expect(offenders, 'a surface composed its own sentence for an unknown').toEqual([])
+  })
+
+  it('bites on a reintroduction of the sentence it forbids', () => {
+    // The guard above proves nothing unless it can fail. This is the exact
+    // string `compose.ts` and `insights.ts` both held.
+    const reintroduced = '${entry.definition.label} — never answered'
+    expect(
+      /\$\{[^}]*\b(?:label|concept\.label|definition\.label)[^}]*\}\s*—\s*never answered/.test(
+        reintroduced,
+      ),
+    ).toBe(true)
+  })
+})

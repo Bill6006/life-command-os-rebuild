@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { createConceptRegistry } from '../../src/domain/concepts'
 import { coreDomains, DOMAIN } from '../../src/domain/domains'
 import { discreetPlaceholder } from '../../src/domain/privacy'
 import { localDayIdAt } from '../../src/domain/time'
@@ -54,6 +55,35 @@ const EVERYTHING = SCENARIOS.map((scenario) => ({
   id: scenario.id,
   text: compose(scenario.id, EVERY_SECTION).text,
 }))
+
+/** The same library, composed the way **Select all** composes it. */
+const EVERY_HISTORY_PRIVATE_OFF = SCENARIOS.map((scenario) => ({
+  id: scenario.id,
+  text: compose(scenario.id, SELECT_ALL).text,
+}))
+
+/**
+ * Every concept the document lists as not known, whatever the reason — QA-82-008.
+ *
+ * This was a match on the single sentence `— never answered`, which was the
+ * only one the section could produce and is now one of six. Read as a rule
+ * about that sentence, the guard would have quietly stopped covering the five
+ * new ones on the day they arrived, which is the shape of a regression that
+ * decays into decoration. So the block is found by its heading and read to the
+ * blank line that ends it.
+ */
+function unknownLabelsIn(text: string): readonly string[] {
+  const lines = text.split(NEWLINE)
+  const start = lines.indexOf('Things the app knows it does not know:')
+  if (start === -1) return []
+  const labels: string[] = []
+  for (const line of lines.slice(start + 1)) {
+    if (line === '') break
+    const found = /^- (.+?) \u2014 /.exec(line)
+    if (found !== null) labels.push(found[1]!.trim())
+  }
+  return labels
+}
 
 describe('a figure never reaches the document without what it measures', () => {
   for (const { id, text } of EVERYTHING) {
@@ -205,11 +235,33 @@ describe('QA-07-003 — leaving the private area out leaves out that it exists',
    * something there, and when. A placeholder is not a redaction if its
    * presence is the fact.
    */
+  /*
+   * The area's names, the placeholder that stands in for a withheld entry,
+   * **and the label of every private concept in the registry** — QA-82-007.
+   *
+   * The list started as the first three and let a reintroduction through: a
+   * dated Timeline row reading "Noted: Private entry" names no domain and
+   * discloses the whole of what the exclusion protects — that there is
+   * something there, and when. A placeholder is not a redaction if its
+   * presence is the fact.
+   *
+   * It then let a second one through for the same reason one size larger.
+   * Diagnostics listed `Recent private pattern — never answered`, which names
+   * neither the domain nor the placeholder and states, of the area the
+   * document has just said it will be silent about, that nothing is known in
+   * it. The labels are read from the registry rather than written down here,
+   * so a private concept added tomorrow is covered by this guard on the day it
+   * is added.
+   */
   const PRIVATE_WORDS = [
     /Private \/ Sexual Health/,
     /private-health/,
     /private \/ sexual health/i,
     new RegExp(discreetPlaceholder('private')),
+    ...createConceptRegistry()
+      .all()
+      .filter((definition) => definition.privacy === 'private')
+      .map((definition) => new RegExp(definition.label)),
   ]
 
   it('names the private area nowhere in the document when it is left out', () => {
@@ -234,6 +286,27 @@ describe('QA-07-003 — leaving the private area out leaves out that it exists',
     const composed = compose('quiet-fortnight', SELECT_ALL)
     expect(composed.header.domains).not.toContain(DOMAIN.privateHealth)
   })
+
+  /*
+   * And on every history, not on the one that happens to hold a private record.
+   *
+   * `quiet-fortnight` is the only fixture with a private entry, so this suite's
+   * whole privacy contract rested on a history where the private fact is
+   * **known**. Its label therefore never reached the unknown list, and the leak
+   * QA-82-007 found was invisible to a scan that only ever read this document.
+   * The other twenty-three are where it lived.
+   */
+  for (const { id, text } of EVERY_HISTORY_PRIVATE_OFF) {
+    it(`says nothing about the private area on ${id}`, () => {
+      const declaring =
+        /leaves out|left out|whether anything has been recorded|whether there are any|may describe/i
+      const leaks = text
+        .split(NEWLINE)
+        .filter((line) => !declaring.test(line))
+        .filter((line) => PRIVATE_WORDS.some((pattern) => pattern.test(line)))
+      expect(leaks, 'the private area is named outside its own exclusion notice').toEqual([])
+    })
+  }
 
   it('states that the exclusion covers whether anything is recorded there', () => {
     // Otherwise the silence reads as an empty area rather than a withheld one.
@@ -385,10 +458,8 @@ describe('the document says what it does not know', () => {
           found[1]!.trim(),
         ),
       )
-      const disowned = [...text.matchAll(/^- (.+?) \u2014 never answered$/gm)]
-        .map((found) => found[1]!.trim())
-        .filter((label) => read.has(label))
-      expect(disowned, 'stated as read, and listed as never answered').toEqual([])
+      const disowned = unknownLabelsIn(text).filter((label) => read.has(label))
+      expect(disowned, 'stated as read, and listed as unknown').toEqual([])
     })
   }
 })

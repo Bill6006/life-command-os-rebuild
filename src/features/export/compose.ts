@@ -1,18 +1,27 @@
+import type { ConceptDefinition } from '../../domain/concepts'
 import { countOf } from '../../domain/counts'
 import { DOMAIN, type LifeDomainId } from '../../domain/domains'
+import { describeUnknown } from '../../domain/knowledge'
 import { FULL_EXPORT, type DisplayPolicy } from '../../domain/privacy'
 import type { CanonicalRecord, CommitmentWindowRecord } from '../../domain/records'
 import { describeCommitmentWindow } from '../../domain/schedule'
-import { localDayIdAt, type Instant, type LocalDayId, type TimeZoneId } from '../../domain/time'
+import {
+  localDayIdAt,
+  localWeekIdAt,
+  type Instant,
+  type LocalDayId,
+  type TimeZoneId,
+} from '../../domain/time'
 import type { Decision } from '../../intelligence/engine'
 import type { InsightsReport } from '../../intelligence/insights'
 import type { Situation } from '../../intelligence/situation'
 import type { RecordId } from '../../domain/ids'
+import { isPlainObject, type MalformedRow } from '../../domain/validation'
 import { evidenceSourceOf, type ProvenanceSource } from '../../domain/records'
 import { describeRecord, tagFor, type DescribeContext } from '../history/describe'
 import { originOfSources, type RecordOrigin } from '../history/origin'
 import type { HistorySource } from '../memory/memoryContext'
-import type { TimelineData } from '../timeline/timelineEntries'
+import { assembleTimeline, TIMELINE_PAGE, type TimelineData } from '../timeline/timelineEntries'
 import { handoffPrompt } from './handoffPrompt'
 import { orderSelection, sectionById, type ExportSectionId } from './sections'
 
@@ -253,6 +262,69 @@ export function recordsInScope(
  */
 function mayName(domain: LifeDomainId, header: ExportHeader): boolean {
   return header.privateIncluded || domain !== DOMAIN.privateHealth
+}
+
+/**
+ * Whether a concept may be named in this document at all — QA-82-007.
+ *
+ * `mayName` asks the question of a life area, which is the shape the leak took
+ * and **not** the shape of the rule. A concept carries two privacy facts and
+ * either of them is enough to withhold it: the area it belongs to, and its own
+ * class. Reading only the domain would have been Round 3's mistake in new
+ * clothes — a private-classed concept filed under Home leaks its label and its
+ * knowledge state while every assertion about the private *area* still passes.
+ *
+ * It is deliberately not written against the one private concept that exists
+ * today. That is the narrow-by-id fix DEF-0094 caught, and it passed
+ * everything until the guard was given a second member of the class.
+ */
+function mayDescribeConcept(definition: ConceptDefinition, header: ExportHeader): boolean {
+  return (
+    header.privateIncluded ||
+    (definition.privacy !== 'private' && mayName(definition.domain, header))
+  )
+}
+
+/**
+ * The records this document may count, from any list of them.
+ *
+ * The same predicate `recordsInScope` applies to the records a section reads,
+ * applied to the ones a figure counts. A count is a claim about the record, so
+ * a figure computed over the whole store under a header saying an area was
+ * left out states the size of the withheld part by subtraction.
+ */
+function describableRecords(
+  records: readonly CanonicalRecord[],
+  header: ExportHeader,
+): readonly CanonicalRecord[] {
+  if (header.privateIncluded) return records
+  return records.filter(
+    (record) =>
+      record.privacy !== 'private' && record.domains.every((domain) => mayName(domain, header)),
+  )
+}
+
+/** Whether a record the document may not describe is the one being pointed at. */
+function withheldRecord(id: RecordId, situation: Situation, header: ExportHeader): boolean {
+  const record = situation.view.history.byId(id)
+  // An id nothing resolves is a dangling reference, which is the finding
+  // itself, and it names no area. It stays.
+  if (record === undefined) return false
+  return describableRecords([record], header).length === 0
+}
+
+/**
+ * Whether an unreadable row says of itself that it is private.
+ *
+ * Read from `raw` because there is nowhere else to read it from — the row did
+ * not parse. Trusted only to withhold, never to disclose; see the note at the
+ * count that uses it.
+ */
+function claimsPrivate(row: MalformedRow): boolean {
+  if (!isPlainObject(row.raw)) return false
+  if (row.raw['privacy'] === 'private') return true
+  const domains = row.raw['domains']
+  return Array.isArray(domains) && domains.includes(DOMAIN.privateHealth)
 }
 
 function describeContext(situation: Situation, policy: DisplayPolicy): DescribeContext {
@@ -633,16 +705,18 @@ function historySection(request: ExportRequest, header: ExportHeader): readonly 
    * that the area was left out, and that statement is what makes the silence
    * readable instead of misleading.
    */
-  const days = header.privateIncluded
-    ? timeline.days
-    : timeline.days
-        .map((day) => ({
-          ...day,
-          entries: day.entries.filter(
-            (entry) => entry.domain !== DOMAIN.privateHealth && !entry.withheld,
-          ),
-        }))
-        .filter((day) => day.entries.length > 0)
+  /*
+   * And the page is already the document's — QA-82-007.
+   *
+   * This filtered `timeline.days` after `assembleTimeline` had chosen forty
+   * entries from the whole history, so a withheld record consumed a slot and
+   * the section rendered thirty-nine. Two library histories lost a whole day
+   * off the end that way: the withheld record was observable from the length
+   * of a list that never mentioned it, which is the same participation leak
+   * one layer up from the row. `composeExport` now asks for a page of what
+   * this document may show, so there is nothing left here to take out.
+   */
+  const days = timeline.days
 
   if (days.length === 0) return [NOTHING_HERE]
 
@@ -732,28 +806,86 @@ function privateSection(request: ExportRequest): readonly string[] {
   return lines
 }
 
-function diagnosticsSection(request: ExportRequest): readonly string[] {
+function diagnosticsSection(request: ExportRequest, header: ExportHeader): readonly string[] {
   const { situation, decision, app } = request
   const trace = decision.trace
   const snapshot = situation.view.snapshot
 
+  /*
+   * Diagnostics is inside the document, so the document's exclusion reaches it
+   * — QA-82-007.
+   *
+   * Every other section takes this `header` and asks what it is allowed to
+   * describe. This one took only the request and read the store: whole-store
+   * counts, and `facts.inState('unknown')` in full. With Private / Sexual
+   * Health left out, one library history disclosed the withheld record twice
+   * over — `19 records` where the same history without it says `18`, and
+   * `Recent private pattern — never answered`, which names the area and states
+   * that nothing is known in it. Both are participation, which D-098 calls the
+   * part of a private record that stays sensitive after the detail is
+   * withheld. Diagnostics is reached by **Select all** and is not consent to
+   * include the private section.
+   *
+   * The qualifier goes **before** the figures rather than after them, because
+   * that is the other half of D-098: a document is read in order, and a
+   * correction arriving later does not repair a count already given.
+   */
+  const stored = describableRecords(snapshot.records, header)
+  const standing = describableRecords(situation.view.history.effective, header)
+  const displaced = describableRecords(situation.view.history.displaced, header)
+  const entities = header.privateIncluded
+    ? snapshot.entities
+    : snapshot.entities.filter(
+        (entity) => entity.privacy !== 'private' && mayName(entity.domain, header),
+      )
+  /*
+   * An unreadable row that *claims* to be private is not counted either.
+   *
+   * The claim is unvalidated by definition — the row failed to parse — so it
+   * is trusted in one direction only: it may remove a row from the count and
+   * can never add one, which is the same asymmetry `childHere` is built on. A
+   * corrupt row therefore cannot force a real private entry to be disclosed,
+   * and a row that says nothing about its area is still counted, because a row
+   * nobody can read cannot be placed in an area and dropping it would hide a
+   * storage fault behind a privacy promise.
+   */
+  const unreadable = header.privateIncluded
+    ? snapshot.malformed
+    : snapshot.malformed.filter((row) => !claimsPrivate(row))
+
+  const days = new Set(stored.map((record) => localDayIdAt(record.occurredAt, situation.zone)))
+  const weeks = new Set(
+    stored.map((record) =>
+      localWeekIdAt(record.occurredAt, situation.zone, situation.weekStartsOn),
+    ),
+  )
+
   const lines = [
     bullet(`Build: ${app.commitSha} (${app.target}), built ${app.buildTime}`),
     bullet(`Architecture used for this decision: ${decision.architecture}`),
+  ]
+
+  if (!header.privateIncluded) {
+    lines.push(
+      '',
+      'Every count below is of the part of the record this document may describe. Private / Sexual Health was left out, so nothing here counts it, names anything in it, or says whether anything is recorded in it at all.',
+      '',
+    )
+  }
+
+  lines.push(
     bullet(
-      `Store: ${countOf(snapshot.records.length, 'record', 'records')}, ${countOf(snapshot.entities.length, 'entity', 'entities')}, ${countOf(snapshot.malformed.length, 'unreadable row', 'unreadable rows')}, schema ${snapshot.schemaVersion}`,
+      `Store: ${countOf(stored.length, 'record', 'records')}, ${countOf(entities.length, 'entity', 'entities')}, ${countOf(unreadable.length, 'unreadable row', 'unreadable rows')}, schema ${snapshot.schemaVersion}`,
     ),
-    bullet(`Records still standing after corrections: ${situation.view.summary.effective}`),
-    bullet(`Replaced or withdrawn: ${situation.view.summary.displaced}`),
-    bullet(
-      `Local days covered: ${situation.view.summary.byLocalDay.size}; local weeks: ${situation.view.summary.byLocalWeek.size}`,
-    ),
+    bullet(`Records still standing after corrections: ${standing.length}`),
+    bullet(`Replaced or withdrawn: ${displaced.length}`),
+    bullet(`Local days covered: ${days.size}; local weeks: ${weeks.size}`),
     '',
     'How this decision was reached:',
     bullet(`Moves proposed: ${trace.proposed.length}`),
     bullet(`Ruled out: ${trace.rejected.length}`),
     bullet(`Ranked: ${trace.ranking.length}`),
-  ]
+  )
 
   for (const rejection of trace.rejected) {
     lines.push(`  - ${rejection.candidate}: ${rejection.reason} — ${rejection.explanation}`)
@@ -764,17 +896,44 @@ function diagnosticsSection(request: ExportRequest): readonly string[] {
     for (const note of trace.notes) lines.push(bullet(note))
   }
 
-  const unknown = situation.view.facts.inState('unknown')
+  /*
+   * And why each one is not known, rather than one sentence for six —
+   * QA-82-008.
+   *
+   * `describeUnknown` is the only place that sentence is written, so the next
+   * surface to list an unknown cannot invent a seventh way of saying it, and a
+   * seventh `UnknownReason` is a compile error rather than one more thing that
+   * silently reads as never having been asked.
+   */
+  const unknown = situation.view.facts
+    .inState('unknown')
+    .filter((entry) => mayDescribeConcept(entry.definition, header))
   if (unknown.length > 0) {
     lines.push('', 'Things the app knows it does not know:')
     for (const entry of unknown) {
-      lines.push(bullet(`${entry.definition.label} — never answered`))
+      const knowledge = entry.knowledge
+      // Narrowing, not a filter: `inState('unknown')` already decided this.
+      if (knowledge.state !== 'unknown') continue
+      lines.push(bullet(`${entry.definition.label} — ${describeUnknown(knowledge)}`))
     }
   }
 
-  if (situation.view.history.issues.length > 0) {
+  /*
+   * A dangling supersession on a withheld record is a fact about the withheld
+   * record. The ids are opaque, and that is not the disclosure: the line's
+   * existence says there is an entry in the area this document has just
+   * promised to say nothing about.
+   */
+  const issues = header.privateIncluded
+    ? situation.view.history.issues
+    : situation.view.history.issues.filter(
+        (issue) =>
+          !withheldRecord(issue.record, situation, header) &&
+          !withheldRecord(issue.target, situation, header),
+      )
+  if (issues.length > 0) {
     lines.push('', 'Records that contradict each other about what replaces what:')
-    for (const issue of situation.view.history.issues) {
+    for (const issue of issues) {
       lines.push(bullet(`${issue.problem}: ${issue.record} → ${issue.target}`))
     }
   }
@@ -804,6 +963,32 @@ const BUILDERS: Record<
 
 export function composeExport(request: ExportRequest): ComposedExport {
   const chosen = orderSelection(request.sections)
+  const privateIncluded = chosen.includes('private')
+
+  /*
+   * The history this document may render, before anything counts it.
+   *
+   * The caller hands in the timeline its own screen shows, which is right for
+   * Timeline and wrong here: that page was chosen from the whole history, so a
+   * withheld record took a slot and every count downstream — the section's own
+   * "the most recent N entries", and `header.records` when Recent record is
+   * the only summarising section chosen — was a count of the document minus
+   * whatever it was not allowed to say (QA-82-007).
+   *
+   * So the document gets its own page, taken from what it may show. With the
+   * private section deliberately included there is nothing to take out and the
+   * caller's own timeline is used unchanged.
+   */
+  const scoped: ExportRequest = privateIncluded
+    ? request
+    : {
+        ...request,
+        timeline: assembleTimeline(request.situation, TIMELINE_PAGE, {
+          showsRecord: (record) => record.privacy !== 'private',
+          reportsUnreadable: (row) => !claimsPrivate(row),
+        }),
+      }
+
   /*
    * What this document draws on, not what the store happens to hold.
    *
@@ -811,7 +996,7 @@ export function composeExport(request: ExportRequest): ComposedExport {
    * document the owner is about to hand somebody, so all of it is computed
    * from the scope rather than from the whole history.
    */
-  const records = recordsInScope(request, chosen)
+  const records = recordsInScope(scoped, chosen)
   const range = dayRange(records)
 
   const header: ExportHeader = {
@@ -826,7 +1011,7 @@ export function composeExport(request: ExportRequest): ComposedExport {
     records: records.length,
     domains: domainsOf(records),
     sections: chosen,
-    privateIncluded: chosen.includes('private'),
+    privateIncluded,
     diagnosticsIncluded: chosen.includes('diagnostics'),
   }
 
@@ -876,7 +1061,7 @@ export function composeExport(request: ExportRequest): ComposedExport {
   for (const id of chosen) {
     const section = sectionById(id)
     lines.push(heading(section.title), '')
-    const body = BUILDERS[id](request, header).filter((line, index, all) => {
+    const body = BUILDERS[id](scoped, header).filter((line, index, all) => {
       // Collapse the runs of blank lines a section's own conditionals leave.
       return !(line === '' && all[index - 1] === '')
     })

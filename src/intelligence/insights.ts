@@ -19,6 +19,7 @@ import {
 } from '../domain/time'
 import type { Decision } from './engine'
 import { describeDays } from './coverage'
+import { describeUnknown } from '../domain/knowledge'
 import type { ProvenanceSource } from '../domain/records'
 import {
   actionScopeOf,
@@ -1636,10 +1637,23 @@ function coverageCards(situation: Situation): readonly Built[] {
       lines.push({
         record: (concept.evidence[0] ?? concept.concept) as RecordId,
         when: localDayIdAt(concept.lastEvidenceAt ?? situation.at, situation.zone),
+        /*
+         * Why there is no evidence, not one sentence for every way of having
+         * none — QA-82-008's sibling on this surface.
+         *
+         * This line said "never answered" whenever the concept had no standing
+         * evidence, and `lastEvidenceAt` is undefined for **every** unknown
+         * reason rather than only for the one that means nobody ever asked. A
+         * standing concept the owner answered and then withdrew, inside an
+         * area that has gone quiet for some other reason, read here as one he
+         * had never been asked about — the same false sentence the review
+         * export was printing, on a different surface and from a different
+         * field. `describeUnknown` is the one place it is written.
+         */
         text:
-          concept.lastEvidenceAt === undefined
-            ? `${concept.label} — never answered`
-            : `${concept.label} — last heard ${describeDays(concept.daysSince ?? 0)} ago`,
+          concept.unknown === undefined
+            ? `${concept.label} — last heard ${describeDays(concept.daysSince ?? 0)} ago`
+            : `${concept.label} — ${describeUnknown(concept.unknown)}`,
       })
     }
   }

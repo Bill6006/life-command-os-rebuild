@@ -1,7 +1,8 @@
 import type { LifeDomainId } from '../../domain/domains'
 import type { RecordId } from '../../domain/ids'
 import { DISCREET_PRIMARY } from '../../domain/privacy'
-import { compareRecordOrder } from '../../domain/records'
+import { compareRecordOrder, type CanonicalRecord } from '../../domain/records'
+import type { MalformedRow } from '../../domain/validation'
 import { localDayIdAt, type Instant, type LocalDayId } from '../../domain/time'
 import type { Situation } from '../../intelligence/situation'
 import { describeRecord } from '../history/describe'
@@ -101,6 +102,40 @@ export interface TimelineData {
   readonly tangled: readonly UnreadableRow[]
 }
 
+/**
+ * What a rendering of the history is allowed to show — QA-82-007.
+ *
+ * Timeline the screen shows everything and withholds the detail, which is
+ * right: it is the owner's own history and dropping a row would tell him it is
+ * thinner than it is. A review export leaves the device under a statement that
+ * an area is not below, and there the row goes as well as the detail.
+ *
+ * That difference used to be applied by the export **after** this function had
+ * already chosen its page, and the ordering was the defect: a withheld record
+ * consumed one of the forty slots and the document then rendered thirty-nine.
+ * On two library histories that dropped a whole day off the end, so the
+ * withheld record was observable from the length of a list that never
+ * mentioned it. A caller that may not show a record must be able to say so
+ * before the page is counted, not after.
+ */
+export interface TimelineScope {
+  /** Applied before the limit, so a withheld row cannot consume a slot. */
+  readonly showsRecord: (record: CanonicalRecord) => boolean
+  /**
+   * Whether an unreadable row may be reported.
+   *
+   * Its area is normally unknowable — the row did not parse — so this is the
+   * caller's judgement rather than a fact this function holds.
+   */
+  readonly reportsUnreadable: (row: MalformedRow) => boolean
+}
+
+/** Everything, which is what the owner's own screens show. */
+const WHOLE_HISTORY: TimelineScope = {
+  showsRecord: () => true,
+  reportsUnreadable: () => true,
+}
+
 /** How many entries a first view renders before the owner asks for more. */
 export const TIMELINE_PAGE = 40
 
@@ -153,7 +188,11 @@ function problemOf(issues: readonly { readonly problem: string }[]): string {
  * render — both arguments rather than state, so the surface stays a function of
  * the situation and the same history at the same moment always reads the same.
  */
-export function assembleTimeline(situation: Situation, limit = TIMELINE_PAGE): TimelineData {
+export function assembleTimeline(
+  situation: Situation,
+  limit = TIMELINE_PAGE,
+  scope: TimelineScope = WHOLE_HISTORY,
+): TimelineData {
   const context = {
     entities: situation.entities,
     history: situation.view.history,
@@ -174,7 +213,7 @@ export function assembleTimeline(situation: Situation, limit = TIMELINE_PAGE): T
    * which is what a reverse-chronological list means.
    */
   const ordered = situation.view.history.effective
-    .filter((record) => record.occurredAt <= situation.at)
+    .filter((record) => record.occurredAt <= situation.at && scope.showsRecord(record))
     .slice()
     .sort((a, b) => -compareRecordOrder(a, b))
 
@@ -216,10 +255,12 @@ export function assembleTimeline(situation: Situation, limit = TIMELINE_PAGE): T
     shown += 1
   }
 
-  const unreadable: UnreadableRow[] = situation.view.snapshot.malformed.map((row) => ({
-    where: whereItWas(row.index, row.issues),
-    problem: problemOf(row.issues),
-  }))
+  const unreadable: UnreadableRow[] = situation.view.snapshot.malformed
+    .filter((row) => scope.reportsUnreadable(row))
+    .map((row) => ({
+      where: whereItWas(row.index, row.issues),
+      problem: problemOf(row.issues),
+    }))
 
   /*
    * Records that disagree about what replaces what.

@@ -99,6 +99,45 @@ export function unknown(reason: UnknownReason, note?: string): Unknown {
   return note === undefined ? { state: 'unknown', reason } : { state: 'unknown', reason, note }
 }
 
+/**
+ * How not knowing reads out loud, in one place — QA-82-008.
+ *
+ * `UnknownReason` exists because the six ways of not knowing are not the same
+ * thing, and the QA inspector has to tell them apart (section 31). The review
+ * export threw the distinction away: it printed **“never answered”** for every
+ * entry in `facts.inState('unknown')`, so a soreness reading the owner gave at
+ * 06:41 and withdrew at 06:55 left a document saying, of the same concept and
+ * in the same breath as “Withdrew an earlier entry”, that he had never been
+ * asked. Four of the six reasons are a claim about *now* on top of an answer
+ * that exists in the record; only `never-observed` is a claim about the whole
+ * history, and that is the one sentence the export was using for all of them.
+ *
+ * **A `Record` rather than a function per caller**, so a seventh reason is a
+ * compile error here instead of a seventh thing that silently reads as never
+ * having been asked. That is the shape of the defect: the fallback was the
+ * whole behaviour.
+ *
+ * The note carries the specifics where `resolveFacts` left any — which records
+ * disagreed, that the only rows were unreadable, that the only records for this
+ * are still in the future. That last one is why the phrases are about *being
+ * answered* rather than about the record holding nothing: a concept whose only
+ * record is dated tomorrow has genuinely never been answered, and the note is
+ * what stops that reading as a life with nothing in it.
+ */
+const UNKNOWN_READS: Record<UnknownReason, string> = {
+  'never-observed': 'never answered',
+  retracted: 'answered once, and the answer was withdrawn',
+  contradicted: 'answered more than once, and nothing separates the answers',
+  lapsed: 'answered for a period that has since ended',
+  'not-applicable': 'does not apply here',
+  malformed: 'unreadable',
+}
+
+export function describeUnknown(state: Unknown): string {
+  const reads = UNKNOWN_READS[state.reason]
+  return state.note === undefined ? reads : `${reads} (${state.note})`
+}
+
 export function staleFrom<T>(
   known: Explicit<T> | Inferred<T>,
   staleSince: Instant,

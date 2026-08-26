@@ -253,6 +253,57 @@ test.describe('how the day is set up', () => {
     expect(said).toContain('\u2014 never answered')
   })
 
+  test('says nothing about the area it says it is leaving out', async ({ page }) => {
+    /*
+     * QA-82-007, on the deployed document. **Select all** reaches Diagnostics
+     * and deliberately does not reach the private section, so this is the
+     * document one tap produces \u2014 and the one that named the withheld area and
+     * stated that nothing was known in it.
+     */
+    await loadInQa(page, 'Two ordinary weeks')
+
+    await page.goto(`${APP}#/data`)
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Data')
+    await page.getByRole('button', { name: 'Select all' }).click()
+
+    const text = page.getByTestId('export-text')
+    await expect(text).toBeVisible()
+    const said = await text.inputValue().catch(() => text.innerText())
+
+    expect(said).toContain('The Private / Sexual Health section is left out.')
+    expect(said).not.toContain('Recent private pattern')
+    expect(said).not.toContain('Private entry')
+    // The counts survive, and say what they are of, before they are given.
+    expect(said).toContain(
+      'Every count below is of the part of the record this document may describe',
+    )
+    expect(said).toMatch(/- Records still standing after corrections: \d+/)
+  })
+
+  test('says why it does not know, rather than one sentence for every reason', async ({ page }) => {
+    /*
+     * QA-82-008. `One answer, and a lot of silence` states soreness at 06:41
+     * and withdraws it at 06:55. The document printed the withdrawal under the
+     * recent record and called the same concept never answered under what it
+     * does not know.
+     */
+    await loadInQa(page, 'One answer, and a lot of silence')
+
+    await page.goto(`${APP}#/data`)
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Data')
+    await page.getByRole('button', { name: 'Select all' }).click()
+
+    const text = page.getByTestId('export-text')
+    await expect(text).toBeVisible()
+    const said = await text.inputValue().catch(() => text.innerText())
+
+    expect(said).toContain('Soreness or pain \u2014 answered once, and the answer was withdrawn')
+    expect(said).not.toContain('Soreness or pain \u2014 never answered')
+    // And a concept nobody has been asked about still reads as one nobody has
+    // been asked about, so the list has not been emptied to make this pass.
+    expect(said).toContain('\u2014 never answered')
+  })
+
   test('has her back, and the middle of the day free, either side of it', async ({ page }) => {
     /*
      * The half that would be easy to break while fixing the first. Her school

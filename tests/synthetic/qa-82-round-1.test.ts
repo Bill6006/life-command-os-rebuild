@@ -368,7 +368,21 @@ describe('QA-82-005 \u2014 a worked-out fact is never something nobody answered'
           found[1]!.trim(),
         ),
       )
-      for (const match of text.matchAll(/^- (.+?) \u2014 never answered$/gm)) {
+      /*
+       * Any unknown, not the one sentence there used to be \u2014 QA-82-008.
+       *
+       * `\u2014 never answered` was the only thing this section could say about an
+       * unknown, so matching it was matching the class. It is now one of six,
+       * and a guard still written against it would pass a document that stated
+       * a reading and then called the same concept withdrawn.
+       */
+      const heading = 'Things the app knows it does not know:'
+      const lines = text.split(String.fromCharCode(10))
+      const start = lines.indexOf(heading)
+      for (const line of start === -1 ? [] : lines.slice(start + 1)) {
+        if (line === '') break
+        const match = /^- (.+?) \u2014 /.exec(line)
+        if (match === null) continue
         const label = match[1]!.trim()
         if (read.has(label))
           contradictions.push(`${time}: \u201c${label}\u201d both read and unanswered`)

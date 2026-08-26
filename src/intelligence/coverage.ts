@@ -2,7 +2,7 @@ import type { ConceptDefinition, ConceptRegistry } from '../domain/concepts'
 import type { DomainRegistry, LifeDomainId } from '../domain/domains'
 import type { EntityIndex } from '../domain/entities'
 import type { RecordId } from '../domain/ids'
-import type { KnowledgeState } from '../domain/knowledge'
+import { unknown, type KnowledgeState, type Unknown } from '../domain/knowledge'
 import type { PrivacyClass } from '../domain/privacy'
 import {
   bearsConcept,
@@ -102,6 +102,17 @@ export interface ConceptCoverage {
   readonly domain: LifeDomainId
   readonly privacy: PrivacyClass
   readonly state: KnowledgeState
+  /**
+   * Why it is not known, when it is not — QA-82-008.
+   *
+   * `state` alone says a concept is unknown, and every surface that reads it
+   * then has to choose a sentence with nothing to choose from. Insights chose
+   * "never answered" for all of them, which is false of the four reasons that
+   * sit on top of an answer the record actually holds: withdrawn, contradicted,
+   * lapsed and unreadable. The reason is already resolved one layer down; it
+   * was simply not carried this far.
+   */
+  readonly unknown: Unknown | undefined
   /** Whether a gap here is a gap in understanding, or just Tuesday. */
   readonly standing: boolean
   /** Where the most recent evidence came from. Absent when there is none. */
@@ -596,6 +607,20 @@ export function assembleCoverage(
         observedAt === undefined
           ? undefined
           : Math.max(0, localDaysBetween(localDayIdAt(observedAt, moment.zone), today))
+      /*
+       * A concept with no entry at all is one nothing has ever spoken to.
+       *
+       * `resolveFacts` seeds every concept the owner can answer, so this does
+       * not happen today; saying it here rather than leaving a surface to
+       * invent a sentence for the case is the point. Every path that has no
+       * evidence now arrives carrying the reason it has none.
+       */
+      const whyUnknown: Unknown | undefined =
+        knowledge === undefined
+          ? unknown('never-observed')
+          : knowledge.state === 'unknown'
+            ? knowledge
+            : undefined
       const neglectedAfter = neglectedAfterDaysFor(definition.freshness)
       const source =
         observedAt === undefined ? undefined : sourceOfNewest(definition.id, view, moment)
@@ -606,6 +631,7 @@ export function assembleCoverage(
         domain: definition.domain,
         privacy: definition.privacy,
         state: knowledge?.state ?? 'unknown',
+        unknown: whyUnknown,
         standing: definition.standing === true,
         source,
         sources: sourcesOf(
