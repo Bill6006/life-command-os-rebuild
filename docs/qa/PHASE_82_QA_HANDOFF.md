@@ -6287,7 +6287,7 @@ adjudicated.
 | Previous checkpoints | `675aedd` (round 8), `6a9c53e` (round 7), `2cdeb4b` (round 6), `dab8c2e` (round 5), `1205402` (round 4), `5936fe2` (round 3), `da1a4ee` (round 2), `0899f18` (round 1), `160ec9a` (first build) |
 | Deployed SHA | `da8e4d4` at the moment the Android gate below ran. **Read it live** from `preview/build-info.json` |
 | Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
-| Relationship | **PASS** — the exact result is recorded below, run after the documentation head deployed. Never asserted as string equality (D-097). |
+| Relationship | **PASS** — proved twice, at the checkpoint and again at the documentation head `9d3554c`; both outputs are recorded below. Never asserted as string equality (D-097). |
 | CI | **green at the product checkpoint `da8e4d4` — run [33020873253](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33020873253)**, both jobs. The aggregate `npm run verify` was run from a clean clone of the checkpoint and again of the documentation head (D-147) |
 | All six QA probes | **exit 0, unmodified.** Round 9's was run against the failing tree first and reproduced both failures |
 | Report this responds to | the Round 9 section above, in this same file |
@@ -6429,11 +6429,39 @@ Bundle-equivalent: the deployed build at da8e4d49ca3f615fda06d3b7a00fb48c25368d1
 serves the same bytes as da8e4d4.
 ```
 
-The commit carrying this paragraph moves the live SHA past the checkpoint, which
-is the case D-097 exists for — **run the checker rather than comparing these
-strings.** The same proof at the documentation head, and the finishing sequence
-run against it, are recorded immediately below this block once that head has
-deployed.
+And again once the documentation head above had deployed:
+
+```text
+$ node scripts/checkpoint-equivalence.mjs da8e4d4     --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Deployed SHA read live from …/preview/build-info.json:
+9d3554cb1f193e32df552158d5414be21bca6216
+
+6 file(s) changed between da8e4d4 and 9d3554cb…, none of them bundle-relevant:
+  - docs/DECISION_LOG.md
+  - docs/DEFECT_LEDGER.md
+  - docs/PHASE_STATUS.md
+  - docs/qa/PHASE_82_QA_HANDOFF.md
+  - docs/qa/evidence/phase82-round9-boundary-probe.ts
+  - docs/qa/evidence/phase82-round9-mutations.mjs
+
+Bundle-equivalent: the deployed build at 9d3554cb… serves the same bytes as
+da8e4d4.
+```
+
+CI at `9d3554c` is green in **both** jobs, including the deploy job's live
+read-back — run [33022073999](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33022073999).
+The commit carrying this paragraph moves the live SHA once more, which is the
+case D-097 exists for — **run the checker rather than comparing these strings.**
+
+**The D-147 finishing sequence, in the order it requires.** The last commit was
+made; the tracked head was cloned into an empty directory; `npm ci` and then the
+**aggregate** `npm run verify` were run there and exited 0 — 1,651 tests across
+73 files, then the build; CI was waited for and finished green at that same SHA
+in both jobs; and all six of QA's probes were run **from that clean clone** and
+exited 0, then confirmed byte-unmodified against their committed bytes. Only
+then were these counts written down. The clean clone was confirmed not to
+contain the untracked owner-review file.
 
 **The untracked owner-review file** still warns under `npm run format:check` in
 this working directory. It is untracked, unchanged, absent from the clean clone
@@ -6541,10 +6569,10 @@ Repaired product checkpoint:
 da8e4d49ca3f615fda06d3b7a00fb48c25368d16
 
 Deployed SHA when the builder last proved equivalence:
-da8e4d49ca3f615fda06d3b7a00fb48c25368d16 — the Preview served the checkpoint exactly at that moment. Read
-it live from preview/build-info.json and prove checkpoint equivalence rather
-than string equality, per D-097. The documentation commit carrying this handoff
-moves the live SHA past the checkpoint.
+9d3554cb1f193e32df552158d5414be21bca6216 — bundle-equivalent to the checkpoint,
+proved by the checker rather than by string equality, per D-097. Read it live
+from preview/build-info.json and prove it again; the commit that records this
+paragraph moves the live SHA once more.
 
 Preview:
 https://bill6006.github.io/life-command-os-rebuild/preview/
