@@ -2435,6 +2435,40 @@ Every figure names the head it was measured on — D-147.
 
 One new test file: `tests/synthetic/qa-82-round-4.test.ts`, 19 tests.
 
+**Checkpoint equivalence, run after the documentation commit was deployed** —
+which is the only moment it says anything, because before it the live SHA and
+the checkpoint were the same string and D-097's whole point is not to compare
+strings:
+
+```text
+$ node scripts/checkpoint-equivalence.mjs 1205402     --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Deployed SHA read live from …/preview/build-info.json:
+0facb94c7fe76cf5a6021a5fb9be793951dce5c0
+
+6 file(s) changed between 1205402 and 0facb94…, none of them bundle-relevant:
+  - docs/DECISION_LOG.md
+  - docs/DEFECT_LEDGER.md
+  - docs/PHASE_STATUS.md
+  - docs/qa/PHASE_82_QA_HANDOFF.md
+  - docs/qa/evidence/phase82-round4-export-probe.ts
+  - scripts/android-gate.mjs
+
+Bundle-equivalent: the deployed build at 0facb94… serves the same bytes as
+1205402.
+```
+
+Run it yourself rather than comparing these strings: the commit carrying this
+paragraph moves the live SHA once more, and that is the case the checker
+exists for.
+
+**The D-147 finishing sequence, in the order it requires.** The last commit was
+made; the tracked head was cloned into an empty directory; `npm ci` and then the
+**aggregate** `npm run verify` were run there and exited 0; CI was waited for and
+finished green at that same SHA; and QA's own probe was run from that clean clone
+and exited 0. Only then were these counts written down. The clean clone was
+confirmed not to contain the untracked owner-review file named above.
+
 **One honest note about the local tree, reported rather than smoothed over.**
 `npm run format:check` on this working directory warns on
 `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md`. That file is **untracked** and is not
