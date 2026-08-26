@@ -5850,4 +5850,774 @@ unless it passes.
 Do not ask me to paste the file contents.
 ```
 
+---
+
+# Independent QA — Phase 82, Round 9 — 2026-08-26
+
+## Verdict: FAIL — two repaired sentences pass; the same document and Life still overclaim
+
+**QA-82-010 PASS. QA-82-012 PASS. QA-82-011 remains phase-blocking, and
+QA-82-013 is a new sibling on Life.** The exact Round 8 probe now passes 7/7:
+Timeline no longer denies the six faults below it, Coverage's new summary no
+longer says `ever`, and Recent record reports both replacement-cycle faults
+without inventing dates or entries. Every earlier QA probe also passes unchanged.
+
+The whole rendered Coverage line still contradicts itself, however. At the
+deployed earlier clock it says `nothing heard at all` immediately before saying
+four Sleep entries and one Home entry are later. Life reads the same two areas
+under `You have not mentioned these`, mixed with areas that genuinely have never
+been mentioned. The Round 8 repair changed `DomainCoverage.summary`; both
+surviving claims are sibling consumers of the unchanged `unheard` projection.
+
+Phase 82 remains **YELLOW**. QA changed only this report and two QA-only evidence
+files. It did not change product code, builder-owned governing records,
+`NEXT_PROMPT`, deployment or phase status, and it made no commit.
+
+`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was not read, altered, staged or
+adjudicated. It remains the unrelated untracked file and was absent from both
+disposable exact-HEAD clones.
+
+## Identity and required first probes
+
+| Item | Independently checked result |
+| --- | --- |
+| Repaired product checkpoint | `675aedde2483aaf578f1a73737fe3474e4d4733a` |
+| Tracked HEAD and live Preview | `c81de7e4ada09cd2740e348cf62db3bb433d5f42` |
+| Live build time | `2026-08-26T19:54:49.164Z` |
+| Deployment equivalence | PASS. The live checker found six post-checkpoint documentation/QA-evidence files and no bundle-relevant change. |
+| Product-checkpoint CI | PASS, Verify and Deploy preview: [run 33005154358](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33005154358). |
+| Exact-HEAD CI | PASS, Verify and Deploy preview: [run 33007558248](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33007558248). The deployed read-back succeeded. |
+| QA report commit | None. This report and the Round 9 evidence remain uncommitted. |
+
+After the full handoff read and before any other suite, QA ran the five required
+probes in the specified order. All exited 0, then all five passed again in the
+clean exact-HEAD clone:
+
+```text
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+npx vite-node docs/qa/evidence/phase82-round5-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round6-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round7-boundary-probe.ts
+npx vite-node docs/qa/evidence/phase82-round8-boundary-probe.ts
+```
+
+Their SHA-256 values remain, in that order:
+
+```text
+880648DDBB3533357DE572BF0065F7F44A2214521CCB64A41A8483FC7A2A8175
+20C8633F8EADF4C333532E896D3DBD3A7D1D9FFFD6CA2E64F57B9F6D12AE6BA1
+094F2168B45CB714C79172C68CAB2C18BB025890762BDF5444ABDE4E8B49C999
+2A3EE4B4C7E18E9CB038B8B6FC4FE6C1C6F83D3395EF254907E802192BE59054
+B5DA760FEA0AF2ABE6DBFD12DDE93157D2737C1D3FD1BA21744A3A266A6348B0
+```
+
+The live Preview was read at 430×932. QA loaded **A file with damage in it**,
+walked its normal clock, **−1 week** and **+1 week**, and read the complete
+Timeline, Life, Insights and Data surfaces. Data was checked with its ordinary
+selection, Diagnostics selected and deliberate Private opt-in. The viewport was
+reset and QA's browser tab was closed afterwards.
+
+## QA-82-011 — the changed summary leaves the old absolute on the same line
+
+**Major / phase-blocking temporal contradiction. The Round 8 finding is only
+partly repaired. Requirements: D-091 and D-153.**
+
+At live `c81de7e`, 2026-04-01 19:00 America/Denver, the complete Coverage lines
+are:
+
+```text
+Sleep & Recovery — unheard, evidence none; nothing heard at all.
+Nothing has come in about sleep & recovery at this point. 4 entries here are later than it.
+
+Home & Environment — unheard, evidence none; nothing heard at all.
+Nothing has come in about home & environment at this point. 1 entry here is later than it.
+```
+
+Those are single rendered bullets; the line breaks above only make the two
+clauses readable here. The new summary is correct. The prefix is still an
+absolute claim about the record and denies the later count that follows it.
+Private opt-in does not change the contradiction, and Diagnostics is not needed
+to see it.
+
+The source boundary is `src/features/export/compose.ts:480-492`.
+`coverageSection()` still derives `nothing heard at all` solely from
+`daysSinceHeard === undefined`, then appends the repaired `domain.summary`.
+`daysSinceHeard` is correctly undefined for a reading after the moment, so it
+cannot distinguish never from not-yet without the new `later` fact D-153 added.
+
+This is the exact class Round 8 reported, not a new wording preference. The
+Round 8 report quoted the unchanged `nothing heard at all` prefix as well as the
+now-repaired `Nothing has ever come in` summary, and its handoff required every
+Coverage owner/export sentence sharing the absolute to be inspected.
+
+**Acceptance:** the complete Coverage line must distinguish genuinely
+never-heard from present-moment silence caused by later readable entries. Keep
+the truthful absolute for an untouched area, keep future records out of current
+evidence, and keep the later count. Do not delete the count or promote future
+data merely to make the sentence agree with itself.
+
+## QA-82-013 — Life says later-record areas were never mentioned
+
+**Major / phase-blocking cross-surface sibling of D-153.**
+
+On the same deployed earlier-clock history, Life renders one **Nothing here
+yet** group containing all eleven areas, including Sleep and Home, followed by:
+
+```text
+You have not mentioned these, and nothing is asking you to.
+```
+
+The owner has mentioned Sleep four times and Home once; those records are simply
+5–8 April while the selected moment is 1 April. One week forward, the same
+unchanged records move Sleep and Home into **Quiet**, proving that the earlier
+group was produced by the clock rather than by an unmentioned record.
+
+`src/features/life/standing.ts:52-57` maps every `status === 'unheard'` area to
+one standing and note without inspecting `coverage.later`. The group therefore
+mixes later-record areas with genuinely untouched ones and applies one absolute
+sentence to both. **Nothing here yet** itself is moment-scoped; **You have not
+mentioned these** is the false claim.
+
+**Acceptance:** Life must preserve the difference D-153 now carries. It may
+group or phrase later-record areas however the builder judges useful, but it may
+not say they were never mentioned or silently make later records current.
+Genuinely untouched areas must keep an honest empty state, and future data must
+remain non-current.
+
+## Independent boundary evidence and false confidence
+
+New read-only probe:
+`docs/qa/evidence/phase82-round9-boundary-probe.ts`.
+
+```text
+npx vite-node docs/qa/evidence/phase82-round9-boundary-probe.ts
+```
+
+It exits 1 with **six passes and two failures**. It uses the real damaged
+fixture, parser, view, situation, decision, Insights, Timeline and export
+composer, and checks snapshot immutability on every composition.
+
+| Check | Result |
+| --- | --- |
+| Repaired Timeline keeps five later entries separate from six damaged rows | PASS |
+| Coverage summaries distinguish not-yet from never without making future evidence current | PASS |
+| Complete Coverage lines do not also say `nothing heard at all` | **FAIL** |
+| Life reaches one mixed group containing later-record and never-record areas | PASS, proving the path is non-vacuous |
+| Life does not say the later-record areas were never mentioned | **FAIL** |
+| Genuinely untouched areas keep `Nothing has ever come in` | PASS |
+| Moving beyond the fixture consumes the later count and changes Sleep/Home from unheard | PASS |
+| Direction, Learning and Insights retain their honest moment-scoped empty language | PASS |
+
+Probe SHA-256:
+`C13A1B67BFDC6EEDD068ACEB8B7B304F182F1B04679004D998991EF640497DA6`.
+It passes targeted Prettier and ESLint.
+
+The green Round 8 tests explain the escape:
+
+1. `qa-82-round-8.test.ts` checks `entry.summary` for `at this point`, later
+   count and absence of `ever`; it never checks the complete bullet prefix.
+2. Its whole-document test finds the Coverage line but rejects only
+   `ever come in`, so the earlier `nothing heard at all` absolute is accepted.
+3. `life-pages.test.ts` constructs every coverage value with `later: 0`; it
+   forbids old `up to date` wording and checks group membership, but never reads
+   Life's note with a later record.
+4. The browser repair case walks the combined Timeline panel, not Life or the
+   complete Coverage line at that clock. Thus 552 green browser assertions can
+   coexist with both deployed contradictions.
+
+Direction says the current direction is unset; Learning explicitly says its
+silence is not `nothing to find`; Insights says nothing **currently** rises to a
+stated reading; and Now says none of the history says how tonight is going.
+Those paths were read at the earlier clock and are not findings.
+
+## What the Round 8 repair now passes
+
+- **QA-82-010 PASS.** Timeline says five entries are later, reassures only that
+  none of those entries was lost, separates the six damaged rows and retains all
+  six owner coordinates. The old absolute about readability is absent.
+- **QA-82-012 PASS.** The two-record replacement cycle reaches `tangled: 2`,
+  `total: 0`, `later: 0`, `unreadable: 0`; default, Select all and private-on
+  Recent record each report two separate relationship faults, without a date,
+  day heading or entry count. A withheld private row leaves the section
+  byte-identical.
+- Both opposite directions pass: later records do not become current evidence,
+  and an area with no record at any time retains its truthful absolute.
+- QA-82-009's seven former failures remain closed: zero-display exports retain
+  in-scope damaged rows and their explanation; true empty stays quiet; damaged
+  rows are not future history; owner coordinates remain on Timeline.
+- QA-82-007 privacy invariance remains closed through all earlier probes,
+  private-off/on deployed reads and the tangled third-direction control.
+
+## Earlier findings, acceptance and preservation
+
+QA-82-001 through QA-82-010 remain PASS except the explicitly incomplete
+QA-82-011; QA-82-012 passes. In particular, the unchanged 24-scenario probe
+retains school 10:20, no-child care askability, raw derived exclusion and the
+known/unknown/question counts. Held decisions still name a genuinely better
+later block and common evidence; all five time-fit bands remain asserted; the
+44px Android boundary and 48px product token remain; and exact-head release
+state is independently green.
+
+All nine original Phase 82 acceptance items remain green in the unchanged
+focused and full gates: arbiter-only thread influence; dominant recovery
+override; explanation, expiry and all five inactive thread states plus one-tap
+stop; genuine later-block hold; 100/100 both architectures with bounded nudge;
+no child percentage grade; school free-middle 300 minutes; asymmetric unknown
+care; and all five honest time-fit bands. Course, hold, growth, goal, obligation,
+no-action, correction, legacy migration and backup/restore flows remain covered.
+
+No deferral was closed. Q1, Q4, Q6, Q7 and Q8 remain open. Reach and
+private-pattern intelligence remain future work; AUD-0040, AUD-0045 and
+AUD-0047 remain out of scope. Phase 8 carry-forwards remain v297 ancestor
+export, life-context-change mapping, literal NUL derived ids and archived
+`skill-claim`, `faith-anchor` and `milestone-observation`. Weighted-mean /
+WORTH_DOING questions, three full-weight unknown zeroes, tight ties,
+thread-as-set, goal-behind and pending-growth fixture gaps remain recorded. No
+generic thread builder, calendar, third schedule question, tomorrow hold,
+percentage bar, QA import or partial/undo feature appeared.
+
+Audit section 10's **21** protections were rechecked against the five-file
+product/test diff and the complete gates: stable lifecycle controls; shared
+Health/Sleep page; deterministic/hybrid agreement and D-025; weighted Something
+else; refusal sovereignty; association thresholds, comparison/confounders and
+empty pooling; proposed-not-applied growth; weak stale coverage; no render
+writes; engine-owned names and resolved subjects; timezone/week/DST;
+legitimate no-action; time with Adaya separate from development; honest legacy
+archive; old-id goal identity; no emotional scale; faith/custody inspect-record
+roles; grouped Life; sleep-derived safeguards; counterfactual guide; and the
+full QA inspector. The two findings are false claims inside preserved surfaces,
+not evidence that those protections were removed.
+
+## Verification and independent reintroductions
+
+Clean exact-HEAD clone:
+`C:\Users\tyree\AppData\Local\Temp\lco-phase82-round9-2112434d75ff4ca4b02514cf9bd11b86`.
+It remained Git-clean after verification and the browser matrix.
+
+| Gate | Independent Round 9 result at `c81de7e` |
+| --- | --- |
+| `npm ci`, aggregate `npm run verify` | PASS, exit 0: format, lint, typecheck, **1,639/1,639 tests across 72 files**, production build. |
+| Five unchanged probes | PASS first in the source checkout and again in the clean clone. |
+| New Round 9 boundary probe | FAIL as intended: **6 pass, 2 fail**, the findings above. |
+| Full browser matrix | PASS: **552/552**, one worker, zero retries, one complete run, **10.5 minutes**, at 360/430/1,280px. No transient or test failure. |
+| Deployed Android gate | PASS: **144 checks**, one run, exit 0, live `c81de7e`; no console error. |
+| Static privacy scan | PASS: **248 tracked files** at exact HEAD. It is not runtime privacy acceptance by itself. |
+| Tournament | PASS: **100/100 deterministic and 100/100 hybrid**; both chose the same on every profile. |
+| Exact-head and checkpoint CI | PASS, both Verify and Deploy preview jobs at each SHA. |
+| D-097 checkpoint equivalence | PASS: product `675aedd` to live `c81de7e`, six non-bundle files only. |
+
+The first attempted aggregate command created and checked the correct clone, but
+the shell did not change into it before invoking `npm ci` / `npm run verify`.
+That attempt therefore ran in the source working directory and stopped at
+format-check on the known unrelated untracked owner-review file. It did not
+format or alter the file. QA corrected the command location and reran the full
+aggregate from the confirmed clean clone; the PASS above is that completed run.
+This operator mistake is recorded rather than replaced by its successful rerun.
+
+The Android gate used Galaxy S24-class emulation at 360×780 CSS px, DPR 3,
+touch/mobile and an Android 14 Chrome user agent; it is not a physical-handset
+claim. The deployed checker and Android process used the established
+process-local TLS-verification workaround after this machine's certificate-chain
+failure. Repository and browser security settings were not changed. The only
+other warnings were the existing bundle-size warning, `whatwg-encoding`
+deprecation and Playwright's NO_COLOR/FORCE_COLOR notice.
+
+### Independent repair reintroductions: 9/9 detected
+
+Disposable exact-HEAD mutation clone:
+`C:\Users\tyree\AppData\Local\Temp\lco-phase82-round9-mutations-ce98297e272f4b939641aa2b9d9f424b`.
+Evidence: `docs/qa/evidence/phase82-round9-mutations.mjs`, SHA-256
+`FE458813D8EE6F297C0660C0C8691F1AD1C58F825BBF80EE34945B9C95258132`.
+
+The script pins both exact HEAD and the disposable clone name, begins from the
+builder's green **429-assertion** focused baseline, rejects load/transform or
+unhandled failures as proof, restores every original in `finally`, and finishes
+Git-clean.
+
+| Reintroduced class | Independent assertion failures |
+| --- | ---: |
+| Tangled rows never reported | 4 / 429 |
+| Tangled rows only below readable entries | 4 / 429 |
+| Tangled list collapsed to one row | 3 / 429 |
+| Tangle heading no longer names the problem | 3 / 429 |
+| Later panel denies the damaged rows below it | 1 / 429 |
+| Coverage says `ever` about a later reading | 2 / 429 |
+| Coverage never counts later area records | 2 / 429 |
+| A later reading becomes current evidence | 1 / 429 |
+| A genuinely never-heard area loses its absolute | 1 / 429 |
+
+All nine builder repair classes are independently load-bearing, including both
+opposite-error guards. That does not make the suite complete: neither the
+unchanged Coverage prefix nor Life's note is mutated by those nine cases, and
+the unmodified repaired tree fails the new probe before any mutation is applied.
+
+Both new QA evidence files pass targeted Prettier/ESLint or `node --check`; the
+report and evidence pass `git diff --check`. No product source was mutated in
+the working repository.
+
+## Complete next handoff — CURRENT Phase 82 Claude builder, repair Round 9 findings
+
+**Model:** Claude Opus-class — the repair must carry a temporal distinction
+through a complete export sentence and a grouped owner surface without weakening
+the opposite cases.
+
+**Intelligence level:** Max — Phase 82 remains in the audit-repair campaign and
+the owner's campaign-wide builder rule still applies.
+
+**Conversation:** CURRENT — the original Phase 82 Claude builder conversation.
+The next independent retest returns to this SAME Codex QA conversation at High.
+
+```text
+Continue the Life Command OS rebuild, repairing Phase 82 after independent QA Round 9.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full, including the Round 9 report and this
+handoff. Do not ask the owner to paste it. Follow docs/qa/README.md and the
+governing defect-loop and finishing rules.
+
+Round 9 verdict: FAIL. Keep Phase 82 YELLOW. Do not start Phase 9 or claim GREEN.
+Product checkpoint tested: 675aedde2483aaf578f1a73737fe3474e4d4733a.
+Tracked and deployed head tested: c81de7e4ada09cd2740e348cf62db3bb433d5f42.
+QA did not commit its report or its two new evidence files.
+
+QA-82-010 and QA-82-012 pass. Preserve the repaired Timeline reassurance, the
+separate two-line tangled-fault report, the absence of invented dates/entries,
+both opposite-error guards and all QA-82-001 through QA-82-010 passes.
+
+QA-82-011 is incomplete. At the deployed damaged fixture minus one week, each
+Sleep/Home Coverage bullet still says `nothing heard at all` before its repaired
+summary says 4/1 entries are later. `coverageSection()` derives that prefix only
+from `daysSinceHeard === undefined`, which cannot distinguish never from not-yet.
+Repair the complete rendered line, not only `DomainCoverage.summary`.
+
+QA-82-013 is the same D-153 class on Life. At the same clock, Sleep and Home are
+grouped with genuinely untouched areas under `You have not mentioned these`.
+One week forward the unchanged records move them into Quiet. `standingFor()`
+reads `status === 'unheard'` but ignores `coverage.later`. Preserve the truthful
+empty state for genuinely untouched areas, and do not make later records current.
+
+Run the five existing QA probes first, unchanged:
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+npx vite-node docs/qa/evidence/phase82-round5-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round6-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round7-boundary-probe.ts
+npx vite-node docs/qa/evidence/phase82-round8-boundary-probe.ts
+
+Then run QA's Round 9 probe unchanged:
+npx vite-node docs/qa/evidence/phase82-round9-boundary-probe.ts
+It currently exits 1 with six passing checks and two failing checks. A complete
+repair makes all eight pass. Do not edit its inputs or weaken its whole-line and
+Life-note assertions. The mutation artifact is pinned to QA's old disposable
+clone and head; do not loosen its pin or run it in the working repository.
+
+Follow canonical-plan section 42: reproduce both deployed paths, identify all
+sibling consumers of `status === unheard`, `daysSinceHeard === undefined` and
+the new `later` distinction, add whole-line and rendered-Life regressions, prove
+faithful reintroductions fail, then repair the root boundary. Read the combined
+surface as a person does. A test of `summary` alone is not a test of the bullet
+that wraps it, and a Life fixture with `later: 0` cannot prove later-history copy.
+
+Walk A file with damage in it at normal time, minus one week and plus one week.
+Read Timeline, Life, Now, Insights and the complete Data document with ordinary
+selection, Diagnostics and Private off/on. Preserve the truthful absolute for an
+area that has genuinely never heard anything, keep future data out of current
+evidence, keep the later count, and preserve privacy invariance and source-store
+immutability. Inspect other owner/export consumers of the same projection rather
+than patching only the two literal phrases.
+
+Preserve every earlier PASS, all nine original acceptance items, all deferrals
+and all 21 audit-section-10 protections. Q1/Q4/Q6/Q7/Q8 stay open; Reach and
+AUD-0040/AUD-0045/AUD-0047 remain out of scope; preserve the Phase 8 carry-
+forwards and deliberate non-features. Do not read, alter, stage or adjudicate
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md. Do not rewrite QA's reports or evidence.
+
+Update builder-owned governing records and the defect ledger honestly. Finish
+the tracked checkpoint, clone that exact head into a clean directory, run npm ci
+and aggregate npm run verify, then verify exact-head CI, the full three-width
+browser matrix, deployed Android gate, privacy scan, tournament and faithful
+repair reintroductions. Report exact counts and every transient; do not roll
+until green. Deploy the repaired checkpoint, read build-info.json live and prove
+checkpoint equivalence with scripts/checkpoint-equivalence.mjs under D-097.
+
+Append the builder repair response and a complete Round 10 retest handoff to this
+same QA file, addressed to the SAME Codex QA conversation at High. Include the
+product checkpoint, live SHA/equivalence, exact verification, remaining limits,
+model/level/conversation and a short copyable launcher. Keep this file's
+completion marker as the single final meaningful line.
+```
+
+### Short launcher
+
+**Model:** Claude Opus-class. **Level:** Max.
+**Conversation:** CURRENT — the original Phase 82 Claude builder.
+
+```text
+Continue the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full and execute the Round 9 FAIL repair
+handoff at the end exactly as written. Preserve QA-82-010 and QA-82-012, finish
+QA-82-011's complete Coverage line, repair QA-82-013 on Life, keep Phase 82
+YELLOW, and return Round 10 to the same Codex QA conversation. Do not ask me to
+paste the file contents.
+```
+
+---
+
+# Round 9 repair — builder response, and the Round 10 retest handoff
+
+**Written by:** the original Phase 82 Claude builder conversation, in response to
+the Round 9 FAIL above. The Round 1 to 9 reports are unchanged; nothing above
+this line was edited, and none of the six QA probes was modified.
+
+**Phase status:** **YELLOW**, unchanged. D-077 stands. Phase 9 has not been
+started, no GREEN closeout has been made, and
+`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was neither read, altered, staged nor
+adjudicated.
+
+## Build to retest
+
+| Fact | Result |
+| --- | --- |
+| Repaired product checkpoint | `da8e4d49ca3f615fda06d3b7a00fb48c25368d16` (`da8e4d4`) — "QA-82 round 9: a distinction is not carried until every consumer carries it" |
+| Previous checkpoints | `675aedd` (round 8), `6a9c53e` (round 7), `2cdeb4b` (round 6), `dab8c2e` (round 5), `1205402` (round 4), `5936fe2` (round 3), `da1a4ee` (round 2), `0899f18` (round 1), `160ec9a` (first build) |
+| Deployed SHA | `da8e4d4` at the moment the Android gate below ran. **Read it live** from `preview/build-info.json` |
+| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Relationship | **PASS** — the exact result is recorded below, run after the documentation head deployed. Never asserted as string equality (D-097). |
+| CI | **green at the product checkpoint `da8e4d4` — run [33020873253](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33020873253)**, both jobs. The aggregate `npm run verify` was run from a clean clone of the checkpoint and again of the documentation head (D-147) |
+| All six QA probes | **exit 0, unmodified.** Round 9's was run against the failing tree first and reproduced both failures |
+| Report this responds to | the Round 9 section above, in this same file |
+
+## What Round 9 found
+
+QA-82-010 and QA-82-012 are closed, and every earlier finding held. What remained
+is the sharpest criticism of a repair this phase has produced, and it is right:
+
+> The Round 8 repair changed `DomainCoverage.summary`; both surviving claims are
+> sibling consumers of the unchanged `unheard` projection.
+
+I added a field and read it in one place. Two other surfaces answer the same
+question from the same projection, and I changed neither.
+
+| Finding | The rendered line |
+| --- | --- |
+| **QA-82-011**, reopened | `Sleep & Recovery — unheard, evidence none; nothing heard at all. Nothing has come in about sleep & recovery at this point. 4 entries here are later than it.` |
+| **QA-82-013** | Life's **Nothing here yet** group, all eleven areas, noted *"You have not mentioned these, and nothing is asking you to."* — over an area mentioned four times |
+
+The first is a bullet built by joining a prefix, a status and a summary. Round 8
+repaired the summary and left the prefix deriving from `daysSinceHeard ===
+undefined`, which cannot tell never from not-yet. **The two halves of one sentence
+contradicting each other is worse than the absolute was on its own**, so this
+round's repair made the line worse before it made it better — worth saying
+plainly.
+
+## QA-82-011 and QA-82-013 → DEF-0100. D-154
+
+**The rule.** Adding a field is not the repair. The repair is that every surface
+deriving the old, coarser answer now derives the new one — and the way to find
+them is to enumerate the consumers of the **projection**, not of the sentence
+that was reported. `daysSinceHeard === undefined` and `status === 'unheard'` are
+both that coarser answer, and anything reading either is a consumer whatever it
+goes on to say.
+
+**The bullet.** Its prefix now reads the same `later` the summary does:
+
+```text
+Sleep & Recovery — unheard, evidence none; nothing heard yet. Nothing has come
+in about sleep & recovery at this point. 4 entries here are later than it.
+```
+
+Where nothing has ever arrived it still says `nothing heard at all` beside
+`Nothing has ever come in about …`, and an area actually heard from still says
+`last heard N days ago`. Both are proved by reintroduction.
+
+**Life.** The group word stays: *"Nothing here yet"* is a claim about the moment
+and is true of both kinds of area, and QA's own probe pins that. What changes is
+the note, which was a claim about the whole record:
+
+```text
+Nothing here yet
+Sleep & Recovery
+  4 entries here, all later than the moment on screen.
+Home & Environment
+  1 entry here, all later than the moment on screen.
+Money · Faith · Social · …
+Nothing here at the moment on screen, and nothing is asking you for it.
+```
+
+**The line appears only when there is one to write.** A Life group grows the
+per-area layout as soon as any area in it has a detail, and `groupsFrom`'s own
+note warns that doing so unconditionally to the seven-area group "would put the
+wall straight back". On an ordinary history at an ordinary clock nothing is
+later, so no detail is produced and the compact list is untouched. That is
+asserted rather than assumed, and a mutation that gives every unheard area a line
+fails on it.
+
+**One note per group, whichever area reaches it first.** The screen takes the
+note from the first area to land in a group, so two different notes there would
+make the page depend on registry order. Both kinds now return the same note, and
+a mutation that splits them fails.
+
+## The tests Round 9 named, and what they assert now
+
+| Named | What it asserts now |
+| --- | --- |
+| `qa-82-round-8.test.ts` checks `entry.summary` for `at this point`, the later count and the absence of `ever`; it never checks the complete bullet prefix | `qa-82-round-9.test.ts` finds the **rendered bullet** for each later area under three selections and rejects both absolutes on that line, while requiring both halves of the truth |
+| its whole-document test rejects only `ever come in`, so the earlier absolute is accepted | The same line is checked for `nothing heard at all` as well |
+| `life-pages.test.ts` constructs every coverage value with `later: 0`; it never reads Life's note with a later record | Every Life assertion here is against a coverage value with `later > 0`, taken from a real composed situation rather than a literal |
+| the browser repair case walks the combined Timeline panel, not Life or the complete Coverage line at that clock | The deployed Life and Coverage surfaces are covered by the synthetic suite at that clock; the browser matrix is unchanged evidence, not the proof for this finding |
+
+## Exact verification results
+
+Every figure names the head it was measured on — D-147.
+
+| Gate | Round 8 (`675aedd`) | Round 9 (`da8e4d4`) |
+| --- | --- | --- |
+| Aggregate `npm run verify` from a clean clone of the tracked head | PASS | **PASS** — format, lint, typecheck, tests, build; exit 0 |
+| Unit / synthetic / contract / adversarial | 1,639 across 72 files | **1,651 / 1,651 across 73 files** |
+| Browser, three widths (360, 430, 1,280px) | 552 / 552 | **551 / 552** — one run; see the transient note below |
+| Android-style gate, against the **deployed** build | clean — 144 | **clean — 144 checks, in one run** |
+| Privacy scan | clean, 246 | **clean — 249 tracked files** |
+| Tournament | 100/100 and 100/100 | **100 / 100 deterministic, 100 / 100 hybrid** |
+| CI at the head being handed off | green at `675aedd` | **green** — run `33020873253` at `da8e4d4`, both jobs |
+| QA's round 4–8 probes | exit 0 | **exit 0**, unmodified |
+| QA's round 9 probe | exit 1 — two failures | **exit 0**, unmodified |
+| Reintroductions proved, this round | 9 | **8** |
+
+One new test file: `tests/synthetic/qa-82-round-9.test.ts`, 12 tests.
+
+**The rotating browser transient, reported rather than re-rolled.** The single
+full matrix run finished **551 / 552**. The failure was `shell.spec.ts` at
+desktop — "every primary destination is reachable and marked current" — timing
+out at 30s inside `page.goto`, before the first assertion:
+
+```text
+Test timeout of 30000ms exceeded.
+Error: page.goto: net::ERR_ABORTED; maybe frame was detached?
+  - navigating to ".../preview/", waiting until "load"
+```
+
+It passes in isolation in 506 ms. This is the fourth distinct spec the transient
+has landed in this phase — `qa-lab` at desktop in round 1, `phase82` at
+mobile-small in rounds 2 and 6, `data` at desktop in round 6, and now `shell` at
+desktop — and it has never once run a product assertion. The Playwright config
+already names its cause and already runs one worker because of it.
+
+**A second run was not attempted.** Rounds 7 and 8 each got a clean 552 on the
+first try; this one did not, and rolling until it does is the selection this
+phase's handoffs forbid. CI's own browser matrix at both heads is independent
+evidence on different hardware and is reported beside it — with the caveat that
+CI permits one retry, which makes it a weaker instrument for this than a local
+run.
+
+**Equivalence, proved rather than compared.** Run while the Preview served the
+checkpoint itself, before this documentation commit:
+
+```text
+$ node scripts/checkpoint-equivalence.mjs da8e4d4     --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Deployed SHA read live from …/preview/build-info.json:
+da8e4d49ca3f615fda06d3b7a00fb48c25368d16
+
+No files changed between da8e4d4 and da8e4d49ca3f615fda06d3b7a00fb48c25368d16.
+
+Bundle-equivalent: the deployed build at da8e4d49ca3f615fda06d3b7a00fb48c25368d16
+serves the same bytes as da8e4d4.
+```
+
+The commit carrying this paragraph moves the live SHA past the checkpoint, which
+is the case D-097 exists for — **run the checker rather than comparing these
+strings.** The same proof at the documentation head, and the finishing sequence
+run against it, are recorded immediately below this block once that head has
+deployed.
+
+**The untracked owner-review file** still warns under `npm run format:check` in
+this working directory. It is untracked, unchanged, absent from the clean clone
+and from CI, and everything was staged by explicit path. QA's own note that its
+first aggregate attempt stopped on that same file, in the source directory rather
+than the clone, is recorded above in QA's words and is not disputed here.
+
+## Every reintroduction, and its result
+
+Eight mutations, each applied to the repaired tree, the named suites run, the
+tree restored. **Eight failures, none by a module-load or type error.** The
+focused set is `qa-82-round-9`, `qa-82-round-8`, `qa-82-round-7`,
+`export-honesty`, `g007-coverage-freshness`, `life-pages` and
+`architecture-guards`: **374 assertions green on the repaired tree.**
+
+| # | Reintroduced defect | Result |
+| --- | --- | --- |
+| 1 | the bullet prefix goes back to one absolute — the finding itself | **FAILS** — 3 of 374 |
+| 2 | the prefix softens for an area nothing ever reached — the opposite error | **FAILS** — 2 of 374 |
+| 3 | the prefix drops the later count it was told about | **FAILS** — 3 of 374 |
+| 4 | Life tells the later areas they were never mentioned | **FAILS** — 1 of 374 |
+| 5 | Life keeps the old note for the whole group | **FAILS** — 2 of 374 |
+| 6 | the later areas get no line of their own | **FAILS** — 1 of 374 |
+| 7 | every unheard area grows a line, wall and all — the over-broad direction | **FAILS** — 1 of 374 |
+| 8 | the two kinds of area get two different group notes | **FAILS** — 1 of 374 |
+
+Mutations 2 and 7 are the opposite errors, and 8 is the one that would look
+correct in the source and wrong on the page: a group takes its note from whichever
+area reached it first, so two notes there is a screen that depends on registry
+order rather than a screen that is wrong.
+
+## Preserved, unchanged
+
+- **Every Round 9 PASS.** QA-82-001 through QA-82-010 and QA-82-012 are untouched
+  and still asserted, along with D-150's scoped recomposition, D-151's owner-only
+  coordinates, D-152's four empty states and D-153's moment-scoped sentences.
+  Nothing in `scope.ts` or `timelineEntries.ts` changed.
+- **All deferrals and open owner questions.** Q1, Q4, Q6, Q7, Q8 remain open. No
+  private evidence is wired into intelligence and Reach is not implemented. The
+  Phase 8 carry-forwards are unchanged.
+- **The deliberate non-features**, **AUD-0040 / AUD-0045 / AUD-0047**, and all 21
+  audit-section-10 items — including Life's grouped overview, which keeps its
+  compact list on every history that has nothing later.
+- **The rule that future data is not evidence about the present**, in the prefix,
+  the summary and Life alike.
+
+## Documents updated
+
+- `docs/PHASE_STATUS.md` — **YELLOW — READY FOR INDEPENDENT QA, ROUND 10**, a
+  round 9 section, and a verification table rolled forward one column.
+- `docs/DECISION_LOG.md` — **D-154** (a distinction is not carried until every
+  consumer of the projection carries it).
+- `docs/DEFECT_LEDGER.md` — **DEF-0100**.
+
+## What Round 10 should press hardest
+
+1. **The other coarse projections.** This round enumerated the consumers of
+   `status === 'unheard'` and `daysSinceHeard === undefined`. `CoverageStatus`
+   has three other values, `EvidenceStrength` has its own, and `refresh` routes
+   Life's stale groups — each is a coarse answer several surfaces derive
+   sentences from.
+2. **Life at the earlier clock, as a person.** The group now grows a per-area
+   layout there. Read whether that page is still worth reading, at 360px as well
+   as 430.
+3. **The prefix's remaining word.** The bullet still prints the raw status
+   `unheard` before the two repaired clauses. It is qualified twice after the
+   fact; judge whether that is enough or whether the status word itself
+   overclaims.
+4. **A history that is partly later.** Every case here is all-later or
+   all-earlier for a given area. An area with some records before the moment and
+   some after should read as heard, and its later count should not appear.
+5. **Whether `later` should be on the concept rows too.** `ConceptCoverage` has
+   no equivalent, so a single concept's own line cannot yet tell the two silences
+   apart.
+
+---
+
+## Retest handoff — Phase 82, round 10
+
+**Model:** Claude Opus-class is the builder's; **QA runs on Codex**, per D-090.
+
+**Intelligence level:** High.
+
+**Conversation:** SAME — the Codex QA conversation that wrote Rounds 1 to 9.
+
+```text
+Continue independent QA of the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You wrote the Phase 82 Round 1 to 9 reports in
+docs/qa/PHASE_82_QA_HANDOFF.md. Round 9 confirmed QA-82-010 and QA-82-012
+repaired and returned FAIL on two consumers of round 8's own distinction:
+QA-82-011, where one Coverage bullet said "nothing heard at all" immediately
+before counting the entries that are later, and QA-82-013, where Life told the
+owner he had never mentioned an area he had mentioned four times. Both are
+repaired and a repaired checkpoint is deployed.
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full — your nine reports and the
+builder's Round 9 repair response beneath them — and run Round 10 exactly as the
+retest handoff there specifies.
+
+Repaired product checkpoint:
+da8e4d49ca3f615fda06d3b7a00fb48c25368d16
+
+Deployed SHA when the builder last proved equivalence:
+da8e4d49ca3f615fda06d3b7a00fb48c25368d16 — the Preview served the checkpoint exactly at that moment. Read
+it live from preview/build-info.json and prove checkpoint equivalence rather
+than string equality, per D-097. The documentation commit carrying this handoff
+moves the live SHA past the checkpoint.
+
+Preview:
+https://bill6006.github.io/life-command-os-rebuild/preview/
+
+Run all six of your own probes first, unchanged:
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+npx vite-node docs/qa/evidence/phase82-round5-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round6-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round7-boundary-probe.ts
+npx vite-node docs/qa/evidence/phase82-round8-boundary-probe.ts
+npx vite-node docs/qa/evidence/phase82-round9-boundary-probe.ts
+All six exit 0 on this head. None was modified; check that.
+
+Verify against the deployed build, not the local tree:
+
+- D-154 is the rule this round adds: a distinction is not carried until every
+  consumer of the projection carries it. Walk your own reproduction again — A
+  file with damage in it at normal time, minus one week and plus one week — and
+  read the complete Timeline, Life, Insights and Data surfaces with Diagnostics
+  on and off and Private off and on, at 360 as well as 430.
+- Press the other coarse projections the same way. CoverageStatus has three
+  values besides unheard, EvidenceStrength has its own, and `refresh` routes
+  Life's stale groups; each is a coarse answer several surfaces word sentences
+  from. ConceptCoverage has no `later` at all, so a concept's own line cannot
+  yet tell the two silences apart.
+- Press a history that is partly later: an area with records both before and
+  after the moment should read as heard, with no later count.
+- Confirm both opposite errors are still refused: future records must not become
+  current evidence, an area nothing ever reached must keep its absolute in both
+  the prefix and the summary, and Life's compact list must survive on an
+  ordinary history at an ordinary clock.
+- QA-82-001 through QA-82-013, D-150 through D-153 are untouched by this repair.
+  Confirm that rather than assume it.
+
+Re-verify every PASS from Rounds 1 to 9 rather than assuming it survived, and
+confirm every deferral, out-of-scope finding and audit-section-10 do-not-change
+rule is unchanged. Do not read, alter, stage or adjudicate
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md.
+
+Builder's counts to check rather than trust, each named against its head:
+aggregate verify PASS from a clean clone of the head you are handed, with CI
+green in both jobs at the checkpoint da8e4d4 (run 33020873253) and again at
+that head; 1,651 unit tests across 73 files; 551 / 552 browser at 360, 430
+and 1,280px; the deployed Android gate clean at 144 checks in one run;
+privacy scan 249 tracked files; tournament 100/100 deterministic and
+100/100 hybrid; 8 reintroductions proved, three of which exist to catch an
+opposite or cosmetic error rather than the reported one.
+
+Write your Round 10 result into docs/qa/PHASE_82_QA_HANDOFF.md as a new section,
+on PASS or FAIL, and end with the complete next handoff and a short launcher.
+Keep the completion marker as the single final meaningful line of that file.
+
+Do not ask me to paste the file contents.
+```
+
+### Short launcher
+
+**Model:** the strongest Codex model available. **Level:** High.
+**Conversation:** SAME — the Codex QA conversation that wrote Rounds 1 to 9.
+
+```text
+Continue independent QA of the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full and run Phase 82 Round 10 exactly as
+the retest handoff at the end of it specifies. You wrote Rounds 1 to 9; the
+builder has repaired QA-82-011 and QA-82-013 under D-154 — a distinction is not
+carried until every consumer of the projection carries it. Keep Phase 82 YELLOW
+unless it passes.
+
+Do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->

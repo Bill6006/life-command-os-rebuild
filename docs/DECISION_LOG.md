@@ -4943,3 +4943,58 @@ data evidence about the present. Both would be the opposite error, and both are
 proved by reintroduction rather than promised: `coverage.ts` still refuses a
 later reading as current evidence, and the export still invents no day heading
 and no entry count for a tangle.
+
+---
+
+## D-154 — A distinction is not carried until every consumer of the projection carries it
+
+**Phase:** 82 (QA round 9) · **Status:** Active
+
+D-153 said a reading of one moment may not be worded as a claim about the whole
+record, and gave `DomainCoverage` a `later` count so the two silences could be
+told apart. Round 9 found that the count had been added and **read in one place**.
+
+- `coverageSection` builds one bullet as `label — status, evidence strength;
+HEARD. SUMMARY`. Round 8 repaired `SUMMARY` and left `HEARD` deriving from
+  `daysSinceHeard === undefined` alone, so the rendered line read _"nothing heard
+  at all. Nothing has come in about sleep & recovery at this point. 4 entries
+  here are later than it."_ The two halves of one sentence contradicting each
+  other is worse than the absolute was on its own.
+- `standingFor` in Life mapped every `unheard` area to one standing without
+  reading `later` at all, so _"You have not mentioned these"_ was said over an
+  area the owner had mentioned four times.
+
+**The rule:** adding a field is not the repair. The repair is that **every
+surface deriving the old, coarser answer now derives the new one** — and the way
+to know is to enumerate the consumers of the projection rather than the
+consumers of the sentence that was reported.
+
+`daysSinceHeard === undefined` and `status === 'unheard'` are both that coarser
+answer. Anything reading either of them is a consumer, whatever it goes on to
+say.
+
+### Two things this fixes, and the shapes they take
+
+**A sentence assembled from parts is one sentence.** A bullet built by joining a
+prefix, a status and a summary is read as a whole, and a guard that asserts one
+part proves nothing about the line. The round 8 tests checked `entry.summary`
+and the round 9 tests check the rendered bullet, which is why one passed while
+the deployed line contradicted itself.
+
+**A group heading and its note make different claims.** _"Nothing here yet"_ is
+about the moment and is true of both kinds of area, so both stay in the group;
+_"You have not mentioned these"_ is about the whole record and was true of only
+one. The note is now true of both, and the areas that are merely ahead of the
+owner say so on their own line.
+
+That line appears only when there is one to write. A Life group grows the
+per-area layout as soon as any area in it has a detail, and on an ordinary
+history at an ordinary clock nothing is later — so the seven-area list stays one
+line, which is what `groupsFrom`'s own note is protecting.
+
+### What this does not license
+
+Future records still do not become current evidence, an area nothing has ever
+reached keeps its absolute in both the prefix and the summary, and no area is
+moved out of a group to make a sentence easier. All three are proved by
+reintroduction rather than promised.

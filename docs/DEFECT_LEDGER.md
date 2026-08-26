@@ -39,6 +39,54 @@ None.
 
 ## Fixed
 
+### DEF-0100 — the new distinction was read by one consumer of three
+
+- Status: Fixed
+- Severity: Major — one rendered bullet contradicting itself, and Life telling
+  the owner he had never mentioned an area he had mentioned four times
+- Found in: Phase 82 / `c81de7e`; both surviving claims are consumers DEF-0099's
+  repair did not reach
+- Found by: independent QA round 9 — QA-82-011 reopened, and QA-82-013
+- Class: **a distinction added to a projection and read in one place.**
+  DEF-0099 gave `DomainCoverage` a `later` count and taught `summary` to use it.
+  Two other surfaces answer the same question from the same projection and were
+  left deriving the coarser answer.
+- Reproductions:
+  - **QA-82-011.** At live `c81de7e`, 2026-04-01 19:00 America/Denver, one
+    Coverage bullet reads `Sleep & Recovery — unheard, evidence none; nothing
+heard at all. Nothing has come in about sleep & recovery at this point. 4
+entries here are later than it.` Private opt-in does not change it and
+    Diagnostics is not needed to see it.
+  - **QA-82-013.** The same clock: Life shows one **Nothing here yet** group
+    containing all eleven areas, noted _"You have not mentioned these, and
+    nothing is asking you to."_ One week forward the same unchanged records move
+    Sleep and Home into **Quiet**, which is what proves the group was produced by
+    the clock rather than by an unmentioned record.
+- Root causes: `coverageSection` deriving its `HEARD` clause from
+  `daysSinceHeard === undefined` alone, and `standingFor` mapping every
+  `status === 'unheard'` area to one standing without reading `later`.
+- Regression: `tests/synthetic/qa-82-round-9.test.ts` — the **rendered bullet**
+  under three selections, asserted to carry neither absolute and both halves of
+  the truth; the absolute preserved for an area nothing ever reached, in both the
+  prefix and the summary; an area that has been heard from left alone; Life's
+  group word kept, its note carrying no _never_ or _have not mentioned_, the
+  later areas given a line that names the count, genuinely untouched areas given
+  no line so the compact list survives, one note for the whole group whichever
+  kind reached it first, and the areas leaving the group once the moment catches
+  up. Eight reintroductions run, all eight fail.
+- Siblings: enumerated as consumers of the **projection** rather than of the
+  reported sentence — everything reading `daysSinceHeard === undefined` or
+  `status === 'unheard'`. Those are the two repaired here plus `summary`, which
+  DEF-0099 already carried. Insights' coverage cards read `lastEvidenceAt` and
+  were repaired under DEF-0097; Direction, Learning and Insights were read at the
+  same clock and make no absolute claim.
+- Note on why the round 8 guards passed: they asserted `entry.summary`, the half
+  that had been repaired, and the whole-document check rejected only `ever come
+in` — so the older absolute in the same bullet went through. And
+  `life-pages.test.ts` builds every coverage value with `later: 0`, so Life's
+  `unheard` branch had never once been rendered with a later record.
+- Fixed in: the checkpoint that closes QA round 9
+
 ### DEF-0099 — three sentences reached past the moment they were reading
 
 - Status: Fixed
