@@ -106,6 +106,18 @@ test.describe('Timeline reads as a record', () => {
     // The readable history is still there, above and unaffected.
     expect(await page.locator('.tl-entry').count()).toBeGreaterThan(0)
     await expect(page.getByText('are not used for anything')).toBeVisible()
+
+    /*
+     * And it says which row to go and look at — QA-82-007, round 6.
+     *
+     * This is his own file on his own device, so the coordinate belongs here.
+     * The review export drops it, because that document withholds rows and the
+     * gap between "Record row 19" and "Record row 22" is a count of what was
+     * withheld. Nothing asserted this screen still had it, which a
+     * reintroduction found by removing it and breaking nothing.
+     */
+    const damaged = await page.getByTestId('tl-damaged').innerText()
+    expect(damaged).toMatch(/Record row \d+/)
   })
 
   test('keeps the private row and withholds what it says', async ({ page }) => {

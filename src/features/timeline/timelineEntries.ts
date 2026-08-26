@@ -74,7 +74,32 @@ export interface TimelineDay {
  * beside real history as though the app understood it.
  */
 export interface UnreadableRow {
-  /** Where in the file it was, in words: "Record row 6", "Entity row 1". */
+  /**
+   * Which list it came from — QA-82-007, round 6.
+   *
+   * Separate from `where` because the two surfaces that render these rows are
+   * allowed to say different amounts, and the one that is allowed to say less
+   * needs something to say. See the note on `where`.
+   */
+  readonly kind: 'record' | 'entity' | 'entry'
+  /**
+   * Where in the file it was, in words: "Record row 6", "Entity row 1".
+   *
+   * **The owner's own screen only.** It is a coordinate into his file, and a
+   * review export does not describe his whole file: with an area left out, the
+   * difference between `Record row 19` and `Record row 22` is a count of what
+   * was withheld, disclosed by a line that mentions none of it. A row number in
+   * a file the reader does not have is not much use to them either.
+   *
+   * And the coordinate is not even always today's. `snapshotFromWire` carries a
+   * malformed row's own `index` through a backup verbatim, so a restored row's
+   * position refers to the array of some previous file — which is why
+   * renumbering the survivors would produce a number that means nothing rather
+   * than a safer one.
+   *
+   * `tests/unit/architecture-guards.test.ts` fails the build if anything under
+   * `src/features/export/` reads this field.
+   */
   readonly where: string
   /**
    * What is wrong, in ordinary language.
@@ -146,10 +171,12 @@ function labelForDay(dayId: LocalDayId, today: LocalDayId, yesterday: LocalDayId
  * "Row 6" in one list with nothing saying they were counted from different
  * places. The issue's own path is the only thing that knows which.
  */
-function whereItWas(index: number, issues: readonly { readonly path?: string }[]): string {
-  const path = issues[0]?.path ?? ''
-  const kind = path.startsWith('entities') ? 'Entity' : 'Record'
-  return `${kind} row ${index + 1}`
+function kindOf(issues: readonly { readonly path?: string }[]): 'record' | 'entity' {
+  return (issues[0]?.path ?? '').startsWith('entities') ? 'entity' : 'record'
+}
+
+function whereItWas(index: number, kind: 'record' | 'entity'): string {
+  return `${kind === 'entity' ? 'Entity' : 'Record'} row ${index + 1}`
 }
 
 function problemOf(issues: readonly { readonly problem: string }[]): string {
@@ -227,10 +254,10 @@ export function assembleTimeline(situation: Situation, limit = TIMELINE_PAGE): T
     shown += 1
   }
 
-  const unreadable: UnreadableRow[] = situation.view.snapshot.malformed.map((row) => ({
-    where: whereItWas(row.index, row.issues),
-    problem: problemOf(row.issues),
-  }))
+  const unreadable: UnreadableRow[] = situation.view.snapshot.malformed.map((row) => {
+    const kind = kindOf(row.issues)
+    return { kind, where: whereItWas(row.index, kind), problem: problemOf(row.issues) }
+  })
 
   /*
    * Records that disagree about what replaces what.
@@ -243,6 +270,7 @@ export function assembleTimeline(situation: Situation, limit = TIMELINE_PAGE): T
    * understood?* — and the honest answer names both kinds.
    */
   const tangled: UnreadableRow[] = situation.view.history.issues.map((issue) => ({
+    kind: 'entry' as const,
     where: 'An entry',
     problem:
       issue.problem === 'supersession-cycle'

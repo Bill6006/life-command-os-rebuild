@@ -1732,3 +1732,51 @@ describe('how not knowing reads is written down once', () => {
     ).toBe(true)
   })
 })
+
+describe('a document that withholds rows carries no coordinate into the file', () => {
+  /*
+   * QA-82-007, round 6, and the last carrier the scoped store could not reach.
+   *
+   * `withheldFrom` removes private records, entities and unreadable rows, and
+   * every count downstream is then honest. What it cannot remove is metadata a
+   * *retained* row brought with it: a malformed row keeps its own `index`, and
+   * the export printed that as "Record row 19". Insert one private record ahead
+   * of it and the same line reads "Record row 20"; insert three and it reads
+   * "Record row 22". The text mentions nothing private and the number is a
+   * count of what was withheld.
+   *
+   * Renumbering the survivors is not the answer, and this is the reason rather
+   * than a preference: `snapshotFromWire` carries a malformed row's `index`
+   * through a backup verbatim, so a restored row's position refers to some
+   * previous file's array. Subtracting today's removals from it would produce a
+   * number that means nothing.
+   *
+   * So the coordinate stays on the owner's own screen, where the file is, and
+   * the export names the row by what it is. This fails the build if any export
+   * file reads the field again.
+   */
+  it('is not read anywhere under the export', () => {
+    const offenders: string[] = []
+    for (const file of FEATURES) {
+      const path = repoPath(file)
+      if (!path.includes('/export/')) continue
+      const code = readCode(file)
+      if (/\.where\b/.test(code)) offenders.push(`${path} reads a row's position in the file`)
+    }
+    expect(offenders, 'an export named where a row sits in a file it does not describe').toEqual([])
+  })
+
+  it('bites on the line it forbids', () => {
+    // The guard above proves nothing unless it can fail. This is what
+    // `historySection` held.
+    expect(/\.where\b/.test('`${row.where} — ${row.problem}`')).toBe(true)
+    expect(/\.where\b/.test("`${row.kind === 'entity' ? 'An entity' : 'A record'}`")).toBe(false)
+  })
+
+  it('is still on the owner’s own screen, which is where the file is', () => {
+    const screen = readFileSync(join(ROOT, 'src/features/timeline/TimelineScreen.tsx'), 'utf8')
+    expect(screen, 'the owner should still be told which row to go and look at').toMatch(
+      /row\.where/,
+    )
+  })
+})

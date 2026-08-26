@@ -697,8 +697,29 @@ function historySection(request: ExportRequest, header: ExportHeader): readonly 
   }
 
   if (timeline.unreadable.length > 0) {
-    lines.push('Rows that could not be read, kept rather than dropped:')
-    for (const row of timeline.unreadable) lines.push(bullet(`${row.where} — ${row.problem}`))
+    /*
+     * Named by what they are rather than by where they sit — QA-82-007, round 6.
+     *
+     * `UnreadableRow.where` is "Record row 19", a coordinate into the owner's
+     * file, and this document does not describe his whole file. With an area
+     * left out, the difference between row 19 and row 22 is a count of what was
+     * withheld — disclosed by a line whose text mentions none of it, and which
+     * the scoped store could not reach because the number is metadata the
+     * retained row brought with it.
+     *
+     * Left out in **both** directions rather than only when something is
+     * withheld, because a position in a file the reader does not have was never
+     * worth much to them, and one rule is easier to keep than two. The owner's
+     * own Timeline still shows it, which is where somebody who has the file
+     * goes to find the row.
+     */
+    lines.push(
+      'Rows that could not be read, kept rather than dropped. Where each one sits in the file is on the owner’s own screen rather than here: this document does not describe the whole file, so a position in it would be a number this reader cannot use and, where anything is left out, a count of what is missing.',
+      '',
+    )
+    for (const row of timeline.unreadable) {
+      lines.push(bullet(`${row.kind === 'entity' ? 'An entity' : 'A record'} — ${row.problem}`))
+    }
   }
 
   return lines
