@@ -357,6 +357,15 @@ the selection this round's handoff forbids. It remains a property of the harness
 rather than of the product, and the consequence stated when it was first recorded
 now matters more: a single green run is weaker evidence than it looks.
 
+**And the CI deploy job went red on a GitHub Pages backlog.** The Verify job —
+format, lint, typecheck, unit layer, browser matrix, build — is green at every
+head of this round. The Deploy preview job publishes and then reads the live
+`build-info.json` back for 300 seconds; on the last documentation commit GitHub's
+own pages build sat queued for over half an hour, so the read-back never matched.
+Nothing in the bundle is implicated. It is recorded here because a red run in the
+history that nobody explains is worse than one that is explained, and because
+four pushes in forty minutes is what filled that queue.
+
 **A guard was blind, and a reintroduction found it.** Removing the coordinate
 from the owner's own screen broke nothing — the architecture guard matched
 `row.where` in a React `key` prop, and no test read the rendered row. The browser

@@ -3825,7 +3825,7 @@ adjudicated.
 | Deployed SHA | `2cdeb4b` at the moment the Android gate below ran. **Read it live** from `preview/build-info.json`: the documentation commit carrying this section moves it past the checkpoint |
 | Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
 | Relationship | **PASS** — the exact result is recorded below. Never asserted as string equality (D-097). |
-| CI | **green at the product checkpoint `2cdeb4b` — run [32980114735](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/32980114735)**. The documentation commit runs again on push; the aggregate `npm run verify` was run from a clean clone of **that** head and CI confirmed green at it before this handoff was declared finished (D-147). `gh run list --commit <head>` is how to check that rather than take it |
+| CI | **green at the product checkpoint `2cdeb4b` — run [32980114735](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/32980114735)**, and **green at documentation head `2274a59` — run [32982085660](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/32982085660)**. On the head after that, the **Verify** job is green and the **Deploy preview** job is red on a GitHub Pages backlog rather than on anything in this repository — see *On the deploy job and the Pages queue* below. The aggregate `npm run verify` was run from a clean clone of each of those heads (D-147) |
 | All three QA probes | **exit 0, unmodified.** Round 6's was run against the failing tree first, and reproduced all five variants |
 | Report this responds to | the Round 6 section above, in this same file |
 
@@ -3969,6 +3969,31 @@ Bundle-equivalent: the deployed build at 2274a59… serves the same bytes as
 Run it yourself rather than comparing these strings: the commit carrying this
 paragraph moves the live SHA once more, and that is the case the checker exists
 for.
+
+**On the deploy job and the Pages queue, reported rather than re-rolled.** CI has
+two jobs. **Verify** — format, lint, typecheck, the unit layer, the browser matrix
+and the production build — is green at every head of this round. **Deploy
+preview** publishes the verified `dist` and then reads `preview/build-info.json`
+back to prove the phone will see that commit, retrying for 300 seconds.
+
+On the last documentation commit that read-back failed: `deployed='2274a59'
+expected='f4ab4a2'`, thirty times over five minutes. The cause is outside this
+repository — GitHub's own **pages build and deployment** for that publish sat
+**queued for over half an hour**, so the bytes were pushed to `gh-pages` and
+GitHub had not built them. Nothing in the bundle is implicated, and the Verify
+job for that same commit passed in full.
+
+**What that means for this handoff, said plainly.** The Preview may still be
+serving a slightly earlier documentation head when you read this, and the run for
+the head you are handed may show the same red deploy job for the same reason.
+Both are fine and neither is a gate failure: every head in this round is a
+documentation-only distance from checkpoint `2cdeb4b`, and **the equivalence
+checker is the instrument for exactly this** — read the live SHA and run it,
+rather than requiring the live SHA to equal the head. That is D-097's whole
+point, and it is why the rule is equivalence and not string equality.
+
+Four pushes in forty minutes is what filled that queue, and that is the builder's
+doing rather than the infrastructure's.
 
 **The D-147 finishing sequence, in the order it requires.** The last commit was
 made; the tracked head was cloned into an empty directory; `npm ci` and then the
