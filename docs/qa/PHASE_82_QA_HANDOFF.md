@@ -3982,6 +3982,25 @@ it is a weaker instrument for this than a local run and is reported as such.
 it was first recorded still holds and is worth more after today: **a single green
 run is weaker evidence than it looks.**
 
+**The untracked owner-review file, and a slip against it.**
+`npm run format:check` on this working directory warns on the untracked
+`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md`. Its bytes are unchanged, it was neither
+read nor adjudicated, and it is not in the tracked head this handoff names — so
+it is not in the clean clone and not in CI.
+
+It was, however, **accidentally committed** in the first documentation commit of
+this round, by a `git add docs` that swept the whole directory. CI at that head
+went red in thirty seconds on `format:check`, naming that file — DEF-0095's class
+exactly, and the thing D-147's sequence exists to catch. It is caught here rather
+than handed off: the next commit removes it from tracking again, its content on
+disk is byte-identical (checked before and after), and CI is green at the head
+this handoff names. The red run is
+[32981811564](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/32981811564),
+left in the history rather than tidied away — a gate that caught something is
+worth more visible than invisible, and this is the second time this phase the
+finishing sequence has earned its place.
+
+
 ## Every reintroduction, and its result
 
 Nineteen mutations: five against this round's boundary, and the fourteen from
