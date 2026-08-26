@@ -39,6 +39,52 @@ None.
 
 ## Fixed
 
+### DEF-0098 — an empty display was read as an empty or unreadable store
+
+- Status: Fixed
+- Severity: Major — a document that mentions a real storage fault nowhere, and a
+  screen that blames the owner's file for the clock he moved
+- Found in: Phase 82 / `4403a3f`
+- Found by: independent QA round 7 — QA-82-009, seven variants of one path
+- Class: **an empty list read as a claim about the store.** Four different
+  situations produce nothing to display — an empty store, a store whose only
+  rows are damaged, a store whose readable rows are all later than the moment
+  being viewed, and a scoped store whose readable rows were all withheld — and
+  two surfaces collapsed them into one.
+- Reproduction: load **A file with damage in it**, press **−1 week**, reaching
+  2026-04-01 19:00 America/Denver. Timeline says _"Nothing in what was loaded
+  could be read. That is a problem with the file rather than an empty history"_
+  over five records that parsed perfectly and are dated 5–8 April. Data →
+  Select all emits `## Recent record` / `_Nothing in the record for this._` and
+  no fault list; with Diagnostics off, the document mentions the six damaged
+  rows nowhere.
+- Root cause: `historySection` returned `NOTHING_HERE` when `days.length === 0`,
+  before the unreadable-row block; and `TimelineScreen` derived
+  `nothingReadable` from `data.total === 0`, which `assembleTimeline` computes
+  after filtering entries to the moment being viewed.
+- Regression: `tests/synthetic/qa-82-round-7.test.ts` — the three empty
+  displays × three selections all describing both faults and their
+  coordinate-omission explanation; the default selection specifically, because
+  Diagnostics is not in it; the withheld and damaged-only sections asserted
+  **identical**; the empty-state sentence asserted to be present and to give no
+  reason; later history said to be later; an empty store still saying nothing;
+  and `later` counted from readable records rather than from damaged rows. Plus
+  `tests/browser/qa-lab.spec.ts` — "does not blame the file for history that has
+  simply not happened yet", which walks the deployed reproduction. Eight
+  reintroductions run, all eight fail.
+- Siblings: enumerated from the same question — _what else reads an empty list
+  as a claim?_ `TimelineData.shown` and `total` are used for the "Show earlier"
+  control, which is correct: it is about paging, not about existence. Diagnostics
+  counts from the store rather than the display and was right throughout, which
+  is exactly why it hid the defect from a reader who had it selected.
+- Note on a guard that could not see a disclosure: reintroducing _"and some were
+  left out of this document"_ into the private-off empty sentence passed every
+  paired comparison in the suite, because a sentence said on both sides of a pair
+  cannot be seen by comparing them. The guard that catches it asserts that no
+  reason is given. That is a limit of paired testing worth keeping in view, and
+  the fifth time this phase a reintroduction found what reading the test did not.
+- Fixed in: the checkpoint that closes QA round 7
+
 ### DEF-0096 — a document that left the private area out still reported its size
 
 - Status: **Reopened twice. Closed at the store in round 5, and at what a

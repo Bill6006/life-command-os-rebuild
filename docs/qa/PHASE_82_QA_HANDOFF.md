@@ -4253,4 +4253,776 @@ Keep Phase 82 YELLOW unless it passes.
 Do not ask me to paste the file contents.
 ```
 
+---
+
+# Independent QA — Phase 82, Round 7 — 2026-08-26
+
+## Verdict: FAIL — the privacy repair passes; the no-visible-history fault path does not
+
+**QA-82-007's retained-coordinate privacy defect is repaired.** The three original
+probes pass unchanged, including all five failing Round 6 positional variants.
+The new strict whole-document comparisons also pass for retained ids, validation
+path indices, historical backup coordinates, ordering and large batches of damaged
+private rows. D-150's recomposition and declared divergence remain accepted.
+
+**QA-82-009 is a new, material storage-honesty finding:** when Recent record has
+no readable entries to show, its empty-state return skips the retained damaged
+rows and their explanation. Diagnostics still counts them if selected; the default
+review does not mention the damage at all. This fails the repair handoff's explicit
+requirement to continue describing in-scope storage faults and D-151's promise
+that their kind and problem remain stated. It is not another private-data leak,
+and QA does not claim the early return was introduced by this repair.
+
+Phase 82 remains **YELLOW**. QA has changed only this report and new QA evidence;
+no product code, governing status, decision log, defect ledger or NEXT_PROMPT was
+changed. Nothing was committed or deployed. The untracked
+`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was not read, altered or adjudicated, and
+was absent from both disposable clones.
+
+## Identity and unchanged instruments
+
+| Item | Independently checked result |
+| --- | --- |
+| Repaired product checkpoint | `2cdeb4bc553d0c7e398294bb40a7c89078f2d42c` |
+| Tracked HEAD and live Preview | `4403a3f9d9106d1c09a439e9c4d7b23292b3ea1e` |
+| Live build time | `2026-08-26T15:59:14.360Z` |
+| Deployment equivalence | PASS. Live checker found six changed documentation/QA-evidence files and no bundle-relevant change; checkpoint ancestry holds. |
+| CI at the product checkpoint | PASS, both Verify and Deploy preview: [32980114735](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/32980114735). |
+| CI at the handed-off HEAD | PASS, both Verify and Deploy preview: [32986416093](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/32986416093). The phone read-back step succeeded. |
+| QA report commit | None. This report and new evidence remain uncommitted. |
+
+The earlier `f4ab4a2` deployment failure and accidentally tracked owner-review
+file remain historical failures, not rewritten as green. At the actual head tested
+here, the deployment queue has cleared and the live SHA equals HEAD. Equivalence
+was still proved rather than inferred from the string.
+
+The required first commands were, in order:
+
+```text
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+npx vite-node docs/qa/evidence/phase82-round5-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round6-privacy-probe.ts
+```
+
+All exited 0 before other suites were run, then passed again in the clean exact-HEAD
+clone. No changes exist to these files from `0f2f80e` to HEAD. Round 6's first tracked
+addition is `0f2f80e`; that comparison does not pretend its earlier untracked state
+was a historical Git object. SHA-256, in the same order:
+
+```text
+880648DDBB3533357DE572BF0065F7F44A2214521CCB64A41A8483FC7A2A8175
+20C8633F8EADF4C333532E896D3DBD3A7D1D9FFFD6CA2E64F57B9F6D12AE6BA1
+094F2168B45CB714C79172C68CAB2C18BB025890762BDF5444ABDE4E8B49C999
+```
+
+## QA-82-009 — an empty displayed history suppresses genuine storage faults
+
+**Material / phase-blocking semantic and storage-reporting defect. No new privacy
+disclosure or data loss is alleged.** Requirements: D-091, D-151, the current
+handoff's explicit storage-fault acceptance, and the distinction between an empty
+history and unreadable data in the Timeline contract.
+
+### Reproduction on deployed Preview, using only existing controls
+
+At [Preview](https://bill6006.github.io/life-command-os-rebuild/preview/), build
+`4403a3f`, at 430×932:
+
+1. Open QA and load **A file with damage in it**. It supplies five readable
+   records dated April 5–8, five damaged record rows and one damaged entity row.
+2. At its normal April 8, 19:00 clock, open Timeline. It shows five entries and
+   the six faults, with `Record row 6` through `Record row 10` and `Entity row 1`.
+   Data → Select all describes five `A record` faults and one `An entity` fault,
+   says why their coordinates are absent, and counts six unreadable rows. This
+   positive control passes, both private-off and deliberately private-on.
+3. Return to QA and press **−1 week** once. The owner-local clock is now
+   **2026-04-01 19:00, America/Denver** (`2026-04-02T01:00:00.000Z`). No records
+   have been edited, deleted or imported.
+4. Timeline still lists all six faults and their original coordinates.
+5. Data → Select all now emits:
+
+```text
+## Recent record
+
+_Nothing in the record for this._
+
+## Diagnostics
+...
+- Store: 5 records, 0 entities, 6 unreadable rows, schema 1
+```
+
+There is no unreadable-row list, no record/entity distinction and no explanation
+of the missing positions. Turn Private on: the same omission remains. Turn
+Diagnostics off, leaving the ordinary default sections selected: no unreadable-row
+warning remains anywhere in the document. The underlying faults have not changed.
+
+**Related false empty-state explanation on Timeline:** at that earlier clock it
+says, “Nothing in what was loaded could be read. That is a problem with the file
+rather than an empty history”. Five loaded records were read successfully; they
+are simply later than the selected clock. The fault list itself remains useful
+and correctly located. Distinguish no entries visible at this moment from no
+entries parsable in the file; do not erase that list to tidy the message.
+
+This deployed reproduction uses the existing QA fixture and time controls, not
+state injection, a new QA import feature, or an owner-store restore. The Timeline
+screen was visually inspected and captured in this QA conversation. The export
+evidence above was read from the visible **The export** field; no saved screenshot
+file is claimed.
+
+### Independent synthetic coverage of the class
+
+New artifact:
+`docs/qa/evidence/phase82-round7-boundary-probe.ts`.
+
+```text
+npx vite-node docs/qa/evidence/phase82-round7-boundary-probe.ts
+```
+
+Result: **exit 1; ten checks pass and seven fail**. These seven are variants of
+one missing-fault-description path, not seven new defects:
+
+| History / selection | Observed result |
+| --- | --- |
+| Only one unclassified broken record and one broken entity; Select all | FAIL: two faults counted only in Diagnostics, neither described. |
+| Same damaged-only history; default selection | FAIL: no fault description or count. |
+| All valid readable entries are private and withheld, with those two public faults retained; Select all | FAIL: correct two-fault Diagnostics count, no description. |
+| Same all-readable-entries-withheld history; default selection | FAIL: no fault warning. |
+| Public readable entries all dated after the clock, with the two faults retained; Select all | FAIL: correct two-fault Diagnostics count, no description. |
+| Same future-only-readable history; default selection | FAIL: no fault warning. |
+| Damaged-only history, Private explicitly included | FAIL: no fault description. |
+
+Adding **one readable public record** makes both fault descriptions reappear;
+that negative control passes. Every composition checks that its input snapshot is
+unchanged. The damaged-only and private-only-readable cases are source-level
+synthetic reproductions, not claimed as additional manual deployed histories.
+
+**Root-cause evidence:** `src/features/export/compose.ts:681` returns when
+`timeline.days.length === 0`, before the unreadable-row block at `:699`. The same
+early return exists at `c583a91` and the repaired checkpoint. D-150 can correctly
+remove all readable entries while retaining unclassified storage faults, so it
+can reach this path without losing or misclassifying the faults themselves.
+`src/features/timeline/TimelineScreen.tsx:57` similarly treats `data.total === 0`
+as “nothing readable”, although `assembleTimeline` filters readable entries by
+the current clock before computing that total.
+
+**Acceptance expectation:** selected Recent record must still report the genuine
+in-scope faults, distinguish record/entity where known, and explain its deliberate
+coordinate omission when there are zero readable entries to display. A valid
+empty store, a damaged-only store, a scoped store whose valid entries were all
+withheld, and a store whose valid entries are only in the future must not be
+silently conflated. The owner screen must not blame successful-but-future parsing
+on file corruption. Preserve source data, coordinates on the owner's fault list,
+the unconditional private-off disclosure and complete-document privacy invariance.
+The builder owns the repair, not QA.
+
+## The repaired privacy boundary and earlier passes
+
+The new probe uses **exact byte equality**, so a reordered or duplicated line
+cannot pass merely because its text occurs somewhere in the other document:
+
+- Three paired histories add **100 private damaged record rows and 75 private
+  damaged entity rows**, plus the real private fixture entry, before, interleaved
+  with or after the public rows. Each full private-off export remains identical
+  to the five-public-fault baseline. The source really contains 180 malformed
+  rows; the export correctly describes and counts only the five in scope.
+- Reversing the readable public input array preserves the complete document,
+  including Recent record's order/day grouping and decision/ranking text.
+- Carried malformed `id`, validation path indices and original indices change
+  from 900/909 to 1900/1909. Both private-off and private-on exports remain
+  identical, with no raw ids, paths, issue-problem sentinels or row coordinates.
+- A real `snapshotToWire → snapshotFromWire` round trip preserves the export
+  and the owner's `Record row 901` / `Entity row 910` coordinates. Canonical
+  backup metadata is not renumbered to produce the privacy pass.
+
+At ordinary deployed fixture time the six damaged rows are correctly described
+and counted, and their owner coordinates survive. The zero-visible-entry path is
+the exception above, not a rejection of the repair's general boundary.
+
+D-150's code (`scope.ts`, recomposition and disclosure) is unchanged by this
+repair. The five original Round 5 pairs and all six Round 6 decision paths pass:
+private outcomes behind no-action, private care behind a hold, live thread,
+stopped/superseded thread, recurring school obligation and growth results. Those
+probes still assert the full-store differences that make the comparisons meaningful.
+The no-action pair is not claimed to change decision kind; the school obligation
+pair is not claimed to consume the owner's later free blocks.
+
+Deployed quiet-fortnight opt-in again changes the diagnostic record count from
+18 to 19 and restores `late scrolling again`; private-off excludes it and states
+the possible divergence. The same disclosure is present with no private rows in
+the damaged-history fixture. No public section was disabled to get a privacy pass.
+
+| Prior item | Round 7 recheck |
+| --- | --- |
+| QA-82-001 / QA-82-005 | PASS. Live school 10:20: care-today yes is correctable; current absence until 15:00 is inferred and has no correction control. Now/Family/export agree. Unchanged Round 4 probe covers all 24 scenarios; school raw known/unknown/questions stay 4/11/5 and no-child 1/14/8, with no invented derived row. |
+| QA-82-002 | PASS. Live 05:30 hold says morning suits Adaya; evidence names the early-morning mismatch and next block, about five free hours for thirty minutes, with no lifecycle action controls. |
+| QA-82-003 | PASS. Exact-fit, near-fit, overrun and fractional cases remain asserted by the unchanged suite, including exact 10/10 and 6/6. No scoring/evidence change occurred. |
+| QA-82-004 | PASS. Deployed Android checks use 44px with unrounded comparison/two-decimal diagnostics; the 48px product token is unchanged. |
+| QA-82-006 | PASS. Exact tracked-HEAD clean-clone aggregate verify and both CI jobs succeed. No unrelated untracked file was formatted. |
+| QA-82-007 | PASS for the repaired privacy class: old failing pairs and new retained-metadata/order/batch tests are invariant. The distinct remaining storage-honesty failure is QA-82-009, not a claim that private coordinates still leak. |
+| QA-82-008 | PASS. Deployed export retains the withdrawn-soreness reason and cash-buffer future-only note. Six-reason formatter/Insights/note assertions pass. Not-applicable remains formatter-covered, not a newly constructed deployed case. |
+
+All nine original acceptance items remain passed by the clean suite and relevant
+live checks: (1) arbiter-only thread influence; (2) dominant recovery override;
+(3) explanation, expiry and all five inactive conditions plus one-tap stop;
+(4) genuinely better next-block hold with shared evidence; (5) 100/100 tournament
+in both architectures and bounded nudge; (6) no child percentage grade;
+(7) school free-middle 300 minutes; (8) asymmetric unknown care handling;
+(9) honest five-band time fit. Live thread stopping retains “Stopped” on Life and
+removes “Part of” from Now immediately. Thread offer, skippable two-step growth,
+stage reversal, goal counts/date, stable lifecycle actions, no-action, migration
+and backup/restore remain covered by the passing automated regression gates.
+
+## False confidence and preservation boundaries
+
+The builder's new nine-test regression constructs its damaged rows beside the
+quiet-fortnight's readable public history. Its “keeps the unreadable row” and
+coordinate-explanation assertions therefore do not reach `days.length === 0`.
+The rendered-coordinate browser assertion is valuable, but deliberately loads a
+fixture with readable history above the faults; it does not test that history's
+other clock states or its export. The original three probes also keep readable
+public entries in their damage cases. Their green results cannot prove that
+faults remain described when the readable part is absent.
+
+The builder's insertion sweeps use set-like line differences, which would miss a
+pure reorder or multiplicity change. This is a test-strength observation, not an
+observed ordering leak: this round's exact-string comparisons pass.
+
+No deferral was silently closed. Q1/Q4/Q6/Q7/Q8 stay open; Reach remains future;
+private-pattern intelligence is not newly wired; AUD-0040/0045/0047 stay outside
+this phase. v297 ancestry, life-context-change mapping, the literal NUL in derived
+ids and the honest archive rules remain unchanged. **Correction to Round 6's
+carry-forward wording:** the named archived family is `milestone-observation`,
+alongside `skill-claim` and `faith-anchor`, not that paragraph's `stress-level`.
+The historical paragraph is preserved, not silently rewritten.
+
+Weighted-mean/abstention denominator and WORTH_DOING questions, the three
+full-weight unknown zeroes, tight ties, thread-as-set choice, goal-behind and
+pending-growth fixture gaps remain open. No generic thread builder, calendar,
+third schedule question, tomorrow hold, percentage bar, QA import, partial/undo
+feature or new owner decision was added.
+
+Audit section 10 was reread in full. All 21 protections are unchanged by the
+five-file product/test repair diff and remain covered where applicable by the
+clean regression gate: stable lifecycle buttons; shared Health/Sleep page;
+deterministic/hybrid agreement and D-025; weighted Something else; refusal never
+becoming immediate benefit; association thresholds/comparison/confounders and
+empty action-family pooling; proposed-not-applied growth; zero-score stale
+coverage; no render writes; engine naming only its own routines/resolved subjects;
+timezone/week/DST rules; legitimate no-action; time with Adaya distinct from
+development; honest legacy archiving; old-id goal identity; no invented emotional
+scale; faith/custody's inspect/record roles; grouped Life overview; original
+sleep-derivation conditions; full counterfactual guide; and the full QA inspector.
+
+## Verification record
+
+Clean exact-HEAD clone:
+`C:\Users\tyree\AppData\Local\Temp\lco-phase82-round7-9569b74acbf841c8855c12eee1803a95`.
+The clone remained Git-clean after verification and the browser matrix.
+
+| Gate | Round 7 observation |
+| --- | --- |
+| `npm ci`, then aggregate `npm run verify` | PASS, exit 0: format, lint, typecheck, **1,605 tests / 70 files**, production build. |
+| Three original probes | PASS, unchanged; first in the source checkout, then again in the clean clone. |
+| New Round 7 boundary probe | FAIL, exit 1: **10 passing checks, 7 failing variants** of QA-82-009. Formatted reruns reproduce the same result. |
+| Full browser matrix | PASS: **549/549**, one worker, zero retries, one complete run, **10.7 minutes**, at 360/430/1,280px. Final run artifact: `passed`, empty failed-test list. |
+| Deployed Android gate | PASS: **144 checks**, one run, exit 0, live `4403a3f`. |
+| Privacy scan | PASS: **242 tracked files** in the clean head; the checkpoint CI log independently reports **240**. New untracked QA evidence is not part of that tracked-file count. |
+| Tournament | PASS: **100/100 deterministic, 100/100 hybrid**, in the aggregate test gate; exact-HEAD CI also prints both totals. |
+| CI browser evidence | Both checkpoint and exact-HEAD logs report **549 passed (9.8m)**. CI permits one retry; local verification above did not. |
+
+The browser-matrix duplication has concrete triggers: the rendered-coordinate
+test was changed, and the builder reported two incomplete full runs. QA's green
+run is additional evidence, **not** a replacement for either builder run. Both
+**548/549** results, their rotating pre-assertion navigation failures, isolation
+passes and the decision not to keep rerolling remain recorded. No claim that the
+transient is fixed is made.
+
+The Android configuration was Galaxy S24-class, 360×780, DPR 3, touch/mobile,
+Android 14 Chrome user agent. This is emulation, not physical-handset validation.
+Whole-screen/field reads used the browser skill at 430×932 against live Preview;
+the viewport was restored and QA's tab closed. The deployed checker initially
+failed Node's local certificate-chain validation; its retry and the Android
+command used a process-scoped TLS-verification workaround. No repository or
+browser security setting was changed.
+
+The old Round 6 scale probe's three 2,000-row synthetic compositions in the clean
+clone took **149.2, 202.2 and 247.7 ms** under this run's conditions. These include
+Insights/Timeline argument construction, not the initial caller decision. They
+are not a physical-phone or unlimited-history performance guarantee.
+
+### Independent reintroductions: 19/19 detected
+
+Disposable exact-HEAD mutation clone:
+`C:\Users\tyree\AppData\Local\Temp\lco-phase82-round7-mutations-6d0289bb037e4d6b9d25efc859670744`.
+Reproduction artifact: `docs/qa/evidence/phase82-round7-mutations.mjs`.
+
+The script mechanically derives the fourteen earlier QA mutations without editing
+their artifact, adds four export mutations and the new test file, and pins its
+execution to this disposable clone shape and `4403a3f`. It verifies a green
+**422-test baseline** and rejects load/unhandled errors as mutation proof. The
+owner-coordinate case separately rebuilds and runs the actual rendered browser
+assertion. These are independent reconstructions of the named classes, not a
+claim to possess the builder's exact unpublished patches.
+
+| Reintroduced class | Independently observed failure |
+| --- | --- |
+| Original coordinate in export | 8 of 422 assertions |
+| Renumbered survivors in export | 4 of 422 |
+| Every damaged row called a record | 1 of 422 |
+| Coordinate-omission explanation removed | 1 of 422 |
+| Caller objects reused | 24 of 422 |
+| Caller decision reused | 2 of 422 |
+| Caller Timeline reused | 18 of 422 |
+| Caller Insights reused | 1 of 422 |
+| Record privacy class alone | 2 of 422 |
+| Record area alone | 3 of 422 |
+| Entity privacy class alone | 2 of 422 |
+| Entity area alone | 2 of 422 |
+| Keep all entities | 6 of 422 |
+| Keep all malformed rows | 5 of 422 |
+| Read unreadable claim in plural only | 5 of 422 |
+| Read unreadable claim in singular only | 5 of 422 |
+| Withhold all malformed rows | 7 of 422 |
+| Remove divergence disclosure | 1 of 422 |
+| Remove the owner's rendered coordinate, leaving its React key intact | Browser assertion fails on `/Record row \d+/` against the rebuilt bundle. |
+
+The record-class and entity-class/area mutations also fail the named
+document-level paired tests, not only predicates. Counts differing from the
+builder's table are left as measured; the exact mechanical mutations are available
+in QA's scripts. The focused run ends with 18 detections and zero unproven checks.
+
+The owner-screen browser baseline passes **1/1**, then the rebuilt mutation fails
+**1/1** with received text `An unreadable row`, at the coordinate assertion. It
+does not fail on navigation, compilation or loading. The script restores the
+original source and rebuilds again; its overall exit is **0**, and the disposable
+clone finishes Git-clean. Thus the builder's once-escaping rendered-coordinate
+class is independently caught now. None of these proofs reaches QA-82-009's empty
+displayed-history branch; detecting known mutations is not proof of completeness.
+
+Both new QA evidence files pass targeted Prettier and ESLint checks; the mutation
+script passes `node --check`; the report diff passes `git diff --check`. The prior
+handoff/report prefix is preserved verbatim apart from line-ending normalization
+in the comparison and moving the single completion marker to this new ending.
+No product file in the working repository was mutated.
+
+## Complete next handoff — CURRENT Phase 82 Claude builder, repair QA-82-009
+
+**Model:** Claude Opus-class — the repair must preserve privacy and storage
+semantics across two different reader promises, rather than only change an empty
+sentence.
+
+**Intelligence level:** Max — Phase 82 is part of the audit-repair campaign and
+the owner's campaign-wide rule applies to its repairs.
+
+**Conversation:** CURRENT — the original Phase 82 Claude builder; this is the
+same unresolved phase. Its subsequent retest belongs to the SAME Codex QA
+conversation, at **High**, not Claude's Max level.
+
+```text
+Continue the Life Command OS rebuild, repairing Phase 82 after independent QA Round 7.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full, including the Round 7 report and this
+handoff. Do not ask the owner to paste it. Follow docs/qa/README.md and the
+governing defect-loop and finishing rules.
+
+Round 7 verdict: FAIL. Keep Phase 82 YELLOW. Do not start the next phase or claim
+GREEN. Product checkpoint tested: 2cdeb4bc553d0c7e398294bb40a7c89078f2d42c.
+Tracked and deployed head tested: 4403a3f9d9106d1c09a439e9c4d7b23292b3ea1e.
+QA did not commit its report or its two new evidence files.
+
+QA-82-007's retained-coordinate privacy class passes. Preserve that result,
+D-150's scoped recomposition/disclosure and D-151's owner-only coordinates.
+Do not undo a repaired privacy boundary to fix the new reporting failure.
+
+Repair QA-82-009 as a class under plan section 42: reproduce it, identify the
+boundary, write regressions, prove they fail on reintroduction, then repair and
+rerun the required full gate. Recent record currently returns its empty state
+before reporting retained damaged rows whenever no readable entries can be shown.
+The seven independent variants cover damaged-only histories, all-readable-entries
+withheld, future-only-readable histories, default/Select all and deliberate
+private opt-in. The default export can contain no warning at all. Diagnostics'
+correct count alone does not satisfy the selected history section's promise.
+Also address the related deployed Timeline claim that no loaded data could be
+read when valid records merely lie after the selected clock. Preserve its useful
+fault list and original coordinates.
+
+Run these unchanged QA probes first:
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+npx vite-node docs/qa/evidence/phase82-round5-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round6-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round7-boundary-probe.ts
+The first three currently exit 0; the fourth exits 1 with ten passing checks and
+seven failing variants. Do not edit the evidence to make the repair pass.
+
+Use the deployed reproduction in the report as well: A file with damage in it,
+then minus one week, reaching April 1 2026 at 19:00 America/Denver; compare
+Timeline and Data with Diagnostics on/off and Private off/on. No new QA import,
+owner-store injection or broad feature is needed to reach it.
+
+Preserve every prior PASS, all nine original phase acceptance items, all named
+deferrals and all 21 audit-section-10 protections. Do not read, alter, stage or
+adjudicate docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md. Do not rewrite QA's reports.
+Keep the known browser-transient history; do not roll until green or substitute
+isolation passes for incomplete full runs.
+
+The new mutation evidence is pinned to the old QA-tested head and disposable
+clone path on purpose. Do not loosen its safety pin to run it in the working
+repository. Build new repair-specific evidence as needed and prove the actual
+rendered behaviors, not only a source token or a nonempty container.
+
+Update the builder-owned governing documents/ledger honestly, finish the tracked
+checkpoint, then clone that exact head into a clean directory and run npm ci and
+the aggregate npm run verify there. Check CI at the actual handoff head, the
+three-width browser gate, deployed Android gate, privacy scan, tournament and
+the regression reintroductions. Report every outcome and exact count, including
+transients, without changing the unrelated untracked file to satisfy formatting.
+Deploy the repaired checkpoint and read Preview build-info.json live; prove
+checkpoint equivalence using scripts/checkpoint-equivalence.mjs per D-097.
+
+Append the builder repair response and a complete Round 8 retest handoff to this
+same QA file, addressed to the SAME Codex QA conversation at High. Include the
+tested checkpoint, live SHA/equivalence, all results, remaining limitations,
+required references, model/level/conversation and a short copyable launcher.
+Do not make the owner ask for that handoff. Keep this QA file's completion marker
+as its single final meaningful line after finishing the handoff.
+```
+
+### Short launcher
+
+**Model:** Claude Opus-class. **Level:** Max.
+**Conversation:** CURRENT — the original Phase 82 Claude builder.
+
+```text
+Continue the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full and execute the Round 7 FAIL repair
+handoff at the end exactly as written. Preserve the repaired privacy boundary,
+repair QA-82-009, keep Phase 82 YELLOW, and return a Round 8 retest handoff to
+the same Codex QA conversation. Do not ask me to paste the file contents.
+```
+
+---
+
+# Round 7 repair — builder response, and the Round 8 retest handoff
+
+**Written by:** the original Phase 82 Claude builder conversation, in response to
+the Round 7 FAIL above. The Round 1 to 7 reports are unchanged; nothing above
+this line was edited, and none of the four QA probes was modified.
+
+**Phase status:** **YELLOW**, unchanged. D-077 stands. Phase 9 has not been
+started, no GREEN closeout has been made, and
+`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was neither read, altered, staged nor
+adjudicated.
+
+## Build to retest
+
+| Fact | Result |
+| --- | --- |
+| Repaired product checkpoint | `6a9c53e132351ebd4ff3b5cf012cf088292bd751` (`6a9c53e`) — "QA-82 round 7: an empty list has more than one reason" |
+| Previous checkpoints | `2cdeb4b` (round 6), `dab8c2e` (round 5), `1205402` (round 4), `5936fe2` (round 3), `da1a4ee` (round 2), `0899f18` (round 1), `160ec9a` (first build) |
+| Deployed SHA | `6a9c53e` at the moment the Android gate below ran. **Read it live** from `preview/build-info.json` |
+| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Relationship | **PASS** — the exact result is recorded below. Never asserted as string equality (D-097). |
+| CI | **green at the product checkpoint `6a9c53e` — run [32996584614](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/32996584614)**, both jobs. The documentation commit runs again on push; the aggregate `npm run verify` was run from a clean clone of that head too (D-147) |
+| All four QA probes | **exit 0, unmodified.** Round 7's was run against the failing tree first and reproduced all seven variants |
+| Report this responds to | the Round 7 section above, in this same file |
+
+## What Round 7 found
+
+QA-82-007 is **closed**. The retained-coordinate repair passed the three earlier
+probes, the five Round 6 positional variants, and new strict whole-document
+comparisons over retained ids, validation path indices, backup-carried
+coordinates, input ordering and batches of 100 damaged private records and 75
+damaged private entities. D-150's recomposition and its declared divergence
+remain accepted. That closes four rounds of one rule.
+
+**QA-82-009 is a different class**, and it is the first finding this phase that is
+not about privacy at all. When there are no entries to display, `historySection`
+returned its empty state **before** the block that reports rows the app could not
+read. A store whose only rows were damaged therefore produced:
+
+```text
+## Recent record
+
+_Nothing in the record for this._
+```
+
+— which is the opposite of true. There is something in the record and the app
+could not read it. Diagnostics still counted the rows, and **Diagnostics is off by
+default**, so the document the owner produces without changing anything mentioned
+six real storage faults nowhere at all.
+
+The same zero reached the owner's own screen from the other side. `TimelineData.total`
+counts entries at or before the moment being viewed, so a history dated *later*
+reports zero — and Timeline read that as *nothing could be read* and told him his
+file was the problem, over five records that had parsed perfectly and were dated
+next week.
+
+## QA-82-009 → DEF-0098. D-152
+
+**Four states, four things to say.** They were being collapsed into one, and two
+of the collapses were separate defects.
+
+| The store | What is true |
+| --- | --- |
+| nothing in it | there is no history yet |
+| only rows that could not be read | there is history and the app cannot read it |
+| readable rows, all later than the moment | there is history and none of it has happened yet |
+| readable rows, all withheld from this document | there is history and this document may not show it |
+
+**The export.** The early return is gone. The section reports the damaged rows
+whether or not it rendered any entries, with their kind named, their problem
+stated and the coordinate-omission explanation D-151 added — and it says which
+empty it is:
+
+```text
+## Recent record
+
+There are no entries to show here.
+
+Rows that could not be read, kept rather than dropped. Where each one sits in
+the file is on the owner’s own screen rather than here: …
+
+- A record — could not be read — 8 things wrong with it
+- An entity — could not be read — 5 things wrong with it
+```
+
+**The owner's screen.** `TimelineData` gained `later` — readable entries after
+the moment being viewed, counted the same way the displayed ones are, so a
+damaged row can never become an entry waiting to happen. Timeline now says *"There
+is history here — five entries — but all of it is later than the moment on screen.
+Nothing has been lost and nothing is unreadable; move forward and it is there."*
+The fault list and its coordinates are untouched: he has the file, and the damage
+is real whatever the clock says.
+
+**The fourth state reads identically to the second, deliberately.** A store whose
+readable rows were all withheld and a store whose only rows were damaged reach the
+same empty display, and in the export they must read the same — the document has
+already promised, unconditionally, that the excluded area is excluded down to
+whether anything is recorded in it. So the sentence states the situation and not
+its cause. The regression asserts the two sections are byte-identical.
+
+**And an empty store still says nothing.** Inventing a fault where there is none
+is the opposite error and just as available; the mutation that reaches for it is
+proved below.
+
+## A guard that could not see a disclosure
+
+Worth recording as a limit rather than a near miss. Reintroducing *"and some were
+left out of this document"* into the private-off empty sentence **passed every
+paired comparison in the suite** — because it is said on both sides of the pair,
+and comparing two documents cannot see a disclosure made in both.
+
+Emptying that sentence entirely also passed, for a duller reason: every other
+assertion was about the fault list below it, so the section could open on a blank
+line and still be green.
+
+The guard that catches both asserts that the state is stated and that **no reason
+is given**. That is the fifth time this phase a reintroduction found what reading
+the test did not, and the second time the miss was in a guard written during the
+same round.
+
+## The tests Round 7 named, and what they assert now
+
+| Named | What it asserts now |
+| --- | --- |
+| the round 6 regression built its damaged rows beside quiet-fortnight's readable history, so its "keeps the unreadable row" assertions never reached `days.length === 0` | `qa-82-round-7.test.ts` builds four stores that each reach an empty display for a different reason, and crosses three of them with three selections |
+| the rendered-coordinate browser assertion loads a fixture with readable history above the faults, and does not test that history's other clock states | `qa-lab.spec.ts` — "does not blame the file for history that has simply not happened yet" walks QA's own deployed reproduction: load the damaged fixture, press **−1 week**, read Timeline |
+| the three original probes keep readable public entries in their damage cases | The new suite has none in three of its four stores, and asserts the default selection specifically, because Diagnostics is not in it |
+| the insertion sweeps use set-like line differences, which would miss a pure reorder or multiplicity change | Accepted as a fair observation. Round 7's own exact-string comparisons pass, and the new suite compares whole section bodies with `toBe` rather than by set |
+
+## Exact verification results
+
+Every figure names the head it was measured on — D-147.
+
+| Gate | Round 6 (`2cdeb4b`) | Round 7 (`6a9c53e`) |
+| --- | --- | --- |
+| Aggregate `npm run verify` from a clean clone of the tracked head | PASS | **PASS** — format, lint, typecheck, tests, build; exit 0 |
+| Unit / synthetic / contract / adversarial | 1,605 across 70 files | **1,625 / 1,625 across 71 files** |
+| Browser, three widths (360, 430, 1,280px) | 548 / 549, twice | **552 / 552 — one clean run, 10.4 minutes, no transient** |
+| Android-style gate, against the **deployed** build | clean — 144 | **clean — 144 checks, in one run** |
+| Privacy scan | clean, 240 | **clean — 245 tracked files** |
+| Tournament | 100/100 and 100/100 | **100 / 100 deterministic, 100 / 100 hybrid** |
+| CI at the head being handed off | green at `2cdeb4b` | **green** — run `32996584614` at `6a9c53e`, both jobs |
+| QA's round 4, 5 and 6 probes | exit 0 | **exit 0**, unmodified |
+| QA's round 7 probe | exit 1 — seven variants | **exit 0**, unmodified |
+| Reintroductions proved, this round | 19 | **8** |
+
+One new test file: `tests/synthetic/qa-82-round-7.test.ts`, 20 tests.
+
+**The untracked owner-review file.** `npm run format:check` on this working
+directory still warns on `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md`. It is untracked,
+its bytes are unchanged, and it is absent from the clean clone and from CI —
+confirmed again this round rather than asserted. Round 6's accidental commit of it
+is not repeated; nothing was staged by directory this time.
+
+## Every reintroduction, and its result
+
+Eight mutations, each applied to the repaired tree, the named suites run, the tree
+restored. **Eight failures, none by a module-load or type error.** The focused set
+is `qa-82-round-7`, `qa-82-round-6`, `qa-82-round-5`, `qa-82-round-4`,
+`export-honesty`, `qa-82-round-1`, `architecture-guards` and `timeline`: **410
+assertions green on the repaired tree.**
+
+| # | Reintroduced defect | Result |
+| --- | --- | --- |
+| 1 | the section returns before it reports the damage — the finding itself | **FAILS** — 10 of 410 |
+| 2 | the damaged rows are reported only when there are rows above them | **FAILS** — 9 of 410 |
+| 3 | later history is called nothing at all | **FAILS** — 1 of 410 |
+| 4 | the empty-with-damage state says nothing before the list | **FAILS** — 1 of 410. **Passed before its guard existed** |
+| 5 | a withheld history is told apart from a damaged one | **FAILS** — 1 of 410. **Passed before its guard existed**, and passed every paired comparison |
+| 6 | a damaged row counts as history waiting to happen | **FAILS** — 2 of 410 |
+| 7 | nothing is ever counted as later | **FAILS** — 2 of 410 |
+| 8 | an empty store grows a damage warning | **FAILS** — 1 of 410, the over-broad direction |
+
+## Preserved, unchanged
+
+- **Every Round 7 PASS.** QA-82-001 through QA-82-008 are untouched and still
+  asserted, along with D-150's scoped recomposition and disclosure, D-151's
+  owner-only coordinates, and the six decision-path pairs from Round 6. Nothing in
+  `scope.ts` changed this round.
+- **All deferrals and open owner questions.** Q1, Q4, Q6, Q7, Q8 remain open. No
+  private evidence is wired into intelligence and Reach is not implemented. The
+  Phase 8 carry-forwards are unchanged — and QA's correction is accepted: the
+  third archived family is `milestone-observation`, not `stress-level` as round
+  6's paragraph said. That paragraph is left as written and corrected here.
+- **The deliberate non-features**, **AUD-0040 / AUD-0045 / AUD-0047**, and all 21
+  audit-section-10 items.
+- **The owner's own record.** Nothing is deleted, renumbered or reordered; the
+  only changes are what two surfaces say when they have nothing to list.
+
+## Documents updated
+
+- `docs/PHASE_STATUS.md` — **YELLOW — READY FOR INDEPENDENT QA, ROUND 8**, a
+  round 7 section, and a verification table rolled forward one column.
+- `docs/DECISION_LOG.md` — **D-152** (an empty list has more than one reason, and
+  each of them is a different thing to say).
+- `docs/DEFECT_LEDGER.md` — **DEF-0098**.
+
+## What Round 8 should press hardest
+
+1. **Other empty states.** This repair covers the history section and the Timeline
+   screen. Coverage, Insights, Direction and Learning all have their own "nothing
+   here" paths, and none of them was examined for the same collapse.
+2. **The `later` count itself.** It is computed by describing every effective
+   record after the moment, which is the same work the display does — worth
+   checking on a large history, and worth checking it never counts something the
+   display would refuse to render.
+3. **The withheld-versus-damaged equivalence, adversarially.** The regression
+   asserts two section bodies are identical. Try to find a store where they
+   differ for some third reason.
+4. **The deployed reproduction, forwards as well as back.** Press `+1 week` from
+   the damaged fixture and check the screen and document agree about a history
+   that is now entirely in the past.
+5. **Whether the empty sentence is the right one.** It is deliberately silent
+   about why, which costs the reader something real in the damaged-only case.
+   Disagree with D-152 if you think that trade is wrong.
+
+---
+
+## Retest handoff — Phase 82, round 8
+
+**Model:** Claude Opus-class is the builder's; **QA runs on Codex**, per D-090.
+
+**Intelligence level:** High.
+
+**Conversation:** SAME — the Codex QA conversation that wrote Rounds 1 to 7.
+
+```text
+Continue independent QA of the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You wrote the Phase 82 Round 1 to 7 reports in
+docs/qa/PHASE_82_QA_HANDOFF.md. Round 7 closed QA-82-007 and returned FAIL on
+QA-82-009: with no entries to display, the review export returned its empty
+state before reporting rows the app could not read, and Timeline blamed the
+owner's file for history dated later than the clock. Both are repaired and a
+repaired checkpoint is deployed.
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full — your seven reports and the
+builder's Round 7 repair response beneath them — and run Round 8 exactly as the
+retest handoff there specifies.
+
+Repaired product checkpoint:
+6a9c53e132351ebd4ff3b5cf012cf088292bd751
+
+Deployed SHA when the builder last proved equivalence:
+6a9c53e132351ebd4ff3b5cf012cf088292bd751 — the Preview served the checkpoint exactly at that moment. Read
+it live from preview/build-info.json and prove checkpoint equivalence rather
+than string equality, per D-097. The documentation commit carrying this handoff
+moves the live SHA past the checkpoint.
+
+Preview:
+https://bill6006.github.io/life-command-os-rebuild/preview/
+
+Run all four of your own probes first, unchanged:
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+npx vite-node docs/qa/evidence/phase82-round5-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round6-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round7-boundary-probe.ts
+All four exit 0 on this head. None was modified; check that.
+
+Verify against the deployed build, not the local tree:
+
+- QA-82-009. Your own reproduction is the first thing to walk: load A file with
+  damage in it, press −1 week, and read Timeline and Data with Diagnostics on
+  and off and Private off and on. The four empty states are recorded in D-152.
+  Press the ones this repair did not touch: Coverage, Insights, Direction and
+  Learning have their own empty paths and were not examined. Confirm an empty
+  store still says nothing, that a damaged row is never counted as history
+  waiting to happen, and that the owner's fault list keeps its coordinates.
+- The withheld-versus-damaged equivalence is asserted as byte-identical section
+  bodies. Try to break it from some third direction.
+- QA-82-007, QA-82-008 and everything you accepted in Round 6 and Round 7 are
+  untouched by this repair. Confirm that rather than assume it.
+
+Re-verify every PASS from Rounds 1 to 7 rather than assuming it survived, and
+confirm every deferral, out-of-scope finding and audit-section-10 do-not-change
+rule is unchanged. Do not read, alter, stage or adjudicate
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md.
+
+Builder's counts to check rather than trust, each named against its head:
+aggregate verify PASS from a clean clone of the head you are handed, with CI
+green at the checkpoint 6a9c53e (run 32996584614) and again at that head;
+1,625 unit tests across 71 files; 552 / 552 — one clean run, 10.4 minutes, no transient browser at 360, 430 and
+1,280px; the deployed Android gate clean at 144 checks in one run;
+privacy scan 245 tracked files; tournament 100/100 deterministic and
+100/100 hybrid; 8 reintroductions proved, two of which passed before the guard
+that now catches them existed — one of those invisible to every paired
+comparison in the suite, which is recorded as a limit of paired testing.
+
+Write your Round 8 result into docs/qa/PHASE_82_QA_HANDOFF.md as a new section,
+on PASS or FAIL, and end with the complete next handoff and a short launcher.
+Keep the completion marker as the single final meaningful line of that file.
+
+Do not ask me to paste the file contents.
+```
+
+### Short launcher
+
+**Model:** the strongest Codex model available. **Level:** High.
+**Conversation:** SAME — the Codex QA conversation that wrote Rounds 1 to 7.
+
+```text
+Continue independent QA of the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full and run Phase 82 Round 8 exactly as
+the retest handoff at the end of it specifies. You wrote Rounds 1 to 7; QA-82-007
+is closed and the builder has repaired QA-82-009 — an empty display was being
+read as an empty or unreadable store (D-152). Keep Phase 82 YELLOW unless it
+passes.
+
+Do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->

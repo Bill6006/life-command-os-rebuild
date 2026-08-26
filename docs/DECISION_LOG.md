@@ -4825,3 +4825,65 @@ boundary. This says the last part out loud: **what a retained row carries is
 metadata too.** Each round the rule was right and its reach was one layer short,
 and the thing that found the next layer each time was a paired document rather
 than a reading of the code.
+
+---
+
+## D-152 — An empty list has more than one reason, and each of them is a different thing to say
+
+**Phase:** 82 (QA round 7) · **Status:** Active
+
+Four rounds of privacy work made the review export honest about what it was
+allowed to describe. Round 7 found the place where it stopped describing
+anything at all.
+
+`historySection` returned `NOTHING_HERE` the moment it had no rows to render —
+**before** the block that reports rows the app could not read. So a store whose
+only rows were damaged produced a document saying _"Nothing in the record for
+this"_, which is the opposite of true: there is something in the record and the
+app could not read it. Diagnostics still counted the damaged rows, and
+Diagnostics is off by default, so the ordinary document mentioned the fault
+nowhere at all.
+
+The same zero reached the owner's own screen from the other side. `TimelineData.total`
+counts entries at or before the moment being viewed, so a history whose entries
+are all _later_ reports zero — and Timeline read that as _nothing could be read_
+and told him his file was the problem. Five records had parsed perfectly and were
+dated next week.
+
+### The four states
+
+| The store                                      | What is true                                       | Where it is said                                |
+| ---------------------------------------------- | -------------------------------------------------- | ----------------------------------------------- |
+| nothing in it                                  | there is no history yet                            | "Nothing here yet"                              |
+| only rows that could not be read               | there is history and the app cannot read it        | the fault list, and "Nothing readable here"     |
+| readable rows, all later than the moment       | there is history and none of it has happened yet   | "…all of it is later than the moment on screen" |
+| readable rows, all withheld from this document | there is history and this document may not show it | the same neutral sentence as the second         |
+
+**The last two are the ones that were being called the second**, and each was a
+different defect: one blamed the owner's file for the clock he had moved, and one
+took a real storage fault down with it.
+
+### Why the fourth reads identically to the second, deliberately
+
+A store whose readable rows were all withheld and a store whose only rows were
+damaged reach the same empty display, and in the export they **must read the
+same**. The document has already promised, unconditionally, that the excluded
+area is excluded down to whether anything is recorded in it; a sentence here that
+told those two apart would take that promise back.
+
+So the sentence states the situation and not its cause: _"There are no entries to
+show here."_ A reintroduction that added _"and some were left out of this
+document"_ passed every paired comparison, because it was said on **both** sides
+of the pair — which is worth recording as a limit of paired testing rather than
+as a near miss. The guard that catches it asserts that no reason is given, not
+that the two sides match.
+
+### And the fault is reported either way
+
+The damaged rows are described whether or not there are entries above them, with
+their kind named and their problem stated, as D-151 requires. Hiding them to tidy
+an empty screen would be the app being neat about a failure — section 36's rule,
+and the reason the "Nothing readable here" panel exists at all.
+
+An empty store still says nothing, because inventing a fault where there is none
+is the opposite error and just as available.
