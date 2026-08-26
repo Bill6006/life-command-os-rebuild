@@ -678,24 +678,62 @@ function historySection(request: ExportRequest, header: ExportHeader): readonly 
    */
   const days = timeline.days
 
-  if (days.length === 0) return [NOTHING_HERE]
+  if (days.length > 0) {
+    const shown = days.reduce((total, day) => total + day.entries.length, 0)
+    lines.push(
+      header.privateIncluded
+        ? `The most recent ${countOf(shown, 'entry', 'entries')}, newest first. Detail from the private domain reads as a placeholder here; the private section below is where it appears in full.`
+        : `The most recent ${countOf(shown, 'entry', 'entries')}, newest first, with the private area left out as stated above.`,
+      '',
+    )
 
-  const shown = days.reduce((total, day) => total + day.entries.length, 0)
-  lines.push(
-    header.privateIncluded
-      ? `The most recent ${countOf(shown, 'entry', 'entries')}, newest first. Detail from the private domain reads as a placeholder here; the private section below is where it appears in full.`
-      : `The most recent ${countOf(shown, 'entry', 'entries')}, newest first, with the private area left out as stated above.`,
-    '',
-  )
-
-  for (const day of days) {
-    lines.push(`**${day.label}** (${day.dayId})`)
-    for (const entry of day.entries) {
-      lines.push(bullet(withOrigin(`${entry.tag}: ${entry.text}`, entry.origin)))
+    for (const day of days) {
+      lines.push(`**${day.label}** (${day.dayId})`)
+      for (const entry of day.entries) {
+        lines.push(bullet(withOrigin(`${entry.tag}: ${entry.text}`, entry.origin)))
+      }
+      lines.push('')
     }
-    lines.push('')
+  } else if (timeline.later > 0) {
+    /*
+     * There is history here; none of it has happened yet — QA-82-009.
+     *
+     * This section used to return `NOTHING_HERE` the moment it had no rows,
+     * which is a claim about the record and was false in three different ways
+     * at once: entries dated after the moment, entries withheld from this
+     * document, and a store whose only rows could not be read. Each of those is
+     * a different thing to tell a reader, and the third one took the damage
+     * report down with it.
+     */
+    lines.push(
+      `Nothing in this document happened at or before the moment it describes. ${countOf(timeline.later, 'entry', 'entries')} in the record ${timeline.later === 1 ? 'is' : 'are'} later than that.`,
+      '',
+    )
+  } else if (timeline.unreadable.length > 0 || timeline.tangled.length > 0) {
+    /*
+     * Deliberately silent about **why** there is nothing to show.
+     *
+     * A store whose only rows are damaged and a store whose readable rows were
+     * all withheld reach this line together, and they must read the same: the
+     * document has already said, unconditionally, that the excluded area is
+     * excluded down to whether anything is recorded in it, and a sentence here
+     * that distinguished the two would take that back. What follows says what
+     * arrived and could not be read, which is the part that is this document's
+     * to report either way.
+     */
+    lines.push('There are no entries to show here.', '')
   }
 
+  /*
+   * Reported whether or not there were rows above it — QA-82-009.
+   *
+   * The early return this used to sit behind meant a history with damage and
+   * nothing displayable said only "Nothing in the record for this", which is
+   * the opposite of true: there is something in the record and the app could
+   * not read it. Diagnostics still counted the rows when it was selected, and
+   * it is off by default, so the ordinary document mentioned the damage
+   * nowhere at all.
+   */
   if (timeline.unreadable.length > 0) {
     /*
      * Named by what they are rather than by where they sit — QA-82-007, round 6.
@@ -721,6 +759,10 @@ function historySection(request: ExportRequest, header: ExportHeader): readonly 
       lines.push(bullet(`${row.kind === 'entity' ? 'An entity' : 'A record'} — ${row.problem}`))
     }
   }
+
+  // A section with nothing at all in it says so rather than being absent, which
+  // is D-091's second invariant: an abstention is written down.
+  if (lines.length === 0) return [NOTHING_HERE]
 
   return lines
 }

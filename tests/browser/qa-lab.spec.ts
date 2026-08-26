@@ -174,6 +174,35 @@ test.describe('a file with damage in it', () => {
     const believes = await openBlock(page, 'What the system believes')
     await expect(believes.locator('.qa-group[data-state="explicit"]')).toBeVisible()
   })
+
+  test('does not blame the file for history that has simply not happened yet', async ({ page }) => {
+    /*
+     * QA-82-009, on the screen it was found on.
+     *
+     * `total` counts entries at or before the moment on screen, so a history
+     * whose entries are all later reports zero — and this screen read that zero
+     * as *nothing could be read*. A week back from this fixture's own clock the
+     * app told the owner his file was the problem, over five records that had
+     * parsed perfectly and were dated later than where he had moved to.
+     *
+     * The fault list itself must survive that, coordinates and all: he has the
+     * file, and the damage is real whatever the clock says.
+     */
+    await openQa(page)
+    await loadScenario(page, 'A file with damage in it')
+    await page.getByRole('button', { name: '−1 week' }).click()
+
+    await page.goto(`${APP}#/timeline`)
+    await expect(page.getByRole('heading', { level: 1, name: 'Timeline' })).toBeVisible()
+
+    const body = await page.locator('main').innerText()
+    expect(body).not.toContain('Nothing in what was loaded could be read')
+    expect(body).toContain('later than the moment on screen')
+
+    // And the damage is still reported, exactly where it was.
+    await expect(page.getByTestId('tl-damaged')).toBeVisible()
+    expect(await page.getByTestId('tl-damaged').innerText()).toMatch(/Record row \d+/)
+  })
 })
 
 test.describe('time travel', () => {

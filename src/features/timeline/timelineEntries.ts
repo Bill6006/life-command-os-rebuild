@@ -121,6 +121,21 @@ export interface TimelineData {
   readonly shown: number
   /** Entries the history holds at or before the moment being viewed. */
   readonly total: number
+  /**
+   * Readable entries the history holds **after** that moment — QA-82-009.
+   *
+   * `total` stops at the moment being viewed, so a history whose entries are
+   * all later than it reports zero — and both surfaces read that zero as
+   * *nothing could be read*. Timeline told the owner his file was damaged when
+   * five records had parsed perfectly and were simply dated next week, and the
+   * export dropped its whole section, including the damaged rows it was meant
+   * to be reporting.
+   *
+   * An empty list has more than one reason. This is the one the other fields
+   * could not distinguish: entries exist, they are readable, and none of them
+   * has happened yet.
+   */
+  readonly later: number
   readonly unreadable: readonly UnreadableRow[]
   /** Records that contradict each other about what replaces what. */
   readonly tangled: readonly UnreadableRow[]
@@ -225,6 +240,15 @@ export function assembleTimeline(situation: Situation, limit = TIMELINE_PAGE): T
   let shown = 0
   let total = 0
 
+  /*
+   * Counted from the same history and described the same way, so "there are
+   * entries, they are just later" is a fact rather than an inference — the
+   * records that produce no row at all must not become entries that exist.
+   */
+  const later = situation.view.history.effective.filter(
+    (record) => record.occurredAt > situation.at && describeRecord(record, context) !== undefined,
+  ).length
+
   for (const record of ordered) {
     const described = describeRecord(record, context)
     // A record whose subject no longer resolves produces no sentence, and
@@ -280,5 +304,5 @@ export function assembleTimeline(situation: Situation, limit = TIMELINE_PAGE): T
           : 'replaces something that is not in the record',
   }))
 
-  return { days, shown, total, unreadable, tangled }
+  return { days, shown, total, later, unreadable, tangled }
 }

@@ -54,14 +54,42 @@ export function TimelineScreen() {
     )
   }
 
-  const nothingReadable = data.total === 0
+  const nothingToShow = data.total === 0
   const damaged = data.unreadable.length + data.tangled.length
+  /*
+   * There is history here; none of it has happened yet — QA-82-009.
+   *
+   * `total` counts entries at or before the moment on screen, so a history
+   * whose entries are all later reports zero — and this screen read that zero
+   * as *nothing could be read*. Move the laboratory clock a week back from a
+   * file that also has damage in it and the app told the owner his file was
+   * the problem, over five records that had parsed perfectly and were simply
+   * dated later than where he had moved to.
+   *
+   * Three empty states, three different things to say. Blaming the file is
+   * only one of them, and it is the one that is hardest to argue with.
+   */
+  const onlyLater = nothingToShow && data.later > 0
 
   return (
     <Screen title="Timeline" lede="Everything that happened, in the order it happened.">
-      {nothingReadable ? (
-        <Panel title={damaged === 0 ? 'Nothing here yet' : 'Nothing readable here'}>
-          {damaged === 0 ? (
+      {nothingToShow ? (
+        <Panel
+          title={
+            onlyLater
+              ? 'Nothing yet at this point'
+              : damaged === 0
+                ? 'Nothing here yet'
+                : 'Nothing readable here'
+          }
+        >
+          {onlyLater ? (
+            <p>
+              There is history here — {data.later} {data.later === 1 ? 'entry' : 'entries'} — but
+              all of it is later than the moment on screen. Nothing has been lost and nothing is
+              unreadable; move forward and it is there.
+            </p>
+          ) : damaged === 0 ? (
             <p>
               Once there is a history — an answer, a suggestion, what came of it — this is where it
               accumulates, oldest at the bottom.
@@ -72,6 +100,11 @@ export function TimelineScreen() {
              * state. An empty Timeline over a file full of damage is not "you
              * have no history", and saying so would be the app being tidy about
              * a failure.
+             *
+             * It must not be a confident *blame* either, which is the other
+             * half and is QA-82-009: this sentence is only true once nothing
+             * readable exists at any moment, so `onlyLater` is checked before
+             * it rather than after.
              */
             <p>
               Nothing in what was loaded could be read. That is a problem with the file rather than
