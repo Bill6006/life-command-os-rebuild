@@ -12,17 +12,19 @@ import {
   type LocalDayId,
   type TimeZoneId,
 } from '../../domain/time'
-import type { Decision } from '../../intelligence/engine'
-import type { InsightsReport } from '../../intelligence/insights'
-import type { Situation } from '../../intelligence/situation'
+import { decide, type Decision } from '../../intelligence/engine'
+import { insightsFor, type InsightsReport } from '../../intelligence/insights'
+import { assembleSituation, type Situation } from '../../intelligence/situation'
 import type { RecordId } from '../../domain/ids'
-import { isPlainObject, type MalformedRow } from '../../domain/validation'
 import { evidenceSourceOf, type ProvenanceSource } from '../../domain/records'
 import { describeRecord, tagFor, type DescribeContext } from '../history/describe'
 import { originOfSources, type RecordOrigin } from '../history/origin'
 import type { HistorySource } from '../memory/memoryContext'
-import { assembleTimeline, TIMELINE_PAGE, type TimelineData } from '../timeline/timelineEntries'
+import { assembleTimeline, type TimelineData } from '../timeline/timelineEntries'
+import type { StoreSnapshot } from '../../memory/store'
+import { buildView } from '../../memory/view'
 import { handoffPrompt } from './handoffPrompt'
+import { withheldFrom } from './scope'
 import { orderSelection, sectionById, type ExportSectionId } from './sections'
 
 /**
@@ -283,48 +285,6 @@ function mayDescribeConcept(definition: ConceptDefinition, header: ExportHeader)
     header.privateIncluded ||
     (definition.privacy !== 'private' && mayName(definition.domain, header))
   )
-}
-
-/**
- * The records this document may count, from any list of them.
- *
- * The same predicate `recordsInScope` applies to the records a section reads,
- * applied to the ones a figure counts. A count is a claim about the record, so
- * a figure computed over the whole store under a header saying an area was
- * left out states the size of the withheld part by subtraction.
- */
-function describableRecords(
-  records: readonly CanonicalRecord[],
-  header: ExportHeader,
-): readonly CanonicalRecord[] {
-  if (header.privateIncluded) return records
-  return records.filter(
-    (record) =>
-      record.privacy !== 'private' && record.domains.every((domain) => mayName(domain, header)),
-  )
-}
-
-/** Whether a record the document may not describe is the one being pointed at. */
-function withheldRecord(id: RecordId, situation: Situation, header: ExportHeader): boolean {
-  const record = situation.view.history.byId(id)
-  // An id nothing resolves is a dangling reference, which is the finding
-  // itself, and it names no area. It stays.
-  if (record === undefined) return false
-  return describableRecords([record], header).length === 0
-}
-
-/**
- * Whether an unreadable row says of itself that it is private.
- *
- * Read from `raw` because there is nowhere else to read it from — the row did
- * not parse. Trusted only to withhold, never to disclose; see the note at the
- * count that uses it.
- */
-function claimsPrivate(row: MalformedRow): boolean {
-  if (!isPlainObject(row.raw)) return false
-  if (row.raw['privacy'] === 'private') return true
-  const domains = row.raw['domains']
-  return Array.isArray(domains) && domains.includes(DOMAIN.privateHealth)
 }
 
 function describeContext(situation: Situation, policy: DisplayPolicy): DescribeContext {
@@ -830,28 +790,18 @@ function diagnosticsSection(request: ExportRequest, header: ExportHeader): reado
    * that is the other half of D-098: a document is read in order, and a
    * correction arriving later does not repair a count already given.
    */
-  const stored = describableRecords(snapshot.records, header)
-  const standing = describableRecords(situation.view.history.effective, header)
-  const displaced = describableRecords(situation.view.history.displaced, header)
-  const entities = header.privateIncluded
-    ? snapshot.entities
-    : snapshot.entities.filter(
-        (entity) => entity.privacy !== 'private' && mayName(entity.domain, header),
-      )
   /*
-   * An unreadable row that *claims* to be private is not counted either.
-   *
-   * The claim is unvalidated by definition — the row failed to parse — so it
-   * is trusted in one direction only: it may remove a row from the count and
-   * can never add one, which is the same asymmetry `childHere` is built on. A
-   * corrupt row therefore cannot force a real private entry to be disclosed,
-   * and a row that says nothing about its area is still counted, because a row
-   * nobody can read cannot be placed in an area and dropping it would hide a
-   * storage fault behind a privacy promise.
+   * Counted straight off the store, because the store is already the one this
+   * document may describe (`withheldFrom`). Round 4 filtered each figure here
+   * and Round 5 showed why that could never be enough: the figures were only
+   * four of the places a withheld record reached. What is left is the count of
+   * what is actually in front of the composer.
    */
-  const unreadable = header.privateIncluded
-    ? snapshot.malformed
-    : snapshot.malformed.filter((row) => !claimsPrivate(row))
+  const stored = snapshot.records
+  const standing = situation.view.history.effective
+  const displaced = situation.view.history.displaced
+  const entities = snapshot.entities
+  const unreadable = snapshot.malformed
 
   const days = new Set(stored.map((record) => localDayIdAt(record.occurredAt, situation.zone)))
   const weeks = new Set(
@@ -918,19 +868,9 @@ function diagnosticsSection(request: ExportRequest, header: ExportHeader): reado
     }
   }
 
-  /*
-   * A dangling supersession on a withheld record is a fact about the withheld
-   * record. The ids are opaque, and that is not the disclosure: the line's
-   * existence says there is an entry in the area this document has just
-   * promised to say nothing about.
-   */
-  const issues = header.privateIncluded
-    ? situation.view.history.issues
-    : situation.view.history.issues.filter(
-        (issue) =>
-          !withheldRecord(issue.record, situation, header) &&
-          !withheldRecord(issue.target, situation, header),
-      )
+  // Resolved from the same store, so a tangle involving a withheld record is
+  // not in this list to begin with.
+  const issues = situation.view.history.issues
   if (issues.length > 0) {
     lines.push('', 'Records that contradict each other about what replaces what:')
     for (const issue of issues) {
@@ -961,33 +901,69 @@ const BUILDERS: Record<
 // The document
 // ---------------------------------------------------------------------------
 
+/**
+ * The same objects, worked out again from the record this document may
+ * describe — D-150, QA-82-007.
+ *
+ * **This is the only place the composer runs anything that decides**, and the
+ * exception is the rule's own logic rather than a hole in it. The rule exists
+ * so the export cannot say something by a means the app does not use: it is
+ * the app's pipeline here, in the app's order, from a store with one thing
+ * taken out of it. What it must never become is a second way of reaching a
+ * conclusion, and it has not.
+ *
+ * Round 4 scoped four renderers and Round 5 found four more, plus the case no
+ * renderer could have fixed: a private reading of the owner's energy outranks
+ * a public one, and then the suggestion, its reason, the limiter, the trace
+ * score and the ranking all carry that reading in another form. There is no
+ * filter over a finished decision that unmakes it.
+ *
+ * `shown` is deliberately not carried across. A session note may not enter an
+ * artefact that leaves the device (D-107, and the guard in
+ * `architecture-guards.test.ts` that keeps every export ignorant of it), and
+ * the surfaces that compose exports do not pass one.
+ */
+function composedFrom(request: ExportRequest, store: StoreSnapshot): ExportRequest {
+  const { situation, decision } = request
+  const moment = {
+    now: situation.at,
+    zone: situation.zone,
+    weekStartsOn: situation.weekStartsOn,
+    domains: situation.domains,
+    concepts: situation.concepts,
+  }
+  const view = buildView(store, moment)
+  const scoped = assembleSituation(view, moment)
+  return {
+    ...request,
+    situation: scoped,
+    // The architecture the owner's own screen used, so the only difference
+    // between the two runs is the record they read.
+    decision: decide(view, moment, { architecture: decision.architecture }),
+    insights: insightsFor(scoped),
+    timeline: assembleTimeline(scoped),
+  }
+}
+
 export function composeExport(request: ExportRequest): ComposedExport {
   const chosen = orderSelection(request.sections)
   const privateIncluded = chosen.includes('private')
 
   /*
-   * The history this document may render, before anything counts it.
+   * What this document is composed from — QA-82-007, and the boundary D-150
+   * settles.
    *
-   * The caller hands in the timeline its own screen shows, which is right for
-   * Timeline and wrong here: that page was chosen from the whole history, so a
-   * withheld record took a slot and every count downstream — the section's own
-   * "the most recent N entries", and `header.records` when Recent record is
-   * the only summarising section chosen — was a count of the document minus
-   * whatever it was not allowed to say (QA-82-007).
+   * Not a filter on each section: four rounds of filtering the sections
+   * somebody had thought about, and every round found the ones nobody had.
+   * The record the document is composed from is the boundary, so a section
+   * cannot get this wrong and a section added tomorrow cannot either.
    *
-   * So the document gets its own page, taken from what it may show. With the
-   * private section deliberately included there is nothing to take out and the
-   * caller's own timeline is used unchanged.
+   * `withheldFrom` returns `undefined` when there is nothing to withhold,
+   * which is almost every history: then these are the objects the owner's own
+   * screens are rendering, passed straight through and not computed twice.
    */
-  const scoped: ExportRequest = privateIncluded
-    ? request
-    : {
-        ...request,
-        timeline: assembleTimeline(request.situation, TIMELINE_PAGE, {
-          showsRecord: (record) => record.privacy !== 'private',
-          reportsUnreadable: (row) => !claimsPrivate(row),
-        }),
-      }
+  const withheld = privateIncluded ? undefined : withheldFrom(request.situation.view.snapshot)
+  const scoped: ExportRequest = withheld === undefined ? request : composedFrom(request, withheld)
 
   /*
    * What this document draws on, not what the store happens to hold.
@@ -1043,6 +1019,26 @@ export function composeExport(request: ExportRequest): ComposedExport {
         ? 'The Private / Sexual Health section is included.'
         : 'The Private / Sexual Health section is left out.',
     ),
+    /*
+     * And what that means for everything below it — D-150.
+     *
+     * The exclusion reaches the record this document is composed from, not
+     * only the rows it prints, because a conclusion drawn from a withheld
+     * record is that record's content in another form. So the app's own screen
+     * can be saying something else at this moment, and a reader who is not
+     * told that would take this for a photograph of it.
+     *
+     * Printed whenever the section is off, whether or not the owner has
+     * anything recorded in that area — an unconditional sentence discloses
+     * nothing, and a conditional one would say there is something there.
+     */
+    ...(header.privateIncluded
+      ? []
+      : [
+          bullet(
+            'Everything below is worked out from the part of the record in this document. The app reads the whole record, so where the area left out matters, what it is saying on his own screen can differ from what is here.',
+          ),
+        ]),
     bullet(
       header.diagnosticsIncluded
         ? 'Diagnostics are included, so a review of how the app itself is tuned is asked for above.'

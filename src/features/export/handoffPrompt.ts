@@ -195,7 +195,7 @@ export function handoffPrompt(options: HandoffPromptOptions): string {
   lines.push(
     options.privateIncluded
       ? 'One more thing: this export includes the Private / Sexual Health section, deliberately. Treat it as ordinary health information, discuss it as directly as anything else here, and do not moralise about it.'
-      : 'One more thing: this export leaves out the Private / Sexual Health section — the entries, and also whether there are any. Nothing below says anything about that area in either direction. Read the silence as a choice about this document, not as an empty part of his life, and do not reason from it.',
+      : 'One more thing: this export leaves out the Private / Sexual Health section — the entries, and also whether there are any. Nothing below says anything about that area in either direction, and nothing below is worked out from it either, so what the app is saying on his own screen right now may rest on something this document does not have. Read the silence as a choice about this document, not as an empty part of his life, and do not reason from it.',
   )
 
   return `${lines.join('\n').trimEnd()}\n`

@@ -278,6 +278,18 @@ test.describe('how the day is set up', () => {
       'Every count below is of the part of the record this document may describe',
     )
     expect(said).toMatch(/- Records still standing after corrections: \d+/)
+    /*
+     * And it says what it was worked out from — round 5.
+     *
+     * The exclusion reaches the record the document is composed from rather
+     * than only the rows it prints, because a conclusion drawn from a withheld
+     * record is that record's content in another form. So the app's own screen
+     * may be saying something else, and the document says so rather than
+     * letting the reader take it for a photograph of Now.
+     */
+    expect(said).toContain(
+      'Everything below is worked out from the part of the record in this document',
+    )
   })
 
   test('says why it does not know, rather than one sentence for every reason', async ({ page }) => {
