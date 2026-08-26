@@ -41,13 +41,62 @@ None.
 
 ### DEF-0096 — a document that left the private area out still reported its size
 
-- Status: **Reopened by QA round 5, and closed again at the store rather than
-  the renderers.** The round 4 repair was correct in the four places it looked
-  and absent in five more; what follows records both passes, because the second
-  is the interesting one.
+- Status: **Reopened twice. Closed at the store in round 5, and at what a
+  retained row carries in round 6.** Three passes are recorded here because the
+  shape of the misses is the useful part.
+- Reopened again by: independent QA round 6 — QA-82-007, five variants of one
+  metadata channel
+- What the second repair missed: `withheldFrom` removes private records,
+  entities and unreadable rows, so every count and conclusion became a fact
+  about the record the owner chose to share. It cannot remove metadata a
+  **retained** row brought with it. A malformed row keeps its own `index`, and
+  Recent record printed `Record row 19`. One private record ahead of it made the
+  same line read `Record row 20`; three made it `Record row 22`; a private
+  _entity_ moved `Entity row 2` to `Entity row 3`. A private row inserted
+  **after** the broken one changed nothing, which is what localised the channel
+  to original positions rather than to detail or totals.
+- Third root cause: `timelineEntries.ts` turned `index + 1` into the row's
+  label and `compose.ts` printed it. The position is a coordinate into the
+  owner's file, and a review export does not describe his whole file.
+- Third repair: the coordinate stays on the owner's own Timeline, where the file
+  is. The export names the row by what it is and says once that the position is
+  on his screen rather than in the document. **D-151.**
+- Why the survivors are not renumbered: `snapshotFromWire` carries a malformed
+  row's `index` through a backup verbatim, so a restored row's position refers
+  to some previous file's array. Subtracting today's removals from it would
+  produce a false claim about the file — the defect D-091 forbids, in place of
+  the privacy one. This is asserted in the regression rather than argued.
+- Third regression: `tests/synthetic/qa-82-round-6.test.ts` — a **sweep** that
+  inserts a private record at every index of the record array and a private
+  entity at every index of the entity array, with an unreadable public row
+  present, and requires the private-off document to be identical every time;
+  the same sweep with an unreadable _private_ row as the thing inserted; a
+  malformed row whose position came out of a backup; the storage fault still
+  reported and still described; the two lists still told apart; the explanation
+  present; opt-in unchanged; and the coordinate still on the owner's screen.
+  Plus an architecture guard that fails the build if any export file reads
+  `UnreadableRow.where`, and a browser assertion that the owner's screen still
+  shows it. Nineteen reintroductions run, all nineteen fail.
+- Why the second regression could not see it: it added private objects to clean
+  histories, or put an unreadable private object last and checked it was gone.
+  None kept an ordinary unreadable row _after_ a removed private one, so nothing
+  ever compared a survivor's label across a removal.
+- Note on a guard that was blind, found by running the mutation: removing the
+  coordinate from the **owner's** screen broke nothing. The architecture guard
+  matched `row.where` in a React `key` prop and was satisfied; no test read the
+  rendered row. The browser suite now asserts the text. That is the fourth time
+  this phase a reintroduction found what reading the test did not.
+- Fixed in: the checkpoint that closes QA round 6. The round 5 and round 4
+  entries below stand as written.
+
+### DEF-0096 (round 5) — the second pass, at the store
+
+- Status: Superseded by the entry above
+- Severity: Blocker
 - Reopened by: independent QA round 5 — QA-82-007, five constructed
-  paired-history cases
-- What the first repair missed: it filtered **renderers**. Diagnostics counted
+  paired-history cases. The round 4 repair was correct in the four places it
+  looked and absent in five more.
+- What the round 4 repair missed: it filtered **renderers**. Diagnostics counted
   the records it was allowed to count, the timeline took its page from what it
   was allowed to show, the supersession list dropped entries pointing at
   withheld records — and `directionSection`, `correctionsSection`,

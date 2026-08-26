@@ -4775,3 +4775,53 @@ and never a storage decision is intact. Deliberate opt-in restores the detail
 _and_ the counts. No public section is disabled, no genuine unknown is removed,
 and no private evidence is wired into intelligence — Q8 and the Reach package
 are untouched.
+
+---
+
+## D-151 — A document that withholds rows carries no coordinate into the file
+
+**Phase:** 82 (QA round 6) · **Status:** Active
+
+D-150 moved the export's boundary to the store it is composed from, and that
+held for everything the store holds. What it could not reach is metadata a
+**retained** row brought with it.
+
+A malformed row keeps its own `index`, and Recent record printed it as
+`Record row 19`. Put one private record ahead of that broken row and the same
+line reads `Record row 20`; put three and it reads `Record row 22`. The text
+names nothing private, and the number is a count of what was withheld — in a
+document that has just promised to say nothing about whether anything is
+recorded there.
+
+**The survivors are not renumbered, and the reason is a fact rather than a
+preference.** `snapshotFromWire` carries a malformed row's `index` through a
+backup verbatim: a restored row's position refers to the array of whatever file
+it came out of, which may have nothing to do with today's. Subtracting today's
+removals from that would produce a number that means nothing rather than a safer
+one — a false claim about the file, which is the defect D-091 forbids rather
+than the privacy one it was meant to fix.
+
+**The rule:** a row's position in the file is a coordinate into the file, and it
+belongs where the file is. The owner's Timeline keeps it, because he has the file
+and a row he cannot find is no use to him. The review export names the row by
+what it is — _"A record — could not be read — 8 things wrong with it"_ — and says
+once, in the same list, that the position is on his own screen rather than here.
+
+**Dropped in both directions**, not only when something is withheld. A position
+in a file the reader does not have was never worth much to them, and one rule is
+easier to keep than two. `tests/unit/architecture-guards.test.ts` fails the build
+if anything under `src/features/export/` reads the field again.
+
+**And the storage fault is still reported.** The count is honest, the kind of row
+is named, and what was wrong with it is described. Hiding the damaged rows to
+make a privacy assertion pass would be the opposite defect: a fault concealed
+behind a promise that was never about faults.
+
+### The same shape, three rounds running
+
+D-098 said an excluded area is excluded from the metadata. D-148 said every
+section inherits that. D-150 said the record a document is composed from is the
+boundary. This says the last part out loud: **what a retained row carries is
+metadata too.** Each round the rule was right and its reach was one layer short,
+and the thing that found the next layer each time was a paired document rather
+than a reading of the code.

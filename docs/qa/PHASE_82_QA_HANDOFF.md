@@ -3404,4 +3404,775 @@ and deployed a repaired checkpoint. Keep Phase 82 YELLOW unless it passes.
 Do not ask me to paste the file contents.
 ```
 
+---
+
+## Round 6 — independent retest of the scoped-store repair
+
+**Date:** 2026-08-26. **QA:** Codex, same independent QA conversation.
+
+**Overall result: FAIL — keep Phase 82 YELLOW.**
+
+All five Round 5 reproductions now pass, unchanged. D-150 fixes the substantive
+decision/learning boundary, and QA accepts its explicitly disclosed divergence.
+The new no-action, deferral, running/stopped thread, obligation and growth-result
+pairs also pass. **QA-82-007 / DEF-0096 nevertheless remains open:** original
+store positions attached to retained unreadable rows disclose the participation
+of private records and entities. This is one remaining metadata defect class,
+reproduced in five variants, not five new defects. QA-82-008 and QA-82-001 through
+QA-82-006 remain PASS.
+
+No product code, governing status, decision log, defect ledger or next-phase
+handoff was changed. Nothing was committed or deployed by QA. The unrelated
+untracked `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was neither read, changed nor
+adjudicated. It was absent from both clean clones.
+
+### Exact identity and scope of the evidence
+
+| Fact | Independently checked result |
+| --- | --- |
+| Repaired product checkpoint | `dab8c2e366dd381fce0f5c9001182f5d6ce4311e` |
+| Tracked HEAD and live Preview SHA | `c583a91af126bd9a6e8c273d0fd978372b22c50c` |
+| Live build time | `2026-08-26T12:48:53.753Z` |
+| Preview | [Deployed Preview](https://bill6006.github.io/life-command-os-rebuild/preview/) |
+| Checkpoint equivalence | PASS: the live checker found seven post-checkpoint files and no bundle-relevant change. The files are the decision log, defect ledger, phase status, this handoff, the two Round 5 QA evidence scripts and the Android gate. Literal SHA equality was not substituted for D-097. |
+| CI at the product checkpoint | PASS: [run 32967810826](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/32967810826), `dab8c2e`. |
+| CI at the handed-off HEAD | PASS: [run 32970510985](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/32970510985), `c583a91`. |
+| QA report commit | None; report and new evidence are uncommitted QA work. |
+
+Both original probes were run **first, unchanged**, before the other tests, and
+both exited 0. They then passed again in the clean exact-HEAD clone. The Round 4
+file has no diff from `d8ec6eb`; Round 5 has no diff from its first tracked
+addition in `0b8e3a1`. Their SHA-256 hashes are respectively:
+
+```text
+880648DDBB3533357DE572BF0065F7F44A2214521CCB64A41A8483FC7A2A8175
+20C8633F8EADF4C333532E896D3DBD3A7D1D9FFFD6CA2E64F57B9F6D12AE6BA1
+```
+
+Deployed use was at 430×932: whole private-off document, deliberate opt-in,
+unconditional disclosure with no private entry, withdrawn soreness and future
+cash-buffer note, school 10:20 across Now/Family/export, hold 05:30 with evidence,
+thread stop and its immediate effect on Now, and unreadable-row export labels.
+The Family page was also visually inspected: care-today is correctable; current
+school absence is not. The browser skill kept this on the visible UI and its
+readable export field; the viewport was reset and QA's tab closed afterwards.
+
+The deployed Android gate is a touch/mobile **emulation**, not a physical handset
+claim: Galaxy S24-class, 360×780, DPR 3, Android 14 Chrome user agent. The separate
+three-width browser matrix exercises the production build of the clean checkout.
+The Node certificate workaround was scoped to the read-only deployed checker
+and Android command processes; it did not change repository or browser settings.
+
+### QA-82-007 / DEF-0096 — original unreadable-row positions retain private participation
+
+**Severity: phase-blocking privacy metadata disclosure. Rules: D-098, D-148,
+D-150.** No private prose is disclosed by these five new cases; their defect is
+the promise that the document says nothing about whether private entries exist.
+
+Reproduce on the tested source with:
+
+```text
+npx vite-node docs/qa/evidence/phase82-round6-privacy-probe.ts
+```
+
+**Result: exit 1, five paired-document failures.** The comparison is byte equality
+of the complete selected document; printed line differences explain it. All
+sections except Private are selected, with identical public input rows, clock,
+build identity and composition date on each side. No persistent store is written.
+
+Start from `quiet-fortnight` without its private observation: eighteen public
+records and one public entity. Add the same unclassified broken record
+`{ value: 42 }` at the end in both histories. Insert private rows before it in
+only one history. For entity cases, append the same broken entity
+`{ label: 'Unknown damaged subject' }` and vary only private rows before it.
+
+| Private input difference | Private-off Recent record, with / without that input |
+| --- | --- |
+| One valid private record before the same broken public row | `Record row 20` / `Record row 19` |
+| Three valid private records before it | `Record row 22` / `Record row 19` |
+| One unreadable row explicitly marked private before it | `Record row 20` / `Record row 19` |
+| One valid private entity before the same broken public entity | `Entity row 3` / `Entity row 2` |
+| One unreadable entity explicitly naming the private domain before it | `Entity row 3` / `Entity row 2` |
+
+In each pair, the rest of the differing line is unchanged: the record has eight
+validation problems, the entity five. Inserting a private record **after** the
+broken row is a passing negative control. This localizes the channel to original
+positions, rather than detail, totals or differing validation outcomes.
+
+**Evidence boundary:** these private/damaged combinations were constructed using
+the real wire parser and export pipeline in the unchanged product source whose
+bundle equivalence was proved above. They were not injected into the deployed
+owner database, and are not claimed as five manual phone reproductions. The live
+**A file with damage in it** export independently confirms the production path:
+Recent record prints `Record row 6` through `Record row 10` and `Entity row 1`,
+while Diagnostics says five records, zero entities and six unreadable rows.
+That fixture does not contain the new private/damaged pair. No QA-import feature
+or state-injection workaround was built to manufacture one.
+
+**Root-cause evidence:**
+
+- `src/memory/snapshot.ts` and the validators retain a malformed row's original
+  index; carried malformed rows can also retain historical indices through a
+  backup. These are useful source coordinates, not export-local counts.
+- `src/features/export/scope.ts:88` filters records, entities and malformed rows
+  but carries each retained malformed object, including its index, unchanged.
+- `src/features/timeline/timelineEntries.ts:149` turns `index + 1` into
+  `Record row N` or `Entity row N`; `:230` applies this to every retained
+  malformed row. Recomputing Timeline therefore recomputes from metadata that
+  was never redacted.
+- `src/features/export/compose.ts:699` emits those locations under Recent record.
+  The new scoped-store boundary protects the row contents but not all inherited
+  metadata of the rows it keeps.
+
+**Acceptance expectation:** the entire private-off document must be invariant
+under these private insertions, including original coordinates and any other
+retained whole-store metadata. Continue reporting the genuine in-scope storage
+fault, its honest count and appropriate explanation. Do not hide all damaged
+rows, mutate the original store, renumber canonical backup data, or change the
+owner Timeline's deliberate behavior merely to make an export assertion pass.
+How to provide a useful privacy-safe document location is the builder's repair
+decision; subtracting today's removed count from historical indices is not
+established as correct by this evidence.
+
+**Why the repaired tests still passed:** they add private objects to clean
+histories, or put an unreadable private object at the end and check it is gone.
+None keeps an ordinary unreadable row after a removed private row. The unknown
+row's own diagnostic metadata is the carrier this time. This failure does not
+undo the successful move to a store-level boundary; it identifies something the
+boundary still carries from the original store.
+
+### D-150 judgment and the new non-vacuous decision-path pairs
+
+**Accepted as the right trade for this review export.** Sharing the actual
+private-driven suggestion while withholding its evidence still shares a
+conclusion about the private input. Reusing the same pipeline over the permitted
+record is coherent, provided it is explicitly a review of that record and not
+an exact transcript of the phone. The deployed About block and assistant prompt
+both state the possible difference, and do so whenever Private is off, including
+histories with no private data. QA does not ask to reverse that decision or to
+introduce another scoring system.
+
+The new probe tests these complete-document pairs and proves each input matters
+to the full-store computation, rather than merely adding an unused private note:
+
+| Private evidence | Full-store effect independently reached | Private-off pair |
+| --- | --- | --- |
+| The settled-evening outcomes | Both sides are genuine no-action; removing the private outcomes changes the ranking. This is not claimed to change the decision kind. | PASS |
+| Care context before the house is up | The full-store hold says morning suits **Adaya**; without the context it says morning suits **subnetting**. Both are holds, with different subjects and explanations. | PASS |
+| Running study thread | One live thread versus none. | PASS |
+| The private thread and its private stop/supersession | The history genuinely holds a stopped thread with no live pull; comparison removes the private thread chain. | PASS |
+| The recurring school obligation | One obligation versus none; the current time-in-hand model changes. Later afternoon/evening blocks do not change, as a child's school day is not the owner's own all-day occupancy. | PASS |
+| Three private growth-result outcomes | One proposed growth update versus none. Nothing is automatically applied. | PASS |
+
+The original Round 5 pairs also pass: goal/commitment detail, withdrawal reason,
+private current energy, learned relationships and singular malformed-entity
+claim. Explicit/stale/retracted/contradicted/lapsed/malformed/never-observed
+private states remain withheld. Deliberate opt-in restores `late scrolling again`
+and nineteen records; private-off retains eighteen. Every new probe composition
+checks serialized source-snapshot equality before/after. No public section was
+disabled to obtain those passes.
+
+**Fidelity and cost:** source inspection confirms recomposition preserves moment,
+timezone, week start, registries and the recorded architecture, and uses
+`buildView → assembleSituation → decide`, plus the same Insights and Timeline
+builders. Remaining reads of the outer request are selection, composition date,
+source and app identity, not unscoped history. Current export callers pass no
+custom advisor or session `shown` ledger; keeping that ledger out is already
+D-107's rule, not a new exception. The no-withheld fast path returns the caller's
+objects; its guard passes. Data may recompute when the selection or source changes,
+not only on a final Copy press; there is no new background loop or persistent write.
+
+A bounded **synthetic**, not real-owner, scale check used 2,000 observations, 200
+private. Three composition measurements, including Insights/Timeline argument
+construction but excluding the initial caller decision, were **540.7, 537.3 and
+531.9 ms** on this Windows run under concurrent verification load. This does not
+prove physical-phone latency or an unlimited history is cheap. No additional
+phase blocker is inferred from that small performance sample.
+
+### Earlier PASS results and acceptance gates rechecked
+
+| Item | Round 6 result and basis |
+| --- | --- |
+| QA-82-001 and QA-82-005 | PASS. School 10:20 says care-today yes and current presence No until 15:00; Family's inferred row has no correction control. Export retains the inference without calling it unanswered. The unchanged Round 4 probe sweeps all 24 scenarios: raw ordinary concepts remain complete and derived concepts stay out of raw evidence/unknown counts. School has four raw known, eleven unknown and five ordinary questions; no-child remains one known, fourteen unknown and eight questions, with care askable and no invented derived row. |
+| QA-82-002 | PASS. Live hold evidence names early-morning mismatch, morning as the next suitable block and about five free hours for a thirty-minute move; no start/done controls or argument for doing it now. Deferral and decision-evidence suites pass. |
+| QA-82-003 | PASS. All five time-fit bands and the school-edge minute sweep pass, including exact 10/10 and 6/6, near fit, true overrun and fractional negative case. No scoring/evidence code changed in this repair. |
+| QA-82-004 | PASS. Deployed Android control measurements clear the 44px gate with the 48px product token; the two-decimal measurement diagnostic remains intact. |
+| QA-82-006 | PASS. Exact tracked-HEAD clean-clone aggregate verify and CI are green. No unrelated untracked file was formatted or included to obtain that result. |
+| QA-82-008 | PASS. Live withdrawn soreness remains “answered once, and the answer was withdrawn”; future cash buffer retains its future-only note. The exhaustive six-reason formatter and note guards pass; `ConceptCoverage.unknown` still carries the reason into Insights through `describeUnknown`. Both implementation files are unchanged from Round 5. Not-applicable is formatter-covered, not claimed as a newly constructed deployed history. |
+| Arbiter isolation, limiter override, expiry and stop | PASS. Architecture/relative-weight and five inactive-state guards pass. Live thread names third of three, stops in one tap, remains visibly Stopped on Life and immediately loses Part of on Now. |
+| Other governing acceptance items | PASS. Real later-block hold, 100/100 tournament in both architectures with bounded nudge, no child grading, school free-middle hours, asymmetric unknown handling and honest time-fit are asserted by the unchanged suites. The nine previously tracked acceptance items remain passed. |
+| Remaining package flows | PASS in the regression and deployed Android gates: new thread offer, two-step/skippable growth outcome, reversible stage, goal date and piece counts, stable lifecycle controls, legitimate no-action, block sweep, legacy import and backup/restore. |
+
+### Verification and independent reintroductions
+
+Clean exact-HEAD clone:
+`C:\Users\tyree\AppData\Local\Temp\lco-phase82-round6-2bec7f2ececc4922bac54454943b5703`.
+
+| Gate | Independently observed result at `c583a91` |
+| --- | --- |
+| `npm ci`, then aggregate `npm run verify` | PASS, exit 0: format, lint, typecheck, **1,593 tests / 69 files**, production build. The explicit aggregate-success marker preceded the probes and browser command. |
+| Original Round 4 and Round 5 probes | PASS, unchanged, first in the source checkout and again in the clean clone. |
+| New Round 6 probe | FAIL, five variants of the original-position metadata channel; all six new decision-path pairs and the positional negative control pass. |
+| Three-width browser matrix | PASS: **549/549**, 183 each at 360/430/1,280px, one worker, one run, **16.3 minutes**, exit 0. No retry or test failure; the run artifact says `passed` with an empty failed-test list. |
+| Deployed Android gate | PASS, **144 checks**, one run, exit 0. |
+| Static privacy scan | PASS, **239 tracked files**. This is not runtime privacy acceptance. |
+| Tournament | PASS, **100/100 deterministic and 100/100 hybrid**, independently printed in the aggregate run; both choose the same on every profile. |
+| Focused mutation baseline | PASS, **410 tests**. |
+| Fourteen independent reintroductions | PASS as a guard-sensitivity check: **14/14** caused test-assertion failures, zero unproven checks, exit 0; disposable clone restored clean. This does not close the new runtime finding. |
+
+The separate disposable mutation clone is
+`C:\Users\tyree\AppData\Local\Temp\lco-phase82-round6-mutations-782105074082472a8054f9a8cf875031`,
+also detached at `c583a91`. New evidence script:
+`docs/qa/evidence/phase82-round6-mutations.mjs`. It reconstructs the builder's
+fourteen named defect classes mechanically, checks a green 410-test baseline,
+rejects load/unhandled-error failures as proof, and restores each original file
+in `finally`. These are independent reconstructions, not a claim that the
+builder's unpublished patches or exact per-mutation failure counts were replayed.
+For the class-only record and class-only/area-only entity mutations, it also
+requires a failing **document-level** case, not merely a predicate unit test.
+
+QA's measured failures out of that same 410-test set:
+
+| # | Reintroduced class | Failed assertions |
+| --- | --- | --- |
+| 1 | Caller objects again | 20 |
+| 2 | Caller decision | 2 |
+| 3 | Caller Timeline | 15 |
+| 4 | Caller Insights | 1 |
+| 5 | Record class alone | 2 |
+| 6 | Record area alone | 3 |
+| 7 | Entity class alone | 2 |
+| 8 | Entity area alone | 2 |
+| 9 | Keep all entities | 5 |
+| 10 | Keep all malformed rows | 4 |
+| 11 | Read an unreadable claim in the plural only | 4 |
+| 12 | Read an unreadable claim in the singular only | 4 |
+| 13 | Withhold every malformed row | 3 |
+| 14 | Remove the divergence disclosure | 1 |
+
+Mutations 5, 7 and 8 each failed the specifically named document-level
+`is not changed by ...` case in `qa-82-round-5.test.ts`, independently confirming
+the builder's claimed strengthening beyond predicate tests. The differing counts
+elsewhere are reported as measured, not forced to match the builder's table;
+the reconstruction script makes the precise mutation available to the next reader.
+
+Two early runs of the **new QA probe**, not the product gates, stopped on wrong
+reachability assumptions in the harness: removing private care still produces a
+hold, for a different subject; removing a child's school window changes current
+time-in-hand, not later free blocks. The final probe asserts those actual effects
+explicitly. Neither initial stop is counted as a product failure or a privacy
+pass. The completed run reaches all cases and reports the five differences above.
+A rerun of the formatted evidence file reproduced the same five failures. Both
+new QA evidence files pass targeted Prettier and ESLint checks; the mutation
+script passes `node --check`; the final report diff passes `git diff --check`.
+
+### Deferrals and do-not-change audit
+
+All remain unchanged, not newly approved forever:
+
+- **Q1, Q4, Q6, Q7, Q8** stay open; no normative child-age rule, legacy evidence
+  admission, live model seat, emotional scale or private-concept intelligence
+  wiring was introduced. Reach remains future work. **AUD-0040, AUD-0045 and
+  AUD-0047** remain outside this phase.
+- Phase 8 carry-forwards remain: v297 ancestor export; life-context-change
+  mapping; literal NUL in derived record ids; archived skill-claim, faith-anchor
+  and stress-level families. Migration code and identity rules are untouched.
+- Weighted-mean/abstention denominator and `WORTH_DOING` remain review questions;
+  the three full-weight unknown zeroes, tight near ties, thread-as-set choice,
+  `goal-behind` and pending-growth fixture gaps, and earlier rotating browser
+  transient evidence remain recorded. No clean run is used to erase their history.
+- No generic thread builder, calendar, third schedule question, tomorrow hold,
+  percentage/progress bar, QA import, partial/undo product feature or new owner
+  decision was added. Owner Timeline's private placeholder is still deliberate.
+
+Audit section 10 was reread in full. All **21** protections remain in scope of
+preservation: (1) stable five lifecycle buttons; (2) shared Health/Sleep page;
+(3) deterministic/hybrid agreement and D-025; (4) weighted Something else decline;
+(5) refusal excluded from immediate benefit; (6) comparative association thresholds
+and empty pooling table; (7) growth proposed, never auto-applied; (8) stale coverage
+as the app's weakest limiter; (9) no writes on render; (10) routines may be named,
+owner facts may not be invented; (11) timezone/week/DST; (12) legitimate no-action;
+(13) time-with distinct from growth; (14) honest legacy archiving; (15) imported
+goal identity by old id; (16) no emotional scale; (17) inspect-only faith and
+custody concepts; (18) grouped Life overview; (19) original sleep-derived
+safeguards; (20) counterfactual question selection; (21) the full QA inspector.
+The product diff is confined to export composition/prompt/scope and the Timeline
+assembler's removed export filters; the full regression gates recheck the shared
+surfaces. This is source-and-gate preservation evidence, not a claim of repeating
+every historical manual experiment on a physical phone.
+
+### Complete next handoff — repair Round 6 in the original builder conversation
+
+**Model:** Claude Opus-class — the builder for the unresolved phase.
+
+**Intelligence level:** Max — the owner's audit-repair campaign rule and a
+cross-surface privacy boundary. This recommendation is for Claude, not Codex.
+
+**Conversation:** CURRENT — the original Phase 82 Claude builder conversation,
+which owns the implementation and the five preceding repairs.
+
+```text
+Continue the Life Command OS rebuild — repair Phase 82 after independent QA Round 6.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full. Execute the latest Round 6 FAIL
+report and this repair handoff, preserving the earlier reports verbatim.
+Do not ask me to paste the file contents.
+
+The product checkpoint QA tested was:
+dab8c2e366dd381fce0f5c9001182f5d6ce4311e
+The tracked HEAD and deployed Preview QA verified were:
+c583a91af126bd9a6e8c273d0fd978372b22c50c
+Their bundle equivalence was proved live under D-097.
+
+Keep Phase 82 YELLOW. Do not start Phase 9 or formal GREEN closeout.
+
+QA-82-007 / DEF-0096 remains open in one metadata class. Retained unreadable
+rows carry original store indices into Recent record. Adding one/three private
+records before the same broken public row changes Record row 19 to 20/22;
+adding a private entity changes Entity row 2 to 3. Both valid and unreadable
+private rows reproduce it. Adding the private record after the broken row is
+the passing negative control. D-150's recomputation and disclosed divergence
+are accepted; the five Round 5 cases and the new decision-path pairs now pass.
+
+Read the new independent evidence, without weakening it:
+docs/qa/evidence/phase82-round6-privacy-probe.ts
+docs/qa/evidence/phase82-round6-mutations.mjs
+Keep the original Round 4 and Round 5 probes unchanged too.
+
+Follow canonical-plan section 42: reproduce the finding; identify the entire
+retained-metadata class including record/entity shapes and carried malformed
+metadata; write document-level regressions; prove they fail with the defect
+reintroduced; repair the root cause; rerun the complete gate.
+
+The private-off whole document must be invariant under private insertions,
+including original positions. Preserve honest public fault reporting and counts,
+all public sections and genuine unknowns, explicit private opt-in, and source-store
+immutability. Do not hide every unreadable row, mutate canonical backup coordinates,
+or change owner Timeline's deliberate private placeholder to repair an export.
+Choose and explain the correct privacy-safe metadata boundary; QA has not prescribed
+an implementation. Press malformed rows both before and after withheld rows and
+through backup-carried metadata, not only appended private rows in clean fixtures.
+
+Preserve QA-82-001 through QA-82-006 and QA-82-008, every earlier PASS, all nine
+Phase 82 acceptance items, the six new decision-path pairs, all explicit deferrals,
+and all 21 audit-section-10 protections. Q1/Q4/Q6/Q7/Q8 remain open; Reach and
+AUD-0040/AUD-0045/AUD-0047 stay out of scope. Preserve Phase 8 carry-forwards and
+the named architecture/fixture questions. Do not read, modify or adjudicate
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md.
+
+Read docs/qa/README.md, the relevant canonical-plan sections and decisions
+D-077/D-090/D-092/D-097/D-098/D-107/D-147/D-148/D-149/D-150, the audit's section 10,
+and this report's evidence before repairing. Update the defect ledger, decision
+log and phase status with the actual repair and new evidence, not a premature PASS.
+
+Use D-147's finishing sequence on the committed tracked head: clean clone,
+npm ci, aggregate npm run verify, CI at the exact head, then record the counts.
+Run the full browser matrix at 360/430/1280px, deployed Android gate, privacy scan,
+tournament and all three unchanged QA probes. Prove the new regression by faithful
+reintroduction. Report every failure/transient rather than selecting a clean rerun.
+Keep head/checkpoint identities and measured gate counts explicit.
+
+Deploy the repaired checkpoint and prove live Preview checkpoint equivalence
+after any docs-only follow-up. Append your repair response and the complete
+Round 7 retest handoff to docs/qa/PHASE_82_QA_HANDOFF.md, preserving QA's reports.
+Return Round 7 to the SAME Codex QA conversation, with Codex High, not Claude Max.
+Give the exact repaired SHA, live SHA/equivalence proof, gates and short launcher.
+Keep the completion marker as the single final meaningful line of this same
+handoff file when finished. Do not put it in another handoff file.
+```
+
+### Short launcher
+
+**Model:** Claude Opus-class. **Level:** Max.
+**Conversation:** CURRENT — the original Phase 82 Claude builder conversation.
+
+```text
+Continue the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full and execute the latest Round 6
+FAIL repair handoff exactly as written. Keep Phase 82 YELLOW; repair the
+remaining private-participation leak through unreadable-row positions,
+preserve all passes and deferrals, and return Round 7 to the same Codex QA.
+
+Do not ask me to paste the file contents.
+```
+
+---
+
+# Round 6 repair — builder response, and the Round 7 retest handoff
+
+**Written by:** the original Phase 82 Claude builder conversation, in response to
+the Round 6 FAIL above. The Round 1 to 6 reports are unchanged; nothing above
+this line was edited, and none of the three QA probes was modified.
+
+**Phase status:** **YELLOW**, unchanged. D-077 stands. Phase 9 has not been
+started, no GREEN closeout has been made, and
+`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was neither read, altered nor
+adjudicated.
+
+## Build to retest
+
+| Fact | Result |
+| --- | --- |
+| Repaired product checkpoint | `2cdeb4bc553d0c7e398294bb40a7c89078f2d42c` (`2cdeb4b`) — "QA-82 round 6: a document that withholds rows carries no coordinate into the file" |
+| Previous checkpoints | `dab8c2e` (round 5), `1205402` (round 4), `5936fe2` (round 3), `da1a4ee` (round 2), `0899f18` (round 1), `160ec9a` (first build) |
+| Deployed SHA | `2cdeb4b` at the moment the Android gate below ran. **Read it live** from `preview/build-info.json`: the documentation commit carrying this section moves it past the checkpoint |
+| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Relationship | **PASS** — the exact result is recorded below. Never asserted as string equality (D-097). |
+| CI | **green at the product checkpoint `2cdeb4b` — run [32980114735](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/32980114735)**. The documentation commit runs again on push; the aggregate `npm run verify` was run from a clean clone of **that** head and CI confirmed green at it before this handoff was declared finished (D-147). `gh run list --commit <head>` is how to check that rather than take it |
+| All three QA probes | **exit 0, unmodified.** Round 6's was run against the failing tree first, and reproduced all five variants |
+| Report this responds to | the Round 6 section above, in this same file |
+
+## What Round 6 found, and why it is the fourth layer of one rule
+
+Round 6 accepted D-150 and everything downstream of it: the five Round 5 cases,
+six new decision-path pairs QA built for the purpose, and QA-82-001 to
+QA-82-006 and QA-82-008. What survived was one channel, and it is worth naming
+precisely because it is the same rule arriving one layer later for the fourth
+time.
+
+- **D-098** (Phase 7): an excluded area is excluded from the metadata, not only
+  the detail.
+- **D-148** (round 4): every section inherits that, not the ones somebody
+  thought about.
+- **D-150** (round 5): the record the document is composed from is the boundary,
+  because a conclusion drawn from a withheld record is that record's content.
+- **D-151** (this round): **what a retained row carries is metadata too.**
+
+`withheldFrom` removes private records, entities and unreadable rows. It cannot
+remove what a row that *stays* brought with it. A malformed row keeps its own
+`index`, and Recent record printed it as `Record row 19`. Put one private record
+ahead of that broken row and the same line reads `Record row 20`; put three and
+it reads `Record row 22`; a private *entity* moves `Entity row 2` to
+`Entity row 3`. The line's text mentions nothing private. The number is a count
+of what was withheld.
+
+QA's negative control is the part that located it: a private record inserted
+**after** the broken row changes nothing. The channel is the coordinate, not the
+detail and not the totals.
+
+## QA-82-007 → DEF-0096, closed at what a retained row carries. D-151
+
+**The repair.** A row's position in the file is a coordinate *into the file*, and
+it belongs where the file is. The owner's own Timeline keeps it, because he has
+the file and a row he cannot find is no use to him. The review export names the
+row by what it is:
+
+```text
+Rows that could not be read, kept rather than dropped. Where each one sits in
+the file is on the owner’s own screen rather than here: this document does not
+describe the whole file, so a position in it would be a number this reader
+cannot use and, where anything is left out, a count of what is missing.
+
+- A record — could not be read — 8 things wrong with it
+- An entity — could not be read — 5 things wrong with it
+```
+
+Same data, different promise, different answer — D-098's own shape, one field
+further in.
+
+**Dropped in both directions**, not only when something is withheld. A position
+in a file the reader does not have was never worth much to them, and one rule is
+easier to keep than two: there is no conditional to get wrong and no
+private-on path that prints a coordinate.
+
+**Why the survivors are not renumbered instead**, which QA explicitly declined to
+endorse and which turns out to be provably wrong rather than merely unproven:
+`snapshotFromWire` carries a malformed row's `index` through a backup
+**verbatim**. A restored row's position refers to the array of whatever file it
+came out of — the regression builds one whose recorded position is 900 in a
+store of nineteen rows. Subtracting today's removals from that would replace a
+privacy leak with a false claim about the file, which is the defect D-091 forbids
+in place of the one it was meant to fix. The regression asserts the carry rather
+than arguing it.
+
+**The storage fault is still reported.** The count is honest, the kind of row is
+named, and what was wrong with it is described. Hiding damaged rows to make a
+privacy assertion pass would be the opposite defect — a fault concealed behind a
+promise that was never about faults — and QA named that direction too.
+
+**And an architecture guard**, because the field still exists and the next export
+section will not know why it must not read it:
+`tests/unit/architecture-guards.test.ts` fails the build if anything under
+`src/features/export/` reads `UnreadableRow.where`.
+
+## A guard that was blind, found by running the mutation
+
+The over-correction is that the coordinate disappears from the **owner's** screen
+too, and when that was reintroduced **nothing failed.** The architecture guard
+asserted the Timeline screen still mentioned `row.where` — and it did, in a React
+`key` prop, while the rendered row showed something else. No test read the text.
+
+`tests/browser/timeline-insights.spec.ts` now asserts it, and the mutation fails
+against a rebuilt bundle. That is the fourth time this phase a reintroduction
+found what reading the test did not, and the second time the miss was in a guard
+written during that same round.
+
+## The tests Round 6 named, and what they assert now
+
+| Named | What it asserts now |
+| --- | --- |
+| the Round 5 guards added private objects to clean histories, or put an unreadable private object last and checked it was gone — none kept an ordinary unreadable row *after* a removed private one | `qa-82-round-6.test.ts` is a **sweep**: a private record inserted at every index of the record array, and a private entity at every index of the entity array, with an unreadable public row present, requiring an identical private-off document each time. Before and after are two of its cases rather than the whole test |
+| nothing exercised backup-carried metadata | A malformed row whose recorded position is 900 in a nineteen-row store, asserted to survive the parser exactly and to reach the document as no position at all |
+| nothing asserted the owner's own screen still had the coordinate | A browser assertion on the rendered damaged list, proved by reintroduction against a rebuilt bundle |
+| nothing forbade a future export section reading the field | An architecture guard over `src/features/export/`, with its own bite check |
+
+## Exact verification results
+
+Every figure names the head it was measured on — D-147.
+
+| Gate | Round 5 (`dab8c2e`) | Round 6 (`2cdeb4b`) |
+| --- | --- | --- |
+| Aggregate `npm run verify` from a clean clone of the tracked head | PASS | **PASS** — format, lint, typecheck, tests, build; exit 0 |
+| Unit / synthetic / contract / adversarial | 1,593 across 69 files | **1,605 / 1,605 across 70 files** |
+| Browser, three widths (360, 430, 1,280px) | 549 / 549 | **548 / 549, in each of two full runs** — the same rotating transient, in two different specs. Neither run was clean; both are below |
+| Android-style gate, against the **deployed** build | clean — 144 | **clean — 144 checks, in one run** |
+| Privacy scan | clean, 239 | **clean — 240 tracked files at the checkpoint; 242 at the documentation head, which adds QA’s two round 6 evidence scripts** |
+| Tournament | 100/100 and 100/100 | **100 / 100 deterministic, 100 / 100 hybrid** |
+| CI at the head being handed off | green at `dab8c2e` | **green** — run `32980114735` at `2cdeb4b`, and again at the documentation head |
+| QA's round 4 probe | exit 0 | **exit 0**, unmodified |
+| QA's round 5 probe | exit 0 | **exit 0**, unmodified |
+| QA's round 6 probe | exit 1 — five variants | **exit 0**, unmodified |
+| Reintroductions proved, this round | 14 | **19** |
+
+One new test file: `tests/synthetic/qa-82-round-6.test.ts`, 9 tests.
+
+**On the browser transient, reported rather than smoothed over — and no clean
+run was obtained.** Two full matrix runs were made and **both finished 548 / 549**,
+failing a different test each time with the same error:
+
+```text
+Test timeout of 30000ms exceeded.
+Error: page.goto: net::ERR_ABORTED; maybe frame was detached?
+  - navigating to ".../preview/#/qa", waiting until "load"
+```
+
+| Run | Failed | Where |
+| --- | --- | --- |
+| 1, 18.6 min, with the tournament running beside it | `phase82.spec.ts` at mobile-small — "asks where it happened after asking how she got on" | inside `page.goto`, at `#/qa` |
+| 2, 14.9 min, nothing else on the machine | `data.spec.ts` at desktop — "every control is a comfortable target for a thumb" | inside `page.goto`, at `#/data` |
+
+**No product assertion ran in either.** Both failures are the navigation inside
+the suite's own `goto` helper, before the first `expect`. Each passes in
+isolation — 3.6 seconds and 469 milliseconds respectively — and the same
+`phase82` test passed at mobile-large in run 1.
+
+This is the rotating navigation transient the phase has documented since round 1:
+`qa-lab.spec.ts` at desktop then, `phase82.spec.ts` at mobile-small in round 2,
+and now once each in two more places. The Playwright config already names its
+cause — one `vite preview` process serving every worker, which "starts dropping
+connections above a handful of concurrent Chromium instances" — and already runs
+one worker because of it. It appeared twice as often today than in rounds 3 to 5,
+which had none.
+
+**A third run was not attempted.** Rolling until a clean one appears is exactly
+the selection Round 6's handoff forbids, and the second run is not evidence that
+the first did not happen. What is offered instead is: both runs in full, the
+exact error, the isolation results, and CI's own independent browser matrix at
+the handed-off head — which is a different machine, and which retries once, so
+it is a weaker instrument for this than a local run and is reported as such.
+
+`docs/PHASE_STATUS.md` keeps this in its open items. The consequence stated when
+it was first recorded still holds and is worth more after today: **a single green
+run is weaker evidence than it looks.**
+
+## Every reintroduction, and its result
+
+Nineteen mutations: five against this round's boundary, and the fourteen from
+Round 5 re-proved against the changed tree. **Nineteen failures, none by a
+module-load or type error.** The focused set is `qa-82-round-6`,
+`qa-82-round-5`, `qa-82-round-4`, `export-honesty`, `qa-82-round-1`,
+`architecture-guards`, `timeline` and `insights`: **422 assertions green on the
+repaired tree.**
+
+| # | Reintroduced defect | Result |
+| --- | --- | --- |
+| 1 | the export prints the row's position in the file again — the finding itself | **FAILS** — 8 of 422 |
+| 2 | the survivors are renumbered and the position printed — the arithmetic repair QA declined to endorse | **FAILS** — 4 of 422, including the backup-carried case |
+| 3 | every unreadable row is named a record | **FAILS** — 2 of 422: "still tells the two lists apart" |
+| 4 | the export stops saying why the position is absent | **FAILS** — 1 of 422 |
+| 5 | the owner's own screen loses the coordinate too | **FAILS** — the browser assertion, against a rebuilt bundle. **This passed before that assertion existed**, and is why it does |
+| 6 | the composer uses the caller's objects again | **FAILS** — 24 of 422 |
+| 7 | the situation is recomposed but the decision is the caller's | **FAILS** — 2 of 422 |
+| 8 | the page is taken from the caller's own timeline again | **FAILS** — 18 of 422 |
+| 9 | the conclusions are the caller's | **FAILS** — 1 of 422 |
+| 10 | a record is withheld on its class alone | **FAILS** — 2 of 422 |
+| 11 | a record is withheld on its area alone | **FAILS** — 3 of 422 |
+| 12 | an entity is withheld on its class alone | **FAILS** — 2 of 422 |
+| 13 | an entity is withheld on its area alone | **FAILS** — 2 of 422 |
+| 14 | entities are not withheld at all | **FAILS** — 6 of 422 |
+| 15 | unreadable rows are not withheld at all | **FAILS** — 5 of 422 |
+| 16 | an unreadable row's claim is read in the plural only | **FAILS** — 2 of 422 |
+| 17 | an unreadable row's claim is read in the singular only | **FAILS** — 2 of 422 |
+| 18 | every unreadable row is treated as private | **FAILS** — 8 of 422 |
+| 19 | the document stops saying what it was worked out from | **FAILS** — 1 of 422 |
+
+Mutation 5 is run separately from the others because it is a screen fact: the
+browser suite runs against a built bundle, so the mutation is proved by
+rebuilding and running that test rather than by the focused unit set. That is
+recorded here rather than smoothed over — a mutation proved by a different
+command is weaker evidence than one proved by the same one.
+
+QA's Round 6 counts for the fourteen re-proved mutations differ from Round 5's in
+places. Both are correct: the focused set has grown by this round's file, so the
+same mutation now fails a superset of assertions. Neither table was adjusted to
+match the other.
+
+## Preserved, unchanged
+
+- **Every Round 6 PASS**, and every earlier pass. QA-82-001 through QA-82-006
+  and QA-82-008 are untouched and still asserted, along with the six
+  decision-path pairs QA added: no-action, deferral, a running thread, a stopped
+  thread and its supersession, a recurring school obligation and growth results.
+- **D-150 and its declared divergence**, which QA accepted. Nothing in this
+  repair changes `withheldFrom`, `composedFrom` or the About-block sentence.
+- **All deferrals and open owner questions.** Q1, Q4, Q6, Q7, Q8 remain open. No
+  private evidence is wired into intelligence and Reach is not implemented. The
+  Phase 8 carry-forwards are unchanged, including the literal NUL byte in
+  derived record ids.
+- **The deliberate non-features**, **AUD-0040 / AUD-0045 / AUD-0047**, and all
+  21 audit-section-10 items. Timeline the screen still keeps the private row,
+  withholds its detail, and now demonstrably still says which row could not be
+  read.
+- **The owner's own store**, and the canonical coordinates in a backup. Nothing
+  is renumbered, mutated or dropped on the way in; the only change is what one
+  document says.
+
+## Documents updated
+
+- `docs/PHASE_STATUS.md` — **YELLOW — READY FOR INDEPENDENT QA, ROUND 7**, a
+  round 6 section, and a verification table that rolls forward one column.
+- `docs/DECISION_LOG.md` — **D-151** (a document that withholds rows carries no
+  coordinate into the file).
+- `docs/DEFECT_LEDGER.md` — **DEF-0096 closed at its third boundary**, with the
+  round 5 and round 4 entries kept beneath it and marked superseded.
+
+## What Round 7 should press hardest
+
+1. **Anything else a retained row brings with it.** The position was one field.
+   A malformed row also carries an `id` it could read and validation `path`s
+   that contain array indices; neither is printed today, and "not printed today"
+   is exactly what was true of the index before round 6.
+2. **Ordering as a channel.** The sweep proves a withheld row does not move a
+   survivor's *label*. It does not prove nothing else is ordered by original
+   position — Recent record's day grouping, the issue list, the ranking.
+3. **The two-rule seam.** The coordinate is dropped in both directions, so
+   there is no conditional. Check that: an opt-in document should also carry no
+   `Record row N`.
+4. **The owner's screen, as a person.** It has to keep being useful. He is meant
+   to be able to open his file and find row 20.
+5. **The count of unreadable rows**, which is still whole-store-shaped in spirit
+   even though it is now computed from the scoped store. A withheld unreadable
+   row lowers it; the pairs above say that is invariant, but a history with many
+   damaged private rows would press it harder than these do.
+
+---
+
+## Retest handoff — Phase 82, round 7
+
+**Model:** Claude Opus-class is the builder's; **QA runs on Codex**, per D-090.
+
+**Intelligence level:** High.
+
+**Conversation:** SAME — the Codex QA conversation that wrote Rounds 1 to 6.
+
+```text
+Continue independent QA of the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You wrote the Phase 82 Round 1 to 6 reports in
+docs/qa/PHASE_82_QA_HANDOFF.md. Round 6 returned FAIL on one class: retained
+unreadable rows carried their original store positions into Recent record, so
+a withheld row ahead of one was readable from the number. It is repaired and a
+repaired checkpoint is deployed.
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full — your six reports and the
+builder's Round 6 repair response beneath them — and run Round 7 exactly as the
+retest handoff there specifies.
+
+Repaired product checkpoint:
+2cdeb4bc553d0c7e398294bb40a7c89078f2d42c
+
+Deployed SHA when the builder last proved equivalence:
+2cdeb4bc553d0c7e398294bb40a7c89078f2d42c — the Preview served the checkpoint exactly at that moment. Read
+it live from preview/build-info.json and prove checkpoint equivalence rather
+than string equality, per D-097. The documentation commit carrying this handoff
+moves the live SHA past the checkpoint.
+
+Preview:
+https://bill6006.github.io/life-command-os-rebuild/preview/
+
+Run all three of your own probes first, unchanged:
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+npx vite-node docs/qa/evidence/phase82-round5-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round6-privacy-probe.ts
+All three exit 0 on this head. None was modified; check that.
+
+Verify against the deployed build, not the local tree:
+
+- QA-82-007. The coordinate now stays on the owner's own Timeline; the export
+  names each unreadable row by what it is and says once that the position is on
+  his screen rather than in the document. D-151 records why the survivors are
+  not renumbered instead — a malformed row's position is carried through a
+  backup verbatim, so renumbering would replace a leak with a false claim about
+  the file. Press what else a retained row brings with it: its readable `id`,
+  the array indices inside its validation paths, and anything ordered by
+  original position. Confirm the storage fault is still reported honestly, its
+  count is still right, the two lists are still told apart, and the owner's own
+  screen still says which row to go and look at.
+- D-150 and everything you accepted in Round 6 is untouched by this repair.
+  Confirm that rather than assume it: the five Round 5 cases and your six
+  decision-path pairs should still pass unchanged.
+- QA-82-008 and QA-82-001 to QA-82-006 are unchanged this round.
+
+Re-verify every PASS from Rounds 1 to 6 rather than assuming it survived, and
+confirm every deferral, out-of-scope finding and audit-section-10 do-not-change
+rule is unchanged. Do not read, alter or adjudicate
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md.
+
+Builder's counts to check rather than trust, each named against its head:
+aggregate verify PASS from a clean clone of the head you are handed, with CI
+green at the checkpoint 2cdeb4b (run 32980114735) and again at that head;
+1,605 unit tests across 70 files; 548 / 549 browser at 360, 430 and
+1,280px; the deployed Android gate clean at 144 checks in one run;
+privacy scan 240 tracked files at the checkpoint and 242 at the head you are handed; tournament 100/100 deterministic and
+100/100 hybrid; 19 reintroductions proved, one of which is a screen fact proved
+by rebuilding the bundle rather than by the focused unit set, and which passed
+before the assertion that now catches it existed.
+
+Write your Round 7 result into docs/qa/PHASE_82_QA_HANDOFF.md as a new section,
+on PASS or FAIL, and end with the complete next handoff and a short launcher.
+Keep the completion marker as the single final meaningful line of that file.
+
+Do not ask me to paste the file contents.
+```
+
+### Short launcher
+
+**Model:** the strongest Codex model available. **Level:** High.
+**Conversation:** SAME — the Codex QA conversation that wrote Rounds 1 to 6.
+
+```text
+Continue independent QA of the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full and run Phase 82 Round 7 exactly as
+the retest handoff at the end of it specifies. You wrote Rounds 1 to 6; the
+builder has closed QA-82-007's remaining class by keeping a row's position in
+the file on the owner's own screen (D-151) and deployed a repaired checkpoint.
+Keep Phase 82 YELLOW unless it passes.
+
+Do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->

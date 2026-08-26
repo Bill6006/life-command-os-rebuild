@@ -24,9 +24,9 @@ reopens Phase 4 or any completed phase.
 
 # Phase 82 — The structural intelligence skeleton
 
-**Status: YELLOW — READY FOR INDEPENDENT QA, ROUND 6.**
+**Status: YELLOW — READY FOR INDEPENDENT QA, ROUND 7.**
 
-Five FAIL rounds so far, and the shape of them is worth reading before the
+Six FAIL rounds so far, and the shape of them is worth reading before the
 detail. Round 1 found three defects. Round 2 closed one and found two of the
 repairs incomplete — the class had been named correctly and then the repair
 scoped to the places that had been _observed_ failing. Round 3 closed those two
@@ -47,11 +47,23 @@ a correction, not a reading anything decides from and not one side of a learned
 relationship, so five paths carried private detail straight past it. Round 5
 constructed the kinds it could not.
 
-**The boundary has now moved off the renderers entirely.** A document is
-composed from the record it may describe (**D-150**) rather than filtered on the
-way out, which is the only answer to the case no filter could have reached: a
-private reading of the owner's energy changes the suggestion itself, and there
-is no filter over a finished decision that unmakes it.
+**The boundary moved off the renderers in round 5.** A document is composed from
+the record it may describe (**D-150**) rather than filtered on the way out, which
+is the only answer to the case no filter could have reached: a private reading of
+the owner's energy changes the suggestion itself, and there is no filter over a
+finished decision that unmakes it. Round 6 accepted that, and every count,
+conclusion and sentence with it.
+
+**Round 6 found the one thing a scoped store cannot reach: what a retained row
+carries.** A malformed row keeps its own position in the file, and the export
+printed it — so `Record row 19` became `Record row 20` with one private record
+ahead of it, and `Record row 22` with three. The coordinate now stays on the
+owner's own screen, where the file is (**D-151**).
+
+Four rounds, four layers of one rule, each right and each one short of the next:
+the metadata (D-098), every section (D-148), the record composed from (D-150),
+and what a retained row brings with it (D-151). A paired document found each
+one; reading the code found none of them.
 
 Not GREEN, and not this conversation's to make GREEN. Owner decision D-077: a
 builder conversation may not approve its own phase, and nothing concluded while
@@ -71,39 +83,39 @@ audit's own reasons for excluding each are unchanged.
 
 ## Checkpoint
 
-|                      |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Product checkpoint   | `dab8c2e366dd381fce0f5c9001182f5d6ce4311e` — QA round 5 repairs; the last commit that changes the bundle. Round 4 closed at `1205402`, round 3 at `5936fe2`, round 2 at `da1a4ee`, round 1 at `0899f18`, the first build at `160ec9a`                                                                                                                                                                                                                                                                                                                                                                                             |
-| Deployed Preview SHA | **Read it live** from `preview/build-info.json`. The documentation commit that carries this row moves it past the checkpoint, which is exactly the case the equivalence checker exists for                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| Relationship         | **Proved.** `node scripts/checkpoint-equivalence.mjs dab8c2e --deployed <build-info url>`. Never asserted as string equality (D-097).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| Independent QA       | **Round 5 returned FAIL**: QA-82-008 passed and QA-82-001 to QA-82-006 held, but QA-82-007 survived in five paths the round 4 repair never reached — private goals and commitments in Direction, a private reading changing the decision itself, private evidence inside learned conclusions, a private withdrawal under corrections, and a malformed entity naming the area in the singular. The boundary has moved to the record the document is composed from (D-150) and a Round 6 retest handoff is written into [`qa/PHASE_82_QA_HANDOFF.md`](qa/PHASE_82_QA_HANDOFF.md). Round 6 is required before anything becomes GREEN |
-| Owner phone test     | Required — owner-visible behaviour changed on Now, on Life and on two domain pages                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| Preview              | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|                      |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product checkpoint   | `2cdeb4bc553d0c7e398294bb40a7c89078f2d42c` — QA round 6 repairs; the last commit that changes the bundle. Round 5 closed at `dab8c2e`, round 4 at `1205402`, round 3 at `5936fe2`, round 2 at `da1a4ee`, round 1 at `0899f18`, the first build at `160ec9a`                                                                                                                                                                                                                                                                                                     |
+| Deployed Preview SHA | **Read it live** from `preview/build-info.json`. The documentation commit that carries this row moves it past the checkpoint, which is exactly the case the equivalence checker exists for                                                                                                                                                                                                                                                                                                                                                                      |
+| Relationship         | **Proved.** `node scripts/checkpoint-equivalence.mjs 2cdeb4b --deployed <build-info url>`. Never asserted as string equality (D-097).                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Independent QA       | **Round 6 returned FAIL**, and narrowly: D-150 was accepted along with its declared divergence, all five Round 5 cases and six new decision-path pairs passed, and QA-82-001 to QA-82-006 and QA-82-008 held. One class remained — a retained unreadable row carried its position in the file into the document, so a withheld row ahead of it was readable from the number. Repaired under **D-151**, and a Round 7 retest handoff is written into [`qa/PHASE_82_QA_HANDOFF.md`](qa/PHASE_82_QA_HANDOFF.md). Round 7 is required before anything becomes GREEN |
+| Owner phone test     | Required — owner-visible behaviour changed on Now, on Life and on two domain pages                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Preview              | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ## Exact verification results
 
 Four columns, for the four most recent verifications. Every figure names the
 head it was measured on, which is D-147 and the reason the last row exists.
 
-| Gate                                                    | Round 2 (`da1a4ee`)   | Round 3 (`5936fe2`)   | Round 4 (`1205402`)   | Round 5 (`dab8c2e`)                                              |
-| ------------------------------------------------------- | --------------------- | --------------------- | --------------------- | ---------------------------------------------------------------- |
-| `npm run verify` from a clean clone of the tracked head | **PASS**              | **PASS**              | **PASS**              | **PASS** — format, lint, typecheck, tests, build                 |
-| Unit layer                                              | 1,498 across 67 files | 1,528 across 67 files | 1,574 across 68 files | **1,593 / 1,593** across 69 files                                |
-| Browser, three widths                                   | 540 / 540             | 543 / 543             | 549 / 549             | **549 / 549** — 183 each                                         |
-| Android-style gate on the deployed build                | clean — 132           | clean — 136           | clean — 143           | **clean — 144 checks**                                           |
-| Privacy scan                                            | clean, 233            | clean, 233            | clean, 234            | **clean — 239 tracked files**                                    |
-| Tournament                                              | 100/100 and 100/100   | 100/100 and 100/100   | 100/100 and 100/100   | **100 / 100 deterministic, 100 / 100 hybrid**                    |
-| CI green at the handed-off head                         | **no — DEF-0095**     | green at `5936fe2`    | green at `1205402`    | **green at `dab8c2e`** — and at the head that carries this table |
-| Reintroductions proved                                  | 14                    | 4                     | 12                    | **14 more, 79 in total**                                         |
+| Gate                                                    | Round 3 (`5936fe2`)   | Round 4 (`1205402`)   | Round 5 (`dab8c2e`)   | Round 6 (`2cdeb4b`)                                                                                                          |
+| ------------------------------------------------------- | --------------------- | --------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `npm run verify` from a clean clone of the tracked head | **PASS**              | **PASS**              | **PASS**              | **PASS** — format, lint, typecheck, tests, build                                                                             |
+| Unit layer                                              | 1,528 across 67 files | 1,574 across 68 files | 1,593 across 69 files | **1,605 / 1,605** across 70 files                                                                                            |
+| Browser, three widths                                   | 543 / 543             | 549 / 549             | 549 / 549             | **548 / 549, twice** — one rotating transient in each run, different specs, neither a product assertion                      |
+| Android-style gate on the deployed build                | clean — 136           | clean — 143           | clean — 144           | **clean — 144 checks**                                                                                                       |
+| Privacy scan                                            | clean, 233            | clean, 234            | clean, 239            | **clean — 240 tracked files at the checkpoint; 242 at the documentation head, which adds QA’s two round 6 evidence scripts** |
+| Tournament                                              | 100/100 and 100/100   | 100/100 and 100/100   | 100/100 and 100/100   | **100 / 100 deterministic, 100 / 100 hybrid**                                                                                |
+| CI green at the handed-off head                         | green at `5936fe2`    | green at `1205402`    | green at `dab8c2e`    | **green at `2cdeb4b`** — and at the head that carries this table                                                             |
+| Reintroductions proved                                  | 4                     | 12                    | 14                    | **19 more, 98 in total**                                                                                                     |
 
 The first build and round 1 columns are dropped rather than carried: `160ec9a`
 and `0899f18` are four repairs behind, and a table nobody can act on is a table
 nobody reads. Their figures are in the round 1 and 2 sections below.
 
-Nine test files: `goal-horizon-and-parts`, `commitment-windows`, `threads`,
+Ten test files: `goal-horizon-and-parts`, `commitment-windows`, `threads`,
 `deferral`, `growth-stage-and-occasion`, `instrument-recut`, `qa-82-round-1`,
-`qa-82-round-4`, `qa-82-round-5`, and a browser suite `phase82.spec.ts` for the
-surfaces the packages end in.
+`qa-82-round-4`, `qa-82-round-5`, `qa-82-round-6`, and a browser suite
+`phase82.spec.ts` for the surfaces the packages end in.
 
 ## Independent QA — round 1
 
@@ -312,6 +324,50 @@ Q8 remain open; AUD-0040, AUD-0045 and AUD-0047 remain out of scope; the Phase 8
 carry-forwards, deliberate non-features and all 21 audit-section-10
 do-not-change items are unchanged. The owner's own store is untouched, and
 `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was neither altered nor adjudicated.
+
+## Independent QA — round 6
+
+**FAIL**, and the narrowest of the six. QA accepted D-150 and its declared
+divergence, all five Round 5 cases passed, six new decision-path pairs passed —
+no-action, deferral, a running thread, a stopped thread and its supersession, a
+recurring school obligation and growth results — and QA-82-001 to QA-82-006 and
+QA-82-008 all held.
+
+One class remained: **a retained unreadable row carries its own position in the
+file.** `Record row 19` became `Record row 20` with one private record ahead of
+it and `Record row 22` with three; a private entity moved `Entity row 2` to
+`Entity row 3`. Inserting the private row _after_ the broken one changed nothing,
+which is what located the channel in the coordinate rather than in detail or
+totals.
+
+**The coordinate now stays on the owner's own Timeline**, where the file is. The
+export names the row by what it is and says once that the position is on his own
+screen. It is dropped whether or not anything is withheld, because a position in
+a file the reader does not have was never worth much to them and one rule is
+easier to keep than two. **D-151** records why the survivors are _not_ renumbered
+instead: a malformed row's position is carried through a backup verbatim, so
+renumbering would replace a leak with a false claim about the file.
+
+**The rotating browser transient appeared twice, and no clean full run was
+obtained.** Both matrix runs finished 548/549, each failing a different test
+inside `page.goto` with `net::ERR_ABORTED` before any product assertion ran —
+`phase82.spec.ts` at mobile-small, then `data.spec.ts` at desktop. Each passes in
+isolation. A third run was not attempted: rolling until a clean one appears is
+the selection this round's handoff forbids. It remains a property of the harness
+rather than of the product, and the consequence stated when it was first recorded
+now matters more: a single green run is weaker evidence than it looks.
+
+**A guard was blind, and a reintroduction found it.** Removing the coordinate
+from the owner's own screen broke nothing — the architecture guard matched
+`row.where` in a React `key` prop, and no test read the rendered row. The browser
+suite now asserts the text. Fourth time this phase that running the mutation
+found what reading the test did not.
+
+**Every round 6 PASS is preserved and every deferral stands.** Q1, Q4, Q6, Q7 and
+Q8 remain open; AUD-0040, AUD-0045 and AUD-0047 remain out of scope; the Phase 8
+carry-forwards, deliberate non-features and all 21 audit-section-10
+do-not-change items are unchanged. `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was
+neither read, altered nor adjudicated.
 
 ## The six packages
 
