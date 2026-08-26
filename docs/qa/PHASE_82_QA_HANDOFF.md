@@ -2243,8 +2243,6 @@ conversation for Round 5.
 Do not ask me to paste the file contents.
 ```
 
-<!-- LCO_COMPLETE -->
-
 ---
 
 # Round 4 repair — builder response, and the Round 5 retest handoff
