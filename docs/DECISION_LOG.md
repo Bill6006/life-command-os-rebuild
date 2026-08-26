@@ -4887,3 +4887,59 @@ and the reason the "Nothing readable here" panel exists at all.
 
 An empty store still says nothing, because inventing a fault where there is none
 is the opposite error and just as available.
+
+---
+
+## D-153 — A reading of one moment may not be worded as a claim about the whole record
+
+**Phase:** 82 (QA round 8) · **Status:** Active
+
+D-152 said an empty list has more than one reason. Round 8 found the same class
+three more times, and one of them was inside D-152's own repair — so this states
+the rule one level up from the list, where the **sentence** is.
+
+### The three
+
+- **The reassurance that denied the panel under it.** D-152's new Timeline
+  sentence said _"nothing has been lost and nothing is unreadable"_,
+  unconditionally, and on the fixture it was written for it sat directly above
+  six rows whose stated reason is _"could not be read"_. The clause was true of
+  the entries it was about and false of the store, and the screen said both at
+  once.
+- **The area nothing had "ever" come in about.** `evidenceByDomain` correctly
+  skips records dated after the moment being read — a reading from next week is
+  not evidence about now. The silence that left was then worded _"Nothing has
+  ever come in about sleep & recovery"_, in a document whose own header named
+  five later entries in that area and their date span.
+- **The fault that was read perfectly.** Two records that each claim to replace
+  the other parse without trouble and are held back from reasoning.
+  `historySection` walked only `unreadable`, so a history whose sole trouble was
+  a replacement cycle produced _"There are no entries to show here"_ and nothing
+  else. Diagnostics reported it, and Diagnostics is off by default.
+
+### The rule
+
+**A projection is a reading of one moment. A sentence about it must not reach
+past that moment.** Concretely, in the three shapes this has now taken:
+
+- _Never_ and _ever_ are claims about the whole record. Where the projection is
+  empty only because the record is dated later, the sentence says **at this
+  point** and says how much is later. Where nothing has genuinely ever arrived,
+  the absolute stays, because there it is true and it is what tells the owner the
+  app is not hiding a gap.
+- A reassurance is about the thing it is reassuring the owner of, and nothing
+  else. _"None of it has been lost"_ is about the later entries; _"nothing is
+  unreadable"_ was about the store, which the panel below it was contradicting.
+- **A row that was read and cannot be used is still a fault.** Held back from
+  reasoning is not the same as absent, and a surface that reports only what
+  failed to parse leaves the second kind unmentioned. They are listed separately
+  because they are different things to tell somebody: one the app could not read,
+  the other it read and cannot trust.
+
+### What this does not license
+
+It does not turn a held-back row into a dated entry, and it does not make future
+data evidence about the present. Both would be the opposite error, and both are
+proved by reintroduction rather than promised: `coverage.ts` still refuses a
+later reading as current evidence, and the export still invents no day heading
+and no entry count for a tangle.

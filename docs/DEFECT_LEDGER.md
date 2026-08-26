@@ -39,6 +39,58 @@ None.
 
 ## Fixed
 
+### DEF-0099 — three sentences reached past the moment they were reading
+
+- Status: Fixed
+- Severity: Major — a screen that contradicts the panel beneath it, a document
+  that contradicts its own record span, and a storage fault the default document
+  never mentions
+- Found in: Phase 82 / `d3df449`; the first of the three was introduced by
+  DEF-0098's repair one round earlier
+- Found by: independent QA round 8 — QA-82-010, QA-82-011 and QA-82-012
+- Class: **a reading of one moment worded as a claim about the whole record.**
+  D-152 separated the reasons a list can be empty; this is the same class one
+  level up, in the sentence rather than the list.
+- Reproductions:
+  - **QA-82-010.** Load **A file with damage in it**, press **−1 week**, open
+    Timeline. The panel says _"nothing has been lost and nothing is
+    unreadable"_ directly above six rows reading _"could not be read"_.
+  - **QA-82-011.** The same clock, Data with the ordinary sections: the header
+    says `Record covers: 2026-04-05 to 2026-04-08, 5 entries`, Recent record says
+    five entries are later, and Coverage says _"Nothing has ever come in about
+    sleep & recovery"_ — where four of those five entries are Sleep readings.
+  - **QA-82-012.** Two readable records whose `supersedes` pointers form a cycle.
+    `resolveHistory` holds both back and reports two `supersession-cycle`
+    issues; `assembleTimeline` returns `tangled: 2, unreadable: 0`; Recent record
+    emits only _"There are no entries to show here."_
+- Root causes, three: an unconditional clause in `TimelineScreen`'s later-history
+  panel; `describe()` in `coverage.ts` wording the `unheard` status as an
+  absolute when `evidenceByDomain` had correctly skipped later records; and
+  `historySection`'s fault block iterating `timeline.unreadable` while
+  `timeline.tangled` sat beside it unread.
+- Regression: `tests/synthetic/qa-82-round-8.test.ts` — the tangle reaching the
+  timeline as a tangle rather than an unreadable row; both of its faults reported
+  in Recent record under all three selections, as two lines rather than one
+  summary; the default document specifically, because Diagnostics is not in it;
+  no invented day heading or entry count; a clean history growing no fault
+  section; the later-panel source carrying no absolute about readability while
+  keeping its reassurance; both facts stated in the document without either
+  denying the other; `DomainCoverage.later` counted without becoming current
+  evidence; the absolute preserved where nothing ever did arrive; and a
+  cross-line check that no area named in the record span is called never-heard in
+  the same document. Nine reintroductions run, all nine fail.
+- Siblings: the other empty paths QA named were pressed in the same document and
+  do not make the absolute claim — Direction states the current direction is
+  unset, Learning says the record does not support a relationship and explicitly
+  declines to equate that with nothing to find, and Insights says nothing
+  _currently_ rises to a stated reading. Coverage was the one that did.
+- Note on what the round 7 tests could not see: they proved future count, damaged
+  count and coordinates as separate facts and never rendered the combined
+  sentence, and their replacement-cycle coverage checked `later === 0` only for
+  stores with no tangle in them. That is why the new guards read whole section
+  bodies and compare words against the other words in the same document.
+- Fixed in: the checkpoint that closes QA round 8
+
 ### DEF-0098 — an empty display was read as an empty or unreadable store
 
 - Status: Fixed

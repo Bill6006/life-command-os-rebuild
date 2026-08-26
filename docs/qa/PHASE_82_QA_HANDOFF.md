@@ -5059,4 +5059,761 @@ passes.
 Do not ask me to paste the file contents.
 ```
 
+---
+
+# Independent QA — Phase 82, Round 8 — 2026-08-26
+
+## Verdict: FAIL — the reported export defect is repaired; the empty-state class is not
+
+The exact seven Round 7 export variants now pass. A Recent record with no
+displayable readable entry still describes retained unreadable rows, including
+their kind, problem and coordinate-omission explanation, with Diagnostics off
+and with Private off or deliberately on. A true empty store remains quiet, a
+damaged row is not counted as future history, the owner's fault coordinates
+remain on Timeline, and the original privacy boundary remains intact.
+
+Round 8 nevertheless found three material siblings while walking the handoff's
+own deployed reproduction and the empty paths it explicitly named:
+
+1. **QA-82-010:** the repaired Timeline says **“nothing is unreadable”** directly
+   above six rows whose reason is **“could not be read.”** This contradiction was
+   introduced by the new later-history sentence.
+2. **QA-82-011:** at the same earlier clock, Coverage calls Sleep and Home areas
+   about which **“nothing has ever come in,”** while the same document says it
+   holds five later entries in those areas and names their 5–8 April span.
+3. **QA-82-012:** a history made only of two readable records in a replacement
+   cycle reaches `timeline.tangled`, but Recent record emits only **“There are no
+   entries to show here.”** The relationship faults are absent from the ordinary
+   document and absent from the selected Recent record even with Select all.
+
+These are not privacy leaks and QA does not claim the last two were introduced
+by checkpoint `6a9c53e`. They are the same class D-152 asked the repair to find:
+an empty projection being read as a wider claim about the store. Phase 82 remains
+**YELLOW**. QA changed only this report and two new QA evidence files. It did not
+change product code, governing status, the decision log, defect ledger or
+`NEXT_PROMPT`, and it did not commit or deploy anything.
+
+`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was not read, altered, staged or
+adjudicated. It remains the only unrelated untracked file and is absent from both
+disposable clones.
+
+## Identity and first probes
+
+| Item | Independently checked result |
+| --- | --- |
+| Repaired product checkpoint | `6a9c53e132351ebd4ff3b5cf012cf088292bd751` |
+| Tracked HEAD and live Preview | `d3df449dcb651250f9362573d7f0ded832258606` |
+| Live build time | `2026-08-26T18:23:16.434Z` |
+| Deployment equivalence | PASS. The live checker found six documentation/QA-evidence changes after the checkpoint and no bundle-relevant change. |
+| CI at product checkpoint | PASS, Verify and Deploy preview: [32996584614](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/32996584614). |
+| CI at handed-off HEAD | PASS, Verify and Deploy preview: [32999318169](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/32999318169). Live read-back matched exact HEAD. |
+| QA report commit | None. This report and its two evidence files are uncommitted. |
+
+After reading the full handoff and before any other suite, QA ran, in this exact
+order:
+
+```text
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+npx vite-node docs/qa/evidence/phase82-round5-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round6-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round7-boundary-probe.ts
+```
+
+All four exited 0, then passed again in the clean exact-HEAD clone. The first
+three SHA-256 values remain exactly the values recorded in Rounds 6 and 7; the
+fourth was first tracked in `cc9c80c` and is unchanged from that commit through
+HEAD:
+
+```text
+880648DDBB3533357DE572BF0065F7F44A2214521CCB64A41A8483FC7A2A8175
+20C8633F8EADF4C333532E896D3DBD3A7D1D9FFFD6CA2E64F57B9F6D12AE6BA1
+094F2168B45CB714C79172C68CAB2C18BB025890762BDF5444ABDE4E8B49C999
+2A3EE4B4C7E18E9CB038B8B6FC4FE6C1C6F83D3395EF254907E802192BE59054
+```
+
+## QA-82-010 — the later-history panel denies the faults immediately below it
+
+**Major / phase-blocking semantic defect, introduced by the Round 7 repair.**
+Requirements: D-152, the whole-screen reading required by D-090, and the
+Timeline fallback contract that storage failures remain visible without a
+confident false claim.
+
+### Deployed reproduction
+
+At [Preview](https://bill6006.github.io/life-command-os-rebuild/preview/), build
+`d3df449`, at 430×932:
+
+1. More → QA laboratory → **A file with damage in it**.
+2. Press **−1 week**, reaching 2026-04-01 19:00 America/Denver.
+3. Open Timeline.
+
+The first panel correctly says five entries are later than the moment, then
+continues:
+
+```text
+Nothing has been lost and nothing is unreadable; move forward and it is there.
+```
+
+Immediately beneath it, the screen says:
+
+```text
+6 rows have problems
+Record row 6 — could not be read
+...
+Entity row 1 — could not be read — 4 things wrong with it
+```
+
+All six coordinates survive, which passes D-151. The contradiction is the
+unqualified **nothing**: the five later readable entries are not unreadable, but
+six other retained rows are. The repaired sentence at
+`src/features/timeline/TimelineScreen.tsx:89` denies the unconditional fault
+panel rendered below it. QA visually inspected and captured this whole screen
+in the current QA conversation; no saved screenshot file is claimed.
+
+The ordinary-clock positive control and the **+1 week** control both pass: five
+dated entries render, the same six fault coordinates remain, and neither screen
+uses the later-history panel.
+
+## QA-82-011 — Coverage says “never” about entries the document says are later
+
+**Major / phase-blocking temporal-semantic defect.** Requirements: D-152 and the
+claim-to-evidence rule that an empty projection may not become a claim about the
+whole store.
+
+In the same deployed −1 week history, Data with ordinary sections selected and
+Diagnostics off says all of the following in one document:
+
+```text
+Record covers: 2026-04-05 to 2026-04-08, 5 entries
+
+Sleep & Recovery — unheard, evidence none; nothing heard at all.
+Nothing has ever come in about sleep & recovery.
+
+Home & Environment — unheard, evidence none; nothing heard at all.
+Nothing has ever come in about home & environment.
+
+Nothing in this document happened at or before the moment it describes.
+5 entries in the record are later than that.
+```
+
+Four of the later records are Sleep observations and the fifth is a Home
+observation. Excluding future records from what is known **at the earlier
+moment** is correct; calling that absence **never** is not. The boundary is
+visible in `src/intelligence/coverage.ts:323-327`, which correctly skips future
+records, followed by the absolute summary at `:477`. The export faithfully
+prints that summary at `src/features/export/compose.ts:482-492`, so this is not
+a renderer typo.
+
+The other untouched empty paths pressed in the same document do not make this
+absolute contradiction: Direction states the current direction is unset;
+Learning says the record does not support a relationship and explicitly does
+not equate that with nothing to find; Insights says nothing **currently** rises
+to a stated reading. Coverage is the failing sibling.
+
+## QA-82-012 — replacement faults disappear from the ordinary Recent record
+
+**Major / phase-blocking storage-honesty defect. Synthetic reproduction, not
+claimed as a separately deployed fixture.** Requirements: D-091, D-152 and the
+Recent record promise that it reads as Timeline does.
+
+New evidence:
+`docs/qa/evidence/phase82-round8-boundary-probe.ts`.
+
+It creates two valid public observation records whose `supersedes` pointers form
+a cycle. `resolveHistory` correctly holds both back from reasoning and reports
+two `supersession-cycle` issues. `assembleTimeline` therefore returns:
+
+```text
+total 0; later 0; unreadable 0; tangled 2
+```
+
+The owner's Timeline would list both under rows with problems, but the ordinary
+export's complete Recent record is only:
+
+```text
+## Recent record
+
+There are no entries to show here.
+```
+
+`historySection` explicitly recognises `timeline.tangled` at
+`src/features/export/compose.ts:712`, but its fault block at `:737-760` iterates
+only `timeline.unreadable`. Select all adds the raw relationship issue under
+Diagnostics; it still does not fulfil the selected Recent record section, and
+Diagnostics is absent from the ordinary default document. This is the same
+false-confidence shape as QA-82-009, not a request to turn a tangled row into a
+dated entry.
+
+Adding the real private fixture row to this tangled history leaves the complete
+private-off Recent record byte-identical, so the adversarial third direction
+does **not** reopen QA-82-007. It isolates the storage-reporting omission.
+
+## What the Round 7 repair now passes
+
+The original deployed reproduction's export is repaired with Diagnostics off:
+Recent record says the five visible records are later, then describes all six
+retained faults by kind and problem and explains why positions remain on the
+owner's screen. Turning Private on leaves that Recent record byte-identical.
+At ordinary fixture time and one week forward, five readable entries render
+above the same six faults. No coordinate, raw id, parser path or issue string
+enters the review document.
+
+The unchanged Round 7 probe passes all 17 checks: damaged-only, all-readable
+entries withheld, future-only readable history, default/Select all/private-on,
+the positive readable-row control, large private damaged batches, carried
+metadata, input permutation and source preservation. Its true-empty synthetic
+case still emits `_Nothing in the record for this._`; the clean browser suite's
+isolated empty-laboratory test also passes. In the persistent in-app browser,
+**Empty the laboratory** is a return-to-owner control, not a safe deployed empty
+fixture. QA restored the synthetic damaged fixture immediately and did not use
+the owner's store as evidence or write to it.
+
+The new Round 8 boundary probe exits 1 with **three passes and four failures**:
+
+| Check | Result |
+| --- | --- |
+| replacement cycle reaches two retained tangled faults and no displayed/future entry | PASS |
+| ordinary Recent record describes those faults | FAIL |
+| Select all's Recent record describes those faults rather than relying on Diagnostics | FAIL |
+| adding a withheld row leaves the tangled Recent record byte-identical | PASS |
+| later-state owner sentence does not deny its own rendered fault panel | FAIL |
+| Coverage does not call a readable future observation something that never came in | FAIL |
+| 5,000 readable future observations are counted without becoming current | PASS; 466.8 ms on the formatted final run |
+
+The scale number includes full parse, view, situation, decision, Insights,
+Timeline and export composition under this run's conditions. It is not a
+physical-phone performance guarantee. Every composition checks that its source
+snapshot remains unchanged.
+
+## Earlier findings and acceptance
+
+| Prior item | Round 8 recheck |
+| --- | --- |
+| QA-82-001 / QA-82-005 | PASS. The unchanged 24-scenario probe and clean suites retain the 10:20 school reading, correctable care-today fact, inferred current absence, and raw known/unknown/question counts without a derived no-child row. |
+| QA-82-002 | PASS. The hold remains tied to a real better next block, shared grounds and no premature action controls. |
+| QA-82-003 | PASS. All five time-fit bands, exact fits 10/10 and 6/6, near fits, overruns and fractional cases remain covered. |
+| QA-82-004 | PASS. Product token 48px and Android unrounded 44px/two-decimal diagnostic rule are unchanged. |
+| QA-82-006 | PASS. Exact-HEAD clean-clone aggregate, CI, browser and deployed Android gates pass. |
+| QA-82-007 | PASS. All three earlier privacy probes and Round 7's exact comparisons pass. The new tangled third direction is invariant. |
+| QA-82-008 | PASS. All six unknown reasons, including the deployed withdrawn and future-only notes, retain their honest wording. |
+| QA-82-009 reported path | PASS. All seven former failures now pass. QA-82-010 through QA-82-012 are siblings the repair/test boundary did not cover, not a relabelling of those seven. |
+
+All nine original acceptance items remain green in the unchanged probes and
+full gates: arbiter-only thread influence; dominant recovery override; thread
+explanation/expiry/all five inactive states plus one-tap stop; genuine next-block
+hold with shared evidence; 100/100 both architectures and bounded nudge; no
+child percentage grade; school free-middle 300 minutes; asymmetric unknown care;
+and all five honest time-fit bands. The course, hold, growth, goal, obligation,
+no-action, migration, backup/restore, correction and lifecycle flows remain
+covered by the clean browser/unit gates.
+
+No deferral was silently closed. Q1/Q4/Q6/Q7/Q8 remain open; Reach remains
+future; private-pattern intelligence is not wired; AUD-0040/0045/0047 remain out
+of scope. v297 ancestry, life-context-change mapping, the literal NUL in derived
+ids and honest archived families (`skill-claim`, `faith-anchor`,
+`milestone-observation`) are unchanged. Weighted-mean/WORTH_DOING questions,
+three full-weight unknown zeroes, tight ties, thread-as-set choice, goal-behind
+and pending-growth fixture gaps remain open. No generic thread builder,
+calendar, third schedule question, tomorrow hold, percentage bar, QA import or
+partial/undo feature appeared.
+
+Audit section 10 was reread in full. Its 21 do-not-change protections are
+unchanged by the five-file repair diff and remain covered where applicable by
+the exact-HEAD gate: stable lifecycle controls; shared Health/Sleep page;
+deterministic/hybrid agreement and D-025; weighted Something else; refusal never
+becoming immediate benefit; association thresholds/comparison/confounders and
+empty action-family pooling; proposed-not-applied growth; zero-score stale
+coverage; no render writes; engine names only its own routines/resolved subjects;
+timezone/week/DST rules; legitimate no-action; time with Adaya distinct from
+development; honest legacy archive; old-id goal identity; no invented emotional
+scale; faith/custody inspect-record roles; grouped Life; original sleep
+derivation; the counterfactual guide; and the full QA inspector.
+
+## Verification record
+
+Clean exact-HEAD clone:
+`C:\Users\tyree\AppData\Local\Temp\lco-phase82-round8-f256ba31ae8c458fa05987a23d6beb14`.
+It remained Git-clean.
+
+| Gate | Independent Round 8 result |
+| --- | --- |
+| `npm ci`, aggregate `npm run verify` | PASS, exit 0: format, lint, typecheck, **1,625/1,625 tests across 71 files**, production build. |
+| Four unchanged QA probes | PASS twice: required first run in source checkout, then clean clone. |
+| Full browser matrix | PASS: **552/552**, one worker, zero retries, one complete run, **10.3 minutes**, at 360/430/1,280px. Final artifact says `passed` with no failed tests. |
+| Deployed Android gate | PASS: **144 checks**, one run, exit 0, live `d3df449`. |
+| Privacy scan | PASS: **245 tracked files** at exact handed-off HEAD. Checkpoint CI correctly reports 243 before the two tracked QA evidence files; HEAD CI reports 245. |
+| Tournament | PASS: **100/100 deterministic, 100/100 hybrid** in the aggregate and both CI logs. |
+| CI | PASS at product `6a9c53e` and exact HEAD `d3df449`; both Verify and Deploy preview green. Product CI browser 552 in 9.9m; HEAD CI browser 552 in 9.0m. |
+| Equivalence | PASS: live `d3df449` differs from product `6a9c53e` in six docs/QA-evidence files only; bundle-equivalent. |
+| New Round 8 boundary probe | FAIL as intended: **3 pass, 4 fail**, the findings above. |
+
+Android configuration was Galaxy S24-class, 360×780 CSS px, DPR 3, touch/mobile,
+Android 14 Chrome user agent. It is emulation, not a physical handset. Whole
+screen and export-field reads used the browser skill at 430×932 against live
+Preview; the synthetic fixture was restored to its normal clock, the viewport
+was reset and the QA tab was closed. The deployed checker and Android gate used
+a process-scoped TLS-verification workaround after the known local certificate
+chain failure. No repository or browser security setting was changed.
+
+### Independent repair reintroductions: 8/8 detected
+
+Disposable exact-HEAD mutation clone:
+`C:\Users\tyree\AppData\Local\Temp\lco-phase82-round8-mutations-4c326d19f0bd4b5a8dd92cb3822e0080`.
+Evidence: `docs/qa/evidence/phase82-round8-mutations.mjs`.
+
+The script pins both the full head and disposable-clone name, begins from a
+green **410-assertion** focused baseline, rejects load/transform/unhandled errors
+as proof, restores each source after its mutation, and finishes Git-clean.
+
+| Reintroduced class | Independent assertion failures |
+| --- | ---: |
+| return before reporting damage | 11 / 410 |
+| report damage only below readable rows | 9 / 410 |
+| call later history an undifferentiated empty display | 1 / 410 |
+| leave the damaged empty state unstated | 1 / 410 |
+| disclose withholding in the neutral sentence | 1 / 410 |
+| count malformed rows as future entries | 3 / 410 |
+| never count future entries | 2 / 410 |
+| give a truly empty store the neutral nonempty state | 1 / 410 |
+
+All eight classes are independently caught. Counts that differ from the
+builder's unpublished mechanical mutations are reported as measured rather than
+forced to match. This proves the repair's named guards and also preserves the
+builder's honest record that two guards did not exist on the first mutation
+attempt. It does not prove the new QA-82-010 through QA-82-012 cases, which are
+outside those eight mutations.
+
+## Tests that gave false confidence
+
+The new deployed browser test at `tests/browser/qa-lab.spec.ts:178` rejects the
+old “nothing could be read” sentence, requires “later than the moment on screen”
+and requires a visible coordinate. It never rejects the new absolute phrase
+“nothing is unreadable.” A screen containing that phrase and six “could not be
+read” rows therefore passes at all three widths and in CI.
+
+The new synthetic tests prove future count, damaged count and coordinates as
+separate facts; they do not render and read the combined owner sentence. Their
+replacement-cycle coverage checks `later === 0` only for an empty store and a
+malformed-only store. No case reaches `timeline.tangled` with no displayable
+entry, and no Recent record assertion asks for tangled faults.
+
+Coverage's existing tests correctly ensure future records do not become current
+evidence. None puts that correct temporal exclusion beside the absolute
+“nothing has ever come in” summary and Recent record's later-entry disclosure.
+The full green gates are valuable regression evidence; these missing cross-line
+claims are why they are not a phase pass.
+
+Both QA evidence files pass targeted Prettier/ESLint or `node --check`, and the
+report diff passes `git diff --check`. No product file in the working repository
+was mutated.
+
+## Complete next handoff — CURRENT Phase 82 Claude builder, repair Round 8 findings
+
+**Model:** Claude Opus-class — the remaining work spans temporal meaning,
+storage-fault reporting and privacy invariance across owner and export surfaces.
+
+**Intelligence level:** Max — Phase 82 remains inside the audit-repair campaign,
+whose owner rule applies Max to every Claude repair round.
+
+**Conversation:** CURRENT — the original Phase 82 Claude builder. This phase is
+still unresolved. The following retest returns to this SAME Codex QA
+conversation at High, never Claude's Max.
+
+```text
+Continue the Life Command OS rebuild, repairing Phase 82 after independent QA Round 8.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full, including the Round 8 report and this
+handoff. Do not ask the owner to paste it. Follow docs/qa/README.md and the
+governing defect-loop and finishing rules.
+
+Round 8 verdict: FAIL. Keep Phase 82 YELLOW. Do not start Phase 9 or claim GREEN.
+Product checkpoint tested: 6a9c53e132351ebd4ff3b5cf012cf088292bd751.
+Tracked and deployed head tested: d3df449dcb651250f9362573d7f0ded832258606.
+QA did not commit its report or its two new evidence files.
+
+The reported QA-82-009 export omission is repaired: all seven former failures
+pass, true empty stays quiet, unreadable rows are not future history, owner
+coordinates survive and QA-82-007 privacy invariance remains closed. Preserve
+all of that, D-150, D-151 and D-152.
+
+Repair the three Round 8 findings as classes under plan section 42:
+
+1. QA-82-010: the deployed −1 week damaged-history Timeline says “nothing is
+   unreadable” directly above six “could not be read” rows. Qualify the claim to
+   the five later readable entries without denying the retained faults below.
+2. QA-82-011: the same earlier-clock document says five Sleep/Home entries are
+   later and also says nothing has ever come in about those areas. Preserve the
+   correct rule that future data is not evidence about an earlier moment, but do
+   not turn “not yet at this point” into “never in the record.” Inspect every
+   Coverage owner/export sentence sharing that absolute summary.
+3. QA-82-012: a two-record supersession cycle produces `timeline.tangled` with
+   no displayable entries. Timeline reports both relationship faults; ordinary
+   Recent record says only there are no entries. Selected Recent record must
+   report retained relationship faults without inventing dates/entries, without
+   requiring Diagnostics, and without exposing withheld participation or raw
+   private metadata.
+
+Run the four unchanged QA probes first and do not edit them:
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+npx vite-node docs/qa/evidence/phase82-round5-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round6-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round7-boundary-probe.ts
+
+Then run QA's new probe unchanged:
+npx vite-node docs/qa/evidence/phase82-round8-boundary-probe.ts
+It currently exits 1 with three passing checks and four failing checks. A complete
+repair should make all seven pass. Do not weaken its claims or edit its inputs.
+The mutation artifact is pinned to QA's old disposable clone and head; do not
+loosen that pin or run it in the working repository.
+
+Walk the deployed controls again: A file with damage in it at normal time, −1
+week and +1 week; read the entire Timeline and Data document with Diagnostics
+on/off and Private off/on. Exercise true empty, damaged-only, withheld-only,
+future-only and tangled-only synthetic stores. Press the Coverage, Direction,
+Learning and Insights empty paths and compare every absolute word with the
+record span and Recent record.
+
+Write repair-specific regressions that read the whole combined owner screen and
+whole section bodies. Prove every repaired class fails when independently
+reintroduced, including the new contradiction, future Coverage wording and
+tangled-only default export. Do not accept a guard that merely finds a nonempty
+container or a different sentence somewhere else.
+
+Preserve every earlier PASS, all nine original acceptance items, every deferral,
+and all 21 audit-section-10 protections. Do not read, alter, stage or adjudicate
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md. Do not rewrite QA's reports or evidence.
+
+Update builder-owned governing documents and the defect ledger honestly. Finish
+the tracked checkpoint, clone that exact head into a clean directory, run npm ci
+and aggregate npm run verify, then verify CI at the actual handoff head, the full
+three-width browser gate, deployed Android gate, privacy scan, tournament and
+all regression reintroductions. Report exact counts and any transient without
+rolling until green. Deploy the repaired checkpoint, read build-info.json live
+and prove checkpoint equivalence with scripts/checkpoint-equivalence.mjs per
+D-097.
+
+Append the builder repair response and a complete Round 9 retest handoff to this
+same QA file, addressed to the SAME Codex QA conversation at High. Include the
+product checkpoint, live SHA/equivalence, exact verification results, remaining
+limitations, model/level/conversation and a short copyable launcher. Keep this
+file's completion marker as its single final meaningful line.
+```
+
+### Short launcher
+
+**Model:** Claude Opus-class. **Level:** Max.
+**Conversation:** CURRENT — the original Phase 82 Claude builder.
+
+```text
+Continue the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full and execute the Round 8 FAIL repair
+handoff at the end exactly as written. Preserve the repaired QA-82-007 and
+QA-82-009 paths, repair QA-82-010 through QA-82-012, keep Phase 82 YELLOW, and
+return a Round 9 retest handoff to the same Codex QA conversation. Do not ask me
+to paste the file contents.
+```
+
+---
+
+# Round 8 repair — builder response, and the Round 9 retest handoff
+
+**Written by:** the original Phase 82 Claude builder conversation, in response to
+the Round 8 FAIL above. The Round 1 to 8 reports are unchanged; nothing above
+this line was edited, and none of the five QA probes was modified.
+
+**Phase status:** **YELLOW**, unchanged. D-077 stands. Phase 9 has not been
+started, no GREEN closeout has been made, and
+`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was neither read, altered, staged nor
+adjudicated.
+
+## Build to retest
+
+| Fact | Result |
+| --- | --- |
+| Repaired product checkpoint | `675aedde2483aaf578f1a73737fe3474e4d4733a` (`675aedd`) — "QA-82 round 8: a reading of one moment is not a claim about the record" |
+| Previous checkpoints | `6a9c53e` (round 7), `2cdeb4b` (round 6), `dab8c2e` (round 5), `1205402` (round 4), `5936fe2` (round 3), `da1a4ee` (round 2), `0899f18` (round 1), `160ec9a` (first build) |
+| Deployed SHA | `675aedd` at the moment the Android gate below ran. **Read it live** from `preview/build-info.json` |
+| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Relationship | **PASS** — the exact result is recorded below, run after the documentation head deployed. Never asserted as string equality (D-097). |
+| CI | **green at the product checkpoint `675aedd` — run [33005154358](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33005154358)**, both jobs. The aggregate `npm run verify` was run from a clean clone of the checkpoint and again of the documentation head (D-147) |
+| All five QA probes | **exit 0, unmodified.** Round 8's was run against the failing tree first and reproduced all four failures |
+| Report this responds to | the Round 8 section above, in this same file |
+
+## What Round 8 found, and the one that is mine
+
+QA-82-009 is closed: all seven of round 7's former failures pass, a true empty
+store stays quiet, a damaged row is not counted as future history, the owner's
+coordinates survive and QA-82-007's privacy boundary is intact. Every earlier
+finding held.
+
+Three siblings of the same class remained. **The first was introduced by the
+round 7 repair**, and that is worth saying plainly rather than filing beside the
+other two: the sentence added to stop an empty display being read as an empty
+store was itself a claim about the store, and on the very fixture it was written
+for it sat directly above the fault panel it denied.
+
+| Finding | What was said | What was also true |
+| --- | --- | --- |
+| **QA-82-010** | "nothing has been lost and **nothing is unreadable**" | six rows immediately below reading "could not be read" |
+| **QA-82-011** | "Nothing has **ever** come in about sleep & recovery" | the same document's header: `Record covers: 2026-04-05 to 2026-04-08, 5 entries`, four of them Sleep |
+| **QA-82-012** | "There are no entries to show here." | two records held back from reasoning, reported only in Diagnostics, which is off by default |
+
+## QA-82-010, QA-82-011, QA-82-012 → DEF-0099. D-153
+
+**One rule, one level up from D-152.** D-152 separated the reasons a list can be
+empty. This is about the **sentence**: a projection is a reading of one moment,
+and a sentence about it may not reach past that moment.
+
+**The reassurance.** It now says only what it is reassuring the owner of —
+*"None of it has been lost; move forward and it is there."* — and adds *"The rows
+below are a separate matter."* when there are any. The absolute about readability
+is gone in both directions, not merely moved behind a condition: QA's probe
+scans the source for it, and I agree with the stricter reading. A clause that is
+true today and is the wrong shape is how this class keeps coming back.
+
+**The area.** `evidenceByDomain` still skips records dated after the moment —
+that rule is correct and is proved by a reintroduction that lets one become
+current evidence. What it now also does is **count** them, so `DomainCoverage`
+carries `later` and the sentence can tell the two silences apart:
+
+```text
+Nothing has come in about sleep & recovery at this point. 4 entries here are
+later than it.
+```
+
+Where nothing has genuinely ever arrived, *"Nothing has ever come in about X"*
+stays, because there it is true and it is the sentence that tells him the app is
+not hiding a gap. That is also proved by reintroduction.
+
+**The fault that was read.** `historySection` walked `unreadable` and left
+`timeline.tangled` sitting beside it. Both lists are reported now, separately,
+because they are different things to tell somebody:
+
+```text
+Rows that could not be read, kept rather than dropped. …
+- A record — could not be read — 8 things wrong with it
+
+Rows that were read without trouble but have a problem the app could not
+resolve: they disagree about what replaces what, so none of them is used.
+
+- An entry — and another each claim to replace the other, so neither is used
+- An entry — and another each claim to replace the other, so neither is used
+```
+
+Two lines for two records, not one summary. No day heading, no entry count, no
+invented date — a held-back row is not history that happened, and dressing it as
+one would be worse than omitting it. That is proved by reintroduction too.
+
+## The tests Round 8 named, and what they assert now
+
+| Named | What it asserts now |
+| --- | --- |
+| the new browser test rejects the old sentence and requires "later than the moment on screen" and a coordinate, but never rejects the new absolute | `qa-82-round-8.test.ts` reads the screen's source for any absolute about readability and requires the reassurance to survive; and reads the document's Recent record body for both facts without either denying the other |
+| the new synthetic tests prove future count, damaged count and coordinates as separate facts and never render the combined sentence | Every new assertion is against a whole section body or the rendered sentence, and one compares Coverage's wording against the areas named in the same document's record span |
+| their replacement-cycle coverage checks `later === 0` only for empty and malformed-only stores; no case reaches `tangled` with no displayable entry | A two-record cycle store is built, asserted to reach `tangled: 2, unreadable: 0, total: 0, later: 0`, and its faults required in Recent record under all three selections |
+| Coverage's tests ensure future records do not become current evidence, but none puts that beside the absolute summary | Both halves are asserted together: `lastEvidenceAt` stays undefined **and** the summary says "at this point" and how much is later |
+
+## Exact verification results
+
+Every figure names the head it was measured on — D-147.
+
+| Gate | Round 7 (`6a9c53e`) | Round 8 (`675aedd`) |
+| --- | --- | --- |
+| Aggregate `npm run verify` from a clean clone of the tracked head | PASS | **PASS** — format, lint, typecheck, tests, build; exit 0 |
+| Unit / synthetic / contract / adversarial | 1,625 across 71 files | **1,639 / 1,639 across 72 files** |
+| Browser, three widths (360, 430, 1,280px) | 552 / 552 | **552 / 552 — one clean run, 10.1 minutes, no transient** |
+| Android-style gate, against the **deployed** build | clean — 144 | **clean — 144 checks, in one run** |
+| Privacy scan | clean, 243 | **clean — 248 tracked files** |
+| Tournament | 100/100 and 100/100 | **100 / 100 deterministic, 100 / 100 hybrid** |
+| CI at the head being handed off | green at `6a9c53e` | **green** — run `33005154358` at `675aedd`, both jobs |
+| QA's round 4–7 probes | exit 0 | **exit 0**, unmodified |
+| QA's round 8 probe | exit 1 — four failures | **exit 0**, unmodified |
+| Reintroductions proved, this round | 8 | **9** |
+
+One new test file: `tests/synthetic/qa-82-round-8.test.ts`, 14 tests.
+
+**The untracked owner-review file** still warns under `npm run format:check` in
+this working directory. It is untracked, unchanged, absent from the clean clone
+and from CI — confirmed again rather than asserted — and everything was staged by
+explicit path.
+
+## Every reintroduction, and its result
+
+Nine mutations, each applied to the repaired tree, the named suites run, the tree
+restored. **Nine failures, none by a module-load or type error.** The focused set
+is `qa-82-round-8` through `qa-82-round-4`, `export-honesty`,
+`g007-coverage-freshness`, `architecture-guards` and `timeline`: **429 assertions
+green on the repaired tree.**
+
+| # | Reintroduced defect | Result |
+| --- | --- | --- |
+| 1 | the tangles are never reported — the finding itself | **FAILS** — 4 of 429 |
+| 2 | the tangles are reported only below readable rows | **FAILS** — 4 of 429 |
+| 3 | the tangle list is summarised to one line | **FAILS** — 3 of 429 |
+| 4 | the tangle heading stops naming the trouble | **FAILS** — 3 of 429 |
+| 5 | the later panel denies the faults below it again | **FAILS** — 1 of 429 |
+| 6 | Coverage says "ever" about a reading that is merely later | **FAILS** — 2 of 429 |
+| 7 | nothing is ever counted as later in an area | **FAILS** — 2 of 429 |
+| 8 | a later reading becomes current evidence — the opposite error | **FAILS** — 1 of 429 |
+| 9 | an area that never heard anything loses its absolute — the other opposite error | **FAILS** — 1 of 429 |
+
+Mutations 8 and 9 are there because both directions of this repair are available
+and only one of them is the defect QA reported. A fix that let future data become
+current evidence, or that softened the absolute where it is true, would pass every
+assertion aimed at the reported finding.
+
+## Preserved, unchanged
+
+- **Every Round 8 PASS.** QA-82-001 through QA-82-009 are untouched and still
+  asserted, along with D-150's scoped recomposition, D-151's owner-only
+  coordinates and D-152's four empty states. Nothing in `scope.ts` changed.
+- **All deferrals and open owner questions.** Q1, Q4, Q6, Q7, Q8 remain open. No
+  private evidence is wired into intelligence and Reach is not implemented. The
+  Phase 8 carry-forwards are unchanged, including the archived `skill-claim`,
+  `faith-anchor` and `milestone-observation` families.
+- **The deliberate non-features**, **AUD-0040 / AUD-0045 / AUD-0047**, and all 21
+  audit-section-10 items.
+- **The owner's own record**, and the rule that future data is not evidence about
+  the present. Nothing was deleted, reordered or promoted.
+
+## Documents updated
+
+- `docs/PHASE_STATUS.md` — **YELLOW — READY FOR INDEPENDENT QA, ROUND 9**, a
+  round 8 section, and a verification table rolled forward one column.
+- `docs/DECISION_LOG.md` — **D-153** (a reading of one moment may not be worded
+  as a claim about the whole record).
+- `docs/DEFECT_LEDGER.md` — **DEF-0099**.
+
+## What Round 9 should press hardest
+
+1. **The rest of the vocabulary.** This round fixed three absolutes. *Never*,
+   *ever*, *nothing*, *all*, *always* and *no* appear across Now, Life, Insights
+   and the guide, and only Coverage and Timeline were swept for them against a
+   moment.
+2. **The `later` count on a real-sized history.** It is computed per area from
+   the effective records; QA's own 5,000-row check was 466.8 ms end to end, but
+   that is one shape.
+3. **The tangle wording as a person would meet it.** *"An entry — and another
+   each claim to replace the other"* reads acceptably in a list of two and may
+   not in a list of twenty.
+4. **The three empty paths this round did not touch** — Direction, Learning and
+   Insights — which QA found honest at the earlier clock. They were read, not
+   changed; press them at other clocks.
+5. **Whether the reassurance is still worth having.** It now says less than it
+   did. If it says too little to be worth the line, that is a fair finding.
+
+---
+
+## Retest handoff — Phase 82, round 9
+
+**Model:** Claude Opus-class is the builder's; **QA runs on Codex**, per D-090.
+
+**Intelligence level:** High.
+
+**Conversation:** SAME — the Codex QA conversation that wrote Rounds 1 to 8.
+
+```text
+Continue independent QA of the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You wrote the Phase 82 Round 1 to 8 reports in
+docs/qa/PHASE_82_QA_HANDOFF.md. Round 8 confirmed QA-82-009 repaired and
+returned FAIL on three siblings: QA-82-010, the round 7 reassurance denying the
+fault panel below it; QA-82-011, Coverage saying nothing had ever come in about
+areas the same document dated and counted; and QA-82-012, a record read
+perfectly, held back from reasoning and reported nowhere the owner would look.
+All three are repaired and a repaired checkpoint is deployed.
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full — your eight reports and the
+builder's Round 8 repair response beneath them — and run Round 9 exactly as the
+retest handoff there specifies.
+
+Repaired product checkpoint:
+675aedde2483aaf578f1a73737fe3474e4d4733a
+
+Deployed SHA when the builder last proved equivalence:
+675aedde2483aaf578f1a73737fe3474e4d4733a — the Preview served the checkpoint exactly at that moment. Read
+it live from preview/build-info.json and prove checkpoint equivalence rather
+than string equality, per D-097. The documentation commit carrying this handoff
+moves the live SHA past the checkpoint.
+
+Preview:
+https://bill6006.github.io/life-command-os-rebuild/preview/
+
+Run all five of your own probes first, unchanged:
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+npx vite-node docs/qa/evidence/phase82-round5-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round6-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round7-boundary-probe.ts
+npx vite-node docs/qa/evidence/phase82-round8-boundary-probe.ts
+All five exit 0 on this head. None was modified; check that.
+
+Verify against the deployed build, not the local tree:
+
+- D-153 is the rule this round adds: a projection is a reading of one moment,
+  and a sentence about it may not reach past that moment. Walk your own
+  reproduction again — A file with damage in it at normal time, minus one week
+  and plus one week — and read the whole Timeline screen and the whole Data
+  document with Diagnostics on and off and Private off and on.
+- Press the rest of the vocabulary. Never, ever, nothing, all, always and no
+  appear across Now, Life, Insights and the guide; only Coverage and Timeline
+  were swept for them against a moment. Direction, Learning and Insights were
+  read and found honest at the earlier clock but not changed — press them at
+  other clocks.
+- Confirm both opposite errors are still refused: future data must not become
+  current evidence, an area that never heard anything must keep its absolute,
+  and a tangled row must gain no date or entry.
+- QA-82-001 through QA-82-009, D-150, D-151 and D-152 are untouched by this
+  repair. Confirm that rather than assume it.
+
+Re-verify every PASS from Rounds 1 to 8 rather than assuming it survived, and
+confirm every deferral, out-of-scope finding and audit-section-10 do-not-change
+rule is unchanged. Do not read, alter, stage or adjudicate
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md.
+
+Builder's counts to check rather than trust, each named against its head:
+aggregate verify PASS from a clean clone of the head you are handed, with CI
+green in both jobs at the checkpoint 675aedd (run 33005154358) and again at
+that head; 1,639 unit tests across 72 files; 552 / 552 — one clean run, 10.1 minutes, no transient browser at 360, 430
+and 1,280px; the deployed Android gate clean at 144 checks in one run;
+privacy scan 248 tracked files; tournament 100/100 deterministic and
+100/100 hybrid; 9 reintroductions proved, two of which exist to catch the
+opposite error rather than the reported one.
+
+Write your Round 9 result into docs/qa/PHASE_82_QA_HANDOFF.md as a new section,
+on PASS or FAIL, and end with the complete next handoff and a short launcher.
+Keep the completion marker as the single final meaningful line of that file.
+
+Do not ask me to paste the file contents.
+```
+
+### Short launcher
+
+**Model:** the strongest Codex model available. **Level:** High.
+**Conversation:** SAME — the Codex QA conversation that wrote Rounds 1 to 8.
+
+```text
+Continue independent QA of the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full and run Phase 82 Round 9 exactly as
+the retest handoff at the end of it specifies. You wrote Rounds 1 to 8; the
+builder has repaired QA-82-010 through QA-82-012 under D-153 — a reading of one
+moment may not be worded as a claim about the whole record. Keep Phase 82 YELLOW
+unless it passes.
+
+Do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->
