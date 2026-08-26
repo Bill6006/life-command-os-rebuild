@@ -4855,6 +4855,40 @@ Every figure names the head it was measured on — D-147.
 
 One new test file: `tests/synthetic/qa-82-round-7.test.ts`, 20 tests.
 
+**Checkpoint equivalence, run after the documentation commit was deployed** — the
+only moment it says anything, because before it the live SHA and the checkpoint
+were the same string:
+
+```text
+$ node scripts/checkpoint-equivalence.mjs 6a9c53e     --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Deployed SHA read live from …/preview/build-info.json:
+cc9c80ca774126a7933890c35a357d35da2660a7
+
+6 file(s) changed between 6a9c53e and cc9c80c…, none of them bundle-relevant:
+  - docs/DECISION_LOG.md
+  - docs/DEFECT_LEDGER.md
+  - docs/PHASE_STATUS.md
+  - docs/qa/PHASE_82_QA_HANDOFF.md
+  - docs/qa/evidence/phase82-round7-boundary-probe.ts
+  - docs/qa/evidence/phase82-round7-mutations.mjs
+
+Bundle-equivalent: the deployed build at cc9c80c… serves the same bytes as
+6a9c53e.
+```
+
+CI at `cc9c80c` is green in **both** jobs, including the deploy job's live
+read-back, and the Preview served that head exactly when this was run. The commit
+carrying this paragraph moves the live SHA once more, which is the case the
+checker exists for — run it rather than comparing these strings.
+
+**The D-147 finishing sequence, in the order it requires.** The last commit was
+made; the tracked head was cloned into an empty directory; `npm ci` and then the
+**aggregate** `npm run verify` were run there and exited 0; CI was waited for and
+finished green at that same SHA in both jobs; and all four of QA's probes were run
+from that clean clone and exited 0. Only then were these counts written down. The
+clean clone was confirmed not to contain the untracked owner-review file.
+
 **The untracked owner-review file.** `npm run format:check` on this working
 directory still warns on `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md`. It is untracked,
 its bytes are unchanged, and it is absent from the clean clone and from CI —
