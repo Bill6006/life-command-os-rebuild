@@ -4690,3 +4690,88 @@ over-broad fix here would quietly empty the list the guide asks from, and the
 regression asserts that as loudly as it asserts the reasons. `ConsideredFact`'s
 own `not known — <reason>` on the QA inspector is untouched: QA named it as
 already preserving the distinction, and it does.
+
+---
+
+## D-150 — A document is composed from the record it may describe, not filtered on the way out
+
+**Phase:** 82 (QA round 5) · **Status:** Active
+
+D-098 and D-148 said an excluded area is excluded from the metadata as well as
+the detail, and from every section rather than the ones somebody thought about.
+Both were implemented as **filters on renderers**, and both rounds that followed
+found renderers nobody had filtered: the coverage list, the history rows, the
+diagnostic counts, the unknown labels, the timeline page, the supersession list
+— and then Direction printing a private goal's own words, Corrections printing
+why a private answer was withdrawn, and Learning and Insights publishing
+conclusions and occasion counts computed from private readings.
+
+**A renderer is not the boundary. The record the document is composed from is.**
+
+### The case that proves it, because no filter could have caught it
+
+A private observation of the owner's energy outranks the public reading beneath
+it. The app then says _"Set today up as a light day"_ instead of _"Spend the
+next ten minutes with Adaya"_, and the reason, the subject, the follow-up, the
+limiter, the trace score and the whole ranking change with it. Every one of
+those sentences is the withheld reading's content in another form.
+
+There is no filter over a finished decision that unmakes it. Withholding only
+the fact row leaves the conclusion standing with its evidence removed, which is
+the exact failure D-091 exists to prevent, one artefact further out: a claim
+carried to a reader who cannot see what it rests on.
+
+So a conclusion drawn from a withheld record **is** that record's content, and
+goes with it. `composeExport` withholds once, at the store, and runs the app's
+own pipeline over what is left.
+
+### The composer may decide, and only here, and this is the rule rather than a hole in it
+
+`compose.ts` has said since Phase 7 that it cannot reach anything that decides —
+"an export that did its own arithmetic would be a second brain with no surface,
+and the first time it disagreed with Now, nobody would find out." The point of
+that rule is that the export must not reach a conclusion **by a means the app
+does not use**. Running the app's own pipeline, in the app's own order, over a
+store with one thing taken out of it is not a second means. It is the same
+means, shown a redacted record, which is what the owner asked for when he turned
+the section off.
+
+What it may never become is a second _way_ of concluding something, and it has
+not: `composedFrom` calls `buildView`, `assembleSituation`, `decide`,
+`insightsFor` and `assembleTimeline` and nothing else, with the architecture the
+owner's own screen used, so the only difference between the two runs is the
+record they read.
+
+### And the disagreement is declared rather than hidden
+
+The honest cost is real: with something withheld, the document can state a
+different suggestion from the one on the owner's phone. So it says so, in the
+About block, before any of it — _"Everything below is worked out from the part
+of the record in this document. The app reads the whole record, so where the
+area left out matters, what it is saying on his own screen can differ from what
+is here."_
+
+**Unconditional whenever the section is off**, whether or not anything is
+recorded in that area. A sentence that appeared only when there was something to
+withhold would be the participation leak wearing a disclosure's clothes.
+
+### Two facts, both shapes, one direction of trust
+
+- A **record** is withheld on its privacy class _or_ its area, and an **entity**
+  on either of the same two. Round 5 reached the class-without-area shape with an
+  ordinary health reading marked private, which a rule about the private _domain_
+  never sees.
+- An **unreadable row** cannot be placed in an area, so it is reported — dropping
+  it would hide a storage fault behind a privacy promise. One that _claims_ the
+  area is withheld, and the claim is trusted in one direction only: it can remove
+  a row and never add one. Round 5 found the claim read in the plural
+  (`domains`, a record's shape) and not the singular (`domain`, an entity's).
+
+### What this does not do
+
+Nothing is deleted from the owner's own store; the withholding happens in a copy
+the composer makes, and section 11's rule that discretion is a display decision
+and never a storage decision is intact. Deliberate opt-in restores the detail
+_and_ the counts. No public section is disabled, no genuine unknown is removed,
+and no private evidence is wired into intelligence — Q8 and the Reach package
+are untouched.

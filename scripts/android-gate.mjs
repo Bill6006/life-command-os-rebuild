@@ -1069,6 +1069,19 @@ async function main() {
       withPrivateOff,
     ) && /- Records still standing after corrections: \d+/.test(withPrivateOff),
   )
+  /*
+   * And it says what it was worked out from — QA-82-007, round 5.
+   *
+   * The exclusion reaches the record the document is composed from, not only
+   * the rows it prints, so the app's own screen can be saying something else.
+   * A reader not told that would take this for a photograph of it.
+   */
+  check(
+    'and says the app itself reads more than this document does',
+    /Everything below is worked out from the part of the record in this document/.test(
+      withPrivateOff,
+    ),
+  )
   await sideways('Data, the private area left out')
 
   await loadScenario('One answer, and a lot of silence')

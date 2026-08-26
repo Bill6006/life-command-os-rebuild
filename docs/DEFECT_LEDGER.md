@@ -41,7 +41,63 @@ None.
 
 ### DEF-0096 — a document that left the private area out still reported its size
 
-- Status: Fixed
+- Status: **Reopened by QA round 5, and closed again at the store rather than
+  the renderers.** The round 4 repair was correct in the four places it looked
+  and absent in five more; what follows records both passes, because the second
+  is the interesting one.
+- Reopened by: independent QA round 5 — QA-82-007, five constructed
+  paired-history cases
+- What the first repair missed: it filtered **renderers**. Diagnostics counted
+  the records it was allowed to count, the timeline took its page from what it
+  was allowed to show, the supersession list dropped entries pointing at
+  withheld records — and `directionSection`, `correctionsSection`,
+  `learningSection`, `insightsSection` and `nowSection` were handed the whole
+  history and the finished decision and were never filtered at all. So a
+  private-off document printed a private goal's statement and a private
+  commitment verbatim, printed the reason a private answer was withdrawn, and
+  published relationship counts, date spans and trends computed entirely from
+  private readings.
+- The case that settles where the boundary belongs: a private observation of
+  the owner's energy outranks the public one beneath it, and the suggestion
+  changes from ten minutes with Adaya to a light day — along with its reason,
+  subject, follow-up, limiter, trace score and ranking. **There is no filter
+  over a finished decision that unmakes it.** Withholding only the fact row
+  leaves the conclusion standing with its evidence removed, which is what
+  D-091 exists to prevent.
+- Second root cause: `composeExport` composed from the caller's objects, which
+  are the ones the owner's own screens render — the whole history, the whole
+  decision, the whole insights report. It now withholds once at the store
+  (`src/features/export/scope.ts`) and runs the app's own pipeline over what is
+  left, declaring in the document that it has done so. **D-150.**
+- Second regression: `tests/synthetic/qa-82-round-5.test.ts` — a table of
+  private things **by kind**, each reaching a different section, asserted to
+  change nothing about a private-off document: a goal with its subject and a
+  commitment; a withdrawal and its reason; a supersession pointing at nothing; a
+  subject nothing refers to; unreadable rows naming the area in the singular, in
+  the plural, and by privacy alone; three carrying only one of the two privacy
+  facts; a reading the decision would otherwise have used; and the readings a
+  relationship was learned from. Plus the other direction — opt-in restores
+  detail and counts, the public record stays whole, the document says what it
+  was worked out from, an unclassifiable unreadable row is still reported, and
+  the owner's own store is untouched. Fourteen reintroductions run, all
+  fourteen fail, none by a module-load or type error.
+- Why the first regression could not see it: it injected one inert
+  `privatePattern` observation into all 24 histories and asserted paired
+  equality. That record is not a goal, not a correction, not a reading anything
+  decides from and not one side of a learned relationship, so it reaches none
+  of the five leaking paths. **A paired-history property only covers the
+  sections the private data can actually reach** — QA's sharpest sentence this
+  phase, and the reason the new table is a table of kinds.
+- Siblings, second pass: `claimsWithheld` read a record's plural `domains` and
+  not an entity's singular `domain`, so a malformed entity naming the private
+  area was counted. Both shapes are read now, and the one-way trust is
+  unchanged: a row that says nothing about its area is still reported.
+- Fixed in: the checkpoint that closes QA round 5. The round 4 entry below
+  stands as written; nothing in it was wrong, and all of it was insufficient.
+
+### DEF-0096 (round 4) — the first pass, at the renderers
+
+- Status: Superseded by the entry above
 - Severity: Blocker — the participation fact a private record's discretion
   exists to protect, disclosed under an explicit promise not to, in the document
   **Select all** produces
