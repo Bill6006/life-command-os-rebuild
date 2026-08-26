@@ -50,11 +50,39 @@ export interface Standing {
 
 export function standingFor(coverage: DomainCoverage): Standing {
   if (coverage.status === 'unheard') {
-    return {
+    /*
+     * Two areas can be empty here for two different reasons — QA-82-013.
+     *
+     * `unheard` means nothing has come in **at the moment being read**. On a
+     * history the owner has travelled behind, that is also true of an area he
+     * has mentioned four times, because those records are dated later than
+     * where he is standing. The group word is honest about the moment; the note
+     * was not, and it told him he had never mentioned Sleep on a screen whose
+     * own records say otherwise a week forward.
+     *
+     * The word stays, because "Nothing here yet" is a claim about now and is
+     * true of both. The note becomes true of both as well, and the areas that
+     * are merely ahead of him say so on their own line.
+     *
+     * **The line only appears when there is one to write.** A group grows the
+     * per-area layout as soon as any of its areas has a detail, and on an
+     * ordinary history at an ordinary clock nothing here is later, so the
+     * compact list stays — which is what the note above `groupsFrom` is
+     * protecting.
+     */
+    const ahead: Standing = {
       word: 'Nothing here yet',
       attention: false,
-      note: 'You have not mentioned these, and nothing is asking you to.',
+      note: 'Nothing here at the moment on screen, and nothing is asking you for it.',
+      detail: (entry) =>
+        `${entry.later} ${entry.later === 1 ? 'entry' : 'entries'} here, all later than the moment on screen.`,
     }
+    const untouched: Standing = {
+      word: ahead.word,
+      attention: false,
+      note: ahead.note,
+    }
+    return coverage.later > 0 ? ahead : untouched
   }
   if (coverage.status === 'current') {
     return {

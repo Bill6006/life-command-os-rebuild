@@ -479,10 +479,27 @@ function coverageSection(request: ExportRequest, header: ExportHeader): readonly
   for (const domain of situation.coverage.domains.filter((entry) =>
     mayName(entry.domain, header),
   )) {
+    /*
+     * The prefix on this bullet, and the summary after it, are one sentence —
+     * QA-82-011, reopened.
+     *
+     * Round 8 repaired `domain.summary` and left this alone, so the rendered
+     * line read *"nothing heard at all. Nothing has come in about sleep &
+     * recovery at this point. 4 entries here are later than it."* — the two
+     * halves of one bullet contradicting each other, which is worse than the
+     * absolute on its own was.
+     *
+     * `daysSinceHeard` is undefined for an area whose only records are later
+     * than the moment, exactly as it is for one that has never been heard from,
+     * so it cannot tell them apart. `later` is the fact D-153 added for this,
+     * and it is read here as well as there.
+     */
     const heard =
-      domain.daysSinceHeard === undefined
-        ? 'nothing heard at all'
-        : `last heard ${countOf(domain.daysSinceHeard, 'day', 'days')} ago`
+      domain.daysSinceHeard !== undefined
+        ? `last heard ${countOf(domain.daysSinceHeard, 'day', 'days')} ago`
+        : domain.later > 0
+          ? 'nothing heard yet'
+          : 'nothing heard at all'
     lines.push(
       bullet(
         fromSources(
