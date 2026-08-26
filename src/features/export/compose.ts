@@ -760,6 +760,33 @@ function historySection(request: ExportRequest, header: ExportHeader): readonly 
     }
   }
 
+  /*
+   * And the rows that were read perfectly and cannot be used — QA-82-012.
+   *
+   * A record that says it replaces something absent, or two that each claim to
+   * replace the other, parse fine and are then held back from reasoning by
+   * `resolveHistory`. They are a storage fault by any reading the owner cares
+   * about, and this section reported none of them: the block above walks
+   * `unreadable`, and a history whose only trouble is a supersession cycle has
+   * an empty one. Timeline showed both lists from the start; the document
+   * showed one, and Diagnostics — which is off by default — was the only place
+   * the other appeared.
+   *
+   * Kept separate from the unreadable list rather than merged into it, because
+   * they are different things to tell somebody: one is a row the app could not
+   * read, the other is a row it read and cannot trust.
+   */
+  if (timeline.tangled.length > 0) {
+    lines.push(
+      '',
+      'Rows that were read without trouble but have a problem the app could not resolve: they disagree about what replaces what, so none of them is used.',
+      '',
+    )
+    for (const row of timeline.tangled) {
+      lines.push(bullet(`An entry — ${row.problem}`))
+    }
+  }
+
   // A section with nothing at all in it says so rather than being absent, which
   // is D-091's second invariant: an abstention is written down.
   if (lines.length === 0) return [NOTHING_HERE]

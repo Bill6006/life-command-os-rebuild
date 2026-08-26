@@ -84,10 +84,23 @@ export function TimelineScreen() {
           }
         >
           {onlyLater ? (
+            /*
+             * The claim is about the later entries, not about the store —
+             * QA-82-009's repair, corrected by QA-82-010.
+             *
+             * The first version of this said "nothing has been lost and nothing
+             * is unreadable", unconditionally, and on the fixture it was written
+             * for it sat directly above six rows whose reason is "could not be
+             * read". Reassuring the owner about the entries that are simply
+             * ahead of him is right; doing it in words that deny the fault panel
+             * underneath is the same defect this sentence was added to fix,
+             * pointing the other way.
+             */
             <p>
               There is history here — {data.later} {data.later === 1 ? 'entry' : 'entries'} — but
-              all of it is later than the moment on screen. Nothing has been lost and nothing is
-              unreadable; move forward and it is there.
+              all of it is later than the moment on screen. None of it has been lost; move forward
+              and it is there.
+              {damaged === 0 ? '' : ' The rows below are a separate matter.'}
             </p>
           ) : damaged === 0 ? (
             <p>

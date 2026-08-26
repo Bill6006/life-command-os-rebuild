@@ -107,6 +107,7 @@ describe('the status word Life puts on a group of areas', () => {
     sources: [],
     lastEvidenceAt: undefined,
     daysSinceEvidence: undefined,
+    later: 0,
     daysSinceHeard: undefined,
     source: undefined,
     concepts: [],

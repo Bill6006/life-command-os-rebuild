@@ -1,4 +1,5 @@
 import type { ConceptDefinition, ConceptRegistry } from '../domain/concepts'
+import { countOf } from '../domain/counts'
 import type { DomainRegistry, LifeDomainId } from '../domain/domains'
 import type { EntityIndex } from '../domain/entities'
 import type { RecordId } from '../domain/ids'
@@ -153,6 +154,13 @@ export interface DomainCoverage {
   readonly lastEvidenceAt: Instant | undefined
   readonly daysSinceEvidence: number | undefined
   /**
+   * Readable records here dated after the moment being read — QA-82-011.
+   *
+   * Carried so a surface can tell "nothing yet" from "nothing ever" without
+   * walking the history again, and so the two sentences cannot drift apart.
+   */
+  readonly later: number
+  /**
    * When anything at all was last heard about this area, momentary readings
    * included.
    *
@@ -286,6 +294,21 @@ interface DomainEvidence {
    */
   readonly heardAt: ReadonlyMap<LifeDomainId, Instant>
   /**
+   * How much of each area is dated after the moment being read — QA-82-011.
+   *
+   * Skipping future records is right: a reading from next week is not evidence
+   * about now, and treating it as current would make an area look fresh on the
+   * strength of something that has not happened. What was wrong was the
+   * **sentence** that came out of the resulting silence. With the laboratory
+   * clock a week back from a fixture's own dates, the app said *"Nothing has
+   * ever come in about sleep & recovery"* in the same document that reported
+   * five later entries and named their 5–8 April span.
+   *
+   * Never having been told and not having been told **yet** are different, which
+   * is G-009's own rule about a value applied to an area and a moment.
+   */
+  readonly laterAt: ReadonlyMap<LifeDomainId, number>
+  /**
    * Every distinct origin heard about an area, meaningful or momentary.
    *
    * Collected beside `heardAt` rather than derived from `meaningful`, because
@@ -300,6 +323,7 @@ interface DomainEvidence {
 function evidenceByDomain(view: MemoryView, moment: CoverageMoment): DomainEvidence {
   const out = new Map<LifeDomainId, Evidence[]>()
   const heard = new Map<LifeDomainId, Instant>()
+  const later = new Map<LifeDomainId, number>()
   const heardSources = new Map<LifeDomainId, Set<ProvenanceSource>>()
   const addHeard = (domain: LifeDomainId, at: Instant, record: CanonicalRecord): void => {
     const held = heard.get(domain)
@@ -324,7 +348,14 @@ function evidenceByDomain(view: MemoryView, moment: CoverageMoment): DomainEvide
     // A record dated in the future is not evidence about now. Time travel makes
     // this reachable, and treating it as current would make an area look fresh
     // on the strength of something that has not happened.
-    if (record.occurredAt > moment.now) continue
+    //
+    // It is counted on the way past, though — QA-82-011. The exclusion is
+    // right and the silence it leaves is not the same silence as never having
+    // been told, and only something that has seen both can tell them apart.
+    if (record.occurredAt > moment.now) {
+      for (const domain of record.domains) later.set(domain, (later.get(domain) ?? 0) + 1)
+      continue
+    }
 
     if (bearsConcept(record)) {
       const definition = moment.concepts.definitionFor(record.concept)
@@ -362,7 +393,7 @@ function evidenceByDomain(view: MemoryView, moment: CoverageMoment): DomainEvide
     }
   }
 
-  return { meaningful: out, heardAt: heard, heardSources }
+  return { meaningful: out, heardAt: heard, laterAt: later, heardSources }
 }
 
 /**
@@ -444,7 +475,12 @@ function strengthFor(
   return 'weak'
 }
 
-function describe(label: string, status: CoverageStatus, daysSince: number | undefined): string {
+function describe(
+  label: string,
+  status: CoverageStatus,
+  daysSince: number | undefined,
+  later: number,
+): string {
   switch (status) {
     case 'current':
       /*
@@ -474,7 +510,18 @@ function describe(label: string, status: CoverageStatus, daysSince: number | und
        */
       return `${label} has been quiet, without anything here needing your attention.`
     case 'unheard':
-      return `Nothing has ever come in about ${label.toLowerCase()}.`
+      /*
+       * "Ever" is a claim about the whole record, and this state is a reading
+       * of one moment — QA-82-011.
+       *
+       * A history dated after the moment being read leaves exactly the same
+       * silence here as a history that was never written, and the app said the
+       * same absolute thing about both. Saying which one it is costs a clause
+       * and stops the document contradicting its own record span.
+       */
+      return later > 0
+        ? `Nothing has come in about ${label.toLowerCase()} at this point. ${countOf(later, 'entry', 'entries')} here ${later === 1 ? 'is' : 'are'} later than it.`
+        : `Nothing has ever come in about ${label.toLowerCase()}.`
     case 'stale':
       // About the app's knowledge, in the app's own voice. Not a claim about
       // how the owner has been living — DEF-0012's rule, on the one kind of
@@ -543,7 +590,7 @@ export function assembleCoverage(
   entities: EntityIndex,
   moment: CoverageMoment,
 ): CoverageState {
-  const { meaningful, heardAt, heardSources } = evidenceByDomain(view, moment)
+  const { meaningful, heardAt, laterAt, heardSources } = evidenceByDomain(view, moment)
   const coming = domainsWithEvidenceComing(view, moment)
   const today = localDayIdAt(moment.now, moment.zone)
 
@@ -579,6 +626,7 @@ export function assembleCoverage(
         : Math.max(0, localDaysBetween(localDayIdAt(newest.at, moment.zone), today))
 
     const heard = heardAt.get(domain.id)
+    const laterHere = laterAt.get(domain.id) ?? 0
     const daysSinceHeard =
       heard === undefined
         ? undefined
@@ -708,6 +756,7 @@ export function assembleCoverage(
       matters,
       lastEvidenceAt: newest?.at,
       daysSinceEvidence,
+      later: laterHere,
       daysSinceHeard,
       source: newest?.source,
       /*
@@ -719,7 +768,7 @@ export function assembleCoverage(
       concepts: conceptRows,
       weakest,
       refresh: routeFor(status, standing, coming.has(domain.id), subjects.has(domain.id)),
-      summary: describe(domain.label, status, staleFor ?? daysSinceHeard),
+      summary: describe(domain.label, status, staleFor ?? daysSinceHeard, laterHere),
     })
   }
 
