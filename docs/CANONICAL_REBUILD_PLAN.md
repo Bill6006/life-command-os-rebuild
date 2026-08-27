@@ -91,6 +91,20 @@ routing label; D-109 stands. No completed phase is reopened and no canonical
 phase is renumbered, so this does not warrant its own version number for the same
 reason the addenda above did not.
 
+**v1.2 addendum (D-174 to D-176):** routing 83 built the ordinary-use acceptance
+instrument D-161 asks for and repaired the defects the owner-use review found,
+and its own sweeps produced three further rules. **A copy catalogue is rendered
+along every axis its sentence branches on** (D-174) — the instrument built in
+Phase 81 to render every no-action sentence renders them against one history, so
+the sentence that called four records "plenty of history" was never rendered by
+it. **A promise about what a surface will not show lives beside the policy that
+decides it** (D-175) — the Private page's promise was written in one file and
+implemented in another and they disagreed for four phases. **Every owner-facing
+control carries an accessible name, and a placeholder is not one** (D-176) —
+section 37 now says so directly, and section 26 gains Timeline's own version of
+D-153. None of this reopens a completed phase or changes the sequence, so it does
+not warrant its own version number for the same reason the addenda above did not.
+
 ## v1.1 change log
 
 This revision closed four implementation ambiguities before developer handoff:
@@ -1359,6 +1373,7 @@ It should show meaningful history such as:
 - Malformed records should not crash Timeline.
 - Unreadable rows should be isolated/reported.
 - Timeline should never create phantom actionable items from corrupt data.
+- **Timeline describes itself as what is recorded, not as what happened.** The app does not watch the owner's life; it holds what it was told and what it worked out from that. The owner-use review found the page opening with _"Everything that happened, in the order it happened."_ over a partial record, and calling three of four entries "the whole record" on a history holding one dated later. A sentence about how much of the record is on the page is checked against how much is on the page (D-153, D-174).
 
 ---
 
@@ -1909,6 +1924,8 @@ This is developer/QA information, not normal daily copy.
 - reduced motion;
 - screen-reader labels;
 - no accessibility “fix” that disables zoom.
+
+**Every owner-facing control carries an accessible name, and a placeholder is not one (D-176).** An `<input>`, `<textarea>` or `<select>` is named by `aria-label`, by `aria-labelledby`, by being wrapped in a `<label>`, or by an `id` a `htmlFor` points at. A placeholder is a hint, it disappears the moment there is anything in the field, and assistive technology is not required to read it. A free-text control also states, in view while the owner is typing, what the app will do with the answer — the owner-use review found the owner typing into a box with no way to tell whether the app understood the answer as a current fact, a standing constraint or an event.
 
 ## Test widths
 

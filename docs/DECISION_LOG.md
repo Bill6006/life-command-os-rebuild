@@ -5772,3 +5772,108 @@ the child copy guard from Phase 81, no wellness composite, no Life Score. A phas
 about progress is where those are most likely to be quietly lost.
 
 ---
+
+## D-174 — A copy catalogue is rendered along every axis its sentence branches on
+
+**Phase:** 83 · **Status:** Active
+
+A sweep that renders a catalogue of owner-facing copy must vary **every input
+the copy branches on**, not only the one the last defect was found on.
+
+**Why:** `no-action-copy.test.ts` exists because a sweep that asks _which words
+appear_ can only see the states the scenario library happens to reach. It was
+written in Phase 81, it renders every no-action reason at every part of the day,
+and it found two further defects of its own class on its first run. It did not
+find F39, and the reason is the rule.
+
+It renders against **one** history — a man three nights short of sleep. On that
+history `nothing-proposed` always has a recovery limiter and therefore always
+takes the limiter branch, so the sentence underneath it, the one that said
+_"There is plenty of history here"_, was never rendered by the instrument built
+to render every sentence. The catalogue had one axis and the sentence branched
+on two: the block **and** the history it was standing on.
+
+**The rule.** Before a catalogue is called complete, list what the sentences
+under it actually switch on and check that the catalogue varies each of them.
+For the no-action copy that is the block, the rejection shape and the size and
+shape of the history; for Timeline's own claims about the record it is how much
+of the record is at or before the moment being read.
+
+**What this is not.** It is not a demand that every test be a cross-product of
+everything. It is a question to answer once per catalogue, in the file, in
+writing — and the answer is cheap to check because the branches are visible in
+the function being swept.
+
+**Discovered by this phase rather than before it.** The rule became visible only
+when the sweep for F39 was written and the existing catalogue turned out to have
+been passing over the defect for two phases. It is recorded here so that the
+next catalogue starts with the question rather than with one axis.
+
+---
+
+## D-175 — A promise about what a surface will not show lives beside the policy that decides it
+
+**Phase:** 83 · **Status:** Active
+
+Where the app promises the owner that something will not appear somewhere, the
+sentence is written in the module that implements the withholding, and the
+surface renders it from there.
+
+**Why:** the Private page said _"Nothing here appears anywhere else."_ in
+`features/life/domainPages.ts`. What a primary surface may show is decided by
+`mayShowDetail` and `discreetPlaceholder` in `domain/privacy.ts`, which withhold
+the **detail** of a private record and deliberately keep the row. Two files, one
+claim about the other's behaviour, and they disagreed from Phase 5 until an
+independent reader opened Timeline in Phase 82's aftermath. Nothing could have
+noticed: there was no place where both facts were in view.
+
+**Concretely:** `PRIVATE_PAGE_PROMISE` is exported from `domain/privacy.ts` and
+`domainPages.ts` renders it. A change to `mayShowDetail` is now a change to a
+promise in the same file, and the regression reads the constant from one end and
+a rendered private record from the other.
+
+**The general form.** A promise about behaviour is a claim, and a claim belongs
+where its evidence is (D-143's shape, one layer up). This applies to any surface
+that tells the owner what it will not do — discretion, exclusion from an export,
+a reading held back from reasoning.
+
+**What this does not settle.** Which of the two repairs section 11 allows is the
+right one in a given case. Here the row stayed on Timeline and the promise
+changed, because on the owner's own screen a record that hides rows from him is
+a record he cannot trust the length of — and the export, where the reader is
+somebody else, drops the row instead (DEF-0096). Same policy module, two
+surfaces, two correct answers.
+
+---
+
+## D-176 — Every owner-facing control has a name and says what the answer is for
+
+**Phase:** 83 · **Status:** Active · **Binds:** 83, 90, 93
+
+Every `<input>`, `<textarea>` and `<select>` on an owner-facing surface carries
+an accessible name — `aria-label`, `aria-labelledby`, a wrapping `<label>`, or a
+`htmlFor` that points at it — and every free-text control also states, in view
+while the owner is typing, what the app will do with the answer.
+
+**A placeholder is neither.** It is a hint, it disappears the moment there is
+anything in the field, and assistive technology is not required to read it.
+
+**Why now rather than in the accessibility phase:** canonical Phase 9 designs
+repeated components. An unlabelled input inherited into the design system
+becomes settled design, and Phase 11's accessibility attack would then be
+re-opening a passed phone gate rather than finding a bug. F40 is the finding;
+the timing is the adjudication's.
+
+**Why the second half is not decoration.** E13 recorded the owner typing into a
+box and having no way to tell whether the app understood the answer as a current
+fact, a standing constraint, an aspiration or an event. A name tells assistive
+technology what the control is. The note tells everybody what happens next, and
+on a domain page that is the difference between _"add this"_ and _"this becomes
+what the app believes from now on"_.
+
+**Enforced rather than remembered.** `tests/unit/architecture-guards.test.ts`
+scans every control under `src/features` and fails the build on one with no
+name; `tests/browser/phase83.spec.ts` asks the running app the same question
+through `element.labels`, which is what a browser actually computes a name from.
+
+---

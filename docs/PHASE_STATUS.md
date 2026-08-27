@@ -99,7 +99,7 @@ re-scope), and no canonical phase is renumbered.
 
 | Routing | Product / canonical name                                 | Blocked on                        |
 | ------- | -------------------------------------------------------- | --------------------------------- |
-| **83**  | The instrument, and the things that are untrue           | **nothing — ready to dispatch**   |
+| **83**  | The instrument, and the things that are untrue           | **YELLOW — with independent QA**  |
 | **84**  | What the owner is trying to become                       | nothing; D-166…D-169 all answered |
 | **90**  | **Canonical Phase 9** — visual coherence, motion, mobile | 84                                |
 | **91**  | Later intelligence — Reach, then Validity                | 90, and Q6's adjudication (D-172) |
@@ -117,6 +117,297 @@ routing integer.
 the orchestrator, no `PHASE_83_QA_HANDOFF.md` exists, and the owner ran it
 directly. Routing 83 belongs to the build phase, and the held handoff's scope is
 superseded rather than reused.
+
+---
+
+# Routing Phase 83 — The instrument, and the things that are untrue
+
+**Status: YELLOW — READY FOR INDEPENDENT QA.**
+
+Canonical product name: _the instrument, and the things that are untrue_.
+**Routing integer 83** (plan section 43A, D-159) — the `**Phase:**` field of
+every handoff in this phase and its rounds carries `83`, never a decimal and
+never a canonical phase number.
+
+The phase the product adjudication created (D-158): the ordinary-use acceptance
+instrument, and then the small set of things the app states or does that are
+wrong. Deliberately Phase 81's shape. Blocked on no owner decision, and it
+opened none.
+
+**A builder conversation may not approve its own phase** (D-077). The QA brief is
+[`qa/PHASE_83_QA_HANDOFF.md`](qa/PHASE_83_QA_HANDOFF.md).
+
+## Checkpoint
+
+| Fact                    | Value                                                                      |
+| ----------------------- | -------------------------------------------------------------------------- |
+| Product checkpoint      | `582f648` — the commit the gate was run on (D-147)                         |
+| Documentation head      | the commit that closes this section                                        |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                |
+| Owner-visible behaviour | **changed** — Now, Timeline, the Private page and two domain-page controls |
+| Owner phone check       | required before GREEN                                                      |
+| Independent QA          | required — Codex, new conversation                                         |
+
+## Exact verification results
+
+| Gate                                      | Result                                                                        |
+| ----------------------------------------- | ----------------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — format, lint, typecheck, 1,753 tests in 80 files, build            |
+| Unit / contract / synthetic / adversarial | **1,753 passed** (1,675 before this phase; +78)                               |
+| Browser, three widths, one worker         | **582 passed** (552 before this phase; +30) — 194 per width                   |
+| Android-style gate                        | **clean — 183 checks** (119 in Phase 82); the deployed run is in the QA brief |
+| Privacy scan                              | **clean** — 262 tracked files                                                 |
+| Block sweep                               | **PASS** — unchanged, and the three new histories pass it                     |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about the child or the owner   |
+
+## The five packages
+
+### 83.0 — The ordinary-use instrument (F38, D-161)
+
+Three near-empty histories, in the **shipped** library rather than the test tree,
+so the QA laboratory offers them and the same store the suite walks is one the
+owner can tap through on a phone:
+
+| Scenario            | What it holds                                  | Why                            |
+| ------------------- | ---------------------------------------------- | ------------------------------ |
+| `the-first-evening` | one record — a single guide answer             | where an ordinary owner starts |
+| `four-records`      | four answers over three days, none withdrawn   | F39's case, unambiguously      |
+| `three-days-since`  | a walk completed on the 22nd, read on the 25th | F43's case, at the boundary    |
+
+`tests/synthetic/journey.ts` is the instrument. It opens a history into a real
+`createMemoryStore` and drives it with the gestures an owner has — a guide
+answer, the five lifecycle controls, the result follow-up, a fact correction —
+each one calling the builder its surface calls. `OWNER_ROUTES` is the table of
+every control that appends to the record, with what it writes **and what must
+already exist before it appears**, and `reachableRecordKinds()` walks it as a
+fixpoint from an empty store. That is what makes the table an assertion rather
+than a claim: `goal` is written only by a control that needs a goal, so it comes
+out unreachable without anybody arguing about it.
+
+**The journey gets past three of its eight steps from a store of one record**,
+and saying so is part of the instrument — a run that only recorded failures
+would be as unfaithful as the fixtures it replaces. Two guide answers produce
+_"Move for 25 minutes: a walk."_; **Start it** and **Done** record it; twenty
+minutes later the app asks for a reading of current energy rather than a grade
+(D-089); correcting that reading on the Health page moves the recommendation to
+_"Start winding down now and let tonight be a recovery night."_
+
+**And one answer is enough to be offered a course.** _"Running on empty"_ on the
+first evening produces a recovery move with _"Make this a run of recovery
+nights?"_ beside it. That is asserted rather than argued, because it is the one
+non-obvious entry in the route table: `thread` is reachable from guide answers
+alone for exactly one of the three thread shapes, and the study schedule and the
+growth ladder ride on moves that need an entity nothing can create.
+
+### The enumerated brief — where an ordinary journey cannot proceed
+
+**This list is the deliverable, and it is routing 84's brief.** It is produced by
+a real run and held against a written table in
+`tests/synthetic/ordinary-use-journey.test.ts`; nothing here is a description of
+the code from outside it.
+
+| Step                       | What the owner was trying to do                              | Why it stops                                                                                                                                                                                                                                                                                                                                 | Where it belongs                        |
+| -------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| **1. Unknown aspiration**  | say what he is trying to become, before he can name it       | No concept in the registry is about anything he is aiming at. The longest-horizon thing he can state is **this week's focus** (`direction.weekly-focus`); there is no destination, no milestone, no starting point.                                                                                                                          | routing 84, package 1 (F01, F35, D-162) |
+| **2. Discovery**           | be asked something that would surface what matters to him    | The guide asked two questions — current energy, soreness — and its whole catalogue is six readings of today's capacity. It has no question that could surface an aspiration, and D-036 caps it at three a day anyway.                                                                                                                        | routing 84, package 4 (F02, D-163)      |
+| **3. Object creation**     | name a goal, a topic, a person, a place or a skill           | **No control on any screen calls `createEntity`.** Entities reach the store through three doors and all three are a file: the QA laboratory, the legacy importer, restore. `constraint`, `goal`, `commitment` and `relationship-event` have no owner route at all — a goal can be corrected once it exists and cannot be brought into being. | routing 84, package 3 (F04, F12, F19)   |
+| **5. Interruption**        | say he was interrupted, then pick the same thing back up     | **Can't right now** is recorded and the move then leaves the screen: Now reads _"Nothing new for today."_ `TRANSITIONS` allows `unable-now → started, completed or declined` and no surface ever offers them again. Nor is a reason asked for or stored — `planLifecycle` takes one and `NowScreen` passes none.                             | routing 84 riders F10/F11/F13, and F07  |
+| **7. Correction (events)** | correct what the app **recorded**, not only what it believes | A fact corrects from its own row on a Life page and that works. Nothing withdraws a completion, moves an entry to the day it happened, or backfills one that was never recorded. `liftVetoRecord` is the only writer of a `correction` record and it corrects a veto.                                                                        | routing 84 rider F32/F36, after D-165   |
+
+**Four further points the instrument found in passing**, recorded so they are not
+rediscovered:
+
+- **A control no shipped history reaches.** The coverage correction —
+  _"Something's changed"_ — requires an area to be stale **and** to have no
+  single overdue reading to point at instead. No history in the library is in
+  that state at the moment it is written for; four weeks on from a studying
+  history is where it first appears. Its browser test travels to reach it.
+- **A field written by nothing and read by nothing.** `ActionUnableNowRecord`
+  carries a `blocker`, `Episode` carries it forward, and no surface supplies it
+  and no reader consumes it. That is F07 exactly, from the other end.
+- **The result follow-up is invisible for the first twenty minutes.** `SOON`
+  opens the outcome window twenty minutes after a completion, by design — a
+  question about how something went has no answer in the second it finishes. It
+  is also precisely what E32 recorded as _"no result question appeared
+  immediately"_.
+- **The deciding evidence reaches the reason and not the panel.** On the
+  weak-topic move, Now says _"the /26 boundaries went wrong twice"_ and the
+  evidence panel's conditions are current-condition readings, one of them
+  unknown. The capability shipped (AUD-0027/0028) and the composition is
+  routing 90's — F33's own roadmap line assigns evidence composition to the
+  visual phase. Routing 83's half is the acceptance case, and it is written.
+
+### 83.1 — Occurrence identity (F43, D-160)
+
+A confirmed defect with the mechanism located before any code was written, so
+this verified the diagnosis and repaired the display path. **DEF-0105.**
+
+`stateOfChosen` matched `(verb, object.id)` across `situation.recentMoves` — a
+three-day window — with no day filter, so a walk completed on the 22nd supplied
+the state of a freshly generated walk on the 25th. `TRANSITIONS.completed` is
+`[]` and `NowScreen` disables every action not in `availableActions(state)`, so
+the card read **"Where this stands — Done"** with all five controls inert.
+
+It now resolves today's occurrence through `openEpisode` — the same function
+`planLifecycle` uses to decide what a tap would do, so the state the screen
+shows and the transition a tap would take cannot disagree.
+
+**A second bound went with the switch of source, and was caught before the
+checkpoint.** `learning.episodes` is every episode in the record and
+`view.history.effective` is not filtered by the moment; `recentMoves` carried
+that bound in the upper end of its window. Without it, an episode later on the
+same owner-local day could settle a move the owner had not touched. It is stated
+on its own now, and its regression fails when it is removed. No shipped history
+reaches it and the library sweep could not have seen it, so the case is built by
+hand.
+
+**Two things were not touched, and both were named in the decision before the
+work started.** The lifecycle planner was already correct. The three-day window
+is correct for what it was built for and still spans three days — the regression
+asserts the 22nd's occurrence is still in `recentMoves` on the 25th, so the test
+cannot be passed by making the evidence disappear.
+
+**Which automated tests gave false confidence: all of them.** 1,675 tests and
+552 browser assertions were green before the repair and green after it. Not one
+read the state of a move on a history whose only completion of it was on an
+earlier day. The library-wide sweep added here — every history, every block, `state`
+equals today's episode or `shown` — is what says there is no second instance.
+
+**F41's three unreproduced observations were re-run against the repaired build**
+(`tests/synthetic/preview-state-observations.test.ts`), and the review's own rule
+holds: no cause is named for anything that does not reproduce.
+
+| Observation                                                                                           | Result on the repaired build                                                                                                                       |
+| ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **E22** — "Not how it went" removed the recommendation, and the surrounding material changed markedly | **Does not reproduce.** The correction lands, the same move stays on screen with the same evidence, the premise and the goals are unchanged.       |
+| **E22** — no correction scope stated and no undo at that moment                                       | **Survives, and it is a product observation rather than a defect.** One tap, one record, nothing between them. D-165's subject; routing 84's.      |
+| **E32** — no result question after a completion                                                       | **Does not reproduce.** `subnetting-struggle` asks _"How much did going back over subnetting help?"_ from twenty minutes on, through the next day. |
+| **E32** — the question is not specific to what went wrong                                             | **Survives as a wish, not a defect.** F11 and F33; the app asks a question and it names its subject.                                               |
+| **E34** — state lost after "Something else"                                                           | **Does not reproduce.** The premise still names what was answered and the guide does not re-ask it.                                                |
+| **E34** — two identically titled stopped courses                                                      | **Does not reproduce.** Stopping supersedes the running record; Life lists one course with one reason on it.                                       |
+
+What survives from E34 is that on a thin history, asking for something else
+exhausts the day — the same shape as the interruption stop above, and recorded
+there rather than twice.
+
+### 83.2 — Sentences that overstate (F39, F33's residual)
+
+**DEF-0106 and DEF-0107.** _"There is plenty of history here"_ fired on any
+non-empty store and was read by an independent reader on four records. The
+sentence now says what the branch above it checked and nothing more: _"There is
+history here, and none of it says how tonight is going."_ No count replaces it —
+`history.all` includes superseded and retracted rows, and a quantity that needs a
+footnote is worse than none.
+
+**The class was swept and it found two more**, both on Timeline: a page header
+claiming _"Everything that happened"_ over a record of what the owner told the
+app, and a footer calling three of four entries _"the whole record"_ on a history
+with one dated tomorrow. `mostly-unknown` has had that shape since Phase 1.
+
+**Why every existing sweep passed, which is D-174.** `no-action-copy.test.ts` was
+built for exactly this class and renders every reason at every block — against
+**one** history, on which `nothing-proposed` always takes the limiter branch. The
+catalogue had one axis and the sentence branched on two. It now has the second.
+
+F33's residual is an acceptance case in `decision-evidence.test.ts`: the reason
+names the specific failed retrieval, the move cites the record that produced it,
+and the panel does not contradict either. Where the deciding evidence sits on the
+screen is routing 90's.
+
+### 83.3 — The private promise (F30, plan section 11)
+
+**DEF-0108.** The Private page promised _"Nothing here appears anywhere else."_
+while `privacy.ts` withheld the **detail** of a private record from a primary
+surface and deliberately kept the row, so Timeline carried a dated **"Private
+entry"**. Section 11 allows two repairs; this is the second — the promise now
+says what it covers.
+
+Timeline keeps the row, because on the owner's own screen a record that hides
+rows from him is a record he cannot trust the length of, and that is the same
+reasoning `compose.ts` uses to reach the **opposite** answer for an export, where
+the reader is somebody else.
+
+**The structural half (D-175):** the sentence moved into `domain/privacy.ts`,
+beside `mayShowDetail` and `discreetPlaceholder`. It was written in one file and
+implemented in another, and they disagreed for four phases with nothing able to
+notice. The regression runs from both ends.
+
+**Not touched:** whether private evidence may _influence_ a recommendation. That
+is D-167's owner permission, default off, routing 84's.
+
+### 83.4 — Form components (F40, D-176)
+
+**DEF-0109.** Two owner-facing inputs had no accessible name: one described only
+by `placeholder="What's changed"`, one by nothing at all — in a file that uses
+`aria-label` correctly three times. Both now carry a visible `<label>` and a note
+saying what the app will do with the answer, which is the half F40 asks for in
+the same breath and the half a checker cannot see.
+
+Swept twice: `architecture-guards.test.ts` reads every control under
+`src/features` from source and accepts a name from `aria-label`,
+`aria-labelledby`, a wrapping `<label>` or a `htmlFor` that points at it;
+`phase83.spec.ts` asks the running app the same question through
+`element.labels`, which is what a browser actually computes a name from. Every
+other control in the app was already named.
+
+## The gate, item by item
+
+The house form: **where it is proved**, not whether it passed. A builder
+conversation may not approve its own phase, so this says what was built and
+where to look at it.
+
+| #   | Acceptance item                                                                                               | Where it is proved                                                                                                                                                                                                                                                                    |
+| --- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | A completion of the same move on any earlier day cannot settle today's recommendation or disable its controls | `occurrence-identity.test.ts` — the three-day fixture, today's own completion still settling, the older occurrence still in `recentMoves`, the later-today bound, the library-wide sweep, and the pre-repair match reintroduced verbatim; `phase83.spec.ts` presses the five controls |
+| 2   | No owner-visible sentence asserts a quantity of history the app did not count                                 | `history-size-copy.test.ts` — every reason at every block at four history sizes including both four-record histories, plus the library-wide sweep over Timeline's own claim; `phase83.spec.ts` reads both screens                                                                     |
+| 3   | The Private page's promise and Timeline's behaviour agree                                                     | `private-promise.test.ts` — from the promise against the display policy, and from a real private record through `assembleTimeline`; `phase83.spec.ts` reads the page and the Timeline                                                                                                 |
+| 4   | Every owner-facing input has an accessible name                                                               | `architecture-guards.test.ts` — "F40 — no owner-facing control without a name", swept over `src/features` and proved to bite on both shapes that were in the tree; `phase83.spec.ts` asks the running app through `element.labels`                                                    |
+| 5   | The ordinary-use journey completes end to end, and the points where it cannot proceed are enumerated          | `ordinary-use-journey.test.ts` — the eight steps walked through the controls the surfaces draw, held against a written table; the enumerated brief above is its output                                                                                                                |
+
+Standing gates: `npm run verify` from a clean checkout, browser at three widths,
+the Android-style gate on the deployed build, the privacy scan, the block sweep,
+and the copy guards — no percentage, rank, grade or score about the child, and no
+score about the owner.
+
+## What this phase deliberately did not do
+
+- **No destination object, no milestone, no baseline.** Routing 84's package 1.
+- **No new domain.** _Love / Dating / Romantic Life_ is approved (D-168) and is
+  routing 84's.
+- **No consent model.** D-167's permission is routing 84's package 6.
+- **No new questioning surface.** D-163's second agenda is routing 84's.
+- **No scoring change of any kind.** No weight and no dimension moved.
+- **No live model.** D-172 keeps D-024/D-025 standing.
+- **Nothing before Phase 82 reopened**, and
+  `qa/WHOLE_APP_OWNER_USE_REVIEW.md` is unaltered.
+- **No orchestrator change.**
+
+## Open, and named rather than left to be found
+
+- **The enumerated brief above is the largest open item**, and it is open on
+  purpose. Every line of it is a routing 84 or routing 90 package.
+- **The evidence panel's composition** (F33 residual, E19) — the deciding
+  evidence reaches the reason line and not the panel. Routing 90.
+- **One browser test flaked once**, in an earlier full-suite run, with
+  `net::ERR_ABORTED; maybe frame was detached?` on `page.goto` — the navigation
+  flake `playwright.config.ts` documents for this platform. The run behind the
+  counts above is clean at 582 / 582, and the test passed in isolation as well.
+  Recorded rather than smoothed over, because a flake nobody writes down is a
+  flake somebody spends an afternoon on later.
+- **`REBUILD_PHASE` in `buildInfo.ts` reads phase 8, and that is checked here
+  rather than assumed.** Its number and title name the last **canonical** phase,
+  and 81, 82 and 83 are initiatives inserted before canonical Phase 9 rather than
+  canonical phases — so `8 / Legacy migration` is correct, `next` is still
+  canonical Phase 9, and the ten Life pages it names are the ten that ship
+  (D-168's twelfth domain is routing 84's). What is stale is only that its
+  summary describes none of what Phase 81, Phase 82 or this phase added. D-034
+  keeps that sentence in one constant and a guard pins it; changing it is not
+  this phase's, and it is named here so nobody has to work the question out
+  twice.
+
+## Still open for the owner, and not this phase's to close
+
+Q1, Q4 and Q6 remain as D-172 leaves them. Nothing in this phase touches them.
 
 ---
 

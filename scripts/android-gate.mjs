@@ -1148,6 +1148,160 @@ async function main() {
   check('and opens on a tap', true)
   await sideways('Career, a goal with a date')
 
+  /*
+   * ------------------------------------------------------------------------
+   * Routing 83 — the instrument, and the things that are untrue, on a handset
+   * ------------------------------------------------------------------------
+   *
+   * Every one of this phase's four repairs was found by a person with a
+   * browser, and three of them are sentences. The suite reads them at three
+   * widths; this reads them on the deployed bytes, in a Galaxy-class context,
+   * because that is the distinction Phase 4 paid five defects to learn.
+   */
+
+  // ---- A completion three days back does not settle today — D-160 -----------
+  await loadScenario('Three days since that walk')
+  await openNow()
+  const staleWalk = await page.locator('.screen').innerText()
+  check('a walk is proposed three days after one was finished', /a walk/.test(await nowHeadline()))
+  check(
+    'and the card does not claim a standing it does not have',
+    !/Where this stands/.test(staleWalk),
+    (staleWalk.match(/Where this stands[^\n]*/) ?? ['not present'])[0],
+  )
+
+  const lifecycle = page.getByTestId('now-actions')
+  check('the five controls are drawn', (await lifecycle.count()) === 1)
+  for (const label of ['Start it', 'Done', 'Something else', "Can't right now", 'Not today']) {
+    const control = lifecycle.getByRole('button', { name: label })
+    check(`"${label}" is live`, (await control.isDisabled()) === false)
+    clearsThumb(`"${label}"`, (await control.boundingBox())?.height)
+  }
+  await sideways('Now, a walk three days after one was finished')
+
+  // And the other half: today's own start really does settle it.
+  await lifecycle.getByRole('button', { name: 'Start it' }).tap()
+  await page.waitForSelector('.rows')
+  const underWay = await page.locator('.rows').innerText()
+  check(
+    'starting it today does say where it stands',
+    /Where this stands/.test(underWay) && /Under way/.test(underWay),
+    underWay.replace(/\s+/g, ' ').trim().slice(0, 120),
+  )
+
+  // ---- Nothing claims a quantity of history nobody counted — F39 ------------
+  await loadScenario('One answer, and a lot of silence')
+  await openNow()
+  const fourRecords = await page.locator('.screen').innerText()
+  check('four records are not called plenty', !/plenty of history/i.test(fourRecords))
+
+  await page.locator('.nav').getByRole('button', { name: 'Timeline' }).tap()
+  await page.waitForSelector('h1:has-text("Timeline")')
+  const timeline = await page.locator('.screen').innerText()
+  check(
+    'Timeline says what is recorded rather than what happened',
+    /Everything recorded here/.test(timeline) && !/Everything that happened/.test(timeline),
+  )
+  const extent = await page.getByTestId('tl-end').innerText()
+  check(
+    'and does not call part of the record the whole of it',
+    /up to the moment on screen/.test(extent) && /dated later/.test(extent),
+    extent.replace(/\s+/g, ' ').trim(),
+  )
+  await sideways('Timeline, a history with an entry dated later')
+
+  // ---- The private promise, read from both ends — F30 -----------------------
+  await loadScenario('Two ordinary weeks')
+  await page.goto(`${BASE}#/life/private`)
+  await page.waitForSelector('h1:has-text("Private")')
+  const privatePage = await page.locator('.screen').innerText()
+  check(
+    'the Private page promises what the behaviour keeps',
+    /The words stay on this page/.test(privatePage) &&
+      /Timeline shows that an entry exists and when/.test(privatePage),
+  )
+  check(
+    'and no longer promises more than that',
+    !/Nothing here appears anywhere else/.test(privatePage),
+  )
+  await sideways('the Private page')
+
+  await page.locator('.nav').getByRole('button', { name: 'Timeline' }).tap()
+  await page.waitForSelector('h1:has-text("Timeline")')
+  const withPrivate = await page.locator('.screen').innerText()
+  check('and Timeline does exactly that — the entry is there', /Private entry/.test(withPrivate))
+  check('and the words are not', !/late scrolling/.test(withPrivate))
+
+  // ---- Every control the owner can reach has a name — F40, D-176 ------------
+  await page.goto(`${BASE}#/life/emotional`)
+  await page.waitForSelector('h1:has-text("Emotional")')
+  await page
+    .getByRole('button', { name: /Not right\?|Add this/ })
+    .first()
+    .tap()
+  const namedField = page.getByRole('textbox', { name: /in your own words/i })
+  check('the free-text correction has an accessible name', (await namedField.count()) === 1)
+  clearsThumb('the free-text correction', (await namedField.boundingBox())?.height)
+  check(
+    'and says what the app will do with the answer',
+    /from now on/.test(await page.locator('.domain-correction__note').innerText()),
+  )
+  await sideways('a domain page with a correction open')
+
+  /*
+   * The sweep, on the deployed bytes.
+   *
+   * `element.labels` is what a browser computes a name from, so this asks the
+   * page the same question a screen reader would rather than checking which
+   * attribute happened to be used.
+   */
+  for (const route of ['now', 'life', 'timeline', 'insights', 'more', 'data', 'life/career']) {
+    await page.goto(`${BASE}#/${route}`)
+    await page.waitForSelector('h1')
+    const nameless = await page
+      .locator('.screen')
+      .locator('input, textarea, select')
+      .evaluateAll((nodes) =>
+        nodes
+          .map((node) => {
+            const element = node
+            const labelled = element.getAttribute('aria-labelledby')
+            const fromIds =
+              labelled === null
+                ? ''
+                : labelled
+                    .split(/\s+/)
+                    .map((id) => document.getElementById(id)?.textContent ?? '')
+                    .join(' ')
+            const fromLabels = [...(element.labels ?? [])]
+              .map((label) => label.textContent ?? '')
+              .join(' ')
+            const name = (element.getAttribute('aria-label') ?? '') + fromIds + fromLabels
+            return name.trim() === '' ? `${element.tagName.toLowerCase()}.${element.className}` : ''
+          })
+          .filter(Boolean),
+      )
+    check(`every control on ${route} has a name`, nameless.length === 0, nameless.join(', '))
+  }
+
+  // ---- What an ordinary owner can reach from a near-empty store — D-161 -----
+  await loadScenario('The first evening')
+  await openNow()
+  const firstEvening = await page.locator('.screen').innerText()
+  const firstQuestion = page.getByTestId('now-question')
+  check(
+    'a near-empty store is asked one question rather than shown a form',
+    (await firstQuestion.count()) === 1 &&
+      (await page.locator('.now-options .now-option').count()) <= 4,
+    firstEvening.replace(/\s+/g, ' ').trim().slice(0, 160),
+  )
+  clearsThumb(
+    'the first answer offered',
+    (await page.locator('.now-option').first().boundingBox())?.height,
+  )
+  check('and it does not claim a history it has not got', !/plenty of history/i.test(firstEvening))
+  await sideways('Now, on the first evening')
+
   // ---- The rest of the app is still standing --------------------------------
   for (const destination of ['Now', 'Life', 'Timeline', 'Insights']) {
     await page.locator('.nav').getByRole('button', { name: destination }).tap()

@@ -1,360 +1,240 @@
 # Next prompt
 
-**Phase:** 83 — **the instrument, and the things that are untrue**
+**Phase:** 83 — **first submission to independent QA**
 
-**Actor:** Claude Code / **builder**.
-**Conversation:** **NEW** — not the Phase 82 builder, and not the adjudication
+**Actor:** Codex / **independent QA**.
+**Conversation:** **NEW** — not the routing 83 builder, and not any Phase 82
 conversation.
-**Model:** Claude Opus-class.
-**Intelligence level:** **Max.**
+**Model:** Codex.
+**Reasoning level:** **High.**
 
 Canonical plan section 43 for the workflow, section 43A for routing, section 58
 for the report format. Independent QA is Codex (D-090); Claude builds. Every
 handoff ends with the model, the level, the conversation and a short copyable
 launcher (D-092, D-083).
 
-**Why Max, and why the obvious answer is wrong here.** A first draft of this
-handoff recommended High, reasoning that the phase is small, bounded and mostly
-correctness. That is precisely the misclassification
-[`qa/README.md`](qa/README.md) warns about: _"each individual repair reads like
-ordinary work — a sentence to reword, a filter to reorder — so 'normal repairs'
-is the natural classification and it has already been chosen twice."_ The
-standing owner decision of 2026-08-25 covers **any further phase created by the
-audit campaign's adjudication**, which is this one. It also holds on the merits:
-83.1 is a semantic distinction spanning `engine.ts`, `situation.ts`,
-`lifecycle.ts` and the Now surface; 83.3 is the privacy boundary that four
-separate Phase 82 QA rounds each got right at one layer and wrong at the next;
-and 83.0 is an acceptance instrument, which is the hardest thing in this
-repository to design and the thing every green gate so far has been weakest at.
-**Judge the level by what the change has to reason about, not by how large the
-diff looks.**
+**Routing 83 is YELLOW — READY FOR INDEPENDENT QA.** Under D-077 the builder
+conversation may not approve its own phase, and nothing it concluded while
+building changes that. This is a **first submission**, not a retest, so it goes
+to a **new Codex conversation**.
 
-**The QA retest block is Codex's and takes `High`, never `Max`.** Codex has no
-Max level, the application will not switch to its top level under automation, and
-a retest handoff asking for Max stops the orchestrator with the level unset. That
-has happened twice. Do not copy this phase's Claude level into a Codex block.
+**The `**Phase:**` field is `83` for every round of this phase.** Never `9`,
+`09`, `8.3` or `9.1` — those parse at or below 82 and never route. Plan section
+43A and D-159 have the map.
 
----
+**Why High and not the top of Codex's range.** The acceptance items are written
+down, the builder has named where it thinks it is weakest, and what this phase
+needs is a person reading whole screens and tracing claims to evidence rather
+than depth of search. Reach higher only if a finding suggests a boundary is
+wrong rather than a line, and say why. **Never Max** — that is Claude's level
+and Codex does not have it; a block asking for it stops the orchestrator with the
+level unset.
 
-## Status — READY TO DISPATCH
+The builder's own report is [`PHASE_STATUS.md`](PHASE_STATUS.md); the QA brief
+is [`qa/PHASE_83_QA_HANDOFF.md`](qa/PHASE_83_QA_HANDOFF.md); the specification
+is section 8 of [`PRODUCT_ADJUDICATION.md`](PRODUCT_ADJUDICATION.md).
 
-**Phase 82 is GREEN**, closed by independent QA on 2026-08-27 at product
-checkpoint `5dd55cc` after twelve rounds. Nothing here reopens it.
-
-**The product adjudication is complete and approved.** It is
-[`PRODUCT_ADJUDICATION.md`](PRODUCT_ADJUDICATION.md); the owner approved it with
-amendments on 2026-08-27 and the governing decisions **D-158 … D-173** are
-written. **This phase is blocked on no owner decision.**
-
-**This file replaces the held handoff of the same number.** The previous
-`NEXT_PROMPT.md` carried `**Phase:** 83 — product adjudication`. That round was
-never dispatched through the orchestrator — no `PHASE_83_QA_HANDOFF.md` exists —
-and the owner ran the adjudication directly. **Routing 83 now belongs to the
-build phase specified below, and the held handoff's scope is superseded rather
-than reused.** Do not go looking for it.
+|                                    |                                                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Product checkpoint                 | `582f648` — the commit the gate was run on (D-147); `21edfe8` is the last that changes the bundle |
+| Deployed Preview SHA               | may have moved past the checkpoint by the docs commits — **read it live**                         |
+| Relationship                       | proved with `scripts/checkpoint-equivalence.mjs`, never string equality (D-097)                   |
+| Preview                            | https://bill6006.github.io/life-command-os-rebuild/preview/                                       |
+| Unit layer                         | 1,753 / 1,753 across 80 files (was 1,675 across 76)                                               |
+| Browser                            | 582 / 582 — 194 each at 360, 430 and 1,280px (was 552)                                            |
+| `npm run verify` from a clean tree | PASS                                                                                              |
+| Privacy scan                       | clean, 262 tracked files                                                                          |
+| Report path for this phase         | `docs/qa/PHASE_83_QA_HANDOFF.md` — Round 0 is the builder's brief; QA owns everything below it    |
 
 ---
 
-## The constraint this phase and every phase after it must be told
+## NEXT ACTION
 
-**Routing phase integers are read as bare integers, and only the numerically
-highest phase's QA report is kept.** `handoff_source.build_candidates()` keeps
-`max(qa_phase(r) for r in reports)` and discards every lower phase as history;
-`_stated_or_inferred_phase()` parses the `**Phase:**` field as a bare integer, so
-decimals truncate. With phases 5, 6, 7, 8, 81 and 82 on disk the surviving
-maximum is **82**, so `9`, `09`, `8.3` and `9.1` all parse at or below it and
-**never route**.
+- **System:** **Codex** — independent QA (D-090)
+- **Model:** a Codex model that can hold a phase's semantics and read a screen
+  critically. This phase is correctness and truthfulness work on four owner
+  surfaces; the findings most worth having come from reading whole screens
+  against the record behind them.
+- **Reasoning level:** **High.** See the reasoning above. Never Max.
+- **Conversation:** **NEW Codex conversation.** First submission, and
+  independence is the whole point of D-077.
+- **Report path:** `docs/qa/PHASE_83_QA_HANDOFF.md`
 
-**This is wider than Phase 9.** Canonical Phases **10, 11 and 12 are equally
-unroutable**. The full map is plan **section 43A** and **D-159**:
-
-| Product / canonical name                                 | Routing |
-| -------------------------------------------------------- | ------- |
-| The instrument, and the things that are untrue           | **83**  |
-| What the owner is trying to become                       | **84**  |
-| **Canonical Phase 9** — visual coherence, motion, mobile | **90**  |
-| Later intelligence — Reach, then Validity                | **91**  |
-| **Canonical Phase 10** — performance, PWA, reliability   | **92**  |
-| **Canonical Phase 11** — adversarial hardening           | **93**  |
-| **Canonical Phase 12** — release                         | **94**  |
-
-Canonical phase names are unchanged and canonical Phase 10 is **not** re-scoped
-by receiving a routing label (D-109 stands). A QA round does **not** get a new
-integer: rounds 1…n of this phase all carry **83**.
-
----
-
-## What this phase is
-
-**Phase 81's shape, deliberately: the instrument first, then the things the app
-states or does that are wrong.** It is small, it is bounded, and it exists so
-that routing 84 and canonical Phase 9 are built and approved on a product that is
-not lying to the owner.
-
-It is **not** the destination model. That is routing 84 and it must not start
-here.
-
-### Why it comes before routing 84 rather than with it
-
-The adjudication split them because **routing 83 is blocked on nothing and
-routing 84 was blocked on four owner decisions**. Those decisions have since
-landed, but the split stands on the owner's explicit instruction — _"Do not merge
-them"_ — and on the better reason underneath it: 83.0's output is 84's brief. The
-enumerated list of points where an ordinary owner journey **cannot** proceed is
-what tells routing 84 where the real acquisition gaps are, rather than routing 84
-guessing.
-
----
-
-## Scope — five work packages
-
-Findings prefixed `F` are the owner-use review's
-([`qa/WHOLE_APP_OWNER_USE_REVIEW.md`](qa/WHOLE_APP_OWNER_USE_REVIEW.md)).
-
-### 83.0 — The ordinary-use instrument (F38, D-161) — **do this first**
-
-Everything after this is verified with it.
-
-A journey fixture family that starts from a **near-empty store** — not a rich
-seeded history — and runs the loop the review says has never been proved:
-
-> unknown aspiration → discovery → object creation → real action → interruption →
-> concrete outcome → correction → changed recommendation
-
-Plus the two histories the rest of this phase needs and the library does not
-have:
-
-- a store of **four records**, which is F39's case;
-- a history whose only completion of a move is **exactly three days before** the
-  read, which is F43's case.
-
-**The deliverable is not only the fixtures.** It is the enumerated list of the
-points where an ordinary journey **cannot proceed today**, each with the reason.
-That list is routing 84's brief and it goes in the phase record.
-
-**Why it is first:** every gate in this campaign so far is green against fixtures
-authored by the same process that wrote the code, and an independent reader with
-a browser then found 44 things that 1,332 unit tests, 501 browser assertions, a
-93-check Android gate and twelve rounds of independent QA did not. Phase 81 put
-AUD-0008 first for exactly this reason.
-
-### 83.1 — Occurrence identity (F43, and the part of F41 it explains) — **D-160**
-
-**A confirmed defect, with the mechanism already located.** Do not re-diagnose
-it; verify the diagnosis and repair it.
-
-`stateOfChosen()` (`src/intelligence/engine.ts:944`) resolves the chosen move's
-state by matching `(verb, object.id)` across `situation.recentMoves` —
-a **three-day** window (`src/intelligence/situation.ts:1282`,
-`addLocalDays(moment.now, -3, zone)`) — with **no day filter in the match**.
-`TRANSITIONS.completed` is `[]` (`lifecycle.ts:76`) and `NowScreen.tsx:644-656`
-disables every action not in `availableActions(state)`. So a move completed up to
-three days ago makes today's freshly generated recommendation read
-_"Where this stands — Done"_ with all five controls inert.
-
-**Two things must not be "fixed" on the way past.**
-
-- **The lifecycle planner is already correct.** `openEpisode()` keys on
-  `(target, dayId)` and `planLifecycle` writes correctly. The defect is in the
-  display path only.
-- **`recentMoves`' three-day window is correct for what it was built for.**
-  `recent-duplication` and learning both need to see beyond today. **Narrow the
-  match, never the window.**
-
-Then re-run F41's unreproduced preview-state observations (E22, E32, E34) against
-the repaired build and report which survive. **No cause may be named for a
-survivor without an isolated reproduction** — the review's own rule, and it
-holds.
-
-### 83.2 — Sentences that overstate (F39, and F33's residual)
-
-`nothing-proposed` emits _"There is plenty of history here"_ whenever
-`history.all.length > 0` (`engine.ts:902`) — any non-empty history, four records
-included. **D-153 already forbids this** ("a reading of one moment may not be
-worded as a claim about the whole record"); round 8 named the rule and this
-instance was never swept. Ground the quantity language in what the sentence
-actually counted.
-
-Sweep the class rather than the instance, the way 81.7's copy catalogue did.
-
-Plus F33's residual acceptance case: the weak-topic recommendation names repeated
-`/26` mistakes while its evidence panel emphasises topic and time rather than the
-failed-retrieval evidence that actually drove it (review E19). AUD-0027/0028
-shipped in Phase 81, so this is **an acceptance test, not a new capability**.
-
-### 83.3 — The private promise (F30, honesty half) — plan section 11
-
-The Private page promises _"Nothing here appears anywhere else"_
-(`src/features/life/domainPages.ts:104`) while `privacy.ts:72` renders
-**"Private entry"** on Timeline — and `src/features/export/compose.ts:676`
-documents that behaviour knowingly. Concealing the sentence is not concealing the
-entry.
-
-**Either the existence and timing are also withheld, or the promise says what it
-actually covers.** One of the two changes.
-
-**This is a truthfulness repair and it is not gated on D-167.** D-167 settles
-whether private evidence may _influence_ recommendations (one owner permission,
-default off) and belongs to routing 84. This package is about a sentence that is
-currently false, and it lands whatever that permission later does.
-
-### 83.4 — Form components (F40)
-
-`src/features/life/DomainPage.tsx:694` is a bare `<input type="text">` with
-`placeholder="What's changed"` and **no `aria-label` and no `<label htmlFor>`** —
-in a file that uses `aria-label` correctly three times elsewhere. Every
-owner-facing input gains a real accessible name and a stated expectation of what
-the app wants and how the answer will be used.
-
-**Why now:** Phase 9 designs repeated components. An unlabeled input inherited
-into the design system becomes settled design, and Phase 11's accessibility
-attack would then be re-opening a passed phone gate.
-
----
-
-## Dependency order
-
-**83.0 → 83.1 → {83.2, 83.3, 83.4} in any order.** 83.0 is absolutely first.
-
----
-
-## Decision-log entries that must exist before the code
-
-All four are **already written and approved** — this phase implements against
-them rather than authoring them:
-
-- **D-160** — a move's identity is what learning pools on; a state belongs to one
-  occurrence on one day. (83.1)
-- **D-161** — a capability is accepted when an ordinary owner can reach it from a
-  near-empty store. (83.0, and it binds 84, 90 and 91)
-- **D-159** — routing integers, and the map. (the whole campaign)
-- Plan **section 11**'s new metadata paragraph. (83.3)
-
-Anything this phase discovers that needs a new rule gets its own entry, written
-**before** the code that implements it, in the repository's standing pattern.
-
----
-
-## Gate
-
-Independent QA is Codex, cold, auditing meaning before duplicating gates
-(D-077 / D-090). Five acceptance items:
-
-1. **A completion of the same move on any earlier day cannot settle today's
-   recommendation or disable its controls** — proved on 83.0's three-day fixture
-   and by faithfully reintroducing the defect and watching the guard fail.
-2. **No owner-visible sentence asserts a quantity of history the app did not
-   count** — proved by rendering the copy catalogue at every history size,
-   including four records, rather than only the sizes the library reaches.
-3. **The Private page's promise and Timeline's behaviour agree** — proved from
-   both ends.
-4. **Every owner-facing input has an accessible name**, swept.
-5. **The ordinary-use journey from a near-empty store completes end to end**, and
-   the points where it cannot proceed are **enumerated with reasons** in the phase
-   record.
-
-Plus the standing gates: `npm run verify` from a clean checkout, browser at three
-widths, the Android-style gate on the deployed build, the privacy scan, the block
-sweep, and the standing copy guards — **no percentage, rank, grade or score about
-the child, and no score about the owner** (D-162, and Phase 81's guard must still
-bite).
-
----
-
-## What must not happen in this phase
-
-- **No destination object, no milestone, no baseline.** That is routing 84's
-  package 1 and starting it here would make this the mega-phase the adjudication
-  refused.
-- **No new domain.** _Love / Dating / Romantic Life_ is approved (D-168) and is
-  routing 84's.
-- **No consent model.** D-167's permission is routing 84's package 6.
-- **No new questioning surface.** D-163's second agenda is routing 84's package 4.
-- **No scoring change of any kind.** Phase 82 re-cut the instrument and
-  re-baselined the tournament (D-137, D-138); this phase must not disturb a weight
-  or a dimension.
-- **No live model.** D-172 keeps D-024/D-025 standing through 83 and 84.
-- **No reopening of Phase 82 or anything before it.** The twelve rounds in
-  `qa/PHASE_82_QA_HANDOFF.md` are the independent record and are not edited.
-- **No alteration of `qa/WHOLE_APP_OWNER_USE_REVIEW.md`.** It is now a tracked,
-  durable repository artifact and this phase reads it.
-- **No orchestrator changes.**
-
-Everything in audit section 10's DO-NOT-CHANGE list carries forward, and
-`PRODUCT_ADJUDICATION.md` section 11 adds to it.
-
----
-
-## Handoff — routing phase 83
-
-**Model:** Claude Opus-class.
-**Intelligence level:** **Max** — the standing audit-campaign rule, and see the
-reasoning at the top of this file.
-**Conversation:** a **new** conversation. Not the Phase 82 builder, and not the
-adjudication conversation — the first carries twelve rounds of repair context and
-the second carries the whole 44-finding argument, and this phase needs neither.
+## COPY/PASTE PROMPT
 
 ```text
-Build routing Phase 83 of Life Command OS: "the instrument, and the things that
-are untrue."
+Independent QA — routing Phase 83 of Life Command OS, "the instrument, and the
+things that are untrue". First submission.
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Phase 82 is GREEN at product checkpoint 5dd55cc. The product adjudication that
-followed it is complete and approved by the owner, and its decisions D-158..D-173
-are written. This phase is blocked on nothing.
+Preview:
+https://bill6006.github.io/life-command-os-rebuild/preview/
 
-Read, in full, before writing code:
-1. docs/NEXT_PROMPT.md          — this handoff, and your scope
-2. docs/PRODUCT_ADJUDICATION.md — why this phase exists and what it excludes
-3. docs/DECISION_LOG.md D-158..D-173 — the rules you build against
-4. docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md — findings F38, F39, F40, F41, F30, F43
-5. docs/CANONICAL_REBUILD_PLAN.md sections 11, 43A, 54
+You are Codex running the independent QA protocol (D-077, D-090). The builder
+conversation may not approve its own phase, and you are not it. Do not repair
+application or product code: you may create or update only
+docs/qa/PHASE_83_QA_HANDOFF.md and narrowly scoped QA evidence artifacts. Round
+0 of that file is the builder's brief; every round from 1 on is yours.
 
-Build the five work packages in docs/NEXT_PROMPT.md, 83.0 first and absolutely
-so. 83.0's enumerated list of points where an ordinary owner journey cannot
-proceed is a deliverable, not a note — routing 84 is scoped from it.
+Your **Phase:** field is 83, in every round. Never 9, 09, 8.3 or 9.1 — those
+parse at or below 82 and never route.
 
-83.1 is a confirmed defect with the mechanism already located in D-160. Verify
-the diagnosis, then repair the display path only: openEpisode and planLifecycle
-are already correct, and recentMoves' three-day window must keep its width.
-Narrow the match, never the window.
+CHECKPOINT
 
-Constraints:
-- Your **Phase:** field is 83. Never 9, 09, 8.3 or 9.1 — those parse at or below
-  82 and silently never route. Plan section 43A has the full map.
-- Do not build the destination model, a new domain, the consent model, a new
-  questioning surface, or any scoring change. Those are routing 84's.
-- Do not reopen Phase 82 or anything before it.
-- Do not alter docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md.
-- Stop at YELLOW — READY FOR INDEPENDENT QA and write
-  docs/qa/PHASE_83_QA_HANDOFF.md. A builder conversation may not approve its own
-  phase (D-077).
+- Product checkpoint: 582f648
+- Deployed Preview SHA: read it live from
+  https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+- These are two facts, not one. Prove the relationship with
+  `node scripts/checkpoint-equivalence.mjs 582f648 --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json`
+  rather than by comparing strings. This repository redeploys on every push,
+  including a documentation-only one, so the deployed SHA may legitimately have
+  moved past the checkpoint by the time you read it — that is D-097 and DEF-0061
+  and it is not a reason to refuse to test.
 
-Do not ask me to paste file contents.
+WORK IN THIS ORDER — the order is the protocol (D-090)
+
+1. SEALED COLD OWNER-USE. Open the deployed Preview at a normal Now and use it
+   as the owner would, BEFORE reading any repository document. Record what it
+   appears to claim, in its own words.
+2. CLAIM-TO-EVIDENCE. For each claim you wrote down, establish what it actually
+   rests on.
+3. SEMANTIC AND PRODUCT CORRECTNESS. Does the app mean what it says, and is what
+   it says worth saying.
+4. TARGETED PHASE ACCEPTANCE, now that the meaning is understood.
+5. TARGETED KNOWN-DEFECT REGRESSION for the surfaces this phase touched — Now,
+   Timeline, the Private page and the two domain-page correction controls.
+6. ARCHITECTURE INSPECTION where a defect suggests the boundary is wrong rather
+   than the line.
+7. FULL-SUITE DUPLICATION ONLY ON A CONCRETE TRIGGER — a builder claim that does
+   not match observed behaviour, a suspected false green, or a change to the
+   test harness itself. Green builder tests are evidence; watching them go green
+   again buys nothing and costs the attention steps 1 and 2 need.
+
+READ AFTER STEP 2, NOT BEFORE
+
+- docs/PRODUCT_ADJUDICATION.md section 8 — this phase's specification and its
+  five-item acceptance gate; section 11 is the do-not-change list.
+- docs/qa/PHASE_83_QA_HANDOFF.md — Round 0, the builder's brief.
+- docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md — findings F30, F33, F38, F39, F40, F41
+  and F43, and evidence entries E02, E13, E17, E19, E22, E31, E32, E34 and E36.
+  This document is not edited by anyone, including you.
+- docs/PHASE_STATUS.md — the routing 83 entry. "The enumerated brief" and "Open,
+  and named rather than left to be found" are where the builder disagrees with
+  itself; start your architecture inspection there.
+- docs/DECISION_LOG.md — D-159, D-160, D-161 and D-153 govern the work.
+  D-174, D-175 and D-176 are this phase's own and are therefore the ones most
+  worth disputing.
+- docs/DEFECT_LEDGER.md — DEF-0105 to DEF-0109.
+- docs/CANONICAL_REBUILD_PLAN.md sections 11, 26, 37, 43A, 50, 58, 61, 62 and 64.
+
+THE GATE — five items (PRODUCT_ADJUDICATION.md section 8)
+
+1. A completion of the same move on ANY earlier day cannot settle today's
+   recommendation or disable its controls. To be proved on the three-day fixture
+   AND by faithfully reintroducing the defect and watching the guard fail. The
+   builder claims a reintroduction; check the proof rather than the claim.
+2. No owner-visible sentence asserts a quantity of history the app did not
+   count, proved by rendering the copy catalogue at every history size —
+   including four records — rather than only the sizes the library reaches.
+3. The Private page's promise and Timeline's behaviour agree, proved from BOTH
+   ends.
+4. Every owner-facing input has an accessible name, swept.
+5. The ordinary-use journey from a near-empty store completes end to end, and
+   the points where it CANNOT proceed are enumerated with reasons in the phase
+   record. That list is routing 84's brief, so judge it for completeness rather
+   than only for accuracy.
+
+Plus the standing gates: npm run verify from a clean checkout, the browser suite
+at three widths, an Android-style pass on the deployed build, the privacy scan,
+the block sweep across every scenario at five blocks, and the standing copy
+guards — no percentage, rank, grade or score about the child, and no score about
+the owner.
+
+WHAT IS NEW ON A SCREEN, AND WHERE TO FIND IT
+
+Three histories were added to the QA laboratory and they are listed first:
+
+- "The first evening" — one record, a single guide answer, and nothing else.
+  This is the near-empty store the whole phase is accepted against.
+- "Four things, over three days" — four answers, none withdrawn.
+- "Three days since that walk" — a walk completed on 22 May, read on 25 May.
+  This is the only history that reaches the state F43 reported.
+
+"One answer, and a lot of silence" is unchanged and is the other four-record
+case; it also holds a record dated the following day, which matters on Timeline.
+
+Surfaces that changed: Now (the state row and the lifecycle controls on a move
+whose match now runs a day at a time; the nothing-proposed sentence), Timeline
+(the page lede and the end-of-list sentence), the Private page (its lede), and
+the two free-text correction controls on every domain page.
+
+WHERE THE BUILDER THINKS IT IS WEAKEST — start here, and disagree freely
+
+- The three-day repair changed one function. Whether anything ELSE in the app
+  resolves "where does this stand" through an action's identity rather than
+  today's occurrence is worth deciding independently of the builder's sweep.
+- The three-day window must NOT have narrowed — recent-duplication and the
+  ignoring-is-a-response rule both need to see beyond today. A repair that
+  quietly narrowed it would pass a test written to check the match.
+- The reworded sentences are true at the sizes that were rendered. Whether
+  history size and part of day are the right two axes is a judgement, not a
+  fact.
+- The private promise is longer than the sentence it replaced. Whether it is the
+  sentence the owner needs, on a phone, at 360px, is a reading.
+- The two labelled inputs on a real handset: focus order, touch target, and
+  whether the note reads as help or as clutter.
+- The enumerated brief in PHASE_STATUS.md is a deliverable and it is routing
+  84's scope. Whether an ordinary journey stops anywhere it does not name is the
+  most valuable thing you can find.
+
+STILL OPEN FOR THE OWNER, AND NOT YOURS OR THE BUILDER'S TO CLOSE
+
+Q1 Adaya's age and normative references; Q4 legacy evidence admissibility; Q6
+live model inference, reopened before routing 91 with the finite concept
+vocabulary refused as a ceiling (D-172). Repeat them in your report; do not
+answer them.
+
+WHAT TO PRODUCE
+
+Per qa/README.md sections 3 and 3a, in the same response as the report: PASS or
+FAIL overall and per acceptance item; the QA-tested and deployed SHAs; the
+Android configuration; exact reproductions, with semantic, behavioural and
+mobile/UI defects separated and blocking distinguished from non-blocking; which
+existing automated tests gave false confidence; confirmation that the deferrals
+are unchanged; and the complete next handoff written into
+docs/qa/PHASE_83_QA_HANDOFF.md — on FAIL addressed to the CURRENT Claude builder
+conversation for routing 83, on PASS addressed to the same conversation for the
+GREEN closeout.
+
+The repair block is Claude's and takes Max. Your retest block is Codex's and
+takes High. Do not copy one level into the other.
+
+Do not ask the owner to paste file contents.
 ```
 
 ### Short launcher
 
-**Model:** Claude Opus-class. **Level:** Max.
-**Conversation:** NEW — a new conversation, not the Phase 82 builder and not the
-adjudication conversation.
+**System:** Codex — independent QA. **Model:** Codex. **Level:** High.
+**Conversation:** NEW — a new Codex conversation, not the routing 83 builder and
+not any Phase 82 conversation.
 
 ```text
-Build routing Phase 83 of Life Command OS.
+Independent QA — routing Phase 83 of Life Command OS. First submission.
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Read docs/NEXT_PROMPT.md in full and execute it exactly as the handoff there
-specifies. Phase 82 is GREEN and the product adjudication is approved; you are
-blocked on nothing. Build 83.0 first.
+Read docs/NEXT_PROMPT.md in full and execute the COPY/PASTE PROMPT there exactly
+as written. Start with sealed cold use of the deployed Preview before you open
+any repository document.
 
 Your **Phase:** field is 83 — never 9, 09, 8.3 or 9.1, which never route.
 
-Stop at YELLOW and write docs/qa/PHASE_83_QA_HANDOFF.md. Do not approve your own
-phase.
+Write your report to docs/qa/PHASE_83_QA_HANDOFF.md, below the builder's Round 0.
 
 Do not ask me to paste file contents.
 ```
+
+<!-- LCO_COMPLETE -->

@@ -39,6 +39,226 @@ None.
 
 ## Fixed
 
+### DEF-0109 — two owner-facing inputs with no accessible name
+
+- Status: Fixed
+- Severity: Major — an unlabelled control on a phone, in a phase whose successor
+  designs repeated components
+- Found in: routing 83 / `87e2057`
+- Found by: the independent owner-use review (F40, E13), and the second one by
+  the sweep written for the first
+- Class: **a control named by nothing, or named only by a placeholder.** Not two
+  fields: the gate had no way at all to tell a labelled control from an
+  unlabelled one, so which pattern a new form inherits was whichever one its
+  author happened to copy. `DomainPage.tsx` uses `aria-label` correctly three
+  times a few hundred lines from the field that had none.
+- Reproduction: open any Life page, tap **Not right?** on a reading with no
+  closed set of answers — a bare `<input type="text">` appears with no label, no
+  `aria-label` and no placeholder. On a stale area with no single overdue
+  reading, **Something's changed** opens a second one whose only description is
+  `placeholder="What's changed"`, which disappears the moment anything is typed
+  and which assistive technology is not required to read.
+- Root cause: the controls were written inline beside their buttons and nothing
+  in the gate read them. The three correct `aria-label`s in the same file are
+  what makes this a class rather than an oversight — the file already knew how.
+- Regression: `tests/unit/architecture-guards.test.ts` — "F40 — no owner-facing
+  control without a name", which scans every `<input>`, `<textarea>` and
+  `<select>` under `src/features` and accepts a name from `aria-label`,
+  `aria-labelledby`, a wrapping `<label>` or a `htmlFor` that points at it.
+  `tests/browser/phase83.spec.ts` — "no control anywhere the owner can reach is
+  nameless", which asks the running app the same question through the DOM's own
+  `element.labels`.
+- Proof by reintroduction: the guard's own "bites on the field that was
+  reported" case runs the exact JSX that was in the tree, twice — once with the
+  placeholder and once with nothing — and both are reported.
+- Siblings: swept. Every other control in the app was already named — `Data`,
+  `ImportPanel`, `DayShape` and the QA laboratory all wrap theirs in a `<label>`
+  or carry an `aria-label`, and the goal-date control on the same page uses
+  `htmlFor`. The two repaired here were the whole class.
+- Also repaired, because F40 asks for it in the same breath: both controls now
+  state what the app wants and what it will do with the answer. A name satisfies
+  a checker; the note is for the owner.
+- Fixed in: the routing 83 checkpoint
+
+### DEF-0108 — the Private page promised more than the behaviour keeps
+
+- Status: Fixed
+- Severity: Major — a privacy promise that is not true is worse than no promise
+- Found in: routing 83 / `87e2057`
+- Found by: the independent owner-use review (F30, E36)
+- Class: **a promise written in one file about behaviour decided in another.**
+  The sentence lived in `features/life/domainPages.ts` and the policy in
+  `domain/privacy.ts`, and they disagreed from Phase 5 to Phase 82 with nothing
+  able to notice.
+- Reproduction: open **Life → Private / Sexual Health**. The page reads _"Yours
+  to enter. Nothing here appears anywhere else."_ Enter anything. Open Timeline:
+  a dated row appears reading **"Private entry"**. The words are concealed; that
+  something was written, and when, is not.
+- Root cause: `mayShowDetail` withholds the _detail_ of a private record from a
+  primary surface and `discreetPlaceholder` stands in for it — deliberately,
+  because dropping the row would tell the owner his history is thinner than it
+  is. `compose.ts` documents the same distinction knowingly one layer up, for
+  the export, where the row really is dropped. Nothing carried that distinction
+  into the sentence the owner reads.
+- Repair: plan section 11 offers two ways out — withhold the existence and the
+  timing too, or say what the promise actually covers — and this is the second.
+  Timeline keeps the row, because on his own screen a record that hides rows
+  from him is a record he cannot trust the length of, and the promise now says
+  so. **The sentence moved to `domain/privacy.ts`**, beside the policy it
+  describes, which is the structural half: a change to `mayShowDetail` is now a
+  change to a promise in the same file.
+- Regression: `tests/synthetic/private-promise.test.ts`, which runs it from both
+  ends — the sentence claims exactly what the display policy does, and a real
+  private record rendered through `assembleTimeline` behaves exactly as the
+  sentence says. `tests/browser/phase83.spec.ts` reads both screens.
+- Siblings: checked. The export was already correct (`compose.ts`, DEF-0096) and
+  says plainly that the area was left out. The domain page itself is the one
+  surface allowed to show the detail and still does. No other surface makes a
+  promise about the private area.
+- Not repaired here, and deliberately: whether private evidence may _influence_
+  a recommendation. That is D-167's owner permission, it is off by default, and
+  it is routing 84's. This entry is about a sentence that was false whatever
+  that permission later does.
+- Fixed in: the routing 83 checkpoint
+
+### DEF-0107 — Timeline called part of the record the whole of it, under a heading claiming everything that happened
+
+- Status: Fixed
+- Severity: Major — two claims about the size and scope of the owner's own
+  record, on the surface whose whole job is being the record
+- Found in: routing 83 / `87e2057`
+- Found by: the class sweep written for DEF-0106, which is the point of sweeping
+  the class
+- Class: **a sentence about a quantity or scope of history, checked against
+  nothing.** D-153 states the rule and round 8 of Phase 82 repaired one instance
+  of it on this very screen — the _empty_ case, `onlyLater`. The case with rows
+  on the page was not, because nothing rendered it.
+- Reproduction: load **"One answer, and a lot of silence"** — four records, one
+  of them dated the following day — and open Timeline. Three rows render and the
+  footer reads _"That is the whole record — 3 entries."_ The page header reads
+  _"Everything that happened, in the order it happened."_ over a record of what
+  the owner told the app.
+- Root cause: `TimelineData.total` counts entries at or before the moment being
+  read and `later` counts the rest. The footer read `total` and called it the
+  record; the lede was written before `later` existed at all.
+- Repair: the footer says what it counted and names the rest — _"That is
+  everything up to the moment on screen — 3 entries. 1 entry is dated later;
+  move forward and it is there."_ Where nothing is later the absolute stays,
+  because there it is true, which is D-153's own condition. The lede says
+  _"Everything recorded here"_, which is the distinction the review asked for in
+  its own words. Both sentences moved into `timelineEntries.ts` as
+  `TIMELINE_LEDE` and `describeExtent`, so a test can read them without a
+  browser.
+- Regression: `tests/synthetic/history-size-copy.test.ts` — "does not call part
+  of the record the whole of it when entries are dated later", plus the sweep
+  "never calls part of the record the whole of it, on any history at any hour",
+  which is the assertion that would have caught this without anyone thinking of
+  `mostly-unknown`. `tests/browser/phase83.spec.ts` reads the rendered footer.
+- Siblings: swept. Every history in the library at every block, and every
+  no-action sentence at every history size. The `Show earlier (N more)` count is
+  `total - shown`, both counted; the `onlyLater` sentence was already repaired.
+- Fixed in: the routing 83 checkpoint
+
+### DEF-0106 — a sentence called any non-empty history "plenty"
+
+- Status: Fixed
+- Severity: Major — copy that sounds confident about the wrong scope makes the
+  honest uncertainty next to it harder to trust
+- Found in: routing 83 / `87e2057`
+- Found by: the independent owner-use review (F39, E17)
+- Class: **a sentence about a quantity of history the app never measured** —
+  D-153's rule, applied to the instance D-153's own round did not sweep.
+- Reproduction: load **"One answer, and a lot of silence"** — four records — and
+  open Now. It reads _"There is plenty of history here, and none of it says how
+  today is going."_ The same sentence appears on a store of **one** record.
+- Root cause: the branch tested `history.all.length === 0` and, on anything
+  else, said "plenty". The only quantity anything in the branch measured was
+  whether there was any history at all.
+- Why every existing sweep passed: `no-action-copy.test.ts` was written for
+  exactly this class and renders every no-action reason at every block — against
+  **one** history, a man three nights short of sleep. On that history
+  `nothing-proposed` always has a recovery limiter and always takes the limiter
+  branch, so the sentence underneath was never rendered by the instrument built
+  to render every sentence. **The catalogue had one axis and the sentence
+  branched on two.**
+- Repair: the sentence says what the branch above it checked and nothing more —
+  _"There is history here, and none of it says how tonight is going."_ No count
+  replaces it: `history.all` includes rows that have been superseded and
+  retracted, so a number taken from it would need explaining before it could be
+  read, and a quantity that needs a footnote is worse than none.
+- Regression: `tests/synthetic/history-size-copy.test.ts`, which adds the second
+  axis — every reason at every block **at every history size**, including both
+  four-record histories and a hundred and twenty-nine.
+- Siblings: checked, and one more was found — DEF-0107. The `everything-ruled-out`
+  and `nothing-in-reach` sentences were already grounded in what their rejection
+  lists counted.
+- Fixed in: the routing 83 checkpoint
+
+### DEF-0105 — a completion three days back settled today's recommendation and disabled every control on it
+
+- Status: Fixed
+- Severity: Blocker — the product's single most important interaction was
+  unusable on any day within three days of a completion of the same move
+- Found in: routing 83 / `87e2057`
+- Found by: the independent owner-use review (F43, E02 and E31), confirmed with
+  the mechanism located by the product adjudication before any code was written
+- Class: **a surface resolving an occurrence's state through an action's
+  identity** — D-160. An action has a stable identity, which is what learning
+  pools on; each time it is put in front of the owner is a separate occurrence
+  with its own day and state.
+- Reproduction: load **"Three days since that walk"** — a walk suggested and
+  completed on 22 May, read on 25 May with today's own answers given — and open
+  Now. Before the repair the card read **"Where this stands — Done"** with all
+  five controls inert, on a suggestion the owner had never seen.
+- Root cause: `stateOfChosen` (`engine.ts`) matched `(verb, object.id)` across
+  `situation.recentMoves` with **no day filter**, and `recentMoves` is a
+  three-day window (`situation.ts`, `addLocalDays(moment.now, -3, zone)`).
+  `TRANSITIONS.completed` is `[]` and `NowScreen` disables every action not in
+  `availableActions(state)`.
+- What was **not** wrong, and was not touched: the lifecycle planner.
+  `openEpisode` keys on `(target, dayId)` and `planLifecycle` writes correctly.
+  The defect was in the display path only.
+- What was **not** narrowed: the three-day window. `recent-duplication` and the
+  ignoring-is-a-response rule in `evaluate.ts` both need to see beyond today, and
+  narrowing the window would have made the test pass by making the evidence
+  disappear. The **match** changed.
+- Repair: `stateOfChosen` resolves today's occurrence through `openEpisode` —
+  the same function `planLifecycle` uses to decide what a tap would do, so the
+  state the screen shows and the transition a tap would take cannot disagree.
+- **A second bound, found while writing the repair rather than reported.**
+  `learning.episodes` is every episode in the record, and
+  `view.history.effective` is not filtered by the moment — each caller does that
+  in its own words (`assembleTimeline`, `recentChanges`, `growthStandingFor`).
+  `recentMoves` carried the bound in the upper end of its window, so switching
+  source dropped it: under time travel an episode later on the _same_
+  owner-local day could have settled a move the owner had not touched. The
+  filter is stated on its own now, with its own regression, and that regression
+  fails when the filter is removed. No shipped history reaches this state and
+  the library sweep asks `openEpisode` the same question the engine does, so
+  neither could have seen it — the case is built by hand.
+- Regression: `tests/synthetic/occurrence-identity.test.ts`, six cases: the
+  three-day fixture reads `shown` with all five actions available; today's own
+  completion still settles today; the older occurrence is still in
+  `recentMoves`; and the library-wide sweep asserts, for every history at every
+  block, that `decision.state` equals today's episode's state or `shown`, and
+  the later-today case above.
+  `tests/browser/phase83.spec.ts` reads the card and presses the buttons.
+- Proof by reintroduction: "comes back the moment the old match is
+  reintroduced" runs the pre-repair matching function, copied from `engine.ts`
+  at `87e2057` rather than approximated, against the same situation. It returns
+  `completed`, and `availableActions` on it is empty.
+- Which automated tests gave false confidence: **all of them.** 1,675 unit,
+  contract, synthetic and adversarial tests and 501 browser assertions were
+  green before the repair and green after it; not one of them read the state of
+  a move on a history whose only completion of that move was on an earlier day.
+  `lifecycle.test.ts` covers the planner, which was correct.
+- Siblings: swept. `continuing()` in the same file already filtered
+  `recentMoves` by day and was correct. `settledRecently` in `constraints.ts`
+  uses a deliberate one-day suppression window and is about filtering a
+  candidate rather than resolving a state; `refusalsInBlock` is block-scoped.
+  The library-wide sweep is what says there is no second instance.
+- Fixed in: the routing 83 checkpoint
+
 ### DEF-0104 — a regression test that could not have failed
 
 - Status: Fixed
