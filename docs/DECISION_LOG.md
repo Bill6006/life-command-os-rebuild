@@ -5877,3 +5877,149 @@ name; `tests/browser/phase83.spec.ts` asks the running app the same question
 through `element.labels`, which is what a browser actually computes a name from.
 
 ---
+
+## D-177 — A quantity in a sentence is compared with the count behind it, never matched against a list of phrases
+
+**Phase:** 83 (QA round 1) · **Status:** Active
+
+Where an owner-visible sentence states a quantity, the guard over it **reads the
+number the sentence's own source used and compares the two**. A list of
+forbidden phrases is not a guard; it is a record of the phrases somebody has
+already thought of.
+
+**Why:** routing 83's second acceptance item is that no owner-visible sentence
+asserts a quantity the app did not count, and the guard written for it — a sweep
+for phrases like _"plenty of history"_ and _"everything that happened"_ — was
+green while Now read _"**The last few times** made little difference"_ on a
+history whose evidence panel, one tap lower, said _"**One occasion** in the
+record"_ and _"**1 occasion**."_
+
+The phrase list could not have found it, and the reason is the rule. _"The last
+few times"_ is not an unmeasurable phrase. It is a perfectly measurable one that
+was never measured — `explain.ts` hard-coded it and the count was three lines
+away in `learning.ts`, which had the correct singular branch already.
+
+**What the comparison found that the instance did not.** Reintroducing the
+hard-coded phrase fails the new sweep at counts of **1, 4 and 12** across three
+histories. The wrong plural was wrong in more places than the one an independent
+reader happened to stand on.
+
+**The one exemption, and it is a check.** A quantity the app is quoting back —
+_"the /26 boundaries went wrong twice"_ is the owner's own recorded words — is
+not the app's claim to make. The sweep allows it only where the phrase appears
+verbatim in a record the history holds. The app cannot escape the rule by
+choosing careful words; only by quoting.
+
+**This does not replace D-174**, which is about the axes a catalogue is rendered
+along. D-174 said render every axis the sentence branches on; this says what to
+assert once it is rendered. Both were needed and only one existed.
+
+---
+
+## D-178 — One name for an action, in the layer every surface can reach
+
+**Phase:** 83 (QA round 1) · **Status:** Active
+
+There is one table that names an action with its subject in it, it lives in
+`src/domain/recommendation.ts` beside `verbLabel`, and every layer reads it.
+
+**`verbLabel` is the eyebrow word on a recommendation card and is not a name for
+a thing.** "Move" is not a noun phrase in English. It may open a card headed
+_"Move for 25 minutes: a walk"_ and it may not be the subject of a sentence.
+
+**Why:** independent QA read one Now card that said four different things about
+one walk — the headline said _"a walk"_, the learned statement said _"**Move**
+has made little difference"_, the button that corrects that statement said
+_"correct what **move** does for you"_, and the evidence panel one tap lower said
+_"getting out for a walk"_.
+
+The panel was right and it was right alone, and that was structural rather than
+careless: the naming table lived in `insights.ts`, **above** `learning.ts` and
+`corrections.ts`. The two files that write the sentence and the button had
+nothing to reach for. Moving the table down is the repair; the four registers
+were a layering fact wearing a copy problem's clothes.
+
+**The name is narrowed only where the evidence is.** An `effect` belief pools
+every episode with a verb, whatever its object, so the object is named **only
+where the pooled episodes agree on one** — `patternName`'s existing rule in
+`insights.ts`, now applied wherever a set is described. Naming one object across
+a pooled walk and a pooled bike ride would state a claim narrower than its own
+evidence, which is D-153's error pointing the other way.
+
+**And each label is named from the set it labels.** One name taken from
+tonight's object was labelling two different pooled sets — the rates over
+comparable episodes and the split over every occasion. Same rule, asked once per
+set rather than once per screen.
+
+**What does not change:** the belief **key** stays verb-scoped, and so does what
+a correction rejects. `effect:move` rejects what the app concluded about moving.
+Only the words change.
+
+---
+
+## D-179 — A claim of exhaustiveness is a test, or it is a comment
+
+**Phase:** 83 (QA round 1) · **Status:** Active
+
+Where a document, a table or a test says it covers **every** case, something has
+to be able to fail when it does not. A list that nothing compares against source
+is a comment with a strong adjective in it.
+
+**Why:** routing 83's ordinary-use instrument carried a table headed _"every
+control on an owner-facing screen that appends to the record"_. It was compiled
+by reading four files; there are five. It missed the course controls on Life and
+the belief correction on Insights, and the test above it — called _"keeps the
+route table honest"_ — checked that ids were unique, that a field was non-empty
+and that a string contained a dot. All three are true of a table missing half its
+rows.
+
+The instrument's whole subject is what an ordinary owner can reach, and its
+output is routing 84's brief. An incomplete list there is not a tidiness
+problem: it is the phase's fifth acceptance item asserting itself.
+
+**What the guard has to compare, and what it cannot.** The reader finds every
+record builder the screens call, from the return type and the parameters rather
+than from the name — `describeRecord` and `standingCommitments` return records
+and build none. It asks **per screen**, because two screens calling one builder
+are two controls and a per-builder check stayed green over exactly that case.
+
+What a control _needs_ before it appears is a reading of a screen and stays
+hand-written. That half cannot be derived, and saying so is part of the claim.
+
+**A write that nobody taps is named rather than filtered.** `MemoryProvider`
+appends the outcomes a history already implies. It is deliberate, documented and
+not an owner control, so it is listed as one — because an instrument about
+ordinary use has to be honest about what it does not cover.
+
+---
+
+## D-180 — A commit that is not pushed has met no gate — D-147 amended
+
+**Phase:** 83 (QA round 1) · **Status:** Active · **Amends:** D-147
+
+D-147 says the gate is run on the commit that is handed off. This adds the half
+it assumed: **the commit that is handed off is one the remote has.** A local
+commit has met exactly the checks its author remembered to run.
+
+**Why:** independent QA found `npm run verify` red at the repository head — a
+one-character formatting difference in `docs/NEXT_PROMPT.md`, in a
+documentation-only commit that was never pushed. CI runs the same command on
+every push and would have found it in under a minute. It never ran, because
+there was nothing to run on.
+
+The failure is not the asterisk. It is that a commit can exist which nothing
+except its author has examined, and the phase's own standing gate is red on it
+while every recorded result says green.
+
+**The guard.** `scripts/checkpoint-equivalence.mjs` already exists to certify
+that what QA reads and what QA tests line up, so it now also reports commits on
+`HEAD` that no remote branch contains. It **reports rather than refuses**: a
+local commit is an ordinary state halfway through a phase, and the bundle
+equivalence it certifies is true either way. What it stops is finishing a phase
+without noticing.
+
+**What this does not license.** It is not permission to push freely. Every push
+costs a CI run and a Pages deployment, and several in an hour back the queue up
+past the deploy job's own read-back window. Batch the commits; check the head.
+
+---

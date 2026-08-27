@@ -39,6 +39,200 @@ None.
 
 ## Fixed
 
+### DEF-0114 — the standing gate was red at a head nothing but this machine had seen
+
+- Status: Fixed
+- Severity: Blocker for closeout — the aggregate gate is the gate
+- Found in: routing 83 / repository head `76d9587`
+- Found by: independent QA round 1, by running `npm run verify` on a clean tree
+  rather than trusting the phase record
+- Class: **a commit that never reached the remote and therefore met no gate but
+  the one its author remembered to run** — D-180, amending D-147.
+- Reproduction: check out `76d9587` and run `npm run verify`. It exits 1 in its
+  first stage: `prettier --check .` reports `docs/NEXT_PROMPT.md`.
+- Root cause: two of them, and only the second is worth the entry. The surface
+  cause is one character — `*after*` where Prettier writes `_after_`. The real
+  one is that `76d9587` was **never pushed**. CI runs `npm run verify` on every
+  push and would have failed in under a minute; it never ran, because there was
+  nothing to run on. Every result recorded in the phase record was green and
+  every one of them was taken before that commit existed.
+- Repair: the file is formatted. The class guard is in
+  `scripts/checkpoint-equivalence.mjs`, which exists to certify that what QA
+  reads and what QA tests line up and is therefore the right place to notice —
+  it now reports commits on `HEAD` that no remote branch contains, naming each
+  one.
+- Why it reports rather than refuses: a local commit is an ordinary state
+  halfway through a phase, and the bundle equivalence the script certifies is
+  true either way. What it stops is finishing a phase without noticing.
+- Proof: run before the push and it names `76d9587` and `32c68c2`. The argument
+  order is load-bearing and is commented — `--not --remotes HEAD` negates HEAD
+  as well, always returns empty and always passes, which is a guard that cannot
+  fail.
+- Siblings: checked. The other documentation commits in this phase were pushed
+  and CI was green on each.
+- Fixed in: the routing 83 round-1 repair checkpoint
+
+### DEF-0113 — an instrument claimed to list every owner control and listed most of them
+
+- Status: Fixed
+- Severity: Blocker — the claim **is** the phase's fifth acceptance item, and
+  the list is routing 84's brief
+- Found in: routing 83 / `582f648`
+- Found by: independent QA round 1, by reading the source against the table
+- Class: **a claim of exhaustiveness with nothing able to falsify it** — D-179.
+- Reproduction: read `OWNER_ROUTES` in `tests/synthetic/journey.ts`, headed
+  "every control on an owner-facing screen that appends to the record", against
+  `src/features/life/Threads.tsx` (**Stop this** / **Pick this up again**,
+  calling `setThreadStateRecord`) and `src/features/insights/InsightsScreen.tsx`
+  (**That is not right**, calling `beliefCorrectionRecord`). Neither is in the
+  table.
+- Root cause: the table was compiled by reading four files; there are five. The
+  test above it, named "keeps the route table honest", asserted that ids were
+  unique, that `writes` was non-empty and that the builder string contained a
+  dot — three things that are true of a table missing half its rows.
+- Repair: both controls added, and a reader that compares the table with the
+  source. It finds builders by **what they return and what they take** rather
+  than by name — `describeRecord`, `describeThreadRecord`, `isWithheldRecord`
+  and `sourcesOfRecords` return or read records and build none, and a first
+  draft reported every one of them; `standingCommitments` returns records and
+  filters rows already in the history, and is excluded because it takes no
+  moment. A record it invents needs an `occurredAt`; a reader does not.
+- **And it asks per screen.** `beliefCorrectionRecord` was already listed under
+  Now, so a per-builder check stays green over the missing Insights control —
+  the second of the two. Two screens calling one builder are two controls.
+- Regression: `tests/synthetic/ordinary-use-journey.test.ts` — "lists every
+  control on every screen that writes a record", and "bites when a control is
+  taken out of the table".
+- Proof by reintroduction: removing the `insights-belief-correction` route fails
+  the guard with `/src/features/insights/InsightsScreen.tsx calls
+beliefCorrectionRecord (insights)` — the file and the control QA named.
+- Also repaired, and reported separately by QA: the enumerated object-creation
+  stop said the owner cannot name a topic he is studying. He can, and the
+  instrument now shows it — Life → Career & Learning → **Add this** stores
+  "Cloud engineering (AWS)" and reads it back. What is true is one layer under
+  it: the fact creates **no entity**, so no study move is generated, no goal can
+  name it as a piece and no course can take it as a subject. The brief now says
+  that, and names routing 84's whole authoring list — goal, routine, person,
+  place, skill and obligation.
+- And the test titled "gets past the four steps … and stops at the four" had a
+  map of three and five. The phase record was right; the test title was not.
+- Siblings: swept. `More / Data` writes nothing — import and restore replace the
+  store from a file. `MemoryProvider` appends derived outcomes on its own; it is
+  deliberate, documented, and now listed as a write that is not a control rather
+  than filtered out silently.
+- Fixed in: the routing 83 round-1 repair checkpoint
+
+### DEF-0112 — a deferral counted the hold's occasions beside the held move's conclusion
+
+- Status: Fixed
+- Severity: Major — two honest statements about two different verbs, one tap
+  apart, with nothing on the screen to reconcile them
+- Found in: routing 83 / `582f648`
+- Found by: **the class sweep written for DEF-0110**, on its first run. Not
+  reported by QA and not in scope; found by looking for the reported defect's
+  class rather than its instance.
+- Class: DEF-0033's — a panel and the line above it counting different things
+  and saying so in the same register.
+- Reproduction: load **A month of what actually worked** and read Now at five in
+  the morning, where the app defers the kitchen to the morning. Open **See
+  evidence**. It says _"Nothing in the record is much like this morning yet"_
+  and _"too early to say · **0 occasions**"_ directly above _"Clearing the
+  kitchen has worked **several times** in situations like today."_
+- Root cause: `engine.ts` composes a hold by taking the held move's semantics
+  and changing the verb to `hold`, so `explanation.semantics.target.verb` is
+  `hold` on a deferral. `evidenceForDecision` read that verb for its counts —
+  there are no `hold` episodes, so zero — and read `explanation.restsOn`, which
+  was computed from the held move's own verb before the rewrite, for its
+  conclusion.
+- Repair: the panel scopes its evidence to `evaluation.candidate.semantics.target`,
+  which is the move on every decision and the **held** move on a hold. Identical
+  on everything that is not a deferral. The sentence on screen stays the hold's,
+  because that is what the owner is looking at, and the deferral rows above it
+  still answer _why not yet_ (QA-82-002).
+- Regression: `tests/synthetic/quantity-agrees.test.ts` — the library-wide sweep
+  that found it. Reintroducing the `explanation`-scoped verb fails it with
+  `what-worked at early-morning · concluded: says four or more over 0`.
+- Siblings: checked. `observed` was reading the same rewritten target and now
+  reads the move's; `rates` and the context split are each named from their own
+  set (D-178).
+- Fixed in: the routing 83 round-1 repair checkpoint
+
+### DEF-0111 — the action's name was lost at the two places it mattered most
+
+- Status: Fixed
+- Severity: Major, blocking for the submission — a generic verb is not an
+  adequate subject for what the owner is being asked to correct
+- Found in: routing 83 / `582f648`
+- Found by: independent QA round 1, by reading one whole card
+- Class: **an identity that survives in the key and dies on the way to the
+  screen** — `corrections.ts` names it in its own comment, for the association
+  aspect, in the R3-B2 repair that left the five verb-scoped aspects behind.
+  D-178.
+- Reproduction: load **Three days since that walk** and open Now. The headline
+  reads _"Move for 25 minutes: **a walk**."_ Directly under it: _"**Move** has
+  made little difference in situations like tonight."_ The correction control's
+  accessible name: _"Not how it went — correct what **move** does for you."_ One
+  tap lower, the evidence panel: _"how often **getting out for a walk**…"_ Four
+  registers for one thing, on one screen.
+- Root cause: structural rather than careless. The table that names an action
+  with its subject in it lived in `insights.ts`, **above** `learning.ts` and
+  `corrections.ts`. The two files that write the sentence and the button had
+  nothing to reach for but `verbLabel` — the eyebrow word on a recommendation
+  card, which is not a name for a thing.
+- Repair: `PATTERN_NAME` and `patternNameFor` moved to
+  `src/domain/recommendation.ts`, beside `verbLabel`. `LearnedEffect` gains
+  `named`, computed under the pooled-object rule; `Explanation` carries it;
+  `describeBelief` takes it. The belief key stays verb-scoped and so does what a
+  correction rejects — only the words change.
+- Regression: `tests/synthetic/one-name-for-an-action.test.ts` — the reported
+  card read as QA read it, plus a library-wide sweep that the statement, the
+  button and the panel say one name, and a guard on the file the table lives in.
+- One existing test asserted the defect. `outcome-learning.test.ts` pinned
+  _"**Reset a space** has worked a few times…"_; it now pins _"Clearing the
+  kitchen…"_ and says why it changed.
+- Siblings: swept. Every history at every block; the association aspect was
+  already correct and is untouched.
+- Fixed in: the routing 83 round-1 repair checkpoint
+
+### DEF-0110 — one occasion was called "the last few times"
+
+- Status: Fixed
+- Severity: Blocker — acceptance item 2 of the phase this defect was found in
+- Found in: routing 83 / `582f648`
+- Found by: independent QA round 1, by opening the evidence under the sentence
+- Class: **a quantity stated in a sentence and compared with nothing** — D-177.
+- Reproduction: load **Three days since that walk** and open Now. The reason
+  reads _"Energy is good, and the evening suits a walk. **The last few times**
+  made little difference, and nothing else here fits better."_ Open **See
+  evidence**: _"**One occasion** in the record is like this evening — 22 May"_
+  and _"too early to say · **1 occasion**."_
+- Root cause: `explain.ts` returned the clause as a fixed string. The count was
+  three lines away in `learning.ts`, which already had the correct singular
+  branch for the sentence beside it.
+- Why the guard written for this exact acceptance item missed it:
+  `history-size-copy.test.ts` holds a list of unmeasurable phrases — "plenty of
+  history", "everything that happened" — and checks that none appears. _"The
+  last few times"_ is not unmeasurable. It is measurable and was never measured,
+  so a phrase list could not see it. A list of known-bad phrases only ever finds
+  the phrases somebody already thought of.
+- Repair: the clause is generated from `learned.samples`, in the vocabulary
+  `learning.ts` already uses for the same number — one vocabulary for one count
+  rather than two files each rounding it their own way.
+- Regression: `tests/synthetic/quantity-agrees.test.ts`, which **compares**
+  rather than matching: every owner-visible sentence a decision produces, on
+  every history at every hour, against the number its own source counted. A
+  phrase nobody has thought of fails the moment it disagrees.
+- Proof by reintroduction, and it found more than was reported: putting the
+  hard-coded phrase back fails at counts of **1, 4 and 12**, across three
+  histories. The plural was wrong in more places than the one an independent
+  reader stood on.
+- The one exemption is itself a check: a quantity quoted verbatim from the
+  record — _"the /26 boundaries went wrong twice"_ is the owner's own recorded
+  words — is not the app's claim to make, and the sweep allows it only where the
+  phrase appears word for word in a record the history holds.
+- Siblings: swept, and one more was found — DEF-0112.
+- Fixed in: the routing 83 round-1 repair checkpoint
+
 ### DEF-0109 — two owner-facing inputs with no accessible name
 
 - Status: Fixed

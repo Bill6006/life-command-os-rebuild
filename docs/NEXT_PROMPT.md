@@ -34,15 +34,15 @@ The builder's own report is [`PHASE_STATUS.md`](PHASE_STATUS.md); the QA brief
 is [`qa/PHASE_83_QA_HANDOFF.md`](qa/PHASE_83_QA_HANDOFF.md); the specification
 is section 8 of [`PRODUCT_ADJUDICATION.md`](PRODUCT_ADJUDICATION.md).
 
-**Which file the orchestrator executes: this one.**
-[`qa/PHASE_83_QA_HANDOFF.md`](qa/PHASE_83_QA_HANDOFF.md) is the report. It
-holds the builder's Round 0 submission and every QA round after it, and QA owns
-it from Round 1. It carries no PASS or FAIL, because the phase is YELLOW and no
-independent QA has run yet — a builder conversation may not write a verdict for
-itself (D-077). The orchestrator reads a QA-named file as a QA report and
-expects a verdict in it, so on equal freshness that file wins the tie and stops
-on the missing verdict. This file is therefore committed *after* it, and is the
-executable handoff until QA writes the next one.
+**Which file the orchestrator executes: not this one, from Round 1 on.**
+[`qa/PHASE_83_QA_HANDOFF.md`](qa/PHASE_83_QA_HANDOFF.md) is the live handoff. It
+holds the builder's Round 0 submission, independent QA's Round 1 — **FAIL** —
+and the repair record and retest prompt under it, and it carries the completion
+marker. This file is the record of the first submission and is kept for that;
+it is not the thing to execute.
+
+The paragraph that stood here said no independent QA had run yet. One has, and
+its verdict is in the report.
 
 |                                    |                                                                                                   |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -247,5 +247,3 @@ Write your report to docs/qa/PHASE_83_QA_HANDOFF.md, below the builder's Round 0
 
 Do not ask me to paste file contents.
 ```
-
-<!-- LCO_COMPLETE -->

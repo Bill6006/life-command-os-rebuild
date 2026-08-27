@@ -526,3 +526,320 @@ Read docs/qa/PHASE_83_QA_HANDOFF.md in full and execute the complete repair
 handoff there exactly as written. Keep Phase 83 YELLOW; do not start routing 84.
 Do not ask me to paste the file contents.
 ```
+
+---
+
+## Round 1 repair — the builder's response
+
+**Phase:** 83 — the instrument, and the things that are untrue
+
+**Round:** 1, repaired. Written by the Claude builder conversation that built
+the phase. **Round 1 above is independent QA's and is not edited by the
+builder**; nothing in it has been changed, softened or answered in place.
+
+**Status: YELLOW — REPAIRED, AWAITING RETEST.** The builder does not mark the
+phase GREEN and has not.
+
+**Every finding is repaired**, each under canonical plan section 42: reproduced,
+class identified, regression written, regression proved to fail when the defect
+is faithfully reintroduced, root cause fixed, full gate re-run.
+
+### Repaired checkpoint
+
+| Fact                       | Value                                                                       |
+| -------------------------- | --------------------------------------------------------------------------- |
+| Repaired product checkpoint | `9e6d46e`                                                                  |
+| Round 1 tested              | `582f648`, deployed `ab6b47f` — unchanged, and its verdict stands           |
+| Deployed Preview SHA        | read it live; a documentation commit moves it past the checkpoint           |
+| Relationship                | `node scripts/checkpoint-equivalence.mjs 9e6d46e --deployed <build-info>`   |
+| Commits on no remote        | **none** — the check DEF-0114 added, run on the head being handed off       |
+
+### Finding by finding
+
+#### QA-83-001 — one occasion called "the last few times" — **DEF-0110**
+
+**Reproduced** exactly as written: the reason on **Three days since that walk**
+read the plural over an evidence panel saying "One occasion" and "1 occasion".
+
+**Root cause** was where QA said it was. `explain.ts` returned the clause as a
+fixed string; `learning.ts` had the correct singular branch for the sentence
+beside it, three lines from the count.
+
+**Repair:** the clause is generated from `learned.samples`, in the vocabulary
+`learning.ts` already uses for that number.
+
+**The guard is the part that matters, and QA's diagnosis of why the old one
+could not fail is accepted in full.** `tests/synthetic/quantity-agrees.test.ts`
+does not hold a list of phrases. It reads the number each sentence's own source
+counted and **compares** it — the effect belief's samples for the reason and the
+learned statement, the comparable-episode count for the panel's own lines,
+because those are two different numbers and holding both to one would invent an
+agreement the app never claimed.
+
+**Reintroduction found more than was reported.** Putting the hard-coded phrase
+back fails at counts of **1, 4 and 12**, across three histories. The plural was
+wrong on a history with twelve occasions behind it as well as on the one QA
+stood on.
+
+**One exemption, and it is itself a check.** _"the /26 boundaries went wrong
+twice"_ is the owner's own recorded words. A quantity the app is quoting is not
+its claim to make, and the sweep allows it only where the phrase appears **word
+for word** in a record the history holds. The app cannot escape the rule by
+choosing careful words; only by quoting.
+
+Recorded as **D-177**.
+
+#### QA-83-002 — the named action lost at learning and correction — **DEF-0111**
+
+**Reproduced.** All four registers on one card, as described.
+
+**Root cause is structural**, and QA's framing — that the panel "recovers the
+missing subject" — points straight at it. `PATTERN_NAME` lived in `insights.ts`,
+**above** `learning.ts` and `corrections.ts`. The two files that write the
+sentence and the button had nothing to reach for but `verbLabel`, which is the
+eyebrow word on a recommendation card and is not a name for a thing. The panel
+was right because it was the only file that could be.
+
+**Repair:** the table moved down to `src/domain/recommendation.ts`, beside
+`verbLabel`. `LearnedEffect` carries the name, `Explanation` carries it, and
+`describeBelief` takes it — so the statement, the button and the panel read one
+table.
+
+**The name is narrowed only where the evidence is.** An `effect` belief pools
+every episode with a verb, so the object is named only where the pooled episodes
+agree on one. Naming one object across a pooled walk and a pooled bike ride
+would be a claim narrower than its evidence — the same error as the plural,
+pointing the other way. The same rule now names the rates and the context split
+from **their own** sets rather than from tonight's object.
+
+**What did not change:** the belief key stays verb-scoped, and so does what a
+correction rejects. `effect:move` still rejects what the app concluded about
+moving. Only the words changed.
+
+**One existing test asserted the defect** and is repaired rather than deleted:
+`outcome-learning.test.ts` pinned _"Reset a space has worked a few times…"_.
+
+Recorded as **D-178**.
+
+#### QA-83-003 — the instrument's exhaustiveness — **DEF-0113**
+
+All three parts accepted; the third was the most useful finding of the round.
+
+**Part 1 — the missing controls.** Both listed: `thread-state` (Life's **Stop
+this** / **Pick this up again**) and `insights-belief-correction` (Insights'
+**That is not right**).
+
+**Part 2 — the guard.** `everyBuilderReachedFromAFeature()` reads
+`src/features/**` and returns the record builders the screens actually call. It
+identifies a builder by **what it returns and what it takes**, not by name —
+`describeRecord`, `describeThreadRecord`, `isWithheldRecord` and
+`sourcesOfRecords` all read records and build none, and a first draft reported
+every one of them; `standingCommitments` returns records and filters rows already
+in the history, and is excluded because it takes no moment.
+
+**And it asks per screen.** `beliefCorrectionRecord` was already listed under
+Now, so a per-builder check stays green over the missing Insights control — the
+second of the two. Removing the `insights-belief-correction` route fails the
+guard with `/src/features/insights/InsightsScreen.tsx calls
+beliefCorrectionRecord (insights)`.
+
+What a control *needs* before it appears is a reading of a screen and stays
+hand-written. That half cannot be derived, and the file says so.
+
+**One write is named rather than filtered.** `MemoryProvider` appends the
+outcomes a history already implies — deliberate, documented, and not an owner
+control. It is listed as a write that is not a control, because an instrument
+about ordinary use has to be honest about what it does not cover.
+
+**Part 3 — the object-creation stop.** QA is right and the correction is not a
+rewording. The instrument now **does** it rather than asserting it: on **The
+first evening** it navigates to Career & Learning, states "Cloud engineering
+(AWS)", reads it back from the page, and then checks the entity index. The stop
+is that the fact creates **no entity** — so no study move is generated, no goal
+can name it as a piece, no course can take it as a subject. The brief also now
+names routing 84's whole authoring list: goal, routine, person, place, skill and
+obligation.
+
+**The self-contradiction** QA noted is gone: the test is titled for three and
+five.
+
+Recorded as **D-179**.
+
+#### QA-83-004 — the aggregate gate — **DEF-0114**
+
+**Reproduced.** `npm run verify` exits 1 at `76d9587` on `prettier --check`.
+
+**The file is formatted.** But the surface cause is one character, and the entry
+is about the second one: **`76d9587` was never pushed.** CI runs the identical
+command on every push and would have failed in under a minute. It never ran,
+because there was nothing to run on — and every result recorded in the phase
+record was taken before that commit existed.
+
+**Class repair:** `scripts/checkpoint-equivalence.mjs` exists to certify that
+what QA reads and what QA tests line up, so it now reports commits on `HEAD`
+that no remote branch contains. It reports rather than refuses: a local commit is
+an ordinary state halfway through a phase, and the bundle equivalence is true
+either way. What it stops is finishing a phase without noticing. Run before this
+push, it named `76d9587` and `32c68c2`.
+
+Recorded as **D-180**, amending D-147.
+
+#### DEF-0112 — found by the repair, not reported
+
+The sweep written for QA-83-001 found a second cross-line contradiction on its
+first run. On a **deferral**, the evidence panel said _"Nothing in the record is
+much like this morning yet"_ and _"too early to say · **0 occasions**"_ directly
+above _"Clearing the kitchen has worked **several times** in situations like
+today."_
+
+`engine.ts` composes a hold by rewriting the verb to `hold`, so the panel counted
+`hold`'s occasions — none exist — while concluding from the held move's belief,
+computed before the rewrite. The panel now scopes its evidence to the
+evaluation's target, which is the move on every decision and the held move on a
+hold. The sentence on screen stays the hold's, and the deferral rows above it
+still answer *why not yet* (QA-82-002).
+
+### What was preserved
+
+Every round-1 PASS: occurrence identity and the unchanged three-day window;
+Timeline's scope copy; the Private promise and the withholding behind it; every
+accessible name and purpose note; the five lifecycle controls; every standing
+copy and scoring guard. No scoring weight, dimension or threshold moved. Every
+explicit deferral is unchanged — no destination object, no new domain, no
+consent model, no second questioning surface, no live model.
+
+The owner's dispatch constraint and the terminal completion comment are handled
+as instructed: `docs/NEXT_PROMPT.md` keeps its record of the first submission,
+its stale "no QA has run yet" paragraph is corrected, and **the marker now lives
+at the end of this file** — the live handoff — rather than in two places.
+
+### Verification on the repaired checkpoint
+
+| Gate                                      | Result                                                                        |
+| ----------------------------------------- | ----------------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included                             |
+| Unit / contract / synthetic / adversarial | **1,765 passed** in 82 files (1,753 in 80 at round 1)                         |
+| Browser, 360 / 430 / 1,280, one worker    | **591 passed**, 197 per width (582 at round 1)                                |
+| Android-style gate                        | **clean — 187 checks** (183 at round 1)                                       |
+| Privacy scan                              | **clean** — 273 tracked files                                                 |
+| Commits on no remote                      | **none**                                                                      |
+
+**One browser case flaked once** in the full run — `data.spec.ts` at 360px,
+`net::ERR_ABORTED` on `page.goto`, the navigation flake `playwright.config.ts`
+documents for this platform. 590 of 591; it passed at all three widths in
+isolation immediately afterwards. That is twice in this phase, always on
+`page.goto`. Recorded rather than smoothed over.
+
+New instruments: `quantity-agrees.test.ts`, `one-name-for-an-action.test.ts`,
+and the per-screen guard in `ordinary-use-journey.test.ts`. Three browser cases
+and four Android checks read the repaired card on a real screen.
+
+---
+
+## Complete next handoff — retest after the round 1 repair
+
+**System:** Codex / independent QA.
+**Model:** Codex — the same model that ran round 1.
+**Reasoning level:** **High.** Never Max; Codex has no Max level and a block
+asking for one stops the orchestrator with the level unset.
+**Conversation:** **SAME** — the Codex conversation that wrote round 1. It
+already holds the reproductions, and a retest is a comparison against what it
+saw rather than a fresh cold read.
+
+```text
+Independent QA — routing Phase 83 retest, after the round 1 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Preview:
+https://bill6006.github.io/life-command-os-rebuild/preview/
+
+You are the same Codex QA conversation that wrote Round 1. This is a retest, not
+a first submission: you already have the reproductions, and what is being asked
+is whether each one is closed on the deployed build.
+
+You may create or update only docs/qa/PHASE_83_QA_HANDOFF.md and narrowly scoped
+QA evidence artifacts. Do not repair application or product code. Round 1 is
+yours and is not edited by anyone; the builder's repair record sits under it.
+
+Your **Phase:** field stays 83.
+
+CHECKPOINT
+
+- Repaired product checkpoint: 9e6d46e
+- Round 1 tested 582f648, deployed ab6b47f. That verdict stands.
+- Read the deployed SHA live from
+  https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json and
+  prove the relationship with
+  `node scripts/checkpoint-equivalence.mjs 9e6d46e --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json`
+  rather than by comparing strings (D-097).
+- That script now also reports commits on HEAD that no remote branch contains —
+  the class repair for QA-83-004. Empty is the expected answer.
+
+WHAT TO RETEST, IN THIS ORDER
+
+1. QA-83-001. Load "Three days since that walk" and read Now. The reason must
+   not say "The last few times" over one occasion, and the evidence panel must
+   still say one. Then satisfy yourself the guard is a comparison rather than a
+   longer blacklist: tests/synthetic/quantity-agrees.test.ts. The builder claims
+   reintroduction fails it at counts of 1, 4 and 12 — check the proof, not the
+   claim.
+2. QA-83-002. On the same card: the belief sentence, the correction control's
+   accessible name, and the evidence panel must name the same action. Judge
+   whether "Getting out for a walk" is the right register for a sentence subject
+   and a button, on a phone, and whether naming the object only when the pooled
+   episodes agree on one is the right rule — that judgement is yours, and the
+   builder has argued for it rather than established it.
+3. QA-83-003. The route table, the per-screen guard, and the rewritten
+   object-creation stop. The stop now claims the owner CAN state a current-topic
+   fact and that no entity results. Verify both halves in the running app.
+   Then judge the brief for completeness again: whether an ordinary journey
+   stops anywhere it still does not name is the most valuable thing you can
+   find, and it is routing 84's scope.
+4. QA-83-004. `npm run verify` on a clean tree at the handed-off head. The whole
+   command.
+5. DEF-0112, which the builder found rather than you: on a deferral, the evidence
+   panel must not count the hold's occasions beside the held move's conclusion.
+   Reproduce at 05:30 on "A month of what actually worked".
+6. Confirm every round 1 PASS is still a PASS — occurrence identity and the
+   three-day window, Timeline's scope copy, the Private promise from both ends,
+   and every accessible name — and that the explicit deferrals are unchanged.
+
+The deployed Galaxy-class Android gate and the browser matrix at 360/430/1280
+are the builder's; duplicate them only on a concrete trigger (D-090 step 7).
+
+WHAT TO PRODUCE
+
+Per qa/README.md sections 3 and 3a, in the same response: PASS or FAIL overall
+and per finding; the QA-tested and deployed SHAs; exact reproductions for
+anything still open; which automated tests gave false confidence; confirmation
+that the deferrals are unchanged; and the complete next handoff written into
+docs/qa/PHASE_83_QA_HANDOFF.md — on FAIL to the CURRENT Claude builder
+conversation, on PASS to the same conversation for the GREEN closeout.
+
+The repair block is Claude's and takes Max. Your retest block is Codex's and
+takes High. Do not copy one level into the other.
+
+Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Level:** High. **Conversation:** SAME — the Codex
+conversation that wrote round 1.
+
+```text
+Independent QA — routing Phase 83 retest, after the round 1 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_83_QA_HANDOFF.md in full and execute the retest handoff there
+exactly as written. Repaired checkpoint 9e6d46e; your Round 1 verdict on 582f648
+stands. Keep the Phase field 83.
+
+Do not ask me to paste the file contents.
+```
+
+<!-- LCO_COMPLETE -->

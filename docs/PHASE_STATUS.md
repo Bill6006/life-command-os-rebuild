@@ -122,7 +122,7 @@ superseded rather than reused.
 
 # Routing Phase 83 — The instrument, and the things that are untrue
 
-**Status: YELLOW — READY FOR INDEPENDENT QA.**
+**Status: YELLOW — REPAIRED AFTER QA ROUND 1, AWAITING RETEST.**
 
 Canonical product name: _the instrument, and the things that are untrue_.
 **Routing integer 83** (plan section 43A, D-159) — the `**Phase:**` field of
@@ -139,26 +139,124 @@ opened none.
 
 ## Checkpoint
 
-| Fact                    | Value                                                                           |
-| ----------------------- | ------------------------------------------------------------------------------- |
-| Product checkpoint      | `582f648` — the commit the gate was run on (D-147)                              |
-| Documentation head      | `51ef425`, plus the commit that closes this section                             |
-| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/ — live at `51ef425` |
-| Owner-visible behaviour | **changed** — Now, Timeline, the Private page and two domain-page controls      |
-| Owner phone check       | required before GREEN                                                           |
-| Independent QA          | required — Codex, new conversation                                              |
+| Fact                       | Value                                                                                    |
+| -------------------------- | ---------------------------------------------------------------------------------------- |
+| Product checkpoint         | `9e6d46e` — the round-1 repair, and the commit this gate was run on (D-147)              |
+| First submission (round 1) | `582f648`, deployed `ab6b47f` — the checkpoint QA tested and failed                      |
+| Documentation head         | the commit that closes this section                                                      |
+| Preview                    | https://bill6006.github.io/life-command-os-rebuild/preview/ — read the deployed SHA live |
+| Owner-visible behaviour    | **changed again** — Now's reason clause, the belief sentence and its correction control  |
+| Owner phone check          | required before GREEN                                                                    |
+| Independent QA             | retest, by the **same** Codex conversation that wrote round 1                            |
 
 ## Exact verification results
 
-| Gate                                      | Result                                                                      |
-| ----------------------------------------- | --------------------------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** — format, lint, typecheck, 1,753 tests in 80 files, build          |
-| Unit / contract / synthetic / adversarial | **1,753 passed** (1,675 before this phase; +78)                             |
-| Browser, three widths, one worker         | **582 passed** (552 before this phase; +30) — 194 per width                 |
-| Android-style gate, deployed              | **clean — 183 checks** against `51ef425` (119 in Phase 82)                  |
-| Privacy scan                              | **clean** — 270 tracked files                                               |
-| Block sweep                               | **PASS** — unchanged, and the three new histories pass it                   |
-| Copy guards                               | **PASS** — no percentage, rank, grade or score about the child or the owner |
+At the repaired checkpoint `9e6d46e`. Round 1's own numbers are in the section
+below it, and the aggregate command is the one that failed there — so it is
+stated first and it is the whole command, not its stages run separately.
+
+| Gate                                      | Result                                                                        |
+| ----------------------------------------- | ----------------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (QA-83-004)                 |
+| Unit / contract / synthetic / adversarial | **1,765 passed** in 82 files (1,753 in 80 at round 1; 1,675 before the phase) |
+| Browser, three widths, one worker         | **591 passed** (582 at round 1; +9) — 197 per width                           |
+| Android-style gate                        | **clean — 187 checks** (183 at round 1); the deployed run is in the QA report |
+| Privacy scan                              | **clean** — 273 tracked files                                                 |
+| Block sweep                               | **PASS** — unchanged                                                          |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about the child or the owner   |
+| Commits not on any remote                 | **none** — the check DEF-0114 added, run on the head being handed off         |
+
+## Independent QA — round 1, and the repair
+
+**Round 1 returned FAIL** at product checkpoint `582f648`, deployed `ab6b47f`,
+on 2026-08-27. Acceptance items 1, 3 and 4 passed. Items 2 and 5 failed, and the
+aggregate `npm run verify` gate failed at the repository head. Four findings,
+**QA-83-001 … QA-83-004**, all repaired below. The phase stays **YELLOW**.
+
+**The shape of the round is worth reading before the detail**, because three of
+the four findings are the same shape: **a guard that could not fail.**
+
+- Item 2's guard held a list of unmeasurable phrases and checked that none
+  appeared. _"The last few times"_ is not unmeasurable — it is measurable and was
+  never measured — so the list could not see it. **A blacklist finds the phrases
+  somebody already thought of.**
+- The instrument's route table said "every" and was compared with nothing. The
+  test above it, named _"keeps the route table honest"_, checked that ids were
+  unique and that a string contained a dot.
+- The aggregate verify gate was red at a head that had **never been pushed**, so
+  CI — which runs the identical command on every push — never ran on it.
+
+The fourth, QA-83-002, is a layering fact wearing a copy problem's clothes: the
+table that names an action with its subject in it lived above the two files that
+needed it.
+
+### What was repaired
+
+| Finding        | Defect       | Repair                                                                                                                                                                                      |
+| -------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **QA-83-001**  | **DEF-0110** | The reason clause is generated from `learned.samples`, in the vocabulary `learning.ts` already uses for that number. The guard now **compares** a stated quantity with the count behind it. |
+| **QA-83-002**  | **DEF-0111** | `patternNameFor` moved from `insights.ts` down to `domain/recommendation.ts`. The belief, the button and the panel read one table, under the pooled-object rule.                            |
+| **QA-83-003**  | **DEF-0113** | Both missing controls listed; a reader that compares the table with the source, **per screen**; the object-creation stop rewritten; the step count corrected.                               |
+| **QA-83-004**  | **DEF-0114** | `docs/NEXT_PROMPT.md` formatted, and `checkpoint-equivalence.mjs` now reports commits on `HEAD` that no remote branch contains.                                                             |
+| _found by 001_ | **DEF-0112** | A deferral counted the **hold's** occasions beside the **held move's** conclusion. Not reported; found by the class sweep on its first run.                                                 |
+
+### What the class sweeps found beyond what was reported
+
+This is the part worth keeping. Both new sweeps found more than the instance
+they were written for.
+
+- **The plural was wrong at three counts, not one.** Reintroducing the
+  hard-coded _"The last few times"_ fails the comparison sweep at **1, 4 and
+  12** across three histories. An independent reader stood on the singular case;
+  the phrase was equally wrong on a history with twelve occasions behind it.
+- **A deferral's evidence panel contradicted itself** — _"0 occasions · too
+  early to say"_ directly above _"Clearing the kitchen has worked several times
+  in situations like today"_. `engine.ts` composes a hold by rewriting the verb
+  to `hold`, and the panel counted that verb while concluding from the held
+  move's. DEF-0112, DEF-0033's class, found because the sweep asked every
+  history at every hour rather than the one that was reported.
+
+### The three rules the round produced
+
+- **D-177** — a quantity in a sentence is compared with the count behind it,
+  never matched against a list of phrases. The one exemption is itself a check:
+  a quantity quoted verbatim from the record is not the app's claim to make, and
+  the sweep allows it only where the phrase appears word for word in a record
+  the history holds.
+- **D-178** — one name for an action, in the layer every surface can reach.
+  `verbLabel` is the eyebrow word on a card and is not a name for a thing; the
+  object is named only where the pooled episodes agree on one, and each label is
+  named from the set it labels.
+- **D-179** — a claim of exhaustiveness is a test, or it is a comment.
+- **D-180** — a commit that is not pushed has met no gate, amending D-147.
+
+### The enumerated brief, corrected
+
+Round 1 was right that the object-creation stop conflated two claims, and the
+instrument now separates them by doing it rather than asserting it. On **The
+first evening**, Life → Career & Learning → **Add this** stores _"Cloud
+engineering (AWS)"_ and reads it back on the page — the owner **can** state what
+he is studying. What he cannot do is create the **entity** the rest of the app
+would need: no learning-topic entity exists afterwards, so no study move is
+generated, no goal can name it as a piece, and no course can take it as a
+subject. The stop is that a fact has nowhere to go, not that it cannot be
+stated.
+
+The brief also now names routing 84's whole authoring list — **goal, routine,
+person, place, skill and obligation** — rather than the four the first version
+happened to mention.
+
+### What round 1 passed, and what was preserved
+
+Occurrence identity and the unchanged three-day window; Timeline's scope copy;
+the Private promise and the withholding behaviour behind it; every accessible
+name and purpose note; the five lifecycle controls; every standing copy and
+scoring guard; and every explicit deferral. Nothing in this repair touches any
+of them, and the suites over all of them ran green on the repaired checkpoint.
+
+One existing test asserted the defect rather than the behaviour:
+`outcome-learning.test.ts` pinned _"Reset a space has worked a few times…"_. It
+now pins the named form and says why it changed.
 
 ## The five packages
 
@@ -207,15 +305,17 @@ a real run and held against a written table in
 the code from outside it.
 
 The numbers are the journey's own steps, so 4, 6 and 8 are absent because those
-three are the ones it gets past.
+three are the ones it gets past. The test that produces it is titled for that
+count now; at round 1 it said "four and four" over a map of three and five,
+which QA reported as a self-contradiction and was right to.
 
-| Step                       | What the owner was trying to do                              | Why it stops                                                                                                                                                                                                                                                                                                                                 | Where it belongs                        |
-| -------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| **1. Unknown aspiration**  | say what he is trying to become, before he can name it       | No concept in the registry is about anything he is aiming at. The longest-horizon thing he can state is **this week's focus** (`direction.weekly-focus`); there is no destination, no milestone, no starting point.                                                                                                                          | routing 84, package 1 (F01, F35, D-162) |
-| **2. Discovery**           | be asked something that would surface what matters to him    | The guide asked two questions — current energy, soreness — and its whole catalogue is six readings of today's capacity. It has no question that could surface an aspiration, and D-036 caps it at three a day anyway.                                                                                                                        | routing 84, package 4 (F02, D-163)      |
-| **3. Object creation**     | name a goal, a topic, a person, a place or a skill           | **No control on any screen calls `createEntity`.** Entities reach the store through three doors and all three are a file: the QA laboratory, the legacy importer, restore. `constraint`, `goal`, `commitment` and `relationship-event` have no owner route at all — a goal can be corrected once it exists and cannot be brought into being. | routing 84, package 3 (F04, F12, F19)   |
-| **5. Interruption**        | say he was interrupted, then pick the same thing back up     | **Can't right now** is recorded and the move then leaves the screen: Now reads _"Nothing new for today."_ `TRANSITIONS` allows `unable-now → started, completed or declined` and no surface ever offers them again. Nor is a reason asked for or stored — `planLifecycle` takes one and `NowScreen` passes none.                             | routing 84 riders F10/F11/F13, and F07  |
-| **7. Correction (events)** | correct what the app **recorded**, not only what it believes | A fact corrects from its own row on a Life page and that works. Nothing withdraws a completion, moves an entry to the day it happened, or backfills one that was never recorded. `liftVetoRecord` is the only writer of a `correction` record and it corrects a veto.                                                                        | routing 84 rider F32/F36, after D-165   |
+| Step                       | What the owner was trying to do                              | Why it stops                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Where it belongs                        |
+| -------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| **1. Unknown aspiration**  | say what he is trying to become, before he can name it       | No concept in the registry is about anything he is aiming at. The longest-horizon thing he can state is **this week's focus** (`direction.weekly-focus`); there is no destination, no milestone, no starting point.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | routing 84, package 1 (F01, F35, D-162) |
+| **2. Discovery**           | be asked something that would surface what matters to him    | The guide asked two questions — current energy, soreness — and its whole catalogue is six readings of today's capacity. It has no question that could surface an aspiration, and D-036 caps it at three a day anyway.                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | routing 84, package 4 (F02, D-163)      |
+| **3. Object creation**     | name something the rest of the app can then refer to         | **He can state the fact and it goes nowhere.** Life → Career & Learning → **Add this** stores "Cloud engineering (AWS)" and reads it back — corrected after QA round 1, which was right that the first version of this row conflated two claims. What it does not create is an **entity**: no learning-topic entity exists afterwards, so no study move is generated, no goal can name it as a piece, no course can take it as a subject. No control on any screen calls `createEntity`, and `constraint`, `goal`, `commitment` and `relationship-event` have no owner route at all. Routing 84's authoring brief is the whole list — **goal, routine, person, place, skill and obligation**. | routing 84, package 3 (F04, F12, F19)   |
+| **5. Interruption**        | say he was interrupted, then pick the same thing back up     | **Can't right now** is recorded and the move then leaves the screen: Now reads _"Nothing new for today."_ `TRANSITIONS` allows `unable-now → started, completed or declined` and no surface ever offers them again. Nor is a reason asked for or stored — `planLifecycle` takes one and `NowScreen` passes none.                                                                                                                                                                                                                                                                                                                                                                              | routing 84 riders F10/F11/F13, and F07  |
+| **7. Correction (events)** | correct what the app **recorded**, not only what it believes | A fact corrects from its own row on a Life page and that works. Nothing withdraws a completion, moves an entry to the day it happened, or backfills one that was never recorded. `liftVetoRecord` is the only writer of a `correction` record and it corrects a veto.                                                                                                                                                                                                                                                                                                                                                                                                                         | routing 84 rider F32/F36, after D-165   |
 
 **Four further points the instrument found in passing**, recorded so they are not
 rediscovered:
@@ -391,6 +491,11 @@ score about the owner.
   purpose. Every line of it is a routing 84 or routing 90 package.
 - **The evidence panel's composition** (F33 residual, E19) — the deciding
   evidence reaches the reason line and not the panel. Routing 90.
+- **The same browser flake reappeared once in the round-1 repair run** —
+  `data.spec.ts` at 360px, `net::ERR_ABORTED` on `page.goto` again, 590 of 591.
+  It passed at all three widths in isolation immediately afterwards. Twice now
+  in one phase, always on `page.goto`, always the flake the config documents;
+  worth watching rather than repairing blind.
 - **One browser test flaked once**, in an earlier full-suite run, with
   `net::ERR_ABORTED; maybe frame was detached?` on `page.goto` — the navigation
   flake `playwright.config.ts` documents for this platform. The run behind the
