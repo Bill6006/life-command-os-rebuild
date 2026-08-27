@@ -1120,4 +1120,96 @@ instrument first, and it is the one thing to read before the packages.
 | Owner phone test            | still required before release                                            |
 | Next phase                  | routing **84**, Claude Opus-class, **Max**, a **NEW** conversation        |
 
+---
+
+## Post-closeout re-dispatch — no work performed
+
+This report was dispatched a second time after the GREEN closeout above had
+already been executed. **Nothing in it was outstanding, and nothing in routing 83
+was changed.** This section exists for two reasons: so a later reader is not left
+wondering what the extra commit on this file was, and because an unchanged file
+is re-dispatched again — the completion contract compares signatures, so a report
+that is finished but untouched stays live.
+
+### What was checked before concluding there was no work
+
+Each of these was checked rather than assumed. The temptation in this situation
+is to read the marker at the bottom, conclude "already done", and stop — but a
+marker only says *this round finished*, and a round finishing is not the same as
+this phase having nothing further owed.
+
+| Question                                                  | Answer                                                                            |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Has independent QA written a round after the closeout?    | No. The last section written to this file is the builder's own closeout.           |
+| Is any of the closeout handoff's seven steps outstanding? | No. All seven were executed, pushed and verified, finishing at `57dd75f`.          |
+| Is routing 83 still GREEN in the phase record?            | Yes, and no commit since has touched its section of `PHASE_STATUS.md`.             |
+| Has anything reopened the phase?                          | No. The commits since are **routing 84's**, not repairs to 83.                     |
+| Does `docs/qa/PHASE_84_QA_HANDOFF.md` exist yet?          | It did not when this was dispatched. It appeared, untracked, while this was written. |
+
+### Why the re-dispatch happened, as far as this file can tell
+
+The orchestrator routes from the numerically highest QA report on disk, and that
+is still this one, because routing 84 has not yet written its own. So the marker
+at the bottom of a finished report was read as a live handoff. The signal that a
+phase has been superseded is **the next phase's report existing**, and it does
+not yet — which leaves a window, between one phase closing and the next reaching
+YELLOW, in which the closed report is the newest thing to route to. Phase 82 hit
+this same window and recorded it the same way, at `87e2057`.
+
+This is worth stating plainly because it is a property of the routing rule, not a
+one-off: the window will open again after every closeout, and it closes only when
+the next builder writes its QA report.
+
+### One thing a later reader should not have to discover
+
+While this note was being written, routing 84's builder wrote
+`docs/qa/PHASE_84_QA_HANDOFF.md` — a Round 0 brief — into the working tree. At
+the time of writing it is **untracked and carries no completion marker**, so the
+marker still sits on this report and only on this report, which is the state the
+contract requires.
+
+**That is the state to watch.** The marker is meant to move, never to be copied:
+if routing 84 marks its own report without clearing this one, two files will
+claim to be the live handoff at once, and the rule that resolves the ambiguity —
+"whichever file carries the marker last" — stops resolving anything. This note
+deliberately does **not** clear the marker here, because the dispatch that
+produced it named this file and this file only, and unilaterally clearing a
+marker another agent is about to rely on would be the same class of mistake in
+the other direction. It is recorded instead, which is the part a later reader
+cannot reconstruct.
+
+### The condition this closeout was made under, which is worth flagging
+
+**Routing 84 was actively committing to this same working tree while this note
+was written** — two commits landed during the check, and its CI verification run
+was in flight. That is not the ordinary case and it is not a state to normalise:
+a second writer in a repository an agent is still working in is precisely what
+the orchestrator's busy guard exists to prevent, and that guard does not cover a
+fresh start.
+
+Two things follow, and both were done rather than merely noted:
+
+- **This commit touches one file — this one.** No product code, no shared
+  document, nothing routing 84 has open. The closeout handoff's own condition
+  ("make no product-code change as part of a documentation closeout") holds here
+  for the additional reason that any executable change would return 83 to YELLOW.
+- **This push waited for routing 84's verification run to finish.** The workflow
+  sets `cancel-in-progress: true`, so pushing into an in-flight run would have
+  cancelled another agent's verification at the moment it was about to claim a
+  checkpoint. Waiting cost minutes; not waiting would have destroyed a result
+  someone else was depending on.
+
+### The status, unchanged
+
+**Phase 83 remains GREEN at approved product checkpoint `9e6d46e`.** The deployed
+Preview no longer serves those bytes, and that is correct rather than a
+discrepancy to chase: routing 84 has changed the bundle since. The equivalence
+recorded in the closeout is a statement about the closeout head, not a standing
+promise about every future deployment — D-097 is a method for comparing a
+checkpoint with what was deployed *from* it, not an assertion that Preview is
+frozen.
+
+Nothing here supersedes the closeout above. The owner's phone check is still
+owed before release.
+
 <!-- LCO_COMPLETE -->
