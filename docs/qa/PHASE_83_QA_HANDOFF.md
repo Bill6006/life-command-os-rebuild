@@ -844,4 +844,178 @@ stands. Keep the Phase field 83.
 Do not ask me to paste the file contents.
 ```
 
+---
+
+## Round 2 — independent QA retest after the Round 1 repair
+
+**Phase:** 83 — the instrument, and the things that are untrue
+
+**Actor:** Codex / independent QA, in the same conversation that wrote Round 1.
+
+**Overall result:** **PASS.** QA-83-001 through QA-83-004 and builder-found
+DEF-0112 are closed on the repaired, deployed product. Every Round 1 PASS
+remains a PASS. Phase 83 is still YELLOW until the builder performs the formal
+GREEN closeout; QA recommends that closeout.
+
+### Build identity and test configuration
+
+| Fact | Value |
+| --- | --- |
+| QA-tested product checkpoint | `9e6d46e` |
+| Repository head used for the clean aggregate gate | `cba5e4414118a93cee99948b6e5b2faea82ae6c3` — documentation-only after the repaired checkpoint |
+| Deployed Preview SHA read live | `cba5e4414118a93cee99948b6e5b2faea82ae6c3` |
+| Relationship | `node --use-system-ca scripts/checkpoint-equivalence.mjs 9e6d46e --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json` reported five changed documents, none bundle-relevant |
+| Remote state | `origin/main` contains `cba5e44`; the checkpoint checker reported no commit on HEAD that is absent from every remote |
+| Deployed browser retest | In-app Chromium against the Preview, using accessible-DOM names and the owner-facing controls |
+| Android configuration retained from the builder gate | Playwright Galaxy S24; 360 × 780 CSS px; DPR 3; touch and `isMobile`; Android 14 / Chrome 126 user agent |
+| QA report commit | Not committed by QA in this round |
+
+The browser matrix and Galaxy-class gate were not duplicated. D-090 says to do
+that only on a concrete trigger; the deployed reproductions matched the repaired
+tests and no browser/mobile discrepancy appeared. The builder's final evidence
+therefore remains 591 browser cases — 197 at each of 360, 430 and 1,280px — and
+187 deployed Android checks.
+
+### Finding-by-finding retest
+
+| Finding | Result | Independent retest evidence |
+| --- | --- | --- |
+| QA-83-001 / DEF-0110 — quantity agrees with its count | **PASS** | On deployed **Three days since that walk**, Now says _“The one time before made little difference”_; the open panel still says _“One occasion”_ and _“1 occasion.”_ The new test compares each phrase with the count its own source used. QA faithfully replaced the three-band helper with the original hard-coded _“The last few times”_: the guard failed over counts **1, 4 and 12**, naming each offending history and count. The source was then restored byte-for-byte and the test returned 4 / 4. |
+| QA-83-002 / DEF-0111 — one name for the action | **PASS** | The same deployed card says **Getting out for a walk** in the belief sentence, the correction control's accessible name and the evidence panel. The phrase is natural in the sentence and specific enough for the control. The object-agreement rule is correct: a verb-pooled belief names an object only where all pooled episodes agree, otherwise it uses the action's grammatical generic name rather than falsely narrowing the evidence. |
+| QA-83-003 / DEF-0113 — exhaustive ordinary-use instrument | **PASS** | The route table now includes Life's thread-state control and Insights' belief correction. The guard reads record-builder calls per feature screen, names the derived-outcome append as deliberately not an owner control, and its bite test removes each formerly missing row. QA also independently enumerated the current `memory.append` sites: no owner-facing writer is absent. In the deployed app, **The first evening → Life → Career & Learning → Current learning topic → Add this** accepted and read back _“Cloud engineering (AWS)”_; the QA inspector then showed **2 records, 0 entities**. The stop now distinguishes a fact from a referable entity and names the complete routing-84 authoring list: goal, routine, person, place, skill and obligation. The corrected journey title says three supported steps and five stops. No unnamed ordinary-use stop was found. |
+| QA-83-004 / DEF-0114 — clean aggregate gate | **PASS** | On a clean tree at `cba5e44`, the whole `npm run verify` command exited 0: formatting, lint, typecheck, 1,765 tests in 82 files and the production build all passed. The deployed checkpoint relationship and remote-containment check also passed. |
+| DEF-0112 — held-move evidence on a deferral | **PASS** | On deployed **A month of what actually worked**, QA moved the clock from 19:30 to **05:30** through fourteen presses of the owner-facing **−1 hour** control. The hold said the morning suits the kitchen better. Its open panel measured the held kitchen move: **4 occasions**, **4 answered**, **4 of 4**, beside _“Clearing the kitchen has worked several times…”_. The contradictory hold count of zero is gone. |
+
+### Acceptance items and preserved Round 1 passes
+
+| # | Result | Evidence |
+| --- | --- | --- |
+| 1. An earlier-day completion cannot settle today's occurrence | **PASS** | The deployed three-day fixture still presents a fresh walk and all five lifecycle controls; its 22 May completion remains in the evidence window while the 25 May occurrence is not falsely settled. `occurrence-identity.test.ts` passed 7 / 7. |
+| 2. No owner sentence asserts a quantity it did not count | **PASS** | The direct one-occasion contradiction is closed, the comparison guard passes over the whole scenario/block sweep, and the faithful hard-coded reintroduction fails at 1, 4 and 12. |
+| 3. The Private promise agrees with Timeline | **PASS** | On deployed **Two ordinary weeks**, Private says the words stay on that page and Timeline shows only existence and time. Private displays _“late scrolling again”_; Timeline displays **Private entry** at 23:40 and never displays those words. Timeline's lede says _“Everything recorded here”_ and its end says _“the whole record — 19 entries.”_ |
+| 4. Every owner-facing input has an accessible name | **PASS** | The deployed current-topic textbox is named **Current learning topic, in your own words**; the repaired belief control is named for getting out for a walk. The source-wide accessible-name guard passed inside the 63-test architecture suite, and the builder's deployed all-route sweep remains green. |
+| 5. The near-empty ordinary-use journey and enumerated stops | **PASS** | The executable current-topic-fact/no-entity result and the source-derived per-screen route guard agree. The complete ordinary-use test passes 9 / 9 and no additional stop or omitted writer was found. |
+
+No separate behavioural-state or mobile/UI defect was found. Screenshots were
+not needed for these text-and-state closures; the evidence is the live
+accessible-DOM text above, the QA inspector's record/entity counts, and the
+commands recorded below.
+
+### Verification record
+
+| Gate | QA result |
+| --- | --- |
+| Focused repaired and preserved regressions | **74 / 74 passed across 6 files** |
+| Restored quantity guard after QA's reintroduction | **4 / 4 passed** |
+| Faithful hard-coded quantity reintroduction | **Expected FAIL observed** — two tests failed, with offenders at counts 1, 4 and 12 |
+| Aggregate `npm run verify` | **PASS** |
+| Unit / contract / synthetic / adversarial | **1,765 / 1,765 passed across 82 files** |
+| Format, lint, typecheck, production build | **PASS** |
+| Privacy scan | **clean — 273 tracked files** |
+| Checkpoint equivalence | **PASS** — deployed `cba5e44` serves the product bytes from `9e6d46e` |
+| Commits on no remote | **none** |
+| Browser matrix / deployed Galaxy gate | Not duplicated without a D-090 trigger; builder evidence remains **591 / 591** and **187 checks clean** |
+
+### Automated false-confidence assessment
+
+Round 1's false-confidence record remains accurate for checkpoint `582f648`:
+`history-size-copy.test.ts`, `phase83.spec.ts`, the Android gate,
+`occurrence-identity.test.ts`, `decision-evidence.test.ts`, all seven former
+ordinary-journey tests and the green 1,753-test suite omitted or restated the
+failed claims.
+
+The repaired instruments close those specific holes. The quantity guard
+compares words with source counts and failed QA's independent reintroduction at
+all three claimed counts. The name guard checks the statement, correction and
+panel against one naming source. The ordinary-use guard compares source calls
+per screen with the route table and exercises the fact/entity distinction. No
+remaining automated false confidence was found in this retest.
+
+### Deferrals and owner questions
+
+Every explicit deferral is unchanged and remains outside Phase 83: no
+destination, milestone or baseline object; no Love / Dating / Romantic Life
+domain; no private-consent model; no second questioning agenda; no scoring
+change; no live model; and every item in audit section 10's do-not-change list
+and product-adjudication section 11.
+
+Q1 (Adaya's age and normative references), Q4 (legacy evidence admissibility)
+and Q6 (live-model inference, reopened before routing 91 without treating the
+finite concept vocabulary as a ceiling) remain open for the owner. QA does not
+answer them.
+
+---
+
+## Complete next handoff — formal GREEN closeout after Round 2 PASS
+
+**System:** Claude / builder.
+**Model:** Claude, Opus-class current equivalent — the closeout must preserve
+the audit campaign's cross-system semantics and route the next package.
+**Intelligence level:** **Max** — the standing audit-campaign rule applies to
+every builder step through the formal closeout.
+**Conversation:** **CURRENT** — return to the original routing 83 Claude builder
+conversation, which owns the phase record and formal closeout.
+
+```text
+Routing Phase 83 formal GREEN closeout after independent QA Round 2 PASS.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_83_QA_HANDOFF.md in full. Round 2 is the authoritative
+independent QA retest. Keep the Phase field exactly 83.
+
+Independent QA passed repaired product checkpoint 9e6d46e. The deployed
+Preview and clean verification head were
+cba5e4414118a93cee99948b6e5b2faea82ae6c3; the checkpoint-equivalence tool
+reported five documentation-only changes and no commit on HEAD absent from
+every remote. The complete npm run verify command passed with 1,765 tests in
+82 files, and the privacy scan was clean across 273 tracked files.
+
+Perform the formal GREEN closeout now:
+
+1. Confirm the QA-tested checkpoint, deployed relationship and Round 2 PASS.
+2. Mark routing Phase 83 GREEN in the governing phase record and update the
+   decision log, defect ledger, canonical plan/status material and any other
+   governing documents the closeout protocol requires. Close QA-83-001 through
+   QA-83-004 and DEF-0112 through DEF-0114 only to the extent Round 2 supports.
+3. Preserve every Phase 83 PASS and every explicit deferral. Do not implement
+   routing 84 during this closeout, do not change scoring, and do not answer Q1,
+   Q4 or Q6.
+4. Make no product-code change as part of a documentation closeout. If an
+   executable change becomes necessary, Phase 83 returns to YELLOW and must go
+   through independent QA again.
+5. Write the complete routing-84 builder prompt into docs/NEXT_PROMPT.md,
+   including its recommended model, Max intelligence level, conversation
+   instruction and short launcher. Do not make the owner ask for that handoff.
+6. Keep this QA report's terminal completion marker at the end of this report
+   only. Do not copy it into docs/NEXT_PROMPT.md or any other handoff file.
+7. Commit and push the documentation closeout, wait for Verify and Preview
+   deployment, read the deployed SHA live, and prove its relationship to
+   9e6d46e with scripts/checkpoint-equivalence.mjs. Report the closeout SHA,
+   deployed SHA, relationship, QA report path and the exact next launcher.
+
+Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude, Opus-class current equivalent.
+**Level:** Max.
+**Conversation:** CURRENT — the original routing 83 Claude builder
+conversation.
+
+```text
+Routing Phase 83 formal GREEN closeout after independent QA Round 2 PASS.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_83_QA_HANDOFF.md in full and execute the complete GREEN
+closeout handoff there exactly as written. Independent QA passed repaired
+checkpoint 9e6d46e. Keep the Phase field 83 and do not start routing 84.
+
+Do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->
