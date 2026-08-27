@@ -338,7 +338,7 @@ Do not ask me to paste file contents.
 ### Short launcher
 
 **Model:** Claude Opus-class. **Level:** Max.
-**Conversation:** a **new** conversation, not the Phase 82 builder and not the
+**Conversation:** NEW — a new conversation, not the Phase 82 builder and not the
 adjudication conversation.
 
 ```text
