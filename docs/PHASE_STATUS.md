@@ -97,7 +97,7 @@ re-scope), and no canonical phase is renumbered.
 82 GREEN ─▶ adjudication ─▶ 83 ─▶ 84 ─▶ 90 ─▶ 91 ─▶ 92 ─▶ 93 ─▶ 94
 ```
 
-| Routing | Product / canonical name                                 | Blocked on                        |
+| Routing | Product / canonical name                                 | State, or what it waits on        |
 | ------- | -------------------------------------------------------- | --------------------------------- |
 | **83**  | The instrument, and the things that are untrue           | **GREEN — closed, round 2**       |
 | **84**  | What the owner is trying to become                       | **nothing — ready to dispatch**   |
