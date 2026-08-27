@@ -550,7 +550,7 @@ is faithfully reintroduced, root cause fixed, full gate re-run.
 | -------------------------- | --------------------------------------------------------------------------- |
 | Repaired product checkpoint | `9e6d46e`                                                                  |
 | Round 1 tested              | `582f648`, deployed `ab6b47f` — unchanged, and its verdict stands           |
-| Deployed Preview SHA        | read it live; a documentation commit moves it past the checkpoint           |
+| Deployed Preview SHA        | `921c6b0` when the builder last read it — read it live, it moves with a docs push |
 | Relationship                | `node scripts/checkpoint-equivalence.mjs 9e6d46e --deployed <build-info>`   |
 | Commits on no remote        | **none** — the check DEF-0114 added, run on the head being handed off       |
 
@@ -720,9 +720,11 @@ at the end of this file** — the live handoff — rather than in two places.
 | `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included                             |
 | Unit / contract / synthetic / adversarial | **1,765 passed** in 82 files (1,753 in 80 at round 1)                         |
 | Browser, 360 / 430 / 1,280, one worker    | **591 passed**, 197 per width (582 at round 1)                                |
-| Android-style gate                        | **clean — 187 checks** (183 at round 1)                                       |
+| Android-style gate, deployed              | **clean — 187 checks** against `921c6b0` (183 at round 1)                     |
 | Privacy scan                              | **clean** — 273 tracked files                                                 |
 | Commits on no remote                      | **none**                                                                      |
+| CI at `921c6b0`                           | Verify **success**, Deploy preview **success**                                |
+| Checkpoint equivalence                    | **PASS** — five docs files changed, none bundle-relevant (D-097)              |
 
 **One browser case flaked once** in the full run — `data.spec.ts` at 360px,
 `net::ERR_ABORTED` on `page.goto`, the navigation flake `playwright.config.ts`

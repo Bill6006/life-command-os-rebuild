@@ -139,15 +139,15 @@ opened none.
 
 ## Checkpoint
 
-| Fact                       | Value                                                                                    |
-| -------------------------- | ---------------------------------------------------------------------------------------- |
-| Product checkpoint         | `9e6d46e` — the round-1 repair, and the commit this gate was run on (D-147)              |
-| First submission (round 1) | `582f648`, deployed `ab6b47f` — the checkpoint QA tested and failed                      |
-| Documentation head         | the commit that closes this section                                                      |
-| Preview                    | https://bill6006.github.io/life-command-os-rebuild/preview/ — read the deployed SHA live |
-| Owner-visible behaviour    | **changed again** — Now's reason clause, the belief sentence and its correction control  |
-| Owner phone check          | required before GREEN                                                                    |
-| Independent QA             | retest, by the **same** Codex conversation that wrote round 1                            |
+| Fact                       | Value                                                                                   |
+| -------------------------- | --------------------------------------------------------------------------------------- |
+| Product checkpoint         | `9e6d46e` — the round-1 repair, and the commit this gate was run on (D-147)             |
+| First submission (round 1) | `582f648`, deployed `ab6b47f` — the checkpoint QA tested and failed                     |
+| Documentation head         | `921c6b0`, plus the commit that closes this section                                     |
+| Preview                    | https://bill6006.github.io/life-command-os-rebuild/preview/ — live at `921c6b0`         |
+| Owner-visible behaviour    | **changed again** — Now's reason clause, the belief sentence and its correction control |
+| Owner phone check          | required before GREEN                                                                   |
+| Independent QA             | retest, by the **same** Codex conversation that wrote round 1                           |
 
 ## Exact verification results
 
@@ -160,11 +160,13 @@ stated first and it is the whole command, not its stages run separately.
 | `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (QA-83-004)                 |
 | Unit / contract / synthetic / adversarial | **1,765 passed** in 82 files (1,753 in 80 at round 1; 1,675 before the phase) |
 | Browser, three widths, one worker         | **591 passed** (582 at round 1; +9) — 197 per width                           |
-| Android-style gate                        | **clean — 187 checks** (183 at round 1); the deployed run is in the QA report |
+| Android-style gate, deployed              | **clean — 187 checks** against `921c6b0` (183 at round 1)                     |
 | Privacy scan                              | **clean** — 273 tracked files                                                 |
 | Block sweep                               | **PASS** — unchanged                                                          |
 | Copy guards                               | **PASS** — no percentage, rank, grade or score about the child or the owner   |
 | Commits not on any remote                 | **none** — the check DEF-0114 added, run on the head being handed off         |
+| CI on the documentation head              | Verify **success**, Deploy preview **success**                                |
+| Checkpoint equivalence                    | **PASS** — deployed `921c6b0` serves the same bytes as `9e6d46e`              |
 
 ## Independent QA — round 1, and the repair
 
@@ -317,9 +319,16 @@ which QA reported as a self-contradiction and was right to.
 | **5. Interruption**        | say he was interrupted, then pick the same thing back up     | **Can't right now** is recorded and the move then leaves the screen: Now reads _"Nothing new for today."_ `TRANSITIONS` allows `unable-now → started, completed or declined` and no surface ever offers them again. Nor is a reason asked for or stored — `planLifecycle` takes one and `NowScreen` passes none.                                                                                                                                                                                                                                                                                                                                                                              | routing 84 riders F10/F11/F13, and F07  |
 | **7. Correction (events)** | correct what the app **recorded**, not only what it believes | A fact corrects from its own row on a Life page and that works. Nothing withdraws a completion, moves an entry to the day it happened, or backfills one that was never recorded. `liftVetoRecord` is the only writer of a `correction` record and it corrects a veto.                                                                                                                                                                                                                                                                                                                                                                                                                         | routing 84 rider F32/F36, after D-165   |
 
-**Four further points the instrument found in passing**, recorded so they are not
+**Five further points the instrument found in passing**, recorded so they are not
 rediscovered:
 
+- **One write in the app is not an owner control at all.** `MemoryProvider`
+  appends the outcomes a history already implies — the morning sleep reading
+  after an early night is the answer to a question the app would otherwise ask.
+  It is deliberate and it resolves D-043 rather than ignoring it, and the
+  instrument lists it as a write that is not a control rather than filtering it
+  out, because an instrument about _ordinary owner use_ has to say what it does
+  not cover. Found by the exhaustiveness guard round 1 asked for.
 - **A control no shipped history reaches.** The coverage correction —
   _"Something's changed"_ — requires an area to be stale **and** to have no
   single overdue reading to point at instead. No history in the library is in
