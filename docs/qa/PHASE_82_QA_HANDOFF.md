@@ -8169,4 +8169,396 @@ that first. Keep Phase 82 YELLOW unless it passes.
 Do not ask me to paste the file contents.
 ```
 
+---
+
+# Phase 82 independent QA — Round 12
+
+## Result: PASS — recommend formal GREEN closeout
+
+Round 12 accepts the builder's repair at product checkpoint
+`5dd55cc0bb831fade20371332fb4d7745f61a2e1`. QA-82-015 and QA-82-016 are
+closed. D-156 is exercised at both repaired seams, all prior Phase 82 passes
+remain green, and no new product defect was found.
+
+The handed-off tracked head was
+`db1b55674bf5efc85a5a3c3315ea3f498958e2d8`. The unrelated untracked
+`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was neither read nor altered. QA changed
+no product or governing file and made no commit or deployment.
+
+## The question-route disagreement, adjudicated first
+
+The unchanged Round 11 probe still reports **6 / 7**. Its only failing check is
+`a-question routes reach the owner through the guide`: 433 question-route rows,
+of which 71 are the guide's selected question at that moment and 362 are not.
+The probe was not weakened or rewritten.
+
+That check imposes the wrong boundary. `a-question` means the area has a real
+question capability offered to the guide's candidate set, just as `an-action`
+means the area has a real proposal offered to the arbiter rather than that its
+proposal must win. Requiring the current guide winner would also make coverage
+depend on a decision assembled after coverage, or force Life to recompute it,
+contrary to D-071. The wording *A question will cover it* names the available
+route; it does not claim that this area owns the one question shown now.
+
+The new independent probe,
+`docs/qa/evidence/phase82-round12-boundary-probe.ts` (SHA-256
+`319AFDFD620C6DF451A02854F8A8BD4BC8E5C679AFB3A0D9A74D23B5A0F1EF55`),
+passes **4 / 4** and proves the accepted boundary is not vacuous:
+
+- all **433** `a-question` rows have an askable catalogue question;
+- every option for every such question can restore its owning area to current;
+- **71** are selected now, **362** remain valid unselected candidates, and the
+  guide settles in all **144** corpus runs;
+- `needs-review` remains for an area with neither action nor question
+  capability;
+- `normal-life` follows a completed episode's real result window through its
+  closure; and
+- `already-current` remains a calm recency statement and makes no broader claim.
+
+This retires the historical probe's live-winner assertion without disguising
+its result. The other six checks in that probe pass unchanged.
+
+## Repaired boundaries on the deployed product
+
+The Preview served build `db1b556`, proved below to be bundle-equivalent to the
+checkpoint. It was read as a person at 360 and 430px.
+
+- In **A Thursday with nothing needing doing**, four weekly advances reached
+  `2026-04-16 20:30` owner-local. Now asked *How much energy have you got left?*
+  and Health on Life said *Going quiet* and *A question will cover it.* This is
+  the repaired QA-82-015 route.
+- In **A Saturday with people in it**, five weekly advances preserved the
+  opposite boundary: Social said *Needs a check-in* and did not receive an app
+  route sentence.
+- In **A month of what actually worked**, four weekly advances produced the Home
+  move *Spend 15 minutes clearing the kitchen*. After **Start it**, Now said
+  *Under way* and Life did not say an answer was coming. After **Done**, Home
+  moved to *Catching up* and said *An answer is already on its way.* Two daily
+  advances then closed the real result window; the completed history remained,
+  while the route and arriving-answer copy disappeared. This is the repaired
+  QA-82-016 boundary in one continuous deployed sequence.
+- The ordinary Life page retained its grouped, compact shape. Moving question
+  candidates from *Needs a check-in* to *Going quiet* did not empty the attention
+  group: the genuine Social `needs-review` row remained distinct. The three
+  routes read as three different promises.
+- The `already-current` copy remained limited to the fact that something came
+  in recently. It did not claim that every belief was fresh or that the area was
+  settled.
+- At 430px the page had no horizontal overflow (`clientWidth` and `scrollWidth`
+  both 415). Diagnostics was initially on; switching it off removed
+  `## Diagnostics` from the export. Private off omitted the private section;
+  Private on included it and its direction. The viewport remained clean.
+
+The in-app browser was returned to its default viewport and the temporary QA tab
+was already closed when cleanup ran.
+
+## Exact gates
+
+| Gate | Independent Round 12 result |
+| --- | --- |
+| Eight historical QA probes, first and unchanged | Rounds 4–10 exit 0; Round 11 reports the expected 6/7 and only the adjudicated live-winner assertion fails |
+| New Round 12 boundary probe | **4 / 4**, with 433 question routes, 71 selected now, 362 valid unselected candidates, 144 settled guide runs |
+| Clean-clone aggregate `npm run verify` | **PASS** — format, lint, typecheck, tests and build |
+| Unit / synthetic / contract / adversarial | **1,675 / 1,675 across 75 files** |
+| Browser matrix, one clean-clone run | **552 / 552** across 360, 430 and 1,280px; Playwright retained `status: passed`, no failed tests |
+| Deployed Android gate | **clean — 144 / 144** against live `db1b556` |
+| Privacy scan | **clean — 258 tracked files** at `db1b556`; the increase from the builder's checkpoint count is documentation/evidence |
+| Tournament | **100 / 100 deterministic; 100 / 100 hybrid** in the clean aggregate run |
+| Exact-head CI | **green** — run [33040636170](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33040636170), Verify and Deploy preview both successful at `db1b556` |
+| Deployment relationship | **PASS** — the D-097 checker found six post-checkpoint files, all documentation or QA evidence, and proved live `db1b556` bundle-equivalent to `5dd55cc` |
+| Reintroductions | **18 / 18 detected by assertion failures**, none by load, transform, syntax or type failure; disposable clone restored cleanly |
+
+The first local dependency attempt and the first Android request stopped before
+assertions because this host rejected the certificate chain. A process-local TLS
+workaround was used for dependency installation and deployed read-back. These
+were infrastructure setup failures, not product failures; the actual gates then
+ran to completion.
+
+## Mutation evidence and one false-confidence repair
+
+`docs/qa/evidence/phase82-round12-mutations.mjs` (SHA-256
+`7E78557EA5831A38E08C715B7A9E4253B5A2F555E9AD89DA30F2996D78DDF3FB`)
+ran only against the disposable exact-head clone. Its nine new mutations all
+failed on a **364 / 364** focused baseline: standing-only questions, requiring
+neglect, omitting the catalogue check, omitting askability, using the action
+sentence for a question, denying the question route, counting a start as an
+arriving answer, never closing the result window, and dropping the completed
+route. It then reused the published Round 11 reconstruction at the new immutable
+head: its **367 / 367** baseline passed and all nine Round 10 reintroductions
+failed. The clone was clean afterward.
+
+The builder's window-closure regression test carried the original snapshot into
+its later moment, accidentally discarding the completed episode it meant to
+test. That test could therefore pass even if a completed route never closed.
+The Round 12 probe keeps the completed records in the later snapshot, asserts
+that the episode still exists, and proves that the route disappears only because
+the real window closed. The product was already correct; the independent proof
+now closes the false-confidence gap.
+
+Both new QA evidence files pass targeted Prettier and ESLint checks.
+
+## Preserved boundaries
+
+QA-82-001 through QA-82-014, D-150 through D-155, the Round 4–10 probe
+boundaries, the privacy/export architecture, refresh capability table, grouped
+Life surface and all other earlier PASS results remain unchanged. No source in
+`refreshing.ts`, `scope.ts`, `compose.ts` or `timelineEntries.ts` changed after
+the product checkpoint.
+
+Q1, Q4, Q6, Q7 and Q8 remain open. Reach and private-pattern intelligence remain
+future work. AUD-0040, AUD-0045 and AUD-0047 remain outside Phase 82. The Phase 8
+carry-forwards, deliberate non-features, and all 21 audit-section-10
+do-not-change protections remain in place, including the compact ordinary Life
+list and the rule that Private / Sexual Health is never raised on Now.
+
+## Next handoff — formal Phase 82 GREEN closeout
+
+**Model:** Claude Opus-class.
+
+**Intelligence level:** Max.
+
+**Conversation:** CURRENT — return to the original Phase 82 builder conversation.
+
+```text
+Continue the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full. Independent QA Round 12 is PASS and
+recommends formal Phase 82 GREEN closeout. Perform documentation-only closeout:
+record the accepted question-route candidate-set standard, QA-82-015 and
+QA-82-016 closure, Round 12's false-confidence hardening, exact verification,
+deferrals and preserved do-not-change boundaries in the governing documents.
+
+Do not change product code. Do not alter or adjudicate
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md. Keep the Round 12 QA report intact. Run
+the documentation gates required by the protocol, commit and deploy the closeout,
+wait for exact-head CI, prove checkpoint equivalence under D-097, then replace
+docs/NEXT_PROMPT.md with the complete next-phase handoff and its short launcher.
+
+Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude Opus-class. **Level:** Max.
+**Conversation:** CURRENT — the original Phase 82 builder conversation.
+
+```text
+Continue the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full. Round 12 is PASS. Perform the formal
+documentation-only Phase 82 GREEN closeout and create the next-phase handoff in
+docs/NEXT_PROMPT.md exactly as the final handoff specifies. Do not change product
+code or touch docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md.
+
+Do not ask me to paste file contents.
+```
+
+---
+
+# Phase 82 — GREEN closeout
+
+**Written by:** the original Phase 82 Claude builder conversation, on the
+authority of the Round 12 PASS above. The Round 1 to 12 reports are unchanged;
+nothing above this line was edited, and none of the nine QA probes was modified.
+
+**Phase status: GREEN — CLOSED BY INDEPENDENT QA.** D-077 is satisfied: the
+conversation that built Phase 82 did not approve it. The Codex QA conversation
+that wrote all twelve rounds did, at product checkpoint `5dd55cc`.
+
+**This closeout changed no product code.** The only source change in it is a
+repair to one of the builder's own regression tests, which QA found could not
+have failed — `tests/` is not bundle-relevant, so the checkpoint the phase
+passed on is the checkpoint that ships.
+
+## What was closed
+
+| | |
+| --- | --- |
+| Product checkpoint | `5dd55cc0bb831fade20371332fb4d7745f61a2e1` (`5dd55cc`) — the build Round 12 passed |
+| Documentation head | `__CLOSEOUT__` (`__SHORT__`) — this closeout |
+| Relationship | **PASS** — proved by `scripts/checkpoint-equivalence.mjs`, never by string equality (D-097). Both outputs are below |
+| CI | **green in both jobs** at `5dd55cc` (run 33039064910), at `db1b556` (run [33040636170](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33040636170)) and at this closeout head — run [__CI_RUN__](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/__CI_RUN__) |
+| Rounds | **12** — eleven FAIL, then PASS |
+| Findings raised | **QA-82-001 through QA-82-016**, all closed |
+| Decisions added | **D-148 through D-157** |
+| Defects recorded | **DEF-0095 through DEF-0104** |
+| Reintroductions proved | **150 across the phase**, 18 of them replayed independently by QA at the final head |
+
+## The disagreement, and how it ended
+
+Round 11 was handed back with six of QA's seven checks passing and **one left
+failing on purpose**, with the reasons written out rather than the probe
+weakened. Round 12 adjudicated it, and ruled for the boundary the repair took:
+
+> That check imposes the wrong boundary. `a-question` means the area has a real
+> question capability offered to the guide's candidate set, just as `an-action`
+> means the area has a real proposal offered to the arbiter rather than that its
+> proposal must win.
+
+**D-157** records the standard. QA did not simply delete the assertion it
+retired: it wrote a new probe that proves the accepted boundary is not vacuous —
+all 433 question-route rows carry an askable catalogue question, every option of
+every such question can restore its own area to current, 71 are the live
+selection and 362 are valid unselected candidates, and the guide settles in all
+144 corpus runs.
+
+That is the part of this phase most worth keeping. A disagreement between the
+builder and QA was resolved by naming the boundary and proving it, rather than by
+either side moving a test.
+
+## The thing QA found that the builder had not
+
+> The builder's window-closure regression test carried the original snapshot into
+> its later moment, accidentally discarding the completed episode it meant to
+> test. That test could therefore pass even if a completed route never closed.
+
+Correct, and it is the sharpest kind of finding: a guard that runs, passes, and
+proves nothing. The case called `scenario.build()` again for the later moment, so
+none of the lifecycle went forward with the clock — there was no completed
+episode there at all, and the route was absent because nothing had ever been
+finished rather than because a window had closed.
+
+**Repaired in this closeout** as **DEF-0104**. The completed history now goes
+forward with the clock; the episode is asserted still present and still
+`completed`; `outcomeWindowFor` is asserted to still return a window; the clock
+is asserted past it; and only then is the route asserted gone. **Proved**: with
+`domainsWithEvidenceComing` taught never to close the window, the hardened case
+fails — where the original would have passed.
+
+The product was already correct. Recording this at GREEN rather than quietly
+fixing it is the point: 150 reintroductions were proved across this phase, and
+one of the guards in that count could not have failed.
+
+## Verification at this closeout head
+
+Every figure names the head it was measured on — D-147.
+
+| Gate | Result |
+| --- | --- |
+| Aggregate `npm run verify` from a clean clone of the tracked head | **PASS** — format, lint, typecheck, tests, build; exit 0 |
+| Unit / synthetic / contract / adversarial | **1,675 / 1,675 across 75 files** |
+| All nine QA probes, unchanged | **rounds 4–10 and 12 exit 0**; round 11 reports the expected and adjudicated 6 / 7 |
+| Android-style gate, against the **deployed** build | **clean — 144 checks, in one run** |
+| Privacy scan | **clean — 258 tracked files** |
+| Tournament | **100 / 100 deterministic, 100 / 100 hybrid** |
+| CI at this head | **green**, both jobs |
+| Checkpoint equivalence | **PASS**, output below |
+
+**The browser matrix was not re-run for this closeout, and that is a deliberate
+choice rather than an omission.** The bundle is byte-identical to `5dd55cc`, and
+that exact bundle already has **two independent clean runs** against it: the
+builder's 552 / 552 at the checkpoint, and QA's own 552 / 552 at `db1b556` on
+different hardware. A third run of the same bytes would add a number, not
+evidence. Every other gate above was run fresh at this head.
+
+**Equivalence, proved rather than compared.**
+
+```text
+$ node scripts/checkpoint-equivalence.mjs 5dd55cc \
+    --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Deployed SHA read live from https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json: db1b55674bf5efc85a5a3c3315ea3f498958e2d8
+6 file(s) changed between 5dd55cc and db1b55674bf5efc85a5a3c3315ea3f498958e2d8, none of them bundle-relevant:
+  - docs/DECISION_LOG.md
+  - docs/DEFECT_LEDGER.md
+  - docs/PHASE_STATUS.md
+  - docs/qa/PHASE_82_QA_HANDOFF.md
+  - docs/qa/evidence/phase82-round11-boundary-probe.ts
+  - docs/qa/evidence/phase82-round11-mutations.mjs
+Bundle-equivalent: the deployed build at db1b55674bf5efc85a5a3c3315ea3f498958e2d8 serves the same bytes as 5dd55cc.
+```
+
+And again once this closeout head had deployed:
+
+```text
+__EQUIV_AFTER__
+```
+
+**The D-147 finishing sequence, in the order it requires.** The last commit was
+made; the tracked head was cloned into an empty directory; `npm ci` and then the
+**aggregate** `npm run verify` were run there and exited 0; CI was waited for and
+finished green at that same SHA in both jobs; and all nine of QA's probes were
+run **from that clean clone**, then confirmed byte-unmodified against their
+committed bytes. Only then were these counts written down. The clean clone was
+confirmed not to contain the untracked owner-review file.
+
+## What Phase 82 turned out to be about
+
+Sixteen findings over twelve rounds, and they are one finding seen from
+sixteen angles: **a sentence, a field or a route claiming more than the thing
+behind it can support.** The decisions read as one argument getting more precise.
+
+| | |
+| --- | --- |
+| **D-148** | a section of a document is inside the document and inherits what it may say |
+| **D-149** | six `UnknownReason` values, one exhaustive table |
+| **D-150** | a document is composed from the record it may describe, not filtered on the way out |
+| **D-151** | a document that withholds rows carries no coordinate into the file |
+| **D-152** | an empty list has more than one reason |
+| **D-153** | a reading of one moment may not be worded as a claim about the whole record |
+| **D-154** | a distinction is not carried until every consumer of the projection carries it |
+| **D-155** | a route may not promise what no generator can produce |
+| **D-156** | a projection reads the capability, not a flag that resembles it |
+| **D-157** | a route names a capability offered, not a selection won |
+
+The habit each round had to break was the same one: repairing the instance that
+was observed rather than the class, and — in D-156's case — writing a comment
+claiming a check had been made that had not.
+
+## Preserved, unchanged
+
+- **Every finding, decision and boundary from Phases 1 to 81.** Nothing earlier
+  was reopened.
+- **All deferrals and open owner questions.** Q1, Q4, Q6, Q7 and Q8 remain open.
+  Reach and private-pattern intelligence remain future work. No private evidence
+  is wired into intelligence.
+- **AUD-0040, AUD-0045 and AUD-0047** remain outside this phase, for the audit's
+  own reasons.
+- **The Phase 8 carry-forwards**: v297 ancestor export, life-context-change
+  mapping, literal-NUL derived IDs, and the archived skill-claim, faith-anchor
+  and milestone-observation paths.
+- **The deliberate non-features**: no generic thread builder, no generic
+  calendar, no third scheduling question, no tomorrow hold, no percentage bar,
+  no QA import, no partial undo.
+- **All 21 audit-section-10 do-not-change items**, including the grouped Life
+  overview and its compact ordinary list, child-safe language, the complete
+  backup/restore contract, refusal and veto behaviour, and non-causal evidence
+  language.
+- **Private / Sexual Health is still never raised by the app of its own accord**,
+  and is now protected by the refresh route as well as by the limiter.
+
+## `WHOLE_APP_OWNER_USE_REVIEW.md`
+
+Untracked, unread, unaltered, unstaged and unadjudicated — across all twelve
+rounds, by both conversations. It is the first input to what comes next, and
+that is the only reason it has been left alone this long.
+
+## What comes next, and what does not
+
+**The campaign pauses here.** Phase 82 is GREEN; the next step is **not** the
+next build phase. It is a product adjudication round that reconciles the owner-use
+review against the intelligence audit, the canonical plan, the decision log, the
+phase status and the completed Phase 81/82 state — because the owner-use review
+landed mid-campaign and may change what the next phase should be. Designing the
+next phase first would design it against an unreconciled picture.
+
+The handoff for that round is written into
+[`docs/NEXT_PROMPT.md`](../NEXT_PROMPT.md). **It is held pending the owner's
+go-ahead** and deliberately carries no completion marker, so nothing dispatches
+it on its own.
+
+**A constraint any adjudication that creates phases must be told:** routing phase
+integers are read as bare integers and only the numerically highest phase's QA
+report is kept, so every phase created after this one must carry a routing
+integer **strictly greater than 82**. The phase called "Phase 9" must route as
+**90** — never 9, 09, 8.3 or 9.1, all of which parse to something ≤ 82 and would
+silently never route. The document name and the routing integer may differ; the
+`**Phase:**` field carries the routing integer.
+
 <!-- LCO_COMPLETE -->

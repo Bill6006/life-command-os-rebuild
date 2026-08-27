@@ -39,6 +39,33 @@ None.
 
 ## Fixed
 
+### DEF-0104 — a regression test that could not have failed
+
+- Status: Fixed
+- Severity: Minor in effect, worth recording in full — **the product was already
+  correct**; the guard over it was not
+- Found in: Phase 82 / `5dd55cc`, in the round 11 regression written for DEF-0103
+- Found by: independent QA round 12, by reading the test rather than running it
+- Class: **a test that rebuilds its fixture for the second half of the case.**
+  The window-closure case advanced the clock past a completed move's result
+  window and asserted the route had gone — but it called `scenario.build()`
+  again for the later moment, so none of the lifecycle went forward with the
+  clock. There was no completed episode there at all, and the route was absent
+  for the trivial reason that nothing had ever been finished. It would have
+  passed just as happily if the window never closed.
+- Why it matters at GREEN: every other guard in this phase was proved by
+  reintroduction, and this one was in the set that ran — its assertion simply
+  could not distinguish the repair from its absence. A test in that state is
+  worse than no test, because the count includes it.
+- Repair: the completed history now goes forward with the clock; the episode is
+  asserted to still be present and still `completed`; `outcomeWindowFor` is
+  asserted to still return a window; the clock is asserted to be past it; and
+  only then is the route asserted gone and the sentence absent.
+- Proof: with `domainsWithEvidenceComing` taught never to close the window, the
+  hardened case fails. QA's own round 12 probe asserts the same boundary
+  independently.
+- Fixed in: the Phase 82 GREEN closeout commit
+
 ### DEF-0103 — a started move was reported as an answer already arriving
 
 - Status: Fixed

@@ -5129,3 +5129,49 @@ here: coverage is assembled before the decision the guide's selection depends on
 show the coverage object the decision was made from rather than a second one.
 The disagreement is recorded rather than resolved by weakening the probe, and it
 is the first thing round 12 is asked to settle.
+
+---
+
+## D-157 — A route names a capability offered, not a selection won
+
+**Phase:** 82 (QA round 12, adjudicated) · **Status:** Active
+
+D-155 and D-156 made each refresh route read the thing that has to keep its
+promise. Round 11 then left one question open, and Round 12 settled it: **what
+does naming a route claim — that the app _could_ do this, or that it _is_ doing
+it right now?**
+
+**It claims the capability.** `an-action` means a same-domain move is offered to
+the arbiter, not that it wins; two proposals reach one trace and one is chosen.
+`a-question` means a same-domain question is offered to the guide's candidate
+set, not that today's tap is spent on it; the guide asks at most three a day and
+skips any question whose answers all land in the same place.
+
+### Why the other reading was refused
+
+Not because it is stricter, but because it is unreachable from where the route is
+computed and would break a rule that already exists:
+
+- `assembleCoverage` runs inside `assembleSituation`, which runs inside `decide`,
+  which is what the guide calls before it can rank anything. Reading the live
+  question from coverage means `coverage → guide → engine → situation → coverage`
+  at runtime, and `probeSwings` runs a full decision per answer option.
+- Resolving it at the Life screen instead would hand Life a coverage object the
+  decision was not made from — the disagreement D-071 exists to prevent, in its
+  own words: _"two of those would eventually disagree, with the owner having no
+  way to tell which screen was lying."_
+
+### What keeps it honest
+
+A capability claim is only worth anything if the capability is real, so the
+boundary is proved rather than asserted: every question-route row carries an
+askable catalogue question, every option of every such question can restore its
+own area to current, and `needs-review` still exists for an area with neither a
+move nor a question. Round 12's probe holds all three.
+
+### The words on the page
+
+_"A question will cover it"_ names what covers the area, not when. It stands
+unchanged. A draft of the round 11 repair hedged it to _"would cover it"_, which
+broke QA's own pinned expectation and was reverted — the sentence was never the
+defect.

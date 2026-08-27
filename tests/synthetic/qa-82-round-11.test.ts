@@ -264,6 +264,8 @@ describe('QA-82-016 — starting something is not an answer arriving', () => {
       episode,
       window: outcomeWindowFor(episode, scenario.zone),
       coverage: assembleSituation(view, moment).coverage.get(episode.semantics.domain),
+      /** The history *with* the lifecycle in it — QA round 12. */
+      snapshot: { ...snapshot, records },
     }
   }
 
@@ -296,15 +298,36 @@ describe('QA-82-016 — starting something is not an answer arriving', () => {
   })
 
   it('stops saying it once the window has closed', () => {
-    // The window is the outcome layer's to define, and coverage now reads it
-    // rather than keeping a two-day copy of its own.
+    /*
+     * Round 12 caught this one being vacuous. It rebuilt the fixture for the
+     * later moment and so carried **none** of the lifecycle into it: there was
+     * no completed episode there at all, and the route was not `normal-life`
+     * for the trivial reason that nothing had ever been finished. It would have
+     * passed just as happily if the window never closed.
+     *
+     * So the completed history goes forward with the clock, the episode is
+     * asserted to still be there and still `completed`, and the route is proved
+     * to disappear because the window closed rather than because the evidence
+     * did.
+     */
     const done = withLifecycle('complete')
     if (done.window === undefined) throw new Error('unreachable')
-    const snapshot = load(scenario.build())
     const later = { ...moment, now: (done.window.latest + DAY) as Instant }
-    const view = buildView(snapshot, later)
+    const view = buildView(done.snapshot, later)
+
+    const stillThere = collectEpisodes(view, scenario.zone).find(
+      (row) => row.recommendation === done.episode.recommendation,
+    )
+    expect(stillThere?.state, 'the completed episode must survive the clock move').toBe('completed')
+    if (stillThere === undefined) throw new Error('unreachable')
+    const window = outcomeWindowFor(stillThere, scenario.zone)
+    expect(window, 'it is still a finished episode; only its window has closed').toBeTruthy()
+    if (window === undefined) throw new Error('unreachable')
+    expect(later.now > window.latest, 'the clock must actually be past the window').toBe(true)
+
     const entry = assembleSituation(view, later).coverage.get(done.episode.semantics.domain)
     expect(entry?.refresh).not.toBe('normal-life')
+    expect(entry === undefined ? '' : lifeLine(entry)).not.toContain(ARRIVING)
   })
 
   it('says nothing is on its way for a move that was refused', () => {
