@@ -159,9 +159,9 @@ through the same controls, now gets past all eight steps.
 
 | Fact                    | Value                                                       |
 | ----------------------- | ----------------------------------------------------------- |
-| Product checkpoint      | `39d147e` — the commit the aggregate gate was run on        |
-| Deployed at the handoff | see below                                                   |
-| CI at the checkpoint    | see below                                                   |
+| Product checkpoint      | `42667ea` — the commit the aggregate gate was run on        |
+| Deployed at the handoff | `42667ea` — the same commit, no files between them          |
+| CI at the checkpoint    | Verify **success**, Deploy preview **success**              |
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/ |
 | Owner-visible behaviour | **changed** — Now, Life, and every domain page              |
 | Owner phone check       | owed before release; not a blocker QA can clear             |
@@ -169,16 +169,18 @@ through the same controls, now gets past all eight steps.
 
 ## Exact verification results
 
-| Gate                                      | Result                                                            |
-| ----------------------------------------- | ----------------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)         |
-| Unit / contract / synthetic / adversarial | **1,812 passed** in 83 files (1,765 in 82 before)                 |
-| Browser, three widths, one worker         | **648 passed** at three widths, 216 per width (591 before)        |
-| Android-style gate, deployed              | **ANDROID**                                                       |
-| Privacy scan                              | **clean** — 283 tracked files                                     |
-| Block sweep                               | **PASS** — unchanged                                              |
-| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya |
-| Commits not on any remote                 | **none** at the handed-off head (D-180)                           |
+| Gate                                      | Result                                                               |
+| ----------------------------------------- | -------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)            |
+| Unit / contract / synthetic / adversarial | **1,812 passed** in 83 files (1,765 in 82 before)                    |
+| Browser, three widths, one worker         | **648 passed** at three widths, 216 per width (591 before)           |
+| Android-style gate, deployed              | **clean — 187 checks** against `42667ea`                             |
+| Privacy scan                              | **clean** — 284 tracked files                                        |
+| Block sweep                               | **PASS** — unchanged                                                 |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya    |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                              |
+| Checkpoint equivalence                    | **PASS** — deployed `42667ea` serves the same bytes, nothing between |
+| CI                                        | Verify **success**, Deploy preview **success**                       |
 
 ## The six packages
 

@@ -24,7 +24,7 @@ conversation may not approve its own phase.
 
 | Fact                    | Value                                                                  |
 | ----------------------- | ---------------------------------------------------------------------- |
-| Product checkpoint      | `39d147e` — the commit the aggregate gate was run on (D-147, D-180)    |
+| Product checkpoint      | `42667ea` — the commit the aggregate gate was run on (D-147, D-180)    |
 | Documentation head      | this file, and the routing 84 record in `PHASE_STATUS.md`              |
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/            |
 | Owner-visible behaviour | **changed** — Now, Life, and every domain page                         |
@@ -32,11 +32,17 @@ conversation may not approve its own phase.
 | QA report path          | this file                                                              |
 
 Confirm the deployed SHA against the checkpoint before testing. `node
-scripts/checkpoint-equivalence.mjs 39d147e --deployed
+scripts/checkpoint-equivalence.mjs 42667ea --deployed
 https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json`
 reports post-checkpoint changes and whether any is bundle-relevant; D-097 asks
 for equivalence rather than literal SHA equality, and the same script now also
 reports commits on `HEAD` that no remote branch contains (D-180).
+
+**The builder's own run of it, for you to repeat rather than to trust:** the
+Preview was live at `42667ea` — the checkpoint itself, with no files between
+them — and the checker reported bundle equivalence. A documentation commit after
+this one moves the head again and that is not a reason to refuse to test; read
+the deployed SHA live.
 
 **Two things worth knowing before you run it**, both about how this checkpoint
 got here.
@@ -58,7 +64,7 @@ than tidied away; `994284a` is the repair.
 DEF-0117 and DEF-0118, both found by the builder reading its own code back:
 one would have shown the owner his own aspiration twice on one page, the other
 wrote a Wednesday into the record out of a question that never mentioned a day.
-`39d147e` narrows the destination control to the three proving domains — it was
+`42667ea` narrows the destination control to the three proving domains — it was
 on every domain page, which is not wrong code and is wrong scope, because a goal
 in Fatherhood stops `goal-fit` abstaining there and Fatherhood is the one area
 this phase was told not to touch.
@@ -66,12 +72,19 @@ this phase was told not to touch.
 `39d147e` closes DEF-0119 — a question about a finished course that nothing
 could ever be asked, because it keyed on a thread state nothing writes.
 
-So the product checkpoint is the fifth commit rather than the first, and the
-four after the first are worth reading as a set: none of them was found by a
-test that existed, and every one of them is the class this phase exists to
+`42667ea` closes DEF-0120, DEF-0121 and DEF-0122, all three found by the browser
+suite and by CI on a checkpoint that had already been pushed: the blocker
+question nested under the wrong branch, a button whose name contained the name
+of the button beside it, and Life going back to being a wall. Every one of them
+was invisible to 1,812 synthetic assertions, which is the argument for having a
+browser suite stated as a fact rather than as a principle.
+
+So the product checkpoint is the sixth commit rather than the first, and the
+five after the first are worth reading as a set: not one was found by a test
+that already existed and passed, and every one is the class this phase exists to
 answer.
 
-**`39d147e`'s own CI run failed**, on `prettier --check` over
+**`42667ea`'s own CI run failed**, on `prettier --check` over
 `docs/DEFECT_LEDGER.md` and `docs/PHASE_STATUS.md` — documentation written after
 the aggregate gate was run, the second time in this phase. The documentation
 head repairs it, changes no product code, and the aggregate gate is green there;
@@ -241,13 +254,14 @@ and what QA observes is itself a trigger.
 
 | Gate                                      | Result                                                    |
 | ----------------------------------------- | ---------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** on `39d147e`                                      |
+| `npm run verify`, clean checkout          | **PASS** on `42667ea`                                      |
 | Unit / contract / synthetic / adversarial | **1,812 passed** in 83 files (1,765 in 82 before)          |
 | Browser, 360 / 430 / 1,280, one worker    | **648 passed**, 216 per width (582 before)                                           |
-| Privacy scan                              | **clean, 283 tracked files**                               |
+| Privacy scan                              | **clean, 284 tracked files**                               |
 | Block sweep and copy guards               | **PASS** — 72 cases across five files, unchanged           |
-| Android-style gate, deployed              | **ANDROID_LINE**                                           |
-| CI at the checkpoint                      | **CI_LINE**                                                |
+| Android-style gate, deployed              | **clean — 187 checks** against `42667ea`                   |
+| CI at the checkpoint                      | Verify **success**, Deploy preview **success**             |
+| Checkpoint equivalence                    | **PASS** — the deployed build **is** `42667ea`             |
 | Commits not on any remote                 | **none** at the handed-off head                            |
 
 ---
@@ -329,7 +343,7 @@ Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the QA protocol in
 docs/qa/README.md exactly as written. Step 1 is cold use of the deployed
 Preview before any repository document.
 
-Product checkpoint: 39d147e. Confirm the deployed build against it first.
+Product checkpoint: 42667ea. Confirm the deployed build against it first.
 
 Write your findings into docs/qa/PHASE_84_QA_HANDOFF.md from Round 1 on. The
 builder does not edit your rounds and you do not change product code.

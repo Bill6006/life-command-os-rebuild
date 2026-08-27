@@ -44,7 +44,7 @@ None.
 - Status: Fixed
 - Severity: Blocker — the one question D-164 allows, absent on the evenings its
   answer is worth most
-- Found in: routing 84 / `39d147e`
+- Found in: routing 84 / `42667ea`
 - Found by: the browser suite at 360px. It passed at the other two widths, which
   is what a defect that depends on whether something else happens to be on
   screen looks like.
@@ -63,7 +63,7 @@ None.
   and offers a way out of the question", which asserts that one of the two
   branches is visible. The synthetic suite could not have caught it: it holds
   `blockerQuestionFor`, and the decision was right the whole time.
-- Fixed in: the commit that adds this entry
+- Fixed in: `42667ea`
 
 ---
 
@@ -72,7 +72,7 @@ None.
 - Status: Fixed
 - Severity: Major — two controls in one row whose accessible names are
   substrings, on the row D-052 requires to be always drawn
-- Found in: routing 84 / `39d147e`
+- Found in: routing 84 / `42667ea`
 - Found by: the browser suite, twenty-six assertions across three widths, and CI
   on the same commit
 - Class: **an owner-facing label that is unique to a reader and ambiguous to a
@@ -89,7 +89,7 @@ None.
   that already described the row were the ones that broke.
 - Siblings: swept. No other pair of labels in `ACTION_WORDS`, `BLOCKER_OPTIONS`
   or the outcome answers is a substring of another.
-- Fixed in: the commit that adds this entry
+- Fixed in: `42667ea`
 
 ---
 
@@ -98,7 +98,7 @@ None.
 - Status: Fixed
 - Severity: Major — the exact failure Phase 5 spent a phase removing, put back
   by a panel whose own decision forbids becoming a chore
-- Found in: routing 84 / `39d147e`
+- Found in: routing 84 / `42667ea`
 - Found by: `shell.spec.ts` — "fits in about a screen and a half rather than two
   and a half", at 360px
 - Class: **a new surface added to a screen that already has a measured budget.**
@@ -121,7 +121,7 @@ None.
   does not understand sits on the screen about what it does.
 - Regression: `shell.spec.ts`, unchanged and now green, plus
   `tests/browser/phase84.spec.ts` — "asks on Insights and not on Now".
-- Fixed in: the commit that adds this entry
+- Fixed in: `42667ea`
 
 ---
 
@@ -130,7 +130,7 @@ None.
 - Status: Fixed
 - Severity: Blocker — two new `OutcomeAspect`s with no reachable control, which
   is the exact pattern this phase exists to stop repeating
-- Found in: routing 84 / `39d147e`
+- Found in: routing 84 / `42667ea`
 - Found by: the builder, writing the test that asks whether the thing can be
   reached at all. Every other test of the two aspects passed without it.
 - Class: **a reader keyed on a value the writer never produces** — AUD-0050's
@@ -155,7 +155,7 @@ None.
   is asked. It fails on the original condition.
 - Siblings: swept. `retained` and `transfer` are the only aspects reached from
   outside `outcomes.ts`, and `finished` is read in one place.
-- Fixed in: `39d147e`
+- Fixed in: `42667ea`
 
 ---
 
@@ -185,7 +185,7 @@ None.
   next step without the aim appearing twice", which asserts one destination, one
   milestone, and the next step reading back.
 - Siblings: none. It is the only place two builders could write the same object.
-- Fixed in: `39d147e`
+- Fixed in: `42667ea`
 
 ---
 
@@ -214,7 +214,7 @@ None.
 - Siblings: swept. `proposeAuthoring` is the only other place a time or a day is
   read from owner input, and it reports a missing one as a problem rather than
   supplying it.
-- Fixed in: `39d147e`
+- Fixed in: `42667ea`
 
 ---
 
