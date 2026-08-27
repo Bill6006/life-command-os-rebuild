@@ -670,10 +670,19 @@ function describeContext(context: DecisionContext): string {
  * would have produced the same answer today and left two definitions of "this
  * move, on this day" to drift apart; with one, the state the screen shows and
  * the transition a tap would take cannot disagree.
+ *
+ * **And not from later today either.** `learning.episodes` is every episode in
+ * the record, and `view.history.effective` is not filtered by the moment — the
+ * callers do that, each in its own words (`assembleTimeline`, `recentChanges`,
+ * `growthStandingFor`). `recentMoves` did it with the upper bound of its
+ * window, and this is the same bound stated on its own: a state the owner has
+ * not set yet is not a state to show him, and under time travel an episode
+ * later on the same owner-local day is exactly that.
  */
 function stateOfChosen(evaluation: Evaluation, situation: Situation): MoveState {
   const target = evaluation.candidate.semantics.target
-  const today = openEpisode(situation.learning.episodes, target, situation.dayId)
+  const sofar = situation.learning.episodes.filter((episode) => episode.shownAt <= situation.at)
+  const today = openEpisode(sofar, target, situation.dayId)
   return today?.state ?? 'shown'
 }
 

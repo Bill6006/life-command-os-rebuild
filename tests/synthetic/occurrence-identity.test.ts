@@ -1,4 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { CONCEPT } from '../../src/domain/concepts'
+import { DOMAIN } from '../../src/domain/domains'
+import { entityRef } from '../../src/domain/entities'
+import { sequentialRecordIds } from '../../src/domain/ids'
 import {
   civilDateFromDayId,
   DAY_BLOCKS,
@@ -17,6 +21,7 @@ import {
 import type { Situation } from '../../src/intelligence/situation'
 import { snapshotFromWire } from '../../src/memory/snapshot'
 import { buildView } from '../../src/memory/view'
+import { createKit, pastEpisodeRecords } from '../../src/synthetic/kit'
 import { SCENARIOS, scenarioById } from '../../src/synthetic/scenarios'
 import { THREE_DAYS_SINCE_ID } from '../../src/synthetic/journeys'
 import { openJourney } from './journey'
@@ -159,6 +164,95 @@ describe('D-160 — a completion on an earlier day does not settle today', () =>
     ).toEqual([])
   })
 
+  it('does not read a state from later on the same day', () => {
+    /*
+     * The bound `recentMoves` carried in the upper end of its window, stated on
+     * its own.
+     *
+     * `learning.episodes` is every episode in the record and
+     * `view.history.effective` is not filtered by the moment — each caller does
+     * that in its own words (`assembleTimeline`, `recentChanges`,
+     * `growthStandingFor`). Under time travel an episode can sit later on the
+     * same owner-local day, and a state the owner has not set yet is not a state
+     * to show him. This is the half of the repair that is easiest to lose: no
+     * shipped history reaches it, and the library sweep below asks `openEpisode`
+     * the same question the engine does, so it could not see it either.
+     */
+    const kit = createKit('LT', 'America/Denver', '2026-05-04T12:00:00Z')
+    const nextId = sequentialRecordIds('LTE')
+    const morning = kit.local('2026-05-20', '09:00')
+    const walk = entityRef('routine', 'a walk')
+
+    const readings = [
+      kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-05-20', '07:00'), domains: [DOMAIN.sleep] },
+        {
+          concept: CONCEPT.sleepHours,
+          value: { type: 'number', value: 7.5, unit: 'hours' },
+          method: 'self-report',
+        },
+      ),
+      kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-05-20', '08:00'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.energy,
+          value: { type: 'scale', value: 4, of: 5 },
+          method: 'self-report',
+        },
+      ),
+      kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-05-20', '08:01'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.soreness,
+          value: { type: 'scale', value: 0, of: 5 },
+          method: 'self-report',
+        },
+      ),
+    ]
+
+    // The same day, eleven hours after the moment being read.
+    const later = pastEpisodeRecords(
+      kit,
+      [
+        {
+          verb: 'move',
+          object: walk,
+          domain: DOMAIN.health,
+          on: '2026-05-20',
+          at: '20:00',
+          context: { block: 'evening', weekend: false, strain: 'none', usableMinutes: 60 },
+          ending: 'completed',
+        },
+      ],
+      nextId,
+    )
+
+    const document = kit.document({
+      entities: [],
+      records: [...readings, ...later],
+      exportedAt: morning,
+    })
+    const loaded = snapshotFromWire(document)
+    expect(loaded.loaded).toBe(true)
+
+    const moment = { now: morning, zone: kit.zone, weekStartsOn: 1 as const }
+    const view = buildView(loaded.snapshot, moment)
+    const episodes = collectEpisodes(view, kit.zone)
+
+    expect(episodes.length, 'the episode is in the record').toBe(1)
+    expect(episodes[0]!.dayId, 'and it is on this owner-local day').toBe('2026-05-20')
+    expect(episodes[0]!.state).toBe('completed')
+    expect(episodes[0]!.shownAt, 'and it has not happened yet').toBeGreaterThan(morning)
+
+    const decision = decide(view, moment)
+    expect(decision.kind, 'a walk is still proposed in the morning').toBe('move')
+    expect(decision.explanation?.rendered.sentence).toContain('a walk')
+    expect(decision.state, 'and nothing has settled it yet').toBe('shown')
+  })
+
   it('comes back the moment the old match is reintroduced', () => {
     const scenario = scenarioById(THREE_DAYS_SINCE_ID)!
     const loaded = snapshotFromWire(scenario.build())
@@ -205,7 +299,9 @@ describe('D-160 — the class, swept', () => {
         if (decision.kind !== 'move' || target === undefined) continue
 
         const today = openEpisode(
-          collectEpisodes(view, scenario.zone),
+          // At or before the moment being read, which is the bound the engine
+          // applies and the one this sweep would otherwise be blind to.
+          collectEpisodes(view, scenario.zone).filter((episode) => episode.shownAt <= now),
           target,
           localDayIdAt(now, scenario.zone),
         )
