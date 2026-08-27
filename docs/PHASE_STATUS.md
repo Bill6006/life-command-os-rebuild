@@ -163,7 +163,7 @@ through the same controls, now gets past all eight steps.
 | Deployed at the handoff | `42667ea` — the same commit, no files between them          |
 | CI at the checkpoint    | Verify **success**, Deploy preview **success**              |
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/ |
-| Owner-visible behaviour | **changed** — Now, Life, and every domain page              |
+| Owner-visible behaviour | **changed** — Now, Insights, and every domain page          |
 | Owner phone check       | owed before release; not a blocker QA can clear             |
 | Independent QA          | **not run** — this is the handoff that asks for it          |
 

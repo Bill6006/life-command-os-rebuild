@@ -27,7 +27,7 @@ conversation may not approve its own phase.
 | Product checkpoint      | `42667ea` — the commit the aggregate gate was run on (D-147, D-180)    |
 | Documentation head      | this file, and the routing 84 record in `PHASE_STATUS.md`              |
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/            |
-| Owner-visible behaviour | **changed** — Now, Life, and every domain page                         |
+| Owner-visible behaviour | **changed** — Now, Insights, and every domain page                         |
 | Owner phone check       | required before GREEN                                                  |
 | QA report path          | this file                                                              |
 
