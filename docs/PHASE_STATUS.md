@@ -594,8 +594,14 @@ score about the owner.
 
 ## Open, and named rather than left to be found
 
+The two product items are also listed under the round-2 closeout above, which is
+where a reader looking for "what is open at GREEN" will land. They are repeated
+rather than moved, because this section is the phase's own list and a reader
+working down it should not have to scroll back for the two that matter most.
+
 - **The enumerated brief above is the largest open item**, and it is open on
-  purpose. Every line of it is a routing 84 or routing 90 package.
+  purpose. Every line of it is a routing 84 or routing 90 package, and routing
+  84's handoff points at it.
 - **The evidence panel's composition** (F33 residual, E19) — the deciding
   evidence reaches the reason line and not the panel. Routing 90.
 - **The same browser flake reappeared once in the round-1 repair run** —
