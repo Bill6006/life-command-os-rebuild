@@ -159,7 +159,7 @@ through the same controls, now gets past all eight steps.
 
 | Fact                    | Value                                                       |
 | ----------------------- | ----------------------------------------------------------- |
-| Product checkpoint      | `2b960cb` — the commit the aggregate gate was run on        |
+| Product checkpoint      | `39d147e` — the commit the aggregate gate was run on        |
 | Deployed at the handoff | see below                                                   |
 | CI at the checkpoint    | see below                                                   |
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/ |
@@ -328,8 +328,8 @@ saying something the owner did not.
   own aspiration twice on one page, with half its milestones under each.
 - The second agenda's commitment prompt asked for a name and a start time and
   then wrote `weekdays: [3]` — a Wednesday out of a question that never
-  mentioned a day. F36's own sentence is *"do not silently infer a consequential
-  fact from ambiguous prose"*, and that is this, in the phase built to answer it.
+  mentioned a day. F36's own sentence is _"do not silently infer a consequential
+  fact from ambiguous prose"_, and that is this, in the phase built to answer it.
 
 Both have a regression that fails when the shape returns, and adding the
 milestone builder made the route table incomplete — which the reader D-183 had
@@ -338,7 +338,7 @@ just been widened to notice, and did.
 **DEF-0119 is the one worth reading last**, because it is the pattern this whole
 phase exists to stop repeating. `dueCourseReflections` asks a finished course
 what is left of it, and it keyed on `thread.state === 'done'` — a state
-**nothing writes**. The Life panel offers *Stop this* and *Pick this up again*,
+**nothing writes**. The Life panel offers _Stop this_ and _Pick this up again_,
 so a course that simply runs to its end stays `running`; the fourth thread state
 has existed since Phase 82 with no control that reaches it. Two new
 `OutcomeAspect`s would have shipped with no path to either, which is

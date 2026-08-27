@@ -24,7 +24,7 @@ conversation may not approve its own phase.
 
 | Fact                    | Value                                                                  |
 | ----------------------- | ---------------------------------------------------------------------- |
-| Product checkpoint      | `2b960cb` — the commit the aggregate gate was run on (D-147, D-180)    |
+| Product checkpoint      | `39d147e` — the commit the aggregate gate was run on (D-147, D-180)    |
 | Documentation head      | this file, and the routing 84 record in `PHASE_STATUS.md`              |
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/            |
 | Owner-visible behaviour | **changed** — Now, Life, and every domain page                         |
@@ -32,7 +32,7 @@ conversation may not approve its own phase.
 | QA report path          | this file                                                              |
 
 Confirm the deployed SHA against the checkpoint before testing. `node
-scripts/checkpoint-equivalence.mjs 2b960cb --deployed
+scripts/checkpoint-equivalence.mjs 39d147e --deployed
 https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json`
 reports post-checkpoint changes and whether any is bundle-relevant; D-097 asks
 for equivalence rather than literal SHA equality, and the same script now also
@@ -40,6 +40,13 @@ reports commits on `HEAD` that no remote branch contains (D-180).
 
 **Two things worth knowing before you run it**, both about how this checkpoint
 got here.
+
+**D-180's failure mode happened twice in this phase, and both are recorded
+here rather than tidied away.** `npm run verify` runs `prettier --check` over
+the whole tree, so editing a file after running it leaves the head red on a
+check that takes a second. It happened once on product commits and once on
+documentation, and CI found both in under a minute — which is the rule working,
+and is also the rule being learned twice.
 
 **`b76ce91` was pushed with two files unformatted** — the decision log and the
 new browser spec — because `npm run verify` was run and then those two files
@@ -51,14 +58,25 @@ than tidied away; `994284a` is the repair.
 DEF-0117 and DEF-0118, both found by the builder reading its own code back:
 one would have shown the owner his own aspiration twice on one page, the other
 wrote a Wednesday into the record out of a question that never mentioned a day.
-`2b960cb` narrows the destination control to the three proving domains — it was
+`39d147e` narrows the destination control to the three proving domains — it was
 on every domain page, which is not wrong code and is wrong scope, because a goal
 in Fatherhood stops `goal-fit` abstaining there and Fatherhood is the one area
 this phase was told not to touch.
 
-So the checkpoint is the fourth commit rather than the first, and the three
-after it are worth reading as a set: none of them was found by a test, and every
-one of them is the class this phase exists to answer.
+`39d147e` closes DEF-0119 — a question about a finished course that nothing
+could ever be asked, because it keyed on a thread state nothing writes.
+
+So the product checkpoint is the fifth commit rather than the first, and the
+four after the first are worth reading as a set: none of them was found by a
+test that existed, and every one of them is the class this phase exists to
+answer.
+
+**`39d147e`'s own CI run failed**, on `prettier --check` over
+`docs/DEFECT_LEDGER.md` and `docs/PHASE_STATUS.md` — documentation written after
+the aggregate gate was run, the second time in this phase. The documentation
+head repairs it, changes no product code, and the aggregate gate is green there;
+`checkpoint-equivalence.mjs` is what proves the bundle is the same, and it is
+worth running rather than believing.
 
 ---
 
@@ -219,7 +237,7 @@ and what QA observes is itself a trigger.
 
 | Gate                                      | Result                                                    |
 | ----------------------------------------- | ---------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** on `2b960cb`                                      |
+| `npm run verify`, clean checkout          | **PASS** on `39d147e`                                      |
 | Unit / contract / synthetic / adversarial | **1,810 passed** in 83 files (1,765 in 82 before)          |
 | Browser, 360 / 430 / 1,280, one worker    | **BROWSER_LINE**                                           |
 | Privacy scan                              | **clean, 283 tracked files**                               |
@@ -307,7 +325,7 @@ Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the QA protocol in
 docs/qa/README.md exactly as written. Step 1 is cold use of the deployed
 Preview before any repository document.
 
-Product checkpoint: 2b960cb. Confirm the deployed build against it first.
+Product checkpoint: 39d147e. Confirm the deployed build against it first.
 
 Write your findings into docs/qa/PHASE_84_QA_HANDOFF.md from Round 1 on. The
 builder does not edit your rounds and you do not change product code.

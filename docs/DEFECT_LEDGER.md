@@ -44,7 +44,7 @@ None.
 - Status: Fixed
 - Severity: Blocker — two new `OutcomeAspect`s with no reachable control, which
   is the exact pattern this phase exists to stop repeating
-- Found in: routing 84 / `2b960cb`
+- Found in: routing 84 / `39d147e`
 - Found by: the builder, writing the test that asks whether the thing can be
   reached at all. Every other test of the two aspects passed without it.
 - Class: **a reader keyed on a value the writer never produces** — AUD-0050's
@@ -54,7 +54,7 @@ None.
   complete its three occasions, travel past its expiry, and call
   `dueCourseReflections`. It returns nothing, for ever.
 - Root cause: it required `thread.state === 'done'`, and **nothing writes that
-  state**. The Life panel offers *Stop this* and *Pick this up again*, so the
+  state**. The Life panel offers _Stop this_ and _Pick this up again_, so the
   only states an owner can write are `abandoned` and `running`; a course that
   simply ran to its end stays `running` with `live: false`. `ThreadState`
   carries `done` because the record kind was written with four states in Phase
@@ -69,7 +69,7 @@ None.
   is asked. It fails on the original condition.
 - Siblings: swept. `retained` and `transfer` are the only aspects reached from
   outside `outcomes.ts`, and `finished` is read in one place.
-- Fixed in: the commit that adds this entry
+- Fixed in: `39d147e`
 
 ---
 
@@ -99,7 +99,7 @@ None.
   next step without the aim appearing twice", which asserts one destination, one
   milestone, and the next step reading back.
 - Siblings: none. It is the only place two builders could write the same object.
-- Fixed in: `2b960cb`
+- Fixed in: `39d147e`
 
 ---
 
@@ -128,7 +128,7 @@ None.
 - Siblings: swept. `proposeAuthoring` is the only other place a time or a day is
   read from owner input, and it reports a missing one as a problem rather than
   supplying it.
-- Fixed in: `2b960cb`
+- Fixed in: `39d147e`
 
 ---
 
