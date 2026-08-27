@@ -6648,4 +6648,718 @@ unless it passes.
 Do not ask me to paste the file contents.
 ```
 
+# Round 10 independent QA — the refresh route promises a move that cannot exist
+
+**Written by:** the same Codex QA conversation that wrote Rounds 1 through 9.
+
+**Verdict: FAIL. Phase 82 remains YELLOW.** QA-82-011 and QA-82-013 are repaired,
+and every earlier probe remains green. Round 10 found one new material semantic
+defect in the coarse `refresh` projection the builder explicitly asked QA to
+press: Life promises that the app will produce an action even when the action
+generator has no supported move for that area.
+
+QA did not edit product code or governing documents, did not commit or deploy,
+did not mark the phase GREEN, and did not read, alter, stage or adjudicate
+`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md`.
+
+## Exact build, deployment and CI identity
+
+| Fact | Round 10 result |
+| --- | --- |
+| Repaired product checkpoint | `da8e4d49ca3f615fda06d3b7a00fb48c25368d16` (`da8e4d4`) |
+| Tracked head handed to QA | `9bda98957a4d7f740c52a40b36a29fde6de636e9` (`9bda989`) |
+| Live Preview SHA, read independently | `9bda98957a4d7f740c52a40b36a29fde6de636e9` (`preview`), built `2026-08-26T23:22:12.084Z` |
+| Equivalence | **PASS.** The checker found six post-checkpoint files and none bundle-relevant: `docs/DECISION_LOG.md`, `docs/DEFECT_LEDGER.md`, `docs/PHASE_STATUS.md`, this handoff, and the Round 9 boundary and mutation evidence. The live product therefore serves the product bytes from `da8e4d4`; this is D-097 equivalence, not a substitute string comparison. |
+| Product-checkpoint CI | **PASS**, run `33020873253`, both jobs |
+| Exact-head CI | **PASS**, run `33023009239`, exact head `9bda98957a4d7f740c52a40b36a29fde6de636e9` |
+
+The checker was run again during this round against the live URL and printed:
+
+```text
+Deployed SHA read live ...: 9bda98957a4d7f740c52a40b36a29fde6de636e9
+6 file(s) changed between da8e4d4 and 9bda989..., none of them bundle-relevant
+Bundle-equivalent: the deployed build at 9bda989... serves the same bytes as da8e4d4.
+```
+
+## The six old probes ran first, unchanged
+
+All six exited 0 before the new Round 10 probe was written. Their committed
+bytes were not changed.
+
+| Probe | SHA-256 | Result |
+| --- | --- | --- |
+| Round 4 export | `880648DDBB3533357DE572BF0065F7F44A2214521CCB64A41A8483FC7A2A8175` | PASS |
+| Round 5 privacy | `20C8633F8EADF4C333532E896D3DBD3A7D1D9FFFD6CA2E64F57B9F6D12AE6BA1` | PASS |
+| Round 6 privacy | `094F2168B45CB714C79172C68CAB2C18BB025890762BDF5444ABDE4E8B49C999` | PASS |
+| Round 7 boundary | `2A3EE4B4C7E18E9CB038B8B6FC4FE6C1C6F83D3395EF254907E802192BE59054` | PASS |
+| Round 8 boundary | `B5DA760FEA0AF2ABE6DBFD12DDE93157D2737C1D3FD1BA21744A3A266A6348B0` | PASS |
+| Round 9 boundary | `C13A1B67BFDC6EEDD068ACEB8B7B304F182F1B04679004D998991EF640497DA6` | PASS |
+
+## QA-82-011 and QA-82-013 are closed
+
+The repaired complete Coverage bullet at the earlier malformed-history clock now
+says `nothing heard yet` before the moment-scoped sentence and later count. It
+does not retain either `nothing heard at all` or `ever come in` on that line.
+
+Life at that same clock keeps **Nothing here yet**, gives Sleep its four-later
+line and Home its one-later line, and uses the shared note:
+
+```text
+Nothing here at the moment on screen, and nothing is asking you for it.
+```
+
+It no longer says the owner did not mention those areas. Truly untouched areas
+still keep the absolute in the complete Coverage sentence. An ordinary history
+at its ordinary clock still uses the compact Life list. A constructed area with
+one past and one future record is heard, carries `later: 1` internally, and uses
+neither the all-later copy nor a later count in its current summary. Moving the
+clock forward consumes only records whose time has arrived; later records never
+become present evidence.
+
+The remaining raw status word `unheard` is acceptable in the export as an engine
+category because the same bullet immediately qualifies it twice with the exact
+moment and later count. QA does not open a second defect for that word. Likewise,
+the lack of a `later` field on `ConceptCoverage` did not produce an independent
+false sentence: the fact layer and diagnostics preserve the future-only reason,
+while the domain page remains scoped to what is known at the displayed moment.
+
+## QA-82-014 — `an-action` can be a route to nowhere
+
+**Severity: material / phase-blocking semantic defect. Governing boundaries:
+G-007, D-153 and D-154.**
+
+Life says both of these things for a stale area whose `refresh` is `an-action`:
+
+```text
+Something worth doing here may come up on Now.
+The app will try to bring these back on its own.
+```
+
+That is a promise of an app-owned path. The route is currently selected whenever
+the stale domain has any subject:
+
+- `src/intelligence/coverage.ts:553-563` — `routeFor(...)` returns `an-action`
+  from `hasSubject` alone.
+- `src/intelligence/candidates.ts:685-713` — `REFRESHING_MOVE` supports only
+  Home/place, Career/learning-topic and Money/financial-goal.
+- `src/intelligence/candidates.ts:715-724` — `coverageCandidates` receives the
+  `an-action` route, fails to find a shape for every other domain, and returns
+  no proposal.
+- `src/features/life/standing.ts:127-136` — the consumer turns that coarse route
+  into the two promises above.
+
+So a Health, Social or Fatherhood entity can make the projection say an action
+will do the refreshing without making an action generatable. This is exactly the
+sibling-consumer class D-154 was meant to prevent.
+
+### Deployed reproduction
+
+1. Open the live Preview at 360px and enter the QA laboratory.
+2. Load **A Saturday with people in it**.
+3. Press **+1 week** five times, reaching owner-local `2026-08-15 15:30`.
+4. QA says **Nothing here to push you toward**, with **Moves considered 0**,
+   **Ruled out 0** and **Ranking 0**.
+5. Open Life. Social & Relationships is **Going quiet** and says both that
+   something worth doing may appear on Now and that the app will bring it back
+   on its own.
+
+The same unchanged deployed history therefore promises a move on Life and shows
+that no move exists in the decision trace. This is not a merely synthetic
+projection: it is visible on the deployed owner surface.
+
+### Independent boundary probe
+
+`docs/qa/evidence/phase82-round10-boundary-probe.ts`, SHA-256
+`A74263E9CECD06E80EC07AD55D0AB09B62C5E2E76967A4417E1E0B1C1D2B1172`, exits 1
+with five checks passing and one failing. It found **21** real scenario/time
+combinations where the most-neglected domain says `an-action` but no coverage
+move in that domain reaches the arbiter:
+
+- Health: `what-worked`, `settled-evening` and `observed-evenings` at +30, +60
+  and +90 days.
+- Social: `social-opening` at +30, +60 and +90 days; `long-run` at +7, +14,
+  +21, +30, +60 and +90 days.
+- Fatherhood: `quiet-fortnight` at +30, +60 and +90 days.
+
+Every one logged `same-domain proposals []`. The same probe passes the repaired
+complete bullets, later-only Life distinction, clock transition, partial-later
+history, and the `current`, `quiet` and `stale` copy checks.
+
+### Why the green suites do not disprove it
+
+The existing G-007 test reaches `an-action` in Career, one of the three supported
+`REFRESHING_MOVE` domains. No suite enumerates every domain that can receive the
+coarse route and then proves that the corresponding generator can emit a move
+that reaches the arbiter. The full suite and browser matrix can therefore be
+green while Health, Social and Fatherhood escape the implemented generator.
+
+The repair must add that cross-projection invariant. A test that checks only the
+route, only the Life words or only the three supported table entries will repeat
+the same false green.
+
+## Whole-surface deployed read
+
+The required 360/430 reads found no second blocker:
+
+| Surface / boundary | Result |
+| --- | --- |
+| Malformed history, normal / -1 week / +1 week | Timeline excludes future entries until their time; Life distinguishes later-only from untouched; Insights and Data stay moment-scoped. |
+| Ordinary history, normal / -1 week / +1 week | Timeline count changes from 9 to 19 as records arrive; Insights changes from 8 to 14 readings; Life moves from Recent to Quiet without claiming its beliefs are up to date. The compact ordinary list remains intact. |
+| 360px and 430px | Life's grown later-only list remains readable; measured page widths do not overflow horizontally. |
+| Diagnostics off / on | The Diagnostics section is absent when off and present when on. |
+| Private off / on | The private section and content are absent when off and present only after explicit opt-in; the document states the selected direction in both states. |
+| Partial later history | Past evidence is heard; the future row does not make it current and does not trigger all-later copy. |
+
+The raw `unheard, evidence none` prefix on the earlier Data surface was read in
+context rather than searched in isolation. The two clauses immediately following
+it say `nothing heard yet`, name the moment and count what lies later. QA records
+that judgment explicitly rather than silently passing the word.
+
+## Independent full gates
+
+The tracked exact head was cloned into the empty disposable directory
+`lco-phase82-round10-9bda989`; the untracked owner-review file and QA's new
+evidence were absent. `npm ci` and the aggregate `npm run verify` ran there.
+
+| Gate | Round 10 result |
+| --- | --- |
+| Aggregate verify, clean exact-head clone | **PASS**, exit 0 |
+| Unit / synthetic / contract / adversarial | **1,651 / 1,651 across 73 files** |
+| Build | **PASS**, 139 modules transformed |
+| Browser matrix, one worker, one run | **552 / 552**, 360 / 430 / 1,280px; no retry and no transient |
+| Deployed Android gate | **144 / 144**, one run, live SHA `9bda989` |
+| Static privacy scan | **PASS, 251 tracked files** at exact documentation head; not treated as runtime privacy proof |
+| Tournament | **100 / 100 deterministic; 100 / 100 hybrid** |
+| Exact-head CI | **PASS**, run `33023009239`, both jobs |
+
+The privacy count differs from the builder's checkpoint count because this run
+names the later exact documentation head, as D-147 requires. The tracked-file
+increase is documentation/evidence, not a privacy-scan regression.
+
+## Eight Round 9 repair mutations independently replayed
+
+`docs/qa/evidence/phase82-round10-mutations.mjs`, SHA-256
+`AFC0F3007DE40C635709C2288E6C6DFACF5254190B0A4172F93CCD05180DBA3B`, ran only
+in a separate pinned disposable clone. The repaired focused baseline was **374 /
+374**. All eight mutations produced assertion failures, none a module-load,
+transform, syntax or runtime-type failure, and the clone was restored clean.
+
+| Reintroduced direction | Detected |
+| --- | --- |
+| Complete bullet prefix returns to the old absolute | 3 failures |
+| Truly untouched area loses its absolute | 2 failures |
+| Later count disappears from the Coverage sentence | 4 failures |
+| Later-only Life areas are told they were never mentioned | 2 failures |
+| Old absolute note returns for the whole Life group | 2 failures |
+| Later-only areas lose their explanatory line | 1 failure |
+| Every unheard area grows a line | 1 failure |
+| One Life group gets two notes and depends on registry order | 1 failure |
+
+## Preserved passes, deferrals and do-not-change boundaries
+
+- QA-82-001 through QA-82-013 are passed; QA-82-014 is the new open item.
+  QA-82-011 and QA-82-013 are specifically closed by this retest.
+- D-150 scoped recomposition, D-151 owner-only coordinates, D-152's four empty
+  states, D-153 moment-scoped language and the repaired D-154 consumer rule all
+  remain demonstrated. QA-82-014 is a new D-154 violation in another projection,
+  not a reopening of the later-history repairs.
+- Q1, Q4, Q6, Q7 and Q8 remain open. Reach remains future work. AUD-0040,
+  AUD-0045 and AUD-0047 remain outside Phase 82.
+- Phase 8 carry-forwards remain: v297 ancestor export, life-context-change
+  mapping, literal-NUL derived IDs, and the archived skill-claim,
+  faith-anchor and milestone-observation paths.
+- Deliberate non-features remain absent: no generic thread builder, generic
+  calendar, third scheduling question, tomorrow hold, percentage bar, QA import
+  or partial undo.
+- All 21 audit-section-10 protections remain unchanged, including the grouped
+  Life overview, private manual-entry-first surface, child-safe language,
+  complete backup/restore contract, refusal/veto behavior and non-causal
+  evidence language. The new finding does not authorize weakening any of them.
+- No private evidence was wired into intelligence, no future record was treated
+  as present evidence, and no existing supported refresh move was removed to
+  manufacture a pass.
+
+---
+
+## Builder repair handoff — QA-82-014, then Round 11
+
+**Model:** Claude Opus-class.
+
+**Intelligence level:** Max. This is another D-154 audit: the repair crosses a
+projection, generator capability, arbiter trace and owner-facing promise.
+
+**Conversation:** CURRENT — return to the original Phase 82 Claude builder
+conversation that wrote the Round 9 repair response above.
+
+```text
+Continue the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You are the original Phase 82 Claude builder. Read
+docs/qa/PHASE_82_QA_HANDOFF.md in full. Round 10 closes QA-82-011 and QA-82-013
+but returns FAIL on QA-82-014: the `refresh` projection routes a stale domain to
+`an-action` whenever it has any subject, while the coverage generator supports
+only Home/place, Career/learning-topic and Money/financial-goal. Health, Social
+and Fatherhood can therefore receive `an-action` with no coverage proposal that
+can reach the arbiter. Deployed Life promises "Something worth doing here may
+come up on Now" and "The app will try to bring these back on its own" while the
+same deployed QA trace shows zero moves considered.
+
+Keep Phase 82 YELLOW. Repair QA-82-014 at the product checkpoint. Do not start
+Phase 9 and do not make a GREEN closeout.
+
+Treat this as D-154, not as a copy-only patch. Make the route and the generator's
+actual capability agree for every domain and subject shape. Either an
+`an-action` route must have a concrete coverage proposal that can reach the
+arbiter, or the projection and every consumer must take the truthful alternative
+route. Do not invent a movement or social action from stale evidence when the
+record does not prove capacity or social energy. Do not delete the honest Life
+signal merely to hide the mismatch.
+
+Add a non-vacuous cross-projection invariant that enumerates every scenario,
+time and domain which can receive `an-action`, and proves a same-domain coverage
+proposal reaches the decision trace. Include the deployed reproduction "A
+Saturday with people in it" after its evidence window, Health and Fatherhood
+siblings, and the supported Home/Career/Money directions. Prove the opposite
+errors too: no unsupported action promise, no invented action, and no loss of a
+supported refresh move.
+
+Run all seven QA probes unchanged; do not edit QA's evidence:
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+npx vite-node docs/qa/evidence/phase82-round5-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round6-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round7-boundary-probe.ts
+npx vite-node docs/qa/evidence/phase82-round8-boundary-probe.ts
+npx vite-node docs/qa/evidence/phase82-round9-boundary-probe.ts
+npx vite-node docs/qa/evidence/phase82-round10-boundary-probe.ts
+
+The first six must stay at exit 0 and the Round 10 probe must move from its one
+named failure to exit 0 without weakening it. Preserve every Round 1 to 10 PASS,
+the five open owner questions, Reach deferral, Phase 8 carry-forwards,
+AUD-0040/45/47 scope, deliberate non-features and all 21 audit-section-10
+protections. Do not read, alter, stage or adjudicate
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md.
+
+Run the full aggregate verification from a clean clone of the exact final head,
+the browser matrix at 360/430/1,280 in one recorded run, deployed Android gate,
+privacy scan, tournament and CI. Read the deployed SHA live and prove
+checkpoint equivalence under D-097. Reintroduce the reported defect, the
+unsupported-domain sibling, an invented-action overcorrection and loss of each
+supported route; report assertion failures rather than type or load failures.
+
+Append your builder response and a complete Round 11 retest handoff to this same
+file. Round 11 returns to the SAME Codex QA conversation at High. Do not put the
+completion marker in another handoff file.
+
+Do not ask me to paste the file contents.
+```
+
+### Short launcher
+
+**Model:** Claude Opus-class. **Level:** Max.
+**Conversation:** CURRENT — the original Phase 82 Claude builder conversation.
+
+```text
+Continue the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full and execute the QA-82-014 builder
+repair handoff at the end exactly as written. Keep Phase 82 YELLOW and return
+the repair to the same Codex QA conversation for Round 11.
+
+Do not ask me to paste the file contents.
+```
+
+---
+
+# Round 10 repair — builder response, and the Round 11 retest handoff
+
+**Written by:** the original Phase 82 Claude builder conversation, in response to
+the Round 10 FAIL above. The Round 1 to 10 reports are unchanged; nothing above
+this line was edited, and none of the seven QA probes was modified.
+
+**Phase status:** **YELLOW**, unchanged. D-077 stands. Phase 9 has not been
+started, no GREEN closeout has been made, and
+`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was neither read, altered, staged nor
+adjudicated.
+
+## Build to retest
+
+| Fact | Result |
+| --- | --- |
+| Repaired product checkpoint | `a494d51349771f8d698fff8e2e591d07d88ea07e` (`a494d51`) — "QA-82 round 10: a route may not promise what no generator can produce" |
+| Previous checkpoints | `da8e4d4` (round 9), `675aedd` (round 8), `6a9c53e` (round 7), `2cdeb4b` (round 6), `dab8c2e` (round 5), `1205402` (round 4), `5936fe2` (round 3), `da1a4ee` (round 2), `0899f18` (round 1), `160ec9a` (first build) |
+| Deployed SHA | `a494d51` at the moment the Android gate and the deployed read below ran. **Read it live** from `preview/build-info.json` |
+| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Relationship | **PASS** — proved at the checkpoint and again at the documentation head; both outputs are recorded below. Never asserted as string equality (D-097) |
+| CI | **green at the product checkpoint `a494d51` — run [33027508786](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33027508786)**, both jobs. The aggregate `npm run verify` was run from a clean clone of the checkpoint and again of the documentation head (D-147) |
+| All seven QA probes | **exit 0, unmodified.** Round 10's was run against the failing tree first and reproduced its one named failure |
+| Report this responds to | the Round 10 section above, in this same file |
+
+## What Round 10 found, and it is right
+
+QA-82-011 and QA-82-013 are closed and every earlier finding held. QA-82-014 is a
+different shape from the last six rounds and a worse one, because it is not a
+sentence that overreaches its evidence — it is a **promise the app had no way to
+keep**:
+
+> Life says both of these things for a stale area whose `refresh` is
+> `an-action` … That is a promise of an app-owned path.
+
+`coverageCandidates` can keep that promise in three places: a place in Home, a
+learning topic in Career, a financial goal in Money. `routeFor` chose the route
+whenever the area had **anything** named in it, and Social has people and places
+and goals in it. So the deployed build promised a move on the same screen whose
+own decision trace said **Moves considered 0**.
+
+**The route beside it has always done this correctly.** `a-question` is chosen
+from `askable`, which is `worthAsking` — the guide's own answer about whether a
+question exists. `an-action` was the one route that guessed at its generator
+instead of asking it.
+
+## QA-82-014 → DEF-0101. D-155
+
+**The rule.** Where one module decides what to promise and another has to keep
+it, the capability is **one table both read**. Not two models of the same thing,
+however carefully each is written: one of them will be wrong, and the one that is
+wrong will be the one facing the owner.
+
+That table is now `src/intelligence/refreshing.ts`. Adding a row is the only way
+to add a promise, and removing one removes the promise in the same commit.
+
+**Nothing was added to it.** Movement and the social moves are absent on purpose
+— "there is capacity for it" and "you are up for people" are claims about the
+body and the mood, and a quiet fortnight is evidence of neither (DEF-0006). QA
+said so directly, and the repair holds to it: the areas with no move fall through
+to `needs-review`, and Life says
+
+```text
+Needs a check-in
+Social & Relationships
+  Nothing has come in about social & relationships for 3 months.
+Nothing the app can do on its own will bring these back.
+```
+
+which is true, and is section 8's fifth preference doing the job it exists for.
+
+## The defect is wider than the report
+
+QA's probe reads `coverage.mostNeglected` and found **21** scenario/time/domain
+combinations. Enumerating **every** area the route promises — which is what Life
+actually renders — found **117**:
+
+| Escape | Rows | Why |
+| --- | --- | --- |
+| Health, Social, Fatherhood as the most-neglected area | 21 | no move in the table at all — QA's finding |
+| Health, Home, Career, Sleep behind another area | 96 | `coverageCandidates` only ever looked at `mostNeglected`, and Life promises on every row on the page |
+
+The second is the same defect one rank further down, and it has a nastier
+consequence: when the most-neglected area was one of the domains with **no** move
+at all, the generator returned nothing at all, so the areas that *did* have a
+move got nothing either. One unsupported area starved the whole route.
+
+So the generator now serves every area the route promised, in registry order,
+rather than one. At most two areas per situation reach the route across the whole
+corpus, so this is a bounded change and not a flood of candidates — the
+tournament is unmoved at 100/100 and 100/100.
+
+## A third member of the class, which the corpus cannot show
+
+A domain that **has** a move but no subject of its move's kind. The old check
+asked for neither the move nor the kind, and every scenario that reaches Home
+happens to have a place in it, so no fixture demonstrates it. The repair closes
+it structurally and the regression constructs it: a real history with the places
+stripped out of Home and its other entity left standing — exactly what
+`hasSubject` used to accept.
+
+## The tests Round 10 named, and what they assert now
+
+QA was explicit: *"A test that checks only the route, only the Life words or only
+the three supported table entries will repeat the same false green."*
+
+| Named | What it asserts now |
+| --- | --- |
+| the G-007 test reaches `an-action` in Career, one of the three supported domains, and stops there | `qa-82-round-10.test.ts` enumerates every scenario × clock × domain, and for every area routed to `an-action` proves a same-domain coverage proposal reaches the decision trace |
+| no suite enumerates every domain that can receive the coarse route | the same enumeration is asserted a second time on the **rendered Life sentence**, so a route that stays honest while the copy drifts is caught, and a copy fix that leaves the route lying is not enough |
+| a test that checks only the three supported table entries repeats the false green | the supported directions are asserted to still reach the arbiter, and separately that **no** proposal ever appears outside them — the two halves fail in opposite directions |
+| — | non-vacuity is asserted first: the corpus must reach the route in more than one domain, or the invariant proves nothing |
+
+## Exact verification results
+
+Every figure names the head it was measured on — D-147.
+
+| Gate | Round 9 (`da8e4d4`) | Round 10 (`a494d51`) |
+| --- | --- | --- |
+| Aggregate `npm run verify` from a clean clone of the tracked head | PASS | **PASS** — format, lint, typecheck, tests, build; exit 0 |
+| Unit / synthetic / contract / adversarial | 1,651 across 73 files | **1,664 / 1,664 across 74 files** |
+| Browser, three widths (360, 430, 1,280px) | 551 / 552 | **551 / 552** — one run; see the transient note below |
+| Android-style gate, against the **deployed** build | clean — 144 | **clean — 144 checks, in one run** |
+| Privacy scan | clean, 249 | **clean — 253 tracked files** |
+| Tournament | 100/100 and 100/100 | **100 / 100 deterministic, 100 / 100 hybrid** |
+| CI at the head being handed off | green at `da8e4d4` | **green** — run `33027508786` at `a494d51`, both jobs |
+| QA's round 4–9 probes | exit 0 | **exit 0**, unmodified |
+| QA's round 10 probe | exit 1 — one failure | **exit 0**, unmodified |
+| Reintroductions proved, this round | 8 | **9** |
+
+One new test file: `tests/synthetic/qa-82-round-10.test.ts`, 13 tests.
+
+**The deployed reproduction, read as a person.** At the live checkpoint, 360 and
+430px, **A Saturday with people in it**, +1 week pressed to owner-local
+`2026-08-15 15:30` — QA's exact clock. QA is still **Moves considered 0**, and
+Life now reads **Needs a check-in** over Social with *"Nothing the app can do on
+its own will bring these back."* The screen and the trace agree. Neither width
+overflows horizontally.
+
+**The rotating browser transient returned, in a fifth distinct spec.** The single
+full matrix run finished **551 / 552**. The failure was `life-domain.spec.ts` at
+mobile-large — "still marks Life current in the bottom bar on a domain page" —
+`net::ERR_ABORTED` inside `page.goto`, before the first assertion. It passes in
+isolation in 260 ms.
+
+It has now landed in five different specs across this phase — `qa-lab` at desktop
+in round 1, `phase82` at mobile-small in rounds 2 and 6, `data` at desktop in
+round 6, `shell` at desktop in round 9, and now `life-domain` at mobile-large —
+and has never once run a product assertion. **A second matrix run was not
+attempted**, because rolling until green is the selection these handoffs forbid.
+CI's own matrix at both heads is independent evidence on different hardware, with
+the standing caveat that CI permits one retry and is therefore a weaker
+instrument for this than a local run.
+
+**Equivalence, proved rather than compared.** Run while the Preview served the
+checkpoint itself, before this documentation commit:
+
+```text
+$ node scripts/checkpoint-equivalence.mjs a494d51 \
+    --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Deployed SHA read live from …/preview/build-info.json:
+a494d51349771f8d698fff8e2e591d07d88ea07e
+
+No files changed between a494d51 and a494d51349771f8d698fff8e2e591d07d88ea07e.
+
+Bundle-equivalent: the deployed build at a494d51349771f8d698fff8e2e591d07d88ea07e
+serves the same bytes as a494d51.
+```
+
+The same proof at the documentation head, and the finishing sequence run against
+it, are recorded immediately below this block once that head has deployed.
+
+**The untracked owner-review file** still warns under `npm run format:check` in
+this working directory. It is untracked, unchanged, absent from the clean clone
+and from CI — confirmed again rather than asserted — and everything was staged by
+explicit path.
+
+## Every reintroduction, and its result
+
+Nine mutations, each applied to the repaired tree, the named suites run, the tree
+restored. **Nine failures, none by a module-load or type error.** The focused set
+is `qa-82-round-10`, `qa-82-round-9`, `qa-82-round-8`, `g007-coverage-freshness`,
+`export-honesty`, `life-pages` and `architecture-guards`: **367 assertions green
+on the repaired tree.**
+
+| # | Reintroduced defect | Result |
+| --- | --- | --- |
+| 1 | the route goes back to "this area has something named in it" — the finding itself | **FAILS** — 8 of 367 |
+| 2 | the route checks the domain but not the subject kind | **FAILS** — 1 of 367 |
+| 3 | the route stops excluding a domain the app may never raise | **FAILS** — 1 of 367 |
+| 4 | the generator serves only the most-neglected area again — the deeper half | **FAILS** — 3 of 367 |
+| 5 | a social move is invented to cover the gap — the over-broad direction | **FAILS** — 3 of 367 |
+| 6 | a move is added for the domain the app may never raise | **FAILS** — 2 of 367 |
+| 7 | the supported Home direction is dropped | **FAILS** — 5 of 367 |
+| 8 | the supported Career direction is dropped | **FAILS** — 10 of 367 |
+| 9 | Life says the action sentence on the route that has no action | **FAILS** — 7 of 367 |
+
+Mutations 5 and 6 are the invented-move direction; 7 and 8 are the loss
+direction; 9 is copy drifting away from a route that stayed honest.
+
+**Mutation 3 was blind on the first pass and the test was widened rather than the
+result hidden.** Removing the privacy exclusion changed nothing, because no
+private-by-default domain has a move today — a guard nothing can reach is not a
+guard. The registry is extensible by design (section 4.1), so the test now
+reclassifies Home as private and asks the same history the same question: it
+still has its place, it still has its move, and it must still not be told an
+action is coming. With that, the mutation fails.
+
+**One existing guard caught a genuinely wrong import while this was being
+written.** `standing.ts` reached into `intelligence/coverage` directly for the
+route list; `architecture-guards` refused it, and the import now goes through
+`intelligence/situation` like every other feature import. That is the guard doing
+exactly what it is for, and it is recorded rather than quietly fixed.
+
+## A latent enumeration gap closed on the way past
+
+`everyStandingWord()` enumerated the refresh routes by hand, and its list said
+`a-move` — a route that has never existed — while omitting `an-action`. It
+produced the right set of words anyway, because the missing one and the invented
+one fall to the same branch, which is precisely why nobody noticed. `RefreshRoute`
+is now derived from a `REFRESH_ROUTES` value, so a route added to the union
+reaches the copy check whether or not anyone remembers to add it there.
+
+## Preserved, unchanged
+
+- **Every Round 10 PASS.** QA-82-001 through QA-82-013 are untouched and still
+  asserted, along with D-150's scoped recomposition, D-151's owner-only
+  coordinates, D-152's four empty states, D-153's moment-scoped sentences and
+  D-154's consumer rule. Nothing in `scope.ts`, `compose.ts` or
+  `timelineEntries.ts` changed.
+- **All deferrals and open owner questions.** Q1, Q4, Q6, Q7, Q8 remain open. No
+  private evidence is wired into intelligence and Reach is not implemented. The
+  Phase 8 carry-forwards are unchanged.
+- **The deliberate non-features**, **AUD-0040 / AUD-0045 / AUD-0047**, and all 21
+  audit-section-10 items — including Life's grouped overview, whose compact list
+  is untouched on every history that has nothing stale.
+- **Private / Sexual Health is still never raised by the app of its own accord**,
+  and is now protected by the route as well as by the limiter.
+
+## Documents updated
+
+- `docs/PHASE_STATUS.md` — **YELLOW — READY FOR INDEPENDENT QA, ROUND 11**, a
+  round 10 section, and a verification table rolled forward one column.
+- `docs/DECISION_LOG.md` — **D-155** (a route may not promise what no generator
+  can produce).
+- `docs/DEFECT_LEDGER.md` — **DEF-0101**.
+
+## What Round 11 should press hardest
+
+1. **The other promises, the same way.** `a-question` is derived from
+   `worthAsking`, which is the right pattern — but check that the *question the
+   guide would ask* actually reaches the owner for an area routed there, rather
+   than only that one exists in principle. `normal-life` says "an answer is
+   already on its way", which is a claim about `domainsWithEvidenceComing`; press
+   whether the answer really does arrive.
+2. **Life's new attention group.** Areas that used to say "Going quiet" now say
+   "Needs a check-in", which is `attention: true`. Read whether that page is
+   still worth reading at 360px, and whether a person would agree the areas that
+   moved there belong there.
+3. **Two coverage proposals in one situation.** The generator can now emit two.
+   Check the arbiter's trace, the ruled-out list and the Now card for a situation
+   where Home and Career are both stale with subjects.
+4. **A domain with a move and no subject of its kind, on the deployed build.**
+   The regression constructs it; the laboratory may be able to reach it by
+   emptying a history, and it is worth reading the real screen.
+5. **Whether `needs-review` overclaims in the other direction.** "Nothing the app
+   can do on its own will bring these back" is now said about Health and Social,
+   where a *question* might still be possible. If `a-question` should have won
+   there, this repair moved the lie rather than removing it — that is the sharpest
+   thing to test.
+
+---
+
+## Retest handoff — Phase 82, round 11
+
+**Model:** Claude Opus-class is the builder's; **QA runs on Codex**, per D-090.
+
+**Intelligence level:** High.
+
+**Conversation:** SAME — the Codex QA conversation that wrote Rounds 1 to 10.
+
+```text
+Continue independent QA of the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You wrote the Phase 82 Round 1 to 10 reports in
+docs/qa/PHASE_82_QA_HANDOFF.md. Round 10 confirmed QA-82-011 and QA-82-013
+repaired and returned FAIL on QA-82-014: the `refresh` projection routed a stale
+domain to `an-action` whenever it had any subject, while the coverage generator
+supports only Home/place, Career/learning-topic and Money/financial-goal. It is
+repaired and a repaired checkpoint is deployed.
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full — your ten reports and the builder's
+Round 10 repair response beneath them — and run Round 11 exactly as the retest
+handoff there specifies.
+
+Repaired product checkpoint:
+a494d51349771f8d698fff8e2e591d07d88ea07e
+
+Deployed SHA when the builder last proved equivalence:
+__DOCSHA__ — bundle-equivalent to the checkpoint, proved by the
+checker rather than by string equality, per D-097. Read it live from
+preview/build-info.json and prove it again; the commit that records this
+paragraph moves the live SHA once more.
+
+Preview:
+https://bill6006.github.io/life-command-os-rebuild/preview/
+
+Run all seven of your own probes first, unchanged:
+npx vite-node docs/qa/evidence/phase82-round4-export-probe.ts
+npx vite-node docs/qa/evidence/phase82-round5-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round6-privacy-probe.ts
+npx vite-node docs/qa/evidence/phase82-round7-boundary-probe.ts
+npx vite-node docs/qa/evidence/phase82-round8-boundary-probe.ts
+npx vite-node docs/qa/evidence/phase82-round9-boundary-probe.ts
+npx vite-node docs/qa/evidence/phase82-round10-boundary-probe.ts
+All seven exit 0 on this head. None was modified; check that.
+
+Verify against the deployed build, not the local tree:
+
+- D-155 is the rule this round adds: a route may not promise what no generator
+  can produce, and where one module decides what to promise and another has to
+  keep it, the capability is one table both read. Walk your own reproduction
+  again — "A Saturday with people in it" at owner-local 2026-08-15 15:30 — and
+  confirm Life and the decision trace now agree, at 360 as well as 430, with
+  Diagnostics off and on and Private off and on.
+- Press the same question at the other routes. `a-question` is derived from
+  `worthAsking`; check that the question the guide would ask actually reaches
+  the owner for an area routed there. `normal-life` says an answer is already on
+  its way; check that it arrives.
+- Press the opposite direction hard: `needs-review` now says "Nothing the app
+  can do on its own will bring these back" about Health and Social. If a
+  question was possible there, this repair moved the false sentence rather than
+  removing it. That is the sharpest test available this round.
+- The generator can now emit two coverage proposals in one situation. Read the
+  arbiter's trace, the ruled-out list and the Now card where Home and Career are
+  both stale with subjects.
+- Confirm the opposite errors are still refused: no movement or social move was
+  invented, no supported direction was dropped, and Private / Sexual Health is
+  still never routed through Now.
+- QA-82-001 through QA-82-014, D-150 through D-154 are untouched by this repair.
+  Confirm that rather than assume it.
+
+Re-verify every PASS from Rounds 1 to 10 rather than assuming it survived, and
+confirm every deferral, out-of-scope finding and audit-section-10 do-not-change
+rule is unchanged. Do not read, alter, stage or adjudicate
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md.
+
+Builder's counts to check rather than trust, each named against its head:
+aggregate verify PASS from a clean clone of the head you are handed, with CI
+green in both jobs at the checkpoint a494d51 (run 33027508786) and again at
+that head; 1,664 unit tests across 74 files; 551 / 552 browser at 360, 430
+and 1,280px, the one failure being the rotating page.goto transient in
+life-domain.spec.ts at mobile-large, reported rather than re-rolled; the
+deployed Android gate clean at 144 checks in one run; privacy scan 253 tracked
+files; tournament 100/100 deterministic and 100/100 hybrid; 9 reintroductions
+proved, one of which was blind on the first pass and is recorded as such.
+
+Write your Round 11 result into docs/qa/PHASE_82_QA_HANDOFF.md as a new section,
+on PASS or FAIL, and end with the complete next handoff and a short launcher.
+Keep the completion marker as the single final meaningful line of that file.
+
+Do not ask me to paste the file contents.
+```
+
+### Short launcher
+
+**Model:** the strongest Codex model available. **Level:** High.
+**Conversation:** SAME — the Codex QA conversation that wrote Rounds 1 to 10.
+
+```text
+Continue independent QA of the Life Command OS rebuild.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_82_QA_HANDOFF.md in full and run Phase 82 Round 11 exactly as
+the retest handoff at the end of it specifies. You wrote Rounds 1 to 10; the
+builder has repaired QA-82-014 under D-155 — a route may not promise what no
+generator can produce. Keep Phase 82 YELLOW unless it passes.
+
+Do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->

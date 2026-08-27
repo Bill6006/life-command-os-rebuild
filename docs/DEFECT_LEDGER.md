@@ -39,6 +39,51 @@ None.
 
 ## Fixed
 
+### DEF-0101 — Life promised a move the app had no way to make
+
+- Status: Fixed
+- Severity: Major — a promise of an app-owned path, on the deployed owner
+  surface, contradicted by the same screen's own decision trace
+- Found in: Phase 82 / `9bda989`; the projection has routed this way since the
+  coverage engine was written
+- Found by: independent QA round 10 — QA-82-014
+- Class: **a projection describing a capability the code behind it lacks.**
+  `routeFor` derived `an-action` from "this domain has something named in it";
+  `coverageCandidates` needs a move for the domain and a subject of that move's
+  kind, and has three (Home/place, Career/learning-topic, Money/financial-goal).
+- Reproduction: live Preview at 360px, QA laboratory, **A Saturday with people
+  in it**, +1 week pressed five times to owner-local 2026-08-15 15:30. QA says
+  **Nothing here to push you toward**, Moves considered 0, Ruled out 0. Life
+  shows Social & Relationships as **Going quiet**, saying both that something
+  worth doing may come up on Now and that the app will bring it back on its own.
+- Root causes: `routeFor` asking `hasSubject` rather than the generator's own
+  capability; and `coverageCandidates` serving only `coverage.mostNeglected`
+  while Life makes the promise on every `an-action` row it renders.
+- Extent: 21 rows where the most-neglected area had no move (what QA's probe
+  reaches), and **117 rows in total** once every promised area is enumerated —
+  Health, Social, Fatherhood and Sleep with no move at all, and Home and Career
+  ranked behind another area in the same situation.
+- Repair: the table moves to `src/intelligence/refreshing.ts` and both sides
+  read it. The route additionally requires a subject of the move's own kind and
+  excludes a domain the app may never raise of its own accord; the generator
+  serves every area the route promised, in registry order, rather than one.
+  Nothing was added to the table — the areas with no move fall to
+  `needs-review`, which is section 8's fifth preference and is true.
+- Regression: `tests/synthetic/qa-82-round-10.test.ts` — the cross-projection
+  invariant over every scenario, clock and domain, asserted twice: on the route
+  field and on the **rendered Life sentence**; the reported reproduction and its
+  Health, Fatherhood and Social siblings; a constructed history where Home keeps
+  a subject but loses the one of the right kind; a registry where Home is
+  reclassified private so the branch that protects a future table row can
+  actually be reached; and the opposite errors — no invented move, no supported
+  direction lost. Nine reintroductions run, all nine fail.
+- Note on why the green suites passed: the G-007 test reaches `an-action` in
+  Career, one of the three supported domains, and stops there. Nothing
+  enumerated the domains that can _receive_ the route and asked whether the
+  generator could serve each. 1,651 unit tests and a 552-check browser matrix
+  were green with the defect deployed.
+- Fixed in: the checkpoint that closes QA round 10
+
 ### DEF-0100 — the new distinction was read by one consumer of three
 
 - Status: Fixed

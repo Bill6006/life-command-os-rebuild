@@ -4998,3 +4998,71 @@ Future records still do not become current evidence, an area nothing has ever
 reached keeps its absolute in both the prefix and the summary, and no area is
 moved out of a group to make a sentence easier. All three are proved by
 reintroduction rather than promised.
+
+---
+
+## D-155 — A route may not promise what no generator can produce
+
+**Phase:** 82 (QA round 10) · **Status:** Active
+
+D-154 said a distinction is not carried until every consumer of the projection
+carries it. This is the same rule pointed the other way: a projection may not
+_describe_ a capability the code behind it does not have.
+
+`routeFor` chose `an-action` — "the app will create something that brings this
+area back" — whenever the stale domain had **any** entity in it.
+`coverageCandidates` needs a move for that _domain_ and a subject of that move's
+own _kind_, and it has three: a place in Home, a learning topic in Career, a
+financial goal in Money. Social has people and places and goals in it and no
+move at all, so Life said
+
+```text
+Going quiet. The app will try to bring these back on its own.
+Social & Relationships … Something worth doing here may come up on Now.
+```
+
+on a screen whose own decision trace said **Moves considered 0**.
+
+**The rule:** where one module decides what to promise and another has to keep
+it, the capability is a single table both read. Not two models of the same
+thing, however carefully each is written — one of them will be wrong and the
+one that is wrong will be the one facing the owner.
+
+`refreshing.ts` is that table. Adding a row is the only way to add a promise;
+removing one removes the promise in the same commit.
+
+### The route beside it already did this
+
+`a-question` is chosen from `askable`, which is `worthAsking` — the guide's own
+answer about whether a question exists. That route has never over-promised,
+because it asks the generator instead of guessing at it. `an-action` was the
+odd one out, and the fix is to make it ask too.
+
+### Enumerate the consumers of the capability, not only of the route
+
+The reported instance was the most-neglected area with no move at all. Two more
+sat behind it, and both are the same rule:
+
+- A domain that **has** a move but no subject of its kind. The old check asked
+  for neither.
+- A domain the generator would serve **eventually** but not now, because
+  `coverageCandidates` only ever looked at `mostNeglected` while Life makes its
+  promise on every row on the page. Worse, when the most-neglected area was one
+  of the domains with no move at all, the route went silent for everybody and
+  the areas that did have a move got nothing either.
+
+Across the scenario corpus that is 21 rows QA found and 117 rows in total.
+
+### What this does not license
+
+**No move is invented to close the gap.** Movement and the social moves are
+absent from the table on purpose: "there is capacity for it" and "you are up for
+people" are claims about the body and the mood, and a quiet fortnight is
+evidence of neither (DEF-0006). The absence of a row is a deliberate answer, and
+the repair is to make the route honest about it — the area falls to
+`needs-review`, and Life says _"Nothing the app can do on its own will bring
+these back"_, which is true and is section 8's fifth preference doing its job.
+
+**No supported direction is dropped** to make the invariant easier, and **no
+domain the app may never raise of its own accord** is given a route through Now.
+Both are proved by reintroduction rather than promised.
