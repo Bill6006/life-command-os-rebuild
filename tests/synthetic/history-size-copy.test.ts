@@ -243,6 +243,11 @@ describe('F39 — Timeline’s own claims about the record', () => {
         const moment = { now, zone: scenario.zone, weekStartsOn: 1 as const }
         const situation = assembleSituation(buildView(loaded.snapshot, moment), moment)
         const data = assembleTimeline(situation)
+        // The screen renders this only when there are rows on the page; with
+        // none it has three other things to say (`onlyLater`, nothing yet,
+        // nothing readable). Asserting a sentence that is never shown would be
+        // this file making up a state to be right about.
+        if (data.total === 0) continue
         const sentence = describeExtent(data)
         const where = `${scenario.id} at ${block}`
 
