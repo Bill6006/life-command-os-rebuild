@@ -6107,7 +6107,7 @@ to recognise, is the guard being taught to agree with itself.
   to match its habits rather than to name their controls.
 - The ordinary-use instrument's builder reader found a control by its **return
   type ending in `Record`**. The two highest-leverage controls in this phase
-  return entities *and* records together, because that is one act (D-182) — so
+  return entities _and_ records together, because that is one act (D-182) — so
   the table's claim to list every control stayed green while it could not see
   them. That is D-179's own failure mode occurring inside the guard D-179 was
   written for.
@@ -6133,10 +6133,10 @@ The discovery agenda emits **one** prompt per destination — the first thing
 about it the app does not know — and the next appears when that one is filled.
 It does not emit one per gap.
 
-**Why:** D-163 requires *fewer questions as it learns, not more*, and a
+**Why:** D-163 requires _fewer questions as it learns, not more_, and a
 destination has four parts of which three can be missing at once. A prompt per
-gap would mean that answering *"what are you hoping Career eventually looks
-like?"* replaced one question with three — the rule inverted, and the agenda
+gap would mean that answering _"what are you hoping Career eventually looks
+like?"_ replaced one question with three — the rule inverted, and the agenda
 getting louder the more the owner told it. It is also simply how a person asks.
 
 **Measured rather than asserted**, in
@@ -6157,7 +6157,7 @@ Adding a `NoActionReason` may change **which sentence** the owner reads about a
 silence the app was already going to keep. It may not change whether the app
 says nothing.
 
-**Why:** F11 asks that *"enough for today"* be sayable — that an evening where
+**Why:** F11 asks that _"enough for today"_ be sayable — that an evening where
 the owner did the thing and there was nothing else should not read as **"Nothing
 new for today"**, which is the app reporting the emptiness of its own list on a
 day he actually got somewhere. That is a true and useful repair, and it is also

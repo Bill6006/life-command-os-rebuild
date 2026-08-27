@@ -47,7 +47,9 @@ async function untilThereIsAMove(page: Page) {
     const question = page.getByTestId('now-question')
     if (!(await question.isVisible())) break
     await page.locator('.now-option').first().click()
-    await expect(question).not.toBeVisible({ timeout: 5000 }).catch(() => undefined)
+    await expect(question)
+      .not.toBeVisible({ timeout: 5000 })
+      .catch(() => undefined)
   }
   await expect(page.getByTestId('now-actions')).toBeVisible()
 }
