@@ -215,3 +215,314 @@ the other.
 
 **The `**Phase:**` field stays `83`** for every round of this phase — never a
 decimal, never a canonical phase number. Plan section 43A and D-159 are why.
+
+---
+
+## Round 1 — independent QA, first submission
+
+**Phase:** 83 — the instrument, and the things that are untrue
+
+**Actor:** Codex / independent QA (D-077, D-090).
+
+**Overall result:** **FAIL.** Acceptance items 1, 3 and 4 pass. Acceptance
+items 2 and 5 fail. The standing aggregate verification gate also fails at the
+current executable handoff head.
+
+This is a product and instrument failure, not a deployment mismatch. The product
+checkpoint `582f648` and deployed build
+`ab6b47f592d1c2eaa844ba9f083e4f772dbfa5ad` are bundle-equivalent.
+
+### Build identity and test configuration
+
+| Fact | Value |
+| --- | --- |
+| QA-tested product checkpoint | `582f648` |
+| Repository head at QA start | `76d9587` — documentation-only after the deployed head |
+| Deployed Preview SHA read live | `ab6b47f592d1c2eaa844ba9f083e4f772dbfa5ad` |
+| Relationship | `node --use-system-ca scripts/checkpoint-equivalence.mjs 582f648 --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json` reported seven post-checkpoint files, none bundle-relevant |
+| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Android configuration | Playwright `Galaxy S24`; 360 × 780 CSS px; DPR 3; touch and `isMobile`; Android 14 / Chrome 126 user agent; deployed Preview |
+| Desktop-width browser matrix | Playwright desktop Chromium at 360 × 740, 430 × 932 and 1,280 × 900; one worker |
+| QA report commit | Not committed by QA in this round |
+
+The first direct Node fetch failed because this workstation did not trust the
+presented certificate chain. Re-running Node with `--use-system-ca` succeeded;
+the browser itself loaded the same deployment normally. No TLS check was
+disabled.
+
+### Protocol record
+
+The order in D-090 was kept:
+
+1. The deployed Preview was opened at its ordinary Now before any repository
+   document except the executable handoff was read. The cold screen claimed a
+   kitchen reset was the best move; that recent attempts had made little
+   difference; that it paid back more tomorrow; that Health was seven months
+   out of date; and that the learned reset claim rested on several similar
+   situations. Starting and completing it moved the app to recall practice.
+2. Those claims were traced through See evidence, Timeline, Data/export and the
+   QA laboratory before the governing specification and builder report were
+   opened.
+3. The whole Now, Timeline, Private and domain-correction surfaces were then read
+   against their evidence, followed by the five acceptance items and the
+   architecture only where the instrument itself failed.
+
+### Acceptance result
+
+| # | Result | Evidence |
+| --- | --- | --- |
+| 1. An earlier-day completion cannot settle today's occurrence | **PASS** | Deployed **Three days since that walk** showed a fresh walk, no false standing, and all five controls enabled. Starting it today changed the state to **Under way**. The older completion remained in the three-day evidence window. The focused reintroduction test passed. |
+| 2. No owner sentence asserts a quantity it did not count | **FAIL** | The four-record no-action copy and Timeline extent repairs pass, but the same three-day fixture says **“The last few times made little difference”** while its open evidence says **“One occasion in the record”** and **“1 occasion.”** See QA-83-001. |
+| 3. The Private promise agrees with Timeline | **PASS** | On **Two ordinary weeks**, Private says the words stay on that page and Timeline shows existence and time. Timeline showed **Private entry** and did not show **late scrolling again**. |
+| 4. Every owner-facing input has an accessible name | **PASS** | The two repaired free-text controls have visible labels and persistent purpose notes. Source sweep, browser sweep and deployed Galaxy sweep all passed. No nameless control was found. |
+| 5. The near-empty ordinary-use journey and its enumerated stops | **FAIL** | The executable path reaches a question, action, outcome, fact correction and changed recommendation, but the claimed exhaustive route instrument is not exhaustive, and one enumerated stop is false in the owner's words. See QA-83-003. |
+
+### Blocking semantic defects
+
+#### QA-83-001 — one occasion is called “the last few times”
+
+**Severity:** Blocker. **Acceptance item:** 2. **Type:** semantic / owner-copy.
+
+**Exact reproduction:**
+
+1. Open the deployed Preview and load **Three days since that walk** from the QA
+   laboratory.
+2. Open Now.
+3. Read the recommendation reason: _“Energy is good, and the evening suits a
+   walk. **The last few times made little difference**, and nothing else here
+   fits better.”_
+4. Open **See evidence**.
+5. Read _“**One occasion** in the record is like this evening — 22 May”_ and
+   _“Too early to say · **1 occasion**.”_
+
+The app counted one occasion and used a plural quantity. The source of the
+contradiction is visible at `src/intelligence/explain.ts:345`, where the reason
+hard-codes “last few times”; the learning summary beside it already has the
+correct singular branch at `src/intelligence/learning.ts:558-564`.
+
+This is the exact D-174 class the phase says it closed: a copy catalogue varied
+history size but did not vary or assert agreement with the number of comparable
+episodes used by a decision reason.
+
+**Existing tests that gave false confidence:**
+
+- `tests/synthetic/history-size-copy.test.ts` passed 8 / 8, including _“never
+  lets a decision sentence assert an unmeasured quantity.”_ Its `UNMEASURED`
+  list detects selected phrases such as “plenty of history”; it does not compare
+  a sentence's quantifier with the count behind it.
+- `tests/browser/phase83.spec.ts` passed at all three widths, but its item-2
+  checks stop after the four-record no-action sentence and Timeline.
+- `scripts/android-gate.mjs` passed all 183 checks but makes the same omission.
+
+#### QA-83-002 — the named walk becomes “Move” at the point of learning and correction
+
+**Severity:** Major, blocking for this submission. **Type:** semantic /
+accessibility.
+
+On the same acceptance fixture, Now correctly heads the action **“Move for 25
+minutes: a walk.”** The learned statement immediately below it says **“Move has
+made little difference in situations like tonight.”** The correction control's
+accessible name is **“Not how it went — correct what move does for you.”** The
+open evidence then recovers the missing subject in its detailed rate labels:
+**“getting out for a walk.”**
+
+The central claim and the control that changes it have lost the action identity
+the screen already knows. A generic verb is not an adequate subject for what
+the owner is being asked to correct, and it violates the standing specificity
+and no-hidden-genericity rules.
+
+**Existing tests that gave false confidence:**
+
+- `occurrence-identity.test.ts` and `phase83.spec.ts` require the headline to
+  contain “a walk” but never read the learned statement or correction name.
+- `decision-evidence.test.ts` proves that Now and the evidence panel repeat the
+  same belief. Both repeat the same generic belief, so equality does not prove
+  specificity.
+
+### Blocking architecture / instrument defect
+
+#### QA-83-003 — the ordinary-use instrument is not an exhaustive map of ordinary use
+
+**Severity:** Blocker. **Acceptance item:** 5. **Type:** architecture / test
+harness / phase-record semantics.
+
+There are three independently reproducible parts.
+
+1. `tests/synthetic/journey.ts:131` claims `OWNER_ROUTES` is **every**
+   owner-facing control that appends to the record. It omits at least:
+   - **Stop this / Pick this up again** in `src/features/life/Threads.tsx:43-67`,
+     which calls `memory.append([setThreadStateRecord(...)])`;
+   - **That is not right** in
+     `src/features/insights/InsightsScreen.tsx:54-83`, which calls
+     `memory.append([beliefCorrectionRecord(...)])`.
+2. The green _“keeps the route table honest”_ test at
+   `ordinary-use-journey.test.ts:357` checks only that ids are unique, `writes`
+   is non-empty and the builder string contains a dot. It never compares the
+   table with the owner-facing source. `ROUTE_BUILDERS` keeps imported symbols
+   compilable but does not prove that every source handler is in the table.
+3. The enumerated object-creation stop says the owner cannot _“name a goal, a
+   topic he is studying, a person, a place or a skill”_. On **The first
+   evening**, ordinary navigation to **Life → Career & Learning → Current
+   learning topic → Add this** opens a labelled textbox and explicitly says the
+   answer becomes what the app reads from now on. An owner can name the topic as
+   a fact. What the app cannot create is a semantic learning-topic entity that
+   goals and study threads can refer to. Those are different claims. The brief
+   also fails to enumerate routing 84 package 3's complete object list: goal,
+   routine, person, place, skill and obligation.
+
+The file visibly contains a second self-contradiction: the test named _“gets
+past the four steps ... and stops at the four”_ has a `PROCEEDS` map with three
+`true` and five `false` values. The phase record correctly says three of eight;
+the green test title does not.
+
+The omitted controls do not by themselves make the already named stops pass.
+They do show that the instrument cannot support its completeness claim, which
+is the acceptance item. Because the list is routing 84's brief, an incomplete
+or semantically conflated list is material even where the underlying product
+gap is deliberately deferred.
+
+**Existing tests that gave false confidence:** all 7 tests in
+`ordinary-use-journey.test.ts` passed; the full 1,753-test suite passed; and the
+582-case browser suite passed. None can fail when an owner record-writing
+handler is absent from `OWNER_ROUTES`.
+
+### Blocking standing-gate defect
+
+#### QA-83-004 — the aggregate clean-tree command stops at the executable handoff
+
+**Severity:** Blocker for closeout. **Type:** verification / documentation.
+
+At clean repository head `76d9587`, `npm run verify` exits 1 during its first
+stage:
+
+```text
+> prettier --check .
+[warn] docs/NEXT_PROMPT.md
+[warn] Code style issues found in the above file. Run Prettier with --write to fix.
+```
+
+The remaining layers were run separately and all passed, but the standing gate
+is the aggregate command and that command is not green. This is not a product
+bundle defect; it is still a required gate failure at the handoff the
+orchestrator executed.
+
+### Behavioural and mobile/UI defects
+
+No separate behavioural-state or mobile/UI defect was found. Occurrence state,
+private withholding, labels, focusable controls, 44px targets, bottom-nav
+clearance and horizontal overflow behaved correctly in the targeted flows.
+
+The first click on one Life-domain link did not navigate in the cold browser
+session; the same route worked on the next independently established path and
+through the complete browser matrix. In accordance with F41's own rule, no
+defect is assigned to a transient observation that did not reproduce.
+
+### Verification record
+
+| Gate | QA result |
+| --- | --- |
+| Focused Phase 83 / architecture tests | **139 / 139 passed across 7 files**, including the tests that gave false confidence |
+| Unit / contract / synthetic / adversarial | **1,753 / 1,753 passed across 80 files** |
+| Lint, typecheck, build | **PASS** when run separately after the aggregate format stop |
+| Aggregate `npm run verify` | **FAIL** — `docs/NEXT_PROMPT.md` is not Prettier-clean |
+| Browser matrix | **582 / 582 passed** — 194 at each of 360, 430 and 1,280px |
+| Android-style deployed gate | **clean — 183 checks** against `ab6b47f`, Galaxy S24 configuration above |
+| Privacy scan | **clean — 271 tracked files** at repository head `76d9587` |
+| Checkpoint equivalence | **PASS** — deployed `ab6b47f` is bundle-equivalent to product checkpoint `582f648` |
+
+The full suite was duplicated because D-090's trigger was concrete: a builder
+claim did not match observed behaviour, two green purpose-written tests were
+suspected false greens, and the phase introduced the test harness being
+challenged. The result confirms the false confidence rather than clearing it.
+
+### Deferrals and owner questions
+
+All explicit deferrals remain unchanged and were not treated as defects: no
+destination/milestone/baseline object; no Love / Dating / Romantic Life domain;
+no private-consent model; no second questioning agenda; no scoring change; and
+no live model. The do-not-change protections in product-adjudication section 11
+remain in force.
+
+Q1 (Adaya's age and normative references), Q4 (legacy evidence admissibility)
+and Q6 (live model inference, reopened before routing 91 without treating the
+finite concept vocabulary as a ceiling) remain open for the owner. QA does not
+answer them.
+
+---
+
+## Complete next handoff — repair after Round 1 FAIL
+
+**System:** Claude / builder.
+**Model:** Claude.
+**Intelligence level:** **Max** — this is audit-campaign repair work across
+owner copy, action identity and the acceptance instrument.
+**Conversation:** **CURRENT** — return to the original routing 83 Claude builder
+conversation, which owns the phase and its repairs.
+
+```text
+Routing Phase 83 repair after independent QA Round 1 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_83_QA_HANDOFF.md in full. Round 1 is the independent QA
+report and is authoritative for this repair. Keep the Phase field exactly 83.
+
+Keep routing 83 YELLOW. Do not start routing 84 and do not mark the phase GREEN.
+Repair QA-83-001 through QA-83-004 under canonical plan section 42: reproduce
+each defect, identify the whole class, write a regression, prove the regression
+fails when the defect is faithfully reintroduced, fix the root cause, and run
+the full gate on the final tracked checkpoint.
+
+Required outcomes:
+
+1. No decision reason uses a plural or other quantity word that disagrees with
+   the comparable occasions behind it. Start with “The last few times” over one
+   occasion on “Three days since that walk,” then sweep the whole owner-visible
+   class rather than adding that phrase to a blacklist.
+2. The learned statement and its correction control retain the named action
+   identity. On the same fixture they must say walk/getting out for a walk, not
+   the generic subject “Move,” and the class guard must cover other engine-named
+   routines from a near-empty store.
+3. Make the ordinary-use instrument's exhaustiveness claim real. Enumerate every
+   owner-facing record-writing handler, including Life thread state controls and
+   Insights belief correction, and add a guard that can fail when a source
+   handler is omitted. Correct the three-versus-five test title/count. Rewrite
+   the object-creation stop so it distinguishes entering a current-topic fact
+   from creating the semantic entity later features require, and ensure the
+   phase record enumerates the full routing 84 authoring brief — goal, routine,
+   person, place, skill and obligation — plus any other genuine stop the repaired
+   exhaustive instrument finds. Do not implement routing 84 capabilities.
+4. Restore the aggregate clean-tree `npm run verify` gate, including formatting
+   docs/NEXT_PROMPT.md. Preserve the owner's dispatch constraint and the terminal
+   completion comment already present there. Do not copy that comment into this
+   QA report or a different handoff file.
+
+Preserve every Round 1 PASS: occurrence identity and the unchanged three-day
+window; Timeline scope copy; the Private promise and withholding policy; all
+accessible names and purpose notes; the five lifecycle controls; every standing
+copy/scoring guard; and every explicit deferral.
+
+Run the full clean-checkout gate, browser suite at 360/430/1280, privacy scan,
+block and copy sweeps, and the deployed Galaxy-class Android gate. Deploy the
+repaired checkpoint, prove checkpoint equivalence if documentation moves the
+deployed SHA, and update this same QA report with the builder's repair record and
+a complete retest prompt addressed to the SAME Codex QA conversation at High.
+Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude. **Level:** Max. **Conversation:** CURRENT — the original
+routing 83 builder conversation.
+
+```text
+Routing Phase 83 repair after independent QA Round 1 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_83_QA_HANDOFF.md in full and execute the complete repair
+handoff there exactly as written. Keep Phase 83 YELLOW; do not start routing 84.
+Do not ask me to paste the file contents.
+```
