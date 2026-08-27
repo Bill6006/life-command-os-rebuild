@@ -43,7 +43,7 @@ is section 8 of [`PRODUCT_ADJUDICATION.md`](PRODUCT_ADJUDICATION.md).
 | Unit layer                         | 1,753 / 1,753 across 80 files (was 1,675 across 76)                                               |
 | Browser                            | 582 / 582 — 194 each at 360, 430 and 1,280px (was 552)                                            |
 | Android gate, deployed             | clean, 183 checks against `51ef425` (was 119)                                                     |
-| `npm run verify` from a clean tree | PASS; CI green on both jobs at the documentation head                                             |
+| `npm run verify` from a clean tree | PASS; CI green on both jobs at `51ef425`                                                          |
 | Privacy scan                       | clean, 270 tracked files                                                                          |
 | Report path for this phase         | `docs/qa/PHASE_83_QA_HANDOFF.md` — Round 0 is the builder's brief; QA owns everything below it    |
 

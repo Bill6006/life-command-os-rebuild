@@ -206,6 +206,9 @@ a real run and held against a written table in
 `tests/synthetic/ordinary-use-journey.test.ts`; nothing here is a description of
 the code from outside it.
 
+The numbers are the journey's own steps, so 4, 6 and 8 are absent because those
+three are the ones it gets past.
+
 | Step                       | What the owner was trying to do                              | Why it stops                                                                                                                                                                                                                                                                                                                                 | Where it belongs                        |
 | -------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
 | **1. Unknown aspiration**  | say what he is trying to become, before he can name it       | No concept in the registry is about anything he is aiming at. The longest-horizon thing he can state is **this week's focus** (`direction.weekly-focus`); there is no destination, no milestone, no starting point.                                                                                                                          | routing 84, package 1 (F01, F35, D-162) |
