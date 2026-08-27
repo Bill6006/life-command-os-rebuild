@@ -39,6 +39,79 @@ None.
 
 ## Fixed
 
+### DEF-0115 — a guard reported every correctly labelled control in the phase as unlabelled
+
+- Status: Fixed
+- Severity: Major — the guard is D-176's enforcement and F40's acceptance item,
+  and what it fails is the repair rather than the defect
+- Found in: routing 84 / pre-checkpoint, before anything was pushed
+- Found by: the builder's own gate, on the first run after the new controls
+  existed
+- Class: **a source-reading guard whose hypothesis about how the thing is
+  written down is narrower than the language** — D-183.
+- Reproduction: add `<label htmlFor="a-name">…</label>` and
+  `<input id="a-name" …/>` to any file under `src/features`, then run
+  `tests/unit/architecture-guards.test.ts` — "names every input, textarea and
+  select under `src/features`". It reports the control as having no accessible
+  name.
+- Root cause: `unnamedControlsIn` accepted `htmlFor={` + a template literal and
+  `htmlFor={` + a bare expression, and nothing else. A plain quoted string —
+  the simplest correct spelling there is, and the one a new form reaches for
+  first — matched neither branch. Ten controls added by this phase read as
+  unlabelled while a browser computes a name for every one of them.
+- Repair: the reader accepts the quoted form as well, on the same condition as
+  the other two — the `htmlFor` must name **that control's own id**. Nothing was
+  relaxed and no file was exempted, which is the half D-183 is about: the
+  tempting fix is to write the template form everywhere and leave the guard
+  teaching authors to match its habits.
+- Regression: the same test, plus "bites on the field that was reported, and on
+  a placeholder standing in for a label", which is unchanged and still fails on
+  both original shapes; and `tests/browser/phase84.spec.ts` — "every input on
+  the new controls has a name a browser can compute", which asks the running app
+  through `element.labels` rather than asking the source.
+- Siblings: DEF-0116, immediately below, is the same class in the same phase on
+  a different reader. Both were found within an hour of each other and neither
+  by the same means.
+- Fixed in: `994284a`
+
+---
+
+### DEF-0116 — the instrument's route reader could not see a control that creates an entity
+
+- Status: Fixed
+- Severity: Blocker — the claim it guards is routing 83's fifth acceptance item
+  and routing 84's third, and it was silently narrower than both
+- Found in: routing 84 / pre-checkpoint
+- Found by: the builder's own gate, when the route table's "bites when a control
+  is taken out" case could not find a control that plainly exists
+- Class: the same as DEF-0115 — **a source-reading guard blind to a shape it was
+  not written for**, and this one is D-179's own failure mode occurring inside
+  the guard D-179 was written for.
+- Reproduction: at `b76ce91` minus the reader change, run
+  `tests/synthetic/ordinary-use-journey.test.ts` — "lists every control on every
+  screen that writes a record". It is green with `destinationRecords` and
+  `authoringRecords` absent from `OWNER_ROUTES`, and they are the two
+  highest-leverage controls in the phase.
+- Root cause: `buildersDeclaredIn` finds a record builder by two conditions —
+  it returns something whose type name ends in `Record`, and it takes a moment.
+  A control that brings a **semantic entity** into being returns entities and
+  records together, because that is one act (D-182), so its return type is
+  `AuthoringResult` and the first condition rejected it. The exhaustiveness
+  claim above the table stayed true of everything the reader could see.
+- Repair: the reader recognises one named bundle type alongside a return type
+  ending in `Record`. Named rather than pattern-matched — "anything ending in
+  `Result`" would pick up half the codebase — so a second bundle type is an edit
+  with a sentence saying why. The moment condition is unchanged, which is what
+  still excludes `standingCommitments` and every reader.
+- Regression: the same test, and "bites when a control is taken out of the
+  table", which now also removes `destinationRecords` from the domain page and
+  from Life separately — two screens, one builder, two controls, which is
+  QA-83-003's own second finding arriving one phase later.
+- Siblings: DEF-0115. Both are D-183.
+- Fixed in: `994284a`
+
+---
+
 ### DEF-0114 — the standing gate was red at a head nothing but this machine had seen
 
 - Status: Fixed

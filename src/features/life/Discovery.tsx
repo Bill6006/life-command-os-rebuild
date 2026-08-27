@@ -5,6 +5,7 @@ import {
   authoringRecords,
   dayFromInput,
   destinationRecords,
+  milestoneFor,
   minutesFromClock,
   reviseDestinationRecord,
 } from '../../intelligence/authoring'
@@ -50,6 +51,7 @@ export function Discovery({ situation }: { situation: Situation }) {
   const [working, setWorking] = useState(false)
   const [draft, setDraft] = useState('')
   const [second, setSecond] = useState('')
+  const [third, setThird] = useState('')
   const [showing, setShowing] = useState(false)
   const inFlight = useRef(false)
 
@@ -107,6 +109,7 @@ export function Discovery({ situation }: { situation: Situation }) {
       await memory.append([discoveryResponseRecord(asked, 'skipped', undefined, moment())])
       setDraft('')
       setSecond('')
+      setThird('')
     })
   }
 
@@ -119,57 +122,86 @@ export function Discovery({ situation }: { situation: Situation }) {
    * what it produced, which is what lets the agenda say later what the answer
    * changed.
    */
+  /**
+   * What an answer becomes, per shape.
+   *
+   * Separated from the writing below so that **nothing is recorded as answered
+   * that produced nothing**. A `discovery-response` says the prompt is settled
+   * and stops it being asked again; writing one beside an empty result would
+   * lose the question and the answer in the same gesture.
+   */
+  const build = (asked: DiscoveryPrompt, said: string, at: ReturnType<typeof moment>) => {
+    if (asked.shape === 'destination') {
+      return destinationRecords({ aim: said, domain: asked.domain }, situation, at)
+    }
+    if (asked.shape === 'milestone') {
+      const destination = asked.destination
+      if (destination === undefined) return undefined
+      /*
+       * `milestoneFor`, not the destination builder: the destination already
+       * exists, and re-running it would write a second record carrying the same
+       * aim — one aspiration appearing twice on his own page.
+       */
+      return milestoneFor(destination.destination, asked.domain, said, situation, at)
+    }
+    if (asked.shape === 'obligation') {
+      const startsAt = minutesFromClock(second)
+      const day = dayFromInput(third)
+      /*
+       * Both, or neither — F36, and the thing this control got wrong first.
+       *
+       * A first draft asked for a name and a time and then wrote `weekdays: [3]`,
+       * which is the app inventing a Wednesday out of a question that never
+       * mentioned one. *"Do not silently infer a consequential fact from
+       * ambiguous prose"* is F36 in as many words, and a day of the week the
+       * owner never said is exactly that.
+       */
+      if (startsAt === undefined || day === undefined) return undefined
+      return authoringRecords(
+        {
+          kind: 'obligation',
+          name: said,
+          domain: asked.domain,
+          startsAt,
+          endsAt: startsAt + 60,
+          dayId: day,
+        },
+        situation,
+        at,
+      )
+    }
+    const record =
+      asked.destination === undefined
+        ? undefined
+        : memory.view.history.byId(asked.destination.source)
+    if (record === undefined || record.kind !== 'destination') return undefined
+    const revised = reviseDestinationRecord(
+      record,
+      asked.shape === 'baseline' ? { baseline: said } : { evidence: [said] },
+      at,
+    )
+    return { entities: [], records: [revised], created: undefined }
+  }
+
   const answer = (asked: DiscoveryPrompt) => {
     const said = draft.trim()
     if (said === '') return
     run(async () => {
       const at = moment()
-      if (asked.shape === 'destination') {
-        const built = destinationRecords({ aim: said, domain: asked.domain }, situation, at)
-        await memory.create(built)
-        await memory.append([discoveryResponseRecord(asked, 'answered', built.records[0]?.id, at)])
-      } else if (asked.shape === 'milestone') {
-        const built = destinationRecords(
-          {
-            aim: asked.destination?.aim ?? said,
-            domain: asked.domain,
-            milestone: said,
-          },
-          situation,
-          at,
-        )
-        await memory.create(built)
-        await memory.append([discoveryResponseRecord(asked, 'answered', built.records[1]?.id, at)])
-      } else if (asked.shape === 'obligation') {
-        const startsAt = minutesFromClock(second)
-        const built = authoringRecords(
-          {
-            kind: 'obligation',
-            name: said,
-            domain: asked.domain,
-            ...(startsAt === undefined ? {} : { startsAt, endsAt: startsAt + 60 }),
-            ...(dayFromInput(second) === undefined ? {} : { dayId: dayFromInput(second)! }),
-            weekdays: [3],
-          },
-          situation,
-          at,
-        )
-        await memory.create(built)
-        await memory.append([discoveryResponseRecord(asked, 'answered', built.records[0]?.id, at)])
-      } else {
-        const record = asked.destination
-          ? memory.view.history.byId(asked.destination.source)
-          : undefined
-        if (record === undefined || record.kind !== 'destination') return
-        const revised = reviseDestinationRecord(
-          record,
-          asked.shape === 'baseline' ? { baseline: said } : { evidence: [said] },
-          at,
-        )
-        await memory.append([revised, discoveryResponseRecord(asked, 'answered', revised.id, at)])
-      }
+      const built = build(asked, said, at)
+      if (built === undefined || built.records.length === 0) return
+      if (built.entities.length > 0) await memory.create(built)
+      else await memory.append(built.records)
+      /*
+       * The produced record is the **first** one, which is what the agenda goes
+       * back to when it says what the answer changed. For a destination that is
+       * the destination; for a milestone it is the goal; for a revision it is
+       * the superseding record.
+       */
+      await memory.append([discoveryResponseRecord(asked, 'answered', built.records[0]?.id, at)])
       setDraft('')
       setSecond('')
+      setThird('')
     })
   }
 
@@ -200,8 +232,7 @@ export function Discovery({ situation }: { situation: Situation }) {
                 What time does it start?
               </label>
               <p className="note">
-                Exact times if you have them. The app works around the span rather than guessing at
-                it.
+                The app works around the span you give it. It will not guess at one.
               </p>
               <input
                 id="discovery-when"
@@ -212,13 +243,32 @@ export function Discovery({ situation }: { situation: Situation }) {
                 data-testid="discovery-when"
                 onChange={(event) => setSecond(event.target.value)}
               />
+              <label className="domain-correction__prompt" htmlFor="discovery-day">
+                Which day?
+              </label>
+              <p className="note">
+                One day. A weekly shape is the Day shape control below, which asks it properly.
+              </p>
+              <input
+                id="discovery-day"
+                type="date"
+                className="domain-input"
+                value={third}
+                disabled={busy}
+                data-testid="discovery-day"
+                onChange={(event) => setThird(event.target.value)}
+              />
             </>
           ) : null}
           <div className="domain-correction__actions">
             <button
               type="button"
               className="domain-option"
-              disabled={busy || draft.trim() === ''}
+              disabled={
+                busy ||
+                draft.trim() === '' ||
+                (prompt.shape === 'obligation' && (second === '' || third === ''))
+              }
               data-testid="discovery-save"
               onClick={() => answer(prompt)}
             >

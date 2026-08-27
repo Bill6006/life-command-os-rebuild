@@ -160,6 +160,38 @@ describe('routing 84 item 1 — a desired outcome changes the next recommendatio
     expect(after).toContain('walk')
   })
 
+  it('names a next step without the aim appearing twice', async () => {
+    /*
+     * The defect this control exists to prevent, held so it cannot come back.
+     *
+     * A destination with no next step is the ordinary state — everything except
+     * the aim is optional, because D-173's load-bearing clause is *"without
+     * requiring me to already understand myself"*. Naming the next step later
+     * has to add a goal, and only a goal: running the destination builder again
+     * writes a second `destination` record carrying the same aim, the entity id
+     * is derived from the label so nothing errors, and the owner reads his own
+     * aspiration twice on one page with half its milestones under each.
+     */
+    const app = await openJourney('the-first-evening')
+    await app.nameDestination({ aim: 'Working as a cloud engineer', domain: DOMAIN.career })
+    expect(app.situation().direction.destinations.length).toBe(1)
+
+    const destination = app.situation().direction.destinations[0]!
+    expect(destination.next, 'a destination named with no next step has one').toBeUndefined()
+
+    const added = await app.addMilestone(
+      destination.destination,
+      DOMAIN.career,
+      'Get through the networking basics',
+    )
+    expect(added.done, added.note).toBe(true)
+
+    const after = app.situation().direction.destinations
+    expect(after.length, 'the aim is on the page twice').toBe(1)
+    expect(after[0]!.next?.goal.statement).toBe('Get through the networking basics')
+    expect(after[0]!.milestones.length).toBe(1)
+  })
+
   it('describes a destination and never scores one — D-162', () => {
     /*
      * The phase's central guard, and a comparison rather than a phrase list
@@ -322,6 +354,38 @@ describe('routing 84 item 3 — one of each, built from empty', () => {
       })
       expect(made.done, `${kind} could not be introduced — ${made.note}`).toBe(true)
       expect(made.written, `${kind} wrote nothing`).toBeGreaterThan(0)
+    }
+  })
+
+  it('never invents a day of the week the owner did not name — F36', async () => {
+    /*
+     * A first draft of the second agenda asked for a name and a start time and
+     * then wrote `weekdays: [3]`. That is the app inventing a Wednesday out of
+     * a question that never mentioned one, and F36 forbids it in as many
+     * words: *"do not silently infer a consequential fact from ambiguous
+     * prose."*
+     *
+     * Held on the builder rather than on the form, because the builder is what
+     * every surface reaches: a recurring span exists only where weekdays were
+     * given, and a one-off exists only where a day was.
+     */
+    const app = await openJourney('the-first-evening')
+    const today = app.dayId()
+    const made = await app.introduce({
+      kind: 'obligation',
+      name: 'Working hours',
+      domain: DOMAIN.career,
+      startsAt: 9 * 60,
+      endsAt: 17 * 60,
+      dayId: today,
+    })
+    expect(made.done, made.note).toBe(true)
+
+    for (const record of app.snapshot().records) {
+      if (record.kind !== 'commitment-window') continue
+      expect(record.recurrence.kind, 'a span repeats weekly without the owner having said so').toBe(
+        'one-off',
+      )
     }
   })
 

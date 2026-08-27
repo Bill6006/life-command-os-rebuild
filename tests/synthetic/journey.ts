@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, sep } from 'node:path'
 import { expect } from 'vitest'
 import type { LifeDomainId } from '../../src/domain/domains'
-import type { EntityKind } from '../../src/domain/entities'
+import type { EntityKind, EntityRef } from '../../src/domain/entities'
 import { newRecordId, type RecordId } from '../../src/domain/ids'
 import {
   RECORD_KINDS,
@@ -65,6 +65,7 @@ import {
 import {
   authoringRecords,
   destinationRecords,
+  milestoneFor,
   proposeAuthoring,
   relationshipEventRecord,
   reviseDestinationRecord,
@@ -363,6 +364,21 @@ export const OWNER_ROUTES: readonly OwnerRoute[] = [
     writes: ['destination', 'goal', 'explicit-fact'],
   },
   {
+    id: 'milestone',
+    surface: 'domain-page',
+    gesture: 'Fill that in, on a destination with nothing next',
+    builder: 'authoring.milestoneFor',
+    /*
+     * Its own row and its own builder, and the reason is a defect it prevents.
+     * Naming the next step through `destinationRecords` writes a **second**
+     * `destination` record carrying the same aim, and `resolveDestinations`
+     * walks records — so one aspiration appears twice on the owner's own page,
+     * with half its milestones under each.
+     */
+    needs: { records: ['destination'] },
+    writes: ['goal', 'explicit-fact'],
+  },
+  {
     id: 'destination-revise',
     surface: 'domain-page',
     gesture: 'Fill that in',
@@ -466,7 +482,7 @@ export const OWNER_ROUTES: readonly OwnerRoute[] = [
     surface: 'life',
     gesture: 'answering the second agenda',
     builder:
-      'authoring.destinationRecords, authoring.authoringRecords, authoring.reviseDestinationRecord',
+      'authoring.destinationRecords, authoring.milestoneFor, authoring.authoringRecords, authoring.reviseDestinationRecord',
     /*
      * The same builders as the domain page's controls and a different control,
      * which is what the per-screen rule is for — QA-83-003's second finding
@@ -657,6 +673,12 @@ export interface JourneyApp {
   nameDestination(draft: DestinationDraft): Promise<GestureResult>
   /** Introduce a goal, routine, person, place, skill or obligation. */
   introduce(draft: AuthoringDraft): Promise<GestureResult>
+  /** Name the next step on a destination that already exists. */
+  addMilestone(
+    destination: EntityRef,
+    domain: LifeDomainId,
+    statement: string,
+  ): Promise<GestureResult>
   /** What the second agenda would ask next, if anything. */
   agenda(): DiscoveryAgenda
   /** Answer the second agenda's question with a destination, as Life does. */
@@ -897,6 +919,16 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
       return write(built.records, `introduced a ${draft.kind}: "${draft.name}"`)
     },
 
+    async addMilestone(destination, domain, statement) {
+      const built = milestoneFor(destination, domain, statement, situation(), authoringMoment())
+      if (built.records.length === 0) {
+        return { done: false, note: 'the milestone could not be built', written: 0 }
+      }
+      await store.putEntities(built.entities)
+      held = await store.snapshot()
+      return write(built.records, `named "${statement}" as the next step`)
+    },
+
     agenda: () => discoveryAgenda(situation(), { now: at, zone, weekStartsOn: 1 }),
 
     async answerDiscovery(said) {
@@ -1030,6 +1062,7 @@ export const ROUTE_BUILDERS = {
   answerRecord,
   authoringRecords,
   destinationRecords,
+  milestoneFor,
   reviseDestinationRecord,
   relationshipEventRecord,
   standingBlockerRecords,

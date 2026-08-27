@@ -554,6 +554,39 @@ export function destinationRecords(
 }
 
 /**
+ * A milestone for a destination that already exists.
+ *
+ * Its own entry point, and the reason is a defect it prevents rather than
+ * tidiness. Naming the next step on an existing aspiration through
+ * {@link destinationRecords} would write a **second `destination` record**
+ * carrying the same aim: the entity id is derived from the label so the entity
+ * is written over itself harmlessly, but `resolveDestinations` walks records,
+ * so the owner would see one aim twice on his own page, each with half the
+ * milestones under it.
+ *
+ * The destination is not touched. What is next is a goal, and adding one is
+ * adding a goal.
+ */
+export function milestoneFor(
+  destination: EntityRef,
+  domain: LifeDomainId,
+  statement: string,
+  situation: Situation,
+  moment: AuthoringMoment,
+  by?: LocalDayId,
+): AuthoringResult {
+  const named = statement.trim()
+  if (named === '') return { entities: [], records: [], created: undefined }
+  return milestoneRecords(
+    named,
+    { aim: '', domain, ...(by === undefined ? {} : { milestoneBy: by }) },
+    destination,
+    situation,
+    moment,
+  )
+}
+
+/**
  * What a milestone is made of, in the area it belongs to — F01, F04, gate 1.
  *
  * ## Why the entity kind depends on the domain

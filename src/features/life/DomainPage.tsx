@@ -28,6 +28,7 @@ import {
 import {
   authoringRecords,
   destinationRecords,
+  milestoneFor,
   relationshipEventRecord,
   reviseDestinationRecord,
   type AuthoringDraft,
@@ -328,21 +329,25 @@ export function DomainPage({ page }: { page: LifePage }) {
     append(() => [reviseDestinationRecord(previous, changes, authoringMoment())])
   }
 
-  /** The next step, as the milestone it is — a goal that names its destination. */
+  /**
+   * The next step, as the milestone it is — a goal that names its destination.
+   *
+   * `milestoneFor` rather than `destinationRecords`: the destination already
+   * exists, and re-running the destination builder would write a second record
+   * carrying the same aim, which reads on this page as the owner aiming at one
+   * thing twice.
+   */
   const addMilestone = (entry: DomainDestination, statement: string) => {
-    const trimmed = statement.trim()
-    if (trimmed === '') return
+    if (statement.trim() === '') return
     if (inFlight.current) return
     inFlight.current = true
     setWorking(true)
     void memory
       .create(
-        destinationRecords(
-          {
-            aim: entry.destination.aim,
-            domain: entry.destination.domain,
-            milestone: trimmed,
-          },
+        milestoneFor(
+          entry.destination.destination,
+          entry.destination.domain,
+          statement,
           situation,
           authoringMoment(),
         ),

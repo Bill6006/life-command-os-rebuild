@@ -100,7 +100,7 @@ re-scope), and no canonical phase is renumbered.
 | Routing | Product / canonical name                                 | State, or what it waits on        |
 | ------- | -------------------------------------------------------- | --------------------------------- |
 | **83**  | The instrument, and the things that are untrue           | **GREEN — closed, round 2**       |
-| **84**  | What the owner is trying to become                       | **nothing — ready to dispatch**   |
+| **84**  | What the owner is trying to become                       | **YELLOW — with independent QA**  |
 | **90**  | **Canonical Phase 9** — visual coherence, motion, mobile | 84                                |
 | **91**  | Later intelligence — Reach, then Validity                | 90, and Q6's adjudication (D-172) |
 | **92**  | **Canonical Phase 10** — performance, PWA, reliability   | 91                                |
@@ -117,6 +117,245 @@ routing integer.
 the orchestrator, no `PHASE_83_QA_HANDOFF.md` exists, and the owner ran it
 directly. Routing 83 belongs to the build phase, and the held handoff's scope is
 superseded rather than reused.
+
+---
+
+# Routing Phase 84 — What the owner is trying to become
+
+**Status: YELLOW — READY FOR INDEPENDENT QA.**
+
+A builder conversation may not approve its own phase (D-077). This record says
+what was built and where to look at it; it does not say the phase passed.
+
+Canonical product name: _the destination and discovery structure — canonical
+Phase 9's product contract_. **Routing integer 84** (plan section 43A, D-159) —
+the `**Phase:**` field of every handoff in this phase and its rounds carries
+`84`, never a decimal and never a canonical phase number.
+
+The phase the product adjudication created (D-158), blocked on four owner
+decisions that were all answered before it started (D-166 … D-169). It opened
+none of its own.
+
+## What it is, in one paragraph
+
+The review's central finding, verified against the tree and true until this
+phase: there was no `destination`, `milestone` or `baseline` anywhere in `src/`.
+Every object the product held was scoped to today or to a bounded three-step
+course, so it could represent **what to do next** and could not represent **what
+any of it was for** — which is why it could not represent progress, and could
+not represent a strategy that fails. Routing 84 builds that object, the
+questioning surface that finds out about it, the authoring route that makes its
+pieces reachable, the evidence semantics that stop attendance reading as
+capability, the states an interrupted evening actually has, and the grammar for
+correcting what was recorded.
+
+**The instrument routing 83 built is how it is measured.** That phase's
+deliverable was an enumerated list of the points where an ordinary owner journey
+**cannot proceed** — five of them, produced by walking the app from a
+near-empty store. This phase's claim is that the same walk, on the same store,
+through the same controls, now gets past all eight steps.
+
+## Checkpoint
+
+| Fact                    | Value                                                       |
+| ----------------------- | ----------------------------------------------------------- |
+| Product checkpoint      | `994284a` — the commit the aggregate gate was run on        |
+| Deployed at the handoff | see below                                                   |
+| CI at the checkpoint    | see below                                                   |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Owner-visible behaviour | **changed** — Now, Life, and every domain page              |
+| Owner phone check       | owed before release; not a blocker QA can clear             |
+| Independent QA          | **not run** — this is the handoff that asks for it          |
+
+## Exact verification results
+
+| Gate                                      | Result                                                            |
+| ----------------------------------------- | ----------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)         |
+| Unit / contract / synthetic / adversarial | **1,804 passed** in 83 files (1,765 in 82 before)                 |
+| Browser, three widths, one worker         | **BROWSER_COUNT passed** (591 before)                             |
+| Android-style gate, deployed              | **ANDROID**                                                       |
+| Privacy scan                              | **clean** — 283 tracked files                                     |
+| Block sweep                               | **PASS** — unchanged                                              |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                           |
+
+## The six packages
+
+### Package 1 — the destination object (F01, F35, F26, D-162)
+
+A `destination` record and a `destination` entity kind. Four parts, and every
+one of them is either the owner's own words or a state from a closed list: what
+he is aiming at, where he is now, what would count as getting somewhere, and
+what he is unsure about. **There is no number on the record and nothing on it
+that can be divided by anything else** — which is how D-162 is enforced rather
+than remembered.
+
+**What is next is a `goal` carrying `milestoneOf`, not a second record kind** —
+**D-181**. A milestone is a named objective with a date and named work in it,
+which is what a goal already is, and D-178's rule is that one thing has one name
+in the layer every surface reads. What the field buys is the **word on screen**
+and what may be concluded from finishing it.
+
+**How a destination reaches a decision, and why that is the only wiring that was
+allowed.** Through its milestone, which is an ordinary goal, ranked by
+`goal-fit` exactly as every other goal is. No dimension was added and no weight
+moved: Phase 82 re-cut the instrument and re-baselined the tournament, and
+D-137/D-138 protect both. The milestone's entity is the kind that area's work
+actually is — a `learning-topic` in Career, a `financial-goal` in Money, a
+`routine` in Health — which is what closes routing 83's own step-3 stop: the
+career generator returns nothing without a topic the owner is on, and nothing an
+owner could tap made one.
+
+**Proved on Career, Health and Money.** Fatherhood is outside the proving scope
+and nothing here touches the growth model.
+
+### Package 2 — progress evidence semantics (F05, F11)
+
+Six rungs in `src/domain/progress.ts` — attempt, completion, quality, retained
+capability, transfer, milestone — each with its own sentence **generated from
+its own count**, and each with a statement of what it is _not_ evidence of. Two
+new `OutcomeAspect`s, `retained` and `transfer`, asked about a **course** days
+after it finished rather than about a session at the end of it.
+
+**A completed session, a completed course and a milestone are three different
+things**, counted separately and worded separately, and a milestone is reached
+only when the owner says so — never from a run of completions.
+
+`enough-done-today` joins the no-action taxonomy, and **D-185** is the rule that
+came with it: a new no-action reason re-labels a silence and never creates one.
+It is computed after the arbiter has finished, from the reason the arbiter
+actually reached.
+
+### Package 3 — owner authoring (F04, F19, F36)
+
+One create-and-confirm control for a goal, a routine, a person, a place, a skill
+and an obligation. The owner says what kind of thing it is and what he calls it;
+the app says back what it understood, what it will create and **what it is not
+going to assume**; he confirms.
+
+**It is the first thing in the product that brings a semantic entity into
+being.** Routing 83's instrument found that no control under `src/features`
+called `createEntity` and that `constraint`, `goal`, `commitment` and
+`relationship-event` had no owner route at all. All four are closed, by building
+controls for them rather than by moving them onto the not-owner-authored list,
+and `recordKindsWithNoOwnerRoute()` now returns **nothing**.
+
+**D-182**: an authoring gesture writes the entity before the record, because the
+two failure modes are not symmetric.
+
+**Not a routines library.** AUD-0045 stays in the later Reach package: the route
+exists, and nothing generates a recommendation from an owner routine. The
+instrument asserts both halves.
+
+### Package 4 — the second information agenda (F02, D-163)
+
+`src/intelligence/discovery.ts`, on **Life** and never on Now. Its own weekly
+budget of two, separate from D-036's three a day, which is untouched. Prompts
+are generated from what the app does not know, so the agenda empties itself as
+it learns; a skip writes a record and is respected; an answer lands as a
+`destination`, a milestone or a span of the week rather than as a survey row.
+
+**D-184**: one question per object at a time, because a destination has four
+parts and a prompt per gap would make answering the first question replace it
+with three.
+
+**It shows what an answer changed**, worked out by replaying the decision
+without the record the answer produced — the same technique the guide uses to
+decide whether its last question was worth asking, and the rule an agenda cannot
+fake.
+
+### Package 5 — inability, interruption, the states (F07, F10, F13, D-164)
+
+The `blocker` field that has existed and done nothing since Phase 3 now has a
+control and a reader. `blockerQuestionFor` never returns "nothing": it either
+asks or says **why it is not asking**, from a closed list of reasons — which is
+what makes the silent path something a test can hold. Two of the seven causes
+are about the world rather than about one evening and become durable
+`constraint` records, listed and correctable on the domain page.
+
+`part-done` joins the lifecycle. It is a settled state that is not terminal, and
+it is the evening real life actually has.
+
+An interrupted or half-finished move is offered back on Now, through the state
+machine's own transitions — `TRANSITIONS` has always allowed the return, and no
+surface offered it.
+
+### Package 6 — correction grammar, private consent (F32, F30, D-165, D-167)
+
+Four gestures, each stating **what it will change, what it preserves and how to
+get back** before it acts, from a table that cannot gain a fifth without all
+three sentences. Two of them are new controls: withdrawing an entry, and moving
+one to the day it happened. **Backfilling an entry that was never recorded is
+deliberately absent** — D-165 leaves it in the later Reach package with
+AUD-0050's retraction half.
+
+One owner permission, on the Private page, **off by default**, and enforced
+structurally: while it is off `createFactReader` cannot read a private concept
+at all, and the reading resolves to `unknown` with the new reason `withheld`.
+When it is on, the rendered reading stays the discreet placeholder — D-167's
+structural discretion guard, which is a precondition rather than a substitute
+for consent.
+
+## The gate, item by item
+
+The house form: **where it is proved**, not whether it passed.
+
+| #   | Acceptance item                                                                         | Where it is proved                                                                                                                                                             |
+| --- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | A desired outcome in each proving domain changes the next recommendation                | `destination-and-discovery.test.ts` — Career, Health and Money separately, each from the near-empty store; `phase84.spec.ts` reads the change on Now                           |
+| 2   | A session, a course and a milestone are three things; no capability from attendance     | `destination-and-discovery.test.ts` — the rung sentences at four counts, the ladder's order, and five sessions leaving a milestone unreached; `phase84.spec.ts` reads the page |
+| 3   | Every fixture object reachable through ordinary use                                     | `destination-and-discovery.test.ts` — one of each built from empty; `ordinary-use-journey.test.ts` — `recordKindsWithNoOwnerRoute()` is empty                                  |
+| 4   | The agenda asks what would not change today, and volume falls                           | `destination-and-discovery.test.ts` — the commitment prompt, the monotonicity run, and the library sweep; `phase84.spec.ts` proves it is on Life and not on Now                |
+| 5   | "Can't right now" produces a durable correctable statement, and asks nothing when known | `destination-and-discovery.test.ts` — both paths, and the silent one with its reason named; `phase84.spec.ts` presses it                                                       |
+| 6   | Each correction states its consequence; a private reading is stored, not reasoned from  | `destination-and-discovery.test.ts` — the gesture table, withdraw, re-date, and the permission off, on and off again                                                           |
+| 7   | The standing guards still bite                                                          | `destination-and-discovery.test.ts` — swept over every destination reading in the library and every progress sentence at every count, with a reintroduction that fails         |
+
+Plus the standing gates: the aggregate `npm run verify` from a clean checkout,
+the browser suite at three widths, the deployed Android-style gate, the privacy
+scan, the block sweep, and the copy guards.
+
+## What this phase deliberately did not do
+
+- **No strategy evaluation** (F03). A thread gains nothing; the verdict belongs
+  to later Validity, and the precondition it was waiting on — a destination —
+  now exists.
+- **No pattern-discovery engine** (F15/F17/F18). No combinations, no lags, no
+  hypothesis machinery.
+- **No domain progression models** beyond the three proving domains.
+- **No owner routines library** (AUD-0045). The route is built; Reach walks it,
+  and the instrument asserts that nothing walks it yet.
+- **No scoring change of any kind.** No dimension, no weight, no bar.
+- **No new visual language.** Everything routing 84 put on screen is plain on
+  purpose; canonical Phase 9 typesets it, and plan section 54 now lists what it
+  inherits.
+- **No live model.** D-172 keeps D-024/D-025 standing.
+- **Nothing before routing 83 reopened**, and
+  `qa/WHOLE_APP_OWNER_USE_REVIEW.md` is unaltered.
+- **No orchestrator change.**
+
+## Open, and named rather than left to be found
+
+- **Backfilling a historical event** has no owner route, by decision (D-165).
+  `ordinary-use-journey.test.ts` asserts its absence so it cannot arrive without
+  the decision being amended.
+- **An owner routine is nameable and is never suggested.** AUD-0045, later
+  Reach. Asserted from both ends, because a route with nothing walking it reads
+  as finished from the outside.
+- **A destination has no verdict.** Whether a strategy is working is F03's and
+  Validity's, and the instrument sweeps `destinations.ts` for one.
+- **`REBUILD_PHASE` in `buildInfo.ts` still reads phase 8**, correctly: its
+  number names the last **canonical** phase, and 81 to 84 are initiatives
+  inserted before canonical Phase 9. What is stale is only its summary. D-034
+  keeps that sentence in one constant and a guard pins it; changing it is not
+  this phase's.
+- **The twelfth domain** — Love / Dating / Romantic Life (D-168) — is approved
+  and not built. Routing 84's package 1 is proved on three domains, and adding
+  an eleventh page is navigation, which is canonical Phase 9's gate.
+- **The evidence panel's composition** (F33 residual, E19) is still routing
+  90's, unchanged by this phase.
+- **The owner's phone check** is owed before release.
+- **Q1, Q4 and Q6** remain the owner's, exactly as D-172 leaves them.
 
 ---
 
