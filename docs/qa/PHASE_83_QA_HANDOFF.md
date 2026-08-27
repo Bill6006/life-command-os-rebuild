@@ -1212,4 +1212,28 @@ frozen.
 Nothing here supersedes the closeout above. The owner's phone check is still
 owed before release.
 
+**What actually happened, added after the fact rather than left standing.** The
+paragraph above named the wrong file. The collision arrived through
+`docs/NEXT_PROMPT.md`, not through routing 84's QA report, and it is real and
+committed: on `origin/main` both `docs/NEXT_PROMPT.md` and this report carry
+exactly one marker each, while `docs/qa/PHASE_84_QA_HANDOFF.md` carries none.
+A reader who trusted the prediction as written would have checked 84's report,
+found no marker, and concluded there was no collision — the opposite of the
+truth. That is why this correction is appended instead of the sentence being
+quietly rewritten.
+
+**Neither agent did anything wrong, and that is the point.** Routing 84 was
+dispatched on `docs/NEXT_PROMPT.md` and its contract required the marker to be
+the last meaningful line of that file. This conversation was dispatched on this
+report, and its contract required the marker here, explicitly forbidding it from
+being placed in a different handoff file. Both obeyed exactly. The invariant that
+the marker never sits in two files is therefore **not enforceable by the agents
+it constrains** whenever two dispatches are live at once: each is required to
+write a marker and forbidden to clear the other's. It can only be enforced by
+whatever issues the dispatches, by not having two open at the same time.
+
+Neither file was cleared here for that reason. The ambiguity is left visible and
+recorded rather than resolved unilaterally, because resolving it means deleting
+a marker another agent's contract depends on.
+
 <!-- LCO_COMPLETE -->
