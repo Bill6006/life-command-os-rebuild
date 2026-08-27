@@ -200,6 +200,8 @@ describe('AUD-0046 — the trajectory measurement itself', () => {
       statement: 'Pass the CCNA before the winter',
       domain: DOMAIN.career,
       source: 'R0000000000000000000000000' as GoalRecord['id'],
+      status: 'active',
+      milestoneOf: undefined,
       targetWindow: dueWindow(0 as Instant, 0 as Instant),
       setDay: day(setOn),
       horizon: {

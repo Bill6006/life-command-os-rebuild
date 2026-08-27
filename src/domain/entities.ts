@@ -23,6 +23,19 @@ export const ENTITY_KINDS = [
   'person',
   'relationship',
   'goal',
+  /**
+   * What the owner is trying to become — F01.
+   *
+   * Its own kind rather than a `goal`, because the two are different lengths of
+   * thing and collapsing them is the finding. A goal is a statement with a date
+   * on it; a destination is what the goals are for, it has no date, and it is
+   * the only object in the model that can still be true in three years.
+   *
+   * A goal that names one through `milestoneOf` is a milestone of it, and that
+   * is the whole of the relationship: `supports-goal` from the milestone's own
+   * entity says the same thing on the graph, for the inspector.
+   */
+  'destination',
   'project',
   'skill',
   'learning-topic',

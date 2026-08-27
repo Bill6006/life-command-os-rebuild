@@ -321,3 +321,71 @@
   color: var(--text-secondary);
   font-size: var(--text-sm);
 }
+
+/*
+ * What the owner is aiming at — F01, F35, routing 84 package 1.
+ *
+ * A definition list, because that is what it is: four named parts of one
+ * object, each of which is a sentence or an honest blank. There is deliberately
+ * no bar, no ring and no accent that could read as an amount — D-162 forbids a
+ * completion figure about the owner and the cheapest defence against one is to
+ * have no shape that could carry it.
+ */
+.domain-destination {
+  margin: var(--space-2) 0 0;
+  display: grid;
+  grid-template-columns: minmax(0, 8rem) minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.domain-destination dt {
+  color: var(--text-secondary);
+}
+
+.domain-destination dd {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.domain-destination__list {
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+/*
+ * One rung of the progress ladder — F05, package 2.
+ *
+ * Three lines: what it is, what the record actually shows, and what that is
+ * **not** evidence of. The third line is the same weight as a note rather than
+ * fine print, because it is the half the review is about.
+ */
+.domain-progress {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.domain-progress:first-child {
+  border-top: none;
+}
+
+.domain-progress__label {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.domain-progress__says {
+  margin: var(--space-1) 0;
+  color: var(--text-primary);
+  font-size: var(--text-base);
+}
+
+/* A milestone says so — F01, gate item 2. */
+.domain-goal__kind {
+  margin: 0 0 var(--space-1);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

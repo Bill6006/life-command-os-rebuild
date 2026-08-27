@@ -20,7 +20,12 @@ import {
   type FactValue,
 } from '../domain/records'
 import { occursOn } from '../domain/schedule'
-import type { PrivacyClass } from '../domain/privacy'
+import {
+  discreetPlaceholder,
+  mayReasonFrom,
+  type PermissionState,
+  type PrivacyClass,
+} from '../domain/privacy'
 import type { RecommendationSemantics } from '../domain/recommendation'
 import {
   addLocalDays,
@@ -401,6 +406,15 @@ export interface Situation {
   readonly limiter: Limiter | undefined
   readonly preferences: readonly OwnerPreference[]
   readonly constraints: readonly ActiveConstraint[]
+  /**
+   * What the owner has allowed the app to reason from — D-167.
+   *
+   * On the situation rather than reached for, because it decides what the
+   * situation could read: a surface that wants to show the control needs the
+   * same answer the fact reader used, and two reads of the same history is two
+   * answers waiting to disagree.
+   */
+  readonly permissions: PermissionState
   readonly recentMoves: readonly PriorMove[]
   /**
    * Moves already put in front of the owner today, handed down by the surface.
@@ -488,19 +502,37 @@ function createFactReader(
   view: MemoryView,
   entities: EntityIndex,
   concepts: ConceptRegistry,
+  permissions: PermissionState,
 ): FactReader {
   const seen = new Map<ConceptId, { entry: ConsideredFact; usedFor: string[] }>()
 
   return {
     read(concept, usedFor) {
-      const knowledge = view.facts.knowledgeFor(concept)
+      const definition = concepts.definitionFor(concept)
+      /*
+       * The structural half of D-167, and it is structural on purpose.
+       *
+       * The owner's permission is **off** until he says otherwise, and while it
+       * is off the decision layer cannot read a private reading at all. Not
+       * "reads it and declines to use it" — there is no value to be careless
+       * with, and no path from here to a ranking, an explanation or an evidence
+       * panel, because the thing that would travel down them does not exist.
+       *
+       * `withheld` rather than `never-observed`: the record holds the answer and
+       * the Private page shows it. What is absent is permission, not evidence,
+       * and the two must not read as the same thing.
+       */
+      const readable = mayReasonFrom(definition.privacy, permissions)
+      const knowledge = readable
+        ? view.facts.knowledgeFor(concept)
+        : unknown('withheld', 'the owner has not allowed this to influence recommendations')
+
       const existing = seen.get(concept)
       if (existing !== undefined) {
         if (!existing.usedFor.includes(usedFor)) existing.usedFor.push(usedFor)
         return knowledge
       }
 
-      const definition = concepts.definitionFor(concept)
       const usedForList = [usedFor]
       seen.set(concept, {
         usedFor: usedForList,
@@ -510,10 +542,22 @@ function createFactReader(
           domain: definition.domain,
           privacy: definition.privacy,
           state: knowledge.state,
+          /*
+           * And the value never becomes a string, even when it may be read.
+           *
+           * D-167 requires that it stay **structurally** impossible for an
+           * explanation or an evidence panel to render an explicit private
+           * reading, and every one of them renders from this field. So a
+           * private concept's reading is the placeholder here, at the one place
+           * the rendering happens, rather than at each of the surfaces that
+           * would have to remember.
+           */
           reading:
             knowledge.state === 'unknown'
               ? `not known — ${knowledge.reason}`
-              : describeFactValue(knowledge.value, (ref) => entities.labelFor(ref)),
+              : definition.privacy === 'private'
+                ? discreetPlaceholder(definition.privacy)
+                : describeFactValue(knowledge.value, (ref) => entities.labelFor(ref)),
           usedFor: usedForList,
           sources: basisOf(knowledge),
         },
@@ -1110,6 +1154,30 @@ function collectPreferences(view: MemoryView): readonly OwnerPreference[] {
   return preferences
 }
 
+/**
+ * Which standing permissions are granted right now — D-167.
+ *
+ * The latest `permission` record for each id wins, and no record at all means
+ * **not granted**. That is the safe default and it needs nothing written down:
+ * a permission nobody gave is one that was not given.
+ *
+ * Turning one off writes `granted: false` rather than deleting anything, so the
+ * record still says what was true while it was on — which is the fourth of
+ * D-167's four simultaneous guarantees.
+ */
+export function resolvePermissions(view: MemoryView, now: Instant): PermissionState {
+  const latest = new Map<string, { readonly at: Instant; readonly granted: boolean }>()
+  for (const record of view.history.effective) {
+    if (record.kind !== 'permission') continue
+    if (record.occurredAt > now) continue
+    const held = latest.get(record.permission)
+    if (held === undefined || record.occurredAt >= held.at) {
+      latest.set(record.permission, { at: record.occurredAt, granted: record.granted })
+    }
+  }
+  return { granted: (permission) => latest.get(permission)?.granted === true }
+}
+
 function collectConstraints(view: MemoryView, now: Instant): readonly ActiveConstraint[] {
   const constraints: ActiveConstraint[] = []
   for (const record of view.history.effective) {
@@ -1161,7 +1229,16 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
   // The owner's entities plus the engine's own small vocabulary of routines,
   // so a suggested wind-down has a subject without inventing one about them.
   const entities = decisionEntities(view.entities.all())
-  const reader = createFactReader(view, entities, concepts)
+  /*
+   * What the owner has allowed the app to reason from — D-167.
+   *
+   * Resolved before the first fact is read, because it decides whether some of
+   * them may be read at all. It is off unless the record says otherwise, which
+   * is why an empty history is the safe state rather than a state anything has
+   * to remember to handle.
+   */
+  const permissions = resolvePermissions(view, moment.now)
+  const reader = createFactReader(view, entities, concepts, permissions)
 
   // Worked out before anything is read, because what a fact is *for* is worded
   // from the hour — AUD-0001. The seam the audit found was exactly this: the
@@ -1276,6 +1353,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     limiter: findLimiter(capacity, inHand, coverage, block),
     preferences: collectPreferences(view),
     constraints: collectConstraints(view, moment.now),
+    permissions,
     shown: (moment.shown ?? []).filter(
       (entry) => entry.dayId === local.dayId && entry.at < moment.now,
     ),

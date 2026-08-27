@@ -14,10 +14,19 @@ import {
   compareRecordOrder,
   describeFactValue,
   type CanonicalRecord,
+  type DestinationRecord,
   type FactValue,
   type GoalRecord,
 } from '../../domain/records'
-import type { Instant } from '../../domain/time'
+import { localDayIdAt, type Instant, type LocalDayId } from '../../domain/time'
+import {
+  describeDestination,
+  destinationsIn,
+  type ActiveDestination,
+  type DestinationReading,
+} from '../../intelligence/destinations'
+import { isCorrectableEvent } from '../../intelligence/corrections'
+import { readProgress, type ProgressReading } from '../../intelligence/progress'
 import type { ConceptId } from '../../domain/windows'
 import {
   describeGoalTrajectory,
@@ -458,14 +467,68 @@ export interface DomainSkill {
   readonly daysSince: number | undefined
 }
 
+/**
+ * A standing constraint the owner supplied when something did not fit — F07.
+ *
+ * Two of the seven blocker causes are facts about the world rather than about
+ * one evening, and those become `constraint` records. They are listed here for
+ * the same reason a veto is: **a belief the owner cannot find is a belief he
+ * cannot correct**, and this one was produced by a single tap on a card that is
+ * long gone by the time it starts mattering.
+ */
+export interface StandingBlocker {
+  readonly record: RecordId
+  readonly description: string
+  readonly at: Instant
+}
+
+/**
+ * A destination, ready to render — F01, F35, D-162.
+ *
+ * The five parts the review asked for, plus the record so a revision can
+ * supersede exactly what it replaces. **No number reaches this interface**, and
+ * that is the shape of D-162's guard rather than a note about it: there is
+ * nothing here that could be divided by anything else.
+ */
+export interface DomainDestination {
+  readonly destination: ActiveDestination
+  readonly reading: DestinationReading
+  readonly record: DestinationRecord | undefined
+  readonly origin: RecordOrigin | undefined
+}
+
+/**
+ * An entry on this page the owner can say was wrong — F32.
+ *
+ * Only what either happened or did not: what he did, what came of it, what he
+ * said about somebody. A reading is corrected from its own row above, which is
+ * a different gesture with a different consequence, and a conclusion is
+ * corrected where it is stated.
+ */
+export interface CorrectableEvent {
+  readonly id: RecordId
+  readonly at: Instant
+  readonly dayId: LocalDayId
+  readonly text: string
+  readonly kind: CanonicalRecord['kind']
+}
+
 export interface DomainPageData {
   readonly page: LifePage
   readonly coverage: readonly DomainCoverage[]
+  /** What the owner is trying to become here — F01, F35, package 1. */
+  readonly destinations: readonly DomainDestination[]
   readonly readings: readonly ConceptReading[]
   readonly goals: readonly DomainGoal[]
+  /** What the record actually shows, sorted onto the six rungs — F05. */
+  readonly progress: ProgressReading
   readonly skills: readonly DomainSkill[]
   readonly vetoes: readonly StandingVeto[]
+  /** What the owner said was in the way, when it was about the world — F07. */
+  readonly blockers: readonly StandingBlocker[]
   readonly recentChanges: readonly RecentChange[]
+  /** Entries here that can be withdrawn or re-dated — F32, package 6. */
+  readonly correctable: readonly CorrectableEvent[]
 }
 
 function skillsFor(situation: Situation, domains: readonly LifeDomainId[]): readonly DomainSkill[] {
@@ -503,6 +566,84 @@ function vetoesFor(
   return out.sort((a, b) => b.at - a.at)
 }
 
+function destinationsFor(
+  situation: Situation,
+  domains: readonly LifeDomainId[],
+): readonly DomainDestination[] {
+  return destinationsIn(situation.direction.destinations, domains).map((destination) => {
+    const found = situation.view.history.byId(destination.source)
+    return {
+      destination,
+      reading: describeDestination(destination),
+      record: found?.kind === 'destination' ? found : undefined,
+      origin: found === undefined ? undefined : originOf(found),
+    }
+  })
+}
+
+function blockersFor(
+  situation: Situation,
+  domains: readonly LifeDomainId[],
+): readonly StandingBlocker[] {
+  const out: StandingBlocker[] = []
+  for (const record of situation.view.history.effective) {
+    if (record.kind !== 'constraint') continue
+    if (record.occurredAt > situation.at) continue
+    if (record.until !== undefined && record.until <= situation.at) continue
+    if (!record.domains.some((domain) => domains.includes(domain))) continue
+    out.push({ record: record.id, description: record.description, at: record.occurredAt })
+  }
+  return out.sort((a, b) => b.at - a.at)
+}
+
+/**
+ * How many entries the correction list offers at once.
+ *
+ * A handful, in the same spirit as "Recently": a correction surface listing a
+ * lifetime is the database viewer section 59 and F04 both refuse. Nothing is
+ * unreachable because of it — the list is the most recent entries, which is
+ * where a mis-tap is.
+ */
+const CORRECTABLE_LIMIT = 6
+
+function correctableFor(
+  situation: Situation,
+  domains: readonly LifeDomainId[],
+): readonly CorrectableEvent[] {
+  const policy: DisplayPolicy = {
+    surface: 'inspection',
+    revealPrivate: domains.includes(DOMAIN.privateHealth),
+  }
+  const context = {
+    entities: situation.entities,
+    history: situation.view.history,
+    concepts: situation.concepts,
+    policy,
+  }
+  const matching = situation.view.history.effective.filter(
+    (record) =>
+      record.occurredAt <= situation.at &&
+      isCorrectableEvent(record) &&
+      record.domains.some((domain) => domains.includes(domain)),
+  )
+  const sorted = [...matching].sort((a, b) => -compareRecordOrder(a, b))
+
+  const out: CorrectableEvent[] = []
+  for (const record of sorted) {
+    const described = describeRecord(record, context)
+    if (described === undefined) continue
+    out.push({
+      id: record.id,
+      at: record.occurredAt,
+      dayId: localDayIdAt(record.occurredAt, situation.zone),
+      text: described.text,
+      kind: record.kind,
+    })
+    if (out.length >= CORRECTABLE_LIMIT) break
+  }
+  return out
+}
+
 export function assembleDomainPageData(situation: Situation, page: LifePage): DomainPageData {
   const coverage = page.domains
     .map((domain) => situation.coverage.get(domain))
@@ -511,10 +652,14 @@ export function assembleDomainPageData(situation: Situation, page: LifePage): Do
   return {
     page,
     coverage,
+    destinations: destinationsFor(situation, page.domains),
     readings: conceptReadings(situation, page.domains),
     goals: goalsFor(situation, page.domains),
+    progress: readProgress(situation, page.domains),
     skills: skillsFor(situation, page.domains),
     vetoes: vetoesFor(situation, page.domains),
+    blockers: blockersFor(situation, page.domains),
     recentChanges: recentChanges(situation, page.domains),
+    correctable: correctableFor(situation, page.domains),
   }
 }

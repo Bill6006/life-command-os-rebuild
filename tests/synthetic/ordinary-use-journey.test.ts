@@ -1,9 +1,9 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { CONCEPT, coreConcepts } from '../../src/domain/concepts'
+import { CONCEPT } from '../../src/domain/concepts'
+import { DOMAIN } from '../../src/domain/domains'
 import type { RecordKind } from '../../src/domain/records'
-import { QUESTIONS } from '../../src/intelligence/questions'
 import { threadOfferFor } from '../../src/intelligence/threads'
 import {
   everyBuilderReachedFromAFeature,
@@ -18,30 +18,32 @@ import {
 } from './journey'
 
 /**
- * The ordinary-use journey, from a near-empty store — routing 83, package 83.0.
+ * The ordinary-use journey, from a near-empty store — D-161, and routing 84's
+ * acceptance.
  *
- * D-161: _a capability is accepted when an ordinary owner, starting from a
- * near-empty store, can reach it through normal use — and the points where an
- * ordinary journey **cannot** proceed are enumerated with reasons rather than
- * left to be discovered._
+ * ## What changed, and why this file is the record of it
  *
- * So this file has two outputs and they are equally the deliverable.
+ * Routing 83 built this instrument and ran it. It got past three of its eight
+ * steps and the five it stopped at became routing 84's brief — *"that list is
+ * the deliverable"*. This is the same walk, on the same near-empty store,
+ * through the same rule: **every gesture is the surface's own call, with the
+ * surface's own arguments**. Nothing here reaches for a record builder no
+ * control emits.
+ *
+ * The eight steps now run. That is the phase's claim and this file is where it
+ * is either true or false; the two outputs are the same two they always were.
  *
  * 1. **The journey runs.** Eight steps, from one answer on a first evening to a
- *    recommendation that changed because of something the owner said. Every
- *    gesture goes through the control the surface actually draws.
- * 2. **The stops are enumerated.** Where the journey cannot go on, the step
- *    says so and says why, and the table below is the same list routing 84 is
- *    scoped from. It is written out by hand and compared against a real run, in
- *    the discipline `no-action-copy.test.ts` established: a generated
- *    expectation is the implementation restated, and the whole reason this file
- *    exists is that the implementation was already passing every test written
- *    from inside it.
+ *    recommendation that changed because of something the owner said.
+ * 2. **What is still open is enumerated.** Where the journey now goes on but
+ *    something further is missing, the step says so, and the table below is
+ *    routing 90's and routing 91's to read.
  *
- * **What this deliberately does not do is repair anything it finds.** Every
- * stop below is a routing 84 or routing 90 package in `PRODUCT_ADJUDICATION.md`
- * section 8, and fixing one here would make routing 83 the mega-phase the
- * adjudication refused.
+ * ## What it still deliberately does not do
+ *
+ * Repair anything it finds. What is left over is a visual phase's or a later
+ * intelligence phase's, and closing one here would make routing 84 the
+ * mega-phase the adjudication refused twice.
  */
 
 const ROOT = join(import.meta.dirname, '..', '..')
@@ -66,92 +68,70 @@ async function walkTheJourney(): Promise<{
 
   // --- 1. unknown aspiration ------------------------------------------------
   //
-  // The owner has opened the app and wants to say what he is trying to become.
-  // Every concept the app can hold is in the registry, and every one an owner
-  // can answer is either in the guide's catalogue or correctable on a Life
-  // page. So the question is answerable without an opinion: is any of them
-  // about a destination?
-  const askable = new Set(QUESTIONS.map((question) => question.concept))
-  const correctable = coreConcepts
-    .all()
-    .filter((definition) => definition.derived !== true)
-    .map((definition) => definition.id)
-  const aboutADestination = [...new Set([...askable, ...correctable])].filter(
-    (concept) => concept === CONCEPT.weeklyFocus,
-  )
+  // The owner has opened the app on his first evening and wants to say what he
+  // is trying to become. Routing 83 found no concept in the registry about
+  // anything he is aiming at, and the longest-horizon thing he could state was
+  // this week's focus. He types one sentence.
+  const named = await app.nameDestination({
+    aim: 'Working as a cloud engineer',
+    domain: DOMAIN.career,
+    milestone: 'Get through the networking basics',
+  })
+  const destinations = app.situation().direction.destinations
+  const aimed = destinations[0]
   stops.push({
     step: 'unknown-aspiration',
     trying: 'say what he is trying to become, before he knows how to name it',
-    proceeded: false,
+    proceeded: named.done && aimed !== undefined,
     note:
-      aboutADestination.length === 0
-        ? 'no concept in the registry is about anything the owner is aiming at'
-        : 'the longest-horizon thing he can state is this week’s focus (direction.weekly-focus); there is no concept for a destination, a milestone or where he is starting from',
+      named.done && aimed !== undefined
+        ? `"${aimed.aim}" is held as a destination in ${aimed.domain}, with "${aimed.next?.goal.statement ?? ''}" named on the way to it — described, with no number on any of it`
+        : `nothing holds an aspiration — ${named.note}`,
   })
 
   // --- 2. discovery ---------------------------------------------------------
   //
-  // The guide is the app's only questioning surface. What it asks on a first
-  // evening is what discovery is.
-  const asked: string[] = []
-  for (let taps = 0; taps < 4; taps += 1) {
-    const step = app.guide()
-    if (step.kind !== 'question' || step.question === undefined) break
-    asked.push(step.question.spec.concept)
-    const answer = step.question.spec.concept === CONCEPT.energy ? 'ok' : 'none'
-    const result = await app.answerGuide(answer)
-    if (!result.done) break
-  }
+  // The guide's whole catalogue is six readings of today's capacity and D-036
+  // caps it at three a day, and that is unchanged and correct. The question is
+  // whether anything else asks about the rest of a life.
+  const agenda = app.agenda()
+  const asked = agenda.prompt
   stops.push({
     step: 'discovery',
     trying: 'be asked something that would surface what matters to him',
-    proceeded: false,
-    note: `the guide asked ${asked.length} question(s) — ${asked.join(', ')} — and every one is a reading of today's capacity; it has no question that could surface an aspiration, and D-036 caps it at ${3} a day regardless`,
+    proceeded: asked !== undefined,
+    note:
+      asked === undefined
+        ? `the second agenda has nothing to ask — ${agenda.because}`
+        : `the second agenda asks "${asked.prompt}" — ${agenda.outstanding.length} thing(s) outstanding, ${agenda.budget} a week, and the guide's three-a-day cap is untouched`,
   })
 
   // --- 3. object creation ---------------------------------------------------
   //
-  // The reachability walk in `journey.ts` answers this, and it answers it from
-  // the controls rather than from a belief about them.
+  // The stop routing 83 found, said precisely: he could state a current-topic
+  // fact and it created no entity, so nothing could refer to it. The walk in
+  // `journey.ts` answers this from the controls rather than from a belief.
   const unreachable = recordKindsWithNoOwnerRoute()
-
-  /*
-   * Said precisely, because the first version of it was not — QA-83-003.
-   *
-   * It read "the owner cannot name a goal, a topic he is studying, a person, a
-   * place or a skill", and on **The first evening** he plainly can name the
-   * topic: Life → Career & Learning → Current learning topic → **Add this**
-   * opens a labelled box and the answer becomes what the app reads. Round 1
-   * found that by walking the app rather than the code.
-   *
-   * What is true is one layer under it, and the instrument checks it here
-   * rather than asserting it: stating the topic writes an `explicit-fact` and
-   * **creates no entity**, so nothing can refer to it. No study move is
-   * generated, no goal can name it as a piece, no course can take it as a
-   * subject. He can tell the app what he is studying and the app has nowhere to
-   * put it.
-   */
-  const naming = await openJourney('the-first-evening')
-  const stated = await naming.correctFact(CONCEPT.learningTopic, {
-    type: 'text',
-    value: 'Cloud engineering (AWS)',
+  const introduced = await app.introduce({
+    kind: 'place',
+    name: 'The library',
+    domain: DOMAIN.career,
   })
-  const readBack = naming
-    .domainPage('career')
-    .readings.find((row) => row.concept === CONCEPT.learningTopic)
-  const entitiesAfter = naming.situation().entities.byKind('learning-topic').length
-
+  const places = app.situation().entities.byKind('place').length
+  const topics = app.situation().entities.byKind('learning-topic').length
   stops.push({
     step: 'object-creation',
     trying: 'name something the rest of the app can then refer to',
-    proceeded: false,
+    proceeded: introduced.done && places > 0 && topics > 0,
     note:
-      stated.done && readBack?.text.includes('Cloud engineering') === true
-        ? `he can state it as a fact — "${readBack.text}" is read back on the Career page — and it creates no entity (${entitiesAfter} learning-topic entities after), so nothing can refer to it: no study move, no goal piece, no course subject. No control on any screen calls createEntity, and ${unreachable.join(', ')} have no owner route at all. Routing 84's authoring brief is the whole list: goal, routine, person, place, skill and obligation`
-        : `stating a current-topic fact did not land — ${stated.note}`,
+      introduced.done && places > 0
+        ? `an owner control creates a semantic entity: ${places} place(s) and ${topics} learning topic(s) exist that no file put there, and ${unreachable.length === 0 ? 'every record kind now has an owner route' : `${unreachable.join(', ')} still have none`}`
+        : `nothing could be introduced — ${introduced.note}`,
   })
 
   // --- 4. real action -------------------------------------------------------
+  await app.answerGuide('ok')
+  await app.answerGuide('none')
   const beforeAction = app.decision()
   const started = await app.act('start')
   stops.push({
@@ -159,34 +139,32 @@ async function walkTheJourney(): Promise<{
     trying: 'get a concrete thing to do, and do it',
     proceeded: started.done && beforeAction.kind === 'move',
     note: started.done
-      ? `Now proposed "${beforeAction.explanation?.rendered.sentence ?? ''}" from two answers, and Start it recorded it`
+      ? `Now proposed "${beforeAction.explanation?.rendered.sentence ?? ''}" and Start it recorded it`
       : `no move reached the screen — ${started.note}`,
   })
 
   // --- 5. interruption ------------------------------------------------------
   //
-  // He starts, is interrupted, says so, and then wants to come back to it. The
-  // state machine allows `unable-now → started | completed | declined`; the
-  // question is whether the screen ever offers them again.
+  // He starts, is interrupted, says so, is asked one optional question about
+  // what was in the way, and then wants to come back to it. Routing 83 found
+  // the move leaving the screen with `TRANSITIONS` allowing the return and no
+  // surface offering it, and the reason neither asked for nor stored.
   const interrupted = await app.act('unable-now')
-  const afterInterruption = app.decision()
-  const cameBack = afterInterruption.kind === 'move'
+  const question = app.blockerFor()
+  const said = await app.sayWhatBlocked('no-kit')
+  const offered = app.resumable()
+  const cameBack = await app.resume('start')
   stops.push({
     step: 'interruption',
-    trying: 'say he was interrupted, and then pick the same thing back up',
-    proceeded: interrupted.done && cameBack,
-    note: interrupted.done
-      ? cameBack
-        ? 'Can’t right now was recorded and the move stayed reachable'
-        : `Can’t right now was recorded, and the move then left the screen: Now reads "${afterInterruption.noAction?.headline ?? ''}" — TRANSITIONS allows unable-now → started, completed or declined, and no surface offers any of them. Nor is any reason for the interruption asked for or stored: planLifecycle takes one and NowScreen passes none`
-      : `nothing recorded the interruption — ${interrupted.note}`,
+    trying: 'say he was interrupted, say what was in the way, and pick it back up',
+    proceeded: interrupted.done && said.done && cameBack.done,
+    note:
+      interrupted.done && said.done && cameBack.done
+        ? `Can't right now was recorded, the app asked once (${question?.ask === true ? question.because : 'and did not'}), the reason is stored as "${offered?.blocker ?? ''}" and kept as a standing constraint, and the move was offered back and picked up`
+        : `${interrupted.note}; ${said.note}; ${cameBack.note}`,
   })
 
   // --- 6. concrete outcome --------------------------------------------------
-  //
-  // Restart the day rather than fight the block: the previous step deliberately
-  // left the evening's suggestions exhausted, and what is being measured here
-  // is whether a completion produces a result the app can use.
   const second = await openJourney('the-first-evening')
   await second.answerGuide('ok')
   await second.answerGuide('none')
@@ -206,20 +184,30 @@ async function walkTheJourney(): Promise<{
   })
 
   // --- 7. correction --------------------------------------------------------
+  //
+  // Two different gestures, and the step is only past when both work: a fact
+  // corrects from its own row, **and** something the app recorded can be
+  // withdrawn or moved to the day it happened.
   const beforeCorrection = second.decision()
   const corrected = await second.correctFact(CONCEPT.energy, { type: 'scale', value: 1, of: 5 })
-  const events = second
-    .snapshot()
-    .records.filter((record) => record.kind === 'action-completion').length
+  const completion = second.snapshot().records.find((record) => record.kind === 'action-completion')
+  const withdrawn =
+    completion === undefined
+      ? { done: false, note: 'nothing to withdraw', written: 0 }
+      : await second.withdraw(completion.id, 'This did not happen')
+  const stillThere = second.snapshot().records.some((record) => record.id === completion?.id)
+  const gone =
+    completion === undefined
+      ? false
+      : !second.view().history.effective.some((record) => record.id === completion.id)
   stops.push({
     step: 'correction',
     trying: 'correct what the app now believes, and correct what it recorded',
-    // A fact can be corrected. An event cannot, and the step is only past when
-    // both are — so this is deliberately a stop rather than a pass.
-    proceeded: false,
-    note: corrected.done
-      ? `a fact corrects from its own row on the Life page (${events} completion(s) in the record stayed untouched), and there is no route to any of them: nothing withdraws a completion, moves an entry to the day it happened, or backfills one that was never recorded — liftVetoRecord is the only writer of a correction record and it corrects a veto`
-      : `the fact could not be corrected — ${corrected.note}`,
+    proceeded: corrected.done && withdrawn.done && gone,
+    note:
+      corrected.done && withdrawn.done
+        ? `a fact corrects from its own row, and a completion can be withdrawn: it stops counting (${gone}) and stays in the record (${stillThere}), which is D-047's watershed rather than a deletion`
+        : `${corrected.note}; ${withdrawn.note}`,
   })
 
   // --- 8. changed recommendation --------------------------------------------
@@ -244,28 +232,28 @@ async function walkTheJourney(): Promise<{
 // ---------------------------------------------------------------------------
 
 /**
- * The four record kinds nothing an owner can tap will produce.
+ * The record kinds nothing an owner can tap will produce.
  *
- * Written out rather than derived from the same walk that computes them, so a
+ * **Empty since routing 84**, and it is empty because controls were built for
+ * the four that had none — `constraint` from the blocker question, `goal` and
+ * `commitment` from the authoring control, `relationship-event` from the people
+ * panel — rather than because anything moved onto `NOT_OWNER_AUTHORED`.
+ *
+ * Written out rather than derived from the same walk that computes it, so a
  * control quietly disappearing widens this and fails, and a control arriving
  * narrows it and fails. Either way somebody reads it.
  */
-const NO_OWNER_ROUTE: readonly RecordKind[] = [
-  'constraint',
-  'goal',
-  'commitment',
-  'relationship-event',
-]
+const NO_OWNER_ROUTE: readonly RecordKind[] = []
 
 /** Which steps an ordinary journey gets past, and which it does not. */
 const PROCEEDS: Record<(typeof JOURNEY_STEPS)[number], boolean> = {
-  'unknown-aspiration': false,
-  discovery: false,
-  'object-creation': false,
+  'unknown-aspiration': true,
+  discovery: true,
+  'object-creation': true,
   'real-action': true,
-  interruption: false,
+  interruption: true,
   'concrete-outcome': true,
-  correction: false,
+  correction: true,
   'changed-recommendation': true,
 }
 
@@ -282,7 +270,12 @@ describe('D-161 — the ordinary-use journey from a near-empty store', () => {
     }
   })
 
-  it('gets past the three steps the app supports, and stops at the five it does not', async () => {
+  it('gets past all eight steps, which is routing 84', async () => {
+    /*
+     * The phase's own claim, and the one line of this file that would have been
+     * false before it. Five of these were stops, each with a reason, and the
+     * reasons were the six work packages.
+     */
     const { stops } = await walkTheJourney()
     for (const stop of stops) {
       expect(stop.proceeded, `${stop.step} — ${stop.note}`).toBe(PROCEEDS[stop.step])
@@ -291,12 +284,10 @@ describe('D-161 — the ordinary-use journey from a near-empty store', () => {
 
   it('reaches a real action, a real outcome and a changed mind from one answer', async () => {
     /*
-     * The half of D-161 that is not a complaint.
-     *
-     * Three of the eight steps do work from a near-empty store, and stating
-     * that plainly is part of the instrument: the finding is that acquisition
-     * is missing, not that the app does nothing. A run that only recorded
-     * failures would be as unfaithful as the fixtures it replaces.
+     * The half of D-161 that is not a complaint, unchanged from routing 83.
+     * Three of the eight steps worked from a near-empty store before this phase
+     * and they still do — a run that only recorded what it added would be as
+     * unfaithful as the fixtures it replaces.
      */
     const app = await openJourney('the-first-evening')
     expect(app.records()).toBe(1)
@@ -329,12 +320,12 @@ describe('D-161 — the ordinary-use journey from a near-empty store', () => {
      * `thread-start` claims `needs: { records: ['observation'] }` — that a
      * course can be offered from guide answers alone. It is true for exactly
      * one of the three shapes: the recovery run is offered beside a recovery
-     * move, and a recovery move needs only short nights. The study schedule and
-     * the growth ladder ride on moves that need an entity nothing can create,
-     * so they are unreachable for the reason `object-creation` stops.
+     * move, and a recovery move needs only short nights.
      *
-     * If this ever stops being true, `reachableRecordKinds()` is wrong and the
-     * enumerated brief is wrong with it.
+     * The other two were unreachable in routing 83 because the moves that carry
+     * them need an entity nothing could create. That is no longer why they are
+     * hard to reach, and the assertion here is deliberately unchanged: what it
+     * pins is that `thread` is reachable at all, and it still is by this route.
      */
     const app = await openJourney('the-first-evening')
     expect((await app.answerGuide('empty')).done).toBe(true)
@@ -358,18 +349,21 @@ describe('D-161 — what an owner has no route to', () => {
     expect([...recordKindsWithNoOwnerRoute()].sort()).toEqual([...NO_OWNER_ROUTE].sort())
   })
 
-  it('has no authoring control anywhere that creates a semantic entity', () => {
+  it('has an authoring control that creates a semantic entity', () => {
     /*
-     * The structural half of "object creation", and the reason the table above
-     * can say `goal` is unreachable without arguing about it.
+     * The structural half of "object creation", inverted — routing 84.
      *
-     * Entities reach the store through three doors and every one of them is a
-     * file: the QA laboratory's `replaceAll`, the legacy importer, and restore.
-     * No control on any screen calls `createEntity`, so the subject of a goal,
-     * a topic, a person, a place or a child's skill cannot be named by the
-     * person whose life it is.
+     * Routing 83 asserted that **no** file under `src/features` called
+     * `createEntity`, and that assertion was the finding. The claim now is the
+     * opposite one and it is held just as tightly: a control exists, it is on a
+     * screen, and it is the only path — every entity in a running store arrived
+     * either through this, through the QA laboratory's `replaceAll`, through
+     * the legacy importer, or through restore.
+     *
+     * It asks for the **handler**, not the import: a file that imported the
+     * builder and never called it would pass a check for the symbol.
      */
-    const offenders: string[] = []
+    const callers: string[] = []
     const walk = (dir: string): void => {
       for (const name of readdirSync(dir)) {
         const full = join(dir, name)
@@ -379,28 +373,29 @@ describe('D-161 — what an owner has no route to', () => {
         }
         if (!name.endsWith('.ts') && !name.endsWith('.tsx')) continue
         const text = readFileSync(full, 'utf8')
-        if (/\bcreateEntity\s*\(/.test(text)) offenders.push(name)
+        // Across a line break, because that is how it is formatted: the call
+        // sits inside `void memory` … `.create(`, and a regex that assumed one
+        // line would report the control missing rather than the formatting.
+        if (/\bmemory\s*\n?\s*\.create\(/.test(text)) callers.push(name)
       }
     }
     walk(join(ROOT, 'src', 'features'))
-    expect(offenders).toEqual([])
+    expect(callers.sort(), 'no screen can bring an entity into being').toEqual([
+      'Discovery.tsx',
+      'DomainPage.tsx',
+    ])
   })
 
   it('lists every control on every screen that writes a record', () => {
     /*
-     * The guard QA-83-003 asked for, and the one this file did not have.
+     * The guard QA-83-003 asked for, unchanged and now covering eleven more
+     * controls than it did.
      *
-     * What stood here checked that ids were unique, that `writes` was non-empty
-     * and that the builder string contained a dot — three things that are true
-     * of a table missing half its rows. It was green while `OWNER_ROUTES` was
-     * missing Life's course controls and the Insights belief correction, under
-     * a comment claiming the table listed **every** control.
-     *
-     * **It asks per screen, not per builder.** `beliefCorrectionRecord` was
-     * already listed under Now, so a check that only asked whether the symbol
-     * appeared anywhere in the table would have stayed green over the missing
-     * Insights control — the second of the two QA found. Two screens calling
-     * one builder are two controls.
+     * **It asks per screen, not per builder.** Routing 84 adds two cases of
+     * exactly the shape that made that necessary: `destinationRecords` and
+     * `authoringRecords` are each called from a domain page and from Life, and
+     * a check that only asked whether the symbol appeared anywhere in the table
+     * would be blind to one of the two.
      */
     const missing = everyBuilderReachedFromAFeature().filter((reached) => {
       if (reached.surface === 'not-a-control') return !NOT_A_CONTROL.includes(reached.builder)
@@ -421,6 +416,10 @@ describe('D-161 — what an owner has no route to', () => {
      * on is the one that was in the tree: a real handler, in a real file,
      * absent from the table — including one whose builder another screen also
      * calls.
+     *
+     * Routing 84's own pair is checked alongside routing 83's, because it is
+     * the same trap one phase later: `destinationRecords` is a control on a
+     * domain page and a different control on Life.
      */
     const reached = everyBuilderReachedFromAFeature()
     const named = (id: string) => OWNER_ROUTES.filter((route) => route.id !== id)
@@ -428,6 +427,8 @@ describe('D-161 — what an owner has no route to', () => {
     for (const [id, builder, surface] of [
       ['thread-state', 'setThreadStateRecord', 'life'],
       ['insights-belief-correction', 'beliefCorrectionRecord', 'insights'],
+      ['destination', 'destinationRecords', 'domain-page'],
+      ['discovery-answer', 'destinationRecords', 'life'],
     ] as const) {
       const found = reached.find((entry) => entry.builder === builder && entry.surface === surface)
       expect(found, `the reader must find ${builder} on ${surface}`).toBeDefined()
@@ -447,6 +448,86 @@ describe('D-161 — what an owner has no route to', () => {
       ids.add(route.id)
       expect(route.writes.length, `${route.id} writes nothing`).toBeGreaterThan(0)
       expect(route.builder).toMatch(/\./)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// What routing 84 did not close, enumerated — the same discipline as its brief
+// ---------------------------------------------------------------------------
+
+/**
+ * Where an ordinary journey now goes on, and something is still missing.
+ *
+ * Routing 83's list was five stops. This is what is left after them, and it is
+ * deliberately shorter and deliberately not empty: a phase that reported no
+ * open items would be the one thing routing 83's own record warns about.
+ *
+ * Each line names where it belongs, and none of them is this phase's.
+ */
+describe('what an ordinary journey still cannot do', () => {
+  it('cannot author an entry for something that was never recorded', async () => {
+    /*
+     * The third of F32's three, and it is deferred by decision rather than
+     * missed. D-165: *"authoring or backfilling a historical event... stays in
+     * the later Reach package. The grammar precedes the authoring surface; it
+     * does not wait for it."*
+     *
+     * Withdrawing works and re-dating works — both are proved in the journey
+     * above. What has no route is writing down something that happened on
+     * Tuesday and was never entered, and the route table is where that shows.
+     */
+    const backfill = OWNER_ROUTES.filter((route) => route.id.includes('backfill'))
+    expect(backfill, 'a backfill control arrived without D-165 being amended').toEqual([])
+  })
+
+  it('cannot be told a routine and then be offered it', async () => {
+    /*
+     * AUD-0045 stays in the later Reach package, and the adjudication says so
+     * in as many words: *"No owner routines library. This phase builds the
+     * route; Reach walks it."*
+     *
+     * So this asserts the half that is built and the half that is not, together
+     * — because a route with nothing walking it is exactly the shape that reads
+     * as finished from the outside.
+     */
+    const app = await openJourney('the-first-evening')
+    const made = await app.introduce({
+      kind: 'routine',
+      name: 'Lifting on a Tuesday',
+      domain: DOMAIN.health,
+    })
+    expect(made.done, 'the route exists').toBe(true)
+    expect(
+      app
+        .situation()
+        .entities.byKind('routine')
+        .some((e) => e.label === 'Lifting on a Tuesday'),
+    ).toBe(true)
+
+    await app.answerGuide('ok')
+    await app.answerGuide('none')
+    const decision = app.decision()
+    const object = decision.explanation?.semantics.target.object.id ?? ''
+    expect(
+      object.startsWith('routine:lifting'),
+      'the engine names only its own routines — D-021, and Reach is where this changes',
+    ).toBe(false)
+  })
+
+  it('has no verdict on whether a strategy is working', () => {
+    /*
+     * F03, and it is Validity's rather than this phase's — *"a strategy can
+     * only fail against a destination that must exist first"*. The destination
+     * exists now, which is the precondition; the verdict is not built and must
+     * not be.
+     */
+    const source = readFileSync(join(ROOT, 'src/intelligence/destinations.ts'), 'utf8')
+    for (const forbidden of ['working', 'failing', 'on track', 'off track']) {
+      expect(
+        source.toLowerCase().includes(`'${forbidden}`),
+        `a destination reading states a verdict: ${forbidden}`,
+      ).toBe(false)
     }
   })
 })

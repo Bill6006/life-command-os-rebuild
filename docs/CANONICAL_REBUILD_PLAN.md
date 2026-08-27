@@ -2975,6 +2975,41 @@ The owner-use review identified relationships the visual design must **leave roo
 - A compact **reentry state** after a long absence: one screen, not a wall of stale cards.
 - A restrained **"why am I being asked this?"** affordance. No dashboard, no score.
 
+## What routing 84 shipped, and this phase now typesets
+
+Routing 84 built the product contract this phase designs against, and the
+distinction matters to what its gate is: these objects exist, they are reachable
+from a near-empty store, and **none of them has a visual language yet**. That
+was deliberate — routing 84 must not spend Phase 9's budget — so what is on
+screen today is honest and plain, and re-typesetting it is this phase's work.
+
+- **A destination**, per life area, with four parts: what he is aiming at, where
+  he is now, what would count as getting somewhere, and what he is unsure about.
+  Any part may be absent and an absent one reads as unstated (G-009).
+- **A milestone**, which is a goal that names its destination (D-181). It reads
+  as a different thing from a goal and from a completed session, and it is
+  reached only when the owner says so.
+- **Six rungs of progress evidence** — attempt, completion, quality, retained
+  capability, transfer, milestone — each with its own sentence and its own
+  statement of what it is *not* evidence of. A completed session, a completed
+  course and a milestone are three different things on the page.
+- **One create-and-confirm control** for a goal, a routine, a person, a place, a
+  skill and an obligation, including the interpretation the owner agrees to and
+  the list of what the app will not assume.
+- **A second questioning surface** on Life, with its own weekly budget, always
+  skippable, and able to show what an answer changed.
+- **One optional question after "Can't right now"**, and a way back to a move
+  that was interrupted or half-finished.
+- **Two correction gestures on a recorded event** — withdraw and re-date — each
+  stating its consequence and what it preserves before it acts.
+- **One owner permission**, on the Private page, off by default.
+
+**The no-score rule binds every one of them** (D-162, section 22). No
+percentage, share, bar, rank, grade or readiness figure about the owner or about
+Adaya, and a "destination" must not become a score through the back door. A
+phase whose subject is *visual* coherence is the second place where one arrives
+looking reasonable — the first was the phase that built the objects.
+
 ## Gate
 
 Owner physical-phone approval required.

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Panel, Screen } from '../../components/ui'
-import type { LifeDomainId } from '../../domain/domains'
+import { DOMAIN, type LifeDomainId } from '../../domain/domains'
 import type { EntityRef } from '../../domain/entities'
 import type { FactValue, GoalStatus, GrowthStage } from '../../domain/records'
 import type { RecordId } from '../../domain/ids'
@@ -21,7 +21,33 @@ import {
   factCorrectionRecord,
   goalCorrectionRecord,
   liftVetoRecord,
+  permissionRecord,
+  redateEventRecord,
+  withdrawEventRecord,
 } from '../../intelligence/corrections'
+import {
+  authoringRecords,
+  destinationRecords,
+  relationshipEventRecord,
+  reviseDestinationRecord,
+  type AuthoringDraft,
+  type DestinationDraft,
+} from '../../intelligence/authoring'
+import {
+  courseReflectionRecord,
+  nextCourseReflection,
+  type CourseReflection,
+} from '../../intelligence/progress'
+import type { OutcomeAnswer } from '../../intelligence/outcomes'
+import {
+  AuthoringPanel,
+  BlockersPanel,
+  CorrectionsPanel,
+  DestinationPanel,
+  PeoplePanel,
+  PermissionPanel,
+  ProgressPanel,
+} from './DomainPanels'
 import { growthStageRecord } from '../../intelligence/growth'
 import type { QuestionOption } from '../../intelligence/questions'
 import {
@@ -34,11 +60,14 @@ import { useMemory } from '../memory/memoryContext'
 import {
   assembleDomainPageData,
   type ConceptReading,
+  type CorrectableEvent,
+  type DomainDestination,
   type DomainGoal,
   type DomainPageData,
   type DomainSkill,
   type LifePage,
   type RecentChange,
+  type StandingBlocker,
 } from './domainPages'
 import './DomainPage.css'
 
@@ -257,6 +286,165 @@ export function DomainPage({ page }: { page: LifePage }) {
     setOpenGoal(undefined)
   }
 
+  /*
+   * The moment every gesture on this page is written at — D-037.
+   *
+   * The moment being reasoned about, and the real clock beside it. Under time
+   * travel those genuinely differ, and within one session the second is what
+   * tells two gestures apart.
+   */
+  const authoringMoment = () => ({
+    now: memory.now,
+    zone: memory.zone,
+    recordedAt: systemClock().now(),
+  })
+
+  /**
+   * Naming what he is trying to become — F01, package 1.
+   *
+   * The entity and the record travel together through `create`, because a goal
+   * whose subject is not in the index is a renderer with nothing to name.
+   */
+  const nameDestination = (draft: DestinationDraft) => {
+    if (inFlight.current) return
+    inFlight.current = true
+    setWorking(true)
+    void memory.create(destinationRecords(draft, situation, authoringMoment())).finally(() => {
+      inFlight.current = false
+      setWorking(false)
+    })
+  }
+
+  const reviseDestination = (
+    entry: DomainDestination,
+    changes: {
+      baseline?: string
+      evidence?: readonly string[]
+      unknowns?: readonly string[]
+    },
+  ) => {
+    const previous = entry.record
+    if (previous === undefined) return
+    append(() => [reviseDestinationRecord(previous, changes, authoringMoment())])
+  }
+
+  /** The next step, as the milestone it is — a goal that names its destination. */
+  const addMilestone = (entry: DomainDestination, statement: string) => {
+    const trimmed = statement.trim()
+    if (trimmed === '') return
+    if (inFlight.current) return
+    inFlight.current = true
+    setWorking(true)
+    void memory
+      .create(
+        destinationRecords(
+          {
+            aim: entry.destination.aim,
+            domain: entry.destination.domain,
+            milestone: trimmed,
+          },
+          situation,
+          authoringMoment(),
+        ),
+      )
+      .finally(() => {
+        inFlight.current = false
+        setWorking(false)
+      })
+  }
+
+  /**
+   * Introducing a goal, a routine, a person, a place, a skill or an obligation
+   * — F04, package 3.
+   *
+   * The single highest-leverage item in the adjudication, and it is one call:
+   * this is the first control in the product that brings a semantic entity into
+   * being.
+   */
+  const createThing = (draft: AuthoringDraft) => {
+    if (inFlight.current) return
+    inFlight.current = true
+    setWorking(true)
+    void memory.create(authoringRecords(draft, situation, authoringMoment())).finally(() => {
+      inFlight.current = false
+      setWorking(false)
+    })
+  }
+
+  const liftBlocker = (blocker: StandingBlocker) => {
+    append(() => [
+      withdrawEventRecord(blocker.record, 'The owner said this is no longer true', {
+        now: memory.now,
+        zone: memory.zone,
+        recordedAt: systemClock().now(),
+      }),
+    ])
+  }
+
+  const withdrawEvent = (event: CorrectableEvent) => {
+    append(() => [
+      withdrawEventRecord(event.id, 'The owner said this did not happen', {
+        now: memory.now,
+        zone: memory.zone,
+        recordedAt: systemClock().now(),
+      }),
+    ])
+  }
+
+  const redateEvent = (event: CorrectableEvent, dayId: string) => {
+    const day = parseLocalDayId(dayId)
+    const record = memory.view.history.byId(event.id)
+    if (day === undefined || record === undefined) return
+    append(() => [
+      redateEventRecord(record, day, {
+        now: memory.now,
+        zone: memory.zone,
+        recordedAt: systemClock().now(),
+      }),
+    ])
+  }
+
+  const setPermission = (granted: boolean) => {
+    append(() => [
+      permissionRecord('private-influence', granted, {
+        now: memory.now,
+        zone: memory.zone,
+        recordedAt: systemClock().now(),
+      }),
+    ])
+  }
+
+  const answerReflection = (reflection: CourseReflection, answer: OutcomeAnswer) => {
+    append(() => [
+      courseReflectionRecord(reflection, answer, page.domains[0]!, {
+        now: memory.now,
+        zone: memory.zone,
+        recordedAt: systemClock().now(),
+      }),
+    ])
+  }
+
+  const recordEvent = (person: EntityRef, nature: string) => {
+    if (nature.trim() === '') return
+    append(() => [relationshipEventRecord(person, nature, page.domains[0]!, authoringMoment())])
+  }
+
+  const reflection = nextCourseReflection(situation)
+
+  /*
+   * The people this area knows about, from the graph rather than from a list.
+   *
+   * Only the owner's own: `situation.entities` folds in the engine's five
+   * standing routines, and none of them is a person, so nothing here can
+   * surface the app's own furniture as somebody he knows.
+   */
+  const people = page.domains.flatMap((domain) =>
+    situation.entities
+      .byKind('person')
+      .filter((entity) => entity.domain === domain)
+      .map((entity) => ({ ref: { id: entity.id, kind: entity.kind }, label: entity.label })),
+  )
+
   const byDomain = new Map<LifeDomainId, ConceptReading[]>()
   for (const reading of data.readings) {
     const held = byDomain.get(reading.domain)
@@ -293,6 +481,23 @@ export function DomainPage({ page }: { page: LifePage }) {
         />
       ))}
 
+      {page.domains.includes(DOMAIN.privateHealth) ? (
+        <PermissionPanel
+          granted={situation.permissions.granted('private-influence')}
+          disabled={busy}
+          onSet={setPermission}
+        />
+      ) : null}
+
+      <DestinationPanel
+        data={data}
+        area={situation.domains.labelFor(page.domains[0]!)}
+        disabled={busy}
+        onName={nameDestination}
+        onRevise={reviseDestination}
+        onMilestone={addMilestone}
+      />
+
       <Panel title="What the app currently believes">
         {page.domains.map((domain) => {
           const readings = byDomain.get(domain) ?? []
@@ -327,7 +532,11 @@ export function DomainPage({ page }: { page: LifePage }) {
       </Panel>
 
       {data.goals.length === 0 ? null : (
-        <Panel title="Goals here">
+        <Panel
+          title={
+            data.goals.every((goal) => goal.milestoneOf !== undefined) ? 'On the way' : 'Goals here'
+          }
+        >
           {data.goals.map((goal) => (
             <GoalRow
               key={goal.source}
@@ -344,6 +553,24 @@ export function DomainPage({ page }: { page: LifePage }) {
           ))}
         </Panel>
       )}
+
+      <ProgressPanel
+        data={data}
+        reflection={reflection}
+        disabled={busy}
+        onReflect={answerReflection}
+      />
+
+      <AuthoringPanel
+        situation={situation}
+        domain={page.domains[0]!}
+        disabled={busy}
+        onCreate={createThing}
+      />
+
+      <PeoplePanel people={people} disabled={busy} onEvent={recordEvent} />
+
+      <BlockersPanel blockers={data.blockers} disabled={busy} onLift={liftBlocker} />
 
       {data.skills.length === 0 ? null : (
         <Panel title="What she is working on">
@@ -426,6 +653,13 @@ export function DomainPage({ page }: { page: LifePage }) {
         </Panel>
       )}
 
+      <CorrectionsPanel
+        events={data.correctable}
+        disabled={busy}
+        onWithdraw={withdrawEvent}
+        onRedate={redateEvent}
+      />
+
       {data.recentChanges.length === 0 ? null : (
         <Panel title="Recently">
           <ul className="domain-recent">
@@ -502,6 +736,19 @@ function GoalRow({
 
   return (
     <div className="domain-goal">
+      {/*
+        A milestone reads as one — F01, F05, gate item 2.
+
+        The word is the whole of the difference on this row and it is not
+        decoration: a milestone belongs to something larger and reaching it is
+        not the same event as finishing a goal that stands on its own. What is
+        underneath is one record kind, deliberately (D-178).
+      */}
+      {goal.milestoneOf === undefined ? null : (
+        <p className="domain-goal__kind" data-testid="domain-milestone">
+          {goal.status === 'achieved' ? 'Milestone — reached' : 'Milestone'}
+        </p>
+      )}
       <p className="domain-goal__statement">
         {goal.statement}{' '}
         {goal.origin === undefined ? null : (

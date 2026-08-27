@@ -20,6 +20,8 @@ import {
 } from './recommendation'
 import {
   COMMITMENT_WINDOW_SOURCES,
+  DESTINATION_STATES,
+  DISCOVERY_DISPOSITIONS,
   GROWTH_STAGES,
   HELP_LEVELS,
   OUTCOME_ASPECTS,
@@ -529,6 +531,21 @@ function readPayload(reader: Reader, kind: RecordKind): Record<string, unknown> 
         // never been broken into parts says nothing about coverage; one broken
         // into parts none of which are done says something quite specific.
         parts: reader.value.parts === undefined ? undefined : readEntityRefList(reader, 'parts'),
+        milestoneOf: readOptionalEntityRef(reader, 'milestoneOf'),
+      }
+    case 'destination':
+      return {
+        destination: readEntityRefFrom(reader, 'destination'),
+        aim: readString(reader, 'aim'),
+        state: readEnum(reader, 'state', DESTINATION_STATES),
+        baseline: readOptionalString(reader, 'baseline'),
+        // Absent and empty are different answers, exactly as they are for a
+        // goal's parts (AUD-0021): a destination nobody has said what would
+        // count for is not one whose evidence list is empty on purpose.
+        evidence:
+          reader.value.evidence === undefined ? undefined : readStringArray(reader, 'evidence'),
+        unknowns:
+          reader.value.unknowns === undefined ? undefined : readStringArray(reader, 'unknowns'),
       }
     case 'commitment':
       return {
@@ -580,6 +597,7 @@ function readPayload(reader: Reader, kind: RecordKind): Record<string, unknown> 
       return {
         recommendation: readRecordId(reader, 'recommendation'),
         note: readOptionalString(reader, 'note'),
+        extent: readOptionalEnum(reader, 'extent', ['full', 'partial'] as const),
       }
     case 'action-decline':
       return {
@@ -634,6 +652,18 @@ function readPayload(reader: Reader, kind: RecordKind): Record<string, unknown> 
           'none',
         ] as const),
         subArea: readOptionalString(reader, 'subArea'),
+      }
+    case 'permission':
+      return {
+        permission: readString(reader, 'permission'),
+        granted: readBoolean(reader, 'granted'),
+        statement: readString(reader, 'statement'),
+      }
+    case 'discovery-response':
+      return {
+        prompt: readString(reader, 'prompt'),
+        disposition: readEnum(reader, 'disposition', DISCOVERY_DISPOSITIONS),
+        produced: readOptionalRecordId(reader, 'produced'),
       }
     case 'imported-legacy-record':
       return {
@@ -961,6 +991,16 @@ function payloadOut(record: CanonicalRecord): Record<string, unknown> {
           ? {}
           : { targetWindow: dueWindowOut(record.targetWindow) }),
         ...(record.parts === undefined ? {} : { parts: record.parts.map(refOut) }),
+        ...(record.milestoneOf === undefined ? {} : { milestoneOf: refOut(record.milestoneOf) }),
+      }
+    case 'destination':
+      return {
+        destination: refOut(record.destination),
+        aim: record.aim,
+        state: record.state,
+        ...(record.baseline === undefined ? {} : { baseline: record.baseline }),
+        ...(record.evidence === undefined ? {} : { evidence: [...record.evidence] }),
+        ...(record.unknowns === undefined ? {} : { unknowns: [...record.unknowns] }),
       }
     case 'commitment':
       return {
@@ -1005,6 +1045,7 @@ function payloadOut(record: CanonicalRecord): Record<string, unknown> {
       return {
         recommendation: record.recommendation,
         ...(record.note === undefined ? {} : { note: record.note }),
+        ...(record.extent === undefined ? {} : { extent: record.extent }),
       }
     case 'action-decline':
       return {
@@ -1057,6 +1098,18 @@ function payloadOut(record: CanonicalRecord): Record<string, unknown> {
         domain: record.domain,
         evidenceStrength: record.evidenceStrength,
         ...(record.subArea === undefined ? {} : { subArea: record.subArea }),
+      }
+    case 'permission':
+      return {
+        permission: record.permission,
+        granted: record.granted,
+        statement: record.statement,
+      }
+    case 'discovery-response':
+      return {
+        prompt: record.prompt,
+        disposition: record.disposition,
+        ...(record.produced === undefined ? {} : { produced: record.produced }),
       }
     case 'imported-legacy-record':
       return { legacyFormat: record.legacyFormat, raw: record.raw }

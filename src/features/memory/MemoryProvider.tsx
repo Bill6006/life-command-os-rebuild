@@ -11,6 +11,7 @@ import {
   type WeekStartDay,
 } from '../../domain/time'
 import type { ValidationIssue } from '../../domain/validation'
+import type { AuthoringResult } from '../../intelligence/authoring'
 import { derivedOutcomeRecords } from '../../intelligence/derived'
 import type { ShownMove } from '../../intelligence/situation'
 import { nextOutcomeDueAt } from '../../intelligence/outcomes'
@@ -299,6 +300,50 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
          * he asked for — and if he switched *to* the owner while the
          * laboratory was being cleared, it would show him an empty one.
          */
+        if (!job.mayPublish()) return
+        if (result.rejected.length > 0) {
+          setError(result.rejected.map((rejection) => rejection.problem).join('; '))
+        }
+        setSnapshot(after)
+      } catch (caught) {
+        if (job.isCurrent()) setError(describe(caught))
+      } finally {
+        if (job.isCurrent()) setBusy(false)
+      }
+    },
+    [projection, storeFor],
+  )
+
+  /**
+   * Introduce something, entities first — F04.
+   *
+   * Same store selection as `append`, for the same reason: what the owner is
+   * looking at is what he is adding to. The two writes are sequential rather
+   * than transactional because they cannot fail halfway in a way that matters —
+   * `putEntities` is a put keyed by id, so an entity written with no record
+   * behind it is inert and invisible, and a repeat of the same gesture writes
+   * the identical entity over the top of it.
+   *
+   * The reverse order is the one that could go wrong: a record naming an entity
+   * the index does not have is a dangling reference, and every renderer is
+   * built to refuse to speak rather than reach for "it" (D-018).
+   */
+  const create = useCallback(
+    async (authored: AuthoringResult) => {
+      const job = projection.beginHere()
+      const current = storeFor(job.against)
+      if (current === undefined) return
+      if (authored.entities.length === 0 && authored.records.length === 0) return
+
+      setBusy(true)
+      setError(undefined)
+      try {
+        if (authored.entities.length > 0) await current.putEntities(authored.entities)
+        const result =
+          authored.records.length === 0
+            ? { appended: 0, skipped: 0, rejected: [] }
+            : await current.append(authored.records)
+        const after = await current.snapshot()
         if (!job.mayPublish()) return
         if (result.rejected.length > 0) {
           setError(result.rejected.map((rejection) => rejection.problem).join('; '))
@@ -713,6 +758,7 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     storageCheck,
     loadDocument,
     append,
+    create,
     clear,
     verifyStorage,
     documentJson: () => snapshotToJson(snapshot, now),

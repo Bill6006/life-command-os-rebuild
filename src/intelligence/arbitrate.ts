@@ -75,6 +75,23 @@ export type NoActionReason =
    * well have been worth doing. It is the app reading the room.
    */
   | 'enough-for-now'
+  /**
+   * He has done what there was, and the honest answer is to say so — F11, F13.
+   *
+   * The sixth of F13's six silences, and the one the product had no word for.
+   * *"The owner wants accomplishment and direction, not a system whose
+   * definition of success is another available task."* Before this, an evening
+   * where he did the thing and there was nothing else read as **"Nothing new
+   * for today"** — the app reporting the emptiness of its own list on an
+   * evening he had actually got somewhere.
+   *
+   * **It is a re-labelling of a silence, never a new one.** The decision is
+   * identical: no move, for exactly the reasons that already applied. What
+   * changes is which sentence is true about it, and the condition is narrow —
+   * everything left was withheld for having already been on screen, and at
+   * least one of them was completed today.
+   */
+  | 'enough-done-today'
 
 /**
  * A move has to be worth making — and the bar is re-derived, not carried across.

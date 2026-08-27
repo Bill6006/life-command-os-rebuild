@@ -6023,3 +6023,156 @@ costs a CI run and a Pages deployment, and several in an hour back the queue up
 past the deploy job's own read-back window. Batch the commits; check the head.
 
 ---
+
+## D-181 — A milestone is a goal that names its destination
+
+**Phase:** 84 · **Status:** Active
+
+What is **next** on the way to something the owner is aiming at is a `goal`
+record carrying `milestoneOf`, not a second record kind. `GoalRecord` gains one
+optional reference; there is no `milestone` in `RECORD_KINDS` and there must not
+be one.
+
+**Why:** a milestone is a named objective, with a date the owner set and named
+work inside it, that can be reached or given up. That is what a goal already is,
+in every field. D-178's rule — one name for a thing, in the layer every surface
+can reach — applies to objects and not only to actions, and a second kind here
+would have meant two horizon readings, two trajectory sentences, two answers to
+whether the thing is done, and eventually two of them disagreeing on a screen.
+
+**What the field actually buys**, which is the whole reason it exists:
+
+- **The word on screen.** A milestone belongs to something larger and says so; a
+  goal that stands on its own does not.
+- **What may be concluded from finishing it.** Reaching a milestone is progress
+  evidence about a destination. Finishing an ordinary goal is not, because there
+  is nothing for it to be evidence about.
+
+**What it must never buy: a milestone reached from anything except the owner
+saying so.** Not from a run of completions, not from a finished course, not from
+covered parts. F05 is that attendance is not capability, and a milestone that
+marked itself reached would be the same error inside the object built to prevent
+it.
+
+**Where the shape is held:** `direction.ts` carries `milestoneOf` on
+`ActiveGoal`; `destinations.ts` groups milestones under the destination they
+name; `goalCorrectionRecord` carries the reference forward unconditionally, so
+marking one reached cannot quietly turn it back into an ordinary goal.
+
+---
+
+## D-182 — An authoring gesture writes the entity before the record
+
+**Phase:** 84 · **Status:** Active
+
+Where a control brings a **semantic entity** into being along with the record
+that refers to it, the entity is written first. `MemoryContextValue.create`
+takes both and does them in that order; so does the ordinary-use instrument.
+
+**Why:** the two failure modes are not symmetric. A record naming an entity the
+index does not have is a **dangling reference**, and every renderer in this
+product is built to refuse to speak rather than reach for "it" (D-018) — so a
+half-applied write becomes a screen that has gone silent about something the
+owner just did. An entity with nothing referring to it is **inert and
+invisible**: it appears on no surface, contributes to no decision, and is
+overwritten by the identical entity if the gesture is repeated, because
+`putEntities` is a put keyed by id.
+
+**Not a transaction, and it does not need to be.** The store's all-or-nothing
+guarantee is about a batch of records (section 29); entities are idempotent by
+id. What this rule buys is that the intermediate state is the harmless one.
+
+**Where it applies:** any later control that creates an entity. There is exactly
+one path today, and the point of writing this down is that the second one gets
+written by somebody who was not here.
+
+---
+
+## D-183 — A guard that reads source is widened by the spelling it could not read, never exempted from it
+
+**Phase:** 84 · **Status:** Active
+
+When a guard that scans source reports something correct as wrong, or fails to
+see something it should have seen, **the repair is in the reader**. Adding the
+file to an allow-list, or rewriting the code into the shape the reader happens
+to recognise, is the guard being taught to agree with itself.
+
+**Why: two of them in one phase, and both were one edit away from being hidden.**
+
+- F40's accessible-name scan accepted a template literal and a bare expression
+  after `htmlFor=` and **not** a plain quoted string — the simplest correct
+  spelling there is, and the one a new form reaches for first. Every correctly
+  labelled control added by this phase read as unlabelled. The tempting fix is
+  to write the template form everywhere, which leaves the guard teaching authors
+  to match its habits rather than to name their controls.
+- The ordinary-use instrument's builder reader found a control by its **return
+  type ending in `Record`**. The two highest-leverage controls in this phase
+  return entities *and* records together, because that is one act (D-182) — so
+  the table's claim to list every control stayed green while it could not see
+  them. That is D-179's own failure mode occurring inside the guard D-179 was
+  written for.
+
+**The general form.** A source-reading guard encodes a hypothesis about how the
+thing it looks for is written down, and the hypothesis is always narrower than
+the language. So the question when one fires — or conspicuously does not — is
+whether the code is wrong or the hypothesis is, and often it is the second.
+
+**What this does not license.** Widening a reader until it accepts what it was
+built to reject. Both widenings here kept every existing condition: the F40 scan
+still requires a `htmlFor` naming that control's own id, and the builder reader
+still requires a moment argument and a return type from a named list. What
+changed is how many ways each may be spelled.
+
+---
+
+## D-184 — The second agenda offers one question per object at a time
+
+**Phase:** 84 · **Status:** Active
+
+The discovery agenda emits **one** prompt per destination — the first thing
+about it the app does not know — and the next appears when that one is filled.
+It does not emit one per gap.
+
+**Why:** D-163 requires *fewer questions as it learns, not more*, and a
+destination has four parts of which three can be missing at once. A prompt per
+gap would mean that answering *"what are you hoping Career eventually looks
+like?"* replaced one question with three — the rule inverted, and the agenda
+getting louder the more the owner told it. It is also simply how a person asks.
+
+**Measured rather than asserted**, in
+`tests/synthetic/destination-and-discovery.test.ts`: over a run of answers the
+number outstanding never rises, and by the end it has fallen; and across the
+whole shipped library no history asks more than the near-empty store does.
+
+**The general form.** An agenda that decomposes an object into questions has to
+ask them in series. Breadth is what turns a conversation into a form.
+
+---
+
+## D-185 — A new no-action reason re-labels a silence and never creates one
+
+**Phase:** 84 · **Status:** Active
+
+Adding a `NoActionReason` may change **which sentence** the owner reads about a
+silence the app was already going to keep. It may not change whether the app
+says nothing.
+
+**Why:** F11 asks that *"enough for today"* be sayable — that an evening where
+the owner did the thing and there was nothing else should not read as **"Nothing
+new for today"**, which is the app reporting the emptiness of its own list on a
+day he actually got somewhere. That is a true and useful repair, and it is also
+one condition away from a rule that decides for him that he has done enough.
+
+So `enough-done-today` is computed **after** the arbiter has finished, from the
+reason the arbiter actually reached, and it fires only where everything
+surviving was withheld for having already been on screen **and** at least one
+move was completed today. The decision is byte-for-byte the one that would have
+been made without it. Phase 82 re-cut the instrument and re-baselined the
+tournament (D-137, D-138), and this is what keeps a copy repair from disturbing
+either.
+
+**A part-done evening does not count**, and that is the rule in miniature: he
+said himself that he did not finish, and telling him he has done enough would be
+the app contradicting him.
+
+---

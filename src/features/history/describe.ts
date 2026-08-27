@@ -83,6 +83,9 @@ const TAGS = {
   context: 'Standing',
   constraint: 'Limit',
   goal: 'Goal',
+  // Not 'Goal': a destination has no date on it and cannot be finished, and
+  // the tag is the one place a reader tells the two horizons apart at a glance.
+  destination: 'Aiming at',
   commitment: 'Commitment',
   // Not 'Commitment': the two are different objects and the tag is the one
   // place a reader tells them apart at a glance. A promise has a due date; this
@@ -103,6 +106,12 @@ const TAGS = {
   'relationship-event': 'Together',
   'domain-update': 'Changed',
   'coverage-update': 'Reviewed',
+  // What the owner allowed, or stopped allowing. Not 'Preference': a preference
+  // is about what he wants suggested, and this is about what the app may read.
+  permission: 'Permission',
+  // The second agenda's own memory, and the tag says which agenda it was —
+  // "Asked" would be indistinguishable from the guide's three a day.
+  'discovery-response': 'Getting to know you',
   /*
    * "Kept" rather than "Imported", now that the origin is its own field.
    *
@@ -141,6 +150,28 @@ const OUTCOME_FRAME: Record<OutcomeAspect, (move: string, answer: string) => str
   result: (move, answer) => `How far ${move} got: ${answer}.`,
   effect: (move, answer) => `What ${move} was worth: ${answer}.`,
   comfort: (move, answer) => `How ${move} felt: ${answer}.`,
+  // The two later rungs — F05. Both are about a course rather than a session,
+  // and both are deliberately about the world rather than about the record:
+  // what is left of it, and whether it has been used.
+  retained: (move, answer) => `What is left of ${move}: ${answer}.`,
+  transfer: (move, answer) => `Where ${move} has been used: ${answer}.`,
+}
+
+/**
+ * The line when the move behind an outcome cannot be resolved.
+ *
+ * A `Record<OutcomeAspect, string>` rather than a chain of ternaries, and the
+ * reason is D-179 in miniature: the chain had three branches and an `else`, so
+ * adding `retained` and `transfer` would have made both of them read *"Said how
+ * a suggestion here felt"* — a true-looking sentence about the wrong question,
+ * with nothing able to notice. A table fails to compile instead.
+ */
+const GENERIC_OUTCOME: Record<OutcomeAspect, string> = {
+  result: 'Said how far a suggestion here got.',
+  effect: 'Said what a suggestion here was worth.',
+  comfort: 'Said how a suggestion here felt.',
+  retained: 'Said what is left of something here.',
+  transfer: 'Said where something here has been used.',
 }
 
 /**
@@ -321,7 +352,21 @@ export function describeRecord(
       return plain(record.description)
     case 'goal':
       return plain(
-        `Goal: ${record.statement}${record.status === 'active' ? '' : ` (${record.status})`}`,
+        `${record.milestoneOf === undefined ? 'Goal' : 'Milestone'}: ${record.statement}${
+          record.status === 'active' ? '' : ` (${record.status})`
+        }`,
+      )
+    case 'destination':
+      /*
+       * The aim, and nothing added to it — D-162.
+       *
+       * No count of the parts it has, no reading of how far along it is, no
+       * word about whether it is going well. A destination is described, and
+       * this surface is the one that describes what happened rather than what
+       * it means.
+       */
+      return plain(
+        `${record.aim}${record.state === 'active' ? '' : ` (${record.state.replace('-', ' ')})`}`,
       )
     case 'commitment':
       return plain(`Commitment: ${record.statement}`)
@@ -371,17 +416,7 @@ export function describeRecord(
     }
     case 'outcome': {
       const said = describeOutcome(record, history, entities)
-      return plain(
-        said ??
-          about(
-            record.aspect === 'result'
-              ? 'Said how far a suggestion here got.'
-              : record.aspect === 'effect'
-                ? 'Said what a suggestion here was worth.'
-                : 'Said how a suggestion here felt.',
-            record.about,
-          ),
-      )
+      return plain(said ?? about(GENERIC_OUTCOME[record.aspect], record.about))
     }
     case 'correction':
       return plain(`Withdrew an earlier entry — ${record.reason}`)
@@ -404,6 +439,21 @@ export function describeRecord(
       return plain(record.summary)
     case 'coverage-update':
       return plain('Reviewed — the owner has looked at this.')
+    case 'permission':
+      return plain(record.statement)
+    case 'discovery-response':
+      /*
+       * A skip is a row, and that is deliberate — D-163.
+       *
+       * "Always skippable and a skip is respected" means the skip has to be
+       * remembered, and a thing the app remembers about the owner is a thing he
+       * can see and correct. What it must never read as is a failure to answer.
+       */
+      return plain(
+        record.disposition === 'answered'
+          ? 'Answered something the app was trying to understand.'
+          : 'Left one of the app’s questions for another time.',
+      )
     case 'imported-legacy-record':
       /*
        * A marker, never the payload.

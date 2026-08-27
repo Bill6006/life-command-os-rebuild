@@ -28,6 +28,28 @@ export const RECORD_KINDS = [
   'context',
   'constraint',
   'goal',
+  /**
+   * What the owner is trying to become — F01, D-162.
+   *
+   * The record kind the product did not have. Every object before this one is
+   * scoped to today or to a bounded three-step course: a `goal` is a statement
+   * with a date and some pieces, a `thread` is two to four occasions, an
+   * `observation` is a reading that goes stale. None of them can hold *stronger,
+   * employable, closer to her* — so the app could represent what to do next and
+   * could not represent what any of it was for, which is why it could not
+   * represent progress and could not represent a strategy that fails.
+   *
+   * **Described, never scored.** D-162 is this record's central guard and it is
+   * enforced by the shape rather than by care: every field here is either the
+   * owner's own words or a state from a closed list. There is no number on it,
+   * so there is nothing for a percentage to be computed from.
+   *
+   * A destination is revised by writing another one with `supersedes` set,
+   * exactly as a goal is. What the owner wrote first stays legible after he
+   * changes his mind about it, which is the whole reason an aspiration is worth
+   * storing rather than inferring.
+   */
+  'destination',
   'commitment',
   /**
    * A named obligation with a place in the owner's day — AUD-0004.
@@ -66,6 +88,30 @@ export const RECORD_KINDS = [
   'relationship-event',
   'domain-update',
   'coverage-update',
+  /**
+   * A standing permission the owner has given or taken back — D-167.
+   *
+   * One control governs whether Private / Sexual Health may influence ordinary
+   * cross-domain reasoning, and it is **off** until he says otherwise. It is a
+   * record rather than a setting because a permission is a thing he said, with
+   * a date on it: turning it off later stops future use without falsifying,
+   * rewriting or deleting what was reasoned from while it was on.
+   */
+  'permission',
+  /**
+   * What came of a question asked to understand the owner over time — F02, D-163.
+   *
+   * The second agenda's own memory, and it exists so a skip is respected.
+   * Answering writes whatever record the answer is — a destination, a
+   * constraint, a commitment window — and this alongside it, naming the prompt
+   * and what it produced. Skipping writes only this. Either way the prompt is
+   * not put again, which is the difference between an agenda and a
+   * questionnaire.
+   *
+   * **Nothing is written when a prompt is rendered** (D-043). This record is
+   * the owner acting, never the app displaying.
+   */
+  'discovery-response',
   'imported-legacy-record',
 ] as const
 
@@ -250,6 +296,67 @@ export type GoalRecord = Record_<
      * "44%" about a man's certification is one with a friendlier face.
      */
     readonly parts?: readonly EntityRef[]
+    /**
+     * The destination this goal is a milestone of — F01, F05.
+     *
+     * Absent on an ordinary goal, and an ordinary goal must behave exactly as
+     * it did before this field existed. Where it is present the goal **is** the
+     * milestone: what is next on the way to something larger, in the owner's
+     * own words, with its own date and its own pieces.
+     *
+     * A second record kind for a milestone was written and thrown away. A
+     * milestone is a named objective with a horizon and named work in it, which
+     * is what a goal already is — and D-178's rule is that one thing has one
+     * name in the layer every surface reads. What changes with this field is the
+     * **word on screen** and what may be concluded from finishing it, not the
+     * shape of the record.
+     */
+    readonly milestoneOf?: EntityRef
+  }
+>
+
+export const DESTINATION_STATES = ['active', 'paused', 'reached', 'set-aside'] as const
+
+export type DestinationState = (typeof DESTINATION_STATES)[number]
+
+export function isDestinationState(value: unknown): value is DestinationState {
+  return typeof value === 'string' && (DESTINATION_STATES as readonly string[]).includes(value)
+}
+
+/**
+ * What the owner is trying to become, and what would show it — F01, F35, D-162.
+ *
+ * Four parts, and every one of them is either his words or a state from a
+ * closed list:
+ *
+ * - `aim` — what he is aiming at.
+ * - `baseline` — where he is now, as he describes it. Not a measurement.
+ * - `evidence` — what would count as having got somewhere.
+ * - `unknowns` — what he does not know yet, kept rather than guessed at.
+ *
+ * What is **next** is deliberately not a field here: it is a `goal` carrying
+ * `milestoneOf`, because what is next is a thing with a date and some work in
+ * it, and that is what a goal already is.
+ *
+ * **There is no number on this record and there must never be one.** D-162
+ * forbids a score, a percentage, a share, a rate, a rank, a grade, a completion
+ * bar or a readiness figure about the owner, and a phase whose whole subject is
+ * progress is where one arrives looking reasonable. The defence is structural:
+ * there is nothing here that can be divided by anything else.
+ */
+export type DestinationRecord = Record_<
+  'destination',
+  {
+    readonly destination: EntityRef
+    /** What he is aiming at, rendered exactly as he wrote it. */
+    readonly aim: string
+    readonly state: DestinationState
+    /** Where he is now, in his words. Absent is a real answer and stays one. */
+    readonly baseline?: string
+    /** What would count as having got somewhere. Never a threshold. */
+    readonly evidence?: readonly string[]
+    /** What he does not know yet. Kept, because an unknown is a fact. */
+    readonly unknowns?: readonly string[]
   }
 >
 
@@ -473,7 +580,25 @@ export type ActionStartRecord = Record_<'action-start', { readonly recommendatio
  */
 export type ActionCompletionRecord = Record_<
   'action-completion',
-  { readonly recommendation: RecordId; readonly note?: string }
+  {
+    readonly recommendation: RecordId
+    readonly note?: string
+    /**
+     * Whether the whole of it happened, or part of it — F10.
+     *
+     * Absent means the whole of it, so every completion written before this
+     * field existed means exactly what it always meant. `partial` is the
+     * evening real life actually has: fifteen of the twenty-five minutes, half
+     * the kitchen, two of the three questions — an attempt that got somewhere
+     * and is not finished.
+     *
+     * It is still a completion. The attempt was carried out, which is the only
+     * thing a completion has ever claimed, and learning reads it as one. What
+     * changes is the **state** the episode is left in and therefore the word on
+     * the card: `part-done` is not `done`, and it can still be finished.
+     */
+    readonly extent?: 'full' | 'partial'
+  }
 >
 
 /** Disagreement. Section 20 — a decline is not evidence that the move is useless. */
@@ -505,7 +630,30 @@ export type ActionUnableNowRecord = Record_<
  * carries that, so "how did Adaya do" is a `result` about a development skill
  * that links to her.
  */
-export const OUTCOME_ASPECTS = ['result', 'effect', 'comfort'] as const
+export const OUTCOME_ASPECTS = [
+  'result',
+  'effect',
+  'comfort',
+  /**
+   * Whether the capability is still there later — F05.
+   *
+   * Asked about a **course**, not about a session, and days after it finished
+   * rather than at the end of it. Three completed study sessions say the
+   * sessions happened; whether any of it stuck is a different observation with
+   * a different window, and the review's complaint is precisely that the
+   * product had one word for both.
+   */
+  'retained',
+  /**
+   * Whether it has been used anywhere real — F05.
+   *
+   * The furthest thing a person can honestly report about their own learning
+   * without being asked to grade himself: not *do you know it* but *have you
+   * used it*. It is the last rung of the progress ladder and the only one that
+   * is about the world rather than about the record.
+   */
+  'transfer',
+] as const
 
 export type OutcomeAspect = (typeof OUTCOME_ASPECTS)[number]
 
@@ -684,6 +832,49 @@ export type CoverageUpdateRecord = Record_<
 >
 
 /**
+ * One standing permission, as the owner last left it — D-167.
+ *
+ * `granted` is the whole payload, and the default is that there is no record at
+ * all — which reads as **off**, because a permission nobody gave is one that
+ * was not given. Turning it off writes `granted: false` rather than deleting
+ * anything: history is append-first, and what was reasoned from while it was on
+ * stays true of the moment it happened.
+ */
+export type PermissionRecord = Record_<
+  'permission',
+  { readonly permission: string; readonly granted: boolean; readonly statement: string }
+>
+
+export const DISCOVERY_DISPOSITIONS = ['answered', 'skipped'] as const
+
+export type DiscoveryDisposition = (typeof DISCOVERY_DISPOSITIONS)[number]
+
+/**
+ * What the owner did with a discovery prompt — F02, D-163.
+ *
+ * The second agenda's memory. `answered` carries the record the answer became,
+ * so the agenda can go back and say **what the answer changed** — which is one
+ * of D-163's four rules and the one an agenda cannot fake.
+ *
+ * `skipped` carries nothing, and that is the point: a skip is respected, the
+ * prompt is not put again, and an unanswered question leaves the thing unknown
+ * rather than guessed at.
+ *
+ * **Nothing is written when a prompt is rendered** (D-043). This record is the
+ * owner acting, never the app displaying.
+ */
+export type DiscoveryResponseRecord = Record_<
+  'discovery-response',
+  {
+    /** The prompt's stable id, so an answer and a skip are both remembered. */
+    readonly prompt: string
+    readonly disposition: DiscoveryDisposition
+    /** What the answer became, when it became something. */
+    readonly produced?: RecordId
+  }
+>
+
+/**
  * Legacy data held at arm's length.
  *
  * Section 30: imported legacy records must not silently drive intelligence
@@ -701,6 +892,7 @@ export type CanonicalRecord =
   | ContextRecord
   | ConstraintRecord
   | GoalRecord
+  | DestinationRecord
   | CommitmentRecord
   | CommitmentWindowRecord
   | ThreadRecord
@@ -717,6 +909,8 @@ export type CanonicalRecord =
   | RelationshipEventRecord
   | DomainUpdateRecord
   | CoverageUpdateRecord
+  | PermissionRecord
+  | DiscoveryResponseRecord
   | ImportedLegacyRecord
 
 /** Records that can answer "what is the value of this concept right now?". */

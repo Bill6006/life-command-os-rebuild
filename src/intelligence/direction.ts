@@ -15,8 +15,9 @@ import {
   type TimeZoneId,
   type WeekStartDay,
 } from '../domain/time'
-import type { FactValue, GoalRecord } from '../domain/records'
+import type { FactValue, GoalRecord, GoalStatus } from '../domain/records'
 import type { MemoryView } from '../memory/view'
+import { resolveDestinations, type ActiveDestination } from './destinations'
 import { entityValue, textValue } from './values'
 
 /**
@@ -110,6 +111,18 @@ export interface ActiveGoal {
   readonly statement: string
   readonly domain: LifeDomainId
   readonly source: RecordId
+  /**
+   * Where the goal stands, carried rather than filtered away — F05.
+   *
+   * `DirectionState.goals` is still only the active ones and every reader of it
+   * behaves exactly as it did. What this buys is the other question: a
+   * milestone that has been **reached** is the one piece of progress evidence
+   * the owner supplies directly, and a list that dropped it could only ever
+   * describe what is still outstanding.
+   */
+  readonly status: GoalStatus
+  /** The destination this is a milestone of, where it is one — F01. */
+  readonly milestoneOf: EntityRef | undefined
   readonly targetWindow: DueWindow | undefined
   /** The owner-local day the goal was set on, so its span can be measured. */
   readonly setDay: LocalDayId
@@ -222,6 +235,17 @@ function describeHorizon(horizon: GoalHorizon): string {
 export interface DirectionState {
   readonly weekly: WeeklyDirection
   readonly goals: readonly ActiveGoal[]
+  /**
+   * What the owner is trying to become, with its milestones — F01, D-162.
+   *
+   * A third horizon beside the week and the goal, and the longest one the model
+   * has ever held. It carries no number and pulls no dimension of its own: what
+   * a destination changes about tonight it changes **through its milestone**,
+   * which is an ordinary goal and is ranked as one. That is not a shortcut — it
+   * is the only wiring that leaves Phase 82's re-cut instrument untouched
+   * (D-137, D-138) while still letting an aspiration reach a decision.
+   */
+  readonly destinations: readonly ActiveDestination[]
   /** Domains the owner is currently pointed at, most direct first. */
   readonly emphasised: readonly LifeDomainId[]
 }
@@ -330,13 +354,23 @@ function horizonOf(
   return { window, dueDay: due, daysRemaining, passed: daysRemaining < 0 }
 }
 
-export function activeGoals(view: MemoryView, moment: DirectionMoment): readonly ActiveGoal[] {
+/**
+ * Every goal in the record, whatever state it is in.
+ *
+ * Split out from {@link activeGoals} rather than inlined into it, because two
+ * different questions were being answered by one filter. What may pull a
+ * decision is the **active** goals, and that is unchanged. What a destination
+ * is made of is all of them: a milestone the owner has marked reached is the
+ * clearest progress evidence in the product, and dropping it here would leave a
+ * destination able to describe only what is still outstanding.
+ */
+export function allGoals(view: MemoryView, moment: DirectionMoment): readonly ActiveGoal[] {
   const goals: ActiveGoal[] = []
   const covered = coveredParts(view, moment.now)
   for (const record of view.history.effective) {
     if (record.kind !== 'goal') continue
     const goal = record as GoalRecord
-    if (goal.status !== 'active') continue
+    if (goal.occurredAt > moment.now) continue
     const domain = goal.domains[0] ?? view.entities.resolve(goal.goal)?.domain
     if (domain === undefined) continue
     goals.push({
@@ -344,6 +378,8 @@ export function activeGoals(view: MemoryView, moment: DirectionMoment): readonly
       statement: goal.statement,
       domain,
       source: goal.id,
+      status: goal.status,
+      milestoneOf: goal.milestoneOf,
       targetWindow: goal.targetWindow,
       setDay: localDayIdAt(goal.occurredAt, moment.zone),
       horizon: horizonOf(goal.targetWindow, moment),
@@ -353,17 +389,34 @@ export function activeGoals(view: MemoryView, moment: DirectionMoment): readonly
   return goals
 }
 
+export function activeGoals(view: MemoryView, moment: DirectionMoment): readonly ActiveGoal[] {
+  return allGoals(view, moment).filter((goal) => goal.status === 'active')
+}
+
 export function resolveDirection(
   view: MemoryView,
   moment: DirectionMoment,
   domains: DomainRegistry = coreDomains,
 ): DirectionState {
   const weekly = resolveWeeklyDirection(view, moment, domains)
-  const goals = activeGoals(view, moment)
+  const everyGoal = allGoals(view, moment)
+  const goals = everyGoal.filter((goal) => goal.status === 'active')
+  const destinations = resolveDestinations(view, moment, everyGoal)
 
   const emphasised: LifeDomainId[] = []
   if (weekly.state === 'set') emphasised.push(weekly.category)
   for (const goal of goals) if (!emphasised.includes(goal.domain)) emphasised.push(goal.domain)
+  /*
+   * A destination points at its area too, and it points last.
+   *
+   * Behind the week and behind the goals, because it is the least urgent claim
+   * of the three: a man is aiming at something for years and at a goal for
+   * months. It says which areas are his, not which is tonight's.
+   */
+  for (const destination of destinations) {
+    if (destination.state !== 'active') continue
+    if (!emphasised.includes(destination.domain)) emphasised.push(destination.domain)
+  }
 
-  return { weekly, goals, emphasised }
+  return { weekly, goals, destinations, emphasised }
 }

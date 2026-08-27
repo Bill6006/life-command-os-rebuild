@@ -192,3 +192,24 @@
   min-height: var(--touch-target);
   padding: 0 var(--space-2);
 }
+
+/*
+ * The one question after "Can't right now" — F07, D-164.
+ *
+ * Set apart from the lifecycle row rather than inside it, because it is not a
+ * sixth thing to do about the move: the inability is already recorded, and this
+ * is optional. It carries "Just leave it" in the same row as the causes so the
+ * way out is never smaller than the way in.
+ */
+.now-blocker {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-soft);
+}
+
+/* Something left half-finished today — F10. */
+.now-resume__sentence {
+  margin: 0 0 var(--space-1);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+}

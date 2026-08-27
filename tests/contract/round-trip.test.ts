@@ -30,6 +30,7 @@ const adaya = entityRef('person', 'Adaya')
 const bedtime = entityRef('routine', 'Bedtime')
 const kitchen = entityRef('place', 'Kitchen counter')
 const cardDebt = entityRef('financial-goal', 'Clear the card balance')
+const employable = entityRef('destination', 'Working as a cloud engineer')
 
 const recommendationRecord = record(
   'action-recommendation',
@@ -94,6 +95,14 @@ const minimal: Record<RecordKind, CanonicalRecord> = {
     'goal',
     { occurredAt: T },
     { goal: ccnaGoal, statement: 'Pass the CCNA', status: 'active' },
+  ),
+  // The smallest honest destination: an aim and a state. Baseline, evidence and
+  // unknowns are all absent, which is the ordinary case on the evening somebody
+  // first says what he is aiming at.
+  destination: record(
+    'destination',
+    { occurredAt: T },
+    { destination: employable, aim: 'Working as a cloud engineer', state: 'active' },
   ),
   commitment: record(
     'commitment',
@@ -186,6 +195,20 @@ const minimal: Record<RecordKind, CanonicalRecord> = {
     { occurredAt: T },
     { domain: DOMAIN.faith, evidenceStrength: 'weak' },
   ),
+  permission: record(
+    'permission',
+    { occurredAt: T },
+    {
+      permission: 'private-influence',
+      granted: false,
+      statement: 'Private / Sexual Health does not influence recommendations',
+    },
+  ),
+  'discovery-response': record(
+    'discovery-response',
+    { occurredAt: T },
+    { prompt: 'destination.career', disposition: 'skipped' },
+  ),
   'imported-legacy-record': record(
     'imported-legacy-record',
     { occurredAt: T },
@@ -252,6 +275,20 @@ const full: Record<RecordKind, CanonicalRecord> = {
       statement: 'Pass the CCNA',
       status: 'paused',
       targetWindow: { kind: 'due', earliest: T, latest: LATER },
+      parts: [subnetting],
+      milestoneOf: employable,
+    },
+  ),
+  destination: record(
+    'destination',
+    { occurredAt: T, domains: [DOMAIN.career], entities: [employable] },
+    {
+      destination: employable,
+      aim: 'Working as a cloud engineer',
+      state: 'paused',
+      baseline: 'Warehouse shifts, studying in the evenings',
+      evidence: ['An interview I did not have to talk my way into'],
+      unknowns: ['Whether the certification is the thing that gets me read'],
     },
   ),
   commitment: record(
@@ -334,7 +371,7 @@ const full: Record<RecordKind, CanonicalRecord> = {
   'action-completion': record(
     'action-completion',
     { occurredAt: T },
-    { recommendation: recommendationId, note: 'Got through the /26 cases' },
+    { recommendation: recommendationId, note: 'Got through the /26 cases', extent: 'partial' },
   ),
   'action-decline': record(
     'action-decline',
@@ -385,6 +422,20 @@ const full: Record<RecordKind, CanonicalRecord> = {
     { occurredAt: T, domains: [DOMAIN.money], entities: [cardDebt] },
     { domain: DOMAIN.money, evidenceStrength: 'moderate', subArea: 'card balance' },
   ),
+  permission: record(
+    'permission',
+    { occurredAt: T, domains: [DOMAIN.privateHealth], privacy: 'sensitive' },
+    {
+      permission: 'private-influence',
+      granted: true,
+      statement: 'Private / Sexual Health may influence recommendations',
+    },
+  ),
+  'discovery-response': record(
+    'discovery-response',
+    { occurredAt: T, domains: [DOMAIN.career] },
+    { prompt: 'destination.career', disposition: 'answered', produced: recommendationId },
+  ),
   'imported-legacy-record': record(
     'imported-legacy-record',
     { occurredAt: T, provenance: { source: 'legacy-import', writtenBy: 'importer' } },
@@ -400,7 +451,7 @@ function throughJson(value: unknown): unknown {
 
 describe('canonical records round-trip without loss', () => {
   it('covers every record kind the plan lists', () => {
-    expect(RECORD_KINDS).toHaveLength(22)
+    expect(RECORD_KINDS).toHaveLength(25)
     expect(Object.keys(minimal).sort()).toEqual([...RECORD_KINDS].sort())
     expect(Object.keys(full).sort()).toEqual([...RECORD_KINDS].sort())
   })

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Panel, PrimarySurface, Row, Rows, Screen } from '../../components/ui'
-import type { RecordId } from '../../domain/ids'
+import { newRecordId, type RecordId } from '../../domain/ids'
+import type { CanonicalRecord } from '../../domain/records'
+import type { MemoryView } from '../../memory/view'
 import { renderRecommendation, type RecommendationSemantics } from '../../domain/recommendation'
 import type { EntityIndex } from '../../domain/entities'
 import { localDateTimeAt, systemClock, type DayBlock } from '../../domain/time'
@@ -10,6 +12,12 @@ import {
   describeBelief,
   forbidRecord,
 } from '../../intelligence/corrections'
+import {
+  blockerQuestionFor,
+  blockerStatement,
+  standingBlockerRecords,
+  type BlockerCause,
+} from '../../intelligence/blockers'
 import { decide, type Decision } from '../../intelligence/engine'
 import { describePremise, type Explanation } from '../../intelligence/explain'
 import { evidenceForDecision, type DecisionEvidence } from '../../intelligence/insights'
@@ -17,9 +25,15 @@ import { nextGuideStep } from '../../intelligence/guide'
 import { growthAnswerRecords, type GrowthSuggestion } from '../../intelligence/growth'
 import {
   availableActions,
+  collectEpisodes,
+  nextResumable,
+  openEpisode,
   planLifecycle,
+  readable,
+  type Episode,
   type LifecycleAction,
   type MoveState,
+  type ResumableMove,
 } from '../../intelligence/lifecycle'
 import {
   nextDueOutcome,
@@ -48,6 +62,7 @@ import {
   EvidenceRate,
 } from '../evidence/EvidencePieces'
 import { originResolver, type RecordOrigin } from '../history/origin'
+import { BlockerQuestion } from '../life/DomainPanels'
 import { useMemory } from '../memory/memoryContext'
 import './NowScreen.css'
 
@@ -85,6 +100,8 @@ function stateWord(state: MoveState, block: DayBlock): string {
       return `New ${horizonWord(block)}`
     case 'started':
       return 'Under way'
+    case 'part-done':
+      return 'Part done'
     case 'completed':
       return 'Done'
     case 'declined':
@@ -105,6 +122,9 @@ function stateWord(state: MoveState, block: DayBlock): string {
 const ACTION_WORDS: Record<LifecycleAction, string> = {
   start: 'Start it',
   complete: 'Done',
+  // F10. Not "Partly done" — the owner is saying what he did, and "Got some of
+  // it done" is what a person says about an evening that ran out.
+  'part-done': 'Got some of it done',
   decline: 'Not today',
   'unable-now': "Can't right now",
   'try-another': 'Something else',
@@ -119,10 +139,93 @@ const ACTION_WORDS: Record<LifecycleAction, string> = {
 const ACTION_ORDER: readonly LifecycleAction[] = [
   'start',
   'complete',
+  // Beside **Done** rather than beside the two ways of saying no, because it is
+  // a report of what happened and not a refusal — which is the distinction F10
+  // says the product was collapsing.
+  'part-done',
   'try-another',
   'unable-now',
   'decline',
 ]
+
+/**
+ * The `action-unable-now` record the owner has just written, so the blocker can
+ * be attached to it.
+ *
+ * Superseding it rather than writing a second row is what keeps the episode
+ * fold honest: `collectEpisodes` applies events in canonical order and a second
+ * `action-unable-now` about the same recommendation would be a second event,
+ * which is not what happened. He did one thing and then said why.
+ */
+function lastUnableNow(
+  view: MemoryView,
+  episode: Episode,
+): Extract<CanonicalRecord, { kind: 'action-unable-now' }> | undefined {
+  let found: Extract<CanonicalRecord, { kind: 'action-unable-now' }> | undefined
+  for (const record of view.history.effective) {
+    if (record.kind !== 'action-unable-now') continue
+    if (record.recommendation !== episode.recommendation) continue
+    if (found === undefined || record.recordedAt > found.recordedAt) found = record
+  }
+  return found
+}
+
+/**
+ * Something left half-finished today, and the way back to it — F10.
+ *
+ * The controls are the state machine's own, which is what makes this a way back
+ * rather than a second screen: `availableActions` on an `unable-now` episode
+ * already allowed **started**, **completed** and **declined** before this phase,
+ * and nothing offered them.
+ */
+function ResumePanel({
+  resumable,
+  entities,
+  disabled,
+  onAct,
+}: {
+  resumable: ResumableMove
+  entities: EntityIndex
+  disabled: boolean
+  onAct: (action: LifecycleAction) => void
+}) {
+  const rendered = renderRecommendation(resumable.semantics, entities)
+  // D-018: no subject, no sentence. A move whose object no longer resolves is
+  // not offered back in vaguer words.
+  if (!rendered.ok) return null
+
+  return (
+    <Panel title="Where you left off">
+      <p className="now-resume__sentence" data-testid="resume-sentence">
+        {rendered.rendered.sentence}
+      </p>
+      <p className="note" data-testid="resume-state">
+        {resumable.state === 'part-done'
+          ? 'You got part of this done.'
+          : 'You said this did not fit at the time.'}
+        {resumable.blocker === undefined ? '' : ` ${resumable.blocker}`}
+      </p>
+      <div className="now-actions">
+        {resumable.actions.map((action) => (
+          <button
+            key={action}
+            type="button"
+            className="now-act"
+            disabled={disabled}
+            data-testid={`resume-${action}`}
+            onClick={() => onAct(action)}
+          >
+            {ACTION_WORDS[action]}
+          </button>
+        ))}
+      </div>
+      <p className="note">
+        Nothing here is a nudge. It is on the screen because you started it, and it goes when the
+        day does — {readable(resumable.state)} is a real place to leave something.
+      </p>
+    </Panel>
+  )
+}
 
 function EmptyNow() {
   return (
@@ -183,6 +286,17 @@ export function NowScreen() {
    * account of where it happened.
    */
   const [heldAnswer, setHeldAnswer] = useState<OutcomeAnswer | undefined>(undefined)
+
+  /**
+   * The move he has just said he cannot do, while the app asks what was in the
+   * way — F07, D-164.
+   *
+   * Session state and nothing more, exactly like `justRefused` above and for
+   * the same reason: the inability is already recorded, and this is the app
+   * asking one optional question about it. Skipping the question leaves the
+   * cause unknown, which D-164 says plainly is better than guessing at it.
+   */
+  const [blocked, setBlocked] = useState<RecommendationSemantics | undefined>(undefined)
 
   /*
    * A synchronous latch, deliberately a ref rather than state.
@@ -291,6 +405,14 @@ export function NowScreen() {
       if (action === 'decline' || action === 'unable-now' || action === 'try-another') {
         setJustRefused(semantics)
       }
+      /*
+       * And the one question D-164 allows, on the one action it is about.
+       *
+       * `unable-now` only. A decline is disagreement and a request for
+       * something else is a request; neither is a fact about the evening, and
+       * asking why after either would be the app arguing with him.
+       */
+      if (action === 'unable-now') setBlocked(semantics)
       append(() => {
         const planned = planLifecycle({
           view: memory.view,
@@ -422,8 +544,64 @@ export function NowScreen() {
     )
   }
 
+  /**
+   * What the owner said was in the way — F07, the field that did nothing.
+   *
+   * Two records at most: the inability is already written, so this supersedes
+   * it with the same record carrying the blocker, and adds a `constraint` where
+   * the cause is about the world rather than about tonight.
+   */
+  const answerBlocker = (semantics: RecommendationSemantics, cause: BlockerCause) => {
+    const moveName = decision.situation.entities.labelFor(semantics.target.object) ?? 'this'
+    const episode = openEpisode(
+      collectEpisodes(memory.view, memory.zone),
+      semantics.target,
+      decision.situation.dayId,
+    )
+    const written = episode === undefined ? undefined : lastUnableNow(memory.view, episode)
+    const moment = {
+      now: memory.now,
+      zone: memory.zone,
+      recordedAt: systemClock().now(),
+    }
+    append(() => [
+      ...(written === undefined
+        ? []
+        : [
+            {
+              ...written,
+              id: newRecordId(),
+              recordedAt: moment.recordedAt,
+              blocker: blockerStatement(cause, moveName),
+              supersedes: written.id,
+            },
+          ]),
+      ...standingBlockerRecords(cause, semantics, moveName, semantics.domain, moment),
+    ])
+    setBlocked(undefined)
+  }
+
   const local = localDateTimeAt(memory.now, memory.zone)
   const explanation = decision.explanation
+
+  /*
+   * Something started or interrupted today that has not been settled — F10.
+   *
+   * The stop routing 83's instrument found: "Can't right now" was recorded and
+   * the move left the screen, with `TRANSITIONS` allowing the return and no
+   * surface offering it. It is offered here rather than pushed back into the
+   * ranking, because a move blocked in this block is genuinely out of the
+   * running for it and what was missing is an **intention he already had**.
+   */
+  const resumable = nextResumable(memory.view, decision.situation, explanation?.semantics)
+  const blockerDecision =
+    blocked === undefined
+      ? undefined
+      : blockerQuestionFor(
+          decision.situation,
+          blocked,
+          decision.situation.entities.labelFor(blocked.target.object) ?? 'this',
+        )
 
   /*
    * Whether a course is worth offering beside this move.
@@ -527,6 +705,15 @@ export function NowScreen() {
             />
           )}
 
+          {blockerDecision === undefined || blocked === undefined ? null : (
+            <BlockerQuestion
+              decision={blockerDecision}
+              disabled={busy}
+              onAnswer={(cause) => answerBlocker(blocked, cause as BlockerCause)}
+              onLeave={() => setBlocked(undefined)}
+            />
+          )}
+
           <StopSuggesting
             refused={justRefused}
             entities={decision.situation.entities}
@@ -596,6 +783,22 @@ export function NowScreen() {
           offer={threadOffer}
           disabled={busy}
           onStart={() => startThread(threadOffer)}
+        />
+      )}
+
+      {/*
+        Something you left half-finished today — F10.
+
+        Below the move and below the question, because it is neither: it is not
+        what to do next and it is not something the app needs an answer to. One
+        at a time, like everything else on this screen.
+      */}
+      {resumable === undefined ? null : (
+        <ResumePanel
+          resumable={resumable}
+          entities={decision.situation.entities}
+          disabled={busy}
+          onAct={(action) => act(resumable.semantics, decision.situation)(action)}
         />
       )}
 

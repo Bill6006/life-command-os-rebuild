@@ -100,14 +100,24 @@ describe('D-160 — a completion on an earlier day does not settle today', () =>
     expect(decision.state, 'today’s occurrence has never been touched').toBe('shown')
   })
 
-  it('leaves all five controls live on it', () => {
+  it('leaves every control live on it', () => {
     const { decision } = readIt(THREE_DAYS_SINCE_ID)
 
-    // D-052 — every button is always drawn; this is about which of them are
-    // live, which is `availableActions` and nothing on the screen.
+    /*
+     * D-052 — every button is always drawn; this is about which of them are
+     * live, which is `availableActions` and nothing on the screen.
+     *
+     * Six since routing 84, not five: `part-done` joined the lifecycle (F10)
+     * and an untouched occurrence can reach it like any other settled state.
+     * The assertion is still the whole set rather than a subset, because what
+     * this test is about is that the earlier day's completion disables
+     * **nothing** — a check that allowed extras could pass while one of them
+     * had gone inert.
+     */
     expect([...availableActions(decision.state ?? 'shown')].sort()).toEqual([
       'complete',
       'decline',
+      'part-done',
       'start',
       'try-another',
       'unable-now',

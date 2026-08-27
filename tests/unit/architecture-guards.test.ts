@@ -548,6 +548,30 @@ describe('there is exactly one arbitration path', () => {
    * which directory imported which file. It has its own test below, and that
    * test is the one the phase gate names.
    */
+  /*
+   * Five joined in routing 84, and every one of them is on the recording side
+   * of the same line — the line `docs/ARCHITECTURE_BOUNDARIES.md` draws between
+   * **deciding** and **recording what the owner did**.
+   *
+   * - `authoring` turns a confirmed draft into an entity and a record. It is
+   *   the first thing in the product that can bring a semantic entity into
+   *   being (F04), and it ranks nothing: what a new goal does to tonight
+   *   happens in the ranking, through `goal-fit`, exactly as it always has.
+   * - `destinations` reads destinations out of history and describes them.
+   *   Every sentence it produces is the owner's own words or a state from a
+   *   closed list, and there is no arithmetic in the file at all (D-162).
+   * - `progress` sorts what happened onto the six evidence rungs and asks a
+   *   finished course what is left of it. It concludes nothing about a move.
+   * - `blockers` decides whether to **ask** what was in the way, which is a
+   *   question on a screen and not a recommendation (D-164).
+   * - `discovery` is the second information agenda. It is deliberately not on
+   *   Now's critical path and by construction cannot move tonight's answer —
+   *   which is the whole reason it is a separate instrument from the guide.
+   *
+   * Adding to this list stays an edit somebody makes deliberately, with a
+   * sentence saying why. That is the guard's value, and it is why the list is
+   * long rather than a pattern.
+   */
   const OPEN_TO_SURFACES = [
     'engine',
     'commitments',
@@ -564,6 +588,11 @@ describe('there is exactly one arbitration path', () => {
     'growth',
     'insights',
     'vocabulary',
+    'authoring',
+    'destinations',
+    'progress',
+    'blockers',
+    'discovery',
   ]
   const DECIDES = [
     'candidates',
@@ -647,6 +676,18 @@ describe('there is exactly one arbitration path', () => {
       'situation.ts',
       'threads.ts',
       'lifecycle.ts',
+      /*
+       * The sixth, added by routing 84, and it is the same argument as
+       * `lifecycle.ts`: it reads a finished course only to **ask about it**.
+       *
+       * `dueCourseReflections` finds threads in state `done` and puts one
+       * question on screen days later — what is left of it, and whether it has
+       * been used. It ranks nothing, proposes nothing and reaches no decision;
+       * what it produces is an `outcome` record pointed at the thread. That is
+       * the recording side of the line `docs/ARCHITECTURE_BOUNDARIES.md` draws,
+       * which is why `outcomes.ts` and `corrections.ts` sit on the same side.
+       */
+      'progress.ts',
     ]
     for (const file of sourceFiles('src/intelligence')) {
       const name = file.split(sep).pop() ?? ''
@@ -1836,12 +1877,34 @@ describe('F40 — no owner-facing control without a name', () => {
       if (insideALabel(code, start)) continue
 
       const id = /\bid=\{?([^\s}]+)\}?/.exec(attributes)?.[1]
-      // An id is only a name when something points at it. `htmlFor` is searched
-      // in the whole file rather than nearby, because the label and the control
-      // are frequently a few lines apart and always in the same component.
+      /*
+       * An id is only a name when something points at it. `htmlFor` is searched
+       * in the whole file rather than nearby, because the label and the control
+       * are frequently a few lines apart and always in the same component.
+       *
+       * **Three forms, and the third was missing** — routing 84. It accepted a
+       * template literal and a bare expression and not `htmlFor="a-string"`,
+       * which is the plainest correct spelling there is and the one a new form
+       * reaches for first. A guard that only recognises the shapes somebody has
+       * already written is D-179's failure in its mildest form: it does not
+       * pass a defect, it fails a repair, and what it teaches an author is to
+       * match its habits rather than to name the control.
+       *
+       * The widening cannot weaken it. Every branch still requires a `htmlFor`
+       * that names **this control's own id**; what changed is that three
+       * spellings of that are now recognised instead of two, and the
+       * reintroduction below still bites.
+       */
       if (id !== undefined && code.includes('htmlFor=')) {
         const bare = id.replace(/^[`'"]|[`'"]$/g, '')
-        if (code.includes(`htmlFor={\`${bare}`) || code.includes(`htmlFor={${id}`)) continue
+        if (
+          code.includes(`htmlFor={\`${bare}`) ||
+          code.includes(`htmlFor={${id}`) ||
+          code.includes(`htmlFor="${bare}"`) ||
+          code.includes(`htmlFor='${bare}'`)
+        ) {
+          continue
+        }
       }
 
       out.push(`${repoPath(file)}:${line} — ${match[1]} with no accessible name`)

@@ -893,6 +893,21 @@ export function noActionCopy(
         detail:
           'Three passes in a row is an answer. Nothing more will be put in front of you until this part of the day is over.',
       }
+    case 'enough-done-today':
+      /*
+       * F11 — completion needs closure, not another available task.
+       *
+       * The distinction this makes is the one the review is about. "Nothing new
+       * for today" is a statement about the app's list. This is a statement
+       * about his day, and it is the only sentence in the catalogue that says
+       * something happened. It names no count — what was done is on Timeline,
+       * and a number here would be the app grading an evening.
+       */
+      return {
+        headline: 'That is enough for today.',
+        detail:
+          'You did what there was, and the rest has already been in front of you. Nothing more needs to move today.',
+      }
     case 'nothing-in-reach':
       /*
        * AUD-0034, and D-038's line drawn carefully.
@@ -972,6 +987,32 @@ const ENOUGH_TO_SEE_BY = 3
 function currentPictureExists(situation: Situation): boolean {
   const known = situation.considered.filter((fact) => fact.state !== 'unknown').length
   return known >= ENOUGH_TO_SEE_BY
+}
+
+/**
+ * Whether the silence is a finished day rather than an empty list — F11.
+ *
+ * Both halves are required and neither is inferred. **Everything that survived
+ * was held back for having already been on screen** — not for the hour, not for
+ * the body, not because nothing was worth doing — and **at least one move was
+ * completed today**. Either without the other is a different silence, and the
+ * catalogue has a sentence for each of them already.
+ *
+ * A part-done evening does not count. He said himself that he did not finish,
+ * and telling him he has done enough would be the app contradicting him.
+ */
+function finishedForToday(
+  reason: NoActionReason,
+  situation: Situation,
+  rejected: readonly Rejection[],
+): boolean {
+  if (reason !== 'everything-ruled-out') return false
+  if (rejected.length === 0) return false
+  if (!rejected.every((row) => row.reason === 'just-covered')) return false
+  return situation.recentMoves.some(
+    (prior) =>
+      prior.state === 'completed' && localDayIdAt(prior.at, situation.zone) === situation.dayId,
+  )
 }
 
 export function decide(
@@ -1106,10 +1147,24 @@ export function decide(
     }
   } else if (selection.chosen === undefined) {
     const proposed = selection.noAction ?? 'nothing-worth-doing'
-    const reason: NoActionReason =
+    const base: NoActionReason =
       proposed === 'nothing-proposed' && currentPictureExists(situation)
         ? 'nothing-in-reach'
         : proposed
+    /*
+     * And whether the honest word for this silence is that he is finished —
+     * F11, F13.
+     *
+     * Deliberately the last step and deliberately narrow. It changes no
+     * decision: `base` is the reason the arbiter actually reached, and this
+     * only asks whether a truer sentence is available for it. The condition is
+     * that everything left was withheld for having already been seen **and**
+     * something was actually completed today, which is the difference between
+     * an empty list and a finished day.
+     */
+    const reason: NoActionReason = finishedForToday(base, situation, rejected)
+      ? 'enough-done-today'
+      : base
     noAction = { reason, ...noActionCopy(reason, situation, rejected) }
   } else {
     const result = explain(selection.chosen, selection.ranked[1], situation, selection.margin)

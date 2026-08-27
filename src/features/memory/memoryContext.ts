@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react'
 import type { CanonicalRecord } from '../../domain/records'
+import type { AuthoringResult } from '../../intelligence/authoring'
 import type { Instant, TimeZoneId, WeekStartDay } from '../../domain/time'
 import type { ValidationIssue } from '../../domain/validation'
 import type { RestoreOutcome, RestorePlan } from '../../memory/restore'
@@ -60,6 +61,27 @@ export interface MemoryContextValue {
 
   loadDocument(json: string, label?: string): Promise<void>
   append(records: readonly CanonicalRecord[]): Promise<void>
+  /**
+   * Introduce something the app can then refer to — F04, routing 84 package 3.
+   *
+   * The one write path that brings a **semantic entity** into being. Before
+   * this phase there was none: no control under `src/features` called
+   * `createEntity`, so the subject of a goal, a topic, a person, a place or a
+   * skill could only arrive through a file — which is the largest single class
+   * of finding in the owner-use review.
+   *
+   * Deliberately separate from {@link append} rather than an extra argument on
+   * it. An entity is not a record: it has no envelope, no provenance and no
+   * place in history, and folding the two into one call would make every
+   * existing caller carry a parameter it can never use.
+   *
+   * **Entities are written first.** A record whose subject is not in the index
+   * yet is a renderer with nothing to name, and D-018 makes that a refusal to
+   * say anything rather than a fallback word — so for the moment between the
+   * two writes, the safe order is the one where the name exists and nothing
+   * refers to it yet.
+   */
+  create(authored: AuthoringResult): Promise<void>
   /**
    * Empty the laboratory and give the owner his own history back.
    *

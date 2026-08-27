@@ -1,11 +1,13 @@
 import { createRecordFactory } from '../domain/build'
 import { coreConcepts, type ConceptRegistry } from '../domain/concepts'
-import type { LifeDomainId } from '../domain/domains'
+import { DOMAIN, type LifeDomainId } from '../domain/domains'
 import type { EntityIndex, EntityRef } from '../domain/entities'
 import { newRecordId, type RecordId } from '../domain/ids'
+import { permissionDefinition, type PermissionId } from '../domain/privacy'
 import { patternNameFor, verbLabel, type ActionVerb } from '../domain/recommendation'
 import type {
   BeliefCorrectionRecord,
+  CanonicalRecord,
   ContextRecord,
   CorrectionRecord,
   PreferenceRecord,
@@ -16,8 +18,16 @@ import type {
   FactValue,
   GoalRecord,
   GoalStatus,
+  PermissionRecord,
 } from '../domain/records'
-import type { Instant, TimeZoneId } from '../domain/time'
+import {
+  civilDateFromDayId,
+  instantAtLocal,
+  localDateTimeAt,
+  type Instant,
+  type LocalDayId,
+  type TimeZoneId,
+} from '../domain/time'
 import type { ConceptId, DueWindow } from '../domain/windows'
 import { actionScopeParts } from './association'
 import { parseBeliefKey } from './learning'
@@ -400,6 +410,18 @@ export function goalCorrectionRecord(
       status: input.status,
       ...withHorizon(carriedForward(input.targetWindow, input.previous.targetWindow)),
       ...withParts(carriedForward(input.parts, input.previous.parts)),
+      /*
+       * And it stays a milestone of whatever it was a milestone of — F01.
+       *
+       * Carried forward unconditionally, with no way to change it through this
+       * control. Marking a milestone reached is the single most important thing
+       * this control does in routing 84, and a correction that quietly turned
+       * it back into an ordinary goal would take the reached step off the
+       * destination it belongs to at the exact moment it mattered.
+       */
+      ...(input.previous.milestoneOf === undefined
+        ? {}
+        : { milestoneOf: input.previous.milestoneOf }),
     },
   )
 }
@@ -468,5 +490,244 @@ export function domainStatusCorrectionRecord(
       domains: [domain],
     },
     { domain, summary },
+  )
+}
+
+// ---------------------------------------------------------------------------
+// The correction grammar — F32, D-165, package 6
+// ---------------------------------------------------------------------------
+
+/**
+ * The four things "that's not right" can mean.
+ *
+ * The review watched one gesture do all four jobs: *"Not how it went"*
+ * immediately suppressed a conclusion with no scope shown and no visible way
+ * back, and a corrected energy reading left two readings on screen with nothing
+ * marking one as superseded. The owner needs to repair the memory without
+ * becoming a database operator, and without invalidating a much broader
+ * conclusion than he intended.
+ *
+ * D-165: each gesture **says what it will change before it changes it**.
+ */
+export const CORRECTION_GESTURES = [
+  /** This did not happen. */
+  'event',
+  /** It happened, on a different day. */
+  'event-timing',
+  /** What the app currently believes is wrong. */
+  'current-fact',
+  /** What the app worked out from several things is wrong. */
+  'learned-interpretation',
+] as const
+
+export type CorrectionGesture = (typeof CORRECTION_GESTURES)[number]
+
+/**
+ * What a gesture will do, said before it acts.
+ *
+ * `preserved` is the half that makes this a grammar rather than a warning. The
+ * owner's hesitation is not about whether the app will do something — it is
+ * about how far it will reach, and every one of these four reaches exactly as
+ * far as its own sentence says and no further.
+ */
+export interface CorrectionConsequence {
+  readonly gesture: CorrectionGesture
+  /** What this changes. */
+  readonly consequence: string
+  /** What it deliberately leaves alone. */
+  readonly preserved: string
+  /** Whether there is a way back, and what it is. */
+  readonly reversal: string
+}
+
+/**
+ * The consequence of each gesture, in the owner's terms.
+ *
+ * A `Record<CorrectionGesture, …>` so a fifth gesture cannot arrive without a
+ * sentence — D-179. Every one of the four is generated from this table and from
+ * nowhere else, which is what makes "each correction gesture states its
+ * consequence before it acts" a property a test can hold rather than a habit a
+ * reviewer has to notice.
+ */
+const CONSEQUENCE: Record<CorrectionGesture, (subject: string) => CorrectionConsequence> = {
+  event: (subject) => ({
+    gesture: 'event',
+    consequence: `${subject} stops counting as something that happened.`,
+    preserved:
+      'The entry stays in your history, marked as withdrawn. Nothing else about that day changes.',
+    reversal: 'Recording it again puts it back.',
+  }),
+  'event-timing': (subject) => ({
+    gesture: 'event-timing',
+    consequence: `${subject} moves to the day it actually happened.`,
+    preserved:
+      'What it says is unchanged, and the original entry stays in your history underneath it.',
+    reversal: 'Moving it again is the same gesture.',
+  }),
+  'current-fact': (subject) => ({
+    gesture: 'current-fact',
+    consequence: `${subject} becomes what the app reads from now on.`,
+    preserved:
+      'The earlier reading stays in your history as what was true then. It is superseded, not deleted.',
+    reversal: 'Correcting it again supersedes this one in turn.',
+  }),
+  'learned-interpretation': (subject) => ({
+    gesture: 'learned-interpretation',
+    consequence: `The app stops concluding ${subject}, from now on.`,
+    preserved:
+      'Everything you actually recorded stays exactly as it is. What stops is the conclusion drawn from it, and only from here forward — D-047.',
+    reversal: 'You can let it go back to what it had learned.',
+  }),
+}
+
+export function correctionConsequence(
+  gesture: CorrectionGesture,
+  subject: string,
+): CorrectionConsequence {
+  return CONSEQUENCE[gesture](subject)
+}
+
+/**
+ * Withdrawing something the record says happened — F32.
+ *
+ * Routing 83's instrument stopped here: *"nothing withdraws a completion"*, and
+ * `liftVetoRecord` was the only writer of a `correction` record in the product.
+ * The mechanism was complete — `resolveHistory` retracts on a `correction` with
+ * no `replacedBy` and has since Phase 1 — and there was no control.
+ *
+ * Nothing is deleted. The entry stays, marked withdrawn, which is what makes a
+ * mis-tap survivable in a record meant to last a lifetime.
+ */
+export function withdrawEventRecord(
+  event: RecordId,
+  reason: string,
+  moment: CorrectionMoment,
+  id: RecordId = newRecordId(),
+): CorrectionRecord {
+  const build = createRecordFactory({ zone: moment.zone, provenance: LIFE_PAGE_PROVENANCE })
+  return build(
+    'correction',
+    {
+      occurredAt: moment.now,
+      ...(moment.recordedAt === undefined ? {} : { recordedAt: moment.recordedAt }),
+      id,
+    },
+    { corrects: event, reason },
+  )
+}
+
+/**
+ * Moving an entry to the day it actually happened — F32.
+ *
+ * The second of the three things routing 83 found no route to. It is a
+ * supersession rather than an edit: the same record, dated correctly, with the
+ * original left standing underneath it exactly as written.
+ *
+ * `occurredAt` moves and `recordedAt` does not — that is the whole distinction
+ * the envelope has carried since Phase 1 and the reason this is expressible at
+ * all. When it happened has been corrected; when it was written down has not,
+ * and rewriting that would be the app lying about its own memory.
+ *
+ * **Backfilling an entry that was never recorded is deliberately not here.**
+ * D-165 puts authoring a historical event in the later Reach package with
+ * AUD-0050's retraction half, and the grammar precedes the authoring surface
+ * rather than waiting for it.
+ */
+export function redateEventRecord(
+  event: CanonicalRecord,
+  to: LocalDayId,
+  moment: CorrectionMoment,
+  id: RecordId = newRecordId(),
+): CanonicalRecord {
+  const local = localDateTimeAt(event.occurredAt, event.zone)
+  const moved = instantAtLocal(
+    {
+      ...civilDateFromDayId(to),
+      hour: local.hour,
+      minute: local.minute,
+      second: local.second,
+    },
+    event.zone,
+  )
+  return {
+    ...event,
+    id,
+    occurredAt: moved,
+    // When it was written down is a fact about the app's memory and is not
+    // being corrected. Only the day it is about has moved.
+    recordedAt: moment.recordedAt ?? event.recordedAt,
+    supersedes: event.id,
+  }
+}
+
+/**
+ * Which entries an owner may correct as **events**.
+ *
+ * The things that either happened or did not: what he did, what came of it, and
+ * what he told the app about somebody. A reading is corrected as a current
+ * fact, which is a different gesture with a different consequence, and a
+ * conclusion is corrected as a learned interpretation.
+ */
+export const CORRECTABLE_EVENT_KINDS: readonly CanonicalRecord['kind'][] = [
+  'action-start',
+  'action-completion',
+  'action-decline',
+  'action-unable-now',
+  'outcome',
+  'relationship-event',
+  'domain-update',
+]
+
+export function isCorrectableEvent(record: CanonicalRecord): boolean {
+  return CORRECTABLE_EVENT_KINDS.includes(record.kind)
+}
+
+// ---------------------------------------------------------------------------
+// The private permission — D-167, F30, package 6
+// ---------------------------------------------------------------------------
+
+/**
+ * The owner granting or withdrawing a standing permission.
+ *
+ * A record rather than a setting, for the reason every other decision in this
+ * product is a record: a permission is a thing he said, with a date on it, and
+ * a settings object would be a second store of truth that a restore could
+ * quietly lose (section 29).
+ *
+ * The statement is taken from the permission's own definition rather than
+ * composed here, so what Timeline shows and what the control promises are the
+ * same sentence — D-175's rule, applied to a permission instead of to a
+ * discretion promise.
+ */
+export function permissionRecord(
+  permission: PermissionId,
+  granted: boolean,
+  moment: CorrectionMoment,
+  id: RecordId = newRecordId(),
+): PermissionRecord {
+  const definition = permissionDefinition(permission)
+  const build = createRecordFactory({ zone: moment.zone, provenance: LIFE_PAGE_PROVENANCE })
+  return build(
+    'permission',
+    {
+      occurredAt: moment.now,
+      ...(moment.recordedAt === undefined ? {} : { recordedAt: moment.recordedAt }),
+      id,
+      domains: [DOMAIN.privateHealth],
+      /*
+       * `sensitive`, not `private`.
+       *
+       * What he permitted is not itself an intimate fact, and classing it
+       * `private` would hide the row that says what the app is allowed to do
+       * behind the very setting it governs. The Data screen and Timeline are
+       * entitled to show that a permission changed and when.
+       */
+      privacy: 'sensitive',
+    },
+    {
+      permission,
+      granted,
+      statement: granted ? definition.granted : definition.withheld,
+    },
   )
 }

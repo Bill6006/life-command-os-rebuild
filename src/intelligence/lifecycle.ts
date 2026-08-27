@@ -55,9 +55,23 @@ import { setThreadStateRecord, threadFor } from './threads'
  * `recordedAt`, exactly as D-037 does for guide answers.
  */
 
-export type MoveState = 'shown' | 'started' | 'completed' | 'declined' | 'unable-now'
+/**
+ * `part-done` is F10's state, and it is the one real life actually has.
+ *
+ * *"Real life rarely consists only of clean starts and finishes."* Fifteen of
+ * the twenty-five minutes, half the kitchen, two of the three questions. Before
+ * this the owner had two words for that evening — **Done**, which overstates
+ * it, or nothing, which loses it — and the review found the app interpreting
+ * disruption as refusal because those were the only shapes it had.
+ *
+ * It is a settled state that is **not terminal**. Only `completed` is terminal,
+ * and part of a thing done can still be finished, put down, or interrupted
+ * again.
+ */
+export type MoveState = 'shown' | 'started' | 'part-done' | 'completed' | 'declined' | 'unable-now'
 
-export type LifecycleAction = 'start' | 'complete' | 'decline' | 'unable-now' | 'try-another'
+export type LifecycleAction =
+  'start' | 'complete' | 'part-done' | 'decline' | 'unable-now' | 'try-another'
 
 /**
  * What the owner may do next, from where the move currently stands.
@@ -68,16 +82,20 @@ export type LifecycleAction = 'start' | 'complete' | 'decline' | 'unable-now' | 
  * owner's life in order to be tidy about its own state machine.
  */
 const TRANSITIONS: Record<MoveState, readonly MoveState[]> = {
-  shown: ['started', 'completed', 'declined', 'unable-now'],
-  started: ['completed', 'declined', 'unable-now'],
-  'unable-now': ['started', 'completed', 'declined'],
-  declined: ['started', 'completed'],
+  shown: ['started', 'part-done', 'completed', 'declined', 'unable-now'],
+  started: ['part-done', 'completed', 'declined', 'unable-now'],
+  // Part of it happened, and none of that closes anything off: it can be
+  // finished, picked up again, put down, or interrupted a second time.
+  'part-done': ['started', 'completed', 'declined', 'unable-now'],
+  'unable-now': ['started', 'part-done', 'completed', 'declined'],
+  declined: ['started', 'part-done', 'completed'],
   completed: [],
 }
 
 const RESULTING_STATE: Record<LifecycleAction, MoveState> = {
   start: 'started',
   complete: 'completed',
+  'part-done': 'part-done',
   decline: 'declined',
   'unable-now': 'unable-now',
   'try-another': 'declined',
@@ -184,8 +202,19 @@ export function collectEpisodes(view: MemoryView, zone: TimeZoneId): readonly Ep
       case 'action-completion': {
         const episode = byRecommendation.get(record.recommendation)
         if (episode === undefined) break
-        if (!TRANSITIONS[episode.state].includes('completed')) break
-        episode.state = 'completed'
+        /*
+         * The record says how much of it happened; the state follows — F10.
+         *
+         * Absent `extent` means the whole of it, so every completion written
+         * before this field existed still lands on `completed` and every reader
+         * of the state behaves exactly as it did. A partial one lands on
+         * `part-done`, which is not terminal, so the app can still ask him to
+         * finish it and learning does not pool it with the evenings that went
+         * the whole way.
+         */
+        const reached: MoveState = record.extent === 'partial' ? 'part-done' : 'completed'
+        if (!TRANSITIONS[episode.state].includes(reached)) break
+        episode.state = reached
         episode.settledAt = record.occurredAt
         break
       }
@@ -344,6 +373,24 @@ export function planLifecycle(request: LifecycleRequest): LifecyclePlan {
         }),
       )
       break
+    case 'part-done':
+      /*
+       * The same record, saying how much — F10.
+       *
+       * Not a new record kind, because the fact is the same fact: the attempt
+       * was carried out. `extent` is the only thing that differs and it is the
+       * only thing that should, so everything that already reads a completion
+       * from the record — a goal piece having had a session, Timeline's line,
+       * the export — goes on working without knowing this state exists.
+       */
+      records.push(
+        build('action-completion', envelope, {
+          recommendation,
+          extent: 'partial',
+          ...(request.reason === undefined ? {} : { note: request.reason }),
+        }),
+      )
+      break
     case 'decline':
       records.push(
         build('action-decline', envelope, {
@@ -424,6 +471,8 @@ export function readable(state: MoveState): string {
       return 'new'
     case 'started':
       return 'started'
+    case 'part-done':
+      return 'part done'
     case 'completed':
       return 'done'
     case 'declined':
@@ -437,8 +486,88 @@ export function readable(state: MoveState): string {
 export function availableActions(state: MoveState): readonly LifecycleAction[] {
   const allowed = TRANSITIONS[state]
   const out: LifecycleAction[] = []
-  for (const action of ['start', 'complete', 'decline', 'unable-now', 'try-another'] as const) {
+  for (const action of [
+    'start',
+    'part-done',
+    'complete',
+    'decline',
+    'unable-now',
+    'try-another',
+  ] as const) {
     if (allowed.includes(RESULTING_STATE[action])) out.push(action)
   }
   return out
+}
+
+// ---------------------------------------------------------------------------
+// Picking something back up — F10, package 5
+// ---------------------------------------------------------------------------
+
+/**
+ * A move today that was interrupted or part-done and can still be finished.
+ *
+ * Routing 83's instrument stopped here, and the stop was exact: **"Can't right
+ * now" is recorded and the move then leaves the screen.** `TRANSITIONS` has
+ * always allowed `unable-now → started | completed | declined`, and no surface
+ * ever offered any of them again — so an interruption was indistinguishable
+ * from a refusal in the only place it mattered, which is what the owner sees.
+ *
+ * The way back is on the surface rather than in the arbiter, and that placement
+ * is deliberate. A move refused or blocked in this block is genuinely out of
+ * the running for it (AUD-0023, and the duplication rules that follow from it),
+ * and reaching into the ranking to bring it back would be undoing a decision
+ * the app was right to make. What was missing is not a recommendation — it is
+ * an **intention he already had**, which is a different thing and belongs
+ * beside the day rather than inside the decision.
+ *
+ * Today only. An intention carried across midnight is a plan for tomorrow, and
+ * D-134 is explicit that `hold` may not name tomorrow.
+ */
+export interface ResumableMove {
+  readonly episode: Episode
+  readonly semantics: RecommendationSemantics
+  readonly state: MoveState
+  /** What was in the way, where he said. Absent is ordinary and stays so. */
+  readonly blocker: string | undefined
+  /** Which actions the state machine will actually take from here. */
+  readonly actions: readonly LifecycleAction[]
+}
+
+export function resumableToday(view: MemoryView, situation: Situation): readonly ResumableMove[] {
+  const out: ResumableMove[] = []
+  for (const episode of collectEpisodes(view, situation.zone)) {
+    if (episode.dayId !== situation.dayId) continue
+    if (episode.state !== 'unable-now' && episode.state !== 'part-done') continue
+    if (episode.shownAt > situation.at) continue
+    out.push({
+      episode,
+      semantics: episode.semantics,
+      state: episode.state,
+      blocker: episode.blocker,
+      actions: availableActions(episode.state),
+    })
+  }
+  return out.sort((a, b) => (b.episode.settledAt ?? 0) - (a.episode.settledAt ?? 0))
+}
+
+/**
+ * The one to offer, or nothing.
+ *
+ * One at a time, for the same reason the guide asks one question at a time and
+ * the growth panel raises one finding at a time: this screen is read with one
+ * thumb and a spare minute, and a list of unfinished things is the nagging the
+ * whole product is fenced against.
+ *
+ * The move currently on screen is never offered back — it is already there, and
+ * showing it twice would be the app arguing with itself.
+ */
+export function nextResumable(
+  view: MemoryView,
+  situation: Situation,
+  onScreen: RecommendationSemantics | undefined,
+): ResumableMove | undefined {
+  return resumableToday(view, situation).find(
+    (move) =>
+      onScreen === undefined || targetKey(move.semantics.target) !== targetKey(onScreen.target),
+  )
 }

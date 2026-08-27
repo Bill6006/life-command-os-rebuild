@@ -1,7 +1,9 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, sep } from 'node:path'
 import { expect } from 'vitest'
+import type { LifeDomainId } from '../../src/domain/domains'
 import type { EntityKind } from '../../src/domain/entities'
+import { newRecordId, type RecordId } from '../../src/domain/ids'
 import {
   RECORD_KINDS,
   type CanonicalRecord,
@@ -26,14 +28,20 @@ import {
   beliefCorrectionRecord,
   forbidRecord,
   liftVetoRecord,
+  permissionRecord,
+  redateEventRecord,
+  withdrawEventRecord,
 } from '../../src/intelligence/corrections'
 import { decide, type Decision } from '../../src/intelligence/engine'
 import { growthAnswerRecords, growthStageRecord } from '../../src/intelligence/growth'
 import { nextGuideStep, type GuideStep } from '../../src/intelligence/guide'
 import {
   availableActions,
+  nextResumable,
   planLifecycle,
+  resumableToday,
   type LifecycleAction,
+  type ResumableMove,
 } from '../../src/intelligence/lifecycle'
 import {
   nextDueOutcome,
@@ -54,6 +62,33 @@ import {
   removeCommitmentWindowRecord,
   reviseCommitmentWindowRecord,
 } from '../../src/intelligence/commitments'
+import {
+  authoringRecords,
+  destinationRecords,
+  proposeAuthoring,
+  relationshipEventRecord,
+  reviseDestinationRecord,
+  type AuthoringDraft,
+  type AuthoringResult,
+  type DestinationDraft,
+} from '../../src/intelligence/authoring'
+import {
+  blockerQuestionFor,
+  blockerStatement,
+  standingBlockerRecords,
+  type BlockerCause,
+  type BlockerDecision,
+} from '../../src/intelligence/blockers'
+import {
+  courseReflectionRecord,
+  readProgress,
+  type ProgressReading,
+} from '../../src/intelligence/progress'
+import {
+  discoveryAgenda,
+  discoveryResponseRecord,
+  type DiscoveryAgenda,
+} from '../../src/intelligence/discovery'
 import { createMemoryStore } from '../../src/memory/memoryStore'
 import { snapshotFromWire } from '../../src/memory/snapshot'
 import type { StoreSnapshot } from '../../src/memory/store'
@@ -307,6 +342,139 @@ export const OWNER_ROUTES: readonly OwnerRoute[] = [
     needs: {},
     writes: ['commitment-window'],
   },
+
+  // -------------------------------------------------------------------------
+  // Routing 84 — what an owner can now bring into being
+  // -------------------------------------------------------------------------
+
+  {
+    id: 'destination',
+    surface: 'domain-page',
+    gesture: 'Say what you are aiming at',
+    builder: 'authoring.destinationRecords',
+    /*
+     * Nothing. That is the whole of package 1's claim and the reason it is
+     * first: the longest-horizon thing in the model is reachable from an empty
+     * store, by typing one sentence.
+     */
+    needs: {},
+    // The milestone is a goal, and in Career it is also the learning topic the
+    // study generator has always needed and never had.
+    writes: ['destination', 'goal', 'explicit-fact'],
+  },
+  {
+    id: 'destination-revise',
+    surface: 'domain-page',
+    gesture: 'Fill that in',
+    builder: 'authoring.reviseDestinationRecord',
+    needs: { records: ['destination'] },
+    writes: ['destination'],
+  },
+  {
+    id: 'authoring',
+    surface: 'domain-page',
+    gesture: 'Tell the app about something',
+    builder: 'authoring.authoringRecords',
+    /*
+     * The single highest-leverage item in the adjudication, and it needs
+     * nothing. Six kinds through one control: a goal and a domain-update for
+     * the four that become entities, a commitment-window for an obligation with
+     * times on it, a commitment for one with only a day.
+     */
+    needs: {},
+    writes: ['goal', 'domain-update', 'commitment-window', 'commitment'],
+  },
+  {
+    id: 'relationship-event',
+    surface: 'domain-page',
+    gesture: 'Something happened',
+    builder: 'authoring.relationshipEventRecord',
+    // A person has to exist first, and now one can.
+    needs: { entities: ['person'] },
+    writes: ['relationship-event'],
+  },
+  {
+    id: 'blocker',
+    surface: 'now',
+    gesture: 'What got in the way?',
+    builder: 'blockers.standingBlockerRecords',
+    // Only asked after the owner has said he cannot do something.
+    needs: { records: ['action-unable-now'] },
+    writes: ['constraint'],
+  },
+  {
+    id: 'milestone-reached',
+    surface: 'domain-page',
+    gesture: 'Done, on a milestone',
+    builder: 'corrections.goalCorrectionRecord',
+    /*
+     * The same builder as `goal-correction` and the same screen, and it is
+     * listed once — this is a state on a control already in the table rather
+     * than a second control. The row exists so the reader sees where a
+     * milestone's *reached* state comes from, and `writes` adds nothing new.
+     */
+    needs: { records: ['goal'] },
+    writes: ['goal'],
+  },
+  {
+    id: 'course-reflection',
+    surface: 'domain-page',
+    gesture: 'how much of a finished course is left',
+    builder: 'progress.courseReflectionRecord',
+    needs: { records: ['thread'] },
+    writes: ['outcome'],
+  },
+  {
+    id: 'withdraw-event',
+    surface: 'domain-page',
+    gesture: 'This did not happen',
+    builder: 'corrections.withdrawEventRecord',
+    needs: { records: ['action-completion'] },
+    writes: ['correction'],
+  },
+  {
+    id: 'redate-event',
+    surface: 'domain-page',
+    gesture: 'It was a different day',
+    builder: 'corrections.redateEventRecord',
+    /*
+     * It supersedes an entry with the same entry, dated correctly — so it can
+     * only ever produce a kind that was already reachable, and `writes` says
+     * exactly that rather than claiming a new route.
+     */
+    needs: { records: ['action-completion'] },
+    writes: ['action-completion'],
+  },
+  {
+    id: 'permission',
+    surface: 'domain-page',
+    gesture: 'Allow Private / Sexual Health to influence recommendations',
+    builder: 'corrections.permissionRecord',
+    needs: {},
+    writes: ['permission'],
+  },
+  {
+    id: 'discovery',
+    surface: 'life',
+    gesture: 'the second agenda’s question, answered or left',
+    builder: 'discovery.discoveryResponseRecord',
+    needs: {},
+    writes: ['discovery-response'],
+  },
+  {
+    id: 'discovery-answer',
+    surface: 'life',
+    gesture: 'answering the second agenda',
+    builder:
+      'authoring.destinationRecords, authoring.authoringRecords, authoring.reviseDestinationRecord',
+    /*
+     * The same builders as the domain page's controls and a different control,
+     * which is what the per-screen rule is for — QA-83-003's second finding
+     * exactly. Two screens calling one builder are two controls.
+     */
+    needs: {},
+    writes: ['destination', 'goal', 'explicit-fact', 'commitment', 'commitment-window'],
+  },
 ]
 
 /**
@@ -317,19 +485,39 @@ export const OWNER_ROUTES: readonly OwnerRoute[] = [
  * and emitted by nothing; `imported-legacy-record` is what the legacy importer
  * quarantines a foreign row as, which is a file arriving rather than an owner
  * saying something.
+ *
+ * **It stayed at two through routing 84**, which is worth saying: the four
+ * kinds that had no route — `constraint`, `goal`, `commitment` and
+ * `relationship-event` — were closed by building controls for them, not by
+ * moving them onto this list.
  */
 export const NOT_OWNER_AUTHORED: readonly RecordKind[] = ['decision', 'imported-legacy-record']
 
 /**
- * Entity kinds an owner can bring into being.
+ * Entity kinds an owner can bring into being — routing 84, package 3.
  *
- * Empty, and there is nothing to compute: no control on any screen calls
- * `createEntity`, and the only entities that exist without an import are
- * `STANDING_ENTITIES` — the five routines the engine is allowed to name for
- * itself. This constant exists so the walk below has somewhere honest to read
- * it from, and so that an authoring control arriving later changes one line.
+ * It was empty, and the emptiness was the largest single finding in the
+ * owner-use review: no control on any screen called `createEntity`, so the only
+ * entities that existed without an import were `STANDING_ENTITIES` — the five
+ * routines the engine is allowed to name for itself.
+ *
+ * Eight now, and every one of them comes from the same control. Five are the
+ * authorable kinds that become entities (`obligation` becomes a span of the
+ * week rather than a thing in the world, so it has none), and three are what a
+ * destination makes: the destination itself, and the domain-appropriate work
+ * entity its milestone becomes — a learning topic in Career, a financial goal
+ * in Money, a routine in Health.
  */
-export const OWNER_CREATABLE_ENTITY_KINDS: readonly EntityKind[] = []
+export const OWNER_CREATABLE_ENTITY_KINDS: readonly EntityKind[] = [
+  'goal',
+  'routine',
+  'person',
+  'place',
+  'skill',
+  'destination',
+  'learning-topic',
+  'financial-goal',
+]
 
 /**
  * Which record kinds an ordinary owner can reach, from a store with nothing in
@@ -451,6 +639,44 @@ export interface JourneyApp {
   correctFact(concept: ConceptId, value: FactValue): Promise<GestureResult>
   /** Append records the way the surfaces do, for a gesture with no helper here. */
   append(records: readonly CanonicalRecord[]): Promise<GestureResult>
+  /**
+   * Introduce something, the way the authoring control does — routing 84.
+   *
+   * Entities first and records second, which is the order `MemoryProvider.create`
+   * writes them in and the order matters: a record whose subject is not in the
+   * index yet is a renderer with nothing to name, and D-018 makes that a
+   * refusal to say anything rather than a fallback word.
+   */
+  appendAuthored(result: AuthoringResult): Promise<GestureResult>
+
+  // -------------------------------------------------------------------------
+  // Routing 84's own gestures, each the surface's own call
+  // -------------------------------------------------------------------------
+
+  /** Say what he is aiming at, the way the domain page's control does. */
+  nameDestination(draft: DestinationDraft): Promise<GestureResult>
+  /** Introduce a goal, routine, person, place, skill or obligation. */
+  introduce(draft: AuthoringDraft): Promise<GestureResult>
+  /** What the second agenda would ask next, if anything. */
+  agenda(): DiscoveryAgenda
+  /** Answer the second agenda's question with a destination, as Life does. */
+  answerDiscovery(said: string): Promise<GestureResult>
+  /** Leave it, the way "Not now" does. */
+  skipDiscovery(): Promise<GestureResult>
+  /** Whether the app would ask what was in the way, and why either way. */
+  blockerFor(): BlockerDecision | undefined
+  /** Say what was in the way, the way Now's control does. */
+  sayWhatBlocked(cause: BlockerCause): Promise<GestureResult>
+  /** Something left half-finished today that the screen offers back. */
+  resumable(): ResumableMove | undefined
+  /** Pick it back up, through the state machine's own transition. */
+  resume(action: LifecycleAction): Promise<GestureResult>
+  /** Withdraw an entry, the way the correction control does. */
+  withdraw(record: RecordId, reason: string): Promise<GestureResult>
+  /** Move an entry to the day it happened. */
+  redate(record: RecordId, to: LocalDayId): Promise<GestureResult>
+  /** What the app can say about progress here, sorted onto its six rungs. */
+  progress(domains: readonly LifeDomainId[]): ProgressReading
 }
 
 /**
@@ -486,6 +712,9 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
    * own instant would collapse the two, and "the answer you gave last" would
    * fall through to a record id that carries no meaning by design.
    */
+  /** The moment every routing-84 gesture is written at, the way a surface does. */
+  const authoringMoment = () => ({ now: at, zone, recordedAt: systemClock().now() })
+
   const write = async (records: readonly CanonicalRecord[], note: string) => {
     if (records.length === 0) return { done: false, note, written: 0 }
     const result = await store.append(records)
@@ -637,6 +866,158 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
     },
 
     append: (records) => write(records, 'appended'),
+
+    async appendAuthored(result) {
+      if (result.entities.length === 0 && result.records.length === 0) {
+        return { done: false, note: 'the draft could not be built', written: 0 }
+      }
+      await store.putEntities(result.entities)
+      held = await store.snapshot()
+      return write(result.records, `introduced ${result.created?.id ?? 'something'}`)
+    },
+
+    async nameDestination(draft) {
+      const built = destinationRecords(draft, situation(), authoringMoment())
+      if (built.records.length === 0) {
+        return { done: false, note: 'the destination could not be built', written: 0 }
+      }
+      await store.putEntities(built.entities)
+      held = await store.snapshot()
+      return write(built.records, `said he is aiming at "${draft.aim}"`)
+    },
+
+    async introduce(draft) {
+      const proposal = proposeAuthoring(draft, situation())
+      if (proposal.problems.length > 0) {
+        return { done: false, note: proposal.problems.join('; '), written: 0 }
+      }
+      const built = authoringRecords(draft, situation(), authoringMoment())
+      await store.putEntities(built.entities)
+      held = await store.snapshot()
+      return write(built.records, `introduced a ${draft.kind}: "${draft.name}"`)
+    },
+
+    agenda: () => discoveryAgenda(situation(), { now: at, zone, weekStartsOn: 1 }),
+
+    async answerDiscovery(said) {
+      const asked = discoveryAgenda(situation(), { now: at, zone, weekStartsOn: 1 }).prompt
+      if (asked === undefined) return { done: false, note: 'nothing is being asked', written: 0 }
+      const moment = authoringMoment()
+      const built = destinationRecords({ aim: said, domain: asked.domain }, situation(), moment)
+      await store.putEntities(built.entities)
+      held = await store.snapshot()
+      return write(
+        [
+          ...built.records,
+          discoveryResponseRecord(asked, 'answered', built.records[0]?.id, moment),
+        ],
+        `answered "${asked.prompt}"`,
+      )
+    },
+
+    async skipDiscovery() {
+      const asked = discoveryAgenda(situation(), { now: at, zone, weekStartsOn: 1 }).prompt
+      if (asked === undefined) return { done: false, note: 'nothing is being asked', written: 0 }
+      return write(
+        [discoveryResponseRecord(asked, 'skipped', undefined, authoringMoment())],
+        `left "${asked.prompt}"`,
+      )
+    },
+
+    /*
+     * About the move he just said he could not do, not about whatever came
+     * next — which is what `NowScreen` does.
+     *
+     * The refused move leaves the screen immediately, because a move blocked in
+     * this block is out of the running for it (AUD-0023). So the question has
+     * to be about the move he pressed, and the surface holds it in session
+     * state for exactly that reason. Here the same thing is read from the
+     * record: the most recently settled unfinished move of today.
+     */
+    blockerFor() {
+      const current = situation()
+      const semantics =
+        resumableToday(view(), current)[0]?.semantics ?? decision().explanation?.semantics
+      if (semantics === undefined) return undefined
+      return blockerQuestionFor(
+        current,
+        semantics,
+        current.entities.labelFor(semantics.target.object) ?? 'this',
+      )
+    },
+
+    async sayWhatBlocked(cause) {
+      const current = situation()
+      const found = resumableToday(view(), current)[0]
+      if (found === undefined) {
+        return { done: false, note: 'nothing was recorded as not fitting', written: 0 }
+      }
+      const semantics = found.semantics
+      const moveName = current.entities.labelFor(semantics.target.object) ?? 'this'
+      const moment = authoringMoment()
+      let written: CanonicalRecord | undefined
+      for (const record of view().history.effective) {
+        if (record.kind !== 'action-unable-now') continue
+        if (record.recommendation !== found.episode.recommendation) continue
+        if (written === undefined || record.recordedAt > written.recordedAt) written = record
+      }
+      if (written === undefined || written.kind !== 'action-unable-now') {
+        return { done: false, note: 'no inability record to attach a reason to', written: 0 }
+      }
+      return write(
+        [
+          {
+            ...written,
+            id: newRecordId(),
+            recordedAt: moment.recordedAt,
+            blocker: blockerStatement(cause, moveName),
+            supersedes: written.id,
+          },
+          ...standingBlockerRecords(cause, semantics, moveName, semantics.domain, moment),
+        ],
+        `said what was in the way: ${cause}`,
+      )
+    },
+
+    resumable: () => nextResumable(view(), situation(), undefined),
+
+    async resume(action) {
+      const found = nextResumable(view(), situation(), undefined)
+      if (found === undefined) {
+        return { done: false, note: 'nothing is offered back', written: 0 }
+      }
+      if (!found.actions.includes(action)) {
+        return {
+          done: false,
+          note: `"${action}" is not offered on a move that reads as ${found.state}`,
+          written: 0,
+        }
+      }
+      const planned = planLifecycle({
+        view: view(),
+        situation: situation(),
+        semantics: found.semantics,
+        action,
+        recordedAt: systemClock().now(),
+      })
+      if (planned.noChange !== undefined) {
+        return { done: false, note: `nothing to write — ${planned.noChange}`, written: 0 }
+      }
+      return write(planned.records, `picked it back up with "${action}"`)
+    },
+
+    withdraw: (record, reason) =>
+      write([withdrawEventRecord(record, reason, authoringMoment())], 'withdrew an entry'),
+
+    redate(record, to) {
+      const found = view().history.byId(record)
+      if (found === undefined) {
+        return Promise.resolve({ done: false, note: 'no such entry', written: 0 })
+      }
+      return write([redateEventRecord(found, to, authoringMoment())], 'moved an entry')
+    },
+
+    progress: (domains) => readProgress(situation(), domains),
   }
 }
 
@@ -647,6 +1028,16 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
  */
 export const ROUTE_BUILDERS = {
   answerRecord,
+  authoringRecords,
+  destinationRecords,
+  reviseDestinationRecord,
+  relationshipEventRecord,
+  standingBlockerRecords,
+  courseReflectionRecord,
+  withdrawEventRecord,
+  redateEventRecord,
+  permissionRecord,
+  discoveryResponseRecord,
   planLifecycle,
   outcomeRecord,
   growthAnswerRecords,
@@ -749,6 +1140,15 @@ function relativeToRoot(file: string): string {
  */
 export const NOT_A_CONTROL: readonly string[] = ['derivedOutcomeRecords']
 
+/**
+ * The one return type that is a set of records rather than a record.
+ *
+ * Named rather than pattern-matched, because "anything ending in `Result`" would
+ * pick up half the codebase. A second bundle type is an edit here, with a
+ * sentence saying why — the same discipline `ALLOWED_READERS` keeps.
+ */
+const BUNDLE = 'AuthoringResult'
+
 /** Every record builder the app defines, found by what it returns and takes. */
 function everyRecordBuilder(): ReadonlySet<string> {
   const out = new Set<string>()
@@ -765,11 +1165,21 @@ function everyRecordBuilder(): ReadonlySet<string> {
  *
  * Two conditions, and both are declarations rather than conventions.
  *
- * **It returns a record.** Not "its name ends in Record" — `describeRecord`,
- * `describeThreadRecord`, `isWithheldRecord` and `sourcesOfRecords` all read
- * records and build none, and a first draft of this reported every one of them.
- * `Record<string, unknown>` is excluded by the same test: TypeScript's utility
- * type is not a canonical record, and `isPlainObject` is not a builder.
+ * **It returns a record, or a bundle of them.** Not "its name ends in Record" —
+ * `describeRecord`, `describeThreadRecord`, `isWithheldRecord` and
+ * `sourcesOfRecords` all read records and build none, and a first draft of this
+ * reported every one of them. `Record<string, unknown>` is excluded by the same
+ * test: TypeScript's utility type is not a canonical record, and `isPlainObject`
+ * is not a builder.
+ *
+ * **`AuthoringResult` is the bundle, and it had to be named** — routing 84. A
+ * control that brings a semantic entity into being returns entities *and*
+ * records together, because they are one act (an entity written after the
+ * record that names it is a renderer with nothing to say). A reader that only
+ * recognised a return type ending in `Record` could not see either of the two
+ * highest-leverage controls in the phase — which is D-179's own failure mode,
+ * in the guard D-179 was written for: the claim stayed green because the shape
+ * it could not read was the shape that arrived.
  *
  * **And it takes a moment.** `standingCommitments(situation): readonly
  * CommitmentWindowRecord[]` returns records and builds none — it filters rows
@@ -797,7 +1207,8 @@ function buildersDeclaredIn(text: string): readonly string[] {
     const returns = /^\s*:\s*(?:readonly\s+)?([A-Za-z0-9_]+)\s*(<)?/.exec(text.slice(close + 1))
     if (returns === null) continue
     if (returns[2] === '<') continue
-    if (!/Record$/.test(returns[1] ?? '')) continue
+    const returned = returns[1] ?? ''
+    if (!/Record$/.test(returned) && returned !== BUNDLE) continue
     if (!/\bmoment\b|Moment\b/.test(text.slice(open, close))) continue
 
     out.push(name)

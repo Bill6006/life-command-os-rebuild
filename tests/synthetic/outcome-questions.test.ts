@@ -286,12 +286,32 @@ describe('an aspect carries the evidence it is meant to carry', () => {
     expect(resultValueOf({ type: 'text', value: 'went fine' })).toBeUndefined()
   })
 
-  it('knows only the three aspects it declares', () => {
-    expect([...OUTCOME_ASPECTS].sort()).toEqual(['comfort', 'effect', 'result'])
+  it('knows only the aspects it declares, and no move profile asks for the two course-scale ones', () => {
+    /*
+     * Five since routing 84, and the split is the point — F05.
+     *
+     * `retained` and `transfer` are about a **course**, days after it finished.
+     * No `MoveProfile` names either of them and none may: an episode is one
+     * occasion on one day, and asking at the end of a session whether the
+     * session stuck is asking whether the session happened. They are reached
+     * only through `dueCourseReflections`, which is keyed on a finished thread.
+     */
+    expect([...OUTCOME_ASPECTS].sort()).toEqual([
+      'comfort',
+      'effect',
+      'result',
+      'retained',
+      'transfer',
+    ])
     const used = new Set<OutcomeAspect>()
     for (const profile of Object.values(MOVE_PROFILES)) {
       for (const aspect of profile.aspects) used.add(aspect)
     }
     for (const aspect of used) expect(OUTCOME_ASPECTS).toContain(aspect)
+    expect([...used].sort(), 'a move profile reached a course-scale aspect').toEqual([
+      'comfort',
+      'effect',
+      'result',
+    ])
   })
 })

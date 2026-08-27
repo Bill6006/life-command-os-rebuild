@@ -936,6 +936,10 @@ function describeEpisodeOutcome(episode: Episode): string {
       return 'you said it did not fit at the time'
     case 'started':
       return 'started, and never settled'
+    case 'part-done':
+      // What it says and no more — F10, F05. Part of it happened; nothing here
+      // claims it worked, and nothing claims it did not.
+      return 'you got part of it done'
     case 'completed': {
       const effect = answerOf(episode, 'effect', effectValueOf)
       if (effect !== undefined) {

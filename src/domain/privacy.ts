@@ -107,3 +107,102 @@ export function discreetPlaceholder(privacy: PrivacyClass): string {
  */
 export const PRIVATE_PAGE_PROMISE =
   'Yours to enter. The words stay on this page — Timeline shows that an entry exists and when, never what it says.'
+
+// ---------------------------------------------------------------------------
+// What the app may reason from — D-167, F30, package 6
+// ---------------------------------------------------------------------------
+
+/**
+ * The standing permissions the owner controls.
+ *
+ * One, and the owner wrote it himself: **"Allow Private / Sexual Health to
+ * influence recommendations"**, default **off**. It is neither of the two
+ * options the audit framed — not "section 11 wins behind a structural barrier"
+ * and not "the registry wins, inspect-and-record" — but a third: *the registry
+ * may win, when and only when the owner has said so*.
+ *
+ * ## Domain-level, not per entry
+ *
+ * D-167 is explicit. Per-entry consent is burden without a demonstrated
+ * benefit, and section 4.5 governs. If later evidence shows one control is not
+ * enough, that is a decision somebody makes in writing.
+ *
+ * ## What "off" means, structurally
+ *
+ * Not "the engine politely declines to look". `createFactReader` cannot read a
+ * private concept at all while this is off — the reading resolves to
+ * `unknown` with reason `withheld`, and nothing downstream can distinguish it
+ * from a fact nobody has ever supplied, because there is nothing to
+ * distinguish. That is what makes *"a private reading can be stored without
+ * being reasoned from"* a property of the code rather than a promise about it.
+ *
+ * ## And what "on" does not mean
+ *
+ * It does not put an intimate reading on a screen. When the permission is on,
+ * the value becomes legible to the decision layer and the **rendered** reading
+ * stays `discreetPlaceholder` everywhere — the structural discretion guard
+ * D-167 names as a precondition rather than a substitute for consent. Nothing
+ * in this phase makes a recommendation from private evidence: that is
+ * AUD-0040's, in the later Reach package, and this is the permission it will
+ * have to ask.
+ */
+export const PERMISSIONS = [
+  {
+    id: 'private-influence',
+    label: 'Allow Private / Sexual Health to influence recommendations',
+    /** What it does, in view while he decides — D-176. */
+    note: 'Off by default. While it is off, what you enter here is stored and shown on this page and the app cannot read it when it works out what to suggest. Turning it off later stops any future use; it never rewrites what is already recorded.',
+    /** The record's statement when granted and when not. */
+    granted: 'Private / Sexual Health may influence recommendations',
+    withheld: 'Private / Sexual Health does not influence recommendations',
+    /** The privacy class this permission unlocks for reasoning. */
+    covers: 'private',
+  },
+] as const
+
+export type PermissionId = (typeof PERMISSIONS)[number]['id']
+
+export function isPermissionId(value: unknown): value is PermissionId {
+  return typeof value === 'string' && PERMISSIONS.some((entry) => entry.id === value)
+}
+
+export interface PermissionState {
+  /** Whether the owner has granted this. Absent means no, because it is. */
+  granted(permission: PermissionId): boolean
+}
+
+/**
+ * Nothing granted.
+ *
+ * The default everywhere, and the default that matters: a permission nobody
+ * gave is one that was not given, so the safe state needs no record to exist.
+ */
+export const NO_PERMISSIONS: PermissionState = { granted: () => false }
+
+/**
+ * Whether the decision layer may read a fact of this class.
+ *
+ * `normal`, `sensitive` and `child-family-sensitive` have always been readable
+ * and stay so — the app has reasoned from sleep, from money and from a child's
+ * skills since Phase 1, and section 11's concern is the private domain
+ * specifically. `private` is the one class that waits for the owner's word.
+ *
+ * Deliberately a different function from {@link mayShowDetail}, in the same
+ * file, for the reason D-175 gives: the promise and the policy live together,
+ * and these are two different promises. One is about what a surface may print;
+ * this is about what the engine may know.
+ */
+export function mayReasonFrom(privacy: PrivacyClass, permissions: PermissionState): boolean {
+  if (privacy !== 'private') return true
+  return permissions.granted('private-influence')
+}
+
+/** The permission entry, for a surface that renders the control. */
+export function permissionDefinition(id: PermissionId): (typeof PERMISSIONS)[number] {
+  const found = PERMISSIONS.find((entry) => entry.id === id)
+  // The list is a literal and the id type is derived from it, so this cannot
+  // miss. The throw is the compiler's assertion made visible at runtime rather
+  // than a case anybody has to handle.
+  if (found === undefined) throw new RangeError(`No permission called "${id}"`)
+  return found
+}

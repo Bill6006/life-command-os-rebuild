@@ -45,6 +45,19 @@ export type UnknownReason =
   | 'not-applicable'
   /** The only rows that mention it could not be read. */
   | 'malformed'
+  /**
+   * There is an answer and the owner has not allowed it to be reasoned from —
+   * D-167.
+   *
+   * The seventh, and D-149 anticipated the shape of adding one: a new reason is
+   * a compile error in this file rather than a seventh thing that silently
+   * reads as never having been asked. It is emphatically **not**
+   * `never-observed` — the record holds the answer, the Private page shows it,
+   * and the engine cannot see it. Saying "never answered" about it would be the
+   * app lying about the owner's own history in order to keep a promise it is
+   * already keeping honestly.
+   */
+  | 'withheld'
 
 export interface Explicit<T> {
   readonly state: 'explicit'
@@ -131,6 +144,7 @@ const UNKNOWN_READS: Record<UnknownReason, string> = {
   lapsed: 'answered for a period that has since ended',
   'not-applicable': 'does not apply here',
   malformed: 'unreadable',
+  withheld: 'answered, and kept out of the app’s reasoning by your own setting',
 }
 
 export function describeUnknown(state: Unknown): string {
