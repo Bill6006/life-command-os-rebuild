@@ -24,9 +24,9 @@ reopens Phase 4 or any completed phase.
 
 # Phase 82 — The structural intelligence skeleton
 
-**Status: YELLOW — READY FOR INDEPENDENT QA, ROUND 11.**
+**Status: YELLOW — READY FOR INDEPENDENT QA, ROUND 12.**
 
-Ten FAIL rounds so far, and the shape of them is worth reading before the
+Eleven FAIL rounds so far, and the shape of them is worth reading before the
 detail. Round 1 found three defects. Round 2 closed one and found two of the
 repairs incomplete — the class had been named correctly and then the repair
 scoped to the places that had been _observed_ failing. Round 3 closed those two
@@ -64,6 +64,15 @@ Four rounds, four layers of one rule, each right and each one short of the next:
 the metadata (D-098), every section (D-148), the record composed from (D-150),
 and what a retained row brings with it (D-151). A paired document found each
 one; reading the code found none of them.
+
+**Round 11 found the same rule broken on both neighbouring routes**, and found
+that round 10's own comment claiming `askable` was "the guide's answer" was not
+true. Life denied a route for Health while Now was asking the one question that
+would fix it, and called a move the owner had merely _started_ an answer already
+on its way. **D-156**: where a projection describes what another module will do,
+it calls that module rather than modelling it — a boolean that resembles the
+capability is worse than no check, because it reads as though the question was
+asked.
 
 **Round 10 found a projection promising what no generator could produce.** Life
 told the owner the app would bring Social back on its own, on a screen whose own
@@ -117,38 +126,38 @@ audit's own reasons for excluding each are unchanged.
 
 ## Checkpoint
 
-|                      |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Product checkpoint   | `a494d51349771f8d698fff8e2e591d07d88ea07e` — QA round 10 repair; the last commit that changes the bundle. Round 9 closed at `da8e4d4`, round 8 at `675aedd`, round 7 at `6a9c53e`, round 6 at `2cdeb4b`, round 5 at `dab8c2e`, round 4 at `1205402`, round 3 at `5936fe2`, round 2 at `da1a4ee`, round 1 at `0899f18`, the first build at `160ec9a`                                                                                                                                                                                             |
-| Deployed Preview SHA | **Read it live** from `preview/build-info.json`. The documentation commit that carries this row moves it past the checkpoint, which is exactly the case the equivalence checker exists for                                                                                                                                                                                                                                                                                                                                                      |
-| Relationship         | **Proved.** `node scripts/checkpoint-equivalence.mjs a494d51 --deployed <build-info url>`. Never asserted as string equality (D-097).                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Independent QA       | **Round 10 returned FAIL**: QA-82-011 and QA-82-013 are closed and every earlier finding held, and one new material defect was found in the coarse `refresh` projection — **QA-82-014**, where Life promised that the app would bring a quiet area back on its own for Health, Social and Fatherhood, none of which the coverage generator has a move for. Repaired under **D-155**, and a Round 11 retest handoff is written into [`qa/PHASE_82_QA_HANDOFF.md`](qa/PHASE_82_QA_HANDOFF.md). Round 11 is required before anything becomes GREEN |
-| Owner phone test     | Required — owner-visible behaviour changed on Now, on Life and on two domain pages                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Preview              | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|                      |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product checkpoint   | `5dd55cc0bb831fade20371332fb4d7745f61a2e1` — QA round 11 repairs; the last commit that changes the bundle. Round 10 closed at `a494d51`, round 9 at `da8e4d4`, round 8 at `675aedd`, round 7 at `6a9c53e`, round 6 at `2cdeb4b`, round 5 at `dab8c2e`, round 4 at `1205402`, round 3 at `5936fe2`, round 2 at `da1a4ee`, round 1 at `0899f18`, the first build at `160ec9a`                                                                                                                                                                                                                                       |
+| Deployed Preview SHA | **Read it live** from `preview/build-info.json`. The documentation commit that carries this row moves it past the checkpoint, which is exactly the case the equivalence checker exists for                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Relationship         | **Proved.** `node scripts/checkpoint-equivalence.mjs 5dd55cc --deployed <build-info url>`. Never asserted as string equality (D-097).                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Independent QA       | **Round 11 returned FAIL**: QA-82-014 was independently confirmed repaired — all nine round 10 mutations replayed to the same counts — and two adjacent route promises failed the same rule. **QA-82-015**: Life said nothing could be done about Health while Now was asking the one question that would make it current. **QA-82-016**: a move the owner only _started_ was reported as an answer already on its way. Both repaired under **D-156**, and a Round 12 retest handoff is written into [`qa/PHASE_82_QA_HANDOFF.md`](qa/PHASE_82_QA_HANDOFF.md). Round 12 is required before anything becomes GREEN |
+| Owner phone test     | Required — owner-visible behaviour changed on Now, on Life and on two domain pages                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Preview              | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 ## Exact verification results
 
 Four columns, for the four most recent verifications. Every figure names the
 head it was measured on, which is D-147 and the reason the last row exists.
 
-| Gate                                                    | Round 7 (`6a9c53e`)   | Round 8 (`675aedd`)   | Round 9 (`da8e4d4`)   | Round 10 (`a494d51`)                                             |
+| Gate                                                    | Round 8 (`675aedd`)   | Round 9 (`da8e4d4`)   | Round 10 (`a494d51`)  | Round 11 (`5dd55cc`)                                             |
 | ------------------------------------------------------- | --------------------- | --------------------- | --------------------- | ---------------------------------------------------------------- |
 | `npm run verify` from a clean clone of the tracked head | **PASS**              | **PASS**              | **PASS**              | **PASS** — format, lint, typecheck, tests, build                 |
-| Unit layer                                              | 1,625 across 71 files | 1,639 across 72 files | 1,651 across 73 files | **1,664 / 1,664** across 74 files                                |
-| Browser, three widths                                   | 552 / 552             | 552 / 552             | 551 / 552             | **551 / 552**                                                    |
+| Unit layer                                              | 1,639 across 72 files | 1,651 across 73 files | 1,664 across 74 files | **1,675 / 1,675** across 75 files                                |
+| Browser, three widths                                   | 552 / 552             | 551 / 552             | 551 / 552             | **552 / 552**                                                    |
 | Android-style gate on the deployed build                | clean — 144           | clean — 144           | clean — 144           | **clean — 144 checks**                                           |
-| Privacy scan                                            | clean, 243            | clean, 246            | clean, 249            | **clean — 253 tracked files**                                    |
+| Privacy scan                                            | clean, 246            | clean, 249            | clean, 253            | **clean — 256 tracked files**                                    |
 | Tournament                                              | 100/100 and 100/100   | 100/100 and 100/100   | 100/100 and 100/100   | **100 / 100 deterministic, 100 / 100 hybrid**                    |
-| CI green at the handed-off head                         | green at `6a9c53e`    | green at `675aedd`    | green at `da8e4d4`    | **green at `a494d51`** — and at the head that carries this table |
-| Reintroductions proved                                  | 8                     | 9                     | 8                     | **9 more, 132 in total**                                         |
+| CI green at the handed-off head                         | green at `675aedd`    | green at `da8e4d4`    | green at `a494d51`    | **green at `5dd55cc`** — and at the head that carries this table |
+| Reintroductions proved                                  | 9                     | 8                     | 9                     | **18 run, 9 of them new; 150 in total**                          |
 
 The first build and round 1 columns are dropped rather than carried: `160ec9a`
 and `0899f18` are four repairs behind, and a table nobody can act on is a table
 nobody reads. Their figures are in the round 1 and 2 sections below.
 
-Fourteen test files: `goal-horizon-and-parts`, `commitment-windows`, `threads`,
+Fifteen test files: `goal-horizon-and-parts`, `commitment-windows`, `threads`,
 `deferral`, `growth-stage-and-occasion`, `instrument-recut`, `qa-82-round-1`,
-`qa-82-round-4` through `qa-82-round-10`, and a browser suite `phase82.spec.ts`
+`qa-82-round-4` through `qa-82-round-11`, and a browser suite `phase82.spec.ts`
 for the surfaces the packages end in.
 
 ## Independent QA — round 1
@@ -490,6 +499,62 @@ reintroduction rather than promised.
 **Every round 8 PASS is preserved and every deferral stands.** Q1, Q4, Q6, Q7 and
 Q8 remain open; AUD-0040, AUD-0045 and AUD-0047 remain out of scope; the Phase 8
 carry-forwards, deliberate non-features and all 21 audit-section-10
+do-not-change items are unchanged. `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was
+neither read, altered, staged nor adjudicated.
+
+## Independent QA — round 11
+
+**FAIL**, on the two routes either side of the one round 10 repaired. QA-82-014
+is independently confirmed closed: QA replayed all nine round 10 mutations in
+their own clean clone and reproduced every count exactly, including the privacy
+branch that was blind on its first builder pass.
+
+**QA-82-015.** `routeFor` was handed `standing` — the concepts that are durable
+facts — and asked whether any was `neglected && askable`. `energy.current` is not
+a standing fact, so it can never be neglected, so an area whose way back was a
+question about tonight's energy fell straight to `needs-review`. On the deployed
+build at owner-local 2026-04-16 20:30, Life said **Needs a check-in** for Health
+and _"Nothing the app can do on its own will bring these back"_ while Now
+displayed _"How much energy have you got left?"_ — one tap from making the area
+current. QA found 71 such contradictions, and the `a-question` route was reached
+**zero** times in the whole corpus.
+
+**QA-82-016.** `domainsWithEvidenceComing` accepted an `action-start` as well as
+an `action-completion`, while its own comment said _finished_ and
+`outcomeWindowFor` says outright that a move started and never finished "is still
+a lifecycle question". Pressing **Start it** and stopping there made Life say an
+answer was already on its way.
+
+**D-156**: where a projection describes what another module will do, it calls
+that module rather than modelling it. The question route now applies
+`askable && questionFor(concept) !== undefined` over every concept in the area —
+character-for-character the filter `probeSwings` opens with —
+and `domainsWithEvidenceComing` asks `outcomeWindowFor` whether a result window
+exists and is still open, which also retires the two-day guess it kept beside the
+outcome layer's real one.
+
+**Round 10's own comment was part of the defect.** It claimed `askable` was "the
+guide's own answer rather than this file's guess at it". It was not; it is
+`worthAsking` from the fact layer, read through `neglected`. Writing the claim
+down is what let it stand another round, and the replacement comment says what
+the code actually does.
+
+**Neither opposite error was traded for.** A genuine `needs-review` survives —
+it is round 10's own Social reproduction, where there is no move and no question
+the fact layer will spend — and `normal-life` still appears the moment a move is
+actually finished, and stops when its window closes.
+
+**One thing is not resolved and is handed forward rather than argued away.**
+Round 11's probe additionally requires every `a-question` row to be the domain
+the guide is asking about _at this moment_. Coverage is assembled before the
+decision the guide's selection depends on; `probeSwings` runs a full decision per
+answer option; and D-071 requires Life to show the coverage object the decision
+was made from. Six of QA's seven checks pass and that one does not. It is the
+first thing round 12 is asked to settle.
+
+**Every round 11 PASS is preserved and every deferral stands.** Q1, Q4, Q6, Q7
+and Q8 remain open; AUD-0040, AUD-0045 and AUD-0047 remain out of scope; the
+Phase 8 carry-forwards, deliberate non-features and all 21 audit-section-10
 do-not-change items are unchanged. `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` was
 neither read, altered, staged nor adjudicated.
 

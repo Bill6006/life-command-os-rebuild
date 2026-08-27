@@ -5066,3 +5066,66 @@ these back"_, which is true and is section 8's fifth preference doing its job.
 **No supported direction is dropped** to make the invariant easier, and **no
 domain the app may never raise of its own accord** is given a route through Now.
 Both are proved by reintroduction rather than promised.
+
+---
+
+## D-156 — A projection reads the capability, not a flag that resembles it
+
+**Phase:** 82 (QA round 11) · **Status:** Active
+
+D-155 said a route may not promise what no generator can produce, and the round
+10 repair made `an-action` read the generator's own table. Round 11 found the
+same rule broken on both neighbouring routes — and found that the round 10
+comment claiming `askable` was "the guide's own answer" was **not true**. It was
+a guess dressed as a citation, and writing it down is what let it stand another
+round.
+
+### The two failures
+
+**QA-82-015.** `routeFor` received `standing` — the concepts that are durable
+facts — and asked whether any was `neglected && askable`. `energy.current` is
+not a standing fact, so it can never be neglected, so an area whose only way back
+was a question about tonight's energy fell to `needs-review`. Life said _"Nothing
+the app can do on its own will bring these back"_ while Now was already asking
+exactly that question, one tap from making the area current.
+
+Two mistakes stacked: the wrong **set** of concepts (standing only), and the
+wrong **test** over it (`neglected`, which is about a lapsed answer rather than
+about whether a question exists).
+
+**QA-82-016.** `domainsWithEvidenceComing` accepted an `action-start` as well as
+an `action-completion`. Its own comment said _finished_, and `outcomeWindowFor`
+says outright that a move "started and never finished is still a lifecycle
+question". So pressing **Start it** and stopping there made Life say an answer
+was already on its way.
+
+### The rule
+
+**Where a projection describes what another module will do, it calls that module
+rather than modelling it.** A boolean that resembles the capability is worse than
+no check at all, because it reads as though the question was asked.
+
+- The question route now applies `askable && questionFor(concept) !== undefined`
+  over **every** concept in the area. That is character-for-character the filter
+  `probeSwings` opens with (`engine.ts`: for each of `QUESTIONS`, skip unless
+  `worthAsking`), so the route and the guide select from one set.
+- `domainsWithEvidenceComing` now calls `outcomeWindowFor` on the collected
+  episodes and checks the window is still open. The two-day guess it kept beside
+  the outcome layer's real window is gone with it.
+
+### The standard this sets, and its limit
+
+A route names a capability that a later layer chooses from. `an-action` promises
+a move is **offered to the arbiter**, not that it wins — round 10 proved exactly
+that, with two proposals reaching the trace and one chosen. `a-question` now
+promises a question is **offered to the guide**, not that today's tap is spent on
+it: the guide asks at most three a day and skips any question whose answers all
+land in the same place.
+
+Round 11's probe holds the question route to the stricter standard — that the
+guide is asking about that area _at this moment_. That is not reachable from
+here: coverage is assembled before the decision the guide's selection depends on,
+`probeSwings` runs a full decision per answer option, and D-071 requires Life to
+show the coverage object the decision was made from rather than a second one.
+The disagreement is recorded rather than resolved by weakening the probe, and it
+is the first thing round 12 is asked to settle.

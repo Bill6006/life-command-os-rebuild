@@ -39,6 +39,75 @@ None.
 
 ## Fixed
 
+### DEF-0103 — a started move was reported as an answer already arriving
+
+- Status: Fixed
+- Severity: Major — Life claiming an answer is on its way for something the
+  owner may never finish
+- Found in: Phase 82 / `95363ff`; present since the coverage engine was written
+- Found by: independent QA round 11 — QA-82-016
+- Class: the same as DEF-0102 — a projection modelling another module's rule
+  instead of calling it.
+- Reproduction: live Preview, **A month of what actually worked**, four `+1 week`
+  presses to owner-local 2026-03-19 19:30. Now offers "Spend 15 minutes clearing
+  the kitchen". Press **Start it** and nothing else: Life puts Home under
+  **Catching up** and says _"An answer is already on its way."_
+- Root cause: `domainsWithEvidenceComing` accepted `action-start` alongside
+  `action-completion`, while its own comment said _finished_ and
+  `outcomeWindowFor` returns undefined until the episode is `completed` — it
+  says in its own words that a move started and never finished "is still a
+  lifecycle question".
+- Repair: the function now collects episodes and asks `outcomeWindowFor` whether
+  a result window exists and is still open. The two-day guess it kept beside the
+  outcome layer's real window is gone with it.
+- Regression: `tests/synthetic/qa-82-round-11.test.ts` — the exact lifecycle,
+  started and left, with the episode asserted `started`, `outcomeWindowFor`
+  asserted undefined, the route asserted not `normal-life` and Life's sentence
+  asserted absent; then the same move completed, proving the window opens, the
+  route returns and the sentence comes back; then the clock moved past the
+  window, proving it stops; and a declined move, proving a refusal is not an
+  answer either.
+- Fixed in: the checkpoint that closes QA round 11
+
+### DEF-0102 — Life denied a route while the app was already taking it
+
+- Status: Fixed
+- Severity: Major — the app telling the owner nothing could be done about an
+  area, on the same screen-pair and at the same moment as it asked him the one
+  question that would fix it
+- Found in: Phase 82 / `95363ff`; present since the coverage engine was written
+- Found by: independent QA round 11 — QA-82-015
+- Class: **a projection reading a flag that resembles the capability instead of
+  the capability.** The round 10 comment claimed `askable` was "the guide's own
+  answer"; it is `worthAsking` from the fact layer, and it was being read
+  through `neglected`.
+- Reproduction: live Preview at 360 and 430px, **A Thursday with nothing needing
+  doing**, four `+1 week` presses to owner-local 2026-04-16 20:30. Life says
+  **Needs a check-in** for Health and _"Nothing the app can do on its own will
+  bring these back."_ Now displays "How much energy have you got left?" One tap
+  on **Plenty** turns Health **Recent**.
+- Root causes, stacked: `routeFor` was handed only the **standing** concepts, and
+  `energy.current` is not one; and the test over them was `neglected && askable`,
+  where `neglected` is about a durable answer that has lapsed and says nothing
+  about whether a question exists.
+- Extent: QA's probe found 71 scenario/clock/domain contradictions, and reached
+  the `a-question` route **zero** times — the route was effectively unreachable.
+- Repair: `routeFor` now receives every concept row in the area and applies
+  `askable && questionFor(concept) !== undefined` — character-for-character the
+  filter `probeSwings` opens with, so the route and the guide select from one
+  set.
+- Regression: `tests/synthetic/qa-82-round-11.test.ts` — the corpus-wide
+  invariant that no area is denied a route while the guide is asking about it;
+  QA's reproduction with the question asserted to reach Now and the answer
+  asserted to make Health current; the genuine `needs-review` case kept, and it
+  is round 10's own Social reproduction; and the shared filter asserted from both
+  ends. Six reintroductions run, all six fail.
+- Note on what remains open: round 11's probe additionally requires every
+  `a-question` row to be the domain the guide is asking about _at this moment_.
+  That is not reachable from coverage — see D-156 — and is recorded in the round
+  11 handoff for round 12 to settle rather than resolved by weakening the probe.
+- Fixed in: the checkpoint that closes QA round 11
+
 ### DEF-0101 — Life promised a move the app had no way to make
 
 - Status: Fixed
