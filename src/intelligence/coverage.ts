@@ -12,15 +12,12 @@ import {
   type EvidenceStrength,
   type ProvenanceSource,
 } from '../domain/records'
-import {
-  addLocalDays,
-  localDayIdAt,
-  localDaysBetween,
-  type Instant,
-  type TimeZoneId,
-} from '../domain/time'
+import { localDayIdAt, localDaysBetween, type Instant, type TimeZoneId } from '../domain/time'
 import { approximateHorizonMs, type ConceptId, type FreshnessHorizon } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
+import { collectEpisodes } from './lifecycle'
+import { outcomeWindowFor } from './outcomes'
+import { questionFor } from './questions'
 import { refreshingMoveFor } from './refreshing'
 
 /**
@@ -586,12 +583,32 @@ function routeFor(
    * quiet fortnight is not evidence of capacity or of social energy (DEF-0006).
    *
    * So the app told the owner it would bring Social back on its own, and then
-   * had nothing to bring. The route beside this one has always got this right:
-   * `askable` below is `worthAsking` from the guide, which is the question
-   * generator's own answer rather than this file's guess at it.
+   * had nothing to bring.
    */
   if (canAct) return 'an-action'
-  if (concepts.some((entry) => entry.neglected && entry.askable)) return 'a-question'
+  /*
+   * `askable`, without `neglected` beside it — QA-82-015, D-156.
+   *
+   * The round 9 note here claimed `askable` was "the guide's own answer". It is
+   * not, and saying so was the reason this went another round: `askable` is
+   * `worthAsking` from the fact layer, which is the same gate the question
+   * layer opens with — but it was being read through `neglected`, and that is a
+   * claim about a *standing* fact whose last answer has lapsed.
+   *
+   * `energy.current` is not a standing fact. It can never be `neglected`, so
+   * this test could never be true of it, so an area whose only route back was a
+   * question about tonight's energy fell to `needs-review` and Life said nothing
+   * the app could do would bring it back — while Now was already asking exactly
+   * that question, one tap from making the area current.
+   *
+   * `questionFor` rather than `askable` alone, because `askable` says the fact
+   * layer would spend a question here and the catalogue is what decides whether
+   * one exists. The guide gives up at `questionFor(...) === undefined`; a route
+   * that did not ask the same thing would promise past it, which is D-155.
+   */
+  if (concepts.some((entry) => entry.askable && questionFor(entry.concept) !== undefined)) {
+    return 'a-question'
+  }
   return 'needs-review'
 }
 
@@ -630,21 +647,35 @@ function domainsAnActionCouldRefresh(
 /**
  * Domains where an answer is already on its way without anyone being asked.
  *
- * Section 8's first preference. An episode the owner finished, whose result
+ * Section 8's first preference. An episode the owner **finished**, whose result
  * window is still open, is evidence about that area arriving on its own — and
  * from Phase 4 the morning-after sleep matcher can answer some of those without
  * a tap at all.
+ *
+ * **The window is asked for rather than guessed at — QA-82-016, D-156.** This
+ * read the history for an `action-completion` *or an `action-start`* in the last
+ * two days, and a start is not a finish. `outcomeWindowFor` returns nothing
+ * until the episode is `completed`, and says so in its own words: a move that
+ * was started and never finished "is still a lifecycle question — Now already
+ * has the buttons for it". So the owner pressed **Start it**, went no further,
+ * and Life told him an answer was already on its way for something he might
+ * never do.
+ *
+ * Asking `outcomeWindowFor` fixes the two-day guess as well. The result window
+ * is the outcome layer's to define — next morning for some verbs, a fixed delay
+ * for others — and a second copy of it here would be the same defect in a
+ * slower-moving form.
  */
 function domainsWithEvidenceComing(
   view: MemoryView,
   moment: CoverageMoment,
 ): ReadonlySet<LifeDomainId> {
   const out = new Set<LifeDomainId>()
-  const from = addLocalDays(moment.now, -2, moment.zone)
-  for (const record of view.history.effective) {
-    if (record.kind !== 'action-completion' && record.kind !== 'action-start') continue
-    if (record.occurredAt > moment.now || record.occurredAt < from) continue
-    for (const domain of record.domains) out.add(domain)
+  for (const episode of collectEpisodes(view, moment.zone)) {
+    const window = outcomeWindowFor(episode, moment.zone)
+    // Nothing to wait for, or the moment for asking has already passed.
+    if (window === undefined || moment.now > window.latest) continue
+    out.add(episode.semantics.domain)
   }
   return out
 }
@@ -830,7 +861,7 @@ export function assembleCoverage(
       sources: [...(heardSources.get(domain.id) ?? new Set<ProvenanceSource>())].sort(),
       concepts: conceptRows,
       weakest,
-      refresh: routeFor(status, standing, coming.has(domain.id), canAct.has(domain.id)),
+      refresh: routeFor(status, conceptRows, coming.has(domain.id), canAct.has(domain.id)),
       summary: describe(domain.label, status, staleFor ?? daysSinceHeard, laterHere),
     })
   }
