@@ -6,7 +6,6 @@ import { hashForLifePage } from '../../platform/routing'
 import { originOfSources } from '../history/origin'
 import { useMemory } from '../memory/memoryContext'
 import { DayShape } from './DayShape'
-import { Discovery } from './Discovery'
 import { pageForDomain } from './domainPages'
 import { Threads } from './Threads'
 import { GROUP_ORDER, standingFor } from './standing'
@@ -223,18 +222,6 @@ export function LifeScreen() {
             Above the day's shape because it is the part of the model most
             likely to be doing something the owner has forgotten agreeing to.
           */}
-          {/*
-            The second information agenda — F02, D-163.
-
-            On Life rather than on Now, which is the decision's first rule: a
-            question whose answer will not change tonight has no business
-            interrupting the one screen that exists to say what to do tonight.
-            Above the courses because it is about the years rather than the
-            weeks, and it is the one thing on this page that is genuinely a
-            question.
-          */}
-          {situation === undefined ? null : <Discovery situation={situation} />}
-
           {situation === undefined ? null : <Threads situation={situation} />}
 
           {situation === undefined ? null : <DayShape situation={situation} />}

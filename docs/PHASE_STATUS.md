@@ -172,8 +172,8 @@ through the same controls, now gets past all eight steps.
 | Gate                                      | Result                                                            |
 | ----------------------------------------- | ----------------------------------------------------------------- |
 | `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)         |
-| Unit / contract / synthetic / adversarial | **1,810 passed** in 83 files (1,765 in 82 before)                 |
-| Browser, three widths, one worker         | **BROWSER_COUNT passed** (591 before)                             |
+| Unit / contract / synthetic / adversarial | **1,812 passed** in 83 files (1,765 in 82 before)                 |
+| Browser, three widths, one worker         | **648 passed** at three widths, 216 per width (591 before)        |
 | Android-style gate, deployed              | **ANDROID**                                                       |
 | Privacy scan                              | **clean** — 283 tracked files                                     |
 | Block sweep                               | **PASS** — unchanged                                              |
@@ -250,7 +250,7 @@ instrument asserts both halves.
 
 ### Package 4 — the second information agenda (F02, D-163)
 
-`src/intelligence/discovery.ts`, on **Life** and never on Now. Its own weekly
+`src/intelligence/discovery.ts`, on **Insights** and never on Now. Its own weekly
 budget of two, separate from D-036's three a day, which is untouched. Prompts
 are generated from what the app does not know, so the agenda empties itself as
 it learns; a skip writes a record and is respected; an answer lands as a
@@ -259,6 +259,11 @@ it learns; a skip writes a record and is respected; an answer lands as a
 **D-184**: one question per object at a time, because a destination has four
 parts and a prompt per gap would make answering the first question replace it
 with three.
+
+It began on Life and moved, and the move is recorded as DEF-0122 rather than
+tidied into a design decision: Life is held to about a screen and a half on a
+phone and had no room, and Insights is where D-169, F02 and AUD-0043 all
+already put a _"what the app is working out"_ surface.
 
 **It shows what an answer changed**, worked out by replaying the decision
 without the record the answer produced — the same technique the guide uses to
@@ -297,12 +302,13 @@ When it is on, the rendered reading stays the discreet placeholder — D-167's
 structural discretion guard, which is a precondition rather than a substitute
 for consent.
 
-## Five defects, and none of them was reported
+## Eight defects, and none of them was reported by anything outside the build
 
 Worth its own section because of where they came from rather than what they
 were. Nothing external found any of them: two by the builder's own gate the
-first time it ran against code that existed, and three by the builder reading
-its own work back before writing the handoff.
+first time it ran against code that existed, three by the builder reading its
+own work back, and three by the browser suite and CI on a checkpoint that had
+already been pushed.
 
 **DEF-0115 and DEF-0116 are one class, and it is the class D-179 was written
 for.** Two guards that read source could not see correct code: the
@@ -349,6 +355,33 @@ rather than whether it behaves once reached. Every other test of the two aspects
 passed without it, and that is worth saying plainly: D-161's whole argument is
 that reachability is a separate question from correctness, and this phase found
 its own example of the difference.
+
+**DEF-0120 to DEF-0122 came from the browser, which is the point of having
+one.** Every one of them was invisible to 1,812 synthetic assertions.
+
+- The blocker question was nested under the branch that draws the move currently
+  on screen — and the move he pressed has **left** that screen by then. It
+  survived only when something else happened to take its place, so it vanished
+  on exactly the evenings its answer is worth most. It passed at two widths out
+  of three, which is what that kind of defect looks like.
+- `part-done` shipped as _"Got some of it done"_, which contains **Done** —
+  two controls in one always-drawn row whose accessible names are substrings.
+  Twenty-six existing assertions broke without being changed.
+- And Life became a wall. The second agenda rendered a question, a note and an
+  input permanently on the screen Phase 5 spent a phase reducing from homework,
+  and `shell.spec.ts` measures it. Closing it until tapped got 2.09 against a
+  ceiling of 1.9; one line and one link got 2.02; dropping the panel chrome got
+  1.91. **The budget was saying the thing it was written to say**, and shaving a
+  sentence until a measured constraint stops complaining is the move the
+  constraint exists to stop — so the agenda moved to Insights, where D-169,
+  F02 and AUD-0043 all already put it.
+
+**And the builder's own reading of the browser run was wrong for one cycle**,
+which is where **D-186** comes from: the suite was piped through `tail -6`, a
+failing summary is longer than a passing one, so the visible tail read _"622
+passed"_ over an invisible _"26 failed"_ — and the pipeline exited zero because
+that is `tail`'s status. CI read it correctly a few minutes later. A gate's
+result is its exit status, never the tail of its output.
 
 ## The gate, item by item
 

@@ -23,7 +23,7 @@ async function loadInQa(page: Page, title: string) {
   await expect(page.locator('.qa-scenario--active')).toContainText(title)
 }
 
-async function go(page: Page, name: 'Now' | 'Life' | 'Timeline') {
+async function go(page: Page, name: 'Now' | 'Life' | 'Timeline' | 'Insights') {
   await page.locator('.nav').getByRole('button', { name }).click()
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
 }
@@ -278,8 +278,8 @@ test.describe('an interruption is not a refusal', () => {
     await untilThereIsAMove(page)
     const actions = page.getByTestId('now-actions')
     await actions.getByRole('button', { name: 'Start it' }).click()
-    await expect(actions.getByRole('button', { name: 'Got some of it done' })).toBeEnabled()
-    await actions.getByRole('button', { name: 'Got some of it done' }).click()
+    await expect(actions.getByRole('button', { name: 'Only part of it' })).toBeEnabled()
+    await actions.getByRole('button', { name: 'Only part of it' }).click()
     await expect(page.locator('.rows')).toContainText('Part done')
   })
 })
@@ -317,7 +317,16 @@ test.describe('correcting what the app recorded', () => {
 
     await page.goto(`${APP}#/life/health-recovery`)
     const events = page.getByTestId('correctable-event')
-    await expect(events.first()).toBeVisible()
+    /*
+     * Wait for the list to settle before reading it.
+     *
+     * One start and one completion, and the page renders them as the store
+     * publishes: reading "the first row" mid-settle picks whichever arrived
+     * first, and the assertion afterwards then compares a row against text that
+     * was never in it. The count is the settled state, so waiting on it is
+     * waiting on the right thing.
+     */
+    await expect(events).toHaveCount(2)
     /*
      * By what it says rather than by how many there are.
      *
@@ -332,7 +341,12 @@ test.describe('correcting what the app recorded', () => {
     await page.getByTestId('correction-open-button').first().click()
     await page.getByTestId('correction-apply').click()
 
-    await expect(page.getByTestId('correctable-event').first()).not.toContainText(withdrawing)
+    /*
+     * Gone from the whole list, not merely off the top of it. A check on the
+     * first row alone passes whenever the withdrawn entry moves down one.
+     */
+    await expect(events).toHaveCount(1)
+    await expect(events.first()).not.toContainText(withdrawing)
   })
 })
 
@@ -364,36 +378,56 @@ test.describe('the private permission', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('the second information agenda', () => {
-  test('asks on Life and not on Now', async ({ page }) => {
+  test('asks on Insights and not on Now', async ({ page }) => {
+    /*
+     * D-169 puts the review loop on Insights and the domain pages, and this is
+     * the other half of the same subject: what the app has worked out sits
+     * below it, and this is what it has not.
+     *
+     * It was on Life first, and `shell.spec.ts` is why it is not: Life is held
+     * to about a screen and a half on a 360-wide phone, and one closed line
+     * with no panel around it still left it over. A measured constraint saying
+     * no is a placement decision, not an obstacle.
+     */
     await loadInQa(page, 'The first evening')
 
-    await go(page, 'Life')
+    await go(page, 'Insights')
+    /*
+     * Closed until tapped, like every other control on a Life surface, and the
+     * closed line says nothing about which area it is about — Life names every
+     * area exactly once and a prompt that named one would make it twice.
+     */
+    await expect(page.getByTestId('discovery-closed')).toBeVisible()
+    await page.getByTestId('discovery-open').click()
     await expect(page.getByTestId('discovery-prompt')).toBeVisible()
-    await expect(page.getByTestId('discovery-skip')).toBeVisible()
+    await expect(page.getByTestId('discovery-leave')).toBeVisible()
 
     await go(page, 'Now')
     await expect(page.getByTestId('discovery-prompt')).toHaveCount(0)
+    await expect(page.getByTestId('discovery-closed')).toHaveCount(0)
   })
 
   test('respects a skip', async ({ page }) => {
     await loadInQa(page, 'The first evening')
-    await go(page, 'Life')
+    await go(page, 'Insights')
 
-    const first = await page.getByTestId('discovery-answer').getAttribute('id')
+    await page.getByTestId('discovery-open').click()
     const asked = await page.locator('[data-testid="discovery-prompt"] label').innerText()
-    await page.getByTestId('discovery-skip').click()
+    await page.getByTestId('discovery-leave').click()
 
-    const next = page.locator('[data-testid="discovery-prompt"] label')
-    if (await next.isVisible()) {
-      await expect(next).not.toHaveText(asked)
-    }
-    expect(first).toBe('discovery-answer')
+    await expect(page.getByTestId('discovery-closed')).toBeVisible()
+    await page.getByTestId('discovery-open').click()
+    await expect(
+      page.locator('[data-testid="discovery-prompt"] label'),
+      'the skipped prompt came back',
+    ).not.toHaveText(asked)
   })
 
   test('shows what an answer changed', async ({ page }) => {
     await loadInQa(page, 'The first evening')
-    await go(page, 'Life')
+    await go(page, 'Insights')
 
+    await page.getByTestId('discovery-open').click()
     await page.getByTestId('discovery-answer').fill('Working as a cloud engineer')
     await page.getByTestId('discovery-save').click()
 

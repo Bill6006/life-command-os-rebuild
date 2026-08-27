@@ -473,7 +473,7 @@ export const OWNER_ROUTES: readonly OwnerRoute[] = [
   },
   {
     id: 'discovery',
-    surface: 'life',
+    surface: 'insights',
     gesture: 'the second agenda’s question, answered or left',
     builder: 'discovery.discoveryResponseRecord',
     needs: {},
@@ -481,7 +481,7 @@ export const OWNER_ROUTES: readonly OwnerRoute[] = [
   },
   {
     id: 'discovery-answer',
-    surface: 'life',
+    surface: 'insights',
     gesture: 'answering the second agenda',
     builder:
       'authoring.destinationRecords, authoring.milestoneFor, authoring.authoringRecords, authoring.reviseDestinationRecord',

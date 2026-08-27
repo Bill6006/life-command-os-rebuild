@@ -55,7 +55,7 @@ things that had to exist around it before it meant anything.
 | **1** | **The destination object**              | A `destination` record and entity, four parts, no number on any of it. What is next is a `goal` carrying `milestoneOf` (**D-181**). |
 | **2** | **Progress evidence semantics**         | Six rungs, each with its own sentence and its own statement of what it is not evidence of. `enough-done-today` (**D-185**).         |
 | **3** | **Owner authoring**                     | One create-and-confirm control for six things, and the first path in the product that creates a semantic entity (**D-182**).        |
-| **4** | **The second information agenda**       | On Life, its own weekly budget, one question per object (**D-184**), and it shows what an answer changed.                           |
+| **4** | **The second information agenda**       | On Insights, its own weekly budget, one question per object (**D-184**), and it shows what an answer changed.                       |
 | **5** | **Inability, interruption, the states** | The `blocker` field gets a control and a reader; `part-done`; a way back to an interrupted move.                                    |
 | **6** | **Correction grammar, private consent** | Four gestures that say what they will change first; withdraw and re-date; one permission, off by default.                           |
 
@@ -143,7 +143,7 @@ Read, in full, and in this order:
                                   expects you to look hardest
 3. docs/PRODUCT_ADJUDICATION.md section 8 — the seven-item gate; section 11 is
                                   the do-not-change list
-4. docs/DECISION_LOG.md D-161..D-169 and D-173, then D-177..D-185
+4. docs/DECISION_LOG.md D-161..D-169 and D-173, then D-177..D-186
 5. docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md — F01, F02, F04, F05, F07, F10, F11,
                                   F13, F19, F26, F30, F32, F35, F36
 6. docs/PHASE_STATUS.md — the routing 84 record, and the routing 83 record

@@ -90,7 +90,7 @@ screen means anything to somebody who does not.
 
 1. `docs/PRODUCT_ADJUDICATION.md` section 8 — the phase and its seven-item gate;
    section 11 is the do-not-change list
-2. `docs/DECISION_LOG.md` **D-161 … D-169, D-173**, then **D-177 … D-185**
+2. `docs/DECISION_LOG.md` **D-161 … D-169, D-173**, then **D-177 … D-186**
 3. `docs/CANONICAL_REBUILD_PLAN.md` sections **11**, **21**, **22**, **43A**,
    **54**, **62**
 4. `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` — findings **F01, F02, F04, F05,
@@ -99,11 +99,12 @@ screen means anything to somebody who does not.
    by anyone.
 5. `docs/PHASE_STATUS.md` — the routing 84 section, and the routing 83 section
    above it whose enumerated brief is this phase's scope
-6. `docs/DEFECT_LEDGER.md` — **DEF-0115 … DEF-0119**. Two are the same class
-   (D-183): a guard that reads source and could not see correct code. Two are
-   the app inventing something the owner did not say. The last is a question
-   nothing could ever reach, which is the pattern this phase exists to stop
-   repeating. None was reported by anything outside this conversation.
+6. `docs/DEFECT_LEDGER.md` — **DEF-0115 … DEF-0122**, eight of them, and none
+   reported by anything outside the build. Two are guards that read source and
+   could not see correct code (D-183). Two are the app saying something the
+   owner did not. One is a question nothing could ever reach. Three came from
+   the browser suite and CI on a checkpoint that had already been pushed, and
+   were invisible to 1,812 synthetic assertions.
 
 ---
 
@@ -188,8 +189,8 @@ name.
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `src/features/life/DomainPanels.tsx`      | New. Destination, progress, authoring, people, blockers, corrections, permission, and the blocker question.   |
 | `src/features/life/DomainPage.tsx`        | Renders them, and owns every handler that builds a record.                                                    |
-| `src/features/life/Discovery.tsx`         | New. The second agenda, on Life.                                                                              |
-| `src/features/life/LifeScreen.tsx`        | Renders it above the courses.                                                                                 |
+| `src/features/insights/Discovery.tsx`     | New. The second agenda, on Insights.                                                                          |
+| `src/features/insights/InsightsScreen.tsx` | Renders it above what the app has worked out.                                                                |
 | `src/features/life/domainPages.ts`        | `DomainPageData` gains destinations, progress, blockers and correctable events.                               |
 | `src/features/now/NowScreen.tsx`          | The blocker question, the resume panel, and the sixth lifecycle button.                                       |
 | `src/features/memory/MemoryProvider.tsx`  | `create(authored)` — the one write path that brings an entity into being (D-182).                             |
@@ -209,11 +210,14 @@ Named as areas of exposure, not as answers.
    1 runs on the near-empty store, because that is what D-161 requires. What a
    destination looks like beside twelve weeks of evidence, a growth ladder and a
    running course is the case the builder is least sure of.
-3. **Whether the second agenda is a form.** Two a week is the budget; the shape
-   of it on screen is a labelled box with a Save and a Not now, and F04's own
-   complaint is about exactly that shape appearing where a conversation belongs.
-4. **The sixth button.** `Got some of it done` joined a row of five that
-   D-052 requires to be always drawn. Check the row does not wrap into a
+3. **Whether the second agenda is a form.** Two a week is the budget, and it is
+   closed until tapped — one line and a link, then a labelled box with a Save
+   and a Not now. It was on Life and moved to Insights when the height budget
+   said Life had no room (DEF-0122). F04's complaint is about exactly the shape
+   this could still be, on a screen with no measured ceiling.
+4. **The sixth button.** `Only part of it` joined a row of five that D-052
+   requires to be always drawn. Its first label contained the word **Done** and
+   broke twenty-six assertions (DEF-0121). Check the row does not wrap into a
    double-tap hazard at 360px, and that no target moves under a thumb.
 5. **The blocker question's silence.** It is asked after `Can't right now` on an
    effortful move and not after a restorative one. The builder believes the
@@ -238,8 +242,8 @@ and what QA observes is itself a trigger.
 | Gate                                      | Result                                                    |
 | ----------------------------------------- | ---------------------------------------------------------- |
 | `npm run verify`, clean checkout          | **PASS** on `39d147e`                                      |
-| Unit / contract / synthetic / adversarial | **1,810 passed** in 83 files (1,765 in 82 before)          |
-| Browser, 360 / 430 / 1,280, one worker    | **BROWSER_LINE**                                           |
+| Unit / contract / synthetic / adversarial | **1,812 passed** in 83 files (1,765 in 82 before)          |
+| Browser, 360 / 430 / 1,280, one worker    | **648 passed**, 216 per width (582 before)                                           |
 | Privacy scan                              | **clean, 283 tracked files**                               |
 | Block sweep and copy guards               | **PASS** — 72 cases across five files, unchanged           |
 | Android-style gate, deployed              | **ANDROID_LINE**                                           |

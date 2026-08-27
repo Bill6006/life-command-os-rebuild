@@ -6176,3 +6176,36 @@ said himself that he did not finish, and telling him he has done enough would be
 the app contradicting him.
 
 ---
+
+## D-186 — A gate's result is its exit status, never the tail of its output
+
+**Phase:** 84 · **Status:** Active · **Extends:** D-180
+
+A gate has passed when the command that runs it exits zero. It has not passed
+because the last few lines you looked at said a number followed by the word
+_passed_.
+
+**Why:** the browser suite was run as
+`npx playwright test --reporter=dot 2>&1 | tee out.txt | tail -6`. The summary
+block is longer than six lines when anything fails, so the visible tail read
+**"622 passed (12.8m)"** — and the line above it, cut off, said **"26 failed"**.
+The pipeline exited zero because the exit status of a pipeline is `tail`'s.
+Twenty-six failures across three widths were reported as a clean run, and CI
+found them a few minutes later on exactly the commit that had just been pushed.
+
+That is D-180's shape one layer in. D-180 says a commit nothing but its author
+has examined has met no gate; this says a gate whose output its author filtered
+has not been read. Both cost the same thing — a green claim over a red result —
+and both are cheap to avoid.
+
+**The rule.** Read the status. Where the output is filtered for length, filter
+for the failure signatures too, and never through a pipe whose last stage
+swallows the status. `grep -E "passed|failed"` over the whole captured file is
+enough; `tail` alone is not, because a failing run's summary is longer than a
+passing one's, which is precisely when the tail stops containing it.
+
+**What this does not license.** Reading less. The point is not that a summary
+line is untrustworthy — it is that the line you did not see is the one that
+mattered.
+
+---

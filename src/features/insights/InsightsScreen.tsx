@@ -6,6 +6,7 @@ import { insightsFor, type Insight } from '../../intelligence/insights'
 import type { EntityIndex } from '../../domain/entities'
 import type { RecordId } from '../../domain/ids'
 import { assembleSituation } from '../../intelligence/situation'
+import { Discovery } from './Discovery'
 import {
   EvidenceConfidence,
   EvidenceLines,
@@ -57,15 +58,19 @@ export function InsightsScreen() {
   const [working, setWorking] = useState(false)
   const inFlight = useRef(false)
 
-  const report = useMemo(() => {
+  const situation = useMemo(() => {
     if (!memory.ready) return undefined
-    const situation = assembleSituation(memory.view, {
+    return assembleSituation(memory.view, {
       now: memory.now,
       zone: memory.zone,
       weekStartsOn: memory.weekStartsOn,
     })
-    return insightsFor(situation)
   }, [memory.ready, memory.view, memory.now, memory.zone, memory.weekStartsOn])
+
+  const report = useMemo(
+    () => (situation === undefined ? undefined : insightsFor(situation)),
+    [situation],
+  )
 
   const correct = useCallback(
     (belief: string) => {
@@ -88,7 +93,7 @@ export function InsightsScreen() {
     [memory],
   )
 
-  if (!memory.ready || report === undefined) {
+  if (!memory.ready || report === undefined || situation === undefined) {
     return (
       <Screen title="Insights">
         <Panel>
@@ -103,6 +108,16 @@ export function InsightsScreen() {
 
   return (
     <Screen title="Insights" lede="What the app has worked out about how your life actually goes.">
+      {/*
+        And the other half of the same subject — F02, D-163, D-169.
+
+        What the app has worked out sits below; this is what it has not, and
+        what it would ask one question a week to find out. It is first because
+        it is the shorter of the two and because a screen about understanding
+        should say what it is missing before it says what it has.
+      */}
+      <Discovery situation={situation} />
+
       {insights.length === 0 ? (
         <Panel title="Nothing worth saying here yet">
           {/*

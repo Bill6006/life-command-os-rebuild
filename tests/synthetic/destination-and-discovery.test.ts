@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { CONCEPT } from '../../src/domain/concepts'
@@ -1044,5 +1044,71 @@ describe('routing 84 item 2 — the two course-scale questions can actually be r
     const progress = app.progress([DOMAIN.sleep, DOMAIN.health])
     expect(progress.rungs.some((rung) => rung.kind === 'retained-capability')).toBe(true)
     expect(progress.strongest).toBe('retained-capability')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// D-167's structural guarantee, stated as something that can fail
+// ---------------------------------------------------------------------------
+
+describe('routing 84 item 6 — the private guarantee is structural, not conventional', () => {
+  it('has exactly one path from a private record to the decision layer', () => {
+    /*
+     * D-167: *"it must remain **structurally** impossible — not merely
+     * conventional — for an explanation or evidence panel to render an explicit
+     * private reading. If that guarantee cannot be made, the permission cannot
+     * be offered."*
+     *
+     * The guarantee rests on there being **one** door. `createFactReader.read`
+     * is gated by `mayReasonFrom` and renders a private value as the discreet
+     * placeholder; a module that reached `view.facts` for a private concept
+     * itself would walk round both. So this asks which files name the concept
+     * at all, and the answer has to stay one — the fixture that writes it.
+     *
+     * `direction.ts` does read `view.facts.knowledgeFor` directly, for the
+     * weekly focus, and that is fine and is why this guard is about the private
+     * concept rather than about the fact layer: a general rule would fail on
+     * something true.
+     */
+    const named: string[] = []
+    const walk = (dir: string): void => {
+      for (const name of readdirSync(dir)) {
+        const full = join(dir, name)
+        if (statSync(full).isDirectory()) {
+          walk(full)
+          continue
+        }
+        if (!name.endsWith('.ts') && !name.endsWith('.tsx')) continue
+        if (name === 'concepts.ts') continue
+        if (/\bprivatePattern\b/.test(readFileSync(full, 'utf8'))) named.push(name)
+      }
+    }
+    walk(join(import.meta.dirname, '..', '..', 'src'))
+    expect(named.sort(), 'a module reads the private concept for itself').toEqual([
+      // The fixture that writes one. It stores; it does not reason.
+      'scenarios.ts',
+    ])
+  })
+
+  it('renders a private reading as the placeholder wherever it is considered, across the library', () => {
+    /*
+     * The other half, and the one that holds when the permission is **on**: the
+     * value becomes legible to the engine and never becomes a string. Swept
+     * over every history rather than over the one that has a private record,
+     * because the sweep is worth more than the instance.
+     */
+    const offenders: string[] = []
+    for (const entry of SCENARIOS) {
+      const loaded = snapshotFromWire(entry.build())
+      const moment = { now: entry.now, zone: entry.zone, weekStartsOn: entry.weekStartsOn ?? 1 }
+      const situation = assembleSituation(buildView(loaded.snapshot, moment), moment)
+      for (const fact of situation.considered) {
+        if (fact.privacy !== 'private') continue
+        if (fact.state === 'unknown') continue
+        if (fact.reading === 'Private entry') continue
+        offenders.push(`${entry.id}: ${fact.concept} read as “${fact.reading}”`)
+      }
+    }
+    expect(offenders, 'an explicit private reading reached the decision trace').toEqual([])
   })
 })

@@ -122,9 +122,19 @@ function stateWord(state: MoveState, block: DayBlock): string {
 const ACTION_WORDS: Record<LifecycleAction, string> = {
   start: 'Start it',
   complete: 'Done',
-  // F10. Not "Partly done" — the owner is saying what he did, and "Got some of
-  // it done" is what a person says about an evening that ran out.
-  'part-done': 'Got some of it done',
+  /*
+   * F10, and the second attempt at the words.
+   *
+   * The first was *"Got some of it done"*, and it contains **Done** — so a
+   * browser computing accessible names finds two buttons in this row whose
+   * names both match it, and a person scanning the row reads the shorter one
+   * inside the longer one. Twenty-six browser assertions across three widths
+   * said so before anybody had to have an opinion about it.
+   *
+   * This is what he would actually say, and it says it without saying the other
+   * button's word.
+   */
+  'part-done': 'Only part of it',
   decline: 'Not today',
   'unable-now': "Can't right now",
   'try-another': 'Something else',
@@ -705,15 +715,6 @@ export function NowScreen() {
             />
           )}
 
-          {blockerDecision === undefined || blocked === undefined ? null : (
-            <BlockerQuestion
-              decision={blockerDecision}
-              disabled={busy}
-              onAnswer={(cause) => answerBlocker(blocked, cause as BlockerCause)}
-              onLeave={() => setBlocked(undefined)}
-            />
-          )}
-
           <StopSuggesting
             refused={justRefused}
             entities={decision.situation.entities}
@@ -783,6 +784,25 @@ export function NowScreen() {
           offer={threadOffer}
           disabled={busy}
           onStart={() => startThread(threadOffer)}
+        />
+      )}
+
+      {/*
+        What was in the way, asked about the move he just pressed — F07, D-164.
+
+        At the top level rather than inside the branch that draws the move,
+        because the move he tapped **has left the screen** — a move refused or
+        blocked in this block is out of the running for it (AUD-0023). Nested
+        under the explanation it appeared only when something else happened to
+        take its place, and vanished on exactly the evenings the app had nothing
+        else to offer, which is where the answer is worth most.
+      */}
+      {blockerDecision === undefined || blocked === undefined ? null : (
+        <BlockerQuestion
+          decision={blockerDecision}
+          disabled={busy}
+          onAnswer={(cause) => answerBlocker(blocked, cause as BlockerCause)}
+          onLeave={() => setBlocked(undefined)}
         />
       )}
 

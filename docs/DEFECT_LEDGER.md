@@ -39,6 +39,92 @@ None.
 
 ## Fixed
 
+### DEF-0120 — the question about what was in the way disappeared when there was nothing else to suggest
+
+- Status: Fixed
+- Severity: Blocker — the one question D-164 allows, absent on the evenings its
+  answer is worth most
+- Found in: routing 84 / `39d147e`
+- Found by: the browser suite at 360px. It passed at the other two widths, which
+  is what a defect that depends on whether something else happens to be on
+  screen looks like.
+- Class: **a control nested under a condition it has nothing to do with.**
+- Reproduction: on **The first evening**, answer the guide, press **Can't right
+  now**. At 360px no blocker question and no silent line appear at all.
+- Root cause: the panel was rendered inside the `explanation !== undefined`
+  branch — the half of Now that draws the move currently on screen. The move he
+  just pressed has **left** that screen by then, because a move blocked in this
+  block is out of the running for it (AUD-0023), so the question survived only
+  when some other candidate happened to take its place. On an evening the app
+  had nothing else for, it vanished.
+- Repair: it renders at the top level, beside the resume panel, from the session
+  state that holds the move he actually pressed.
+- Regression: `tests/browser/phase84.spec.ts` — "asks once what was in the way,
+  and offers a way out of the question", which asserts that one of the two
+  branches is visible. The synthetic suite could not have caught it: it holds
+  `blockerQuestionFor`, and the decision was right the whole time.
+- Fixed in: the commit that adds this entry
+
+---
+
+### DEF-0121 — a new button's name contained the name of the button beside it
+
+- Status: Fixed
+- Severity: Major — two controls in one row whose accessible names are
+  substrings, on the row D-052 requires to be always drawn
+- Found in: routing 84 / `39d147e`
+- Found by: the browser suite, twenty-six assertions across three widths, and CI
+  on the same commit
+- Class: **an owner-facing label that is unique to a reader and ambiguous to a
+  machine** — and, in this case, ambiguous to a reader too.
+- Reproduction: any test doing `getByRole('button', { name: 'Done' })` inside
+  `now-actions` resolves to two elements: **Done** and **Got some of it done**.
+- Root cause: `part-done` shipped as _"Got some of it done"_, which contains
+  _Done_. Accessible-name matching is substring by default, and a person
+  scanning six buttons reads the shorter label inside the longer one.
+- Repair: _"Only part of it"_ — what he would actually say, and it does not say
+  the other button's word.
+- Regression: the existing browser suite, which failed on it without being
+  changed. That is worth noting: no new test was needed, because the assertions
+  that already described the row were the ones that broke.
+- Siblings: swept. No other pair of labels in `ACTION_WORDS`, `BLOCKER_OPTIONS`
+  or the outcome answers is a substring of another.
+- Fixed in: the commit that adds this entry
+
+---
+
+### DEF-0122 — Life became a wall again, and a measured budget said so
+
+- Status: Fixed
+- Severity: Major — the exact failure Phase 5 spent a phase removing, put back
+  by a panel whose own decision forbids becoming a chore
+- Found in: routing 84 / `39d147e`
+- Found by: `shell.spec.ts` — "fits in about a screen and a half rather than two
+  and a half", at 360px
+- Class: **a new surface added to a screen that already has a measured budget.**
+- Reproduction: open Life at 360 wide on **The first evening**. The body scroll
+  height was 2.24 screens against a ceiling of 1.9.
+- Root cause: the second agenda rendered its question, its note and its input
+  permanently on Life. Two further problems came with it: the prompt names the
+  area it is about, and `shell.spec.ts` also requires Life to name each of the
+  eleven areas **exactly once** — so _Career & Learning_ appeared twice.
+- Repair, and it took three attempts, which is the useful part. Closing the
+  control until tapped got it to 2.09. Trimming to one line and one link got it
+  to 2.02. Dropping the panel chrome entirely got it to 1.91 — still over. The
+  budget was saying the thing it was written to say: **Life has no room**, and
+  shaving a sentence until a measured constraint stops complaining is the move
+  the constraint exists to stop.
+- So the agenda moved to **Insights**, which is where it belongs on its own
+  merits: D-169 puts the review loop on Insights and the domain pages, F02 asks
+  for a _"what I understand / am working out"_ state distinct from the guide, and
+  AUD-0043 already puts a working-out panel there. A question about what the app
+  does not understand sits on the screen about what it does.
+- Regression: `shell.spec.ts`, unchanged and now green, plus
+  `tests/browser/phase84.spec.ts` — "asks on Insights and not on Now".
+- Fixed in: the commit that adds this entry
+
+---
+
 ### DEF-0119 — the question about a finished course keyed on a state nothing writes
 
 - Status: Fixed

@@ -21,14 +21,25 @@ import { useMemory } from '../memory/memoryContext'
 /**
  * The second information agenda, on the surface it belongs on — F02, D-163.
  *
- * ## Why it is here and not on Now
+ * ## Why it is here, and the two places it is not
  *
- * D-163's first rule: *never on Now's critical path*. Now is where the app
- * comes to the owner with one thing to do, and a question whose answer will not
- * change what that thing is has no business interrupting it. Life is where he
- * comes to see what the app understands, which is exactly what this is asking
- * to improve — and D-169 puts the review loop on the same surfaces for the same
- * reason.
+ * **Not Now.** D-163's first rule is *never on Now's critical path*: Now is
+ * where the app comes to the owner with one thing to do, and a question whose
+ * answer will not change what that thing is has no business interrupting it.
+ *
+ * **Not Life either, and that was measured rather than argued.** It started
+ * there, and `shell.spec.ts` holds Life to about a screen and a half on a
+ * 360-wide phone — the budget section 7 spent Phase 5 winning back from a
+ * screen that was homework. A panel took it to 2.24; one closed line and one
+ * link, with no panel around them, still left it at 1.91. Life has no room, and
+ * shaving a sentence until a measured constraint stops complaining is the move
+ * the constraint exists to stop.
+ *
+ * **Insights is where it belongs on its own merits.** D-169 puts the review
+ * loop on Insights and the domain pages; F02 asks for a *"what I understand / am
+ * working out"* state distinct from the pre-recommendation guide; and AUD-0043
+ * already puts a working-out panel here. A question about what the app does not
+ * understand sits on the screen about what it does.
  *
  * ## What it asks, and what makes that different from the guide
  *
@@ -53,6 +64,20 @@ export function Discovery({ situation }: { situation: Situation }) {
   const [second, setSecond] = useState('')
   const [third, setThird] = useState('')
   const [showing, setShowing] = useState(false)
+  /**
+   * Closed until tapped, like every other control on a Life surface.
+   *
+   * The first version rendered the question, its note and its box permanently,
+   * and Life went from a screen and a half to two and a quarter on a 360-wide
+   * phone — the exact wall section 7 spent Phase 5 removing, put back by the
+   * panel whose own decision forbids becoming *"an onboarding questionnaire, a
+   * domain maintenance chore"*. `shell.spec.ts` measures the height and said so.
+   *
+   * The closed line also says nothing about **which** area it is about, which
+   * is the other thing that broke: the prompt names the area, and Life already
+   * names every area exactly once.
+   */
+  const [open, setOpen] = useState(false)
   const inFlight = useRef(false)
 
   const agenda = useMemo(
@@ -107,6 +132,7 @@ export function Discovery({ situation }: { situation: Situation }) {
   const skip = (asked: DiscoveryPrompt) => {
     run(async () => {
       await memory.append([discoveryResponseRecord(asked, 'skipped', undefined, moment())])
+      setOpen(false)
       setDraft('')
       setSecond('')
       setThird('')
@@ -199,17 +225,50 @@ export function Discovery({ situation }: { situation: Situation }) {
        * the superseding record.
        */
       await memory.append([discoveryResponseRecord(asked, 'answered', built.records[0]?.id, at)])
+      setOpen(false)
       setDraft('')
       setSecond('')
       setThird('')
     })
   }
 
+  /*
+   * Nothing to ask and nothing answered is nothing to show.
+   *
+   * Life's first rule is that the owner should not need to visit it for routine
+   * maintenance, and a panel reporting that it has no questions is the app
+   * talking about itself on the one screen that exists to talk about him.
+   */
+  if (prompt === undefined && agenda.answered === 0) return null
+
   return (
     <Panel title="Getting to know you">
       {prompt === undefined ? (
         <p className="note" data-testid="discovery-quiet">
-          {agenda.because}.
+          Nothing the app is trying to work out just now.
+        </p>
+      ) : !open ? (
+        /*
+         * One line and one link, and nothing else.
+         *
+         * The closed state is measured: `shell.spec.ts` holds Life to about a
+         * screen and a half on a 360-wide phone, and every sentence and every
+         * button here is counted against that. **Not now** is not offered until
+         * the question is, because skipping a question you have not read is not
+         * a skip — and D-163's "always skippable" is about the question rather
+         * than about the offer of one.
+         */
+        <p className="note" data-testid="discovery-closed">
+          One answer would help the app know you better.{' '}
+          <button
+            type="button"
+            className="domain-linkish"
+            disabled={busy}
+            data-testid="discovery-open"
+            onClick={() => setOpen(true)}
+          >
+            What is it?
+          </button>
         </p>
       ) : (
         <div className="domain-correction" data-testid="discovery-prompt">
@@ -278,7 +337,7 @@ export function Discovery({ situation }: { situation: Situation }) {
               type="button"
               className="domain-correction__cancel"
               disabled={busy}
-              data-testid="discovery-skip"
+              data-testid="discovery-leave"
               onClick={() => skip(prompt)}
             >
               Not now

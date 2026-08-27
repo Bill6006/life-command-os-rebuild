@@ -428,7 +428,7 @@ describe('D-161 — what an owner has no route to', () => {
       ['thread-state', 'setThreadStateRecord', 'life'],
       ['insights-belief-correction', 'beliefCorrectionRecord', 'insights'],
       ['destination', 'destinationRecords', 'domain-page'],
-      ['discovery-answer', 'destinationRecords', 'life'],
+      ['discovery-answer', 'destinationRecords', 'insights'],
     ] as const) {
       const found = reached.find((entry) => entry.builder === builder && entry.surface === surface)
       expect(found, `the reader must find ${builder} on ${surface}`).toBeDefined()
