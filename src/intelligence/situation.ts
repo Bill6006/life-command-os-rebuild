@@ -1288,6 +1288,10 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
       now: moment.now,
       zone: moment.zone,
       concepts,
+      // The decision index rather than the store's: a belief about a walk has
+      // to be able to name it, and the engine's own routines resolve nowhere
+      // else (QA-83-002).
+      entities,
     }),
     considered: reader.considered(),
     entities,

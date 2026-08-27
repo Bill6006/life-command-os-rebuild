@@ -233,10 +233,25 @@ describe('a completed action changes later reasoning', () => {
     expect(walked.explanation?.rendered.sentence).toContain('a walk')
   })
 
-  it('says out loud what it is resting on', () => {
+  it('says out loud what it is resting on, and names what it is about', () => {
+    /*
+     * This asserted _"**Reset a space** has worked a few times…"_ until QA-83-002.
+     *
+     * "Reset a space" is `verbLabel` — the eyebrow word on a recommendation
+     * card — and it was the only name the learning layer could reach, because
+     * the table that names an action with its subject in it lived in
+     * `insights.ts`, above it. So the belief sentence and the button that
+     * corrects it said one thing while the headline and the evidence panel said
+     * another, on one screen.
+     *
+     * The count is untouched and so is the belief's scope: what changed is the
+     * noun. Every episode behind this belief is the same kitchen, which is the
+     * condition under which the object may be named at all.
+     */
     expect(warm.explanation?.restsOn).toBe(
-      'Reset a space has worked a few times in situations like tonight.',
+      'Clearing the kitchen has worked a few times in situations like tonight.',
     )
+    expect(warm.explanation?.restsOnNamed).toBe('Clearing the kitchen')
     expect(cold.explanation?.restsOn).toBeUndefined()
   })
 

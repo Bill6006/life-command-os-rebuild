@@ -342,7 +342,33 @@ function learnedBandClause(evaluation: Evaluation, situation: Situation): string
    * survived the filter fits better, which is a statement about the field
    * rather than about any particular alternative.
    */
-  return ' The last few times made little difference, and nothing else here fits better.'
+  /*
+   * And the quantity is counted rather than assumed — QA-83-001.
+   *
+   * This read "The last few times made little difference" on a history whose
+   * own evidence panel said "One occasion in the record" and "1 occasion". A
+   * plural over a count of one, in the phase whose second acceptance item is
+   * that no owner-visible sentence asserts a quantity the app did not count.
+   *
+   * The count is `learned.samples`, which is the number of comparable episodes
+   * this belief was actually built from, and the words are the ones
+   * `learning.ts` already uses for the same quantity — one vocabulary for one
+   * number, rather than two files each rounding it their own way.
+   */
+  return ` ${howOften(learned.samples)} made little difference, and nothing else here fits better.`
+}
+
+/**
+ * How many comparable occasions there were, in words — QA-83-001.
+ *
+ * The same three bands `summarise` uses, phrased for the front of a clause.
+ * Anything that states a quantity here has to come from this function, so the
+ * sweep in `quantity-agrees.test.ts` has one place to hold to a count.
+ */
+function howOften(samples: number): string {
+  if (samples <= 1) return 'The one time before'
+  if (samples < 4) return 'The last few times'
+  return 'The last several times'
 }
 
 /** The top of the band `learning.ts` calls "has made little difference". */
@@ -843,6 +869,20 @@ export interface Explanation {
   /** The belief `restsOn` states, so the owner has something to disagree with. */
   readonly restsOnBelief: string | undefined
   /**
+   * What that belief is about, in the app's one name for an action —
+   * QA-83-002.
+   *
+   * The key is verb-scoped and must stay so: rejecting `effect:move` rejects
+   * what the app concluded about moving, not about walks. But the *word* on the
+   * button was `verbLabel`, which produced "correct what move does for you"
+   * under a card headed "a walk" — a word for a template's eyebrow standing in
+   * for the name of a thing. This is what the pooled evidence is actually
+   * about, named to one object only where the pooled episodes agree on one.
+   *
+   * Present wherever `restsOnBelief` is.
+   */
+  readonly restsOnNamed: string | undefined
+  /**
    * Which course this move belongs to, and where in it — AUD-0020.
    *
    * **A thread must never be a hidden reason.** It moves the ranking, so the
@@ -992,6 +1032,7 @@ export function explain(
       restsOn: learned.summary,
       restsOnBelief:
         learned.summary === undefined ? undefined : beliefKey('effect', semantics.target.verb),
+      restsOnNamed: learned.summary === undefined ? undefined : learned.named,
       partOf: partOfThread(situation, semantics),
     },
   }

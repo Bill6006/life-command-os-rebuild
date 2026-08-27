@@ -1,6 +1,7 @@
 import type { ConceptRegistry } from '../domain/concepts'
 import type { RecordId } from '../domain/ids'
-import { verbLabel, type ActionTarget, type ActionVerb } from '../domain/recommendation'
+import type { EntityIndex, EntityRef } from '../domain/entities'
+import { patternNameFor, type ActionTarget, type ActionVerb } from '../domain/recommendation'
 import {
   evidenceSourceOf,
   type DecisionContext,
@@ -296,6 +297,15 @@ export interface LearnedEffect {
   readonly evidence: readonly EvidenceRef[]
   /** Owner-facing, when there is enough to say anything. */
   readonly summary: string | undefined
+  /**
+   * What this belief is about, in the app's one name for an action —
+   * QA-83-002.
+   *
+   * Present whether or not there is a `summary`, because the control that
+   * corrects the belief has to name it even where the sentence is withheld.
+   * Named to one object only where the pooled episodes agree on one.
+   */
+  readonly named: string
   readonly corrected: boolean
 }
 
@@ -396,6 +406,15 @@ interface Moment {
   readonly zone: TimeZoneId
   /** Needed to read reliability per concept rather than per source (D-059). */
   readonly concepts: ConceptRegistry
+  /**
+   * Needed to name the action a belief is about — QA-83-002.
+   *
+   * The same reason `concepts` is here: a sentence this file writes for the
+   * owner cannot be composed from a verb alone. It is the decision index
+   * rather than the store's, because the engine's own routines — a walk,
+   * winding down — are standing entities and resolve nowhere else.
+   */
+  readonly entities: EntityIndex
 }
 
 /**
@@ -540,6 +559,33 @@ function evidenceFor(
 const UNREGISTERED = 'reliability.default' as ConceptId
 
 /**
+ * What the pooled evidence is about, named the way the app names an action.
+ *
+ * QA-83-002. This used to be `verbLabel(verb)` — the eyebrow word on a
+ * recommendation card — so a belief built entirely from walks read *"Move has
+ * made little difference"* under a headline reading *"Move for 25 minutes: a
+ * walk."* and beside an evidence panel already saying *"getting out for a
+ * walk"*. Four registers for one thing, on one screen.
+ *
+ * **The object is named only where the pooled episodes agree on one**, which
+ * is `patternName`'s rule in `insights.ts`, applied at the layer the belief is
+ * actually written. An `effect` belief pools every episode with this verb, so
+ * naming one object across a pooled walk and a pooled bike ride would state a
+ * claim narrower than its own evidence — the mirror of the error D-153
+ * polices, and just as wrong.
+ */
+function namedAction(
+  verb: ActionVerb,
+  objects: readonly EntityRef[],
+  entities: EntityIndex,
+): string {
+  const distinct = new Set(objects.map((object) => object.id))
+  const first = objects[0]
+  const label = distinct.size === 1 && first !== undefined ? entities.labelFor(first) : undefined
+  return patternNameFor(verb, label)
+}
+
+/**
  * What the app has learned, in one line the owner can disagree with.
  *
  * Section 61 gives the target almost word for word — "This has worked several
@@ -547,27 +593,22 @@ const UNREGISTERED = 'reliability.default' as ConceptId
  * the move, because losing the noun is the failure section 3 is about.
  */
 function summarise(
-  verb: ActionVerb,
+  named: string,
   observed: number,
   samples: number,
   block: DayBlock,
 ): string | undefined {
   if (samples < 1) return undefined
-  const move = verbLabel(verb).toLowerCase()
   const when = horizonWord(block)
   const often = samples === 1 ? 'once' : samples < 4 ? 'a few times' : 'several times'
 
-  if (observed >= 0.6) return `${capitalise(move)} has worked ${often} in situations like ${when}.`
+  if (observed >= 0.6) return `${named} has worked ${often} in situations like ${when}.`
   if (observed <= 0.3) {
     return samples === 1
-      ? `${capitalise(move)} did not do much the one time in situations like ${when}.`
-      : `${capitalise(move)} has not done much ${often} in situations like ${when}.`
+      ? `${named} did not do much the one time in situations like ${when}.`
+      : `${named} has not done much ${often} in situations like ${when}.`
   }
-  return `${capitalise(move)} has made little difference in situations like ${when}.`
-}
-
-function capitalise(text: string): string {
-  return text.length === 0 ? text : `${text.charAt(0).toUpperCase()}${text.slice(1)}`
+  return `${named} has made little difference in situations like ${when}.`
 }
 
 // ---------------------------------------------------------------------------
@@ -635,6 +676,20 @@ export function buildLearning(
    * a parallel learner is the owner's requirement 1: one weight, one path,
    * three reasons an evening might count for less.
    */
+  /**
+   * One comparable episode's contribution, and what it was about.
+   *
+   * `object` is carried so a belief can be named under the pooled-object rule
+   * — QA-83-002. Without it the set that decides whether one object may be
+   * named had already been reduced to numbers.
+   */
+  interface Contributing {
+    readonly weight: number
+    readonly value: number
+    readonly evidence: EvidenceRef
+    readonly object: EntityRef
+  }
+
   const gather = (
     verb: ActionVerb,
     context: DecisionContext,
@@ -642,15 +697,23 @@ export function buildLearning(
     read: (value: FactValue) => number | undefined,
     after: Instant | undefined,
     onlyCompleted: boolean,
-  ): { weight: number; value: number; evidence: EvidenceRef }[] => {
+  ): Contributing[] => {
     const measures = profileFor(verb).measures
-    const out: { weight: number; value: number; evidence: EvidenceRef }[] = []
+    const out: Contributing[] = []
     for (const found of comparable(episodes, verb, context, moment, after)) {
       if (onlyCompleted && found.episode.state !== 'completed') continue
       const answer = answerOf(found.episode, aspect, read)
       if (answer === undefined) continue
       const evidence = evidenceFor(answer.record, measures, moment.concepts)
-      out.push({ weight: found.weight * evidence.reliability, value: answer.value, evidence })
+      out.push({
+        weight: found.weight * evidence.reliability,
+        value: answer.value,
+        evidence,
+        // Carried so a belief can name what it is about — QA-83-002. The
+        // pooled set is what decides whether one object may be named, so the
+        // set has to keep hold of them.
+        object: found.episode.semantics.target.object,
+      })
     }
     return out
   }
@@ -682,11 +745,17 @@ export function buildLearning(
           pull: 0,
           evidence: [],
           summary: undefined,
+          named: patternNameFor(verb, undefined),
           corrected,
         }
       }
 
       const observed = contributing.reduce((sum, entry) => sum + entry.value * entry.weight, 0) / n
+      const named = namedAction(
+        verb,
+        contributing.map((entry) => entry.object),
+        moment.entities,
+      )
 
       // Which number the evidence speaks to is decided by when the question was
       // asked, not by preference: a move judged twenty minutes later says
@@ -702,10 +771,11 @@ export function buildLearning(
         samples: contributing.length,
         pull: moved.pull,
         evidence: contributing.map((entry) => entry.evidence),
+        named,
         summary:
           moved.pull < 0.2
             ? undefined
-            : summarise(verb, observed, contributing.length, context.block),
+            : summarise(named, observed, contributing.length, context.block),
         corrected,
       }
     })

@@ -241,3 +241,77 @@ test.describe('every owner-facing control has a name', () => {
     }
   })
 })
+
+// ---------------------------------------------------------------------------
+// Round 1 repairs — QA-83-001 and QA-83-002, on the card they were read on
+// ---------------------------------------------------------------------------
+
+test.describe('the card independent QA read', () => {
+  test('does not call one occasion the last few times', async ({ page }) => {
+    /*
+     * QA-83-001. The reason said "The last few times made little difference"
+     * over a history whose own evidence panel said "One occasion in the record"
+     * and "1 occasion".
+     */
+    await loadInQa(page, 'Three days since that walk')
+    await go(page, 'Now')
+
+    const reason = await page.getByTestId('now-reason').innerText()
+    expect(reason).not.toContain('The last few times')
+    expect(reason).toContain('The one time before')
+
+    await page.getByTestId('now-see-evidence').click()
+    const evidence = await page.getByTestId('now-evidence').innerText()
+    expect(evidence).toContain('One occasion')
+    expect(evidence).toContain('1 occasion')
+  })
+
+  test('names the walk in the belief and in the button that corrects it', async ({ page }) => {
+    /*
+     * QA-83-002. The headline said "a walk", the belief said "Move", the button
+     * said "what move does for you" and the panel said "getting out for a
+     * walk" — four registers for one thing, on one screen.
+     */
+    await loadInQa(page, 'Three days since that walk')
+    await go(page, 'Now')
+
+    const rests = page.getByTestId('now-rests-on')
+    await expect(rests).toContainText('Getting out for a walk has made little difference')
+    await expect(rests).not.toContainText('Move has made little difference')
+
+    await expect(
+      page.getByRole('button', { name: /correct what getting out for a walk does for you/i }),
+    ).toBeVisible()
+
+    // And the panel that was already right still agrees with both.
+    await page.getByTestId('now-see-evidence').click()
+    await expect(page.getByTestId('now-evidence')).toContainText('getting out for a walk')
+  })
+
+  test('counts the held move rather than the hold, on a deferral', async ({ page }) => {
+    /*
+     * DEF-0112, found by the sweep written for QA-83-001 rather than reported.
+     * The panel said "0 occasions · too early to say" directly above "Clearing
+     * the kitchen has worked several times".
+     *
+     * Half past five is where this history defers, so the clock is set rather
+     * than nudged: a test that skips itself when it does not find the state it
+     * was written for is a test that reports nothing.
+     */
+    await loadInQa(page, 'A month of what actually worked')
+    const day = (await page.locator('.rows__row', { hasText: 'Owner-local' }).innerText()).match(
+      /(\d{4}-\d{2}-\d{2})/,
+    )?.[1]
+    expect(day, 'the laboratory should say which day it is on').toBeDefined()
+    await page.getByLabel('Travel to').fill(`${day}T05:30`)
+
+    await go(page, 'Now')
+    await expect(page.locator('.primary-surface__headline')).toContainText('suits')
+    await expect(page.getByTestId('now-actions')).toHaveCount(0)
+
+    await page.getByTestId('now-see-evidence').click()
+    const evidence = await page.getByTestId('now-evidence').innerText()
+    expect(evidence, 'the panel counts the held move, not the hold').not.toContain('0 occasions')
+    expect(evidence).toContain('Clearing the kitchen')
+  })
+})

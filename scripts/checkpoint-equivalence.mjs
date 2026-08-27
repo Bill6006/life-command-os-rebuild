@@ -124,6 +124,31 @@ function changedPaths(from, to) {
  * from the second, and 1 when it is not. A ref that does not contain the
  * checkpoint is not a candidate for equivalence at all: it is an older build.
  */
+/**
+ * Commits on HEAD that no remote branch contains — QA-83-004.
+ *
+ * `git log --branches --not --remotes` in its scripted form. Empty is the
+ * ordinary answer; anything else means the head being described is one only
+ * this machine has seen.
+ */
+function commitsNotOnAnyRemote() {
+  try {
+    // `HEAD` before `--not`, and the order is the whole thing: `--not` negates
+    // everything after it, so `--not --remotes HEAD` asks for commits in
+    // neither the remotes nor HEAD, which is always empty and always passes.
+    const raw = execFileSync('git', ['log', '--oneline', 'HEAD', '--not', '--remotes'], {
+      encoding: 'utf8',
+    })
+    return raw
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+  } catch {
+    // No remote configured, or no HEAD yet. Neither is this script's business.
+    return []
+  }
+}
+
 function contains(commit, candidate) {
   try {
     execFileSync('git', ['merge-base', '--is-ancestor', commit, candidate], {
@@ -142,6 +167,30 @@ if (!contains(productSha, ref)) {
   console.error('deployment, the deploy for that checkpoint has not landed yet: wait for it and')
   console.error('read the deployed SHA again. Nothing here says the checkpoint is wrong.')
   process.exit(1)
+}
+
+/*
+ * And whether the tree QA will read is a tree anyone else can — QA-83-004.
+ *
+ * Round 1 found `npm run verify` red at the repository head, on a documentation
+ * commit that had never been pushed. CI runs the same command on every push and
+ * would have caught it in minutes; it never ran, because there was nothing to
+ * run on. **An unpushed commit is a commit that has met no gate but the one the
+ * author remembered to run.**
+ *
+ * This script exists to certify that what QA reads and what QA tests line up,
+ * so it is the right place to notice. It reports rather than refuses: a local
+ * commit is a normal state to be in halfway through a phase, and the equivalence
+ * claim above it is still true of the bundle either way.
+ */
+const unpushed = commitsNotOnAnyRemote()
+if (unpushed.length > 0) {
+  console.warn(
+    `${unpushed.length} commit(s) on HEAD are on no remote branch. QA reads the repository, not`,
+  )
+  console.warn('your working copy, and CI has not run on these:')
+  for (const line of unpushed) console.warn(`  - ${line}`)
+  console.warn('')
 }
 
 const changed = changedPaths(productSha, ref)

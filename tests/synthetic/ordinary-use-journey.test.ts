@@ -6,7 +6,9 @@ import type { RecordKind } from '../../src/domain/records'
 import { QUESTIONS } from '../../src/intelligence/questions'
 import { threadOfferFor } from '../../src/intelligence/threads'
 import {
+  everyBuilderReachedFromAFeature,
   JOURNEY_STEPS,
+  NOT_A_CONTROL,
   OWNER_ROUTES,
   openJourney,
   reachableRecordKinds,
@@ -112,11 +114,41 @@ async function walkTheJourney(): Promise<{
   // The reachability walk in `journey.ts` answers this, and it answers it from
   // the controls rather than from a belief about them.
   const unreachable = recordKindsWithNoOwnerRoute()
+
+  /*
+   * Said precisely, because the first version of it was not — QA-83-003.
+   *
+   * It read "the owner cannot name a goal, a topic he is studying, a person, a
+   * place or a skill", and on **The first evening** he plainly can name the
+   * topic: Life → Career & Learning → Current learning topic → **Add this**
+   * opens a labelled box and the answer becomes what the app reads. Round 1
+   * found that by walking the app rather than the code.
+   *
+   * What is true is one layer under it, and the instrument checks it here
+   * rather than asserting it: stating the topic writes an `explicit-fact` and
+   * **creates no entity**, so nothing can refer to it. No study move is
+   * generated, no goal can name it as a piece, no course can take it as a
+   * subject. He can tell the app what he is studying and the app has nowhere to
+   * put it.
+   */
+  const naming = await openJourney('the-first-evening')
+  const stated = await naming.correctFact(CONCEPT.learningTopic, {
+    type: 'text',
+    value: 'Cloud engineering (AWS)',
+  })
+  const readBack = naming
+    .domainPage('career')
+    .readings.find((row) => row.concept === CONCEPT.learningTopic)
+  const entitiesAfter = naming.situation().entities.byKind('learning-topic').length
+
   stops.push({
     step: 'object-creation',
-    trying: 'name a goal, a topic he is studying, a person, a place or a skill',
+    trying: 'name something the rest of the app can then refer to',
     proceeded: false,
-    note: `no control on any screen creates a semantic entity, and ${unreachable.join(', ')} have no owner route at all — a goal can be corrected once it exists and cannot be brought into being`,
+    note:
+      stated.done && readBack?.text.includes('Cloud engineering') === true
+        ? `he can state it as a fact — "${readBack.text}" is read back on the Career page — and it creates no entity (${entitiesAfter} learning-topic entities after), so nothing can refer to it: no study move, no goal piece, no course subject. No control on any screen calls createEntity, and ${unreachable.join(', ')} have no owner route at all. Routing 84's authoring brief is the whole list: goal, routine, person, place, skill and obligation`
+        : `stating a current-topic fact did not land — ${stated.note}`,
   })
 
   // --- 4. real action -------------------------------------------------------
@@ -250,7 +282,7 @@ describe('D-161 — the ordinary-use journey from a near-empty store', () => {
     }
   })
 
-  it('gets past the four steps the app supports, and stops at the four it does not', async () => {
+  it('gets past the three steps the app supports, and stops at the five it does not', async () => {
     const { stops } = await walkTheJourney()
     for (const stop of stops) {
       expect(stop.proceeded, `${stop.step} — ${stop.note}`).toBe(PROCEEDS[stop.step])
@@ -354,9 +386,61 @@ describe('D-161 — what an owner has no route to', () => {
     expect(offenders).toEqual([])
   })
 
-  it('keeps the route table honest about which builder each control calls', () => {
-    // Every route names a real screen and a real builder, and no two claim the
-    // same id. A table nobody can check is a comment.
+  it('lists every control on every screen that writes a record', () => {
+    /*
+     * The guard QA-83-003 asked for, and the one this file did not have.
+     *
+     * What stood here checked that ids were unique, that `writes` was non-empty
+     * and that the builder string contained a dot — three things that are true
+     * of a table missing half its rows. It was green while `OWNER_ROUTES` was
+     * missing Life's course controls and the Insights belief correction, under
+     * a comment claiming the table listed **every** control.
+     *
+     * **It asks per screen, not per builder.** `beliefCorrectionRecord` was
+     * already listed under Now, so a check that only asked whether the symbol
+     * appeared anywhere in the table would have stayed green over the missing
+     * Insights control — the second of the two QA found. Two screens calling
+     * one builder are two controls.
+     */
+    const missing = everyBuilderReachedFromAFeature().filter((reached) => {
+      if (reached.surface === 'not-a-control') return !NOT_A_CONTROL.includes(reached.builder)
+      return !OWNER_ROUTES.some(
+        (route) => route.surface === reached.surface && route.builder.includes(reached.builder),
+      )
+    })
+
+    expect(
+      missing.map((reached) => `${reached.file} calls ${reached.builder} (${reached.surface})`),
+      'a screen writes a record through a control no route names',
+    ).toEqual([])
+  })
+
+  it('bites when a control is taken out of the table', () => {
+    /*
+     * The guard proves nothing unless it can fail, and the shape it has to fail
+     * on is the one that was in the tree: a real handler, in a real file,
+     * absent from the table — including one whose builder another screen also
+     * calls.
+     */
+    const reached = everyBuilderReachedFromAFeature()
+    const named = (id: string) => OWNER_ROUTES.filter((route) => route.id !== id)
+
+    for (const [id, builder, surface] of [
+      ['thread-state', 'setThreadStateRecord', 'life'],
+      ['insights-belief-correction', 'beliefCorrectionRecord', 'insights'],
+    ] as const) {
+      const found = reached.find((entry) => entry.builder === builder && entry.surface === surface)
+      expect(found, `the reader must find ${builder} on ${surface}`).toBeDefined()
+
+      const without = named(id)
+      const stillCovered = without.some(
+        (route) => route.surface === surface && route.builder.includes(builder),
+      )
+      expect(stillCovered, `removing ${id} should leave ${builder} unlisted`).toBe(false)
+    }
+  })
+
+  it('keeps the route table honest about which screen and builder each control names', () => {
     const ids = new Set<string>()
     for (const route of OWNER_ROUTES) {
       expect(ids.has(route.id), `${route.id} is listed twice`).toBe(false)

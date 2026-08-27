@@ -415,6 +415,65 @@ export function verbLabel(verb: ActionVerb): string {
   return TEMPLATES[verb].label
 }
 
+// ---------------------------------------------------------------------------
+// Naming an action, with its subject in it
+// ---------------------------------------------------------------------------
+
+/**
+ * What a pattern about this verb is called, with the subject in it.
+ *
+ * DEF-0028's rule applied one level up: a card that says "a suggestion here"
+ * four times is the generic language section 4.6 asks the app not to settle for
+ * when the subject is known. The object is used where the sentence reads
+ * naturally with it, and the fallback names the kind of move rather than
+ * reaching for a pronoun.
+ *
+ * Written per verb rather than composed from a pattern, for the reason the
+ * outcome prompts are: a template general enough to cover a lab, a daughter and
+ * a night's sleep produces a sentence nobody would say out loud.
+ */
+const PATTERN_NAME: Record<ActionVerb, (object: string | undefined) => string> = {
+  'recall-practice': (o) => (o === undefined ? 'Recall practice' : `Recall practice on ${o}`),
+  'review-weak-topic': (o) =>
+    o === undefined ? 'Going back over a weak topic' : `Going back over ${o}`,
+  'hands-on-lab': (o) => (o === undefined ? 'Hands-on labs' : `Building a lab with ${o}`),
+  'protect-sleep': () => 'Protecting your sleep',
+  'wind-down': () => 'Winding down',
+  recover: () => 'Taking a recovery night',
+  'ease-off': () => 'Easing off for the rest of the day',
+  'lighten-the-day': () => 'Keeping a day light',
+  'time-with': (o) => (o === undefined ? 'Unhurried time with someone' : `Time with ${o}`),
+  // The skill label already carries whose it is — DEF-0027, which is why the
+  // person is not named a second time here.
+  'growth-opportunity': (o) => (o === undefined ? 'A chance to practise' : capitaliseFirst(o)),
+  'reach-out': (o) => (o === undefined ? 'Reaching out' : `Reaching out to ${o}`),
+  'start-conversation': (o) =>
+    o === undefined ? 'Starting a conversation' : `Starting a conversation at ${o}`,
+  'reset-space': (o) => (o === undefined ? 'Clearing a space' : `Clearing ${o}`),
+  'handle-money-item': (o) => (o === undefined ? 'Dealing with a money job' : `Dealing with ${o}`),
+  move: (o) => (o === undefined ? 'Getting some movement in' : `Getting out for ${o}`),
+  hold: () => 'Holding off',
+}
+
+/**
+ * What an action about this verb is called, given its object.
+ *
+ * Exported so the sweeps can walk the whole catalogue rather than sampling it —
+ * the same reason `everyOutcomeQuestion` is exported from `outcomes.ts`. A
+ * verb added without a name here would otherwise reach a card as `undefined`,
+ * and would do it on whichever history happened to contain that verb.
+ *
+ * **This is the app's one name for an action, and it lives here so that every
+ * layer can reach it — QA-83-002.** It used to live in `insights.ts`, above
+ * `learning.ts` and `corrections.ts`, so the belief sentence and the button
+ * that corrects it had only `verbLabel` to work with and said *"Move"* under a
+ * card headed *"a walk"*. `verbLabel` is the word on the eyebrow of a
+ * recommendation; it was never a name for a thing.
+ */
+export function patternNameFor(verb: ActionVerb, object: string | undefined): string {
+  return PATTERN_NAME[verb](object)
+}
+
 /** Every verb the catalogue can render. Used by the pronoun regression. */
 export function allActionVerbs(): readonly ActionVerb[] {
   return ACTION_VERBS

@@ -547,6 +547,7 @@ export function NowScreen() {
 
           <DetailPanel
             explanation={explanation}
+            entities={decision.situation.entities}
             state={decision.state}
             block={decision.situation.block}
             disabled={busy}
@@ -814,12 +815,15 @@ function OutcomePanel({
  */
 function DetailPanel({
   explanation,
+  entities,
   state,
   block,
   disabled,
   onCorrect,
 }: {
   explanation: Explanation
+  /** So a correction can name what it is about, in every aspect (R3-B2). */
+  entities: EntityIndex
   state: MoveState | undefined
   block: DayBlock
   disabled: boolean
@@ -864,6 +868,7 @@ function DetailPanel({
 
   const belief = explanation.restsOnBelief
   const restsOn = explanation.restsOn
+  const named = explanation.restsOnNamed
 
   if (rows.length === 0 && restsOn === undefined) return null
 
@@ -893,9 +898,18 @@ function DetailPanel({
             type="button"
             className="now-linkish"
             disabled={disabled}
-            // Short enough for a thumb, and named for anyone who cannot see
-            // which sentence it sits under (sections 37 and D-039).
-            aria-label={`Not how it went — correct ${describeBelief(belief)}`}
+            /*
+              Short enough for a thumb, and named for anyone who cannot see
+              which sentence it sits under (sections 37 and D-039).
+
+              `restsOnNamed` rather than the key alone — QA-83-002. Read from
+              the key, this said "correct what **move** does for you" under a
+              card headed "Move for 25 minutes: a walk" and beside an evidence
+              panel saying "getting out for a walk". It now says what the
+              sentence directly above it says, because it is asking about the
+              same thing.
+            */
+            aria-label={`Not how it went — correct ${describeBelief(belief, entities, named)}`}
             onClick={() => onCorrect(belief)}
           >
             Not how it went

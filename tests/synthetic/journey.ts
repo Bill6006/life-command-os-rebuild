@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { join, sep } from 'node:path'
 import { expect } from 'vitest'
 import type { EntityKind } from '../../src/domain/entities'
 import {
@@ -97,7 +99,7 @@ import { scenarioById } from '../../src/synthetic/scenarios'
 export interface OwnerRoute {
   readonly id: string
   /** The screen the control is on. */
-  readonly surface: 'now' | 'life' | 'domain-page'
+  readonly surface: 'now' | 'life' | 'domain-page' | 'insights'
   /** What the owner taps, in the words on the button. */
   readonly gesture: string
   /** The builder the surface calls, so this table can be checked against source. */
@@ -121,12 +123,22 @@ export interface OwnerRoute {
 /**
  * Every control on an owner-facing screen that appends to the record.
  *
- * Compiled by reading the four files that write anything — `NowScreen.tsx`,
- * `DomainPage.tsx`, `DayShape.tsx` and `LifeScreen.tsx` — and listing the
- * builder each handler calls and the record kind that builder returns. `More /
- * Data` is deliberately absent: import and restore replace the store from a
- * file rather than authoring anything, and a capability only reachable by
- * hand-writing JSON is precisely what D-161 says does not count.
+ * **This claim is checked rather than asserted — QA-83-003.** It said "every"
+ * and was compiled by reading four files; there are five, and it missed the
+ * course controls on Life and the belief correction on Insights. A claim of
+ * exhaustiveness that nothing can falsify is a comment, and this one was
+ * sitting above a green test called "keeps the route table honest" that
+ * compared the table against nothing at all.
+ *
+ * `everyBuilderReachedFromAFeature()` now reads `src/features/**` and returns
+ * the record builders the screens actually call; the guard in
+ * `ordinary-use-journey.test.ts` fails when one of them is missing from here.
+ * The table is still written by hand, because what each control *needs* cannot
+ * be read off a call site — but it can no longer be quietly incomplete.
+ *
+ * `More / Data` is deliberately absent: import and restore replace the store
+ * from a file rather than authoring anything, and a capability only reachable
+ * by hand-writing JSON is precisely what D-161 says does not count.
  */
 export const OWNER_ROUTES: readonly OwnerRoute[] = [
   {
@@ -197,6 +209,34 @@ export const OWNER_ROUTES: readonly OwnerRoute[] = [
     writes: ['preference'],
   },
   {
+    id: 'thread-state',
+    surface: 'life',
+    gesture: 'Stop this / Pick this up again',
+    builder: 'threads.setThreadStateRecord',
+    // Missed by the first table and found by QA-83-003. It is the one control
+    // on Life that writes anything other than the day's shape, and it is the
+    // finding's own example of why "every" needed a guard under it.
+    needs: { records: ['thread'] },
+    writes: ['thread'],
+  },
+  {
+    id: 'insights-belief-correction',
+    surface: 'insights',
+    gesture: 'That is not right',
+    builder: 'corrections.beliefCorrectionRecord',
+    /*
+     * The same builder as Now's control and a different control — QA-83-003.
+     *
+     * Listing it once under Now would have been the table describing the
+     * *builder* rather than the owner's route to it, and the two have different
+     * preconditions: Now's needs a decision that rests on something learned,
+     * this one needs a card on Insights, which includes the association
+     * findings Now never states.
+     */
+    needs: { records: ['outcome'] },
+    writes: ['belief-correction'],
+  },
+  {
     id: 'thread-start',
     surface: 'now',
     gesture: 'Yes, keep going',
@@ -262,7 +302,8 @@ export const OWNER_ROUTES: readonly OwnerRoute[] = [
     id: 'day-shape',
     surface: 'life',
     gesture: 'the school-day and working-hours clocks',
-    builder: 'commitments.commitmentWindowRecord / revise / remove',
+    builder:
+      'commitments.commitmentWindowRecord, reviseCommitmentWindowRecord, removeCommitmentWindowRecord',
     needs: {},
     writes: ['commitment-window'],
   },
@@ -624,3 +665,200 @@ export const ROUTE_BUILDERS = {
   reviseCommitmentWindowRecord,
   removeCommitmentWindowRecord,
 } as const
+
+// ---------------------------------------------------------------------------
+// What the screens actually call — QA-83-003
+// ---------------------------------------------------------------------------
+
+const ROOT = join(import.meta.dirname, '..', '..')
+
+/**
+ * Every record builder an owner-facing screen calls.
+ *
+ * The half of `OWNER_ROUTES` that can be checked. What a control *needs*
+ * before it appears is a reading of the screen and stays hand-written; **which
+ * builders the screens call is a fact about the files**, and a table claiming
+ * to list every control can be held to it.
+ *
+ * The first version of the table said "every" and was compiled by reading four
+ * files. There are five, and it missed the course controls on Life and the
+ * belief correction on Insights — with a green test above it called "keeps the
+ * route table honest" that compared the table against nothing at all.
+ */
+export interface ReachedBuilder {
+  readonly builder: string
+  /** Repository-relative, so a failure names the file to go and read. */
+  readonly file: string
+  /** The screen it is on, which is what makes the check per-control. */
+  readonly surface: OwnerRoute['surface'] | 'not-a-control'
+}
+
+export function everyBuilderReachedFromAFeature(): readonly ReachedBuilder[] {
+  const builders = everyRecordBuilder()
+  const out: ReachedBuilder[] = []
+  const seen = new Set<string>()
+
+  for (const file of filesUnder(join(ROOT, 'src', 'features'))) {
+    const relative = relativeToRoot(file)
+    const code = withoutComments(readFileSync(file, 'utf8'))
+    for (const match of code.matchAll(/([A-Za-z0-9_]+)\s*\(/g)) {
+      const builder = match[1]
+      if (builder === undefined || !builders.has(builder)) continue
+      const key = `${relative}|${builder}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push({ builder, file: relative, surface: surfaceOf(relative) })
+    }
+  }
+  return out.sort((a, b) => `${a.file}${a.builder}`.localeCompare(`${b.file}${b.builder}`))
+}
+
+/**
+ * Which screen a file is, so the guard is about controls rather than builders.
+ *
+ * A per-builder check cannot see QA-83-003's second finding: `beliefCorrectionRecord`
+ * was already listed under Now, so the Insights control that calls the same
+ * builder was invisible to any check that only asked whether the *symbol*
+ * appeared somewhere in the table. Two screens, one builder, two controls.
+ */
+function surfaceOf(file: string): ReachedBuilder['surface'] {
+  if (file.includes('/now/')) return 'now'
+  if (file.includes('/insights/')) return 'insights'
+  if (file.endsWith('/DomainPage.tsx')) return 'domain-page'
+  if (file.includes('/life/')) return 'life'
+  // `MemoryProvider` writes derived outcomes on its own; see `NOT_A_CONTROL`.
+  return 'not-a-control'
+}
+
+function relativeToRoot(file: string): string {
+  return file.slice(ROOT.length).split(sep).join('/')
+}
+
+/**
+ * Builders a feature calls that are **not** owner controls.
+ *
+ * One, and it is deliberate and documented where it happens. `MemoryProvider`
+ * writes the outcomes a history already implies — the morning sleep reading
+ * after an early night is the answer to a question the app would otherwise ask
+ * — and it resolves D-043 rather than ignoring it: the ids are derived from the
+ * episode, so there is at most one derived row per episode ever.
+ *
+ * Named here rather than filtered out silently, because a write nobody taps is
+ * exactly the thing an instrument about *ordinary owner use* has to be honest
+ * about not covering.
+ */
+export const NOT_A_CONTROL: readonly string[] = ['derivedOutcomeRecords']
+
+/** Every record builder the app defines, found by what it returns and takes. */
+function everyRecordBuilder(): ReadonlySet<string> {
+  const out = new Set<string>()
+  for (const layer of ['intelligence', 'domain', 'memory']) {
+    for (const file of filesUnder(join(ROOT, 'src', layer))) {
+      for (const name of buildersDeclaredIn(readFileSync(file, 'utf8'))) out.add(name)
+    }
+  }
+  return out
+}
+
+/**
+ * The exported functions in one file that build a record.
+ *
+ * Two conditions, and both are declarations rather than conventions.
+ *
+ * **It returns a record.** Not "its name ends in Record" — `describeRecord`,
+ * `describeThreadRecord`, `isWithheldRecord` and `sourcesOfRecords` all read
+ * records and build none, and a first draft of this reported every one of them.
+ * `Record<string, unknown>` is excluded by the same test: TypeScript's utility
+ * type is not a canonical record, and `isPlainObject` is not a builder.
+ *
+ * **And it takes a moment.** `standingCommitments(situation): readonly
+ * CommitmentWindowRecord[]` returns records and builds none — it filters rows
+ * already in the history. A return type says what comes out; a moment says the
+ * rows are new. Every builder here takes one, because a record it invents needs
+ * an `occurredAt` and a zone, and no reader does.
+ *
+ * The parameter list is balanced rather than pattern-matched: a lazy regex
+ * crossing from one `export function` to the next reported `questionFor`,
+ * `describePremise` and `daysSincePractice` as builders, having found some
+ * later function's return annotation.
+ */
+function buildersDeclaredIn(text: string): readonly string[] {
+  const out: string[] = []
+  const declarations = /export function ([A-Za-z0-9_]+)\s*\(/g
+
+  for (const match of text.matchAll(declarations)) {
+    const name = match[1]
+    if (name === undefined || match.index === undefined) continue
+
+    const open = match.index + match[0].length - 1
+    const close = closingParenAfter(text, open)
+    if (close === undefined) continue
+
+    const returns = /^\s*:\s*(?:readonly\s+)?([A-Za-z0-9_]+)\s*(<)?/.exec(text.slice(close + 1))
+    if (returns === null) continue
+    if (returns[2] === '<') continue
+    if (!/Record$/.test(returns[1] ?? '')) continue
+    if (!/\bmoment\b|Moment\b/.test(text.slice(open, close))) continue
+
+    out.push(name)
+  }
+  return out
+}
+
+/** The index of the parenthesis that closes the one at `open`. */
+function closingParenAfter(text: string, open: number): number | undefined {
+  let depth = 0
+  for (let index = open; index < text.length; index += 1) {
+    const char = text[index]
+    if (char === '(') depth += 1
+    else if (char === ')') {
+      depth -= 1
+      if (depth === 0) return index
+    }
+  }
+  return undefined
+}
+
+function filesUnder(dir: string): readonly string[] {
+  const out: string[] = []
+  const walk = (current: string): void => {
+    for (const name of readdirSync(current)) {
+      const full = join(current, name)
+      if (statSync(full).isDirectory()) {
+        walk(full)
+        continue
+      }
+      if (name.endsWith('.ts') || name.endsWith('.tsx')) out.push(full)
+    }
+  }
+  walk(dir)
+  return out
+}
+
+/**
+ * Source with comments removed.
+ *
+ * The same shape `architecture-guards.test.ts` uses, and for the same reason:
+ * several of the files being scanned explain in prose exactly which builder
+ * they no longer call.
+ */
+function withoutComments(text: string): string {
+  let out = ''
+  let index = 0
+  while (index < text.length) {
+    const two = text.slice(index, index + 2)
+    if (two === '//') {
+      const end = text.indexOf('\n', index)
+      index = end === -1 ? text.length : end
+      continue
+    }
+    if (two === '/*') {
+      const end = text.indexOf('*/', index + 2)
+      index = end === -1 ? text.length : end + 2
+      continue
+    }
+    out += text[index] ?? ''
+    index += 1
+  }
+  return out
+}

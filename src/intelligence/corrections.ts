@@ -3,7 +3,7 @@ import { coreConcepts, type ConceptRegistry } from '../domain/concepts'
 import type { LifeDomainId } from '../domain/domains'
 import type { EntityIndex, EntityRef } from '../domain/entities'
 import { newRecordId, type RecordId } from '../domain/ids'
-import { verbLabel, type ActionVerb } from '../domain/recommendation'
+import { patternNameFor, verbLabel, type ActionVerb } from '../domain/recommendation'
 import type {
   BeliefCorrectionRecord,
   ContextRecord,
@@ -182,8 +182,26 @@ export function liftVetoRecord(
  * `entities` is optional only because a key is sometimes described where no
  * index exists. Every owner-facing surface has one and must pass it: without
  * it, an association correction can only name its verb (R3-B2).
+ *
+ * `named` is the same argument one aspect over — QA-83-002. R3-B2 repaired the
+ * association branch and left the five verb-scoped aspects on `verbLabel`, so
+ * the button under a card headed *"Move for 25 minutes: a walk"* read *"correct
+ * what **move** does for you"*. The comment below is the reason, and it applies
+ * here unchanged: the identity survived in the key and died on the way to the
+ * screen.
+ *
+ * **It is a name, not a narrowing.** The key stays verb-scoped and so does what
+ * the correction rejects; what changes is that the sentence says what the
+ * pooled evidence is about, which is `learning.ts`'s `named` and is one object
+ * only where the pooled episodes agree on one. Where no caller supplies it, the
+ * app's own generic name for the action is used — *"getting some movement in"*
+ * rather than *"move"*, which was never a word for anything.
  */
-export function describeBelief(key: string, entities?: EntityIndex): string {
+function lowerFirst(text: string): string {
+  return text.length === 0 ? text : `${text.charAt(0).toLowerCase()}${text.slice(1)}`
+}
+
+export function describeBelief(key: string, entities?: EntityIndex, named?: string): string {
   const parsed = parseBeliefKey(key)
   if (parsed === undefined) return key
 
@@ -207,13 +225,13 @@ export function describeBelief(key: string, entities?: EntityIndex): string {
     if (parts === undefined) return 'what the app has worked out about this'
     if ('family' in parts) return `what the app has worked out follows ${parts.family.label}`
 
-    const named = entities?.labelFor(parts.object)
-    return named === undefined
+    const label = entities?.labelFor(parts.object)
+    return label === undefined
       ? `what the app has worked out follows ${verbLabel(parts.verb).toLowerCase()}`
-      : `what the app has worked out follows ${named}`
+      : `what the app has worked out follows ${label}`
   }
 
-  const move = verbLabel(parsed.verb as ActionVerb).toLowerCase()
+  const move = lowerFirst(named ?? patternNameFor(parsed.verb as ActionVerb, undefined))
   switch (parsed.aspect) {
     case 'effect':
       return `what ${move} does for you`

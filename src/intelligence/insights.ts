@@ -1,6 +1,6 @@
 import type { LifeDomainId } from '../domain/domains'
 import type { RecordId } from '../domain/ids'
-import type { ActionVerb } from '../domain/recommendation'
+import { patternNameFor, type ActionVerb } from '../domain/recommendation'
 import {
   bearsConcept,
   describeFactValue,
@@ -349,53 +349,21 @@ export interface Insight {
 // Naming the pattern
 // ---------------------------------------------------------------------------
 
-/**
- * What a pattern about this verb is called, with the subject in it.
+/*
+ * The table moved down to `domain/recommendation.ts` — QA-83-002.
  *
- * DEF-0028's rule applied one level up: a card that says "a suggestion here"
- * four times is the generic language section 4.6 asks the app not to settle for
- * when the subject is known. The object is used where the sentence reads
- * naturally with it, and the fallback names the kind of move rather than
- * reaching for a pronoun.
+ * It lived here, and it was the only place in the app that could name an
+ * action with its subject in it. So one screen carried four registers for one
+ * thing: the headline said *"a walk"*, the learned statement said *"Move"*,
+ * the correction control said *"what move does for you"*, and this panel's own
+ * rates said *"getting out for a walk"*. The evidence panel was right and it
+ * was right alone, because `learning.ts` and `corrections.ts` are below this
+ * file and had nothing to read but `verbLabel`.
  *
- * Written per verb rather than composed from a pattern, for the reason the
- * outcome prompts are: a template general enough to cover a lab, a daughter and
- * a night's sleep produces a sentence nobody would say out loud.
+ * Re-exported rather than moved silently: `everyPatternName`-style sweeps and
+ * the existing callers keep the door they already use.
  */
-const PATTERN_NAME: Record<ActionVerb, (object: string | undefined) => string> = {
-  'recall-practice': (o) => (o === undefined ? 'Recall practice' : `Recall practice on ${o}`),
-  'review-weak-topic': (o) =>
-    o === undefined ? 'Going back over a weak topic' : `Going back over ${o}`,
-  'hands-on-lab': (o) => (o === undefined ? 'Hands-on labs' : `Building a lab with ${o}`),
-  'protect-sleep': () => 'Protecting your sleep',
-  'wind-down': () => 'Winding down',
-  recover: () => 'Taking a recovery night',
-  'ease-off': () => 'Easing off for the rest of the day',
-  'lighten-the-day': () => 'Keeping a day light',
-  'time-with': (o) => (o === undefined ? 'Unhurried time with someone' : `Time with ${o}`),
-  // The skill label already carries whose it is — DEF-0027, which is why the
-  // person is not named a second time here.
-  'growth-opportunity': (o) => (o === undefined ? 'A chance to practise' : capitalise(o)),
-  'reach-out': (o) => (o === undefined ? 'Reaching out' : `Reaching out to ${o}`),
-  'start-conversation': (o) =>
-    o === undefined ? 'Starting a conversation' : `Starting a conversation at ${o}`,
-  'reset-space': (o) => (o === undefined ? 'Clearing a space' : `Clearing ${o}`),
-  'handle-money-item': (o) => (o === undefined ? 'Dealing with a money job' : `Dealing with ${o}`),
-  move: (o) => (o === undefined ? 'Getting some movement in' : `Getting out for ${o}`),
-  hold: () => 'Holding off',
-}
-
-/**
- * What a pattern about this verb is called, given its object.
- *
- * Exported so the sweeps can walk the whole catalogue rather than sampling it —
- * the same reason `everyOutcomeQuestion` is exported from `outcomes.ts`. A
- * verb added without a name here would otherwise reach a card as `undefined`,
- * and would do it on whichever history happened to contain that verb.
- */
-export function patternNameFor(verb: ActionVerb, object: string | undefined): string {
-  return PATTERN_NAME[verb](object)
-}
+export { patternNameFor }
 
 function patternName(verb: ActionVerb, episodes: readonly Episode[], situation: Situation): string {
   const objects = new Set(episodes.map((episode) => episode.semantics.target.object.id))
@@ -2531,9 +2499,46 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
   if (explanation === undefined || evaluation === undefined) return undefined
 
   const situation = decision.situation
-  const verb = explanation.semantics.target.verb
-  const subject = situation.entities.labelFor(explanation.semantics.target.object)
-  const name = patternNameFor(verb, subject)
+
+  /*
+   * The evidence is about the move, and on a deferral the move is not the
+   * sentence — QA-83-001's sweep, and DEF-0033's class again.
+   *
+   * `engine.ts` composes a hold by taking the held move's semantics and
+   * changing the verb to `hold`, so `explanation.semantics.target.verb` is
+   * `hold` on a deferral. This panel read that verb for its counts and read
+   * `explanation.restsOn` — computed from the held move's own verb, before the
+   * rewrite — for its conclusion. So every deferral over a move with a learned
+   * belief printed **"Nothing in the record is much like this morning yet"**
+   * and **"too early to say · 0 occasions"** directly above **"Clearing the
+   * kitchen has worked several times in situations like today."**
+   *
+   * Two honest statements about two different verbs, with nothing on the screen
+   * to reconcile them. The evaluation's own target is the move either way —
+   * identical to the explanation's on every decision that is not a hold — so
+   * the counts and the conclusion are now about the same thing.
+   *
+   * `move` stays the sentence on screen, because that is what the owner is
+   * looking at, and the deferral rows above still answer *why not yet*.
+   */
+  const target = evaluation.candidate.semantics.target
+  const verb = target.verb
+  const subject = situation.entities.labelFor(target.object)
+  /*
+   * Named from the set each label is about — QA-83-002's class.
+   *
+   * One `name`, taken from *this evening's* object, labelled two different
+   * sets: the rates over `alike`, and the split over `everyOccasion`. Both are
+   * pooled by verb, so a history with a walk and a bike ride under `move` would
+   * have had its pooled rates read "how often getting out for **a walk** could
+   * actually be done" — a claim narrower than the evidence it counts, which is
+   * the same error as calling one occasion "the last few times" pointing the
+   * other way.
+   *
+   * `patternName` is the rule and it was already here: name the object only
+   * where the set agrees on one. It is now asked once per set rather than once
+   * per screen.
+   */
 
   const here = hereNowWord(situation.block)
   const leansOn = new Set<ConceptId>(evaluation.candidate.leansOn)
@@ -2590,7 +2595,7 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
       episode.shownAt <= situation.at &&
       (rejected === undefined || episode.shownAt > rejected),
   )
-  const split = strongestSplit(everyOccasion, name)
+  const split = strongestSplit(everyOccasion, patternName(verb, everyOccasion, situation))
 
   return {
     move: explanation.rendered.sentence,
@@ -2603,7 +2608,7 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
           ? `One occasion in the record is like ${here} — ${describeDay(alike[0]!.dayId)}.`
           : `${alike.length} occasions in the record are like ${here}.`,
     window: windowOf(alike),
-    rates: ratesFor(alike, name),
+    rates: ratesFor(alike, patternName(verb, alike, situation)),
     counterexamples: [...counterexamples.values()],
     confidence: confidenceFrom(alike.length, counterexamples.size),
     concluded: explanation.restsOn,
@@ -2613,8 +2618,8 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
      * walk than without" is. Same reason the card itself uses it.
      */
     observed: describeAssociationBriefly(
-      situation.learning.associationFor(explanation.semantics.target),
-      subject ?? lowerFirst(name),
+      situation.learning.associationFor(target),
+      subject ?? lowerFirst(patternNameFor(verb, undefined)),
       situation.at,
       situation.zone,
       situation.block,

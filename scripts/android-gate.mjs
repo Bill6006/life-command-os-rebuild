@@ -1284,6 +1284,32 @@ async function main() {
     check(`every control on ${route} has a name`, nameless.length === 0, nameless.join(', '))
   }
 
+  // ---- The card round 1 read — QA-83-001, QA-83-002 -------------------------
+  await loadScenario('Three days since that walk')
+  await openNow()
+  const walkReason = await page.getByTestId('now-reason').innerText()
+  check(
+    'one comparable occasion is not called the last few times',
+    !/the last few times/i.test(walkReason) && /the one time before/i.test(walkReason),
+    walkReason,
+  )
+  const restsOn = await page.getByTestId('now-rests-on').innerText()
+  check(
+    'the belief names the walk rather than the verb',
+    /getting out for a walk/i.test(restsOn) && !/^Move has/.test(restsOn.trim()),
+    restsOn.replace(/\s+/g, ' ').trim(),
+  )
+  const correctName = await page
+    .getByTestId('now-rests-on')
+    .locator('button')
+    .getAttribute('aria-label')
+  check(
+    'and so does the button that corrects it',
+    /getting out for a walk/i.test(correctName ?? ''),
+    correctName ?? 'no name',
+  )
+  await sideways('Now, the card round 1 read')
+
   // ---- What an ordinary owner can reach from a near-empty store — D-161 -----
   await loadScenario('The first evening')
   await openNow()
