@@ -14,6 +14,7 @@ import type { ConceptId } from '../domain/windows'
 import { goalIsBehind, type ActiveGoal } from './direction'
 import { growthStandingFor, maintenanceProbeDue, practiceEvidenceHasAged } from './growth'
 import { profileFor } from './moves'
+import { refreshingMoveFor } from './refreshing'
 import { SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
 import { entityValue } from './values'
 
@@ -663,89 +664,72 @@ const moneyCandidates: Generator = (situation) => {
 }
 
 /**
- * A move that would bring something back about an area that has gone quiet.
+ * Moves that bring back an area the app has stopped hearing about.
  *
  * Section 8's third preference: "create a useful action that naturally produces
  * evidence." It comes third for a reason — after using what normal life is
  * already producing and after cautious inference — so this fires only when
  * coverage has already decided that neither of those will do.
  *
- * **It relaxes nothing that DEF-0006 tightened.** The moves below make no claim
- * about how the owner feels: clearing a room, going back over a topic, dealing
- * with a money item. Movement and the social moves are deliberately absent,
- * because "there is capacity for it" and "you are up for people" are claims
- * about the body and the mood, and a quiet fortnight is not evidence of either.
- * A stale area is a reason to find something out; it is not a reason to pretend
- * to know something.
- *
- * And the subject is always the owner's own (D-021). A domain with nothing
- * named in it produces nothing here, which is why coverage falls through to a
- * question or to the Life signal in that case rather than inventing a subject.
+ * The table itself lives in `refreshing.ts` because the coverage engine has to
+ * read the same one. It used to guess at this file's capability and guessed
+ * wrong — QA-82-014, D-155.
  */
-const REFRESHING_MOVE: readonly {
-  readonly domain: LifeDomainId
-  readonly kind: SemanticEntity['kind']
-  readonly verb: ActionVerb
-  readonly leansOn: readonly ConceptId[]
-  readonly because: string
-}[] = [
-  {
-    domain: DOMAIN.home,
-    kind: 'place',
-    verb: 'reset-space',
-    leansOn: [CONCEPT.homeFriction],
-    because: 'nothing has come in about the house for a while, and this would',
-  },
-  {
-    domain: DOMAIN.career,
-    kind: 'learning-topic',
-    verb: 'recall-practice',
-    leansOn: [CONCEPT.learningTopic],
-    because: 'nothing has come in about the studying for a while, and this would',
-  },
-  {
-    domain: DOMAIN.money,
-    kind: 'financial-goal',
-    verb: 'handle-money-item',
-    leansOn: [CONCEPT.cashBuffer],
-    because: 'nothing has come in about the money for a while, and this would',
-  },
-]
-
 const coverageCandidates: Generator = (situation) => {
-  const quiet = situation.coverage.mostNeglected
-  if (quiet === undefined) return []
-  // Only when coverage has concluded that an action is the right route. If
-  // evidence is already coming, or a question would do, this is not the answer.
-  if (quiet.refresh !== 'an-action') return []
+  /*
+   * Every area the route promised an action for, not only the most neglected.
+   *
+   * This asked `coverage.mostNeglected` alone, and Life makes its promise on
+   * every `an-action` row on the page. Two rows carrying "Something worth doing
+   * here may come up on Now" while one of them was never offered to the arbiter
+   * is the same defect as the one QA reported, one rank further down the list —
+   * and when the most neglected area was one of the domains with no move at
+   * all, the whole route went silent and the areas that did have a move got
+   * nothing either.
+   *
+   * `coverage.neglected` is `stale` and `matters`, in registry order. The route
+   * has already excluded the domains the app may not raise of its own accord,
+   * so nothing here has to remember that separately.
+   */
+  const promised = situation.coverage.neglected.filter((entry) => entry.refresh === 'an-action')
 
-  const shape = REFRESHING_MOVE.find((entry) => entry.domain === quiet.domain)
-  if (shape === undefined) return []
+  const out: Candidate[] = []
+  for (const quiet of promised) {
+    const shape = refreshingMoveFor(quiet.domain)
+    /*
+     * Both of these are the route's own preconditions read back. They cannot
+     * fail while `routeFor` and this generator read one table — which is the
+     * point of the table — and `tests/synthetic/qa-82-round-10.test.ts` proves
+     * it across every scenario, clock and domain rather than trusting it.
+     */
+    if (shape === undefined) continue
+    const subject = firstOfKind(situation, shape.kind, shape.domain)
+    if (subject === undefined) continue
 
-  const subject = firstOfKind(situation, shape.kind, shape.domain)
-  if (subject === undefined) return []
-
-  const ref: EntityRef = { id: subject.id, kind: subject.kind }
-  return [
-    candidate(
-      {
-        generator: 'coverage',
-        subject: ref,
-        domain: shape.domain,
-        verb: shape.verb,
-        object: ref,
-        trigger: 'stale-evidence',
-        evidence: quiet.weakest?.evidence ?? [],
-        leansOn: shape.leansOn,
-        // The whole reason this move exists. Whatever it rests on that has gone
-        // quiet is what it is here to bring back, so `uncertainty` says nothing
-        // about it — the same fact may not create a move and then sink it.
-        resolves: shape.leansOn,
-        proposedBecause: shape.because,
-      },
-      situation,
-    ),
-  ]
+    const ref: EntityRef = { id: subject.id, kind: subject.kind }
+    out.push(
+      candidate(
+        {
+          generator: 'coverage',
+          subject: ref,
+          domain: shape.domain,
+          verb: shape.verb,
+          object: ref,
+          trigger: 'stale-evidence',
+          evidence: quiet.weakest?.evidence ?? [],
+          leansOn: shape.leansOn,
+          // The whole reason this move exists. Whatever it rests on that has
+          // gone quiet is what it is here to bring back, so `uncertainty` says
+          // nothing about it — the same fact may not create a move and then
+          // sink it.
+          resolves: shape.leansOn,
+          proposedBecause: shape.because,
+        },
+        situation,
+      ),
+    )
+  }
+  return out
 }
 
 const GENERATORS: readonly Generator[] = [

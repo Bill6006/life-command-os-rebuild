@@ -1311,3 +1311,4 @@ export type { ActiveThread }
  */
 export { describeGoalTrajectory }
 export type { CoverageState, DomainCoverage, ConceptCoverage, RefreshRoute } from './coverage'
+export { REFRESH_ROUTES } from './coverage'

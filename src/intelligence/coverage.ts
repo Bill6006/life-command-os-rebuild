@@ -1,7 +1,7 @@
 import type { ConceptDefinition, ConceptRegistry } from '../domain/concepts'
 import { countOf } from '../domain/counts'
 import type { DomainRegistry, LifeDomainId } from '../domain/domains'
-import type { EntityIndex } from '../domain/entities'
+import type { EntityIndex, SemanticEntity } from '../domain/entities'
 import type { RecordId } from '../domain/ids'
 import { unknown, type KnowledgeState, type Unknown } from '../domain/knowledge'
 import type { PrivacyClass } from '../domain/privacy'
@@ -21,6 +21,7 @@ import {
 } from '../domain/time'
 import { approximateHorizonMs, type ConceptId, type FreshnessHorizon } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
+import { refreshingMoveFor } from './refreshing'
 
 /**
  * The coverage engine (canonical plan sections 8, 17.1 step 3, and 63).
@@ -93,8 +94,24 @@ export type CoverageStatus = 'current' | 'quiet' | 'stale' | 'unheard'
  * and the only one that costs the owner a trip to a Life page, which is why
  * section 8 puts it last and why this engine tries four things first.
  */
-export type RefreshRoute =
-  'already-current' | 'normal-life' | 'an-action' | 'a-question' | 'needs-review'
+export const REFRESH_ROUTES = [
+  'already-current',
+  'normal-life',
+  'an-action',
+  'a-question',
+  'needs-review',
+] as const
+
+/**
+ * The routes as a value, so nothing has to copy the list out by hand.
+ *
+ * `everyStandingWord` did copy it, and its copy said `a-move` — a route that
+ * has never existed. It happened to produce the right set of words because the
+ * missing `an-action` and the invented `a-move` both fall to the same branch,
+ * which is precisely why nobody noticed. A route added to this union now
+ * reaches the copy check whether or not anyone remembers to add it there.
+ */
+export type RefreshRoute = (typeof REFRESH_ROUTES)[number]
 
 /** One sub-area: a concept, and how well it is currently held. */
 export interface ConceptCoverage {
@@ -554,13 +571,60 @@ function routeFor(
   status: CoverageStatus,
   concepts: readonly ConceptCoverage[],
   evidenceComing: boolean,
-  hasSubject: boolean,
+  canAct: boolean,
 ): RefreshRoute {
   if (status === 'current' || status === 'quiet') return 'already-current'
   if (evidenceComing) return 'normal-life'
-  if (hasSubject) return 'an-action'
+  /*
+   * `canAct`, not "there is something named in this area" — QA-82-014, D-155.
+   *
+   * This used to ask whether the domain had any entity at all, and that is not
+   * the question the generator answers. `candidates.ts` needs a move for the
+   * *domain* and a subject of that move's own *kind*, and it has three: a place
+   * in Home, a learning topic in Career, a financial goal in Money. Health,
+   * Social and Fatherhood have none and are not going to get one, because a
+   * quiet fortnight is not evidence of capacity or of social energy (DEF-0006).
+   *
+   * So the app told the owner it would bring Social back on its own, and then
+   * had nothing to bring. The route beside this one has always got this right:
+   * `askable` below is `worthAsking` from the guide, which is the question
+   * generator's own answer rather than this file's guess at it.
+   */
+  if (canAct) return 'an-action'
   if (concepts.some((entry) => entry.neglected && entry.askable)) return 'a-question'
   return 'needs-review'
+}
+
+/**
+ * The domains an action could actually refresh, right now, in this history.
+ *
+ * Everything that gates `coverageCandidates` is asked here, so the route cannot
+ * promise past the generator: the move must exist for the domain, a subject of
+ * that move's kind must exist in it, and the domain must be one the app is
+ * allowed to raise of its own accord. Private / Sexual Health is manual-entry
+ * first (section 11) and is never raised, so an action is not the route by
+ * which it comes back — it is covered and reported on Life like any other area.
+ */
+function domainsAnActionCouldRefresh(
+  entities: EntityIndex,
+  domains: DomainRegistry,
+): ReadonlySet<LifeDomainId> {
+  const named = new Map<LifeDomainId, Set<SemanticEntity['kind']>>()
+  for (const entity of entities.all()) {
+    const kinds = named.get(entity.domain)
+    if (kinds === undefined) named.set(entity.domain, new Set([entity.kind]))
+    else kinds.add(entity.kind)
+  }
+
+  const out = new Set<LifeDomainId>()
+  for (const domain of domains.all()) {
+    if (domains.defaultPrivacyFor(domain.id) === 'private') continue
+    const move = refreshingMoveFor(domain.id)
+    if (move === undefined) continue
+    if (named.get(domain.id)?.has(move.kind) !== true) continue
+    out.add(domain.id)
+  }
+  return out
 }
 
 /**
@@ -611,8 +675,7 @@ export function assembleCoverage(
     else held.push(definition)
   }
 
-  const subjects = new Set<LifeDomainId>()
-  for (const entity of entities.all()) subjects.add(entity.domain)
+  const canAct = domainsAnActionCouldRefresh(entities, moment.domains)
 
   const domains: DomainCoverage[] = []
 
@@ -767,7 +830,7 @@ export function assembleCoverage(
       sources: [...(heardSources.get(domain.id) ?? new Set<ProvenanceSource>())].sort(),
       concepts: conceptRows,
       weakest,
-      refresh: routeFor(status, standing, coming.has(domain.id), subjects.has(domain.id)),
+      refresh: routeFor(status, standing, coming.has(domain.id), canAct.has(domain.id)),
       summary: describe(domain.label, status, staleFor ?? daysSinceHeard, laterHere),
     })
   }

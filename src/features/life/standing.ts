@@ -1,4 +1,4 @@
-import type { DomainCoverage } from '../../intelligence/situation'
+import { REFRESH_ROUTES, type DomainCoverage } from '../../intelligence/situation'
 
 /**
  * The word Life puts on a group of areas, and what that word may claim.
@@ -147,10 +147,9 @@ function refreshWords(coverage: DomainCoverage): string {
  */
 export function everyStandingWord(): readonly string[] {
   const statuses = ['current', 'quiet', 'stale', 'unheard'] as const
-  const routes = ['normal-life', 'needs-review', 'a-question', 'a-move'] as const
   const words = new Set<string>()
   for (const status of statuses) {
-    for (const refresh of routes) {
+    for (const refresh of REFRESH_ROUTES) {
       words.add(standingFor({ status, refresh } as unknown as DomainCoverage).word)
     }
   }
