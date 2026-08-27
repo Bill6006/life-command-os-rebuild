@@ -39,6 +39,65 @@ None.
 
 ## Fixed
 
+### DEF-0117 — naming the next step wrote the owner's aspiration into the record a second time
+
+- Status: Fixed
+- Severity: Major — the owner reads one aim twice on his own page, with half its
+  milestones under each
+- Found in: routing 84 / `994284a`
+- Found by: the builder, reading its own code back before the handoff was
+  written. Nothing reported it and no test failed on it.
+- Class: **a builder used for the wrong half of an object it can build both
+  halves of.** `destinationRecords` writes a destination and, optionally, its
+  first milestone; calling it to add a milestone to a destination that already
+  exists writes both again.
+- Reproduction: on **The first evening**, open Career & Learning, say what you
+  are aiming at without naming a next step, then use **Fill that in** to name
+  one. Two `destination` records now carry the same aim, and
+  `resolveDestinations` walks records rather than entities.
+- Root cause: the entity id is derived from the label, so the entity was written
+  over itself and nothing errored — which is exactly why nothing caught it. The
+  duplication is in the record layer, and the surface reads the record layer.
+- Repair: `milestoneFor` — a milestone for a destination that already exists,
+  which adds a goal and touches the destination not at all. Both callers use it:
+  the domain page's **Fill that in** and the second agenda's next-step prompt.
+- Regression: `tests/synthetic/destination-and-discovery.test.ts` — "names a
+  next step without the aim appearing twice", which asserts one destination, one
+  milestone, and the next step reading back.
+- Siblings: none. It is the only place two builders could write the same object.
+- Fixed in: `e78d70b`
+
+---
+
+### DEF-0118 — the second agenda wrote a Wednesday out of a question that never mentioned a day
+
+- Status: Fixed
+- Severity: Major — a consequential fact about the owner's week, invented
+- Found in: routing 84 / `994284a`
+- Found by: the builder, reading its own code back
+- Class: **the app inferring a consequential fact from ambiguous input** — F36's
+  own sentence, and the class the whole owner-use review is about.
+- Reproduction: on Life, answer the second agenda's _"Is there something that
+  takes a regular chunk of your week?"_ with a name and a start time. The
+  resulting `commitment-window` carried `recurrence: { kind: 'weekly', days:
+[3] }`.
+- Root cause: the form asked for two things and the handler needed three, so the
+  third was written as a literal. The value was chosen because a weekday was
+  needed, not because anything knew one.
+- Repair: the prompt asks which day, will not save without it, and
+  `authoringRecords` writes a recurring span **only** where weekdays were given
+  and a one-off **only** where a day was. The note under the control says the
+  app will not guess at a span.
+- Regression: `tests/synthetic/destination-and-discovery.test.ts` — "never
+  invents a day of the week the owner did not name — F36", held on the builder
+  rather than on the form, because the builder is what every surface reaches.
+- Siblings: swept. `proposeAuthoring` is the only other place a time or a day is
+  read from owner input, and it reports a missing one as a problem rather than
+  supplying it.
+- Fixed in: `e78d70b`
+
+---
+
 ### DEF-0115 — a guard reported every correctly labelled control in the phase as unlabelled
 
 - Status: Fixed

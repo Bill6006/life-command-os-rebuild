@@ -10,6 +10,7 @@ import {
   describeMilestone,
   minutesFromClock,
   proposeAuthoring,
+  PROVING_DOMAINS,
   type AuthorableKind,
   type AuthoringDraft,
   type DestinationDraft,
@@ -55,6 +56,18 @@ import type {
 // What the owner is trying to become — F01, F35, package 1
 // ---------------------------------------------------------------------------
 
+/**
+ * Where a destination may be named — the adjudication's proving scope.
+ *
+ * Career, Health and Money, and **not Fatherhood**: *"the growth model is the
+ * product's best-evidenced mechanism, Phases 81 and 82 each corrected it, and
+ * it is the hardest place to prove a new object and the worst place to break
+ * one. It joins once the shape is proved."*
+ *
+ * The panel is absent on the other pages rather than empty. An empty one would
+ * be the app inviting him to fill in something it is not ready to hold, and
+ * every domain page in this product is a report before it is a form.
+ */
 export function DestinationPanel({
   data,
   area,
@@ -78,6 +91,17 @@ export function DestinationPanel({
   const [milestone, setMilestone] = useState('')
   const [filling, setFilling] = useState<string | undefined>(undefined)
   const [draft, setDraft] = useState('')
+
+  /*
+   * Three proving domains, not twelve.
+   *
+   * A destination already recorded is always shown — an area that gained one
+   * before this rule, or through an import, must not have it silently hidden —
+   * and the control that makes a new one is offered only where the object is
+   * proved.
+   */
+  const proving = PROVING_DOMAINS.includes(data.page.domains[0]!)
+  if (!proving && data.destinations.length === 0) return null
 
   return (
     <Panel title="What you are aiming at">
@@ -216,7 +240,7 @@ export function DestinationPanel({
         </div>
       ))}
 
-      {naming ? (
+      {!proving ? null : naming ? (
         <div className="domain-correction" data-testid="destination-form">
           <label className="domain-correction__prompt" htmlFor="destination-aim">
             What are you hoping {area} eventually looks like?

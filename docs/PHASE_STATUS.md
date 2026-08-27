@@ -159,7 +159,7 @@ through the same controls, now gets past all eight steps.
 
 | Fact                    | Value                                                       |
 | ----------------------- | ----------------------------------------------------------- |
-| Product checkpoint      | `994284a` — the commit the aggregate gate was run on        |
+| Product checkpoint      | `e78d70b` — the commit the aggregate gate was run on        |
 | Deployed at the handoff | see below                                                   |
 | CI at the checkpoint    | see below                                                   |
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/ |
@@ -172,7 +172,7 @@ through the same controls, now gets past all eight steps.
 | Gate                                      | Result                                                            |
 | ----------------------------------------- | ----------------------------------------------------------------- |
 | `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)         |
-| Unit / contract / synthetic / adversarial | **1,804 passed** in 83 files (1,765 in 82 before)                 |
+| Unit / contract / synthetic / adversarial | **1,806 passed** in 83 files (1,765 in 82 before)                 |
 | Browser, three widths, one worker         | **BROWSER_COUNT passed** (591 before)                             |
 | Android-style gate, deployed              | **ANDROID**                                                       |
 | Privacy scan                              | **clean** — 283 tracked files                                     |

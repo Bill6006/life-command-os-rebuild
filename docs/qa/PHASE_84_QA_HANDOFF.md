@@ -24,7 +24,7 @@ conversation may not approve its own phase.
 
 | Fact                    | Value                                                                  |
 | ----------------------- | ---------------------------------------------------------------------- |
-| Product checkpoint      | `994284a` — the commit the aggregate gate was run on (D-147, D-180)    |
+| Product checkpoint      | `e78d70b` — the commit the aggregate gate was run on (D-147, D-180)    |
 | Documentation head      | this file, and the routing 84 record in `PHASE_STATUS.md`              |
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/            |
 | Owner-visible behaviour | **changed** — Now, Life, and every domain page                         |
@@ -32,18 +32,28 @@ conversation may not approve its own phase.
 | QA report path          | this file                                                              |
 
 Confirm the deployed SHA against the checkpoint before testing. `node
-scripts/checkpoint-equivalence.mjs 994284a --deployed
+scripts/checkpoint-equivalence.mjs e78d70b --deployed
 https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json`
 reports post-checkpoint changes and whether any is bundle-relevant; D-097 asks
 for equivalence rather than literal SHA equality, and the same script now also
 reports commits on `HEAD` that no remote branch contains (D-180).
 
-**One thing worth knowing before you run it.** The first attempt at this
-checkpoint, `b76ce91`, was pushed with two files unformatted — the decision log
-and the new browser spec — because `npm run verify` was run and then those two
-files were edited. CI found it in under a minute and `994284a` is the repair.
-That is D-180's own failure mode occurring one phase after the rule was written,
-and it is recorded here rather than tidied away.
+**Two things worth knowing before you run it**, both about how this checkpoint
+got here.
+
+**`b76ce91` was pushed with two files unformatted** — the decision log and the
+new browser spec — because `npm run verify` was run and then those two files
+were edited. CI found it in under a minute. That is D-180's own failure mode
+occurring one phase after the rule was written, and it is recorded here rather
+than tidied away; `994284a` is the repair.
+
+**`e78d70b` repairs two defects the builder found reading its own code back**,
+after `994284a` was pushed and before this handoff was written — DEF-0117 and
+DEF-0118, both in the ledger. One would have shown the owner his own aspiration
+twice on one page; the other wrote a Wednesday into the record out of a question
+that never mentioned a day. Neither was reported by anything; both are the class
+the review is about, which is why the checkpoint is the third commit rather than
+the first.
 
 ---
 
@@ -66,9 +76,10 @@ screen means anything to somebody who does not.
    by anyone.
 5. `docs/PHASE_STATUS.md` — the routing 84 section, and the routing 83 section
    above it whose enumerated brief is this phase's scope
-6. `docs/DEFECT_LEDGER.md` — **DEF-0115 and DEF-0116**, both found by the
-   builder's own gate and both the same class (D-183): a guard that reads
-   source and could not see correct code
+6. `docs/DEFECT_LEDGER.md` — **DEF-0115 … DEF-0118**. The first two are the
+   same class (D-183): a guard that reads source and could not see correct code.
+   The second two are the app inventing something the owner did not say, found
+   by the builder reading its own code back.
 
 ---
 
@@ -202,8 +213,8 @@ and what QA observes is itself a trigger.
 
 | Gate                                      | Result                                                    |
 | ----------------------------------------- | ---------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** on `994284a`                                      |
-| Unit / contract / synthetic / adversarial | **1,804 passed** in 83 files (1,765 in 82 before)          |
+| `npm run verify`, clean checkout          | **PASS** on `e78d70b`                                      |
+| Unit / contract / synthetic / adversarial | **1,806 passed** in 83 files (1,765 in 82 before)          |
 | Browser, 360 / 430 / 1,280, one worker    | **BROWSER_LINE**                                           |
 | Privacy scan                              | **clean, 283 tracked files**                               |
 | Block sweep and copy guards               | **PASS** — 72 cases across five files, unchanged           |
@@ -290,7 +301,7 @@ Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the QA protocol in
 docs/qa/README.md exactly as written. Step 1 is cold use of the deployed
 Preview before any repository document.
 
-Product checkpoint: 994284a. Confirm the deployed build against it first.
+Product checkpoint: e78d70b. Confirm the deployed build against it first.
 
 Write your findings into docs/qa/PHASE_84_QA_HANDOFF.md from Round 1 on. The
 builder does not edit your rounds and you do not change product code.

@@ -6,7 +6,11 @@ import { DOMAIN, type LifeDomainId } from '../../src/domain/domains'
 import { PROGRESS_EVIDENCE, progressSentence, rankOf } from '../../src/domain/progress'
 import { mayReasonFrom, NO_PERMISSIONS } from '../../src/domain/privacy'
 import { addLocalDaysToDayId, systemClock } from '../../src/domain/time'
-import { AUTHORABLE_KINDS, type AuthorableKind } from '../../src/intelligence/authoring'
+import {
+  AUTHORABLE_KINDS,
+  PROVING_DOMAINS,
+  type AuthorableKind,
+} from '../../src/intelligence/authoring'
 import { BLOCKER_CAUSES, BLOCKER_OPTIONS } from '../../src/intelligence/blockers'
 import {
   CORRECTION_GESTURES,
@@ -905,6 +909,58 @@ describe('routing 84 item 7 — no score about the owner, anywhere', () => {
       const moment = { now: entry.now, zone: entry.zone, weekStartsOn: entry.weekStartsOn ?? 1 }
       const built = decide(buildView(loaded.snapshot, moment), moment)
       expect(built.kind, `${entry.id} produced nothing at all`).toBeDefined()
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The proving scope, held so it cannot widen without somebody deciding to
+// ---------------------------------------------------------------------------
+
+describe('routing 84 — three proving domains, not twelve', () => {
+  it('offers the destination control on Career, Health and Money and nowhere else', () => {
+    /*
+     * *"Package 1 is proved on exactly three domains … Fatherhood is
+     * deliberately excluded — the growth model is the product's best-evidenced
+     * mechanism, Phases 81 and 82 each corrected it, and it is the hardest place
+     * to prove a new object and the worst place to break one. It joins once the
+     * shape is proved."*
+     *
+     * Held on the constant the surface reads rather than on the surface,
+     * because a fourth page gaining the control is a decision somebody makes
+     * and this is where it fails until they do.
+     */
+    expect([...PROVING_DOMAINS].sort()).toEqual([DOMAIN.career, DOMAIN.health, DOMAIN.money].sort())
+    expect(PROVING_DOMAINS).not.toContain(DOMAIN.fatherhood)
+  })
+
+  it('asks its aspiration question about those three and no others', async () => {
+    const app = await openJourney('the-first-evening')
+    const asked = app
+      .agenda()
+      .outstanding.filter((prompt) => prompt.topic === 'aspiration')
+      .map((prompt) => prompt.domain)
+    expect([...asked].sort()).toEqual([...PROVING_DOMAINS].sort())
+  })
+
+  it('leaves the growth model exactly where Phase 82 left it', async () => {
+    /*
+     * The reason Fatherhood is excluded, asserted rather than assumed. Naming a
+     * destination in Career and finishing a session against it must not change
+     * what the app believes about a child's skill — the growth reader walks
+     * `domain-update` records carrying a `growthStage`, and nothing this phase
+     * writes carries one.
+     */
+    const app = await openJourney('the-first-evening')
+    await app.nameDestination({
+      aim: 'Working as a cloud engineer',
+      domain: DOMAIN.career,
+      milestone: 'Get through the networking basics',
+    })
+    await app.introduce({ kind: 'skill', name: 'Subnetting', domain: DOMAIN.career })
+    for (const record of app.snapshot().records) {
+      if (record.kind !== 'domain-update') continue
+      expect(record.growthStage, 'this phase wrote a judgement about a skill').toBeUndefined()
     }
   })
 })
