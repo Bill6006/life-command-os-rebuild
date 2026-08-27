@@ -174,6 +174,13 @@ function fourRecords(): Scenario {
  * Exactly three days, because the boundary is where the defect lives. Two days
  * would prove the same thing with slack in it; four would fall outside the
  * window and prove nothing at all.
+ *
+ * **The clock times are load-bearing and this says so out loud.** The window is
+ * `addLocalDays(now, -3)`, an instant rather than a day boundary, so the 22nd's
+ * episode is inside it only because 20:00 is later in the evening than 18:45.
+ * `occurrence-identity.test.ts` asserts the episode is still in `recentMoves`
+ * on the read, which is what stops this fixture quietly falling out of the
+ * window and passing for the wrong reason.
  */
 function threeDaysSinceThatWalk(): Scenario {
   const kit = createKit('JC', 'America/Denver', '2026-05-04T12:00:00Z')

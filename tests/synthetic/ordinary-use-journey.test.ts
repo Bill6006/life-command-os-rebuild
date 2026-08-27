@@ -4,10 +4,12 @@ import { describe, expect, it } from 'vitest'
 import { CONCEPT, coreConcepts } from '../../src/domain/concepts'
 import type { RecordKind } from '../../src/domain/records'
 import { QUESTIONS } from '../../src/intelligence/questions'
+import { threadOfferFor } from '../../src/intelligence/threads'
 import {
   JOURNEY_STEPS,
   OWNER_ROUTES,
   openJourney,
+  reachableRecordKinds,
   recordKindsWithNoOwnerRoute,
   type JourneyApp,
   type JourneyStop,
@@ -286,6 +288,36 @@ describe('D-161 — the ordinary-use journey from a near-empty store', () => {
     const after = app.decision()
     expect(after.kind).toBe('move')
     expect(after.explanation?.rendered.sentence).not.toBe(before.explanation?.rendered.sentence)
+  })
+
+  it('offers a course of action from a single answer, which is what makes `thread` reachable', async () => {
+    /*
+     * The route table's one non-obvious entry, checked rather than argued.
+     *
+     * `thread-start` claims `needs: { records: ['observation'] }` — that a
+     * course can be offered from guide answers alone. It is true for exactly
+     * one of the three shapes: the recovery run is offered beside a recovery
+     * move, and a recovery move needs only short nights. The study schedule and
+     * the growth ladder ride on moves that need an entity nothing can create,
+     * so they are unreachable for the reason `object-creation` stops.
+     *
+     * If this ever stops being true, `reachableRecordKinds()` is wrong and the
+     * enumerated brief is wrong with it.
+     */
+    const app = await openJourney('the-first-evening')
+    expect((await app.answerGuide('empty')).done).toBe(true)
+
+    const decision = app.decision()
+    const target = decision.explanation?.semantics.target
+    expect(target, 'a recovery move should be on screen').toBeDefined()
+
+    const offer = threadOfferFor(
+      decision.situation.threads,
+      target!,
+      decision.situation.entities.labelFor(target!.object) ?? '',
+    )
+    expect(offer?.kind).toBe('recovery-run')
+    expect(reachableRecordKinds().has('thread')).toBe(true)
   })
 })
 
