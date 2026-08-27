@@ -20,6 +20,104 @@ disclosed evidence/analytics. Every handoff from here also names a recommended
 **Claude model**, not only an intelligence level (D-080). Neither change
 reopens Phase 4 or any completed phase.
 
+**The domain count changed after Phase 82.** The plan now states **twelve
+domains and eleven baseline pages** — _Love / Dating / Romantic Life_ was added
+by owner decision (D-168, amending D-078). The Health & Recovery page still
+covers two domains, which is where the remaining difference comes from.
+
+---
+
+# Product adjudication — between Phase 82 and the next build phase
+
+**Status: COMPLETE AND APPROVED, 2026-08-27.** Not a build phase; it produced a
+decision, not a diff. The record is
+[`PRODUCT_ADJUDICATION.md`](PRODUCT_ADJUDICATION.md) and it was approved by the
+owner with amendments, recorded as **D-158 … D-173**.
+
+An independent sealed owner-use review
+([`qa/WHOLE_APP_OWNER_USE_REVIEW.md`](qa/WHOLE_APP_OWNER_USE_REVIEW.md) — 44
+findings, 36 sealed browser evidence entries, 88 owner wishes) landed in the
+middle of Phase 82 and was deliberately left unread by both conversations for all
+twelve rounds so it could not bias the repairs. It was read first in this round,
+in full, and reconciled against the intelligence audit, the canonical plan, this
+log's D-001…D-157 and the repository itself.
+
+**The central finding survived verification against the tree.** There is no
+`destination`, `milestone` or `baseline` concept anywhere in `src/` — the only
+matches are URL routing. Every object Phase 82 built is scoped to today or to a
+bounded three-step course. The product can represent what to do next and cannot
+represent what the owner is trying to become, so it cannot represent progress,
+and cannot represent a strategy that fails. That changes what a domain page
+**is**, and Phase 9 would otherwise typeset a fact-viewer and pass the owner's
+phone gate on it.
+
+**Three things this round found by reading the code rather than the documents.**
+
+- **F43 is confirmed, not suspected, and the mechanism is located.**
+  `stateOfChosen()` (`engine.ts:944`) matches `(verb, object.id)` across
+  `situation.recentMoves`, which is a **three-day** window (`situation.ts:1282`)
+  with no day filter. `TRANSITIONS.completed` is `[]` and `NowScreen.tsx:644-656`
+  disables every action not available from the state — so a walk completed on the
+  22nd makes a fresh walk on the 25th read _"Where this stands — Done"_ with all
+  five controls inert. The lifecycle planner is already correct; the display path
+  is not. **D-160**, and routing 83's second work package.
+- **The routing constraint is wider than Phase 9.** Canonical Phases **10, 11 and
+  12 are equally unroutable** as bare integers — all ≤ 82 — and only Phase 9's
+  case had been noticed. **D-159** and new plan section 43A.
+- **F07 is cheaper than the review knew.** `action-unable-now` already carries an
+  optional `blocker`, plumbed to `request.reason` and stored on the episode, and
+  **no surface writes it and nothing reads it** — AUD-0050's pattern, one record
+  kind further on. **D-164**.
+
+**Disposition of the 44 findings.** None is fully solved by Phase 81 or Phase 82,
+so "already handled" was not available as a disposition and was not used. Twelve
+need work before Phase 9; nine need only that Phase 9 leave room for their shape
+(now written into plan section 54); twenty-three belong after it. Four are
+refused as proposed and keep a narrower half. The largest deferral is deliberate:
+F20–F25, F28 and F29 are each an **instance of one finding in one domain**, and
+building twelve progression models before the shape is proved on three is the
+mega-phase failure the audit already refused once.
+
+**Five owner questions closed:** Q7 (six distinct emotional dimensions, no
+composite — D-166), Q8 (private influence as one owner-controlled permission,
+default off — D-167), romantic placement (a twelfth core domain with its own page
+— D-168), the review surface (Insights and domain pages, no new tab — D-169), and
+Faith (passivity is interim, not the design — D-170). Cross-device continuity is
+deferred (D-171). **Q6 is reopened before routing 91** with the finite concept
+vocabulary explicitly refused as a permanent ceiling (D-172). Q1 and Q4 remain
+deferred.
+
+**Nothing was reopened.** Phase 82 stays GREEN, Phases 1–81 are untouched,
+canonical Phase 10 keeps its scope (D-109 stands, and a routing label is not a
+re-scope), and no canonical phase is renumbered.
+
+## The campaign from here
+
+```
+82 GREEN ─▶ adjudication ─▶ 83 ─▶ 84 ─▶ 90 ─▶ 91 ─▶ 92 ─▶ 93 ─▶ 94
+```
+
+| Routing | Product / canonical name                                 | Blocked on                        |
+| ------- | -------------------------------------------------------- | --------------------------------- |
+| **83**  | The instrument, and the things that are untrue           | **nothing — ready to dispatch**   |
+| **84**  | What the owner is trying to become                       | nothing; D-166…D-169 all answered |
+| **90**  | **Canonical Phase 9** — visual coherence, motion, mobile | 84                                |
+| **91**  | Later intelligence — Reach, then Validity                | 90, and Q6's adjudication (D-172) |
+| **92**  | **Canonical Phase 10** — performance, PWA, reliability   | 91                                |
+| **93**  | **Canonical Phase 11** — adversarial hardening           | 92                                |
+| **94**  | **Canonical Phase 12** — release                         | 93                                |
+
+Product phase names and routing integers are different things; plan section 43A
+is the only place they are reconciled, and the `**Phase:**` field carries the
+routing integer.
+
+**Routing 83 was briefly claimed by the adjudication round itself** — the held
+`NEXT_PROMPT.md` written at the Phase 82 closeout carried
+`**Phase:** 83 — product adjudication`. That round was never dispatched through
+the orchestrator, no `PHASE_83_QA_HANDOFF.md` exists, and the owner ran it
+directly. Routing 83 belongs to the build phase, and the held handoff's scope is
+superseded rather than reused.
+
 ---
 
 # Phase 82 — The structural intelligence skeleton

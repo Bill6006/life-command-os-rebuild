@@ -13,3 +13,12 @@ docs/CANONICAL_REBUILD_PLAN.md
 # formatter is a rule that breaks at every QA handoff and can only be satisfied
 # by the one person forbidden to satisfy it — CI failed on exactly that.
 docs/qa/PHASE_*_QA_HANDOFF.md
+
+# The independent sealed owner-use review, for both of the reasons above at once.
+# It was written by an independent Codex conversation the builder may not edit,
+# and the owner's instruction when it was handed over was that it must not be
+# deleted, replaced, formatted or otherwise altered. Running the formatter over
+# it would turn 36 sealed browser evidence entries and 44 findings into a
+# paraphrase of themselves, which is the same objection that already exempts the
+# canonical plan. It is committed byte-for-byte as it was received.
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md

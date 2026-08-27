@@ -62,6 +62,35 @@ outcome (D-113). None of this reopens a completed phase, and it does not warrant
 its own version number for the same reason D-082, D-083, D-089, D-090 and D-091
 did not.
 
+**v1.2 addendum (D-158 to D-173):** an independent sealed owner-use review
+(`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md`, 44 findings) was completed after Phase
+82 closed GREEN and adjudicated against this plan, the intelligence audit, the
+decision log and the repository. The adjudication is
+`docs/PRODUCT_ADJUDICATION.md` and the owner approved it. **Two build phases now
+precede canonical Phase 9** — routing 83, the ordinary-use acceptance instrument
+and the observed defects; and routing 84, the destination and discovery structure
+the visual phase designs its product contract around (D-158). The review's
+central finding survived verification against the tree: the product holds no
+representation of what the owner is trying to become, so it cannot represent
+progress or a strategy that fails, and that changes what a domain page is. Five
+owner questions are answered: six distinct emotional dimensions with no composite
+(D-166, closing Q7); private influence as one owner-controlled permission
+defaulting off (D-167, closing Q8); **Love / Dating / Romantic Life as a twelfth
+core domain** with its own page, making twelve domains and eleven pages (D-168,
+amending D-078); an in-product review loop on Insights and the domain pages with
+no new navigation tab (D-169); and Faith's current passivity recorded as an
+interim state rather than the product design (D-170). Cross-device continuity is
+deferred and local-first stands (D-171); Q6 is reopened before the later
+intelligence phase, with the finite concept vocabulary explicitly refused as a
+permanent ceiling (D-172). Section 4.1 gains the twelfth domain, section 11 gains
+the permission, sections 22, 23 and 54 are amended, and **new section 43A
+reconciles canonical phase names with orchestrator routing integers** (D-159) —
+canonical Phases 9, 10, 11 and 12 are all unroutable as bare integers and route
+as 90, 92, 93 and 94. Canonical Phase 10 is **not** re-scoped by receiving a
+routing label; D-109 stands. No completed phase is reopened and no canonical
+phase is renumbered, so this does not warrant its own version number for the same
+reason the addenda above did not.
+
 ## v1.1 change log
 
 This revision closed four implementation ambiguities before developer handoff:
@@ -217,9 +246,25 @@ A domain is **not** removed from the model because a switch is off.
 - Faith & Meaning
 - Home & Environment
 - Private / Sexual Health
+- Love / Dating / Romantic Life
 - Long-Range Direction / Identity
 
 The domain registry must be extensible.
+
+**Twelve core domains, eleven baseline pages (D-168, amending D-078).**
+_Love / Dating / Romantic Life_ was added by owner decision after the sealed
+owner-use review found the owner's romantic aspiration had no home anywhere in
+the model. It is a distinct domain with its own Life page and is **not** reduced
+to Social or Private: hiding it inside Social would force one domain to carry two
+unrelated destinations. It must be able to hold relationship aspirations, dating
+and social opportunity, compatibility and boundaries, relationship development,
+relevant confidence and social context, and the owner's own stated desired
+relationship direction. It must never become a date quota, a partner score, a
+compatibility percentage or a ranking of people.
+
+The remaining gap between twelve domains and eleven pages is unchanged and is
+D-078's: **Health & Recovery** covers _Health & Physical Capacity_ and
+_Sleep & Recovery_ together, because the engine reads them together.
 
 ## 4.2 One global brain
 
@@ -525,9 +570,26 @@ The app should **not** behave as though the owner must answer unsolicited privat
 
 ## Intelligence use
 
-Private evidence may still influence whole-life reasoning when relevant.
+Private evidence may influence whole-life reasoning when relevant **and only when the owner has switched that influence on** (D-167, closing Q8).
 
-Examples:
+One explicit owner control governs it:
+
+> **Allow Private / Sexual Health to influence recommendations** — default **OFF**.
+
+**When OFF:** private evidence stays stored and inspectable inside its authorized private surfaces. It does **not** influence cross-domain recommendation ranking and does not enter pattern discovery.
+
+**When ON**, all four of these hold at once:
+
+- ordinary Now and Timeline copy stays discreet;
+- an explanation must not reveal an intimate premise to someone reading over the owner's shoulder;
+- the owner can turn the permission off again;
+- turning it off stops **future** use without falsifying, rewriting or deleting history.
+
+Consent is at the **domain level**, not per entry, unless later evidence shows domain-level consent is insufficient.
+
+The **structural discretion guard is still required** and is not replaced by the permission: when the permission is ON it must be structurally impossible — not merely conventional — for an explanation or an evidence panel to render an explicit private reading. If that guarantee cannot be made, the permission cannot be offered.
+
+Examples of what the permission, once ON, makes possible:
 
 - late-night scrolling + fatigue + repeated private behavior may make a bedtime/phone-boundary recommendation more useful;
 - loneliness may suggest social connection rather than a generic willpower message.
@@ -543,6 +605,8 @@ The owner defines the desired relationship with those behaviors.
 Normal Now/Timeline surfaces should avoid unnecessarily exposing explicit private details.
 
 Exact reveal/discretion behavior can be refined during implementation.
+
+**A discretion promise must be true of metadata as well as content.** The owner-use review found the Private page promising that nothing here appears anywhere else while Timeline showed that a private entry existed and when it occurred. Concealing the sentence is not concealing the entry. Either the existence and timing are also withheld, or the promise says what it actually covers — and that is a truthfulness repair rather than a future capability, so it is routing 83's, not routing 84's, and it does not wait on the permission above.
 
 ## Export requirement
 
@@ -1056,6 +1120,16 @@ Do **not** make a giant Life Score a foundation requirement.
 - Use trajectories, confidence, coverage, bottlenecks, and actual next decisions first.
 - A score or forecast may be added later only if it clearly improves decisions.
 
+## This binds the destination model (D-162)
+
+The destination and progression objects routing 84 introduces — what the owner is aiming at, where he is now, what would count as evidence of progress, what is next, and what is unknown — are **qualitative by default**. A quantity appears only where the owner supplied one and it names what it measures (D-084).
+
+Forbidden on every owner surface, about the owner and about Adaya: a score, a percentage, a share, a rate, a rank, a grade, a completion bar, a readiness number, or any composite across domains.
+
+Still allowed, and what a destination is described with: counts of occasions, dates, the owner's own stated targets in his own units, and honest uncertainty.
+
+**Why this needs saying twice.** A phase whose whole subject is progress is the one place a percentage arrives looking reasonable. Avoiding an unsupported percentage is correct; avoiding a meaningful progress model is not. The answer to that tension is description with evidence, not a number with a friendly face.
+
 ## If forecasts are used
 
 They must define:
@@ -1137,11 +1211,23 @@ Support useful emotional context without diagnosis.
 
 Do not turn every interaction into therapy language.
 
+**Six distinct dimensions, owner-decided (D-166, closing Q7):** mood; stress; motivation; confidence; loneliness / social connection need; mental overload / overwhelm.
+
+They stay distinct, may each be unknown independently, and **never form a composite wellness score** — nothing anywhere may aggregate across them. Not all of them are asked on any given day; they are asked or observed when informationally useful. Free-text emotional context still coexists with them where useful.
+
+**Energy and tiredness/recovery are not among them.** They stay represented through their existing Health and Sleep concepts and must not be silently duplicated into an emotional reading: one quantity with two homes is two answers to one question.
+
+A single `emotional.score` concept is the wellness score arriving through the back door and is forbidden.
+
 ## Faith & Meaning
 
 Respect owner-defined faith.
 
 Never claim divine authority.
+
+**Faith's current passivity is an interim state, not the product design (D-170).** The owner's stated aim is greater closeness to God and stronger genuine belief while honestly recognizing uncertainty. Faith must eventually be able to participate, when the owner chooses that direction, in destination, discovery, practices and experiences, reflection, strategy and pattern learning.
+
+It must never manufacture certainty, tell the owner what he believes, grade faith, treat doubt as failure, or become a devotional app by default. But "respectful" must not mean the app permanently does nothing.
 
 ## Home & Environment
 
@@ -2283,6 +2369,37 @@ Maintain:
 
 ---
 
+# 43A. Phase names and orchestrator routing integers (D-159)
+
+**A canonical phase name and its routing integer are different things, and this section is the only place they are reconciled.**
+
+The external orchestrator parses the `**Phase:**` field of a handoff as a **bare integer**, and `handoff_source.build_candidates()` keeps only `max(qa_phase(r) for r in reports)`, discarding every lower phase as history. With phases 5, 6, 7, 8, 81 and 82 on disk, the surviving maximum is **82**.
+
+So `**Phase:** 9`, `09`, `8.3` and `9.1` all parse to something at or below 82 and **never route**. The QA report is discarded, the builder → QA → repair → retest lifecycle never starts, and nothing warns anyone.
+
+**The constraint is wider than Phase 9.** Canonical Phases **10, 11 and 12 are equally unroutable** — 10, 11 and 12 are all ≤ 82. Fixing only Phase 9 would move the silent failure three phases downstream.
+
+## The map
+
+| Product / canonical name                               | Routing integer | Handoff file                  |
+| ------------------------------------------------------ | --------------- | ----------------------------- |
+| The instrument, and the things that are untrue         | **83**          | `qa/PHASE_83_QA_HANDOFF.md`   |
+| What the owner is trying to become                     | **84**          | `qa/PHASE_84_QA_HANDOFF.md`   |
+| **Canonical Phase 9** — visual coherence, motion, mobile | **90**        | `qa/PHASE_90_QA_HANDOFF.md`   |
+| Later intelligence — Reach, then Validity              | **91**          | `qa/PHASE_91_QA_HANDOFF.md`   |
+| **Canonical Phase 10** — performance, PWA, reliability | **92**          | `qa/PHASE_92_QA_HANDOFF.md`   |
+| **Canonical Phase 11** — adversarial hardening         | **93**          | `qa/PHASE_93_QA_HANDOFF.md`   |
+| **Canonical Phase 12** — release                       | **94**          | `qa/PHASE_94_QA_HANDOFF.md`   |
+
+## Rules
+
+- Every phase created from here to release carries a routing integer **strictly greater than 82**.
+- **Canonical phases are not renumbered.** Section 54 is still Phase 9, section 55 is still Phase 10. Only the routing label differs, and giving canonical Phase 10 the integer 92 does **not** re-scope it — D-109 stands.
+- **A QA round does not get a new routing integer.** Builder, QA, repair and retest rounds all stay under the same number, as they did through Phase 82's twelve rounds.
+- A document filename may follow either convention, but the `**Phase:**` field carries the **routing integer**, and a QA handoff filename follows the routing integer so the orchestrator and a human reader agree.
+
+---
+
 # 44. Phase gates
 
 Do not run the whole rebuild as one enormous coding session.
@@ -2791,6 +2908,8 @@ Bring forward useful history without importing the old architecture.
 
 # 54. Phase 9 — Visual coherence + motion + mobile refinement
 
+**Routes as phase 90** — see section 43A. Preceded by routing 83 and routing 84 (D-158).
+
 Visual design begins earlier, but this phase performs whole-product coherence.
 
 ## Review
@@ -2823,13 +2942,31 @@ Reject:
 - endless tiny metrics;
 - pastel wellness.
 
+## Structural accommodation (D-158)
+
+The owner-use review identified relationships the visual design must **leave room for** without building. Passing the phone gate on a design that forecloses one of these re-opens a passed gate later.
+
+- A course of action carrying a **review status and a verdict sentence** — one more status on an object this phase already designs.
+- A tradeoff clause naming a **longer horizon**, inside Q9's one-additional-clause budget. Not a second card.
+- A **recurring constraint** the owner can see and dismiss, on the domain page rather than a new screen.
+- A held intention resolving to **fulfilled, missed or expired** — three outcomes for a state this phase already designs.
+- A **maintenance-versus-advancement distinction in the reason line**, not a chart.
+- An evidence card able to carry a **competing explanation and an open question**, and a visible link from a pattern to a changed approach.
+- Domain pages composing a **destination section with an existing progression object** — Adaya's growth stage is the test case.
+- A compact **reentry state** after a long absence: one screen, not a wall of stale cards.
+- A restrained **"why am I being asked this?"** affordance. No dashboard, no score.
+
 ## Gate
 
 Owner physical-phone approval required.
 
+Plus the structural accommodation list above, and the owner-use review's own acceptance questions (its section 11.8) run for the first time.
+
 ---
 
 # 55. Phase 10 — Performance, PWA, reliability
+
+**Routes as phase 92** — see section 43A. **Its scope is unchanged** by that label (D-109, D-159).
 
 ## Build/harden
 
@@ -2855,6 +2992,8 @@ Owner physical-phone approval required.
 ---
 
 # 56. Phase 11 — Independent adversarial hardening
+
+**Routes as phase 93** — see section 43A. Scope unchanged.
 
 Use a fresh independent context/agent that did not author the latest repairs.
 
@@ -2890,6 +3029,8 @@ Then rerun integration and a fresh independent retest.
 ---
 
 # 57. Phase 12 — Release
+
+**Routes as phase 94** — see section 43A. Scope unchanged.
 
 ## Release only when
 

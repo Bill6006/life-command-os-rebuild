@@ -5175,3 +5175,600 @@ _"A question will cover it"_ names what covers the area, not when. It stands
 unchanged. A draft of the round 11 repair hedged it to _"would cover it"_, which
 broke QA's own pinned expectation and was reverted — the sentence was never the
 defect.
+
+---
+
+## D-158 — Two build phases precede canonical Phase 9, and the owner-use review is why
+
+**Phase:** adjudication, after 82 · **Status:** Active
+
+An independent sealed owner-use review (`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md`,
+44 findings) was read after Phase 82 closed GREEN, and the owner adjudicated it
+against the intelligence audit, the canonical plan, this log and the repository.
+The result is recorded in full in `docs/PRODUCT_ADJUDICATION.md` and approved.
+
+**Two build phases now precede canonical Phase 9**, and they are not merged:
+
+- **Routing 83** — _"The instrument, and the things that are untrue."_ An
+  ordinary-use acceptance instrument, plus the defects the review found that
+  Phase 9 would otherwise typeset as settled design. Blocked on no owner
+  decision.
+- **Routing 84** — _"What the owner is trying to become."_ The destination and
+  discovery structure that Phase 9 designs its product contract around.
+
+**Why not one phase.** Routing 83 is blocked on nothing and routing 84 was
+blocked on four owner decisions (D-166 … D-169). Merging them would have made a
+confirmed, unusable-Now-card defect (D-160) wait on a policy question about faith
+and romance.
+
+**Why not straight to Phase 9.** The review's central finding survived
+verification against the tree: there is no `destination`, `milestone` or
+`baseline` concept anywhere in `src/`. The product can represent what to do next
+and cannot represent what the owner is trying to become — so it cannot represent
+progress, and cannot represent a strategy that fails. That changes what a domain
+page **is**. Phase 9 would typeset a fact-viewer, pass the owner's phone gate on
+it, and the destination model would then have to re-open a passed gate.
+
+**What this does not do.** It does not reopen Phase 82 or anything before it, it
+does not re-scope canonical Phase 10 (D-109 stands), and it does not renumber a
+canonical phase. Twelve of the review's 44 findings need work before Phase 9;
+nine need only that Phase 9 leave room for their shape; twenty-three belong
+after it. The audit's membership test is used unchanged — _would Phase 9 approve
+the wrong product structure if this landed afterwards?_
+
+**Where the two documents disagreed:** the review wins on what the product is
+for; the audit wins on how to sequence it. The audit examined the intelligence
+the product **has** and found 51 real defects in it. The review examined the
+intelligence the product **promised** and found the promise itself unrepresented.
+Both readings are correct; only one changes the phase architecture.
+
+---
+
+## D-159 — Every phase from here to release carries a routing integer greater than 82
+
+**Phase:** adjudication, after 82 · **Status:** Active
+
+`_stated_or_inferred_phase()` parses the `**Phase:**` field as a bare integer and
+`handoff_source.build_candidates()` keeps only `max(qa_phase(r) for r in reports)`,
+discarding every lower phase as history. With phases 5, 6, 7, 8, 81 and 82 on
+disk, the surviving maximum is **82**.
+
+So `**Phase:** 9`, `09`, `8.3` and `9.1` all parse to something at or below 82 and
+**never route** — the QA report is discarded, the builder → QA → repair → retest
+lifecycle never starts, and nothing warns anyone.
+
+**The constraint is wider than Phase 9, and this is the part nobody had written
+down.** Canonical **Phase 10, Phase 11 and Phase 12 are equally unroutable** —
+10, 11 and 12 are all ≤ 82. Fixing only Phase 9 would move the silent failure
+three phases downstream.
+
+**Product phase names and routing integers are different things.** This table is
+the only place they are reconciled, and the `**Phase:**` field carries the routing
+integer:
+
+| Product / canonical name                               | Routing integer | Handoff file                |
+| ------------------------------------------------------ | --------------- | --------------------------- |
+| The instrument, and the things that are untrue         | **83**          | `qa/PHASE_83_QA_HANDOFF.md` |
+| What the owner is trying to become                     | **84**          | `qa/PHASE_84_QA_HANDOFF.md` |
+| **Canonical Phase 9** — visual coherence               | **90**          | `qa/PHASE_90_QA_HANDOFF.md` |
+| Later intelligence — Reach, then Validity              | **91**          | `qa/PHASE_91_QA_HANDOFF.md` |
+| **Canonical Phase 10** — performance, PWA, reliability | **92**          | `qa/PHASE_92_QA_HANDOFF.md` |
+| **Canonical Phase 11** — adversarial hardening         | **93**          | `qa/PHASE_93_QA_HANDOFF.md` |
+| **Canonical Phase 12** — release                       | **94**          | `qa/PHASE_94_QA_HANDOFF.md` |
+
+**Giving canonical Phase 10 the routing integer 92 does not re-scope it.** Only
+its routing label changes; its build list is unchanged and D-109 stands. The same
+is true of 11 and 12.
+
+**A QA round does not get a new routing integer.** Rounds 1 … n of one phase all
+carry that phase's integer, as they did through Phase 82's twelve rounds.
+
+**Routing 83 was briefly claimed by the adjudication round itself** — the held
+`NEXT_PROMPT.md` written at the Phase 82 closeout carried `**Phase:** 83 —
+product adjudication`. That round was never dispatched through the orchestrator;
+no `PHASE_83_QA_HANDOFF.md` exists, and the owner ran the adjudication directly.
+**Routing 83 therefore belongs to the build phase D-158 names**, and the held
+handoff's scope is superseded rather than reused.
+
+---
+
+## D-160 — A move's identity is what learning pools on; a state belongs to one occurrence on one day
+
+**Phase:** 83 · **Status:** Active
+
+An action has a **stable identity** — the thing outcome learning and the
+association engine pool evidence over — and each time it is put in front of the
+owner is a separate **occurrence** with its own date, state and outcome. Those
+are different things, and no surface may resolve one through the other.
+
+Concretely: the state shown on a recommendation is the state of **this day's**
+occurrence of it, or `shown` if there is none. A settled occurrence from an
+earlier day may not supply it.
+
+**Why:** verified in the tree at `87e2057`. `stateOfChosen()`
+(`src/intelligence/engine.ts:944`) matches `(verb, object.id)` across
+`situation.recentMoves`, and `recentMoves` is a **three-day** window
+(`src/intelligence/situation.ts:1282`, `addLocalDays(moment.now, -3, zone)`) with
+no day filter in the match. `TRANSITIONS.completed` is `[]`, and
+`NowScreen.tsx:644-656` disables every action not in `availableActions(state)`.
+So a walk completed on the 22nd makes a freshly generated walk on the 25th read
+_"Where this stands — Done"_ with all five controls inert — which is exactly what
+the owner-use review recorded in E02 and E31, including why the observed gap was
+three days.
+
+**The lifecycle planner is already right and is not what changes.**
+`openEpisode()` keys on `(target, dayId)`; `planLifecycle` writes correctly. The
+defect is in the display path only, and the repair must not "fix" the planner to
+match.
+
+**What must not be lost:** `recentMoves`' three-day window is correct for what it
+was built for — `recent-duplication` and learning both need to see beyond today.
+Narrowing the window would break them. What changes is the **match**, not the
+window.
+
+**Why it is a decision rather than a one-line fix:** the review classified this as
+a suspected bug and the fix is small, but the rule underneath it is the one the
+audit's own blind-spot list names — _"one action identity, many occurrences"_ —
+and it will be needed again wherever a surface asks "where does this stand".
+
+---
+
+## D-161 — A capability is accepted when an ordinary owner can reach it from a near-empty store
+
+**Phase:** 83 · **Status:** Active · **Binds:** 83, 84, 90, 91
+
+A capability is not accepted because a prepared fixture demonstrates it. It is
+accepted when an ordinary owner, starting from a **near-empty store**, can reach
+it through normal use — and the points where an ordinary journey **cannot**
+proceed are enumerated with reasons rather than left to be discovered.
+
+**Why:** every gate in this campaign so far is green against fixtures authored by
+the same process that wrote the code. Eighteen synthetic scenarios, all
+builder-written. The evidence that this matters is the owner-use review itself:
+an independent reader with a browser found 44 things that 1,332 unit tests, 501
+browser assertions, a 93-check Android gate and twelve rounds of independent QA
+did not — and the largest class of them was **objects that are easy to encounter
+in a fixture and impossible to introduce as an owner**.
+
+**The instrument comes first**, as it did in Phase 81 (AUD-0008, step 81.0): the
+journey fixture family is routing 83's first work package, and everything after
+it is verified with it.
+
+**The journey it must run:** unknown aspiration → discovery → object creation →
+real action → interruption → concrete outcome → correction → changed
+recommendation.
+
+**What this is not.** It is not a demand for more favourable examples, and it does
+not replace the existing gates. A rich fixture still proves what it always
+proved; it just stops being sufficient on its own.
+
+---
+
+## D-162 — A destination is described, never scored
+
+**Phase:** 84 · **Status:** Active
+
+The destination object routing 84 introduces — what the owner is aiming at, where
+he is now, what would count as evidence of progress, what is next, and what is
+unknown — is **qualitative by default**. A quantity appears only where the owner
+supplied one and it names what it measures (D-084).
+
+**Forbidden on every owner surface, about the owner and about Adaya:** a score, a
+percentage, a share, a rate, a rank, a grade, a completion bar, a readiness
+number, or any composite across domains.
+
+**Why this needs its own entry rather than resting on the rules already in
+place:** plan section 22 forbids a Life Score and D-129 forbids dividing a goal's
+pieces, and both stand. But a phase whose whole subject is _progress_ is the one
+place where a percentage arrives looking reasonable, and the review is explicit
+that avoiding an unsupported percentage is correct while avoiding a meaningful
+progress model is not. The answer to that tension is **description with
+evidence**, not a number with a friendly face — the same repair AUD-0049 made to
+the growth suggestion, applied to the owner.
+
+**What is still allowed:** counts of occasions, dates, the owner's own stated
+targets in his own units, and honest uncertainty. Those are what a destination is
+described with.
+
+---
+
+## D-163 — Two question budgets, and neither borrows from the other
+
+**Phase:** 84 · **Status:** Active
+
+A question asked to **decide today** and a question asked to **understand the
+owner over time** are different instruments with different justifications, and
+they carry separate budgets.
+
+- The decision guide is unchanged. D-036's answer-share rule, D-111's narrow
+  consequential exception and the three-a-day cap all stand, and routing 84 does
+  not raise them.
+- The second agenda may ask something whose answer would **not** change today's
+  recommendation — an aspiration, a recurring obstacle, a resource, a change —
+  because its value is future information rather than a decision flip.
+
+**Rules for the second agenda:** it is never on Now's critical path; it is always
+skippable and a skip is respected; an answer is remembered and not re-asked; and
+it must be able to **show what the answer changed**. Question volume falls as
+answers accumulate, and that is measured across the library rather than asserted.
+
+**Why:** the review's F02, and the audit's own §10 item 20 — `guide.ts` decides
+whether to ask by re-running `decide()` under every possible answer, so it
+**structurally cannot** ask a question that would not move today's answer. That
+mechanism is correct and protected. It is also, on its own, a system that can
+know nothing about a life while being certain it has nothing worth asking.
+
+**What this must not become:** an onboarding questionnaire, a domain maintenance
+chore, or a licence to ask more in total. Less wasted questioning, more useful
+learning.
+
+---
+
+## D-164 — A reason for inability is asked when the answer has a use, and never to fill a field
+
+**Phase:** 84 · **Status:** Active
+
+When the owner says he cannot do something now, the app may ask **one** compact,
+optional question about what was in the way — gated on whether the answer has a
+credible path to a better decision or a useful future understanding, **not** on a
+refusal count.
+
+**Ask when:** the recommendation could be adapted in materially different ways
+depending on the blocker; a high-priority intention is repeatedly blocked and the
+cause is unknown; a known time/place/resource assumption may be wrong; one answer
+could identify a constraint affecting several recommendations; or a
+safety-relevant unknown decides whether to offer something easier or stop.
+
+**Do not ask when:** the app already knows the constraint and it is still current;
+the owner just answered, skipped or asked to be left alone; there is no useful
+adaptation or future consequence; the next move is an obvious respectful stop; or
+the only purpose is to populate a record.
+
+**"Just leave it" is always available**, and an unanswered question leaves the
+cause unknown rather than guessed.
+
+**Why:** the field already exists and is inert. `action-unable-now` carries an
+optional `blocker` (`records.ts:488`), plumbed to `request.reason`
+(`lifecycle.ts:384`) and stored on the episode (`:208`) — and **no surface writes
+it and nothing reads it**. That is AUD-0050's pattern exactly: complete
+plumbing, no control. D-045's separation of inability from decline from effect is
+what makes the reason worth capturing, and it stands unchanged.
+
+**What must not be inferred from an inability:** dislike, a verdict on the move,
+lack of commitment, a permanent veto, or anything about the owner's character.
+The review's own table of meanings is the reference.
+
+**The no-question path is proved as carefully as the question path.** Sometimes
+the intelligent response is silence, and an app that asks after every tap has
+failed this decision rather than implemented it.
+
+---
+
+## D-165 — A correction states its consequence before it acts
+
+**Phase:** 84 · **Status:** Active
+
+Correcting an **event**, its **date or subject**, a **current fact**, and a
+**learned interpretation** are four different gestures with four different
+consequences, and each says what it will change before it changes it.
+
+**Why:** today they are one gesture. The review watched _"Not how it went"_
+immediately remove a conclusion with no scope shown and no visible way back, and
+watched a corrected energy reading leave two readings on screen with nothing
+marking one as superseded. The owner needs to repair the memory without becoming
+a database operator or invalidating a much broader conclusion than he intended.
+
+**D-047 is not weakened.** A belief correction remains a **watershed** rather than
+a deletion: history is preserved, the conclusion is suppressed from that point
+forward, and provenance survives. What this adds is the owner-facing grammar
+above that mechanism, and a visible distinction between a superseded reading and
+a second genuine measurement.
+
+**Out of scope here:** authoring or backfilling a historical event. That is
+AUD-0050's retraction half and stays in the later Reach package. The grammar
+precedes the authoring surface; it does not wait for it.
+
+**The owner is never asked to diagnose causation** in order to correct something
+(D-089).
+
+---
+
+## D-166 — Six emotional dimensions, distinct, independently unknown, never composited
+
+**Phase:** 84 · **Status:** Active · **Answers:** Q7 · **Supersedes the open
+question in** DEF-0056
+
+The owner has named the dimensions. The first structured emotional-state model
+holds:
+
+- mood
+- stress
+- motivation
+- confidence
+- loneliness / social connection need
+- mental overload / overwhelm
+
+**Rules, all owner-stated:**
+
+- they stay **distinct** and may each be unknown independently;
+- they **do not** form a composite wellness score, and nothing anywhere may
+  aggregate across them;
+- not all of them are asked on any given day;
+- they are asked or observed when informationally useful, under D-163's budgets;
+- **free-text emotional context still coexists** with them where useful.
+
+**Energy and tiredness/recovery are not among them.** They stay represented
+through their existing Health and Sleep concepts and must not be silently
+duplicated into an emotional reading — one quantity with two homes is two
+answers to one question.
+
+**Why the architecture already supports this:** verified in the audit and
+unchanged since — each dimension is its own `ConceptId` with its own `FactValue`,
+`tracked` is per-concept and optional, as are `standing` and `privacy`, and
+nothing aggregates across concepts. Structured optional dimensions and free text
+coexist **with no schema change**.
+
+**What would break it:** a single `emotional.score` concept. That is the wellness
+score arriving through the back door, it is what DEF-0056 refused in writing, and
+AUD-0041's guard plus this entry are what prevent it. **The audit's own first
+draft nearly proposed it.**
+
+**This unblocks** AUD-0011's emotional half in the later Reach package. It does
+not authorise implementing it before then.
+
+---
+
+## D-167 — Private influence is one owner-controlled permission, and it is off
+
+**Phase:** 84 · **Status:** Active · **Answers:** Q8
+
+Private / Sexual Health **must not** silently influence ordinary cross-domain
+intelligence. One explicit owner control governs it:
+
+> **Allow Private / Sexual Health to influence recommendations** — default **OFF**.
+
+**When OFF:** private evidence stays stored and inspectable inside its authorised
+private surfaces. It does **not** influence cross-domain recommendation ranking
+and does not enter pattern discovery.
+
+**When ON:** the intelligence system may use authorised private evidence, and
+four things hold at once —
+
+- ordinary Now and Timeline copy stays discreet;
+- an explanation must not reveal an intimate premise to someone reading over the
+  owner's shoulder;
+- the owner can turn the permission off again;
+- turning it off stops **future** use without falsifying, rewriting or deleting
+  history.
+
+**Domain-level consent, not per-entry.** Per-entry consent is not required unless
+later evidence shows the domain-level control is insufficient — it is burden
+without a demonstrated benefit, and section 4.5 governs.
+
+**This is neither of the two options the audit framed.** Q8 offered "section 11
+wins, behind a structural barrier" or "the registry wins, inspect-and-record".
+The owner's answer is a third: **the registry may win, when and only when the
+owner has said so.** Plan section 11's "private evidence may still influence
+whole-life reasoning" is therefore true **conditionally**, and section 11 is
+amended to say so rather than being overruled.
+
+**The structural discretion guard is still required**, not replaced by the
+permission. When the permission is ON, `createFactReader.read()` places rendered
+values onto `situation.factsConsidered`, and it must remain **structurally**
+impossible — not merely conventional — for an explanation or evidence panel to
+render an explicit private reading. If that guarantee cannot be made, the
+permission cannot be offered.
+
+**This unblocks** AUD-0040 and therefore the later Reach package. It does not
+authorise implementing them before then.
+
+**Separately and immediately:** the honesty defect in routing 83 is not gated on
+this. The Private page currently promises _"Nothing here appears anywhere else"_
+(`domainPages.ts:104`) while `privacy.ts:72` renders **"Private entry"** on
+Timeline. One of those two must change in routing 83, whatever this permission
+later does.
+
+---
+
+## D-168 — Love / Dating / Romantic Life is the twelfth core domain — D-078 amended
+
+**Phase:** 84 · **Status:** Active · **Amends:** D-078
+
+**Love / Dating / Romantic Life becomes a distinct core domain with its own Life
+page.** The model holds **twelve** core domains and the product builds **eleven**
+baseline pages — the difference remains the Health & Recovery page, which covers
+_Health & Physical Capacity_ and _Sleep & Recovery_ together (D-078's reasoning,
+unchanged).
+
+**It is not reduced to Social or Private.** Hiding a romantic aspiration inside
+Social forces one domain to carry two unrelated destinations, and Private is
+about a different thing entirely.
+
+**What it must eventually be able to hold:** relationship aspirations; dating and
+social opportunity; compatibility and boundaries; relationship development;
+relevant confidence and social context; and the owner's own stated desired
+relationship direction.
+
+**What it must never become:** a date quota, a partner score, a compatibility
+percentage, or a ranking of people. D-162 and plan section 22 apply here as
+everywhere, and AUD-0047's rule — a quality signal may **only suppress, never
+rank** — applies to any person this domain touches.
+
+**Why it is decided now rather than when it is built:** placement is
+**navigation**, and Phase 9's gate is owner physical-phone approval. A twelfth
+domain arriving after that gate re-opens it.
+
+**Plan section 4.1 already permitted this** — "the domain registry must be
+extensible" — which is permission rather than a plan. This is the plan.
+
+---
+
+## D-169 — Review lives on Insights and the domain pages, and earns no navigation tab
+
+**Phase:** 84 structure, 91 build · **Status:** Active
+
+The product gains an in-product way to ask _"what changed, what did I achieve,
+what matters, and what should change next?"_ It lives on **Insights and the
+relevant domain pages**, where the evidence and its provenance already are.
+
+**It does not get a top-level navigation tab.** Navigation stays as it is.
+
+**What the owner should eventually be able to inspect:** what the system believes;
+what it is uncertain about; what it appears to be learning; the current
+destination, milestone and strategy; why a strategy changed; and meaningful
+progress evidence.
+
+**D-087 stands unchanged.** Timeline offers nothing to press and no filter. It
+remains the raw chronological ledger, and the review loop is built elsewhere.
+Search over Timeline is refused: it is a large surface D-087 deliberately
+declined, and it would be the first place a private entry becomes findable by
+attribute.
+
+**No compulsory weekly ritual.** A review the owner must perform is life
+administration, which section 4.5 and section 65 both forbid.
+
+---
+
+## D-170 — Faith's passivity is an interim state, not the product design
+
+**Phase:** 84 records it, 91 builds it · **Status:** Active · **Amends:**
+AUD-0011's disposition and the audit's DO-NOT-CHANGE item 17
+
+`faithPractice` is currently unread by the intelligence layer and declares
+`materialToDecision: false`, and AUD-0011 left the domain inspect-and-record **by
+design**. The owner has now ruled that this is **an interim state and not the
+eventual product design**.
+
+The owner's stated aim, recorded in his own terms: to pursue **greater closeness
+to God and stronger genuine belief while honestly recognising uncertainty**.
+
+**Faith must eventually be able to participate, when the owner chooses that
+direction, in:** destination; discovery; practices and experiences; reflection;
+strategy; and pattern learning.
+
+**It must never:** manufacture certainty; tell the owner what he believes; grade
+faith; treat doubt as failure; claim divine authority (plan section 23); or
+become a devotional app by default.
+
+**Why this is a decision rather than a backlog item:** "respectful" had become
+indistinguishable from "the app permanently does nothing", and a deliberately
+passive domain can still violate the product purpose. Being deliberate did not
+make it adequate. Recording it as an explicit later requirement is what stops the
+non-decision hardening into the design.
+
+**Scope discipline:** this does **not** expand routing 84 beyond its approved
+proving scope of Career, Health and Money. Faith joins when the destination shape
+is proved, in the later intelligence phase.
+
+**The custody-arrangement half of DO-NOT-CHANGE item 17 is untouched** and
+remains correct.
+
+---
+
+## D-171 — Cross-device continuity is deferred; local-first stands
+
+**Phase:** adjudication, after 82 · **Status:** Active
+
+The product remains **local-first**: the owner's own browser storage, with
+explicit backup and restore. Cross-device continuity is **deferred**.
+
+**No accounts, no cloud synchronisation, no server and no new threat model** are
+introduced before release merely to solve it.
+
+**Why:** the owner-use review raises a real tension — the product's argument is
+that it compounds over years, and its substrate can be erased by clearing site
+data — and it explicitly does not demand synchronisation. The cost of an account,
+a server and a data-protection surface for a record this intimate is not
+justified before the product has proved it is worth keeping.
+
+**What still happens:** backup and restore stay complete and owner-controlled
+(Phase 7), reliability work stays in canonical Phase 10 at routing 92, and the
+product is **honest** about being one device and one browser rather than letting
+the owner assume otherwise.
+
+**Revisit** if the owner reopens it, or if release evidence shows the manual
+backup burden is not being carried.
+
+---
+
+## D-172 — Q6 is reopened before routing 91, and the finite concept vocabulary is not the ceiling
+
+**Phase:** before 91 · **Status:** Open — adjudication required before routing 91
+starts
+
+**No live model is wired during routing 83 or 84.** D-024 and D-025 stand for
+those phases.
+
+Before routing 91 begins, the later-intelligence design must explicitly answer:
+
+> **How can this system discover hypotheses, combinations, sequences and
+> potentially important variables that were not manually hardcoded in advance?**
+
+and adjudicate whether **model-assisted hypothesis generation**, **another
+bounded inference mechanism**, or a **hybrid** is required.
+
+**Why it is reopened.** The owner's ranked priority is discovering patterns he
+cannot identify himself. `association.ts` is single-action and two-arm; a
+hand-authored dimension set can only find patterns somebody anticipated; and the
+audit's own words are that the current tournament rubric "measures what rules are
+already good at and cannot detect the difference this audit is about". Separately,
+the product holds **seventeen concepts**, several of them single free-text
+strings, and has none for where the owner was, who he was with, whether he
+trained, or how work went. **The finite concept vocabulary must not silently
+become the permanent ceiling of what the product can understand**, and widening
+it is part of what this adjudication must consider.
+
+**Any model-assisted path must preserve, without exception:**
+
+- provenance;
+- uncertainty;
+- privacy, including D-167's permission;
+- owner correction;
+- deterministic safety constraints;
+- association, never causation (D-089, D-091);
+- **no silent canonical facts from model inference** — an inference is a
+  conclusion with its evidence attached, never a recorded truth.
+
+**D-025 is not reversed by this entry.** It is scheduled for reconsideration on
+evidence, under a rubric strong enough to see the difference (AUD-0039), which is
+the condition D-025 itself named.
+
+**Q1** (Adaya's age and normative references) and **Q4** (legacy evidence
+admissibility) remain deferred as adjudicated. Neither blocks routing 83 or 84.
+
+---
+
+## D-173 — Routing 84 is accepted on an owner journey, not on a set of fields
+
+**Phase:** 84 · **Status:** Active
+
+Routing 84 must not deliver prettier goal fields. Its acceptance gate proves an
+ordinary owner journey, in the owner's own words:
+
+> "I start with a vague desire I have not fully planned myself → the app helps
+> make the desired direction concrete → it establishes enough baseline and
+> unknowns → it identifies a meaningful next milestone → it connects a strategy to
+> that milestone → daily actions can serve that strategy → completion is
+> distinguished from actual progress → the system can acquire additional useful
+> information without requiring me to already understand myself."
+
+That journey runs on the near-empty store D-161 requires, in each of the three
+proving domains — **Career, Health and Money**.
+
+**Why this is the gate rather than a goal:** the review's finding is that the app
+understands activities better than the life those activities are supposed to
+build. A phase that added a destination field to every domain page would satisfy
+a checklist and change nothing about that. The last clause is the load-bearing
+one: **the owner is not required to already understand himself**, which is what
+separates this from an onboarding form.
+
+**Fatherhood is deliberately outside the proving scope.** The growth model is the
+product's best-evidenced mechanism and Phases 81 and 82 each corrected it; it is
+the hardest place to prove a new object and the worst place to break one. It
+joins once the shape is proved.
+
+**The standing guards must still bite at the end of it** — D-162's no-score rule,
+the child copy guard from Phase 81, no wellness composite, no Life Score. A phase
+about progress is where those are most likely to be quietly lost.
+
+---
