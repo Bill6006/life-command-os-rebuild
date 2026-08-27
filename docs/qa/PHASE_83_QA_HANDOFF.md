@@ -25,7 +25,7 @@ conversation may not approve its own phase.
 | Fact                     | Value                                                        |
 | ------------------------ | ------------------------------------------------------------ |
 | Product checkpoint       | `582f648` — the commit the gate was run on (D-147)           |
-| Documentation head       | the commit that adds this file                               |
+| Documentation head       | `51ef425`, plus the commit that records the deployed gate    |
 | Preview                  | https://bill6006.github.io/life-command-os-rebuild/preview/ |
 | Owner-visible behaviour  | **changed** — Now, Timeline, the Private page, two domain-page controls |
 | Owner phone check        | required before GREEN                                        |
@@ -36,6 +36,12 @@ scripts/checkpoint-equivalence.mjs 582f648 --deployed
 https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json`
 reports post-checkpoint changes and whether any is bundle-relevant; D-097 asks
 for equivalence rather than literal SHA equality.
+
+**The builder's own run of it, for you to repeat rather than to trust:** the
+Preview was live at `51ef425` and the checker found seven post-checkpoint files
+— five documents, this file, and `scripts/android-gate.mjs` — none of them
+bundle-relevant. Read the deployed SHA live; a further documentation commit
+moves it again and that is not a reason to refuse to test.
 
 ---
 
@@ -129,8 +135,9 @@ and what QA observes is itself a trigger.
 | `npm run verify`, clean checkout                | PASS                                                 |
 | Unit / contract / synthetic / adversarial       | **1,753 passed** in 80 files (1,675 in 76 before)    |
 | Browser, 360 / 430 / 1,280, one worker          | **582 passed**, 194 per width (552 before)           |
-| Privacy scan                                    | clean, 262 tracked files                             |
-| Android-style gate, deployed                    | see the line below                                   |
+| Privacy scan                                    | clean, 270 tracked files                             |
+| Android-style gate, deployed                    | **clean — 183 checks** against `51ef425` (119 before) |
+| CI on the documentation head                    | Verify **success**, Deploy preview **success**        |
 
 **One browser test flaked once**, in an earlier full-suite run, with
 `net::ERR_ABORTED; maybe frame was detached?` on `page.goto` — the navigation

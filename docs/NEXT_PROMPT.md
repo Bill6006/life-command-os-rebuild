@@ -37,13 +37,14 @@ is section 8 of [`PRODUCT_ADJUDICATION.md`](PRODUCT_ADJUDICATION.md).
 |                                    |                                                                                                   |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------- |
 | Product checkpoint                 | `582f648` — the commit the gate was run on (D-147); `21edfe8` is the last that changes the bundle |
-| Deployed Preview SHA               | may have moved past the checkpoint by the docs commits — **read it live**                         |
+| Deployed Preview SHA               | `51ef425` when the builder last read it; it moves with every docs push — **read it live**         |
 | Relationship                       | proved with `scripts/checkpoint-equivalence.mjs`, never string equality (D-097)                   |
 | Preview                            | https://bill6006.github.io/life-command-os-rebuild/preview/                                       |
 | Unit layer                         | 1,753 / 1,753 across 80 files (was 1,675 across 76)                                               |
 | Browser                            | 582 / 582 — 194 each at 360, 430 and 1,280px (was 552)                                            |
-| `npm run verify` from a clean tree | PASS                                                                                              |
-| Privacy scan                       | clean, 262 tracked files                                                                          |
+| Android gate, deployed             | clean, 183 checks against `51ef425` (was 119)                                                     |
+| `npm run verify` from a clean tree | PASS; CI green on both jobs at the documentation head                                             |
+| Privacy scan                       | clean, 270 tracked files                                                                          |
 | Report path for this phase         | `docs/qa/PHASE_83_QA_HANDOFF.md` — Round 0 is the builder's brief; QA owns everything below it    |
 
 ---

@@ -134,15 +134,17 @@ None.
   of it on this very screen — the _empty_ case, `onlyLater`. The case with rows
   on the page was not, because nothing rendered it.
 - Reproduction: load **"One answer, and a lot of silence"** — four records, one
-  of them dated the following day — and open Timeline. Three rows render and the
-  footer reads _"That is the whole record — 3 entries."_ The page header reads
+  of them dated the following day — and open Timeline. Two rows render, the
+  third record having been superseded by the retraction and the fourth being
+  later, and the footer reads _"That is the whole record — 2 entries."_ The page
+  header reads
   _"Everything that happened, in the order it happened."_ over a record of what
   the owner told the app.
 - Root cause: `TimelineData.total` counts entries at or before the moment being
   read and `later` counts the rest. The footer read `total` and called it the
   record; the lede was written before `later` existed at all.
 - Repair: the footer says what it counted and names the rest — _"That is
-  everything up to the moment on screen — 3 entries. 1 entry is dated later;
+  everything up to the moment on screen — 2 entries. 1 entry is dated later;
   move forward and it is there."_ Where nothing is later the absolute stays,
   because there it is true, which is D-153's own condition. The lede says
   _"Everything recorded here"_, which is the distinction the review asked for in

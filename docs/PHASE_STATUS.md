@@ -139,26 +139,26 @@ opened none.
 
 ## Checkpoint
 
-| Fact                    | Value                                                                      |
-| ----------------------- | -------------------------------------------------------------------------- |
-| Product checkpoint      | `582f648` — the commit the gate was run on (D-147)                         |
-| Documentation head      | the commit that closes this section                                        |
-| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                |
-| Owner-visible behaviour | **changed** — Now, Timeline, the Private page and two domain-page controls |
-| Owner phone check       | required before GREEN                                                      |
-| Independent QA          | required — Codex, new conversation                                         |
+| Fact                    | Value                                                                           |
+| ----------------------- | ------------------------------------------------------------------------------- |
+| Product checkpoint      | `582f648` — the commit the gate was run on (D-147)                              |
+| Documentation head      | `51ef425`, plus the commit that closes this section                             |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/ — live at `51ef425` |
+| Owner-visible behaviour | **changed** — Now, Timeline, the Private page and two domain-page controls      |
+| Owner phone check       | required before GREEN                                                           |
+| Independent QA          | required — Codex, new conversation                                              |
 
 ## Exact verification results
 
-| Gate                                      | Result                                                                        |
-| ----------------------------------------- | ----------------------------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** — format, lint, typecheck, 1,753 tests in 80 files, build            |
-| Unit / contract / synthetic / adversarial | **1,753 passed** (1,675 before this phase; +78)                               |
-| Browser, three widths, one worker         | **582 passed** (552 before this phase; +30) — 194 per width                   |
-| Android-style gate                        | **clean — 183 checks** (119 in Phase 82); the deployed run is in the QA brief |
-| Privacy scan                              | **clean** — 262 tracked files                                                 |
-| Block sweep                               | **PASS** — unchanged, and the three new histories pass it                     |
-| Copy guards                               | **PASS** — no percentage, rank, grade or score about the child or the owner   |
+| Gate                                      | Result                                                                      |
+| ----------------------------------------- | --------------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — format, lint, typecheck, 1,753 tests in 80 files, build          |
+| Unit / contract / synthetic / adversarial | **1,753 passed** (1,675 before this phase; +78)                             |
+| Browser, three widths, one worker         | **582 passed** (552 before this phase; +30) — 194 per width                 |
+| Android-style gate, deployed              | **clean — 183 checks** against `51ef425` (119 in Phase 82)                  |
+| Privacy scan                              | **clean** — 270 tracked files                                               |
+| Block sweep                               | **PASS** — unchanged, and the three new histories pass it                   |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about the child or the owner |
 
 ## The five packages
 
@@ -301,8 +301,8 @@ footnote is worse than none.
 
 **The class was swept and it found two more**, both on Timeline: a page header
 claiming _"Everything that happened"_ over a record of what the owner told the
-app, and a footer calling three of four entries _"the whole record"_ on a history
-with one dated tomorrow. `mostly-unknown` has had that shape since Phase 1.
+app, and a footer calling the two rows it could show _"the whole record"_ on a
+history of four, one of them dated the following day. `mostly-unknown` has had that shape since Phase 1.
 
 **Why every existing sweep passed, which is D-174.** `no-action-copy.test.ts` was
 built for exactly this class and renders every reason at every block — against

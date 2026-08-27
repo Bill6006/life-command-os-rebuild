@@ -1373,7 +1373,7 @@ It should show meaningful history such as:
 - Malformed records should not crash Timeline.
 - Unreadable rows should be isolated/reported.
 - Timeline should never create phantom actionable items from corrupt data.
-- **Timeline describes itself as what is recorded, not as what happened.** The app does not watch the owner's life; it holds what it was told and what it worked out from that. The owner-use review found the page opening with _"Everything that happened, in the order it happened."_ over a partial record, and calling three of four entries "the whole record" on a history holding one dated later. A sentence about how much of the record is on the page is checked against how much is on the page (D-153, D-174).
+- **Timeline describes itself as what is recorded, not as what happened.** The app does not watch the owner's life; it holds what it was told and what it worked out from that. The owner-use review found the page opening with _"Everything that happened, in the order it happened."_ over a partial record, and calling the two rows it could show "the whole record" on a history of four, one of them dated the following day. A sentence about how much of the record is on the page is checked against how much is on the page (D-153, D-174).
 
 ---
 
