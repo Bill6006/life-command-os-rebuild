@@ -6995,7 +6995,7 @@ adjudicated.
 | Previous checkpoints | `da8e4d4` (round 9), `675aedd` (round 8), `6a9c53e` (round 7), `2cdeb4b` (round 6), `dab8c2e` (round 5), `1205402` (round 4), `5936fe2` (round 3), `da1a4ee` (round 2), `0899f18` (round 1), `160ec9a` (first build) |
 | Deployed SHA | `a494d51` at the moment the Android gate and the deployed read below ran. **Read it live** from `preview/build-info.json` |
 | Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
-| Relationship | **PASS** — proved at the checkpoint and again at the documentation head; both outputs are recorded below. Never asserted as string equality (D-097) |
+| Relationship | **PASS** — proved at the checkpoint and again at the documentation head `ff76ebd`; both outputs are recorded below. Never asserted as string equality (D-097) |
 | CI | **green at the product checkpoint `a494d51` — run [33027508786](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33027508786)**, both jobs. The aggregate `npm run verify` was run from a clean clone of the checkpoint and again of the documentation head (D-147) |
 | All seven QA probes | **exit 0, unmodified.** Round 10's was run against the failing tree first and reproduced its one named failure |
 | Report this responds to | the Round 10 section above, in this same file |
@@ -7145,8 +7145,40 @@ Bundle-equivalent: the deployed build at a494d51349771f8d698fff8e2e591d07d88ea07
 serves the same bytes as a494d51.
 ```
 
-The same proof at the documentation head, and the finishing sequence run against
-it, are recorded immediately below this block once that head has deployed.
+And again once the documentation head above had deployed:
+
+```text
+$ node scripts/checkpoint-equivalence.mjs a494d51 \
+    --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Deployed SHA read live from …/preview/build-info.json:
+ff76ebde3d74f743f167e37c91151c8a8760e04e
+
+6 file(s) changed between a494d51 and ff76ebde…, none of them bundle-relevant:
+  - docs/DECISION_LOG.md
+  - docs/DEFECT_LEDGER.md
+  - docs/PHASE_STATUS.md
+  - docs/qa/PHASE_82_QA_HANDOFF.md
+  - docs/qa/evidence/phase82-round10-boundary-probe.ts
+  - docs/qa/evidence/phase82-round10-mutations.mjs
+
+Bundle-equivalent: the deployed build at ff76ebde… serves the same bytes as
+a494d51.
+```
+
+CI at `ff76ebd` is green in **both** jobs, including the deploy job's live
+read-back — run [33028490499](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33028490499).
+The commit carrying this paragraph moves the live SHA once more, which is the
+case D-097 exists for — **run the checker rather than comparing these strings.**
+
+**The D-147 finishing sequence, in the order it requires.** The last commit was
+made; the tracked head was cloned into an empty directory; `npm ci` and then the
+**aggregate** `npm run verify` were run there and exited 0 — 1,664 tests across
+74 files, then the build; CI was waited for and finished green at that same SHA
+in both jobs; and all seven of QA's probes were run **from that clean clone** and
+exited 0, then confirmed byte-unmodified against their committed bytes. Only then
+were these counts written down. The clean clone was confirmed not to contain the
+untracked owner-review file.
 
 **The untracked owner-review file** still warns under `npm run format:check` in
 this working directory. It is untracked, unchanged, absent from the clean clone
@@ -7278,9 +7310,9 @@ Repaired product checkpoint:
 a494d51349771f8d698fff8e2e591d07d88ea07e
 
 Deployed SHA when the builder last proved equivalence:
-__DOCSHA__ — bundle-equivalent to the checkpoint, proved by the
-checker rather than by string equality, per D-097. Read it live from
-preview/build-info.json and prove it again; the commit that records this
+ff76ebde3d74f743f167e37c91151c8a8760e04e — bundle-equivalent to the checkpoint,
+proved by the checker rather than by string equality, per D-097. Read it live
+from preview/build-info.json and prove it again; the commit that records this
 paragraph moves the live SHA once more.
 
 Preview:
