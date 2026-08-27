@@ -1113,8 +1113,9 @@ instrument first, and it is the one thing to read before the packages.
 | --------------------------- | ------------------------------------------------------------------------ |
 | Final status                | **GREEN**                                                                |
 | Approved product checkpoint | `9e6d46e`                                                                |
-| Closing SHA                 | the documentation commit that carries this section                       |
-| Deployed Preview SHA        | read live after the closeout push; proved with `checkpoint-equivalence.mjs` |
+| Closing SHA                 | `ce91f77`; the finishing sequence is recorded at `d42689c`                |
+| Deployed Preview SHA        | `d42689c`, read live — bundle-equivalent to `9e6d46e`, six documentation files changed and none bundle-relevant |
+| CI at the closeout head     | Verify **success**, Deploy preview **success**                           |
 | QA report                   | this file — rounds 1 and 2                                               |
 | Owner phone test            | still required before release                                            |
 | Next phase                  | routing **84**, Claude Opus-class, **Max**, a **NEW** conversation        |

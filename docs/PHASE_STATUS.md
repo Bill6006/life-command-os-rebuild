@@ -170,7 +170,9 @@ it are QA's and are not edited.
 | First submission (round 1)  | `582f648`, deployed `ab6b47f` — the checkpoint QA tested and failed                                                         |
 | QA read the repository at   | `cba5e44`, documentation-only after the checkpoint                                                                          |
 | Deployed at the retest      | `cba5e44`, proved bundle-equivalent to `9e6d46e` with `checkpoint-equivalence.mjs`                                          |
-| Closing SHA                 | the documentation commit that closes this section                                                                           |
+| Closing SHA                 | `ce91f77`, with the finishing sequence recorded at `d42689c`                                                                |
+| Deployed at the closeout    | `d42689c`, proved bundle-equivalent to `9e6d46e` — six documentation files changed, none bundle-relevant                    |
+| CI at the closeout head     | Verify **success**, Deploy preview **success**                                                                              |
 | Preview                     | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                 |
 | Owner-visible behaviour     | **changed** — Now, Timeline, the Private page, two domain-page controls, and the belief sentence and its correction control |
 | Owner phone check           | still owed before release; not a blocker QA can clear                                                                       |
