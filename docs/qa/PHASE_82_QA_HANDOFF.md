@@ -7768,7 +7768,7 @@ settle it.
 | Previous checkpoints | `a494d51` (round 10), `da8e4d4` (round 9), `675aedd` (round 8), `6a9c53e` (round 7), `2cdeb4b` (round 6), `dab8c2e` (round 5), `1205402` (round 4), `5936fe2` (round 3), `da1a4ee` (round 2), `0899f18` (round 1), `160ec9a` (first build) |
 | Deployed SHA | `5dd55cc` at the moment the Android gate and the deployed read below ran. **Read it live** from `preview/build-info.json` |
 | Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
-| Relationship | **PASS** — proved at the checkpoint and again at the documentation head; both outputs are recorded below. Never asserted as string equality (D-097) |
+| Relationship | **PASS** — proved at the checkpoint and again at the documentation head `b03a3a5`; both outputs are recorded below. Never asserted as string equality (D-097) |
 | CI | **green at the product checkpoint `5dd55cc` — run [33039064910](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33039064910)**, both jobs. The aggregate `npm run verify` was run from a clean clone of the checkpoint and again of the documentation head (D-147) |
 | QA probes, rounds 4–10 | **exit 0, unmodified** |
 | QA probe, round 11 | **6 of 7 checks pass, unmodified.** The seventh is the disagreement below |
@@ -7899,6 +7899,87 @@ Every figure names the head it was measured on — D-147.
 
 One new test file: `tests/synthetic/qa-82-round-11.test.ts`, 11 tests.
 
+**Both reproductions, read as a person on the deployed build** at 360 and 430px,
+before any of this was written.
+
+At QA's exact clock — **A Thursday with nothing needing doing**, +1 week pressed
+four times to owner-local `2026-04-16 20:30` — Now displays *"How much energy have
+you got left?"* and Life reads:
+
+```text
+Going quiet
+Health & Physical Capacity
+  Nothing has come in about health & physical capacity for 5 weeks.
+  A question will cover it.
+The app will try to bring these back on its own.
+```
+
+The two screens now say the same thing. At **A month of what actually worked**,
+owner-local `2026-03-19 19:30`, Now offers *"Spend 15 minutes clearing the
+kitchen"*; after pressing **Start it** and nothing further, Home reads *"Going
+quiet … Something worth doing here may come up on Now"* — not *"An answer is
+already on its way."* Neither width overflows sideways, and the three route
+sentences appear distinctly on the same page.
+
+**The browser matrix ran once and came back 552 / 552**, with no retry and no
+rotating `page.goto` transient — the first clean single run since round 8.
+
+**Equivalence, proved rather than compared.** Run while the Preview served the
+checkpoint itself, before this documentation commit:
+
+```text
+$ node scripts/checkpoint-equivalence.mjs 5dd55cc     --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Deployed SHA read live from …/preview/build-info.json:
+5dd55cc0bb831fade20371332fb4d7745f61a2e1
+
+No files changed between 5dd55cc and 5dd55cc0bb831fade20371332fb4d7745f61a2e1.
+
+Bundle-equivalent: the deployed build at 5dd55cc0bb831fade20371332fb4d7745f61a2e1
+serves the same bytes as 5dd55cc.
+```
+
+And again once the documentation head above had deployed:
+
+```text
+$ node scripts/checkpoint-equivalence.mjs 5dd55cc \
+    --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Deployed SHA read live from …/preview/build-info.json:
+b03a3a5aafe3ac9fb2d90b92605417653a12da63
+
+6 file(s) changed between 5dd55cc and b03a3a5a…, none of them bundle-relevant:
+  - docs/DECISION_LOG.md
+  - docs/DEFECT_LEDGER.md
+  - docs/PHASE_STATUS.md
+  - docs/qa/PHASE_82_QA_HANDOFF.md
+  - docs/qa/evidence/phase82-round11-boundary-probe.ts
+  - docs/qa/evidence/phase82-round11-mutations.mjs
+
+Bundle-equivalent: the deployed build at b03a3a5a… serves the same bytes as
+5dd55cc.
+```
+
+CI at `b03a3a5` is green in **both** jobs, including the deploy job's live
+read-back — run [33039945333](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33039945333).
+The commit carrying this paragraph moves the live SHA once more, which is the
+case D-097 exists for — **run the checker rather than comparing these strings.**
+
+**The D-147 finishing sequence, in the order it requires.** The last commit was
+made; the tracked head was cloned into an empty directory; `npm ci` and then the
+**aggregate** `npm run verify` were run there and exited 0 — 1,675 tests across
+75 files, then the build; CI was waited for and finished green at that same SHA
+in both jobs; and all eight of QA's probes were run **from that clean clone** —
+the first seven exit 0 and round 11's reports the same 6 of 7 — then confirmed
+byte-unmodified against their committed bytes. Only then were these counts
+written down. The clean clone was confirmed not to contain the untracked
+owner-review file.
+
+**The untracked owner-review file** still warns under `npm run format:check` in
+this working directory. It is untracked, unchanged, absent from the clean clone
+and from CI — confirmed again rather than asserted — and everything was staged by
+explicit path.
+
 ## Every reintroduction, and its result
 
 Each applied to the repaired tree, the named suites run, the tree restored.
@@ -8007,9 +8088,9 @@ Repaired product checkpoint:
 5dd55cc0bb831fade20371332fb4d7745f61a2e1
 
 Deployed SHA when the builder last proved equivalence:
-__DOCSHA__ — bundle-equivalent to the checkpoint, proved by the
-checker rather than by string equality, per D-097. Read it live from
-preview/build-info.json and prove it again; the commit that records this
+b03a3a5aafe3ac9fb2d90b92605417653a12da63 — bundle-equivalent to the checkpoint,
+proved by the checker rather than by string equality, per D-097. Read it live
+from preview/build-info.json and prove it again; the commit that records this
 paragraph moves the live SHA once more.
 
 Preview:
