@@ -8572,5 +8572,34 @@ integer **strictly greater than 82**. The phase called "Phase 9" must route as
 **90** — never 9, 09, 8.3 or 9.1, all of which parse to something ≤ 82 and would
 silently never route. The document name and the routing integer may differ; the
 `**Phase:**` field carries the routing integer.
+---
+
+## Post-closeout dispatch log
+
+Phase 82 is closed. This section exists only to record dispatches that arrived
+**after** the GREEN closeout above, so that a re-dispatch leaves a trace instead
+of looking like silence.
+
+**Nothing below changes the phase, the checkpoint, or any result.** The product
+checkpoint is still `5dd55cc`, Phase 82 is still GREEN, and the next step is
+still the held product adjudication in [`../NEXT_PROMPT.md`](../NEXT_PROMPT.md).
+
+| When | What arrived | What was done |
+| --- | --- | --- |
+| 2026-08-27 | A builder dispatch against this file, after closeout. The orchestrator's own `active_run` recorded `dispatched_already_complete: true`, `conversation_key: phase:82\|role:builder` | **No work.** The terminal section of this file is the builder's own closeout, not a QA report, so it parses builder → builder and contains nothing to execute. No product code, test, document or checkpoint was touched. This row was appended so the run has a signature to complete against |
+
+**Why this happens, and what stops it.** The completion contract reads the last
+meaningful line of the dispatched file. That marker survives on disk after a
+round finishes, so a completed handoff stays re-dispatchable — a present marker
+is not an all-clear. With Phase 82 complete and `auto_run_across_phases` off,
+this file is the newest routable candidate and there is no next QA report to move
+to, so it can be handed out again.
+
+The campaign is at a **deliberate owner-gated pause**, so the orchestrator should
+be paused too, or pointed at the adjudication once the owner opens it. That is
+the owner's call and was not made here: this conversation does not change
+orchestrator state.
+
+**A re-dispatch should add one row above, not a second section.**
 
 <!-- LCO_COMPLETE -->
