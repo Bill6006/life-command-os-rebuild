@@ -34,6 +34,16 @@ The builder's own report is [`PHASE_STATUS.md`](PHASE_STATUS.md); the QA brief
 is [`qa/PHASE_83_QA_HANDOFF.md`](qa/PHASE_83_QA_HANDOFF.md); the specification
 is section 8 of [`PRODUCT_ADJUDICATION.md`](PRODUCT_ADJUDICATION.md).
 
+**Which file the orchestrator executes: this one.**
+[`qa/PHASE_83_QA_HANDOFF.md`](qa/PHASE_83_QA_HANDOFF.md) is the report. It
+holds the builder's Round 0 submission and every QA round after it, and QA owns
+it from Round 1. It carries no PASS or FAIL, because the phase is YELLOW and no
+independent QA has run yet — a builder conversation may not write a verdict for
+itself (D-077). The orchestrator reads a QA-named file as a QA report and
+expects a verdict in it, so on equal freshness that file wins the tie and stops
+on the missing verdict. This file is therefore committed *after* it, and is the
+executable handoff until QA writes the next one.
+
 |                                    |                                                                                                   |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------- |
 | Product checkpoint                 | `582f648` — the commit the gate was run on (D-147); `21edfe8` is the last that changes the bundle |
