@@ -39,6 +39,40 @@ None.
 
 ## Fixed
 
+### DEF-0119 — the question about a finished course keyed on a state nothing writes
+
+- Status: Fixed
+- Severity: Blocker — two new `OutcomeAspect`s with no reachable control, which
+  is the exact pattern this phase exists to stop repeating
+- Found in: routing 84 / `2b960cb`
+- Found by: the builder, writing the test that asks whether the thing can be
+  reached at all. Every other test of the two aspects passed without it.
+- Class: **a reader keyed on a value the writer never produces** — AUD-0050's
+  pattern, and routing 83 found the same shape in `action-unable-now.blocker`:
+  complete plumbing, no control.
+- Reproduction: start the recovery run the app offers beside a recovery move,
+  complete its three occasions, travel past its expiry, and call
+  `dueCourseReflections`. It returns nothing, for ever.
+- Root cause: it required `thread.state === 'done'`, and **nothing writes that
+  state**. The Life panel offers *Stop this* and *Pick this up again*, so the
+  only states an owner can write are `abandoned` and `running`; a course that
+  simply ran to its end stays `running` with `live: false`. `ThreadState`
+  carries `done` because the record kind was written with four states in Phase
+  82, and no control ever reached the fourth.
+- Repair: `ActiveThread.finished` — one definition, computed where the rest of
+  the thread's standing is: `state === 'done'`, or `running` with as many
+  occasions behind it as the plan expected. Abandoned is not finished and
+  neither is paused; he said so.
+- Regression: `tests/synthetic/destination-and-discovery.test.ts` — "asks a
+  finished course what is left of it, days later", which starts the course the
+  app offers, finishes it through the ordinary controls over three evenings, and
+  is asked. It fails on the original condition.
+- Siblings: swept. `retained` and `transfer` are the only aspects reached from
+  outside `outcomes.ts`, and `finished` is read in one place.
+- Fixed in: the commit that adds this entry
+
+---
+
 ### DEF-0117 — naming the next step wrote the owner's aspiration into the record a second time
 
 - Status: Fixed
@@ -65,7 +99,7 @@ None.
   next step without the aim appearing twice", which asserts one destination, one
   milestone, and the next step reading back.
 - Siblings: none. It is the only place two builders could write the same object.
-- Fixed in: `e78d70b`
+- Fixed in: `2b960cb`
 
 ---
 
@@ -94,7 +128,7 @@ None.
 - Siblings: swept. `proposeAuthoring` is the only other place a time or a day is
   read from owner input, and it reports a missing one as a problem rather than
   supplying it.
-- Fixed in: `e78d70b`
+- Fixed in: `2b960cb`
 
 ---
 

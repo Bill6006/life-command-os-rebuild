@@ -82,7 +82,9 @@ import {
 } from '../../src/intelligence/blockers'
 import {
   courseReflectionRecord,
+  nextCourseReflection,
   readProgress,
+  type CourseReflection,
   type ProgressReading,
 } from '../../src/intelligence/progress'
 import {
@@ -699,6 +701,12 @@ export interface JourneyApp {
   redate(record: RecordId, to: LocalDayId): Promise<GestureResult>
   /** What the app can say about progress here, sorted onto its six rungs. */
   progress(domains: readonly LifeDomainId[]): ProgressReading
+  /** Start the course being offered beside the move on Now, if one is. */
+  startCourse(): Promise<GestureResult>
+  /** The question a finished course is being asked, if any. */
+  courseQuestion(): CourseReflection | undefined
+  /** Answer it, the way the domain page's control does. */
+  answerCourse(answer: OutcomeAnswer, domain: LifeDomainId): Promise<GestureResult>
 }
 
 /**
@@ -1050,6 +1058,45 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
     },
 
     progress: (domains) => readProgress(situation(), domains),
+
+    async startCourse() {
+      const current = decision()
+      const target = current.explanation?.semantics.target
+      if (target === undefined) return { done: false, note: 'no move on screen', written: 0 }
+      const offer = threadOfferFor(
+        current.situation.threads,
+        target,
+        current.situation.entities.labelFor(target.object) ?? '',
+      )
+      if (offer === undefined) return { done: false, note: 'no course is offered', written: 0 }
+      return write(
+        [
+          startThreadRecord(
+            {
+              kind: offer.kind,
+              subject: offer.subject,
+              subjectLabel: offer.subjectLabel,
+              domain: offer.domain,
+            },
+            { now: at, zone, recordedAt: systemClock().now() },
+          ),
+        ],
+        `started the ${offer.kind}`,
+      )
+    },
+
+    courseQuestion: () => nextCourseReflection(situation()),
+
+    async answerCourse(answer, domain) {
+      const asked = nextCourseReflection(situation())
+      if (asked === undefined) {
+        return { done: false, note: 'no course is being asked about', written: 0 }
+      }
+      return write(
+        [courseReflectionRecord(asked, answer, domain, authoringMoment())],
+        `answered "${asked.prompt}"`,
+      )
+    },
   }
 }
 

@@ -169,6 +169,24 @@ export interface ActiveThread {
   readonly done: number
   /** Past its own date. Kept visible, no longer in force. */
   readonly expired: boolean
+  /**
+   * Whether the plan actually happened — routing 84.
+   *
+   * A course that expected three occasions and had three is **finished**,
+   * whatever its record still says. Nothing writes `state: 'done'`: the Life
+   * panel offers **Stop this** and **Pick this up again**, so the only states
+   * an owner can write are `abandoned` and `running`, and a run that simply
+   * completed stays `running` with `live: false`.
+   *
+   * That mattered the moment something wanted to ask a question **about a
+   * finished course** (F05's retained-capability rung). A reader that keyed on
+   * `state === 'done'` would have been a question nothing could ever reach —
+   * complete plumbing with no control, which is AUD-0050's pattern and the one
+   * this phase exists to stop repeating.
+   *
+   * Abandoned is not finished, and neither is paused. He said so.
+   */
+  readonly finished: boolean
   /** Whether it still pulls on a decision: running, unexpired and unfinished. */
   readonly live: boolean
 }
@@ -244,6 +262,7 @@ export function activeThreads(
       source: record.id,
       done,
       expired,
+      finished: record.state === 'done' || (record.state === 'running' && done >= record.steps),
       live: record.state === 'running' && !expired && done < record.steps,
     })
   }

@@ -15,7 +15,7 @@ launcher (D-092, D-083).
 
 **Routing 84 is YELLOW — READY FOR INDEPENDENT QA.** A builder conversation may
 not approve its own phase (D-077). The build is at product checkpoint
-`e78d70b`; the brief for QA is
+`2b960cb`; the brief for QA is
 [`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md) and the phase record is
 [`PHASE_STATUS.md`](PHASE_STATUS.md).
 
@@ -131,7 +131,7 @@ trying to become."
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Routing 84 is YELLOW — READY FOR INDEPENDENT QA at product checkpoint e78d70b.
+Routing 84 is YELLOW — READY FOR INDEPENDENT QA at product checkpoint 2b960cb.
 A builder conversation may not approve its own phase (D-077).
 
 Read, in full, and in this order:
@@ -149,8 +149,8 @@ Read, in full, and in this order:
 6. docs/PHASE_STATUS.md — the routing 84 record, and the routing 83 record
                           above it whose enumerated brief was this phase's scope
 
-Confirm the deployed build against e78d70b before testing:
-  node scripts/checkpoint-equivalence.mjs e78d70b --deployed \
+Confirm the deployed build against 2b960cb before testing:
+  node scripts/checkpoint-equivalence.mjs 2b960cb --deployed \
     https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
 
 Test on the near-empty store — "The first evening" in the QA laboratory — because
@@ -188,7 +188,7 @@ Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the QA protocol in
 docs/qa/README.md exactly as written. Step 1 is cold use of the deployed
 Preview before any repository document.
 
-Product checkpoint: e78d70b. Your **Phase:** field is 84.
+Product checkpoint: 2b960cb. Your **Phase:** field is 84.
 
 Write your findings into docs/qa/PHASE_84_QA_HANDOFF.md from Round 1 on. Do not
 change product code, and do not approve your own reading of the builder's

@@ -159,7 +159,7 @@ through the same controls, now gets past all eight steps.
 
 | Fact                    | Value                                                       |
 | ----------------------- | ----------------------------------------------------------- |
-| Product checkpoint      | `e78d70b` — the commit the aggregate gate was run on        |
+| Product checkpoint      | `2b960cb` — the commit the aggregate gate was run on        |
 | Deployed at the handoff | see below                                                   |
 | CI at the checkpoint    | see below                                                   |
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/ |
@@ -172,7 +172,7 @@ through the same controls, now gets past all eight steps.
 | Gate                                      | Result                                                            |
 | ----------------------------------------- | ----------------------------------------------------------------- |
 | `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)         |
-| Unit / contract / synthetic / adversarial | **1,806 passed** in 83 files (1,765 in 82 before)                 |
+| Unit / contract / synthetic / adversarial | **1,810 passed** in 83 files (1,765 in 82 before)                 |
 | Browser, three widths, one worker         | **BROWSER_COUNT passed** (591 before)                             |
 | Android-style gate, deployed              | **ANDROID**                                                       |
 | Privacy scan                              | **clean** — 283 tracked files                                     |
@@ -296,6 +296,59 @@ at all, and the reading resolves to `unknown` with the new reason `withheld`.
 When it is on, the rendered reading stays the discreet placeholder — D-167's
 structural discretion guard, which is a precondition rather than a substitute
 for consent.
+
+## Five defects, and none of them was reported
+
+Worth its own section because of where they came from rather than what they
+were. Nothing external found any of them: two by the builder's own gate the
+first time it ran against code that existed, and three by the builder reading
+its own work back before writing the handoff.
+
+**DEF-0115 and DEF-0116 are one class, and it is the class D-179 was written
+for.** Two guards that read source could not see correct code: the
+accessible-name scan did not recognise a plain quoted `htmlFor`, so every
+correctly labelled control this phase added read as unlabelled; and the
+instrument's builder reader looked for a return type ending in `Record`, so it
+could not see either of the two highest-leverage controls in the phase — both of
+which return entities and records together, because that is one act (D-182).
+The second is D-179's own failure mode occurring **inside** the guard D-179 was
+written for: the exhaustiveness claim stayed true of everything the reader could
+see. Both were one edit from being hidden behind an exemption, and **D-183** is
+the rule that came out of it: a source-reading guard is widened by the spelling
+it could not read, never exempted from it.
+
+**DEF-0117 and DEF-0118 are the class the whole review is about** — the app
+saying something the owner did not.
+
+- Naming the next step on a destination that already existed ran the destination
+  builder again, so a second `destination` record carrying the same aim went
+  into the history. The entity id is derived from the label, so the entity was
+  written over itself and nothing errored; the duplication is in the record
+  layer, and the surface reads the record layer. The owner would have read his
+  own aspiration twice on one page, with half its milestones under each.
+- The second agenda's commitment prompt asked for a name and a start time and
+  then wrote `weekdays: [3]` — a Wednesday out of a question that never
+  mentioned a day. F36's own sentence is *"do not silently infer a consequential
+  fact from ambiguous prose"*, and that is this, in the phase built to answer it.
+
+Both have a regression that fails when the shape returns, and adding the
+milestone builder made the route table incomplete — which the reader D-183 had
+just been widened to notice, and did.
+
+**DEF-0119 is the one worth reading last**, because it is the pattern this whole
+phase exists to stop repeating. `dueCourseReflections` asks a finished course
+what is left of it, and it keyed on `thread.state === 'done'` — a state
+**nothing writes**. The Life panel offers *Stop this* and *Pick this up again*,
+so a course that simply runs to its end stays `running`; the fourth thread state
+has existed since Phase 82 with no control that reaches it. Two new
+`OutcomeAspect`s would have shipped with no path to either, which is
+`action-unable-now.blocker` all over again, one phase after routing 83 found it.
+
+It was caught by writing the test that asks whether the thing can be **reached**
+rather than whether it behaves once reached. Every other test of the two aspects
+passed without it, and that is worth saying plainly: D-161's whole argument is
+that reachability is a separate question from correctness, and this phase found
+its own example of the difference.
 
 ## The gate, item by item
 

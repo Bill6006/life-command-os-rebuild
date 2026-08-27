@@ -278,7 +278,17 @@ export function dueCourseReflections(situation: Situation): readonly CourseRefle
 
   const out: CourseReflection[] = []
   for (const thread of situation.threads) {
-    if (thread.state !== 'done') continue
+    /*
+     * `finished`, not `state === 'done'`.
+     *
+     * Nothing writes that state: the Life panel offers **Stop this** and **Pick
+     * this up again**, so a course that simply ran its three occasions stays
+     * `running` with `live: false`. Keying on the record's own word would have
+     * made this question unreachable — a field written by nothing and read by
+     * nothing, which is the pattern routing 83 found in `blocker` and the one
+     * this phase is here to stop repeating.
+     */
+    if (!thread.finished) continue
     const subject = situation.entities.labelFor(thread.subject)
     // No subject, no sentence — D-018 at the one place a question could go
     // wrong. A course whose topic no longer resolves is not asked about.
@@ -302,6 +312,16 @@ export function dueCourseReflections(situation: Situation): readonly CourseRefle
       ],
     ] as const) {
       if (already.has(aspect)) continue
+      /*
+       * Counted from the plan's own end date rather than from the day the last
+       * occasion happened.
+       *
+       * `expiresOn` is set when the course starts and never extended, and it is
+       * the later of the two — so the question can only ever arrive **after**
+       * the run is genuinely behind him, never in the middle of a week he is
+       * still finishing it in. A course finished early waits a few days longer,
+       * which is the right way round for a question about what stayed.
+       */
       const opensOn = addLocalDaysToDayId(thread.expiresOn, after)
       const closesOn = addLocalDaysToDayId(opensOn, OPEN_FOR_DAYS)
       const today = situation.dayId

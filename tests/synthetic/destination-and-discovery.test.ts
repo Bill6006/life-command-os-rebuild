@@ -964,3 +964,85 @@ describe('routing 84 — three proving domains, not twelve', () => {
     }
   })
 })
+
+// ---------------------------------------------------------------------------
+// The rung that is furthest from anything — reachable, or it is not a rung
+// ---------------------------------------------------------------------------
+
+describe('routing 84 item 2 — the two course-scale questions can actually be reached', () => {
+  it('asks a finished course what is left of it, days later', async () => {
+    /*
+     * The anti-vacuity check, and the reason it is worth its own test.
+     *
+     * `retained` and `transfer` are new `OutcomeAspect`s, and an aspect nothing
+     * can write is the pattern routing 83 found in `blocker`: complete
+     * plumbing, no control. So this reaches one the way an owner would — start
+     * the recovery run the app offers beside a recovery move, finish its three
+     * occasions, wait, and be asked.
+     *
+     * The first draft of `dueCourseReflections` keyed on `thread.state ===
+     * 'done'`, which **nothing writes**: the Life panel offers Stop this and
+     * Pick this up again, so a course that simply ran to its end stays
+     * `running`. This test is what found that.
+     */
+    const app = await openJourney('the-first-evening')
+    await app.answerGuide('empty')
+    expect((await app.startCourse()).done, 'no course was offered').toBe(true)
+
+    const thread = app.situation().threads[0]
+    expect(thread, 'the course is not in the situation').toBeDefined()
+
+    /*
+     * Its three occasions, on three evenings — and each evening opens the way
+     * an evening opens: the app asks how much is left before it suggests
+     * anything. Answering first is the ordinary shape of the day rather than
+     * scaffolding, and skipping it is what a fixture would do.
+     */
+    for (let day = 0; day < thread!.steps; day += 1) {
+      for (let asked = 0; asked < 3 && app.decision().kind !== 'move'; asked += 1) {
+        const step = app.guide()
+        if (step.kind !== 'question' || step.question === undefined) break
+        await app.answerGuide(
+          step.question.spec.concept === CONCEPT.energy
+            ? 'empty'
+            : step.question.spec.concept === CONCEPT.sleepHours
+              ? 'under-5'
+              : undefined,
+        )
+      }
+      const decision = app.decision()
+      expect(
+        (await app.act('start')).done,
+        `occasion ${day}: ${decision.noAction?.headline ?? decision.explanation?.rendered.sentence ?? ''}`,
+      ).toBe(true)
+      expect((await app.act('complete')).done, `occasion ${day} could not be finished`).toBe(true)
+      /*
+       * Two days between them, not one, and that is the app rather than the
+       * test: a recovery night is not put in front of him the evening after a
+       * recovery night, which is the anti-repetition rule doing its job. A run
+       * of three takes about a week, which is what the plan's ten-day expiry is
+       * sized for.
+       */
+      app.travelDays(2)
+    }
+    expect(app.situation().threads[0]?.finished, 'the run did not finish').toBe(true)
+
+    // Nothing is asked while the plan is still running its course.
+    expect(app.courseQuestion(), 'asked before the course was behind him').toBeUndefined()
+
+    // And days after its own end date, it is.
+    app.travelDays(8)
+    const asked = app.courseQuestion()
+    expect(asked, 'a finished course is never asked what is left of it').toBeDefined()
+    expect(asked?.aspect).toBe('retained')
+    expect(asked?.prompt).toContain('still there')
+
+    const answered = await app.answerCourse(asked!.answers[1]!, DOMAIN.sleep)
+    expect(answered.done, answered.note).toBe(true)
+
+    // It lands on its own rung, above the sessions and separate from them.
+    const progress = app.progress([DOMAIN.sleep, DOMAIN.health])
+    expect(progress.rungs.some((rung) => rung.kind === 'retained-capability')).toBe(true)
+    expect(progress.strongest).toBe('retained-capability')
+  })
+})
