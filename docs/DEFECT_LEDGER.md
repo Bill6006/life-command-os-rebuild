@@ -70,7 +70,7 @@ None.
   fail.
 - Siblings: checked. The other documentation commits in this phase were pushed
   and CI was green on each.
-- Fixed in: the routing 83 round-1 repair checkpoint
+- Fixed in: `9e6d46e`, the routing 83 round-1 repair — the checkpoint independent QA passed in round 2
 
 ### DEF-0113 — an instrument claimed to list every owner control and listed most of them
 
@@ -120,7 +120,7 @@ beliefCorrectionRecord (insights)` — the file and the control QA named.
   store from a file. `MemoryProvider` appends derived outcomes on its own; it is
   deliberate, documented, and now listed as a write that is not a control rather
   than filtered out silently.
-- Fixed in: the routing 83 round-1 repair checkpoint
+- Fixed in: `9e6d46e`, the routing 83 round-1 repair — the checkpoint independent QA passed in round 2
 
 ### DEF-0112 — a deferral counted the hold's occasions beside the held move's conclusion
 
@@ -155,7 +155,7 @@ beliefCorrectionRecord (insights)` — the file and the control QA named.
 - Siblings: checked. `observed` was reading the same rewritten target and now
   reads the move's; `rates` and the context split are each named from their own
   set (D-178).
-- Fixed in: the routing 83 round-1 repair checkpoint
+- Fixed in: `9e6d46e`, the routing 83 round-1 repair — the checkpoint independent QA passed in round 2
 
 ### DEF-0111 — the action's name was lost at the two places it mattered most
 
@@ -192,7 +192,7 @@ beliefCorrectionRecord (insights)` — the file and the control QA named.
   kitchen…"_ and says why it changed.
 - Siblings: swept. Every history at every block; the association aspect was
   already correct and is untouched.
-- Fixed in: the routing 83 round-1 repair checkpoint
+- Fixed in: `9e6d46e`, the routing 83 round-1 repair — the checkpoint independent QA passed in round 2
 
 ### DEF-0110 — one occasion was called "the last few times"
 
@@ -231,7 +231,7 @@ beliefCorrectionRecord (insights)` — the file and the control QA named.
   words — is not the app's claim to make, and the sweep allows it only where the
   phrase appears word for word in a record the history holds.
 - Siblings: swept, and one more was found — DEF-0112.
-- Fixed in: the routing 83 round-1 repair checkpoint
+- Fixed in: `9e6d46e`, the routing 83 round-1 repair — the checkpoint independent QA passed in round 2
 
 ### DEF-0109 — two owner-facing inputs with no accessible name
 
@@ -272,7 +272,7 @@ beliefCorrectionRecord (insights)` — the file and the control QA named.
 - Also repaired, because F40 asks for it in the same breath: both controls now
   state what the app wants and what it will do with the answer. A name satisfies
   a checker; the note is for the owner.
-- Fixed in: the routing 83 checkpoint
+- Fixed in: `582f648`, carried into the approved checkpoint `9e6d46e` and confirmed still closed by independent QA in round 2
 
 ### DEF-0108 — the Private page promised more than the behaviour keeps
 
@@ -313,7 +313,7 @@ beliefCorrectionRecord (insights)` — the file and the control QA named.
   a recommendation. That is D-167's owner permission, it is off by default, and
   it is routing 84's. This entry is about a sentence that was false whatever
   that permission later does.
-- Fixed in: the routing 83 checkpoint
+- Fixed in: `582f648`, carried into the approved checkpoint `9e6d46e` and confirmed still closed by independent QA in round 2
 
 ### DEF-0107 — Timeline called part of the record the whole of it, under a heading claiming everything that happened
 
@@ -353,7 +353,7 @@ beliefCorrectionRecord (insights)` — the file and the control QA named.
 - Siblings: swept. Every history in the library at every block, and every
   no-action sentence at every history size. The `Show earlier (N more)` count is
   `total - shown`, both counted; the `onlyLater` sentence was already repaired.
-- Fixed in: the routing 83 checkpoint
+- Fixed in: `582f648`, carried into the approved checkpoint `9e6d46e` and confirmed still closed by independent QA in round 2
 
 ### DEF-0106 — a sentence called any non-empty history "plenty"
 
@@ -388,7 +388,7 @@ beliefCorrectionRecord (insights)` — the file and the control QA named.
 - Siblings: checked, and one more was found — DEF-0107. The `everything-ruled-out`
   and `nothing-in-reach` sentences were already grounded in what their rejection
   lists counted.
-- Fixed in: the routing 83 checkpoint
+- Fixed in: `582f648`, carried into the approved checkpoint `9e6d46e` and confirmed still closed by independent QA in round 2
 
 ### DEF-0105 — a completion three days back settled today's recommendation and disabled every control on it
 
@@ -453,7 +453,7 @@ beliefCorrectionRecord (insights)` — the file and the control QA named.
   uses a deliberate one-day suppression window and is about filtering a
   candidate rather than resolving a state; `refusalsInBlock` is block-scoped.
   The library-wide sweep is what says there is no second instance.
-- Fixed in: the routing 83 checkpoint
+- Fixed in: `582f648`, carried into the approved checkpoint `9e6d46e` and confirmed still closed by independent QA in round 2
 
 ### DEF-0104 — a regression test that could not have failed
 

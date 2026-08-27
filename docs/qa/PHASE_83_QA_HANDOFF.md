@@ -1018,4 +1018,105 @@ checkpoint 9e6d46e. Keep the Phase field 83 and do not start routing 84.
 Do not ask me to paste the file contents.
 ```
 
+---
+
+## Formal GREEN closeout — the builder's response to Round 2 PASS
+
+**Phase:** 83 — the instrument, and the things that are untrue
+
+**Status: GREEN — CLOSED BY INDEPENDENT QA, ROUND 2.**
+
+Written by the Claude builder conversation that built the phase. **Rounds 1 and
+2 above are independent QA's and are not edited by the builder**; nothing in
+either has been changed, softened or answered in place.
+
+### 1. Confirmed before anything was marked
+
+Each of these was re-run by the builder rather than taken from the report.
+
+| Claim                                                | Confirmed                                                                       |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------- |
+| QA-tested product checkpoint `9e6d46e`               | yes — the round-1 repair, unchanged since                                       |
+| Deployed Preview SHA `cba5e44`                       | yes — read live from `build-info.json`                                          |
+| Deployed build is bundle-equivalent to `9e6d46e`     | yes — five documentation files changed between them, none bundle-relevant (D-097) |
+| Aggregate `npm run verify` on a clean tree           | **PASS** — the whole command                                                    |
+| 1,765 tests across 82 files                          | yes                                                                             |
+| Privacy scan clean across 273 tracked files          | yes                                                                             |
+| No commit on HEAD absent from every remote           | yes, at the head being handed off — the check DEF-0114 added                    |
+| Round 2 verdict                                      | **PASS**, and it recommends this closeout                                       |
+
+### 2. What the closeout changed
+
+**Documentation only. No product code changed after `9e6d46e`** — the condition
+the closeout handoff set, and the reason the approved checkpoint is still the one
+QA tested.
+
+- `PHASE_STATUS.md` — routing 83 marked **GREEN**, the round-2 record added, the
+  campaign table updated, and the checkpoint table restated around the approved
+  checkpoint rather than the submission.
+- `DEFECT_LEDGER.md` — DEF-0105 … DEF-0114 now name the SHA each was fixed in
+  and record that round 2 confirmed them closed. No entry's severity, class or
+  reasoning was rewritten.
+- `CANONICAL_REBUILD_PLAN.md` — the v1.2 change log gains D-177 … D-180.
+  Sections 26 and 37 already carried D-174 … D-176 from the first submission.
+  No section, phase scope or routing integer changed.
+- `NEXT_PROMPT.md` — replaced with the complete routing-84 builder handoff.
+- This report — the closeout record, and the completion marker moved to the end
+  of it.
+
+### 3. What was closed, and only to the extent Round 2 supports
+
+| Finding / defect | Closed | On what evidence                                                                                                    |
+| ---------------- | ------ | -------------------------------------------------------------------------------------------------------------------- |
+| QA-83-001 / DEF-0110 | yes | QA ran the reintroduction itself, watched the guard fail at counts 1, 4 and 12, restored the source and confirmed 4 / 4 |
+| QA-83-002 / DEF-0111 | yes | The deployed card says one name in the belief, the control and the panel                                            |
+| QA-83-003 / DEF-0113 | yes | QA independently enumerated the `memory.append` sites and found no owner-facing writer absent from the table         |
+| QA-83-004 / DEF-0114 | yes | The whole `npm run verify` exited 0 on a clean tree at `cba5e44`                                                     |
+| DEF-0112             | yes | The deployed deferral panel measures the **held** move — 4 occasions, not 0                                          |
+| DEF-0105 … DEF-0109  | yes | Round 1 passed acceptance items 1, 3 and 4; round 2 confirmed every round-1 pass still passes                        |
+
+Nothing is closed beyond that. **No new decision was written for round 2**, and
+that is deliberate: round 1 produced D-177 … D-180 because it found four things
+nothing could have caught, and round 2 found nothing new. A round that produces
+no rule is recorded as producing none.
+
+### 4. What is preserved, and what remains open
+
+**Every explicit deferral is unchanged and none was implemented here** — no
+destination, milestone or baseline object; no Love / Dating / Romantic Life
+domain; no private-consent model; no second questioning agenda; no scoring
+change; no live model. Audit section 10's do-not-change list and product
+adjudication section 11 both stand. **Q1, Q4 and Q6 remain the owner's**, exactly
+as D-172 leaves them, and are not answered here.
+
+Open at GREEN, and named rather than left to be found:
+
+- **The enumerated brief is routing 84's scope**, and it is open on purpose.
+- **The evidence panel's composition** (F33 residual, E19) — the deciding
+  evidence reaches the reason line and not the panel. Routing 90's.
+- **The owner's phone check** is still owed before release. Independent QA is
+  not a substitute for it.
+
+### 5. The next phase
+
+**Routing 84 — "what the owner is trying to become."** Blocked on nothing:
+D-166 … D-169 answered the four owner decisions it waited on. The complete
+builder prompt is written into `docs/NEXT_PROMPT.md`, with its model, level,
+conversation instruction and a short launcher, per D-083 and D-092.
+
+**83.0's enumerated brief is 84's own brief.** That was the point of building the
+instrument first, and it is the one thing to read before the packages.
+
+### 6. Closing facts
+
+| Fact                        | Value                                                                    |
+| --------------------------- | ------------------------------------------------------------------------ |
+| Final status                | **GREEN**                                                                |
+| Approved product checkpoint | `9e6d46e`                                                                |
+| Closing SHA                 | the documentation commit that carries this section                       |
+| Deployed Preview SHA        | read live after the closeout push; proved with `checkpoint-equivalence.mjs` |
+| QA report                   | this file — rounds 1 and 2                                               |
+| Owner phone test            | still required before release                                            |
+| Next phase                  | routing **84**, Claude Opus-class, **Max**, a **NEW** conversation        |
+
 <!-- LCO_COMPLETE -->

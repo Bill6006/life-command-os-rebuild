@@ -99,8 +99,8 @@ re-scope), and no canonical phase is renumbered.
 
 | Routing | Product / canonical name                                 | Blocked on                        |
 | ------- | -------------------------------------------------------- | --------------------------------- |
-| **83**  | The instrument, and the things that are untrue           | **YELLOW — with independent QA**  |
-| **84**  | What the owner is trying to become                       | nothing; D-166…D-169 all answered |
+| **83**  | The instrument, and the things that are untrue           | **GREEN — closed, round 2**       |
+| **84**  | What the owner is trying to become                       | **nothing — ready to dispatch**   |
 | **90**  | **Canonical Phase 9** — visual coherence, motion, mobile | 84                                |
 | **91**  | Later intelligence — Reach, then Validity                | 90, and Q6's adjudication (D-172) |
 | **92**  | **Canonical Phase 10** — performance, PWA, reliability   | 91                                |
@@ -122,11 +122,15 @@ superseded rather than reused.
 
 # Routing Phase 83 — The instrument, and the things that are untrue
 
-**Status: YELLOW — REPAIRED AFTER QA ROUND 1, AWAITING RETEST.**
+**Status: GREEN — CLOSED BY INDEPENDENT QA, ROUND 2.**
+
+Approved by the independent Codex QA conversation that wrote both rounds, at
+repaired product checkpoint `9e6d46e`, on 2026-08-27. D-077 is satisfied: no
+builder conversation approved its own phase.
 
 Canonical product name: _the instrument, and the things that are untrue_.
 **Routing integer 83** (plan section 43A, D-159) — the `**Phase:**` field of
-every handoff in this phase and its rounds carries `83`, never a decimal and
+every handoff in this phase and its rounds carried `83`, never a decimal and
 never a canonical phase number.
 
 The phase the product adjudication created (D-158): the ordinary-use acceptance
@@ -134,26 +138,51 @@ instrument, and then the small set of things the app states or does that are
 wrong. Deliberately Phase 81's shape. Blocked on no owner decision, and it
 opened none.
 
-**A builder conversation may not approve its own phase** (D-077). The QA brief is
-[`qa/PHASE_83_QA_HANDOFF.md`](qa/PHASE_83_QA_HANDOFF.md).
+**One FAIL round preceded it, and the shape of that round is the phase's real
+record.** Round 1 found four things, and three of them were the same thing: **a
+guard that could not fail.** A copy guard holding a list of forbidden phrases
+rather than comparing a quantity with its count; a route table saying "every"
+with nothing comparing it to source, under a green test called _"keeps the route
+table honest"_; and the aggregate `npm run verify` red at a head that had never
+been pushed, so CI — which runs the identical command on every push — never ran
+on it. The fourth was a layering fact: the table that names an action with its
+subject in it lived above the two files that needed it, so one card said _"a
+walk"_, _"Move"_, _"what move does for you"_ and _"getting out for a walk"_.
+
+**Both repair sweeps then found more than had been reported.** The wrong plural
+was wrong at counts of 1, 4 and 12 rather than only the one an independent
+reader stood on, and a deferral's evidence panel was counting the _hold's_
+occasions beside the _held move's_ conclusion — DEF-0112, which nobody asked
+for.
+
+QA independently reproduced that reintroduction in round 2, watched the guard
+fail at all three counts, and restored the source byte-for-byte before passing.
+
+**A builder conversation may not approve its own phase** (D-077). The record is
+[`qa/PHASE_83_QA_HANDOFF.md`](qa/PHASE_83_QA_HANDOFF.md), and rounds 1 and 2 in
+it are QA's and are not edited.
 
 ## Checkpoint
 
-| Fact                       | Value                                                                                   |
-| -------------------------- | --------------------------------------------------------------------------------------- |
-| Product checkpoint         | `9e6d46e` — the round-1 repair, and the commit this gate was run on (D-147)             |
-| First submission (round 1) | `582f648`, deployed `ab6b47f` — the checkpoint QA tested and failed                     |
-| Documentation head         | `921c6b0`, plus the commit that closes this section                                     |
-| Preview                    | https://bill6006.github.io/life-command-os-rebuild/preview/ — live at `921c6b0`         |
-| Owner-visible behaviour    | **changed again** — Now's reason clause, the belief sentence and its correction control |
-| Owner phone check          | required before GREEN                                                                   |
-| Independent QA             | retest, by the **same** Codex conversation that wrote round 1                           |
+| Fact                        | Value                                                                                                                       |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Approved product checkpoint | `9e6d46e` — the round-1 repair, and the commit QA tested                                                                    |
+| First submission (round 1)  | `582f648`, deployed `ab6b47f` — the checkpoint QA tested and failed                                                         |
+| QA read the repository at   | `cba5e44`, documentation-only after the checkpoint                                                                          |
+| Deployed at the retest      | `cba5e44`, proved bundle-equivalent to `9e6d46e` with `checkpoint-equivalence.mjs`                                          |
+| Closing SHA                 | the documentation commit that closes this section                                                                           |
+| Preview                     | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                 |
+| Owner-visible behaviour     | **changed** — Now, Timeline, the Private page, two domain-page controls, and the belief sentence and its correction control |
+| Owner phone check           | still owed before release; not a blocker QA can clear                                                                       |
+| Independent QA              | **PASS**, round 2, same Codex conversation as round 1                                                                       |
+| Closeout                    | documentation only — no product code changed after `9e6d46e`                                                                |
 
 ## Exact verification results
 
-At the repaired checkpoint `9e6d46e`. Round 1's own numbers are in the section
-below it, and the aggregate command is the one that failed there — so it is
-stated first and it is the whole command, not its stages run separately.
+At the approved checkpoint `9e6d46e`, confirmed independently by QA in round 2
+and re-run by the builder at the closeout head. The aggregate command is the one
+that failed at round 1, so it is stated first and it is the whole command, not
+its stages run separately.
 
 | Gate                                      | Result                                                                        |
 | ----------------------------------------- | ----------------------------------------------------------------------------- |
@@ -164,9 +193,78 @@ stated first and it is the whole command, not its stages run separately.
 | Privacy scan                              | **clean** — 273 tracked files                                                 |
 | Block sweep                               | **PASS** — unchanged                                                          |
 | Copy guards                               | **PASS** — no percentage, rank, grade or score about the child or the owner   |
-| Commits not on any remote                 | **none** — the check DEF-0114 added, run on the head being handed off         |
-| CI on the documentation head              | Verify **success**, Deploy preview **success**                                |
-| Checkpoint equivalence                    | **PASS** — deployed `921c6b0` serves the same bytes as `9e6d46e`              |
+| Commits not on any remote                 | **none** at the handed-off head — the check DEF-0114 added                    |
+| CI                                        | Verify **success**, Deploy preview **success**                                |
+| Checkpoint equivalence                    | **PASS** — deployed `cba5e44` serves the same bytes as `9e6d46e`              |
+| Independent QA's own re-run               | **PASS** — QA ran the aggregate gate, the suite and the reintroduction itself |
+
+## Independent QA — round 2, and the GREEN closeout
+
+**Round 2 returned PASS** on 2026-08-27, from the same Codex conversation that
+wrote round 1, at repaired product checkpoint `9e6d46e` with the repository and
+the deployed Preview both at `cba5e44`. QA-83-001 … QA-83-004 and the
+builder-found DEF-0112 are closed; every round-1 PASS is still a PASS; all five
+acceptance items pass. **QA recommended the formal GREEN closeout and this is
+it.**
+
+**The retest was not a re-reading of the builder's claims.** Three things in it
+are worth keeping.
+
+- **QA ran the reintroduction itself.** It replaced the three-band helper with
+  the original hard-coded _"The last few times"_, watched the quantity guard
+  fail over counts **1, 4 and 12** — naming each offending history — and then
+  restored the source byte-for-byte and confirmed 4 / 4. The builder's claim that
+  the guard bites was checked rather than believed, which is what D-077 is for.
+- **QA independently enumerated the `memory.append` sites** rather than reading
+  the repaired route table, and found no owner-facing writer absent from it.
+- **The fact-versus-entity stop was verified in the running app**, not in the
+  test: _"Cloud engineering (AWS)"_ was entered on the deployed Career page and
+  read back, and the QA inspector then showed **2 records, 0 entities**.
+
+**The browser matrix and the Galaxy-class gate were deliberately not
+duplicated** — D-090 step 7 asks for that only on a concrete trigger, and the
+deployed reproductions matched the repaired tests. The builder's evidence stands
+as the record: 591 browser cases at three widths, 187 deployed Android checks.
+
+### What the closeout changed
+
+Documentation only. **No product code changed after `9e6d46e`**, which is the
+condition the closeout handoff set: an executable change here would return the
+phase to YELLOW and require independent QA again.
+
+### The five acceptance items, as independent QA left them
+
+| #   | Item                                                                          | Round 2 |
+| --- | ----------------------------------------------------------------------------- | ------- |
+| 1   | An earlier-day completion cannot settle today's occurrence                    | PASS    |
+| 2   | No owner sentence asserts a quantity it did not count                         | PASS    |
+| 3   | The Private page's promise and Timeline's behaviour agree                     | PASS    |
+| 4   | Every owner-facing input has an accessible name                               | PASS    |
+| 5   | The ordinary-use journey completes, and its stops are enumerated with reasons | PASS    |
+
+Plus the standing gates: the aggregate `npm run verify` from a clean checkout,
+the browser suite at three widths, the deployed Android-style gate, the privacy
+scan, the block sweep, and the copy guards — no percentage, rank, grade or score
+about the child, and none about the owner.
+
+### No new rule came out of round 2, and that is worth saying
+
+Rounds do not always produce decisions. Round 1 produced four — D-177 to D-180 —
+because it found four things nothing could have caught. Round 2 found nothing
+new, so nothing was written down, and the absence is recorded here rather than
+filled with a restatement of what the repairs already say.
+
+### What remains open at GREEN
+
+- **The enumerated brief is the phase's largest open item, and it is open on
+  purpose.** Every line of it is a routing 84 or routing 90 package. It is
+  immediately below, and it is the next phase's scope.
+- **The evidence panel's composition** (F33 residual, E19) — the deciding
+  evidence reaches the reason line and not the panel. Routing 90's; F33's own
+  roadmap line assigns evidence composition to the visual phase.
+- **The owner's phone check** is still owed before release. Independent QA is
+  not a substitute for it and never was.
+- **Q1, Q4 and Q6** remain the owner's, exactly as D-172 leaves them.
 
 ## Independent QA — round 1, and the repair
 

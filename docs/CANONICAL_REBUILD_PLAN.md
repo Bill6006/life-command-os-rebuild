@@ -105,6 +105,8 @@ section 37 now says so directly, and section 26 gains Timeline's own version of
 D-153. None of this reopens a completed phase or changes the sequence, so it does
 not warrant its own version number for the same reason the addenda above did not.
 
+**v1.2 addendum (D-177 to D-180):** routing 83's first submission failed independent QA, and its four findings produced four more rules. Three of the four were one shape — **a guard that could not fail**. **A quantity in a sentence is compared with the count behind it, never matched against a list of phrases** (D-177): the guard written for the phase's own quantity acceptance item held a list of unmeasurable phrases while Now said "the last few times" over one occasion, which is measurable and was simply never measured. **A claim of exhaustiveness is a test, or it is a comment** (D-179): the ordinary-use route table said "every" with nothing comparing it to source. **A commit that is not pushed has met no gate** (D-180, amending D-147): the aggregate `npm run verify` was red at a head CI had never seen, because the commit had never been pushed. The fourth was structural rather than a guard — **one name for an action, in the layer every surface can reach** (D-178): the table that names an action with its subject in it lived above the two files that write the belief sentence and the button that corrects it, so one card carried four registers for one walk. Section 43A, the routing map and every phase scope are unchanged, so this does not warrant its own version number for the same reason the addenda above did not.
+
 ## v1.1 change log
 
 This revision closed four implementation ambiguities before developer handoff:
