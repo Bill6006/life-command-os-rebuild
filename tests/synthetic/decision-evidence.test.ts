@@ -797,3 +797,77 @@ describe('AUD-0033 — a near-tie does not read like a clear win', () => {
     expect(close.length, 'the clause never fires, so nothing is being tested').toBeGreaterThan(0)
   })
 })
+
+describe('F33 residual / E19 — the weak-topic move, and what its evidence says', () => {
+  /**
+   * The acceptance case routing 83 owes F33 — and only the acceptance case.
+   *
+   * The capability shipped in Phase 81 as AUD-0027 and AUD-0028: the owner's
+   * own specific evidence reaches the sentence he reads. The review confirmed
+   * it working — _"'A topic keeps slipping' proposed going back over subnetting
+   * because /26 boundaries had been wrong twice the previous day… much better
+   * than generic study advice"_ — and then recorded a residual: the evidence
+   * panel underneath emphasised topic and time rather than that failed
+   * retrieval.
+   *
+   * So there is a test here and there is no repair here. What the panel shows
+   * and in what order is **evidence composition**, which F33's own roadmap line
+   * assigns to the visual phase, and the adjudication splits the residual
+   * across routing 83 and routing 90 for exactly that reason. Routing 83's half
+   * is proving the deciding evidence reaches the owner at all; routing 90's is
+   * where on the screen it sits.
+   *
+   * The gap is written down rather than left to be rediscovered — see the
+   * enumerated journey brief in `docs/PHASE_STATUS.md`.
+   */
+  it('names the specific failed retrieval in the sentence the owner reads', () => {
+    const decision = loadScenario('subnetting-struggle').decision()
+    const reason = decision.explanation?.rendered.reason ?? ''
+
+    expect(decision.explanation?.rendered.sentence).toContain('subnetting')
+    expect(reason).toContain('/26')
+    expect(reason.toLowerCase()).toContain('went wrong twice')
+  })
+
+  it('cites the record that produced it, rather than only wording it', () => {
+    /*
+     * The difference between a sentence about the owner's record and a sentence
+     * that reads like one. The candidate carries the record ids it was
+     * generated from, and the outcome those ids point at is the failed
+     * retrieval the reason quotes.
+     */
+    const decision = loadScenario('subnetting-struggle').decision()
+    const cited = decision.evaluation?.candidate.semantics.evidence ?? []
+    expect(cited.length, 'the move must cite something').toBeGreaterThan(0)
+
+    const records = cited.map((id) => decision.situation.view.history.byId(id))
+    const outcomes = records.filter((record) => record?.kind === 'outcome')
+    expect(outcomes.length, 'and one of them is the outcome that went badly').toBeGreaterThan(0)
+    expect(JSON.stringify(outcomes)).toContain('/26')
+  })
+
+  it('does not contradict that sentence one tap lower', () => {
+    /*
+     * The panel is allowed to say less than the reason. It is not allowed to
+     * say something else — DEF-0033's class, which is what an evidence panel
+     * disagreeing with the line above it always is.
+     */
+    const decision = loadScenario('subnetting-struggle').decision()
+    const evidence = evidenceForDecision(decision)
+    expect(evidence).toBeDefined()
+
+    // Every condition on the panel is a concept the decision actually leaned
+    // on, and the panel says plainly which of them are unknown.
+    const leansOn = new Set(decision.evaluation?.candidate.leansOn ?? [])
+    for (const condition of evidence!.conditions) {
+      expect(leansOn.has(condition.concept), condition.label).toBe(true)
+    }
+
+    // And it makes no claim about how this move has gone, because nothing
+    // comparable has happened yet. A panel inventing a rate here would be the
+    // contradiction.
+    expect(evidence!.rates).toEqual([])
+    expect(evidence!.confidence.comparable).toBe(0)
+    expect(evidence!.comparable).toContain('Nothing in the record is much like this')
+  })
+})

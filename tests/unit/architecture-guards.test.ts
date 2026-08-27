@@ -1780,3 +1780,137 @@ describe('a document that withholds rows carries no coordinate into the file', (
     )
   })
 })
+
+/**
+ * Every owner-facing input has an accessible name — F40, plan section 37.
+ *
+ * The reported defect was one field: a bare `<input type="text">` with
+ * `placeholder="What's changed"`, in a file that uses `aria-label` correctly
+ * three times a few hundred lines away. A second, worse one was directly
+ * underneath it with not even a placeholder.
+ *
+ * The class is not "two fields in `DomainPage.tsx`". It is that nothing in the
+ * gate could tell a labelled control from an unlabelled one, so a new form
+ * inherits whichever pattern the author happened to copy — and canonical Phase
+ * 9 designs repeated components. An unlabelled input inherited into the design
+ * system becomes settled design, and Phase 11's accessibility attack would then
+ * be re-opening a passed phone gate rather than finding a bug.
+ *
+ * The rule is the standard one: a control is named by `aria-label`, by
+ * `aria-labelledby`, by being wrapped in a `<label>`, or by an `id` some
+ * `htmlFor` points at. A placeholder is none of those — it is a hint, it
+ * disappears as soon as there is anything in the field, and assistive
+ * technology is not required to read it.
+ */
+describe('F40 — no owner-facing control without a name', () => {
+  const CONTROLS = /<(input|textarea|select)\b/g
+
+  /** The attributes of the tag starting at `start`, up to its closing bracket. */
+  function attributesAt(text: string, start: number): string {
+    let depth = 0
+    for (let index = start; index < text.length; index += 1) {
+      const char = text[index]
+      if (char === '{') depth += 1
+      else if (char === '}') depth -= 1
+      else if (char === '>' && depth === 0) return text.slice(start, index)
+    }
+    return text.slice(start)
+  }
+
+  /** Whether the control at `start` sits inside an open `<label>`. */
+  function insideALabel(text: string, start: number): boolean {
+    const before = text.slice(0, start)
+    return before.lastIndexOf('<label') > before.lastIndexOf('</label>')
+  }
+
+  function unnamedControlsIn(file: string): readonly string[] {
+    const text = readFileSync(file, 'utf8')
+    const code = codeOnly(text)
+    const out: string[] = []
+    for (const match of code.matchAll(CONTROLS)) {
+      const start = match.index
+      const attributes = attributesAt(code, start)
+      const line = code.slice(0, start).split('\n').length
+
+      if (/\baria-label\b|\baria-labelledby\b/.test(attributes)) continue
+      if (insideALabel(code, start)) continue
+
+      const id = /\bid=\{?([^\s}]+)\}?/.exec(attributes)?.[1]
+      // An id is only a name when something points at it. `htmlFor` is searched
+      // in the whole file rather than nearby, because the label and the control
+      // are frequently a few lines apart and always in the same component.
+      if (id !== undefined && code.includes('htmlFor=')) {
+        const bare = id.replace(/^[`'"]|[`'"]$/g, '')
+        if (code.includes(`htmlFor={\`${bare}`) || code.includes(`htmlFor={${id}`)) continue
+      }
+
+      out.push(`${repoPath(file)}:${line} — ${match[1]} with no accessible name`)
+    }
+    return out
+  }
+
+  it('names every input, textarea and select under src/features', () => {
+    const offenders = FEATURES.flatMap((file) => unnamedControlsIn(file))
+    expect(offenders).toEqual([])
+  })
+
+  it('bites on the field that was reported, and on a placeholder standing in for a label', () => {
+    /*
+     * The guard proves nothing unless it can fail, and the two shapes it has to
+     * fail on are the two that were actually in the tree.
+     */
+    const reported = `
+      <div className="domain-correction">
+        <input
+          type="text"
+          className="domain-input"
+          value={draft}
+          placeholder="What's changed"
+          disabled={disabled}
+          onChange={(event) => onDraftChange(event.target.value)}
+        />
+      </div>`
+    const nameless = `
+      <div className="domain-correction">
+        <input type="text" className="domain-input" value={draft} disabled={disabled} />
+      </div>`
+    const named = `
+      <label className="data-field">
+        <span>Or paste one</span>
+        <textarea value={text} />
+      </label>`
+
+    const scan = (jsx: string): number => {
+      const code = codeOnly(jsx)
+      let found = 0
+      for (const match of code.matchAll(CONTROLS)) {
+        const attributes = attributesAt(code, match.index)
+        if (/\baria-label\b|\baria-labelledby\b/.test(attributes)) continue
+        if (insideALabel(code, match.index)) continue
+        if (/\bid=/.test(attributes) && code.includes('htmlFor=')) continue
+        found += 1
+      }
+      return found
+    }
+
+    expect(scan(reported), 'a placeholder is not a label').toBe(1)
+    expect(scan(nameless), 'and nothing at all is certainly not').toBe(1)
+    expect(scan(named), 'a wrapped control is named').toBe(0)
+  })
+
+  it('does not accept a placeholder as the whole of what the app asks for', () => {
+    /*
+     * The second half of F40, which a name alone does not satisfy: _"every
+     * owner needs to know what the app expects and how the answer will be
+     * used."_ Both free-text controls on a domain page now carry a note saying
+     * where the answer goes, and this is what stops the note being quietly
+     * dropped when the component is next touched.
+     */
+    const page = readFileSync(join(ROOT, 'src/features/life/DomainPage.tsx'), 'utf8')
+    const notes = [...page.matchAll(/domain-correction__note/g)]
+    expect(notes.length, 'both free-text corrections say what happens to the answer').toBe(2)
+    // The comments explaining the repair quote the attribute, so this reads the
+    // code rather than the prose. `codeOnly` is what tells them apart.
+    expect(codeOnly(page)).not.toMatch(/placeholder=/)
+  })
+})

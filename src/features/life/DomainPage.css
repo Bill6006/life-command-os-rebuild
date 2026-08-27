@@ -103,6 +103,21 @@
   color: var(--text-secondary);
 }
 
+/*
+ * What the app will do with the answer — F40.
+ *
+ * A step quieter than the label above it, because it is the second thing read
+ * rather than the first. It is not a placeholder and it does not disappear:
+ * the owner is entitled to see what happens to what he types while he is
+ * typing it.
+ */
+.domain-correction__note {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  max-width: 46ch;
+}
+
 .domain-correction__actions {
   display: flex;
   gap: var(--space-3);

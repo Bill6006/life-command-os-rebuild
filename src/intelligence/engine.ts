@@ -34,7 +34,7 @@ import { applyConstraints, type Rejection } from './constraints'
 import { evaluateAll, withDimension, type Evaluation } from './evaluate'
 import { explain, type Explanation } from './explain'
 import { describeEvidenceMix, similarity } from './learning'
-import type { MoveState } from './lifecycle'
+import { openEpisode, type MoveState } from './lifecycle'
 import { profileFor } from './moves'
 import { outcomeWindowFor } from './outcomes'
 import { answerRecord, GUIDE_PROVENANCE, QUESTIONS } from './questions'
@@ -643,15 +643,38 @@ function describeContext(context: DecisionContext): string {
   return parts.join(', ')
 }
 
+/**
+ * Where **today's** occurrence of the chosen move stands — D-160.
+ *
+ * An action has a stable identity and each time it is put in front of the owner
+ * is a separate occurrence with its own date and state, and no surface may
+ * resolve one through the other.
+ *
+ * This used to match `(verb, object.id)` across `situation.recentMoves` with no
+ * day filter, and `recentMoves` is a **three-day** window
+ * (`situation.ts`, `addLocalDays(moment.now, -3, zone)`). So a walk completed
+ * on the 22nd supplied the state of a freshly generated walk on the 25th:
+ * `TRANSITIONS.completed` is `[]` and `NowScreen` disables every action not in
+ * `availableActions(state)`, which left the product's single most important
+ * interaction reading **"Where this stands — Done"** with all five controls
+ * inert, on a suggestion the owner had never seen. That is F43, and E02 and
+ * E31 are what it looks like from a browser.
+ *
+ * **The window is not what changed, and must not be.** `recent-duplication`
+ * and learning both need to see beyond today — the same move offered three
+ * evenings running is a worse move on the third evening. What changed is the
+ * match.
+ *
+ * It resolves through `openEpisode`, which is the function `planLifecycle`
+ * already uses to decide what a tap would do. Filtering `recentMoves` by day
+ * would have produced the same answer today and left two definitions of "this
+ * move, on this day" to drift apart; with one, the state the screen shows and
+ * the transition a tap would take cannot disagree.
+ */
 function stateOfChosen(evaluation: Evaluation, situation: Situation): MoveState {
   const target = evaluation.candidate.semantics.target
-  let latest: { at: Instant; state: MoveState } | undefined
-  for (const prior of situation.recentMoves) {
-    if (prior.semantics.target.verb !== target.verb) continue
-    if (prior.semantics.target.object.id !== target.object.id) continue
-    if (latest === undefined || prior.at > latest.at) latest = { at: prior.at, state: prior.state }
-  }
-  return latest?.state ?? 'shown'
+  const today = openEpisode(situation.learning.episodes, target, situation.dayId)
+  return today?.state ?? 'shown'
 }
 
 /**
@@ -897,9 +920,29 @@ export function noActionCopy(
       if (limited !== undefined) {
         return { headline: 'Nothing worth starting right now.', detail: limited }
       }
+      /*
+       * What the branch above it counted, and nothing more — F39, D-153.
+       *
+       * This said **"There is plenty of history here"** on any non-empty
+       * store, and the review read it on four records. "Plenty" is a claim
+       * about the size of the whole record, and the only quantity anything
+       * here measured is the one directly above: whether there is any history
+       * at all. D-153 is the rule — a reading of one moment may not be worded
+       * as a claim about the whole record — and round 8 named it without
+       * sweeping this instance.
+       *
+       * No count replaces it, because no count would mean anything here.
+       * `history.all` includes rows that have been superseded and retracted,
+       * so a number taken from it would need explaining before it could be
+       * read, and a quantity that needs a footnote is worse than none. What
+       * the owner needs from this sentence is not the size of his record: it
+       * is that the silence is about **now** rather than about how little the
+       * app has been told, which is the second clause and is what the state
+       * actually establishes.
+       */
       return {
         headline: 'Nothing to suggest just yet.',
-        detail: `There is plenty of history here, and none of it says how ${horizonWord(situation.block)} is going. One answer below is usually enough.`,
+        detail: `There is history here, and none of it says how ${horizonWord(situation.block)} is going. One answer below is usually enough.`,
       }
     }
   }
@@ -908,11 +951,12 @@ export function noActionCopy(
 /**
  * Whether the app can actually see this moment, or only the history behind it.
  *
- * The split AUD-0034 asks for. "There is plenty of history here, and none of it
- * says how today is going" is true and useful when the readings have all aged
- * out; it is simply false when three of them came in this morning. Counted over
- * the facts the situation actually assembled, so it moves with what the engine
- * read rather than with how many rows are in the store.
+ * The split AUD-0034 asks for. "There is history here, and none of it says how
+ * today is going" is true and useful when the readings have all aged out; it is
+ * simply false when three of them came in this morning. Counted over the facts
+ * the situation actually assembled, so it moves with what the engine read
+ * rather than with how many rows are in the store — which is also why the
+ * sentence it guards no longer says how many rows there are (F39).
  */
 const ENOUGH_TO_SEE_BY = 3
 

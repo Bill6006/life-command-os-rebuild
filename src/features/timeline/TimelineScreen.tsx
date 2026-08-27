@@ -3,7 +3,13 @@ import { Panel, Screen } from '../../components/ui'
 import { localTimeOfDayAt } from '../../domain/time'
 import { assembleSituation } from '../../intelligence/situation'
 import { useMemory } from '../memory/memoryContext'
-import { assembleTimeline, TIMELINE_PAGE, type TimelineData } from './timelineEntries'
+import {
+  assembleTimeline,
+  describeExtent,
+  TIMELINE_LEDE,
+  TIMELINE_PAGE,
+  type TimelineData,
+} from './timelineEntries'
 import './TimelineScreen.css'
 
 /**
@@ -72,7 +78,7 @@ export function TimelineScreen() {
   const onlyLater = nothingToShow && data.later > 0
 
   return (
-    <Screen title="Timeline" lede="Everything that happened, in the order it happened.">
+    <Screen title="Timeline" lede={TIMELINE_LEDE}>
       {nothingToShow ? (
         <Panel
           title={
@@ -170,7 +176,7 @@ export function TimelineScreen() {
             </button>
           ) : (
             <p className="note" data-testid="tl-end">
-              That is the whole record — {data.total} {data.total === 1 ? 'entry' : 'entries'}.
+              {describeExtent(data)}
             </p>
           )}
         </>

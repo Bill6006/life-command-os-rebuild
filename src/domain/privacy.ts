@@ -71,3 +71,39 @@ export function mayShowDetail(privacy: PrivacyClass, policy: DisplayPolicy): boo
 export function discreetPlaceholder(privacy: PrivacyClass): string {
   return privacy === 'private' ? 'Private entry' : 'Withheld'
 }
+
+// ---------------------------------------------------------------------------
+// What the private area promises, and why the sentence lives here — F30
+// ---------------------------------------------------------------------------
+
+/**
+ * The Private page's own description of the discretion it gets.
+ *
+ * It read **"Yours to enter. Nothing here appears anywhere else."** and that
+ * was not true. `mayShowDetail` withholds the *detail* of a private record from
+ * a primary surface and `discreetPlaceholder` stands in for it — deliberately,
+ * because a surface that dropped the row would tell the owner his history is
+ * thinner than it is. So Timeline carries a dated row reading **"Private
+ * entry"**: the words are concealed and the fact that something was entered,
+ * and when, is not. Concealing the sentence is not concealing the entry.
+ *
+ * Plan section 11 gives two ways out — withhold the existence and timing too,
+ * or say what the promise actually covers — and this is the second. The first
+ * would mean dropping the row from Timeline, which is the participation-leak
+ * repair the *export* needed (`compose.ts`) and the opposite of what the
+ * owner's own screen needs: he already knows what is in his private area, and a
+ * record that hides rows from him is a record he cannot trust the length of.
+ *
+ * **The sentence lives beside the policy it describes, and that is the point.**
+ * It was written in `domainPages.ts` and the behaviour was decided here, two
+ * files apart, and they disagreed for four phases without anything noticing.
+ * A change to `mayShowDetail` or `discreetPlaceholder` is now a change to a
+ * promise sitting in the same file, and `tests/synthetic/private-promise.test.ts`
+ * reads this constant from one end and renders a private record from the other.
+ *
+ * It says nothing about export, because export is not this page's behaviour and
+ * the Data screen states its own. It says nothing about influence either: that
+ * is D-167's permission, it is off by default, and it is routing 84's.
+ */
+export const PRIVATE_PAGE_PROMISE =
+  'Yours to enter. The words stay on this page — Timeline shows that an entry exists and when, never what it says.'

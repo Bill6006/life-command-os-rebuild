@@ -3,7 +3,7 @@ import { DOMAIN, type LifeDomainId } from '../../domain/domains'
 import type { EntityIndex, EntityKind, EntityRef } from '../../domain/entities'
 import type { GrowthStage } from '../../domain/records'
 import type { RecordId } from '../../domain/ids'
-import type { DisplayPolicy } from '../../domain/privacy'
+import { PRIVATE_PAGE_PROMISE, type DisplayPolicy } from '../../domain/privacy'
 import {
   basisOf,
   matchKnowledge,
@@ -101,7 +101,15 @@ export const LIFE_PAGES: readonly LifePage[] = [
   {
     slug: 'private',
     title: 'Private / Sexual Health',
-    lede: 'Yours to enter. Nothing here appears anywhere else.',
+    /*
+     * The promise the behaviour can keep — F30, plan section 11.
+     *
+     * It said "Nothing here appears anywhere else" while Timeline rendered a
+     * dated "Private entry" row. The sentence is now next to the policy that
+     * decides what a primary surface may show, in `domain/privacy.ts`, so the
+     * two cannot drift apart again without somebody editing both.
+     */
+    lede: PRIVATE_PAGE_PROMISE,
     domains: [DOMAIN.privateHealth],
   },
   {

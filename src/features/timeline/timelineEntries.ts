@@ -306,3 +306,46 @@ export function assembleTimeline(situation: Situation, limit = TIMELINE_PAGE): T
 
   return { days, shown, total, later, unreadable, tangled }
 }
+
+// ---------------------------------------------------------------------------
+// What the page says about how much of the record it is showing — F39
+// ---------------------------------------------------------------------------
+
+/**
+ * The page's own description of itself.
+ *
+ * It read **"Everything that happened, in the order it happened."** The app
+ * does not watch the owner's life. It holds what he told it and what it worked
+ * out from that, and a page that opens by claiming to hold everything that
+ * happened makes every honest *"not enough yet"* underneath it harder to
+ * believe. The review put it exactly: _the distinction between "everything that
+ * happened" and "everything recorded here" matters._
+ *
+ * Here rather than in the component so the words have one home and a test can
+ * read them without a browser — the same arrangement `describeRecord` already
+ * has for a row.
+ */
+export const TIMELINE_LEDE = 'Everything recorded here, in the order it happened.'
+
+/**
+ * How much of the record is on the page, once the page holds all of it — F39.
+ *
+ * This said **"That is the whole record — 3 entries"** on a history holding
+ * four, one of them dated tomorrow. `total` counts entries at or before the
+ * moment being read, so the sentence was asserting a size of the record from a
+ * count of part of it — D-153's rule, one surface over from where round 8 found
+ * it. `mostly-unknown` has had a record dated the following day since Phase 1
+ * and nothing rendered this line against it.
+ *
+ * **Where nothing is later, the absolute stays.** There it is true, and it is
+ * what tells the owner the app is not holding anything back — which is D-153's
+ * own condition for when an absolute is allowed to stand.
+ */
+export function describeExtent(data: TimelineData): string {
+  const entries = `${data.total} ${data.total === 1 ? 'entry' : 'entries'}`
+  if (data.later === 0) return `That is the whole record — ${entries}.`
+  const later =
+    data.later === 1 ? '1 entry is dated later' : `${data.later} entries are dated later`
+  const them = data.later === 1 ? 'it is' : 'they are'
+  return `That is everything up to the moment on screen — ${entries}. ${later}; move forward and ${them} there.`
+}

@@ -688,12 +688,34 @@ function CoveragePanel({
           what will settle this.
         </p>
       ) : open ? (
+        /*
+         * A name, and a stated expectation — F40.
+         *
+         * This was a bare `<input type="text">` with `placeholder="What's
+         * changed"` and nothing else: no accessible name for anyone using
+         * assistive technology, and for everyone else no statement of what the
+         * app wanted or what it would do with the answer. A placeholder is not
+         * a label — it is a hint that disappears the moment there is anything
+         * in the box.
+         *
+         * The label names the area, because a page can carry two of these
+         * (health and sleep share one), and the note says where the answer
+         * goes. `aria-label` would have satisfied a checker; a visible label
+         * satisfies the owner too, which is the half F40 is actually about.
+         */
         <div className="domain-correction">
+          <label className="domain-correction__prompt" htmlFor={`domain-status-${coverage.domain}`}>
+            What has changed in {coverage.label}?
+          </label>
+          <p className="domain-correction__note">
+            In your own words. It joins this area’s history as something you told the app, and it is
+            what brings the picture back up to date.
+          </p>
           <input
+            id={`domain-status-${coverage.domain}`}
             type="text"
             className="domain-input"
             value={draft}
-            placeholder="What's changed"
             disabled={disabled}
             onChange={(event) => onDraftChange(event.target.value)}
           />
@@ -769,8 +791,27 @@ function ConceptRow({
 
       {open ? (
         reading.question === undefined ? (
+          /*
+           * The same repair, on the row that had not even a placeholder — F40.
+           *
+           * A concept with no closed set of answers gets a free-text box, and
+           * the box arrived with no name at all: the reading it replaces is two
+           * lines above it and nothing connected the two. The label names the
+           * reading and says what kind of answer the app wants, and the note
+           * says what happens to it — which is the difference between "add
+           * this" and "this becomes what the app believes".
+           */
           <div className="domain-correction">
+            <label className="domain-correction__prompt" htmlFor={`concept-${reading.concept}`}>
+              {reading.label}, in your own words
+            </label>
+            <p className="domain-correction__note">
+              {known
+                ? 'This replaces what the app has here, and is what it reads from now on.'
+                : 'The app has nothing here yet. What you write becomes what it reads from now on.'}
+            </p>
             <input
+              id={`concept-${reading.concept}`}
               type="text"
               className="domain-input"
               value={draft}

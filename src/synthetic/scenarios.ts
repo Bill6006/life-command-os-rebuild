@@ -6,6 +6,7 @@ import type { CanonicalRecord, DecisionContext, ThreadState } from '../domain/re
 import { addLocalDaysToDayId, localDayId, timeZone } from '../domain/time'
 import { dueWindow } from '../domain/windows'
 import type { SnapshotWire } from '../memory/snapshot'
+import { JOURNEY_SCENARIOS } from './journeys'
 import { createKit, pastEpisodeRecords, type Scenario } from './kit'
 
 /**
@@ -3347,6 +3348,13 @@ function beforeTheHouseIsUp(): Scenario {
 }
 
 export const SCENARIOS: readonly Scenario[] = [
+  /*
+   * The near-empty histories first, because that is the order D-161 puts them
+   * in: a capability is accepted when an ordinary owner can reach it from a
+   * near-empty store, so the store an owner actually starts from is the first
+   * thing the laboratory offers rather than the twenty-fourth.
+   */
+  ...JOURNEY_SCENARIOS,
   beforeTheHouseIsUp(),
   studyThreadScenario(),
   schoolMorningScenario(),
