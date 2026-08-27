@@ -8381,9 +8381,9 @@ passed on is the checkpoint that ships.
 | | |
 | --- | --- |
 | Product checkpoint | `5dd55cc0bb831fade20371332fb4d7745f61a2e1` (`5dd55cc`) — the build Round 12 passed |
-| Documentation head | `__CLOSEOUT__` (`__SHORT__`) — this closeout |
+| Documentation head | `e4625d36ce27abfa8fd7dd87a5dceb39c63e5a3e` (`e4625d3`) — this closeout |
 | Relationship | **PASS** — proved by `scripts/checkpoint-equivalence.mjs`, never by string equality (D-097). Both outputs are below |
-| CI | **green in both jobs** at `5dd55cc` (run 33039064910), at `db1b556` (run [33040636170](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33040636170)) and at this closeout head — run [__CI_RUN__](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/__CI_RUN__) |
+| CI | **green in both jobs** at `5dd55cc` (run 33039064910), at `db1b556` (run [33040636170](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33040636170)) and at this closeout head — run [33060112680](https://github.com/Bill6006/life-command-os-rebuild/actions/runs/33060112680) |
 | Rounds | **12** — eleven FAIL, then PASS |
 | Findings raised | **QA-82-001 through QA-82-016**, all closed |
 | Decisions added | **D-148 through D-157** |
@@ -8477,7 +8477,19 @@ Bundle-equivalent: the deployed build at db1b55674bf5efc85a5a3c3315ea3f498958e2d
 And again once this closeout head had deployed:
 
 ```text
-__EQUIV_AFTER__
+Deployed SHA read live from https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json: e4625d36ce27abfa8fd7dd87a5dceb39c63e5a3e
+10 file(s) changed between 5dd55cc and e4625d36ce27abfa8fd7dd87a5dceb39c63e5a3e, none of them bundle-relevant:
+  - docs/DECISION_LOG.md
+  - docs/DEFECT_LEDGER.md
+  - docs/NEXT_PROMPT.md
+  - docs/PHASE_STATUS.md
+  - docs/qa/PHASE_82_QA_HANDOFF.md
+  - docs/qa/evidence/phase82-round11-boundary-probe.ts
+  - docs/qa/evidence/phase82-round11-mutations.mjs
+  - docs/qa/evidence/phase82-round12-boundary-probe.ts
+  - docs/qa/evidence/phase82-round12-mutations.mjs
+  - tests/synthetic/qa-82-round-11.test.ts
+Bundle-equivalent: the deployed build at e4625d36ce27abfa8fd7dd87a5dceb39c63e5a3e serves the same bytes as 5dd55cc.
 ```
 
 **The D-147 finishing sequence, in the order it requires.** The last commit was
