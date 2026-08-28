@@ -350,3 +350,366 @@ builder does not edit your rounds and you do not change product code.
 
 Do not ask me to paste file contents.
 ```
+
+---
+
+## Round 1 — independent QA, first submission
+
+**Phase:** 84 — what the owner is trying to become
+
+**Actor:** Codex / independent QA (D-077, D-090).
+
+**Overall result:** **FAIL.** Acceptance items 3, 5, 6 and 7 pass. Acceptance
+items 1, 2 and 4 fail. Five material owner-visible defects are open, four of
+them directly inside the phase gate. The phase stays **YELLOW**.
+
+This is not a deployment mismatch. The deployed documentation head
+`3dbfc9b02ed5d41b810a494817f485021f4546ac` is bundle-equivalent to product
+checkpoint `42667ea`.
+
+### Build identity and test configuration
+
+| Fact | Value |
+| --- | --- |
+| QA-tested product checkpoint | `42667ea` |
+| Repository head at QA start | `3dbfc9b` — documentation-only after the product checkpoint |
+| Deployed Preview SHA read live | `3dbfc9b02ed5d41b810a494817f485021f4546ac` |
+| Relationship | `node --use-system-ca scripts/checkpoint-equivalence.mjs 42667ea --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json` reported four post-checkpoint files, none bundle-relevant |
+| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Android configuration | Playwright Galaxy S24-class context; 360 × 780 CSS px; DPR 3; touch and `isMobile`; Android 14 / Chrome 126 user agent; deployed Preview |
+| Focused browser matrix | Desktop Chromium at 360 × 740, 430 × 932 and 1,280 × 900; one worker |
+| QA report commit | Not committed by QA in this round |
+
+### Protocol record
+
+The order in D-090 was kept.
+
+1. The deployed Preview was opened on ordinary Now before any repository
+   document except this executable handoff was read. **The first evening** was
+   then used from its one-record store through Career destination authoring,
+   Now, partial completion, interruption, blocker capture, Life and Insights.
+2. The cold screen appeared to claim that a named next step immediately became
+   current work; partial work remained resumable; blocker causes were retained;
+   sessions, courses and milestones were distinct; and the second agenda learned
+   something for later without affecting today.
+3. Those claims were traced through the deployed domain pages, QA laboratory,
+   Timeline/correction copy and complete ordinary controls before the governing
+   decisions and implementation were read.
+4. The acceptance paths were then repeated with counterfactual resets, a
+   naturally completed three-session course, a standing blocker, private storage
+   with permission off, and the actual discovery-question sequence.
+
+No screenshot artifact was added: every failure is a stable text/state
+contradiction reproduced on the deployed build and tied below to its source and
+false-green test. The browser DOM transcripts and exact owner steps are the QA
+evidence.
+
+### Acceptance result
+
+| # | Result | Evidence |
+| --- | --- | --- |
+| 1. A destination changes the next recommendation in Career, Health and Money | **FAIL** | Career and Money change Now from the near-empty store. Health does not: identical guide answers produce the identical walk before and after a Health destination. See QA-84-001. |
+| 2. A completed session, completed course and milestone are distinct; attendance is not capability | **FAIL** | Partial work is called a completed session, and a naturally completed course never appears as a course. Milestones remain owner-set and distinct. See QA-84-002 and QA-84-003. |
+| 3. Goal, routine, person, place, skill and obligation are ordinarily authorable | **PASS** | All six controls are present from the near-empty domain page, preview an interpretation and unknowns, and the focused synthetic path builds each from empty. A separate false destination confirmation is QA-84-005. |
+| 4. The second agenda asks for later-useful information and grows quieter | **FAIL** | Skip/budget/volume behavior passes, but the only longitudinal commitment question asks for a regular weekly chunk and records one calendar date. Its claimed later-change test bypasses the agenda and never checks a later decision. See QA-84-004. |
+| 5. “Can't right now” learns a blocker when useful and stays silent when known | **PASS** | On a walk, **Haven't got what I need** produced the durable domain statement _“a walk needs something I have not got”_ with **Not true any more**. The known and restorative silent branches are held by the source decision and focused tests. |
+| 6. Correction consequences and private permission | **PASS** | Event correction states consequence and preservation before applying. A private reading increased the store from one to two records while permission remained off and the QA decision still considered the same nine non-private facts. |
+| 7. Standing no-score guards | **PASS** | No score, percentage, rank, grade, progress bar, readiness number, wellness composite or Life Score appeared on the tested destination/progress/private paths; the guards and privacy scan remain green. |
+
+### Blocking semantic and behavioural defects
+
+#### QA-84-001 — a Health destination does not change the near-empty recommendation
+
+**Severity:** Blocker. **Acceptance item:** 1. **Type:** product semantics.
+
+**Exact counterfactual reproduction:**
+
+1. Load **The first evening**, open Now and answer **Enough** (and **Nothing**
+   when soreness is asked). The headline is _“Move for 25 minutes: a walk.”_
+2. Reset **The first evening**.
+3. Open Health & Recovery and set the destination _“Build sustainable
+   strength”_ with next step _“Lift twice each week”_.
+4. Return to Now and give the same answers.
+5. The headline is still, byte for byte, _“Move for 25 minutes: a walk.”_
+
+Career and Money each add a candidate the thin store did not have. Health
+deliberately does not suggest the owner-authored routine, preserving the explicit
+AUD-0045 deferral; that protection is correct. The acceptance proof nevertheless
+requires the Health destination itself to visibly change the next recommendation
+from the near-empty journey. It does so only in the synthetic test after that
+test first adds an unrelated Career destination and makes Career win, then uses
+Health to restore the walk (`destination-and-discovery.test.ts:146-164`). That
+is not the standalone Health counterfactual claimed by the handoff.
+
+**Existing tests that gave false confidence:**
+
+- `destination-and-discovery.test.ts` calls its three cases separate, but the
+  Health case depends on a Career destination created first.
+- `phase84.spec.ts` tests the deployed recommendation change only for Career.
+- All 57 focused Phase 84 browser cases pass because no browser case performs
+  the Health-before/Health-after comparison.
+
+#### QA-84-002 — “Only part of it” becomes “1 session done” and “Followed through”
+
+**Severity:** Blocker. **Acceptance item:** 2. **Type:** semantic contradiction.
+
+**Exact reproduction:**
+
+1. Load **The first evening**, answer **Enough**, press **Start it**, then
+   **Only part of it** on the walk.
+2. Now correctly offers the move back as **Part done**.
+3. Open Health & Recovery.
+4. **What has actually happened** says _“Sessions done — 1 session done.”_
+5. **Something here wrong?** and Recently call the same event _“Followed
+   through — getting out for a walk.”_
+
+One screen preserves the owner's distinction and the next erases it. The record
+does carry `extent: 'partial'`; `readProgress` counts every
+`action-completion` as the **Sessions done** rung without consulting `extent`
+(`src/intelligence/progress.ts:39-43,125-132`), while history copy assigns every
+action completion **Followed through** (`src/features/history/describe.ts:242,
+397-415`). This is exactly the attendance/progress boundary package 2 exists to
+make visible.
+
+**Existing tests that gave false confidence:**
+
+- The synthetic partial test proves only `part-done` state and that it can later
+  complete; it never reads progress or history copy.
+- The browser partial test proves only the button and **Part done** row.
+- The progress sentence sweep checks counts and forbidden capability words, not
+  whether the counted record was complete.
+
+#### QA-84-003 — a course completed through ordinary controls never appears as a completed course
+
+**Severity:** Blocker. **Acceptance item:** 2. **Type:** architecture / unreachable reader.
+
+**Exact reproduction:**
+
+1. Load **The first evening**, answer **Running on empty**, accept **Three
+   recovery nights in a row**, and complete its three ordinary occasions on 6,
+   8 and 10 May.
+2. The third card correctly says _“Third of three. The last one.”_
+3. After completing it, open Health & Recovery.
+4. The page shows **3 sessions done** and no **Courses finished** section at all.
+
+`ActiveThread.finished` correctly recognises a running thread with all expected
+occasions. `readProgress`, however, walks raw thread records and accepts only
+`record.state === 'done'` (`src/intelligence/progress.ts:157`). DEF-0119 already
+establishes that no ordinary control writes that state. This is the same
+unreachable-value class one reader away from the repaired course-reflection
+reader.
+
+**Existing tests that gave false confidence:**
+
+- The test titled _“reads a completion as a session, a finished course as a
+  course…”_ never starts or finishes a course. It asserts only that one completed
+  session did not become a course (`destination-and-discovery.test.ts:285-300`).
+- The course-reflection reachability test proves a later retained-capability
+  question, not that the finished course itself renders.
+- The Phase 84 browser item-2 block tests sessions and milestones only; there is
+  no completed-course browser case.
+
+#### QA-84-004 — the “regular chunk of your week” question stores one dated occurrence
+
+**Severity:** Blocker. **Acceptance item:** 4. **Type:** longitudinal discovery / semantic capture.
+
+**Exact reproduction:**
+
+1. On **The first evening**, skip the three destination questions across the
+   agenda's two-per-week budget until Insights asks _“Is there something that
+   takes a regular chunk of your week?”_
+2. The form asks for a name, start time and **Which day?** as a calendar date.
+3. Its own note says _“One day. A weekly shape is the Day shape control below,
+   which asks it properly.”_ There is no Day-shape control below on Insights.
+4. The handler passes a `dayId` and no weekdays
+   (`src/features/insights/Discovery.tsx:183-196`), so `authoringRecords` writes a
+   `one-off` commitment window, not the regular week the question asked about.
+
+The app neither preserves the answer's recurrence nor offers the referenced
+control on that surface. This is not a wording nicety: the agenda's purpose is
+to learn something that changes a later decision, and one dated occurrence is a
+different fact from the ordinary weekly obligation it asked the owner to name.
+
+**Existing tests that gave false confidence:**
+
+- The synthetic test titled _“asks something that would not change today, and
+  changes a later day”_ bypasses the discovery agenda by calling generic
+  `introduce` with weekdays. It then opens a fresh near-empty journey and asserts
+  only that the fresh journey has no commitments and a day id exists
+  (`destination-and-discovery.test.ts:430-460`). It never travels the answered
+  store or reads a later decision.
+- The browser tests open/skip the agenda and show a change panel after an
+  aspiration. They never reach or answer the obligation question.
+
+#### QA-84-005 — an empty optional milestone is confirmed as the literal next step “that”
+
+**Severity:** Major, blocking for this submission. **Type:** owner confirmation / copy semantics.
+
+**Exact reproduction:**
+
+1. Reset **The first evening** and open Career & Learning.
+2. Open **Say what you are aiming at** and enter only _“Working as a cloud
+   engineer”_. Leave _“And the next step towards it, if you know it”_ empty.
+3. **That is it** is enabled, while the consequence above it says _“The next
+   step in Career & Learning: ‘that’. The app will treat this as what you are
+   currently studying, and start suggesting work on it.”_
+4. Saving actually creates no milestone, current learning topic or study move,
+   which is the correct treatment of the optional blank.
+
+The pre-action confirmation is false precisely where D-173 says the owner must
+not already understand the next step. The source supplies the invented fallback
+in `DomainPanels.tsx:265`. The browser test that saves an aim without a milestone
+checks only the eventual missing-state copy, never the confirmation the owner
+agreed to.
+
+### Documentation defect
+
+#### QA-84-006 — canonical Phase 9 is told that the second agenda shipped on Life
+
+**Severity:** Non-blocking to the product bundle, material to the next handoff.
+
+Canonical plan section 54 says _“A second questioning surface on Life”_
+(`CANONICAL_REBUILD_PLAN.md:2999`). DEF-0122, D-169, the phase status and the
+deployed product all place it on Insights because Life failed its measured height
+budget. Section 54 explicitly tells canonical Phase 9 what routing 84 shipped;
+that inheritance record must agree with the product it will typeset.
+
+### Mobile and UI result
+
+No separate touch-target, overlap, sticky-navigation or horizontal-overflow
+defect was found in the targeted 360px flows. The six Now actions wrap to three
+rows at 360px, each at 48px high, without overlap; **Only part of it** remains a
+distinct accessible name. Owner-entered terminal punctuation can still produce
+double punctuation in generated recommendation copy (for example
+_“Finish the subnetting lab..”_); treat that as a copy-class sibling while
+repairing QA-84-005, not as an additional gate finding.
+
+The deployed Android gate passed 187 checks in a real Galaxy-class context, but
+it contains no Phase 84 destination, authoring, discovery, blocker, partial or
+progress-course interaction. Its generic navigation/overflow pass therefore
+does not cover the failed surfaces.
+
+### Verification record
+
+| Gate | QA result |
+| --- | --- |
+| Aggregate `npm run verify` | **PASS** — 1,812 / 1,812 tests across 83 files; format, lint, typecheck and build pass |
+| Focused Phase 84 browser matrix | **57 / 57 passed** — 19 at each of 360, 430 and 1,280px; confirms the false-green omissions above |
+| Deployed Android-style gate | **clean — 187 checks** against deployed `3dbfc9b`, bundle-equivalent to `42667ea` |
+| Privacy scan | **clean — 284 tracked files** |
+| CI at deployed head | **PASS** — Verify and Deploy preview jobs successful for `3dbfc9b` |
+| Checkpoint equivalence | **PASS** — four documentation files changed, none bundle-relevant |
+| Commits on no remote at QA start | **none** |
+
+The aggregate suite and focused browser matrix were duplicated on a concrete
+D-090 trigger: deployed behavior contradicted the acceptance claims and the
+purpose-written tests were suspected false-greens. Their green results confirm
+the omissions; they do not clear the defects.
+
+### Deferrals and protected behavior
+
+All explicit deferrals remain absent and were not treated as defects: no
+strategy verdict, no pattern-discovery engine, no progression model beyond the
+three proving domains, no owner-routine recommendation library, no historical
+backfill, no twelfth domain page, no scoring change, no new visual language and
+no live model.
+
+The protected behavior remains intact: Fatherhood's growth path is untouched;
+all child and owner no-score guards still bite; Health and Sleep remain one
+page; private reasoning is off by default; Timeline stays passive; the guide's
+budget and five established lifecycle controls remain, with the sixth partial
+control added distinctly; deterministic and hybrid remain aligned; and no
+render-time owner record write was introduced.
+
+---
+
+## Complete next handoff — repair after Round 1 FAIL
+
+**System:** Claude / builder.
+**Model:** Claude, Opus-class.
+**Intelligence level:** **Max** — this is audit-campaign repair across progress
+semantics, reachability, longitudinal capture and the acceptance instrument.
+**Conversation:** **CURRENT** — return to the original routing 84 Claude builder
+conversation, which owns this unresolved phase and its repairs.
+
+```text
+Routing Phase 84 repair after independent QA Round 1 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 1 is the independent QA
+report and is authoritative for this repair. Keep the Phase field exactly 84.
+
+Keep routing 84 YELLOW. Do not start routing 90 and do not mark the phase GREEN.
+Repair QA-84-001 through QA-84-006 under canonical plan section 42: reproduce
+each defect, identify the whole class, write a regression, prove that regression
+fails when the defect is faithfully reintroduced, fix the root cause, and run
+the full gate on the final tracked checkpoint.
+
+Required outcomes:
+
+1. From The first evening, a Health destination must visibly change the next
+   recommendation under a valid before/after counterfactual using identical
+   guide answers and no unrelated destination as test scaffolding. Preserve
+   D-021 and the explicit deferral: do not begin suggesting arbitrary
+   owner-authored routines merely to make the test move.
+2. Partial work must remain partial everywhere. It must not appear as a completed
+   session or “Followed through” in progress, correction or history copy, and it
+   must remain resumable and capable of later full completion.
+3. A course completed through ordinary controls must render as a completed
+   course, distinct from its sessions and from a milestone. Sweep every reader
+   for the unreachable `thread.state === 'done'` assumption exposed by DEF-0119,
+   rather than repairing only the reported page.
+4. Prove the second agenda's later-useful question through the actual discovery
+   UI and the same answered store. What the question asks, what the form accepts
+   and what the record stores must be the same fact; then travel to the later
+   situation and show the changed decision. Do not bypass the agenda with the
+   generic authoring builder, and do not use a fresh store for the “later” half.
+5. When the optional next step is blank, the confirmation must not invent
+   “that” or promise a learning topic and recommendations that will not be
+   written. Sweep owner-entered punctuation at the same composition boundary so
+   generated sentences do not acquire doubled punctuation.
+6. Correct canonical plan section 54 so its factual inheritance list places the
+   shipped second agenda on Insights, consistent with D-169 and DEF-0122.
+
+Preserve every Round 1 PASS and every explicit deferral, especially the private
+structural guard, standing blocker and silent paths, all no-score protections,
+Fatherhood's untouched growth model, the owner-routine recommendation deferral,
+and Life's measured height budget.
+
+The new regressions must cover the real owner surfaces. Add deployed
+Android-style coverage for the Phase 84 controls the current 187-check gate does
+not touch, and add browser cases for Health's counterfactual, partial-progress
+copy, naturally completed course rendering, the actual longitudinal discovery
+flow and the empty optional milestone confirmation.
+
+Run the clean aggregate gate, full browser suite at 360/430/1280, privacy scan,
+block and copy sweeps, and the deployed Galaxy-class Android gate. Deploy the
+repaired checkpoint, prove checkpoint equivalence if documentation moves the
+deployed SHA, and update this same QA report with the builder's repair record and
+a complete retest prompt addressed to the SAME Codex QA conversation at High.
+Do not start routing 90.
+
+Keep this file's terminal completion marker as its last meaningful line. Do not
+copy it to docs/NEXT_PROMPT.md or any other handoff file.
+Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude, Opus-class. **Level:** Max. **Conversation:** CURRENT — the
+original routing 84 builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 1 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete repair
+handoff there exactly as written. Keep Phase 84 YELLOW; do not start routing 90.
+Do not ask me to paste the file contents.
+```
+
+<!-- LCO_COMPLETE -->
