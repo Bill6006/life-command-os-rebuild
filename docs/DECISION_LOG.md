@@ -6209,3 +6209,92 @@ line is untrustworthy — it is that the line you did not see is the one that
 mattered.
 
 ---
+
+## D-187 — A constraint the engine does not act on is recorded plainly and promised nothing
+
+**Phase:** 84 (owner addendum) · **Status:** Active
+
+Where the owner tells the app what was in the way, the app **records it and says
+so**. It may not say, or imply, that a recommendation will change because of it,
+unless something actually reads the record and changes one.
+
+**Why, and it is a fact about this tree rather than a principle in the abstract:**
+a `constraint` is attached as a caution and shown; it is not enforced.
+`applyConstraints` never reads `situation.constraints`. `cautionsFor` matches a
+constraint's concept against a candidate's `leansOn`, and no `leansOn` anywhere
+contains a `blocker.*` concept — so for a blocker that branch **cannot fire**.
+`constraints.ts` records the non-enforcement as deliberate.
+
+So a sentence like _"the app will stop putting this in front of you"_ would be
+false today, and falsifiable by the owner within one evening — which is worse
+than saying nothing, because it teaches him that the app's promises are
+decorative.
+
+**What may be said:** what was recorded, where it is, and how to take it back.
+**What may not:** what will follow from it.
+
+**Why this is not a reason to withhold the control.** The owner's case is real —
+his daughter is asleep and there is nobody else to watch her — and the seven
+causes had nothing for it. `someone-needs-me` is semantically wrong (nobody
+needed his time; he was not free to leave) and it is `standing: false`, so it
+wrote no durable record at all. Capturing it honestly now is the precondition for
+F08's blocker aggregation later, which is adjudicated to Validity and needs a
+supervision concept, a candidate attribute for _requires leaving the house_, and
+a reversal of the non-enforcement decision. None of those is this phase's.
+
+**The guard is a reintroduction, not a promise.** A copy sweep asserts that no
+owner-visible string on the blocker path claims a future recommendation will
+change, and it is proved by putting such a sentence in and watching it fail.
+
+**This is D-018 and G-009's discipline applied to a capture path**: never claim
+knowledge the system does not act on, and never let an absence read as a
+capability.
+
+---
+
+## D-188 — A destination is proposed and confirmed by its own function, not by widening the authorable kinds
+
+**Phase:** 84 (owner addendum) · **Status:** Active
+
+The discovery card writes a destination only through `proposeDestination()`,
+which returns the same `AuthoringProposal` shape the six authorable kinds return
+and composes `milestoneConfirmation()`. `AUTHORABLE_KINDS` stays at six and
+`destination` is not added to it.
+
+**The choice, and why this one.** The instruction was to route the discovery
+answer through the existing `proposeAuthoring` contract, and that cannot be done
+as stated: `proposeAuthoring` is keyed on `AuthorableKind`, which is six kinds,
+and a destination is not one of them. Two ways out were available.
+
+- **(a) Add `destination` to `AUTHORABLE_KINDS`.** Four exhaustive tables gain a
+  row, which the compiler enforces — genuinely the safer half. But `ENTITY_FOR`
+  would have to say what kind of thing in the world a destination is, and it is
+  not one: a person, a place and a routine are things he has; a destination is
+  what they are **for**. Widening a closed set to reuse a function is the kind of
+  change that reads as tidy and leaves the set meaning less.
+- **(b) `proposeDestination()`.** No table churn, the six-kind exhaustiveness is
+  untouched, and it composes the confirmation sentence this repair had already
+  written for the same path.
+
+**(b), and the deciding argument is what the two sets are.** `AUTHORABLE_KINDS`
+answers _"what can the owner bring into being?"_ — its members are objects the
+rest of the app refers to. A destination is authored through the same **pattern**
+(propose, show what is not assumed, confirm) and is not a member of that
+category. Sharing the pattern is the point; sharing the enum would be an
+overloading of it.
+
+**What the proposal must contain**, and it is the same contract the panel has:
+what the app understood, what it will create, and **what it is not assuming**.
+The last is the half that earns a confirmation, and the bare-aim case — no
+milestone — is exactly where the owner is least able to check it (D-173).
+
+**No interpretation of the words.** The aim is stored byte-identical to what he
+typed, in the prompt's own domain. _"More money"_ under a Career prompt stays
+Career. Whether it means a Money aim, what amount, what horizon, is routing 91
+package 1 (D-172), and this decision does not open it.
+
+**Composed where a test can read it.** QA-84-005 is the standing lesson: a
+sentence a surface composes inline is a sentence no test can hold to what is
+actually written.
+
+---
