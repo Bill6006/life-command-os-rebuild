@@ -39,6 +39,49 @@ None.
 
 ## Fixed
 
+### DEF-0129 — the closed catalogue was closed over one module, not over the screen
+
+- Status: Fixed
+- Severity: Blocker — D-193's guarantee did not hold, so a future edit could put
+  a promise on the owner's screen with all three gates green
+- Found in: routing 84 / `0f9b882`
+- Found by: **independent QA round 4** (QA-84-012), by reading the whole Health
+  panel and the resume panel and asking the catalogue about what it saw
+- Class: **a guard collected where copy is written rather than where it is
+  read.** The third variation on one theme: DEF-0127 listed phrases, DEF-0128
+  listed verbs, and this one listed a module.
+- Reproduction: from **The first evening**, answer **Enough**, press **Can't
+  right now**, choose **Can't leave — someone's in my care**, then read the whole
+  Health panel and Now's resume panel. Six owner-visible strings — the panel
+  title, the paragraph above the rows, **Not true any more** and its accessible
+  name, **Where you left off**, the state sentence and the closing note — all
+  answer `false` to `isApprovedBlockerCopy`, and the two catalogue tests pass
+  anyway.
+- Root cause: `everyRenderedBlockerString()` collected the return values of
+  `blockerQuestionFor` and the `BLOCKER_OPTIONS` table. It had no path to
+  JSX-composed copy, and neither the browser nor the Android D-187 case read
+  beyond a child locator inside the panel.
+- Repair: a rendering collector — `tests/synthetic/blocker-copy.test.tsx` mounts
+  `BlockersPanel`, `BlockerQuestion` and `ResumePanel` in every branch and reads
+  every text-bearing element and every `aria-label`. The surfaces are enumerated
+  by `blockerSurfacesInSource()` from the blocker-path types in their props, and
+  the catalogue is split into the half `blockers.ts` assembles and the half the
+  surfaces compose, each proved by the check that can reach it. See **D-194**.
+- Regression: four cases in `blocker-copy.test.tsx`, plus the browser and Android
+  D-187 cases now reading whole panels element by element.
+- Proved by reintroduction three ways, two of them the boundaries QA named: **the
+  promise QA proposed** for the domain panel's parent note (_"The app keeps these
+  so it can choose something better next time."_) fails the synthetic catalogue
+  **and** the browser gate; **an unapproved string in the resume panel's title**
+  fails the catalogue; and **a fourth component taking a `StandingBlocker` that
+  nothing renders** fails the surface enumeration.
+- Siblings: checked by the instrument rather than by reading — it reports every
+  feature component whose props include a blocker-path type, and all three are
+  rendered. Two owner-visible strings the first collector could not reach were
+  found while writing it: the resume panel's bare _"You said this did not fit at
+  the time."_ (reached by **Just leave it**) and its part-done-after-a-blocker
+  form.
+
 ### DEF-0128 — the guard that replaced a phrase list was a phrase list
 
 - Status: Fixed

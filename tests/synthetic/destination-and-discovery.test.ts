@@ -46,6 +46,7 @@ import {
 import {
   adaptationClaims,
   APPROVED_BLOCKER_COPY,
+  APPROVED_FROM_BLOCKERS_MODULE,
   isApprovedBlockerCopy,
   MUST_BE_ALLOWED,
   MUST_BE_CAUGHT,
@@ -2082,9 +2083,13 @@ describe('QA-84-011 — the adaptation guard, rebuilt on what is actually closed
       'the blocker path rendered copy nobody approved — add it to APPROVED_BLOCKER_COPY with the reason it is honest',
     ).toEqual([])
 
-    // And it is not vacuous: the walk really did reach every branch.
+    /*
+     * And it is not vacuous: the walk really did reach every branch of the half
+     * this file is responsible for. The other half is composed in JSX and is
+     * proved by rendering, in `blocker-copy.test.tsx` — QA-84-012.
+     */
     expect(rendered.length, 'the sweep collected almost nothing').toBeGreaterThanOrEqual(
-      APPROVED_BLOCKER_COPY.length,
+      APPROVED_FROM_BLOCKERS_MODULE.length,
     )
   })
 
@@ -2099,7 +2104,7 @@ describe('QA-84-011 — the adaptation guard, rebuilt on what is actually closed
      * app copy, so it is not in the catalogue and nothing here sweeps for it.
      */
     const rendered = await everyRenderedBlockerString()
-    const unreached = APPROVED_BLOCKER_COPY.filter((line) => !rendered.has(flat(line)))
+    const unreached = APPROVED_FROM_BLOCKERS_MODULE.filter((line) => !rendered.has(flat(line)))
     expect(
       unreached,
       'the catalogue lists copy the path never renders — remove it, or the check is guarding nothing',

@@ -1505,6 +1505,45 @@ async function main() {
     /in my care/.test(r84Kept) && adaptationClaims(r84Kept).length === 0,
     r84Kept.replace(/\s+/g, ' ').trim(),
   )
+
+  /*
+   * The whole panel, not the row — QA-84-012.
+   *
+   * This read the standing blocker's own row and stopped there, so the panel
+   * title, the paragraph above the rows and the withdrawal control's accessible
+   * name were outside every gate. A promise written into any of them rendered
+   * on a green board.
+   */
+  const r84Panel = page.locator('.panel', { has: page.getByTestId('domain-blocker') }).first()
+  const r84Sentences = await r84Panel.evaluate((root) => {
+    const out = []
+    const flat = (text) => text.replace(/\s+/g, ' ').trim()
+    for (const element of [root, ...root.querySelectorAll('*')]) {
+      if (element.querySelector('*') === null) {
+        const text = flat(element.textContent ?? '')
+        if (text !== '') out.push(text)
+      }
+      const label = element.getAttribute('aria-label')
+      if (label !== null) out.push(flat(label))
+    }
+    return [...new Set(out)]
+  })
+  const r84Statement = 'a walk means leaving, and I could not — someone was in my care.'
+  const r84Promises = r84Sentences.filter((line) => adaptationClaims(line).length > 0)
+  check(
+    'and no sentence anywhere in that panel promises a change the engine cannot make',
+    r84Sentences.length > 3 && r84Promises.length === 0,
+    r84Promises.join(' / ') || `${r84Sentences.length} sentences read`,
+  )
+  const r84Unapproved = r84Sentences
+    .map((line) => line.split(r84Statement).join('{statement}'))
+    .filter((line) => line !== '{statement}' && !line.startsWith('Not true any more: '))
+    .filter((line) => !containsApprovedBlockerCopy(line))
+  check(
+    'and every sentence of it that is the app’s own was approved — D-194',
+    r84Unapproved.length === 0,
+    r84Unapproved.join(' / ') || 'all approved',
+  )
   const r84Lift = page.getByTestId('domain-blocker-lift').first()
   check('and there is always a way out of it', (await r84Lift.count()) === 1)
   clearsThumb('the way out', (await r84Lift.boundingBox())?.height)

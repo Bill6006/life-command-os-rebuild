@@ -268,7 +268,7 @@ export function claimingStrings(strings) {
  * `{move}` stands where the move's own name goes, so a statement is listed once
  * rather than once per move.
  */
-export const APPROVED_BLOCKER_COPY = [
+export const APPROVED_FROM_BLOCKERS_MODULE = [
   // The eight causes he can choose between.
   'No time',
   'There was not enough time.',
@@ -298,6 +298,61 @@ export const APPROVED_BLOCKER_COPY = [
   'You have already said what was in the way today.',
   'This was a restful thing rather than an effortful one, and there is nothing here worth asking about.',
 ]
+
+/**
+ * And the copy the **surfaces** compose — QA-84-012, D-194.
+ *
+ * Everything above is assembled in `blockers.ts`, and for one round that was
+ * mistaken for the whole path. It is not: `BlockersPanel` writes a title, a
+ * paragraph and an accessible name in JSX; `ResumePanel` writes a title, two
+ * state sentences and an interpolated note. All of it is owner-visible, none of
+ * it could enter a check that collects the return values of a function, and a
+ * promise written into any of it would have rendered on a green gate.
+ *
+ * **The two halves are separate because they are reached differently.** The
+ * first is proved by walking the scenario library through `blockerQuestionFor`;
+ * this one is proved by **rendering the components** and reading what comes out,
+ * in `blocker-copy.test.tsx`. A single list would leave each check unable to say
+ * which entries it is responsible for, and an unreachable entry in one half
+ * would be excused by the other.
+ *
+ * `{move}` is the move's own name, `{statement}` a stored cause from the first
+ * half, `{recommendation}` the move sentence (guarded by G-001 and its own
+ * catalogue), and `{state}` the word for where a move was left.
+ */
+export const APPROVED_FROM_SURFACES = [
+  // The standing panel on a domain page.
+  'Things you said were in the way',
+  /*
+   * The row itself is the stored cause, rendered verbatim — his words, filed
+   * under their own template above. The panel adds nothing to it, and that is
+   * the point of the row.
+   */
+  '{statement}',
+  'These are about the world rather than about one evening, so the app keeps them until you say otherwise. Nothing here is read as you not wanting to.',
+  'Not true any more',
+  'Not true any more: {statement}',
+
+  // The way back to a move that was left — Now's resume panel.
+  'Where you left off',
+  '{recommendation}',
+  'You said this did not fit at the time.',
+  'You said this did not fit at the time. {statement}',
+  'You got part of this done.',
+  'You got part of this done. {statement}',
+  'Nothing here is a nudge. It is on the screen because you started it, and it goes when the day does — {state} is a real place to leave something.',
+
+  // The lifecycle controls that panel offers, which are on the path too.
+  'Start it',
+  'Done',
+  'Only part of it',
+  'Not today',
+  "Can't right now",
+  'Something else',
+]
+
+/** Every string the blocker path can put in front of the owner. */
+export const APPROVED_BLOCKER_COPY = [...APPROVED_FROM_BLOCKERS_MODULE, ...APPROVED_FROM_SURFACES]
 
 /** Whitespace-insensitive membership, so wrapping in a template cannot matter. */
 export function isApprovedBlockerCopy(line) {

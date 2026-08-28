@@ -1413,6 +1413,70 @@ function takesAMoment(parameters: string): boolean {
 // ---------------------------------------------------------------------------
 
 /**
+ * A component that renders blocker copy of its own — QA-84-012, D-194.
+ *
+ * D-193 called `APPROVED_BLOCKER_COPY` closed, and it was closed over
+ * `blockers.ts` and no further. Three components compose owner-visible blocker
+ * copy in JSX — a panel title, a paragraph, an accessible name, two state
+ * sentences, an interpolated note — and none of it could enter a check that
+ * collects the return values of `blockerQuestionFor`.
+ *
+ * **The enumeration of surfaces has to be structural too**, or the next
+ * component that renders a blocker is invisible in the same way. So the
+ * surfaces are derived from what they *take*: a component whose props include a
+ * blocker-path type renders blocker copy, and
+ * `blocker-copy.test.tsx` asserts that the set it renders is exactly this set.
+ */
+const BLOCKER_PROP_TYPES = ['StandingBlocker', 'BlockerDecision', 'ResumableMove'] as const
+
+export interface BlockerSurface {
+  readonly file: string
+  readonly component: string
+  /** The blocker-path type in its props, so a failure says why it qualified. */
+  readonly takes: string
+}
+
+export function blockerSurfacesInSource(): readonly BlockerSurface[] {
+  const out: BlockerSurface[] = []
+  for (const file of filesUnder(join(ROOT, 'src', 'features'))) {
+    if (!file.endsWith('.tsx')) continue
+    const code = withoutComments(readFileSync(file, 'utf8'))
+    /*
+     * A component is `function Name({ … }: { … })`, and what it takes is in the
+     * type block after the destructuring. Read to the end of that block rather
+     * than a fixed number of lines: a prop list is as long as it is.
+     */
+    for (const match of code.matchAll(/(?:export\s+)?function ([A-Z][A-Za-z0-9_]*)\s*\(\{/g)) {
+      const name = match[1]
+      if (name === undefined || match.index === undefined) continue
+      const open = code.indexOf('}: {', match.index)
+      if (open === -1) continue
+      const close = closingBraceAfter(code, open + 3)
+      if (close === undefined) continue
+      const props = code.slice(open, close)
+      const takes = BLOCKER_PROP_TYPES.find((type) => new RegExp(`\\b${type}\\b`).test(props))
+      if (takes === undefined) continue
+      out.push({ file: relativeToRoot(file), component: name, takes })
+    }
+  }
+  return out.sort((a, b) => `${a.file}${a.component}`.localeCompare(`${b.file}${b.component}`))
+}
+
+/** The index of the brace that closes the one at `open`. */
+function closingBraceAfter(text: string, open: number): number | undefined {
+  let depth = 0
+  for (let index = open; index < text.length; index += 1) {
+    const char = text[index]
+    if (char === '{') depth += 1
+    else if (char === '}') {
+      depth -= 1
+      if (depth === 0) return index + 1
+    }
+  }
+  return undefined
+}
+
+/**
  * A screen that decides it has nothing to offer because the store is empty.
  *
  * QA-84-007's class, read off the tree. `LifeScreen` and `DomainPage` both

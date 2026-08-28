@@ -6519,3 +6519,53 @@ it fails that sweep on the first unfamiliar word.**
 honest thing is to say so where it lives rather than let a green gate imply more.
 
 ---
+
+## D-194 — A catalogue of what may be said is closed over what is rendered, not over where it is written
+
+**Phase:** 84 (QA round 4 repair) · **Status:** Active · Extends **D-193**, whose
+two-part shape stands.
+
+Where a rule closes the set of copy a path may render, the set is collected by
+**rendering the surfaces and reading what comes out** — every text-bearing
+element and every accessible name — and the surfaces themselves are enumerated
+**from what they take**, not from a list somebody wrote.
+
+**D-193 closed a catalogue and called it closed. It was closed over one module.**
+`APPROVED_BLOCKER_COPY` held everything `blockers.ts` assembles, and the check
+collected the return values of `blockerQuestionFor`. But `BlockersPanel` composes
+a title, a paragraph and an `aria-label` in JSX, and `ResumePanel` composes a
+title, two state sentences and an interpolated note. Six owner-visible strings
+answered `false` to `isApprovedBlockerCopy` and **no gate asked them the
+question** — QA-84-012.
+
+QA's sentence for it: _"A closed catalogue over data returned by `blockers.ts` is
+not a closed catalogue over what the owner and accessibility tree receive."_
+
+**So the collector renders.** `blocker-copy.test.tsx` mounts every surface in
+every branch and reads the DOM, which is the only place an interpolated sentence
+and a template-literal accessible name exist whole. A seventh string added to one
+of those panels tomorrow fails without anybody having thought of it, which is the
+property a hand-assembled set cannot have.
+
+**And the enumeration of surfaces is structural too**, or the next component is
+invisible in exactly the same way. `blockerSurfacesInSource()` derives the list
+from the props: a component taking a `StandingBlocker`, a `BlockerDecision` or a
+`ResumableMove` renders blocker copy, and the rendered set must equal that set. A
+fourth panel fails until it is rendered here.
+
+**The catalogue has two halves because they are reached differently** — one by
+walking the scenario library through `blockerQuestionFor`, one by rendering — and
+each check is responsible for its own. A single list would let an unreachable
+entry in one half be excused by the other.
+
+**The rendered gates read whole panels.** The browser and Android D-187 cases
+read a _child_ locator — the question's inner block, the standing blocker's own
+row — so the panel title and the paragraph above the rows were outside every
+assertion. They now read the panel, element by element, plus the accessibility
+tree.
+
+**The general rule, three findings deep:** a guard over copy must be collected
+where the owner reads it. Where it is written is an implementation detail, and
+every version of this guard that trusted the writing place has been wrong.
+
+---

@@ -188,7 +188,16 @@ function lastUnableNow(
  * already allowed **started**, **completed** and **declined** before this phase,
  * and nothing offered them.
  */
-function ResumePanel({
+/*
+ * Exported so a gate can render it — QA-84-012, D-194.
+ *
+ * The catalogue that D-193 called closed was closed over `blockers.ts` and no
+ * further. This panel composes blocker copy of its own in JSX — a title, two
+ * state sentences, an interpolated note — and none of it could enter a check
+ * that collects the return values of a function. What the owner receives is
+ * rendered, so the check has to render.
+ */
+export function ResumePanel({
   resumable,
   entities,
   disabled,

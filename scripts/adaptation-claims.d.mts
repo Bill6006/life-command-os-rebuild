@@ -26,6 +26,12 @@ export const MUST_BE_CAUGHT: readonly string[]
  */
 export const APPROVED_BLOCKER_COPY: readonly string[]
 
+/** The half assembled in `blockers.ts`, proved by walking the scenario library. */
+export const APPROVED_FROM_BLOCKERS_MODULE: readonly string[]
+
+/** The half the surfaces compose in JSX, proved by rendering them. */
+export const APPROVED_FROM_SURFACES: readonly string[]
+
 /** Whitespace-insensitive membership of {@link APPROVED_BLOCKER_COPY}. */
 export function isApprovedBlockerCopy(line: string): boolean
 

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { adaptationClaims, containsApprovedBlockerCopy } from '../../scripts/adaptation-claims.mjs'
 
 /**
@@ -27,6 +27,33 @@ async function loadInQa(page: Page, title: string) {
 async function go(page: Page, name: 'Now' | 'Life' | 'Timeline' | 'Insights') {
   await page.locator('.nav').getByRole('button', { name }).click()
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
+}
+
+/**
+ * Every sentence a panel puts on screen — QA-84-012.
+ *
+ * The D-187 cases read a **child** locator: the question's inner block, and the
+ * standing blocker's own row. Everything around them — the panel title, the
+ * paragraph above the rows, the accessible name on the withdrawal control — was
+ * outside the assertion, and QA showed that a promise written into any of it
+ * would render on a green gate. So this reads the panel, leaf element by leaf
+ * element, plus the accessibility tree with it.
+ */
+async function everySentenceIn(panel: Locator): Promise<readonly string[]> {
+  return panel.evaluate((root) => {
+    const out: string[] = []
+    const flat = (text: string) => text.replace(/\s+/g, ' ').trim()
+    for (const element of [root, ...root.querySelectorAll('*')]) {
+      const node = element as HTMLElement
+      if (node.querySelector('*') === null) {
+        const text = flat(node.textContent ?? '')
+        if (text !== '') out.push(text)
+      }
+      const label = node.getAttribute('aria-label')
+      if (label !== null) out.push(flat(label))
+    }
+    return [...new Set(out)]
+  })
 }
 
 async function openCareer(page: Page) {
@@ -705,21 +732,43 @@ test.describe('owner addendum — “I can’t leave, someone’s in my care”'
      * here, and all three passed while the deployed note promised *"the app can
      * offer something that fits next time"*.
      */
-    const onScreen = await asked.innerText()
-    expect(
-      adaptationClaims(onScreen),
-      'the question promised a change the engine cannot make',
-    ).toEqual([])
+    for (const sentence of await everySentenceIn(asked)) {
+      expect(
+        adaptationClaims(sentence),
+        `the question promised a change the engine cannot make: “${sentence}”`,
+      ).toEqual([])
+    }
 
     await page.getByTestId('blocker-must-stay').click()
     await page.goto(`${APP}#/life/health-recovery`)
     const standing = page.getByTestId('domain-blocker')
     await expect(standing.first()).toBeVisible()
-    const recorded = await standing.first().innerText()
-    expect(
-      adaptationClaims(recorded),
-      'the record promised a change the engine cannot make',
-    ).toEqual([])
+
+    /*
+     * The whole panel, not the row — QA-84-012. The title and the paragraph
+     * above the rows are the copy that was outside every gate.
+     */
+    const panel = page.locator('.panel', { has: page.getByTestId('domain-blocker') }).first()
+    const sentences = await everySentenceIn(panel)
+    expect(sentences.length, 'the panel read as empty').toBeGreaterThan(3)
+    for (const sentence of sentences) {
+      expect(
+        adaptationClaims(sentence),
+        `the standing panel promised a change the engine cannot make: “${sentence}”`,
+      ).toEqual([])
+    }
+
+    // And every sentence of it that is the app's own is one somebody approved.
+    const statement = 'a walk means leaving, and I could not — someone was in my care.'
+    const appsOwn = sentences
+      .map((line) => line.split(statement).join('{statement}'))
+      .filter((line) => line !== '{statement}' && !line.startsWith('Not true any more: '))
+    for (const sentence of appsOwn) {
+      expect(
+        containsApprovedBlockerCopy(sentence),
+        `the standing panel rendered copy nobody approved: “${sentence}”`,
+      ).toBe(true)
+    }
   })
 })
 
