@@ -1343,4 +1343,247 @@ two that render, in the browser as well.
 - **The owner phone check** is owed before release and is not a blocker QA can
   clear.
 
-<!-- LCO_COMPLETE -->
+---
+
+## Round 3 — independent QA retest after the Round 2 repair
+
+**Phase:** 84 — what the owner is trying to become
+
+**Actor:** Codex / independent QA (D-077, D-090).
+
+**Overall result:** **FAIL.** All seven product acceptance items pass, and all
+four Round 2 owner-visible reproductions are repaired on the deployed build.
+The phase nevertheless remains **YELLOW** because the D-192 standing guard is
+still a false green: an ordinary future-adaptation promise can be written in
+several direct forms that `adaptationClaims` returns as safe. One new blocking
+finding, QA-84-011, is open.
+
+### Build identity and test configuration
+
+| Fact | Value |
+| --- | --- |
+| QA-tested product checkpoint | `cdd9259` |
+| Deployed Preview SHA read live | `7810904391f76ce4ccc182b4a07adcec0650f9ac` |
+| Relationship | `node --use-system-ca scripts/checkpoint-equivalence.mjs cdd9259 --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json` reported four changed files and none bundle-relevant |
+| Repository head at QA start | `7810904`, equal to `origin/main`, with a clean worktree |
+| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Manual mobile viewport | 390 × 844 CSS px in the deployed Preview |
+| Cold-store isolation | A DNS-equivalent trailing-dot host, `bill6006.github.io.`, supplied a genuinely fresh IndexedDB origin without clearing either existing QA browser store; the page showed deployed build `7810904` |
+| Android configuration | Galaxy S24-class deployed gate; 360 × 780 CSS px; DPR 3; touch and `isMobile`; Android 14 / Chrome 126 user agent |
+| Browser matrix | Chromium at 360 × 740, 430 × 932 and 1,280 × 900; one worker |
+| QA report commit | Not committed by QA in this round |
+
+### Protocol and cold-store owner-use record
+
+This was the required **cold-store owner-use check**, not a new sealed check.
+Rounds 1 and 2 already existed in this same conversation.
+
+1. The deployed Preview opened from a genuinely fresh store without loading a
+   scenario and without opening QA Lab. Now said **Nothing loaded / There is no
+   history here yet**, invented no recommendation or history, and offered two
+   ordinary routes: **Answer one thing about you** and **Or look at the areas of
+   your life**. The developer route remained visibly separate.
+2. The Life route listed all eleven areas together under **Nothing here yet**.
+   Each distinct domain page remained reachable. Career, Health and Money
+   carried **Say what you are aiming at**, and all ten distinct pages carried
+   the six authoring controls: goal, routine, person, place, skill and
+   obligation. No area invented a standing.
+3. Insights carried the second agenda. CASE A entered `More money` under its
+   Career prompt. Before confirmation it showed the owner's exact words, the
+   Career destination and dated entry it would create, and that it would not
+   assume the next step, starting point or evidence. After confirmation Career
+   showed `More money` byte-identical, under Career, with every named unknown
+   still unknown. No amount, horizon, Money interpretation or second meaning
+   appeared.
+4. Now then asked for current energy instead of inventing work. **Enough**
+   produced the walk. CASE B pressed **Can't right now** and read the repaired
+   note before answering: it said the cause would be kept on its area and could
+   be taken back, with no claim about a future recommendation.
+5. **Can’t leave — someone’s in my care** produced the durable Health statement
+   _“a walk means leaving, and I could not — someone was in my care”_ with **Not
+   true any more**. Now's resume panel and the Health page said only what was
+   recorded. There was no unsupported future-adaptation claim on the live path.
+
+No screenshot artifact was added. The evidence is the deployed DOM transcript,
+the exact owner steps above, the live build identity, and the direct guard
+counterexamples below.
+
+### Round 2 repairs and acceptance result
+
+| # | Result | Round 3 evidence |
+| --- | --- | --- |
+| 1. A destination changes the recommendation in Career, Health and Money | **PASS** | From **The first evening**, the unchanged baseline was _Move for 25 minutes: a walk_. A Health destination _Build sustainable strength_ with next step _Lift twice each week_ first promised that the app would suggest it on evenings with capacity, then produced _Get some movement in: Lift twice each week_ under identical **Enough** input, chosen over the walk. Career and Money's independent counterfactuals pass in the focused synthetic gate. |
+| 2. A completed session, completed course and milestone are distinct; attendance is not capability | **PASS** | After **Start it → Only part of it**, the complete Timeline row read **Part done / Got part of the way — getting out for a walk**. The domain progress rung, naturally completed course and owner-set milestone distinctions pass in the focused synthetic and three-width browser paths. |
+| 3. Goal, routine, person, place, skill and obligation are ordinarily authorable | **PASS** | All six controls were present on every cold-store domain page; the focused synthetic journey builds each from empty and the browser matrix exercises the confirmation contract. |
+| 4. The second agenda asks for later-useful information and grows quieter | **PASS** | CASE A preserved the vague answer and its unknowns; the real weekly-obligation flow, later changed decision, skip budget and library-wide falling volume all pass in the focused synthetic/browser evidence. |
+| 5. “Can't right now” learns a blocker when useful and stays silent when known | **PASS on the product path; standing guard FAIL is QA-84-011** | CASE B wrote the durable caregiving constraint with its withdrawal route and made no adaptation claim. The known and restorative silent paths pass. The rule intended to keep future copy honest is not capable of enforcing the semantic class. |
+| 6. Correction consequences and private permission | **PASS** | The four consequence previews, withdraw/re-date paths and private off/on/off structural behavior pass in the focused synthetic suite and at all three browser widths. |
+| 7. Standing no-score guards | **PASS** | No score, percentage, rank, grade, readiness number, wellness composite or Life Score appeared on the cold-store, destination, progress, discovery, blocker, correction or private paths; the synthetic sweeps and privacy scan pass. |
+
+QA-84-007 through QA-84-010 are closed by their own deployed reproductions.
+Nothing was invented to fill the first screen, Health's confirmation and action
+agree, the partial row is one coherent statement, and the blocker copy now says
+only what is recorded and where.
+
+### New Round 3 finding
+
+#### QA-84-011 — the shared adaptation guard is still a phrase list with easy semantic escapes
+
+**Severity:** Blocker. **Acceptance relationship:** standing copy guard, D-187,
+D-192 and the explicit Round 3 attack requirement. **Type:** false-green test
+architecture.
+
+**Exact reproduction:**
+
+```text
+node --input-type=module -e "import {adaptationClaims} from './scripts/adaptation-claims.mjs'; const lines=['The app will choose a more suitable option.','The app will pick something else for you.','The app will use this when deciding what comes next.','The app will prefer an option that works indoors.']; for (const line of lines) console.log(JSON.stringify({line,claims:adaptationClaims(line)}));"
+```
+
+Every line is a plain promise that the app will adapt a future recommendation
+because of the blocker. Nothing in the current engine performs any of them.
+Every result is nevertheless `"claims":[]`.
+
+The same failure is visible through nominal and passive forms:
+
+```text
+Future recommendations will take this into account.
+The app remembers this for future recommendations.
+Recommendations will be different next time.
+```
+
+All three also return `[]`.
+
+**Source boundary:** `scripts/adaptation-claims.mjs:66-150` is three finite word
+lists. `adaptationClaims()` at line 168 reports a claim only when one actor, one
+listed modality and one listed adaptation verb occur inside a 60-character
+window. The actor and modality are present in _“The app will choose a more
+suitable option”_; the promise escapes solely because `choose` is absent from
+`ADAPTATION_VERBS`. `pick`, `prefer`, `use`, `decide`, nominal
+`recommendations`, and ordinary `future` phrasing supply siblings.
+
+This is the same defect class as QA-84-010 one layer deeper. The old guards
+listed remembered phrases. The replacement takes a cross-product of remembered
+words and calls that the semantic class. `MUST_BE_CAUGHT` at line 209 proves the
+six strings already anticipated, including the two that shipped, but has no
+mutation or paraphrase boundary capable of disproving the list itself.
+
+**Existing tests that give false confidence:**
+
+- `tests/synthetic/destination-and-discovery.test.ts`, _“QA-84-010 — nothing on
+  the blocker path claims the app will change what it offers”_, passes because
+  it sends the current live strings through this matcher.
+- `tests/browser/phase84.spec.ts`, _“QA-84-010 — the blocker note claims nothing
+  the engine does not do”_, imports the same matcher and passes at all three
+  widths for the same reason.
+- `scripts/android-gate.mjs` imports the same matcher and reports _“the question
+  promises no change the engine cannot make”_ while the matcher accepts the
+  counterexamples above.
+- The aggregate 1,841-test gate, the 690-case browser matrix and the 230-check
+  Android gate are therefore simultaneously green over the same false negative.
+
+This finding does **not** say the repaired live blocker copy is false; it is
+honest. It says D-192's required protection does not hold, so a future copy edit
+can restore the exact forbidden behavior while every standing gate remains
+green.
+
+### Mobile, verification and protected-scope result
+
+No touch-target, horizontal-overflow, sticky-navigation, button-shift, console
+or mobile interaction defect was found in the targeted flows.
+
+| Gate | QA result |
+| --- | --- |
+| Aggregate `npm run verify` | **PASS** — 1,841 / 1,841 tests across 83 files; format, lint, typecheck and production build pass |
+| Full browser matrix | **PASS — 690 / 690**, 230 at each of 360, 430 and 1,280px; one worker; 13.8 minutes |
+| Deployed Android-style gate | **clean — 230 checks** against deployed `7810904`, using Node's system CA store |
+| Privacy scan | **clean — 288 tracked files** |
+| Block sweep and standing no-score guards | **PASS inside the aggregate suite** |
+| D-192 adaptation copy guard | **FAIL by direct adversarial counterexample**; all three importing gates are false green |
+| Checkpoint equivalence | **PASS** — deployed `7810904` is bundle-equivalent to `cdd9259` |
+| CI at deployed head | **PASS** — workflow run `33175320902` completed successfully for `7810904` |
+| Commits on no remote at QA start | **none** |
+
+The protected scope remains intact. No product code was changed by QA; no
+strategy evaluation, pattern-discovery engine, blocker enforcement, semantic
+interpretation, new domain progression model, owner-routines library,
+historical backfill, twelfth page, scoring change, visual language or
+orchestrator change appeared. There is no `PHASE_85_*` file, and
+`qa/WHOLE_APP_OWNER_USE_REVIEW.md` is unaltered.
+
+---
+
+## Complete next handoff — repair after Round 3 FAIL
+
+**System:** Claude / builder.
+**Model:** Claude, Opus-class.
+**Intelligence level:** **Max** — this is the third audit-campaign repair and the
+remaining defect is the semantic boundary of the guard written in the preceding
+repair.
+**Conversation:** **CURRENT** — return to the original routing 84 Claude builder
+conversation, which owns this still-unresolved phase and its repairs.
+
+```text
+Routing Phase 84 repair after independent QA Round 3 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 3 is the independent QA
+retest and is authoritative for this repair. Keep the Phase field exactly 84.
+
+Keep routing 84 YELLOW. Do not start routing 90 and do not mark the phase GREEN.
+Repair QA-84-011 under canonical plan section 42: reproduce it, identify the
+whole semantic escape class, write a regression, prove that regression fails
+when the defect is faithfully reintroduced, fix the root cause, and run the full
+gate on the final tracked checkpoint.
+
+The current live blocker copy is honest and QA-84-007 through QA-84-010 are
+closed. Preserve them. The defect is that scripts/adaptation-claims.mjs returns
+no claim for direct future-adaptation promises including:
+
+- “The app will choose a more suitable option.”
+- “The app will pick something else for you.”
+- “The app will use this when deciding what comes next.”
+- “The app will prefer an option that works indoors.”
+- “Future recommendations will take this into account.”
+
+Do not repair only those words by adding them to the existing lists. Establish
+the whole class D-187 forbids and D-192 claims to guard, including ordinary
+active, nominal and passive paraphrases; prove the exact reported escapes fail;
+and prove honest present-tense recording/correction copy still passes. Keep one
+authoritative guard shared by the synthetic, browser and Android gates.
+
+Preserve every Round 3 product PASS and every explicit deferral, especially the
+first-run abstention and ordinary routes, all eleven empty Life areas and domain
+controls, Health's confirmation-to-recommendation agreement, the complete
+partial Timeline row, the honest live blocker copy and caregiving withdrawal
+route, course/recurrence/correction/private behavior, all no-score protections,
+Fatherhood's untouched growth model, and the absence of blocker enforcement.
+
+Run the clean aggregate gate, full browser suite at 360/430/1280, privacy scan,
+block/copy sweeps, and deployed Galaxy-class Android gate. Deploy the repaired
+checkpoint, prove checkpoint equivalence if documentation moves the deployed
+SHA, append the builder's repair record and a complete Round 4 retest prompt to
+this same QA report, and address that retest to the SAME Codex QA conversation
+at High.
+
+Do not create a PHASE_85_* file. Do not alter
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md. Do not ask the owner to paste file
+contents.
+```
+
+### Short launcher
+
+**Model:** Claude, Opus-class. **Level:** Max. **Conversation:** CURRENT — the
+original routing 84 builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 3 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 3
+repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
+routing 90. Do not ask me to paste the file contents.
+```
