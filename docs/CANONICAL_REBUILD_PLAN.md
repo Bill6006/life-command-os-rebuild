@@ -2996,7 +2996,7 @@ screen today is honest and plain, and re-typesetting it is this phase's work.
 - **One create-and-confirm control** for a goal, a routine, a person, a place, a
   skill and an obligation, including the interpretation the owner agrees to and
   the list of what the app will not assume.
-- **A second questioning surface** on Life, with its own weekly budget, always
+- **A second questioning surface** on Insights, with its own weekly budget, always
   skippable, and able to show what an answer changed.
 - **One optional question after "Can't right now"**, and a way back to a move
   that was interrupted or half-finished.

@@ -15,20 +15,21 @@ import type { OutcomeAspect } from './records'
  *
  * ## The ladder
  *
- * Six kinds, in order of how much they license. Each rung is a different
+ * Seven kinds, in order of how much they license. Each rung is a different
  * observation with a different window, and **a lower rung never speaks for a
  * higher one**:
  *
  * 1. `attempt` — it was started. Says the intention existed.
- * 2. `completion` — the thing asked for was carried out. Says nothing about
+ * 2. `part-done` — some of it happened, and he said so. Not a session done.
+ * 3. `completion` — the thing asked for was carried out. Says nothing about
  *    whether the intended end state happened; that is DEF-0020's distinction
  *    and it is the one the whole learning layer rests on.
- * 3. `quality` — the intended end state occurred. An `outcome` of aspect
+ * 4. `quality` — the intended end state occurred. An `outcome` of aspect
  *    `result`.
- * 4. `retained-capability` — it is still there later. Asked about a **course**,
+ * 5. `retained-capability` — it is still there later. Asked about a **course**,
  *    days after it finished.
- * 5. `transfer` — it has been used somewhere real.
- * 6. `milestone` — the owner says a named step on the way to something is
+ * 6. `transfer` — it has been used somewhere real.
+ * 7. `milestone` — the owner says a named step on the way to something is
  *    reached. **Never inferred**: it is his statement, not a conclusion from
  *    what he attended.
  *
@@ -48,6 +49,21 @@ import type { OutcomeAspect } from './records'
 
 export const PROGRESS_EVIDENCE = [
   'attempt',
+  /**
+   * Some of it happened, and he said so — F10, QA-84-002.
+   *
+   * Its own rung, between starting and finishing, because it is its own fact.
+   * The first version counted a partial completion as a **session done**: one
+   * screen offered the move back as *"Part done"* and the next called it
+   * *"1 session done"* and *"Followed through"*, which is the owner's own
+   * distinction preserved by the state machine and erased by everything that
+   * read it.
+   *
+   * A rung rather than a fold into `attempt`, because *"I got some of the
+   * kitchen cleared"* is more than *"I started"* and less than *"I did it"*,
+   * and the whole subject of this ladder is that those are three claims.
+   */
+  'part-done',
   'completion',
   'quality',
   'retained-capability',
@@ -89,6 +105,7 @@ export const RUNG_FOR_ASPECT: Partial<Record<OutcomeAspect, ProgressEvidence>> =
  */
 export const PROGRESS_LABEL: Record<ProgressEvidence, string> = {
   attempt: 'Started',
+  'part-done': 'Got part way',
   completion: 'Sessions done',
   quality: 'How they went',
   'retained-capability': 'What has stuck',
@@ -110,6 +127,7 @@ export const PROGRESS_LABEL: Record<ProgressEvidence, string> = {
  */
 export const PROGRESS_SENTENCE: Record<ProgressEvidence, (count: number) => string> = {
   attempt: (count) => `${countOf(count, 'thing', 'things')} started here.`,
+  'part-done': (count) => `${countOf(count, 'time', 'times')} you got part of the way and said so.`,
   completion: (count) =>
     `${countOf(count, 'session', 'sessions')} done. That is what happened, not what it came to.`,
   quality: (count) =>
@@ -154,6 +172,7 @@ export function courseSentence(count: number): string {
  */
 export const PROGRESS_DOES_NOT_SAY: Record<ProgressEvidence, string> = {
   attempt: 'Starting something is not doing it.',
+  'part-done': 'Part of something is not the whole of it, and it is not a session done.',
   completion: 'Doing the sessions is not the same as getting better at it.',
   quality: 'How a session went is not how much of it stayed.',
   'retained-capability': 'Knowing it is not the same as having used it.',

@@ -54,6 +54,63 @@ async function untilThereIsAMove(page: Page) {
   await expect(page.getByTestId('now-actions')).toBeVisible()
 }
 
+/**
+ * Answer the guide until there is a move, choosing named answers where the
+ * question is one this file cares about.
+ *
+ * `untilThereIsAMove` presses whatever comes first, which for energy is
+ * *"Running on empty"* — a recovery evening. Several cases below need an
+ * ordinary one, so they say which answers they mean.
+ */
+async function answerGuideWith(page: Page, wanted: readonly string[]) {
+  /*
+   * Answer whatever the guide is asking, preferring a named option, until
+   * there is something to press.
+   *
+   * Written to survive the screen re-rendering underneath it, which it does
+   * constantly and correctly: every control on Now carries `disabled={busy}`
+   * while an append is in flight, travelling the clock rebuilds the whole
+   * decision, and an answer can remove the question that was on screen when it
+   * was read. So each pass re-reads what is there, waits for the state a click
+   * needs, and treats a lost element as a reason to look again rather than as
+   * a failure — the alternative is a test that reports the app broken because
+   * it re-rendered.
+   */
+  for (let taps = 0; taps < 6; taps += 1) {
+    if ((await page.getByTestId('now-actions').count()) > 0) return
+    const options = page.locator('.now-option')
+    if ((await options.count()) === 0) return
+
+    /*
+     * A plain loop, because `Array.find` with an async predicate does not do
+     * what it reads like: every promise is truthy, so it returns the first
+     * candidate whether or not the option is on screen. It passed by retrying,
+     * which is the worst way for a test helper to be right.
+     */
+    let target = options.first()
+    for (const label of wanted) {
+      const option = page.locator('.now-option', { hasText: label }).first()
+      if ((await option.count()) > 0) {
+        target = option
+        break
+      }
+    }
+    try {
+      await target.click({ timeout: 5_000 })
+    } catch {
+      // Gone or still busy. The next pass reads the screen as it now is.
+    }
+  }
+}
+
+/** Move the laboratory clock forward, the way the QA screen does. */
+async function travel(page: Page, unit: '+1 day' | '+1 week', times: number) {
+  await page.goto(`${APP}#/qa`)
+  for (let step = 0; step < times; step += 1) {
+    await page.locator('.qa-travel').getByRole('button', { name: unit }).click()
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Item 1 — saying what he is aiming at, and the app changing its mind
 // ---------------------------------------------------------------------------
@@ -412,7 +469,7 @@ test.describe('the second information agenda', () => {
     await go(page, 'Insights')
 
     await page.getByTestId('discovery-open').click()
-    const asked = await page.locator('[data-testid="discovery-prompt"] label').innerText()
+    const asked = await page.locator('[data-testid="discovery-prompt"] label').first().innerText()
     await page.getByTestId('discovery-leave').click()
 
     await expect(page.getByTestId('discovery-closed')).toBeVisible()
@@ -433,5 +490,267 @@ test.describe('the second information agenda', () => {
 
     await page.getByTestId('discovery-changes-open').click()
     await expect(page.getByTestId('discovery-changes')).toBeVisible()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// QA round 1 — the five defects, on the screens they were reported from
+// ---------------------------------------------------------------------------
+
+test.describe('what independent QA found on the deployed build', () => {
+  test('QA-84-001 — a Health destination alone changes what Now suggests', async ({ page }) => {
+    /*
+     * The counterfactual, twice through the same store, with identical answers
+     * and no other destination anywhere. QA reproduced this by hand and got the
+     * same walk byte for byte; there was no browser case that would have.
+     */
+    await loadInQa(page, 'The first evening')
+    await go(page, 'Now')
+    await answerGuideWith(page, ['Enough', 'Nothing'])
+    const before = await page.locator('.primary-surface__headline').innerText()
+    expect(before).toContain('walk')
+
+    await page.goto(`${APP}#/life/health-recovery`)
+    await page.getByTestId('destination-open').click()
+    await page.getByTestId('destination-aim-input').fill('Strong enough to keep up with her')
+    await page.getByTestId('destination-milestone-input').fill('Lift twice each week')
+    await page.getByTestId('destination-save').click()
+    await expect(page.getByTestId('destination-aim')).toBeVisible()
+
+    await go(page, 'Now')
+    await answerGuideWith(page, ['Enough', 'Nothing'])
+    const after = await page.locator('.primary-surface__headline').innerText()
+    expect(after, 'a Health destination changed nothing on Now').not.toBe(before)
+    expect(after).toContain('Lift twice each week')
+    // And no duration was invented for a step the app has never seen.
+    expect(after).not.toMatch(/\d+ minutes/)
+  })
+
+  test('QA-84-002 — partial work reads as partial on the page that counts it', async ({ page }) => {
+    await loadInQa(page, 'The first evening')
+    await go(page, 'Now')
+    await answerGuideWith(page, ['Enough', 'Nothing'])
+    const actions = page.getByTestId('now-actions')
+    await actions.getByRole('button', { name: 'Start it' }).click()
+    await actions.getByRole('button', { name: 'Only part of it' }).click()
+    await expect(page.locator('.rows')).toContainText('Part done')
+
+    await page.goto(`${APP}#/life/health-recovery`)
+    // The rung it belongs on, and not the one above it.
+    await expect(page.getByTestId('progress-part-done')).toBeVisible()
+    await expect(page.getByTestId('progress-completion')).toHaveCount(0)
+
+    // And the same event, worded the same way, in the correction list.
+    const screen = await page.locator('.screen').innerText()
+    expect(screen).not.toContain('Followed through')
+    expect(screen).toContain('Got part of the way')
+  })
+
+  test('QA-84-003 — a course finished through the ordinary controls shows as a course', async ({
+    page,
+  }) => {
+    /*
+     * **Two sessions in** is the one history in the library that holds a course
+     * at all, and it sits one occasion from the end — so the whole flow is the
+     * final session, through the buttons an owner presses.
+     *
+     * An earlier version drove three occasions from the near-empty store across
+     * six days of travel. It proved the same thing and it was flaky, because
+     * whether a recovery move is on screen after travelling depends on what the
+     * guide decides to ask — and a browser case whose setup can fail for a
+     * reason unrelated to its subject is worse than no browser case. The
+     * multi-day walk is held in the synthetic instrument, which can drive the
+     * clock exactly.
+     *
+     * That the library contains exactly one course, and that it had never been
+     * finished, is why `state === 'done'` survived in three separate readers.
+     */
+    await loadInQa(page, 'Two sessions in')
+    await go(page, 'Now')
+
+    const actions = page.getByTestId('now-actions')
+    await expect(actions, 'the third session was not offered').toBeVisible()
+    const start = actions.getByRole('button', { name: 'Start it' })
+    await expect(start).toBeEnabled({ timeout: 15_000 })
+    await start.click()
+    const done = actions.getByRole('button', { name: 'Done', exact: true })
+    await expect(done).toBeEnabled({ timeout: 15_000 })
+    await done.click()
+
+    await page.goto(`${APP}#/life/career`)
+    // Three different things, and the page says three different things.
+    await expect(page.getByTestId('progress-courses')).toBeVisible()
+    await expect(page.getByTestId('progress-completion')).toBeVisible()
+    await expect(page.getByTestId('progress-milestone')).toHaveCount(0)
+  })
+
+  test('QA-84-004 — the weekly question asks for a day of the week', async ({ page }) => {
+    /*
+     * What the question asks for is what the form accepts. It asked about a
+     * regular chunk of the week and offered a calendar date, and stored one
+     * dated occurrence.
+     */
+    test.setTimeout(120_000)
+    await loadInQa(page, 'The first evening')
+
+    /*
+     * The agenda is deliberately slow: three aspiration questions come before
+     * the weekly one and only two are put in a week (D-163, D-184). So an
+     * owner reaches this question in his second week, and the test travels
+     * rather than pretending he would not have to.
+     */
+    let asked = ''
+    for (let round = 0; round < 8; round += 1) {
+      await go(page, 'Insights')
+      if (!(await page.getByTestId('discovery-closed').isVisible())) {
+        await travel(page, '+1 week', 1)
+        continue
+      }
+      await page.getByTestId('discovery-open').click()
+      asked = await page.locator('[data-testid="discovery-prompt"] label').first().innerText()
+      if (asked.includes('regular chunk')) break
+      await page.getByTestId('discovery-leave').click()
+    }
+
+    const label = asked
+    expect(label, 'the agenda never reached the weekly question').toContain('regular chunk')
+    const day = page.getByTestId('discovery-day')
+    await expect(day).toBeVisible()
+    // A day of the week, not a date in a month.
+    expect(await day.evaluate((node) => node.tagName)).toBe('SELECT')
+    await expect(day).toContainText('Wednesday')
+  })
+
+  test('QA-84-005 — a blank next step is not confirmed as one', async ({ page }) => {
+    await loadInQa(page, 'The first evening')
+    await page.goto(`${APP}#/life/career`)
+    await page.getByTestId('destination-open').click()
+    await page.getByTestId('destination-aim-input').fill('Working as a cloud engineer')
+
+    // The optional box is empty, and the confirmation says so.
+    const form = page.getByTestId('destination-form')
+    await expect(form).toContainText('nothing is created')
+    await expect(form).not.toContainText('The next step in Career & Learning: “that”')
+    await expect(form).not.toContainText('currently studying')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The owner addendum — two corrections from real use, on the screens they
+// were reported from. Neither is a QA finding.
+// ---------------------------------------------------------------------------
+
+test.describe('owner addendum — “I can’t leave, someone’s in my care”', () => {
+  test('is on the list, and writes something that survives the evening', async ({ page }) => {
+    /*
+     * The owner's case on the deployed build: Now offered a walk while his
+     * daughter was asleep and there was nobody else to watch her. The nearest
+     * of the seven causes was *"Someone needed me"*, which is wrong twice —
+     * nobody needed his time, he was not free to leave — and `standing: false`,
+     * so it wrote nothing durable at all.
+     */
+    await loadInQa(page, 'The first evening')
+    await go(page, 'Now')
+    /*
+     * An ordinary evening, named rather than taken. `untilThereIsAMove` presses
+     * whatever is first, which for energy is *"Running on empty"* — a recovery
+     * evening, where the app may correctly decide the answer would change
+     * nothing and say so instead of asking (D-164). This case is about the
+     * question, so it asks for the evening the question is put on.
+     */
+    await answerGuideWith(page, ['Enough', 'Nothing'])
+    await page.getByTestId('now-actions').getByRole('button', { name: "Can't right now" }).click()
+
+    const asked = page.getByTestId('blocker-question')
+    await expect(asked, 'the app did not ask what was in the way').toBeVisible()
+
+    const option = page.getByTestId('blocker-must-stay')
+    await expect(option, 'the eighth cause is not offered').toBeVisible()
+    await expect(option).toContainText('in my care')
+    await option.click()
+    await expect(asked).toHaveCount(0)
+
+    // Durable, and on the page for the area the move belonged to — across a
+    // reload, which is what "durable" has to mean on a phone.
+    await page.goto(`${APP}#/life/health-recovery`)
+    await expect(page.getByRole('heading', { level: 1, name: 'Health & Recovery' })).toBeVisible()
+    await page.reload()
+    const standing = page.getByTestId('domain-blocker')
+    await expect(standing.first()).toContainText('someone was in my care')
+
+    // And withdrawable, which is the way out the question always offers.
+    await page.getByTestId('domain-blocker-lift').first().click()
+    await expect(page.getByTestId('domain-blocker')).toHaveCount(0)
+  })
+
+  test('promises nothing about what the app will suggest next — D-187', async ({ page }) => {
+    /*
+     * Nothing in the engine reads a blocker constraint: `applyConstraints`
+     * never looks at `situation.constraints`, and `cautionsFor` matches a
+     * constraint's concept against a candidate's `leansOn`, which never holds a
+     * `blocker.*` concept. So a sentence saying the walk will stop being
+     * offered would be falsifiable by the owner within one evening.
+     */
+    await loadInQa(page, 'The first evening')
+    await go(page, 'Now')
+    await answerGuideWith(page, ['Enough', 'Nothing'])
+    await page.getByTestId('now-actions').getByRole('button', { name: "Can't right now" }).click()
+
+    const asked = page.getByTestId('blocker-question')
+    await expect(asked).toBeVisible()
+    const onScreen = await asked.innerText()
+    for (const promise of [/stop suggesting/i, /won.t suggest/i, /no longer suggest/i]) {
+      expect(onScreen, 'the question promised a change the engine cannot make').not.toMatch(promise)
+    }
+
+    await page.getByTestId('blocker-must-stay').click()
+    await page.goto(`${APP}#/life/health-recovery`)
+    const standing = page.getByTestId('domain-blocker')
+    await expect(standing.first()).toBeVisible()
+    const recorded = await standing.first().innerText()
+    for (const promise of [/stop suggesting/i, /won.t suggest/i, /no longer suggest/i]) {
+      expect(recorded, 'the record promised a change the engine cannot make').not.toMatch(promise)
+    }
+  })
+})
+
+test.describe('owner addendum — the discovery card says what it will do first', () => {
+  test('shows the interpretation, what it makes and what it will not assume', async ({ page }) => {
+    /*
+     * The owner typed **More money** into the Career prompt and pressed *That
+     * is it*, believing he had confirmed an interpretation. The branch went
+     * straight to the record builder, and the panel one screen away has had the
+     * whole contract since package 3.
+     */
+    await loadInQa(page, 'The first evening')
+    await go(page, 'Insights')
+    await page.getByTestId('discovery-open').click()
+
+    // Nothing to confirm until there is something to confirm.
+    await expect(page.getByTestId('discovery-proposal')).toHaveCount(0)
+    await expect(page.getByTestId('discovery-save')).toBeDisabled()
+
+    await page.getByTestId('discovery-answer').fill('More money')
+    const proposal = page.getByTestId('discovery-proposal')
+    await expect(proposal).toBeVisible()
+    await expect(proposal, 'his words were not shown back to him').toContainText('More money')
+    await expect(proposal).toContainText('Career & Learning')
+    await expect(page.getByTestId('discovery-unknowns')).toContainText('the next step')
+    await expect(page.getByTestId('discovery-save')).toBeEnabled()
+  })
+
+  test('and writes nothing at all if he leaves it', async ({ page }) => {
+    await loadInQa(page, 'The first evening')
+    await go(page, 'Insights')
+    await page.getByTestId('discovery-open').click()
+    await page.getByTestId('discovery-answer').fill('More money')
+    await expect(page.getByTestId('discovery-proposal')).toBeVisible()
+
+    await page.getByTestId('discovery-leave').click()
+    await expect(page.getByTestId('discovery-prompt')).toHaveCount(0)
+
+    // Career has no aspiration on it: reading a proposal is not agreeing to one.
+    await openCareer(page)
+    await expect(page.locator('body')).not.toContainText('More money')
   })
 })

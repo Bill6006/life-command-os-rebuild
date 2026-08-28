@@ -351,13 +351,17 @@ export function renderRecommendation(
 ): RenderResult {
   const issues: RenderIssue[] = []
 
-  const subject = index.labelFor(semantics.subject)
-  if (subject === undefined) issues.push({ problem: 'unresolved-subject', ref: semantics.subject })
+  const rawSubject = index.labelFor(semantics.subject)
+  if (rawSubject === undefined) {
+    issues.push({ problem: 'unresolved-subject', ref: semantics.subject })
+  }
+  const subject = rawSubject === undefined ? undefined : ownerPhrase(rawSubject)
 
-  const object = index.labelFor(semantics.target.object)
-  if (object === undefined) {
+  const rawObject = index.labelFor(semantics.target.object)
+  if (rawObject === undefined) {
     issues.push({ problem: 'unresolved-object', ref: semantics.target.object })
   }
+  const object = rawObject === undefined ? undefined : ownerPhrase(rawObject)
 
   let goal: string | undefined
   if (semantics.relatedGoal !== undefined) {
@@ -470,6 +474,24 @@ const PATTERN_NAME: Record<ActionVerb, (object: string | undefined) => string> =
  * card headed *"a walk"*. `verbLabel` is the word on the eyebrow of a
  * recommendation; it was never a name for a thing.
  */
+/**
+ * An owner-written phrase, ready to sit inside a sentence the app composes.
+ *
+ * One thing, and it is the thing that goes wrong: a generated sentence supplies
+ * its own full stop, so a name the owner ended with one produces *"Finish the
+ * subnetting lab.."*. Every template here ends its sentence, and every subject
+ * inside one may be his words, so the trim belongs at the boundary rather than
+ * in each template.
+ *
+ * **It does not touch his case, and that is deliberate.** Lower-casing a phrase
+ * to make it read mid-sentence would also lower-case a person's name, and the
+ * standing rule is that the app renders what he calls a thing exactly. A capital
+ * inside a sentence is his; a doubled full stop is the app's.
+ */
+export function ownerPhrase(text: string): string {
+  return text.trim().replace(/[.!?]+$/, '')
+}
+
 export function patternNameFor(verb: ActionVerb, object: string | undefined): string {
   return PATTERN_NAME[verb](object)
 }

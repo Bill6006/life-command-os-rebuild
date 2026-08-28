@@ -31,10 +31,23 @@ import { useMemory } from '../memory/memoryContext'
  * unable to tell whether the app dropped it or he did.
  */
 
+/*
+ * `finished` rather than the state word — QA-84-003's class, third instance.
+ *
+ * The line under it read `thread.state === 'done'`, and **nothing writes that
+ * state**: this very panel offers *Stop this* and *Pick this up again*, so the
+ * only states an owner can write are `abandoned` and `running`. It was dead on
+ * the day it was written, and it was dead here while the same assumption was
+ * being repaired twice elsewhere — once in the course-reflection reader
+ * (DEF-0119) and once in the progress reader (QA-84-003).
+ *
+ * The occasions line above it happened to cover the case, which is why nothing
+ * looked wrong. One definition now answers it, computed where the rest of a
+ * thread's standing is.
+ */
 function standing(thread: ActiveThread): string {
-  if (thread.done >= thread.steps) return 'Finished.'
+  if (thread.finished) return 'Finished.'
   if (thread.state === 'abandoned') return 'Stopped.'
-  if (thread.state === 'done') return 'Finished.'
   if (thread.expired) return 'Ran out of time on its own.'
   if (thread.state === 'paused') return 'Paused — you passed on one of these.'
   return describeThreadPosition(thread)

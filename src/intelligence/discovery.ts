@@ -242,7 +242,7 @@ export function outstandingPrompts(situation: Situation): readonly DiscoveryProm
       domain: DOMAIN.direction,
       shape: 'obligation',
       prompt: 'Is there something that takes a regular chunk of your week?',
-      note: 'This is kept as a part of your week that is already spoken for, so the app stops suggesting things into it. It changes nothing about today unless today is one of those days.',
+      note: 'This is kept as a part of every week that is already spoken for, so the app stops suggesting things into it. It changes nothing about today unless today is that day.',
       because: 'nothing in the record says what an ordinary week looks like',
       destination: undefined,
     })

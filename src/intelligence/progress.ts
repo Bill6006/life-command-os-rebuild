@@ -122,14 +122,27 @@ export function readProgress(
           about: nameOf(record),
         })
         break
-      case 'action-completion':
-        push('completion', {
-          kind: 'completion',
+      case 'action-completion': {
+        /*
+         * The record says how much of it happened, and the rung follows —
+         * QA-84-002.
+         *
+         * This counted every completion as a session done and never looked at
+         * `extent`, so *"Only part of it"* arrived on this page as *"1 session
+         * done"* — the owner's own distinction, preserved by the state machine
+         * and erased by the thing that reads it. Absent means the whole of it,
+         * so every completion written before the field existed still lands
+         * where it always did.
+         */
+        const rung: ProgressEvidence = record.extent === 'partial' ? 'part-done' : 'completion'
+        push(rung, {
+          kind: rung,
           at: record.occurredAt,
           record: record.id,
           about: nameOf(record),
         })
         break
+      }
       case 'outcome': {
         const rung = RUNG_FOR_ASPECT[record.aspect]
         if (rung === undefined) break
@@ -154,17 +167,44 @@ export function readProgress(
         })
         break
       case 'thread':
-        if (record.state !== 'done') break
-        courses.push({
-          kind: 'completion',
-          at: record.occurredAt,
-          record: record.id,
-          about: situation.entities.labelFor(record.subject) ?? record.intent,
-        })
+        /*
+         * Courses are read from the situation, not from these rows —
+         * QA-84-003.
+         *
+         * This accepted only `state === 'done'`, and **nothing writes that
+         * state**: the Life panel offers *Stop this* and *Pick this up again*,
+         * so a course that runs its three occasions stays `running` with
+         * `live: false`. A run completed through the ordinary controls
+         * therefore never appeared as a course anywhere on this page, which is
+         * DEF-0119's own class one reader further on — the same mistake, found
+         * twice, because the first repair was scoped to the place it was
+         * noticed.
+         *
+         * `ActiveThread.finished` is the one definition, and it is read below.
+         */
         break
       default:
         break
     }
+  }
+
+  /*
+   * Every course that actually finished, from the one place that knows —
+   * QA-84-003.
+   *
+   * `situation.threads` is `activeThreads`, which computes `finished` from what
+   * the record shows rather than from the state word nobody writes. Reading it
+   * here is what makes a completed course visible at all.
+   */
+  for (const thread of situation.threads) {
+    if (!thread.finished) continue
+    if (!domains.includes(threadDomain(situation, thread))) continue
+    courses.push({
+      kind: 'completion',
+      at: situation.view.history.byId(thread.source)?.occurredAt ?? situation.at,
+      record: thread.source,
+      about: situation.entities.labelFor(thread.subject) ?? thread.intent,
+    })
   }
 
   const rungs: ProgressRung[] = []
@@ -187,6 +227,21 @@ export function readProgress(
   }
 
   return { domain: domains[0]!, rungs, strongest, courses }
+}
+
+/**
+ * Which life area a course belongs to.
+ *
+ * The record it came from carries the domains it was written with, which is
+ * where a thread's area has always lived. Read through the history rather than
+ * guessed from the subject, because a subject can belong to one area and a plan
+ * about it be filed under another.
+ */
+function threadDomain(situation: Situation, thread: ActiveThread): LifeDomainId {
+  const record = situation.view.history.byId(thread.source)
+  return (
+    record?.domains[0] ?? situation.entities.resolve(thread.subject)?.domain ?? ('' as LifeDomainId)
+  )
 }
 
 /**

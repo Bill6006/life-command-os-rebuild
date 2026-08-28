@@ -136,6 +136,16 @@ export interface AuthoringDraft {
 }
 
 /**
+ * What can be proposed, which is the six plus the thing the six are for.
+ *
+ * Not `AuthorableKind` itself — see {@link proposeDestination}. A destination
+ * shares the propose-and-confirm **pattern** and is not a member of that
+ * category, and the four exhaustive tables keyed on `AuthorableKind` stay at
+ * six rows because of it.
+ */
+export type ProposableKind = AuthorableKind | 'destination'
+
+/**
  * What the app will do with a draft, said before it does it.
  *
  * Every field here is meant to be rendered. `interpretation` is the sentence
@@ -144,7 +154,7 @@ export interface AuthoringDraft {
  * things the app is **not** going to assume from what he typed.
  */
 export interface AuthoringProposal {
-  readonly kind: AuthorableKind
+  readonly kind: ProposableKind
   readonly interpretation: string
   readonly creates: readonly string[]
   readonly unknowns: readonly string[]
@@ -621,6 +631,119 @@ const MILESTONE_ENTITY: Partial<Record<string, EntityKind>> = {
 
 export function milestoneEntityKind(domain: LifeDomainId): EntityKind {
   return MILESTONE_ENTITY[domain] ?? 'goal'
+}
+
+/**
+ * What naming an aspiration will do, said before it does it — D-188.
+ *
+ * ## Why this is not `proposeAuthoring`
+ *
+ * `proposeAuthoring` is keyed on `AuthorableKind`, which is six kinds, and a
+ * destination is not one of them. That set answers *"what can the owner bring
+ * into being?"* and its members are things he has — a person, a place, a
+ * routine. A destination is what those are **for**. Sharing the
+ * propose-and-confirm pattern is the point; sharing the enum would mean
+ * `ENTITY_FOR` having to say what kind of thing in the world a destination is,
+ * which is the question the closed set exists to avoid answering.
+ *
+ * So: the same {@link AuthoringProposal} shape, its own function, and the
+ * six-kind exhaustiveness untouched.
+ *
+ * ## What the discovery card was doing instead
+ *
+ * Writing the record straight from the box. The owner typed *"More money"* into
+ * the Career prompt, pressed **That is it**, and believed he had confirmed an
+ * interpretation — while the panel one screen away has had the whole contract
+ * since package 3 and the surface he actually used had none of it. Same class
+ * as QA-84-005, one surface across: there the confirmation was wrong, here
+ * there was no confirmation at all.
+ *
+ * ## What it does not do
+ *
+ * Read the words. The aim is stored byte-identical to what he typed, in the
+ * prompt's own domain — *"More money"* under a Career prompt stays Career.
+ * Whether it means something about money, what amount, by when, is routing 91
+ * package 1 (D-172), and nothing here opens it.
+ */
+export function proposeDestination(
+  draft: DestinationDraft,
+  situation: Situation,
+): AuthoringProposal {
+  const aim = draft.aim.trim()
+  const area = situation.domains.labelFor(draft.domain)
+  const problems: string[] = []
+  if (aim === '') {
+    problems.push(
+      'It needs something to aim at. The app keeps your words exactly as you write them.',
+    )
+  }
+
+  const creates: string[] = [
+    `something to aim at in ${area}, in your words: “${aim}”`,
+    'an entry saying you named it, dated today',
+  ]
+
+  /*
+   * The next step, where a form offered him one, in the words that say what
+   * making it the next step will mean.
+   *
+   * {@link milestoneConfirmation} rather than a second sentence with the same
+   * job — it is the one place that already knows a milestone becomes the thing
+   * the app studies in Career, the money thing that is open in Money, and
+   * neither of those in Health.
+   */
+  const milestone = draft.milestone?.trim() ?? ''
+  if (milestone !== '') creates.push(milestoneConfirmation(milestone, draft.domain, area))
+
+  /*
+   * And the half that earns a confirmation: what it is **not** taking from
+   * what he typed.
+   *
+   * The bare aim is the ordinary case and the one D-173 exists to protect — a
+   * man who can only say *"I want to be employable"* has said enough — so the
+   * blanks are named rather than filled.
+   */
+  const unknowns: string[] = []
+  if (milestone === '') unknowns.push('what the next step towards it is')
+  if (draft.baseline === undefined || draft.baseline.trim() === '') {
+    unknowns.push('where you are starting from')
+  }
+  if ((draft.evidence ?? []).length === 0) unknowns.push('what would count as getting somewhere')
+
+  return {
+    kind: 'destination',
+    interpretation: `Something you are aiming at in ${area}: “${aim}”. Kept in your words, never scored, and yours to change or drop.`,
+    creates,
+    unknowns,
+    problems,
+  }
+}
+
+/**
+ * The sentence the owner agrees to before a destination is written — QA-84-005.
+ *
+ * Here rather than in the panel's JSX, and that placement is the repair. The
+ * confirmation was composed inline as `describeMilestone(milestone || 'that', …)`,
+ * so leaving the optional next step empty — the ordinary case, and the one
+ * D-173 exists to protect — produced *"The next step in Career & Learning:
+ * ‘that’. The app will treat this as what you are currently studying, and start
+ * suggesting work on it."* Nothing of the sort was written, correctly.
+ *
+ * A sentence a surface composes is a sentence no test can read. This one is a
+ * function of what the owner has typed, so it can be held to what will actually
+ * happen — which is what `destination-and-discovery.test.ts` does, and what
+ * caught nothing while the sentence lived in a template literal.
+ */
+export function milestoneConfirmation(
+  milestone: string,
+  domain: LifeDomainId,
+  area: string,
+): string {
+  const named = milestone.trim()
+  if (named === '') {
+    return 'Leave this empty and nothing is created for it. You can name the next step later, from this page.'
+  }
+  return describeMilestone(named, domain, area)
 }
 
 /** What making this the next step will mean, said before it is made. */

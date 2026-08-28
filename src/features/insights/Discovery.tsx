@@ -3,11 +3,15 @@ import { Panel } from '../../components/ui'
 import { systemClock } from '../../domain/time'
 import {
   authoringRecords,
-  dayFromInput,
   destinationRecords,
+  milestoneConfirmation,
   milestoneFor,
   minutesFromClock,
+  proposeAuthoring,
+  proposeDestination,
   reviseDestinationRecord,
+  type AuthoringDraft,
+  type AuthoringProposal,
 } from '../../intelligence/authoring'
 import {
   discoveryAgenda,
@@ -16,6 +20,7 @@ import {
   type DiscoveryPrompt,
 } from '../../intelligence/discovery'
 import type { Situation } from '../../intelligence/situation'
+import type { IsoWeekday } from '../../domain/time'
 import { useMemory } from '../memory/memoryContext'
 
 /**
@@ -57,6 +62,29 @@ import { useMemory } from '../memory/memoryContext'
  * an answer produced and reports the difference — including when the difference
  * is nothing, because a question worth asking need not have moved tonight.
  */
+/**
+ * The seven days, in the owner's week order.
+ *
+ * ISO numbering, because that is what `CommitmentRecurrence` stores and what
+ * `occursOn` reads — one numbering for the week, so a Monday means the same
+ * thing in the form, in the record and in the engine.
+ */
+const WEEKDAYS: readonly { readonly value: string; readonly label: string }[] = [
+  { value: '1', label: 'Monday' },
+  { value: '2', label: 'Tuesday' },
+  { value: '3', label: 'Wednesday' },
+  { value: '4', label: 'Thursday' },
+  { value: '5', label: 'Friday' },
+  { value: '6', label: 'Saturday' },
+  { value: '7', label: 'Sunday' },
+]
+
+function weekdayFrom(value: string): IsoWeekday | undefined {
+  const day = Number(value)
+  if (!Number.isInteger(day) || day < 1 || day > 7) return undefined
+  return day as IsoWeekday
+}
+
 export function Discovery({ situation }: { situation: Situation }) {
   const memory = useMemory()
   const [working, setWorking] = useState(false)
@@ -115,6 +143,56 @@ export function Discovery({ situation }: { situation: Situation }) {
   const busy = working || memory.busy
   const prompt = agenda.prompt
 
+  /**
+   * What the obligation answer amounts to, built once — QA-84-004, D-188.
+   *
+   * The proposal and the record are made from the **same** draft, because a
+   * confirmation composed from one object and a record written from another is
+   * how a confirmation stops describing what happens.
+   */
+  const obligationDraft = (said: string): AuthoringDraft | undefined => {
+    if (prompt === undefined) return undefined
+    const startsAt = minutesFromClock(second)
+    const weekday = weekdayFrom(third)
+    if (startsAt === undefined || weekday === undefined) return undefined
+    return {
+      kind: 'obligation',
+      name: said,
+      domain: prompt.domain,
+      startsAt,
+      endsAt: startsAt + 60,
+      weekdays: [weekday],
+    }
+  }
+
+  /**
+   * What the app will do, shown before it does it — the owner addendum, D-188.
+   *
+   * This card wrote the record straight from the box. The owner typed his aim
+   * into *"What do you hope Career & Learning eventually looks like?"*, pressed
+   * **That is it**, and believed he had confirmed an interpretation he was
+   * never shown.
+   *
+   * Composed in `authoring.ts` rather than here, which is QA-84-005's standing
+   * lesson: a sentence a surface builds inline is a sentence no test can hold
+   * to what is actually written.
+   */
+  const proposal: AuthoringProposal | undefined =
+    prompt === undefined || draft.trim() === ''
+      ? undefined
+      : prompt.shape === 'destination'
+        ? proposeDestination({ aim: draft.trim(), domain: prompt.domain }, situation)
+        : prompt.shape === 'obligation'
+          ? proposeAuthoring(
+              obligationDraft(draft.trim()) ?? {
+                kind: 'obligation',
+                name: draft.trim(),
+                domain: prompt.domain,
+              },
+              situation,
+            )
+          : undefined
+
   const moment = () => ({
     now: memory.now,
     zone: memory.zone,
@@ -158,6 +236,15 @@ export function Discovery({ situation }: { situation: Situation }) {
    */
   const build = (asked: DiscoveryPrompt, said: string, at: ReturnType<typeof moment>) => {
     if (asked.shape === 'destination') {
+      /*
+       * Nothing is written until the proposal says it can be — D-188.
+       *
+       * The same gate the domain page's form has had since package 3: a draft
+       * with a problem in it builds nothing, and he is told what the problem
+       * is rather than finding out from a record that never appeared.
+       */
+      const proposed = proposeDestination({ aim: said, domain: asked.domain }, situation)
+      if (proposed.problems.length > 0) return undefined
       return destinationRecords({ aim: said, domain: asked.domain }, situation, at)
     }
     if (asked.shape === 'milestone') {
@@ -171,30 +258,25 @@ export function Discovery({ situation }: { situation: Situation }) {
       return milestoneFor(destination.destination, asked.domain, said, situation, at)
     }
     if (asked.shape === 'obligation') {
-      const startsAt = minutesFromClock(second)
-      const day = dayFromInput(third)
       /*
-       * Both, or neither — F36, and the thing this control got wrong first.
+       * What the question asked for is what the record holds — QA-84-004.
        *
-       * A first draft asked for a name and a time and then wrote `weekdays: [3]`,
-       * which is the app inventing a Wednesday out of a question that never
-       * mentioned one. *"Do not silently infer a consequential fact from
-       * ambiguous prose"* is F36 in as many words, and a day of the week the
-       * owner never said is exactly that.
+       * The question is *"Is there something that takes a regular chunk of your
+       * week?"* and the first two drafts both stored something else. The first
+       * invented `weekdays: [3]` from a form that never asked which day — the
+       * app putting a Wednesday in his record out of nothing. The repair asked
+       * for a **calendar date**, which stored a `one-off` span: no longer
+       * invented, and no longer the regular week he was asked about either.
+       *
+       * A recurring question stores a recurring fact. The form asks which day
+       * of the week, `authoringRecords` writes a `weekly` recurrence from it,
+       * and the note no longer points at a Day-shape control that is not on
+       * this screen.
        */
-      if (startsAt === undefined || day === undefined) return undefined
-      return authoringRecords(
-        {
-          kind: 'obligation',
-          name: said,
-          domain: asked.domain,
-          startsAt,
-          endsAt: startsAt + 60,
-          dayId: day,
-        },
-        situation,
-        at,
-      )
+      const shaped = obligationDraft(said)
+      if (shaped === undefined) return undefined
+      if (proposeAuthoring(shaped, situation).problems.length > 0) return undefined
+      return authoringRecords(shaped, situation, at)
     }
     const record =
       asked.destination === undefined
@@ -276,6 +358,23 @@ export function Discovery({ situation }: { situation: Situation }) {
             {prompt.prompt}
           </label>
           <p className="note">{prompt.note}</p>
+          {prompt.shape !== 'milestone' ? null : (
+            /*
+             * What making this the next step will mean — F04, QA-84-005.
+             *
+             * A milestone is the one thing on this card that changes what the
+             * app suggests, so it is said out loud rather than inferred
+             * quietly, in the sentence `authoring.ts` composes for every other
+             * surface that offers one.
+             */
+            <p className="note" data-testid="discovery-milestone-note">
+              {milestoneConfirmation(
+                draft,
+                prompt.domain,
+                situation.domains.labelFor(prompt.domain),
+              )}
+            </p>
+          )}
           <input
             id="discovery-answer"
             type="text"
@@ -303,22 +402,52 @@ export function Discovery({ situation }: { situation: Situation }) {
                 onChange={(event) => setSecond(event.target.value)}
               />
               <label className="domain-correction__prompt" htmlFor="discovery-day">
-                Which day?
+                Which day of the week?
               </label>
               <p className="note">
-                One day. A weekly shape is the Day shape control below, which asks it properly.
+                Kept as a part of every week, not as one date — which is what the question asked
+                about. You can correct it on Life, where the rest of your week is.
               </p>
-              <input
+              <select
                 id="discovery-day"
-                type="date"
                 className="domain-input"
                 value={third}
                 disabled={busy}
                 data-testid="discovery-day"
                 onChange={(event) => setThird(event.target.value)}
-              />
+              >
+                <option value="">Pick one</option>
+                {WEEKDAYS.map((day) => (
+                  <option key={day.value} value={day.value}>
+                    {day.label}
+                  </option>
+                ))}
+              </select>
             </>
           ) : null}
+          {proposal === undefined ? null : (
+            <div data-testid="discovery-proposal">
+              <p className="domain-correction__prompt">{proposal.interpretation}</p>
+              {proposal.creates.length === 0 ? null : (
+                <ul className="domain-destination__list">
+                  {proposal.creates.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              )}
+              {proposal.unknowns.length === 0 ? null : (
+                <p className="note" data-testid="discovery-unknowns">
+                  The app will not assume {proposal.unknowns.join(', ')}.
+                </p>
+              )}
+              {proposal.problems.map((problem) => (
+                <p key={problem} className="note" data-testid="discovery-problem">
+                  {problem}
+                </p>
+              ))}
+            </div>
+          )}
+
           <div className="domain-correction__actions">
             <button
               type="button"
@@ -326,6 +455,7 @@ export function Discovery({ situation }: { situation: Situation }) {
               disabled={
                 busy ||
                 draft.trim() === '' ||
+                (proposal?.problems.length ?? 0) > 0 ||
                 (prompt.shape === 'obligation' && (second === '' || third === ''))
               }
               data-testid="discovery-save"

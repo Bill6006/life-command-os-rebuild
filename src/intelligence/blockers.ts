@@ -47,22 +47,40 @@ import type { Situation } from './situation'
  * The causes the app offers, and what each one is about.
  *
  * A closed list, because a free-text box asking a man why he could not go for a
- * walk at nine in the evening is a worse question than no question. The seven
- * are the review's own list — time, place, fatigue, responsibility, pain,
- * equipment, unexpected interruption — and every one of them is a fact about
- * the evening rather than about him.
+ * walk at nine in the evening is a worse question than no question. Seven are
+ * the review's own list — time, place, fatigue, responsibility, pain, equipment,
+ * unexpected interruption — and the eighth is the owner's, from real use. Every
+ * one of them is a fact about the evening rather than about him.
  *
- * `standing` is the half that makes gate item 5 provable. Two of the seven are
- * about the world rather than about tonight: not having the kit, and not being
- * where the thing happens. Those become a **`constraint` record** — durable,
- * visible on the domain page, and correctable from there — and the other five
- * are recorded on the episode as what was in the way on that occasion.
+ * `standing` is the half that makes gate item 5 provable. Three of the eight are
+ * about the world rather than about tonight: not having the kit, not being where
+ * the thing happens, and being the only person able to watch somebody. Those
+ * become a **`constraint` record** — durable, visible on the domain page, and
+ * correctable from there — and the other five are recorded on the episode as
+ * what was in the way on that occasion.
+ *
+ * **A durable record is not an enforced one** (D-187). Nothing in the engine
+ * reads a blocker constraint, and no string on this path may suggest otherwise.
  */
 export const BLOCKER_CAUSES = [
   'no-time',
   'not-here',
   'too-tired',
   'someone-needs-me',
+  /**
+   * He cannot leave — somebody is in his care and there is nobody else.
+   *
+   * The owner's own case, hit on the deployed build: Now offered a walk while
+   * his daughter was asleep upstairs and there was no one to watch her. The
+   * seven causes had nothing for it. `someone-needs-me` is the near miss and it
+   * is wrong twice over — nobody needed his **time**, he was not free to leave —
+   * and it is `standing: false`, so it wrote no durable record at all. The app
+   * learned one canned string on one episode and forgot it.
+   *
+   * **It is not a refusal and not a dislike** (D-045). Nothing may read it as
+   * either, and nothing does: it reaches `owner-preference` through no path.
+   */
+  'must-stay',
   'sore',
   'no-kit',
   'interrupted',
@@ -109,6 +127,29 @@ export const BLOCKER_OPTIONS: Record<BlockerCause, BlockerOption> = {
     label: 'Someone needed me',
     statement: () => 'Somebody else needed the time.',
     standing: false,
+  },
+  'must-stay': {
+    id: 'must-stay',
+    label: 'Can’t leave — someone’s in my care',
+    /*
+     * What was recorded, and nothing about what will follow from it — D-187.
+     *
+     * The temptation here is one clause: *"so the app will stop suggesting
+     * things that mean going out."* It would be false. `applyConstraints` never
+     * reads `situation.constraints`, and `cautionsFor` matches a constraint's
+     * concept against a candidate's `leansOn`, which never contains a
+     * `blocker.*` concept — so nothing acts on this, deliberately
+     * (`constraints.ts` says so in as many words).
+     *
+     * Making it act is F08's blocker aggregation, adjudicated to later
+     * Validity: it needs a supervision concept the registry does not have, a
+     * candidate attribute for *requires leaving the house* that nothing has, and
+     * a reversal of that non-enforcement decision. Capturing it honestly now is
+     * what makes that possible; promising it now is what would make the app's
+     * promises decorative.
+     */
+    statement: (move) => `${move} means leaving, and I could not — someone was in my care.`,
+    standing: true,
   },
   sore: {
     id: 'sore',

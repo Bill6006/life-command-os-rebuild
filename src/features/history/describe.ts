@@ -98,6 +98,10 @@ const TAGS = {
   'action-recommendation': 'Suggested',
   'action-start': 'Started',
   'action-completion': 'Done',
+  // The tag stays 'Done' for both, and the **sentence** carries the extent —
+  // QA-84-002. A tag is one word on a chronological list and a domain page's
+  // "Recently" shows no tag at all, so a distinction that lived only there
+  // would be invisible on the surface the defect was reported from.
   'action-decline': 'Passed',
   'action-unable-now': 'Not then',
   outcome: 'Result',
@@ -243,6 +247,17 @@ const LIFECYCLE_FRAME = {
   'action-decline': 'Turned down',
   'action-unable-now': 'Did not fit at the time',
 } as const
+
+/**
+ * What a completion says when only part of it happened — QA-84-002.
+ *
+ * The table above is keyed by record kind, and a partial completion is the same
+ * kind as a whole one — so every line about an evening that ran out read
+ * *"Followed through"*, on Timeline and in the correction list, while Now was
+ * correctly offering the move back as **Part done**. One screen kept the owner's
+ * distinction and the next erased it.
+ */
+const PART_DONE_FRAME = 'Got part of the way'
 
 function describeLifecycle(
   lead: string,
@@ -397,8 +412,9 @@ export function describeRecord(
     case 'action-completion':
     case 'action-decline':
     case 'action-unable-now': {
+      const partial = record.kind === 'action-completion' && record.extent === 'partial'
       const said = describeLifecycle(
-        LIFECYCLE_FRAME[record.kind],
+        partial ? PART_DONE_FRAME : LIFECYCLE_FRAME[record.kind],
         record.recommendation,
         history,
         entities,
@@ -408,7 +424,9 @@ export function describeRecord(
         record.kind === 'action-start'
           ? 'Started a suggestion here.'
           : record.kind === 'action-completion'
-            ? 'Followed through on a suggestion here.'
+            ? partial
+              ? 'Got part of the way with a suggestion here.'
+              : 'Followed through on a suggestion here.'
             : record.kind === 'action-decline'
               ? 'Passed on a suggestion here.'
               : "Said a suggestion here didn't fit at the time."

@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, sep } from 'node:path'
 import { expect } from 'vitest'
 import type { LifeDomainId } from '../../src/domain/domains'
+import type { IsoWeekday } from '../../src/domain/time'
 import type { EntityKind, EntityRef } from '../../src/domain/entities'
 import { newRecordId, type RecordId } from '../../src/domain/ids'
 import {
@@ -67,9 +68,11 @@ import {
   destinationRecords,
   milestoneFor,
   proposeAuthoring,
+  proposeDestination,
   relationshipEventRecord,
   reviseDestinationRecord,
   type AuthoringDraft,
+  type AuthoringProposal,
   type AuthoringResult,
   type DestinationDraft,
 } from '../../src/intelligence/authoring'
@@ -92,6 +95,7 @@ import {
   discoveryResponseRecord,
   type DiscoveryAgenda,
 } from '../../src/intelligence/discovery'
+import { describeRecord } from '../../src/features/history/describe'
 import { createMemoryStore } from '../../src/memory/memoryStore'
 import { snapshotFromWire } from '../../src/memory/snapshot'
 import type { StoreSnapshot } from '../../src/memory/store'
@@ -683,6 +687,13 @@ export interface JourneyApp {
   ): Promise<GestureResult>
   /** What the second agenda would ask next, if anything. */
   agenda(): DiscoveryAgenda
+  /**
+   * What the card would show him before he pressed anything — D-188.
+   *
+   * `undefined` where the shape has no proposal of its own, which is how the
+   * surface decides too.
+   */
+  discoveryProposal(said: string): AuthoringProposal | undefined
   /** Answer the second agenda's question with a destination, as Life does. */
   answerDiscovery(said: string): Promise<GestureResult>
   /** Leave it, the way "Not now" does. */
@@ -707,6 +718,20 @@ export interface JourneyApp {
   courseQuestion(): CourseReflection | undefined
   /** Answer it, the way the domain page's control does. */
   answerCourse(answer: OutcomeAnswer, domain: LifeDomainId): Promise<GestureResult>
+  /**
+   * Answer the agenda's weekly-commitment question the way Insights does.
+   *
+   * The surface's own call, with the surface's own arguments — which is the
+   * rule this whole file exists to keep, and the rule the first proof of gate
+   * item 4 broke by reaching for the generic authoring builder instead.
+   */
+  answerAgendaCommitment(
+    name: string,
+    startsAt: number,
+    weekday: IsoWeekday,
+  ): Promise<GestureResult>
+  /** Every entry on this history, worded the way every surface words it. */
+  describeEvents(): readonly string[]
 }
 
 /**
@@ -939,9 +964,27 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
 
     agenda: () => discoveryAgenda(situation(), { now: at, zone, weekStartsOn: 1 }),
 
+    discoveryProposal(said) {
+      const asked = discoveryAgenda(situation(), { now: at, zone, weekStartsOn: 1 }).prompt
+      if (asked === undefined || asked.shape !== 'destination') return undefined
+      return proposeDestination({ aim: said.trim(), domain: asked.domain }, situation())
+    },
+
     async answerDiscovery(said) {
       const asked = discoveryAgenda(situation(), { now: at, zone, weekStartsOn: 1 }).prompt
       if (asked === undefined) return { done: false, note: 'nothing is being asked', written: 0 }
+      /*
+       * Through the proposal, because the card is — D-188.
+       *
+       * The instrument's whole worth is that a gesture here is the gesture
+       * there. While this called `destinationRecords` directly it was modelling
+       * the bypass rather than the control, and would have gone on passing
+       * after the bypass was removed.
+       */
+      const proposed = proposeDestination({ aim: said.trim(), domain: asked.domain }, situation())
+      if (proposed.problems.length > 0) {
+        return { done: false, note: proposed.problems.join('; '), written: 0 }
+      }
       const moment = authoringMoment()
       const built = destinationRecords({ aim: said, domain: asked.domain }, situation(), moment)
       await store.putEntities(built.entities)
@@ -1058,6 +1101,56 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
     },
 
     progress: (domains) => readProgress(situation(), domains),
+
+    async answerAgendaCommitment(name, startsAt, weekday) {
+      const asked = discoveryAgenda(situation(), {
+        now: at,
+        zone,
+        weekStartsOn: 1,
+      }).outstanding.find((prompt) => prompt.shape === 'obligation')
+      if (asked === undefined) {
+        return { done: false, note: 'the agenda is not asking about the week', written: 0 }
+      }
+      const moment = authoringMoment()
+      const built = authoringRecords(
+        {
+          kind: 'obligation',
+          name,
+          domain: asked.domain,
+          startsAt,
+          endsAt: startsAt + 60,
+          weekdays: [weekday],
+        },
+        situation(),
+        moment,
+      )
+      if (built.records.length === 0) {
+        return { done: false, note: 'the answer built nothing', written: 0 }
+      }
+      return write(
+        [
+          ...built.records,
+          discoveryResponseRecord(asked, 'answered', built.records[0]?.id, moment),
+        ],
+        `answered "${asked.prompt}"`,
+      )
+    },
+
+    describeEvents() {
+      const current = situation()
+      const context = {
+        entities: current.entities,
+        history: current.view.history,
+        concepts: current.concepts,
+        policy: { surface: 'inspection' as const, revealPrivate: false },
+      }
+      const out: string[] = []
+      for (const record of current.view.history.effective) {
+        const described = describeRecord(record, context)
+        if (described !== undefined) out.push(described.text)
+      }
+      return out
+    },
 
     async startCourse() {
       const current = decision()
@@ -1267,12 +1360,29 @@ function everyRecordBuilder(): ReadonlySet<string> {
  * rows are new. Every builder here takes one, because a record it invents needs
  * an `occurredAt` and a zone, and no reader does.
  *
- * The parameter list is balanced rather than pattern-matched: a lazy regex
- * crossing from one `export function` to the next reported `questionFor`,
- * `describePremise` and `daysSincePractice` as builders, having found some
- * later function's return annotation.
+ * The reading itself is {@link declaredIn}, whose parameter list is balanced
+ * rather than pattern-matched: a lazy regex crossing from one `export function`
+ * to the next reported `questionFor`, `describePremise` and `daysSincePractice`
+ * as builders, having found some later function's return annotation.
  */
 function buildersDeclaredIn(text: string): readonly string[] {
+  return declaredIn(
+    text,
+    (returned, parameters) =>
+      (/Record$/.test(returned) || returned === BUNDLE) && takesAMoment(parameters),
+  )
+}
+
+/**
+ * The exported functions in one file matching a test on what they declare.
+ *
+ * Lifted out of {@link buildersDeclaredIn} unchanged when the addendum's guard
+ * needed the same reader for a different return type.
+ */
+function declaredIn(
+  text: string,
+  accept: (returned: string, parameters: string) => boolean,
+): readonly string[] {
   const out: string[] = []
   const declarations = /export function ([A-Za-z0-9_]+)\s*\(/g
 
@@ -1287,13 +1397,117 @@ function buildersDeclaredIn(text: string): readonly string[] {
     const returns = /^\s*:\s*(?:readonly\s+)?([A-Za-z0-9_]+)\s*(<)?/.exec(text.slice(close + 1))
     if (returns === null) continue
     if (returns[2] === '<') continue
-    const returned = returns[1] ?? ''
-    if (!/Record$/.test(returned) && returned !== BUNDLE) continue
-    if (!/\bmoment\b|Moment\b/.test(text.slice(open, close))) continue
+    if (!accept(returns[1] ?? '', text.slice(open, close))) continue
 
     out.push(name)
   }
   return out
+}
+
+function takesAMoment(parameters: string): boolean {
+  return /\bmoment\b|Moment\b/.test(parameters)
+}
+
+// ---------------------------------------------------------------------------
+// Nothing is brought into being without being proposed first — D-188
+// ---------------------------------------------------------------------------
+
+/**
+ * The shape a propose-and-confirm control returns, named the way `BUNDLE` is.
+ *
+ * A second proposal type is an edit here with a sentence saying why — the same
+ * discipline `ALLOWED_READERS` and `BUNDLE` keep, and for the same reason: a
+ * pattern like *"anything ending in Proposal"* would make the guard weaker
+ * every time somebody named a type conveniently.
+ */
+const PROPOSAL = 'AuthoringProposal'
+
+/**
+ * A screen that brings something into being, and what it shows first.
+ *
+ * `builds` is the {@link BUNDLE} builders it calls — the controls that write an
+ * entity and the records naming it as one act. `proposes` is the functions
+ * returning a {@link PROPOSAL} it calls: what the app understood, what it will
+ * create, and what it is **not** assuming.
+ */
+export interface AuthoringSurface {
+  readonly file: string
+  readonly surface: ReachedBuilder['surface']
+  readonly builds: readonly string[]
+  readonly proposes: readonly string[]
+}
+
+/**
+ * Files whose confirmation is genuinely somewhere else, and where.
+ *
+ * One, and it is the container/panel split rather than a bypass: `DomainPage`
+ * receives an `AuthoringDraft` from `DomainPanels`, which composed the proposal,
+ * rendered it, and disabled its own confirm button until `problems` was empty.
+ * The page only writes what that form handed it.
+ *
+ * Named here rather than filtered out silently, because the entry is the cost of
+ * the exemption: a second surface writing without proposing has to be argued for
+ * in this table, in front of whoever is reading the diff — which is precisely
+ * what did not happen when `Discovery.tsx` started calling `destinationRecords`
+ * directly.
+ */
+export const PROPOSES_ELSEWHERE: readonly { readonly file: string; readonly why: string }[] = [
+  {
+    file: '/src/features/life/DomainPage.tsx',
+    why: 'the page writes the draft DomainPanels’ AuthoringPanel and DestinationPanel already proposed and confirmed',
+  },
+]
+
+/**
+ * Every feature file that writes an authored bundle, and what it proposed.
+ *
+ * The owner addendum's guard, and it is a source instrument rather than a
+ * comment because the thing it protects is an absence: `Discovery.tsx` never
+ * imported `proposeAuthoring`, and nothing anywhere said so. A test that reads
+ * the tree can say so, and says it again the next time somebody adds a screen.
+ *
+ * What it proves: no surface calls a builder that brings something into being
+ * without also composing a proposal. What it does not prove: that the proposal
+ * is the one shown on the branch that writes — that is what the behavioural
+ * tests in `destination-and-discovery.test.ts` are for, and the two together are
+ * the claim.
+ */
+export function everyAuthoringSurface(): readonly AuthoringSurface[] {
+  const bundles = new Set<string>()
+  const proposals = new Set<string>()
+  for (const layer of ['intelligence', 'domain', 'memory']) {
+    for (const file of filesUnder(join(ROOT, 'src', layer))) {
+      const text = readFileSync(file, 'utf8')
+      for (const name of declaredIn(
+        text,
+        (returned, parameters) => returned === BUNDLE && takesAMoment(parameters),
+      )) {
+        bundles.add(name)
+      }
+      for (const name of declaredIn(text, (returned) => returned === PROPOSAL)) proposals.add(name)
+    }
+  }
+
+  const out: AuthoringSurface[] = []
+  for (const file of filesUnder(join(ROOT, 'src', 'features'))) {
+    const code = withoutComments(readFileSync(file, 'utf8'))
+    const builds = new Set<string>()
+    const proposes = new Set<string>()
+    for (const match of code.matchAll(/([A-Za-z0-9_]+)\s*\(/g)) {
+      const called = match[1]
+      if (called === undefined) continue
+      if (bundles.has(called)) builds.add(called)
+      if (proposals.has(called)) proposes.add(called)
+    }
+    if (builds.size === 0) continue
+    out.push({
+      file: relativeToRoot(file),
+      surface: surfaceOf(relativeToRoot(file)),
+      builds: [...builds].sort(),
+      proposes: [...proposes].sort(),
+    })
+  }
+  return out.sort((a, b) => a.file.localeCompare(b.file))
 }
 
 /** The index of the parenthesis that closes the one at `open`. */

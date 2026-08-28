@@ -7,7 +7,7 @@ import { correctionConsequence, type CorrectionGesture } from '../../intelligenc
 import {
   AUTHORABLE_KINDS,
   dayFromInput,
-  describeMilestone,
+  milestoneConfirmation,
   minutesFromClock,
   proposeAuthoring,
   PROVING_DOMAINS,
@@ -262,7 +262,19 @@ export function DestinationPanel({
             And the next step towards it, if you know it
           </label>
           <p className="note">
-            {describeMilestone(milestone || 'that', data.page.domains[0]!, area)}
+            {/*
+              What will happen, and only if it will — QA-84-005.
+
+              This read `describeMilestone(milestone || 'that', …)`, so an owner
+              who left the optional box empty — the ordinary case, and the one
+              D-173 exists to protect — was told *"The next step in Career &
+              Learning: 'that'. The app will treat this as what you are
+              currently studying, and start suggesting work on it."* None of
+              that happened, correctly: a blank milestone creates nothing. The
+              confirmation was false precisely where the owner is least able to
+              check it.
+            */}
+            {milestoneConfirmation(milestone, data.page.domains[0]!, area)}
           </p>
           <input
             id="destination-milestone"

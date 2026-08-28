@@ -39,6 +39,57 @@ None.
 
 ## Fixed
 
+### DEF-0123 — the discovery card wrote an aspiration without ever proposing one
+
+- Status: Fixed
+- Severity: Major — the owner confirmed something he was never shown, on the
+  surface he actually used
+- Found in: routing 84 / `328e42f`, by the owner on the deployed build
+- Found by: **owner use**, not a gate. Every automated claim about the
+  propose-and-confirm contract was true of the domain page's form, which is the
+  surface that has it; nothing asked whether the other surface that authors the
+  same thing had it too.
+- Class: **one contract, two surfaces, and only one of them holds it.** The same
+  class as QA-84-005 one step out: there the confirmation described something
+  the app then did not do, here there was no confirmation at all. The family is
+  _a rule enforced where it was written rather than where it applies_, and its
+  members are found by asking which other screens reach the same builder.
+- Reproduction: from a near-empty store, open Insights. The agenda asks _"What
+  are you hoping Career & Learning eventually looks like?"_. Type **More money**
+  and press **That is it**. A `destination` entity and record are written
+  immediately. No interpretation, no list of what will be created, and no
+  statement of what is **not** being assumed appears at any point — while
+  `DomainPanels.tsx`'s authoring form has shown all three since package 3.
+- Root cause: `Discovery.tsx` never imported `proposeAuthoring`. Its destination
+  branch was `return destinationRecords({ aim: said, domain: asked.domain }, …)`
+  — a direct call to the builder. And it could not have imported it as written:
+  `proposeAuthoring` is keyed on `AuthorableKind`, which is six kinds, and
+  `destination` is not one of them (D-188 records the choice made instead).
+- Repair: `proposeDestination()` in `authoring.ts`, returning the same
+  `AuthoringProposal` shape and composing `milestoneConfirmation()`. The card
+  renders it in the panel chrome the authoring form already uses, and both the
+  confirm button and the record builder are gated on `problems` being empty. The
+  obligation branch on the same card went through `proposeAuthoring` at the same
+  time, from a single draft — a proposal composed from one object and a record
+  written from another is how a confirmation stops describing what happens.
+- Regression: `tests/synthetic/destination-and-discovery.test.ts` — _"owner
+  addendum — the discovery card stops bypassing the confirmation"_, seven cases.
+  The one that would have caught this is **"cannot come back: no screen brings
+  something into being without proposing it"**, which reads the tree:
+  `everyAuthoringSurface()` in `tests/synthetic/journey.ts` reports which feature
+  files call a builder returning `AuthoringResult` and which of them compose an
+  `AuthoringProposal` first. Proved by reintroduction — putting the direct call
+  back fails it with _"/src/features/insights/Discovery.tsx builds
+  authoringRecords, destinationRecords, milestoneFor"_.
+- Siblings: checked, and this is why the guard is a source instrument rather
+  than three more test cases. `DomainPage.tsx` calls `destinationRecords`,
+  `authoringRecords` and `milestoneFor` and proposes nothing — it is the
+  container for `DomainPanels`' form, which proposed and confirmed before
+  handing the draft over, and it is named in `PROPOSES_ELSEWHERE` with that
+  reason rather than filtered out silently. No third surface authors anything.
+- Note on scope: this is **owner-directed**, not a QA finding. Codex raised
+  neither addendum fix in Round 1, and QA-84-001…006 are unchanged by it.
+
 ### DEF-0120 — the question about what was in the way disappeared when there was nothing else to suggest
 
 - Status: Fixed

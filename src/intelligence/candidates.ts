@@ -118,13 +118,29 @@ interface CandidateInput {
   readonly relatedGoal?: EntityRef
   /** Concepts this move exists to find something out about. Rarely any. */
   readonly resolves?: readonly ConceptId[]
+  /**
+   * That the app does not know how long this one takes — QA-84-001.
+   *
+   * `sizeFor` gives every move its verb's natural size, trimmed to what is in
+   * hand, and that is right for the app's own routines: a walk is twenty-five
+   * minutes because the catalogue says so. It is wrong for a step the **owner**
+   * named — he wrote a sentence, not a session, and "Move for 25 minutes: lift
+   * twice each week" is the app inventing a duration for something it has never
+   * seen. F36 forbids exactly that, and `ActionTarget.minutes` is already
+   * optional so that an absent one is a real state (G-009).
+   */
+  readonly durationUnknown?: boolean
 }
 
 function candidate(input: CandidateInput, situation: Situation): Candidate {
   const semantics: RecommendationSemantics = {
     subject: input.subject,
     domain: input.domain,
-    target: target(input.verb, input.object, sizeFor(input.verb, situation)),
+    target: target(
+      input.verb,
+      input.object,
+      input.durationUnknown === true ? undefined : sizeFor(input.verb, situation),
+    ),
     // The summary is left empty here. The explanation generator writes it from
     // the facts that were actually used, which is what stops every profile
     // getting the same sentence (section 64).
@@ -604,7 +620,7 @@ const healthCandidates: Generator = (situation) => {
   if (!isUsable(strain) || strain.value !== 'none') return []
   if (!isUsable(situation.capacity.energy) && !isUsable(situation.capacity.soreness)) return []
 
-  return [
+  const out: Candidate[] = [
     candidate(
       {
         generator: 'health',
@@ -620,6 +636,84 @@ const healthCandidates: Generator = (situation) => {
       situation,
     ),
   ]
+
+  /*
+   * And the next step he named himself, where he has named one — QA-84-001.
+   *
+   * ## What this fixes
+   *
+   * A destination in Health changed nothing an owner could see. Career and
+   * Money each gain a candidate the thin store did not have, because their
+   * generators consume an owner-named object — a `learning-topic`, a
+   * `financial-goal`. Health's consumed nothing the owner could create, so
+   * naming an aspiration there moved a score by 0.04 and no word on the screen.
+   *
+   * ## Why this is not AUD-0045's routines library
+   *
+   * It is bound to **the next milestone of an active destination**, and to
+   * nothing else. An owner routine introduced through the authoring control is
+   * still never suggested; a routine that is not a destination's next step is
+   * still never suggested; and there is no ranking over the owner's routines
+   * anywhere. *"This phase builds the route; Reach walks it"* — a destination's
+   * own next step is the route, and one step of it is not a library.
+   *
+   * ## And it is squarely inside D-021
+   *
+   * *"Every other subject a recommendation can be about must already exist in
+   * the owner's history, or the move is not proposed."* This subject exists
+   * because he created it, exactly as the home generator's `place` and the
+   * money generator's `financial-goal` do. The engine invents nothing.
+   *
+   * ## No minutes
+   *
+   * `move` renders "Move for N minutes: X" with a duration and "Get some
+   * movement in: X" without one. The app has no idea how long his next step
+   * takes — he wrote a sentence, not a session — and inventing a number for it
+   * is the precision F36 forbids. So it is proposed with none.
+   */
+  const next = nextMilestoneIn(situation, DOMAIN.health)
+  if (next !== undefined) {
+    out.push(
+      candidate(
+        {
+          generator: 'health',
+          subject: next.goal,
+          domain: DOMAIN.health,
+          verb: 'move',
+          object: next.goal,
+          trigger: 'good-conditions',
+          evidence: basisOf(strain),
+          leansOn: [CONCEPT.energy, CONCEPT.soreness],
+          relatedGoal: next.goal,
+          durationUnknown: true,
+          proposedBecause: 'it is the step he named towards what he is aiming at',
+        },
+        situation,
+      ),
+    )
+  }
+
+  return out
+}
+
+/**
+ * The next milestone of an active destination in this area, if it has one.
+ *
+ * Deliberately narrow, and every clause of it is load-bearing: an **active**
+ * destination, its **next** step — the first one not yet reached — and only
+ * where the subject actually resolves, because a move about an entity the index
+ * has lost renders nothing (D-018) and should not be proposed at all.
+ */
+function nextMilestoneIn(situation: Situation, domain: LifeDomainId): ActiveGoal | undefined {
+  for (const destination of situation.direction.destinations) {
+    if (destination.domain !== domain) continue
+    if (destination.state !== 'active') continue
+    const next = destination.next
+    if (next === undefined) continue
+    if (situation.entities.labelFor(next.goal.goal) === undefined) continue
+    return next.goal
+  }
+  return undefined
 }
 
 /** Money. Needs a goal that exists, never a generic "check your budget". */

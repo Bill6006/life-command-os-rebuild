@@ -1328,6 +1328,181 @@ async function main() {
   check('and it does not claim a history it has not got', !/plenty of history/i.test(firstEvening))
   await sideways('Now, on the first evening')
 
+  /*
+   * ------------------------------------------------------------------------
+   * Routing 84 — what the owner is trying to become, on a handset
+   * ------------------------------------------------------------------------
+   *
+   * QA r84Asked for this in Round 1 and it was the one request the repair had not
+   * answered: the phase's own controls read at three widths and never on the
+   * deployed bytes with a thumb. Everything below is reached the way the owner
+   * reaches it — from the near-empty store, by tapping.
+   */
+
+  // ---- Naming an aspiration, from one record — F01, D-173 -------------------
+  await loadScenario('The first evening')
+  await page.goto(`${BASE}#/life/career`)
+  await page.waitForSelector('h1:has-text("Career")')
+  check(
+    'the aspiration control is r84Closed until it is r84Asked for',
+    (await page.getByTestId('destination-form').count()) === 0,
+  )
+  const r84OpenAim = page.getByTestId('destination-open')
+  clearsThumb('the aspiration control', (await r84OpenAim.boundingBox())?.height)
+  await r84OpenAim.tap()
+  await page.waitForSelector('[data-testid="destination-form"]')
+
+  const r84AimBox = page.getByTestId('destination-aim-input')
+  clearsThumb('the aspiration box', (await r84AimBox.boundingBox())?.height)
+  await r84AimBox.fill('Working as a cloud engineer')
+  const r84AimForm = await page.getByTestId('destination-form').innerText()
+  check(
+    'the optional next step says plainly that leaving it empty creates nothing',
+    /nothing is created/.test(r84AimForm),
+    r84AimForm.replace(/\s+/g, ' ').trim().slice(0, 200),
+  )
+  check(
+    'and never confirms a next step he did not name',
+    !/“that”/.test(r84AimForm) && !/currently studying/.test(r84AimForm),
+  )
+  await sideways('Career, naming an aspiration')
+
+  await page.getByTestId('destination-save').tap()
+  await page.waitForSelector('[data-testid="destination-aim"]')
+  const r84Named = await page.getByTestId('destination-aim').innerText()
+  check(
+    'his words come back exactly as he wrote them',
+    r84Named.includes('Working as a cloud engineer'),
+    r84Named.replace(/\s+/g, ' ').trim(),
+  )
+  const r84Card = await page.getByTestId('destination').innerText()
+  check(
+    'and nothing on it scores him — D-162',
+    !/%|percent|score|rank|grade|\bon track\b/i.test(r84Card),
+    r84Card.replace(/\s+/g, ' ').trim().slice(0, 200),
+  )
+  check(
+    'what it does not know is r84Named rather than filled — F01',
+    (await page.getByTestId('destination-missing').count()) >= 1,
+    r84Card.replace(/\s+/g, ' ').trim().slice(0, 200),
+  )
+  await sideways('Career, with an aspiration on it')
+
+  // ---- Attendance is not capability — gate item 2 ---------------------------
+  await loadScenario('Two sessions in')
+  await page.goto(`${BASE}#/life/career`)
+  await page.waitForSelector('h1:has-text("Career")')
+  const r84Happened = await page.locator('.screen').innerText()
+  check(
+    'what has actually r84Happened is counted rather than rated',
+    !/%|percent|\bscore\b|\bgrade\b|\bproficien/i.test(r84Happened),
+    (r84Happened.match(/[^\n]*(%|percent|score|grade)[^\n]*/i) ?? ['clean'])[0],
+  )
+  check(
+    'and a session says what it is not evidence of',
+    /not what it came to|does not say|is not/i.test(r84Happened),
+  )
+  await sideways('Career, what has actually r84Happened')
+
+  // ---- The second agenda, and the confirmation it now shows — D-188 ---------
+  await loadScenario('The first evening')
+  await page.locator('.nav').getByRole('button', { name: 'Insights' }).tap()
+  await page.waitForSelector('h1:has-text("Insights")')
+  const r84Closed = page.getByTestId('discovery-r84Closed')
+  check(
+    'the second agenda is one r84Closed line until it is tapped',
+    (await r84Closed.count()) === 1,
+  )
+  const r84OpenAgenda = page.getByTestId('discovery-open')
+  clearsThumb('the agenda control', (await r84OpenAgenda.boundingBox())?.height)
+  await r84OpenAgenda.tap()
+  await page.waitForSelector('[data-testid="discovery-prompt"]')
+
+  check(
+    'and proposes nothing before there is anything to propose',
+    (await page.getByTestId('discovery-proposal').count()) === 0,
+  )
+  check(
+    'with the confirm control held until then',
+    await page.getByTestId('discovery-save').isDisabled(),
+  )
+
+  await page.getByTestId('discovery-answer').fill('More money')
+  await page.waitForSelector('[data-testid="discovery-proposal"]')
+  const r84Proposed = await page.getByTestId('discovery-proposal').innerText()
+  check(
+    'the card says what it understood, in his words',
+    /More money/.test(r84Proposed),
+    r84Proposed.replace(/\s+/g, ' ').trim().slice(0, 200),
+  )
+  check(
+    'and what it is not assuming, before anything is written — D-188',
+    /will not assume/.test(r84Proposed) && /next step/.test(r84Proposed),
+    r84Proposed.replace(/\s+/g, ' ').trim().slice(0, 200),
+  )
+  check(
+    'and does not read a second meaning into the phrase — D-172',
+    !/Money|budget|savings|salary/.test(r84Proposed),
+    r84Proposed.replace(/\s+/g, ' ').trim().slice(0, 200),
+  )
+  await sideways('Insights, the agenda with a proposal on it')
+
+  // ---- What was in the way, including the cause the owner needed — D-187 ----
+  await loadScenario('The first evening')
+  await openNow()
+  for (let r84Taps = 0; r84Taps < 4; r84Taps += 1) {
+    if ((await page.getByTestId('now-actions').count()) > 0) break
+    const r84Options = page.locator('.now-option')
+    if ((await r84Options.count()) === 0) break
+    const r84Enough = r84Options.filter({ hasText: /Enough|Nothing/ })
+    await ((await r84Enough.count()) > 0 ? r84Enough.first() : r84Options.first()).tap()
+    await page.waitForTimeout(150)
+  }
+  await page.getByTestId('now-actions').getByRole('button', { name: "Can't right now" }).tap()
+  await page.waitForSelector('[data-testid="blocker-question"]')
+
+  const r84Causes = await page
+    .getByTestId('blocker-question')
+    .locator('.domain-r84Options .domain-option')
+    .count()
+  check('all eight r84Causes are offered on one screen', r84Causes === 8, `${r84Causes} controls`)
+  const r84MustStay = page.getByTestId('blocker-must-stay')
+  check(
+    'including the one for being the only person who can watch somebody',
+    (await r84MustStay.count()) === 1,
+  )
+  clearsThumb('that cause', (await r84MustStay.boundingBox())?.height)
+
+  const r84Asked = await page.getByTestId('blocker-question').innerText()
+  check(
+    'and the question promises no change the engine cannot make — D-187',
+    !/stop suggesting|won.t suggest|no longer suggest|from now on/i.test(r84Asked),
+    r84Asked.replace(/\s+/g, ' ').trim().slice(0, 200),
+  )
+  await sideways('Now, what was in the way')
+
+  await r84MustStay.tap()
+  await page.goto(`${BASE}#/life/health-recovery`)
+  await page.waitForSelector('h1:has-text("Health")')
+  const r84Standing = page.getByTestId('domain-blocker')
+  check(
+    'choosing it writes something durable on the area it belonged to',
+    (await r84Standing.count()) >= 1,
+  )
+  const r84Kept = await r84Standing.first().innerText()
+  check(
+    'which says what r84Happened and nothing about what follows from it',
+    /in my care/.test(r84Kept) && !/stop suggesting|won.t suggest|no longer suggest/i.test(r84Kept),
+    r84Kept.replace(/\s+/g, ' ').trim(),
+  )
+  const r84Lift = page.getByTestId('domain-blocker-r84Lift').first()
+  check('and there is always a way out of it', (await r84Lift.count()) === 1)
+  clearsThumb('the way out', (await r84Lift.boundingBox())?.height)
+  await r84Lift.tap()
+  await page.waitForSelector('[data-testid="domain-blocker"]', { state: 'detached' })
+  check('one tap takes it back', true)
+  await sideways('Health & Recovery, a r84Standing blocker lifted')
+
   // ---- The rest of the app is still standing --------------------------------
   for (const destination of ['Now', 'Life', 'Timeline', 'Insights']) {
     await page.locator('.nav').getByRole('button', { name: destination }).tap()
