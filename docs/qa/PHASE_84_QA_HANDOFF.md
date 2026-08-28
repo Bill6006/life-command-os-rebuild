@@ -843,12 +843,12 @@ package 1.
 | `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)         |
 | Unit / contract / synthetic / adversarial | **1,834 passed** in 83 files (1,812 at Round 1)                   |
 | Browser, three widths, one worker         | **PENDING**                                                  |
-| Deployed Android gate                     | ****clean — 219 checks** against deployed `94e1716` (187 at Round 1, none of them this phase's controls)**                                                  |
-| Privacy scan                              | ****clean** — 284 tracked files**                                                  |
+| Deployed Android gate                     | **clean — 219 checks** against deployed `94e1716` (187 at Round 1, none of them this phase's controls)                                                  |
+| Privacy scan                              | **clean** — 284 tracked files                                                  |
 | Block sweep and copy guards               | **PASS**                                                          |
 | Commits not on any remote                 | **none** at the handed-off head (D-180)                           |
-| Checkpoint equivalence                    | ****PASS** — deployed `94e1716` serves the same bytes, nothing between**                                                    |
-| CI                                        | **Verify **success**, Deploy preview **success****                                                       |
+| Checkpoint equivalence                    | **PASS** — deployed `94e1716` serves the same bytes, nothing between                                                    |
+| CI                                        | Verify **success**, Deploy preview **success**                                                       |
 
 ### One additional Round 2 requirement, owner-directed
 
@@ -1217,3 +1217,130 @@ Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 2
 repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
 routing 90. Do not ask me to paste the file contents.
 ```
+
+---
+
+## Round 2 repair — the builder's record
+
+**Actor:** Claude / the routing 84 builder conversation. **Appended below QA's
+round 2 rather than inside it** — QA owns every round and the builder does not
+edit them (D-077). Round 2 above is byte-identical to what QA wrote and was
+committed on its own as `180fcdd` before a line of this repair was written.
+
+**Result: all four findings repaired. The phase stays YELLOW.** The builder does
+not declare GREEN. Round 3 is dispatched in `docs/NEXT_PROMPT.md` to the **same**
+Codex conversation at High.
+
+**QA was right twice, and the second time it was right about the first repair.**
+QA-84-008 exists because QA-84-001 was fixed; QA-84-009 exists because QA-84-002
+was fixed in the sentence and argued away in the tag. That is the case for a
+retest round, and it is why all four decisions below are about **classes** rather
+than about the four sentences.
+
+### Checkpoint
+
+| Fact                    | Value                                                                        |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| Repaired checkpoint     | `cdd9259` — the commit the aggregate gate was run on, and the one to test   |
+| Round 2 checkpoint      | `94e1716` — deployed as `eaf4536`, what Round 2 failed                       |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                  |
+| Owner-visible behaviour | **changed** — Now on a first run, Life, every domain page, Timeline, blocker |
+| QA's Round 2 commit     | `180fcdd` — QA's report, committed unedited                                  |
+
+### What each finding became
+
+| Finding   | Repair                                                                                                                                                                                                                                                                                                                                                                                             | Where                                                                       |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| QA-84-007 | `LifeScreen` and `DomainPage` gated on `snapshot.records.length === 0`, which is not a readiness check: it switched off the aspiration form, the six authoring controls and the area links — the controls that exist **so the owner can write the first record**. Both now gate on readiness alone, as `InsightsScreen` always has. Now keeps its abstention and names the ordinary ways on. **D-189** | `src/features/life/LifeScreen.tsx`, `DomainPage.tsx`, `now/NowScreen.tsx`    |
+| QA-84-008 | `describeMilestone`'s Health sentence described the behaviour QA-84-001's repair had changed. It now says the app will start suggesting the step **on evenings there is something to spend on it**, which is the condition `healthCandidates` actually applies. **D-190**                                                                                                                            | `src/intelligence/authoring.ts`                                              |
+| QA-84-009 | `tagOf(record)` reads the extent and is what every surface renders; `tagFor(kind)` stays for the schema's exhaustiveness sweep. **D-191**                                                                                                                                                                                                                                                           | `src/features/history/describe.ts`, `src/features/export/compose.ts`         |
+| QA-84-010 | Both promising notes rewritten to say what is recorded and where. The guard is now over the **class** — actor × non-present modality × adaptation verb — in one module every gate imports. **D-192**                                                                                                                                                                                                | `src/intelligence/blockers.ts`, `scripts/adaptation-claims.mjs`              |
+
+### On QA-84-010 in particular
+
+This is the one worth being plain about. **D-187 forbade exactly this claim one
+round earlier, and the guard written alongside it did not catch it.** The guard
+collected the live note into its sweep and its five phrases — *stop*, *won't*, *no
+longer*, *avoid*, *from now on* — did not appear in *"so the app can offer
+something that fits next time"*. Three narrower copies of that list had grown, in
+the synthetic suite, the browser suite and the Android gate, and all three were
+green while the promise rendered on the deployed build.
+
+`scripts/adaptation-claims.mjs` asks for an actor, a modality that is not the
+present, and a verb about what is put in front of him — a few hundred formulations
+from three short lists rather than the six somebody remembered. It carries **no
+negation exemption**: the first draft had one, and it immediately let through
+*"the app will no longer put this in front of you"* by reading the *no* in *no
+longer* as a denial. A negated promise is still a promise. Honest denials pass on
+their own merits, because they contain no adaptation verb at all.
+
+`MUST_BE_CAUGHT` names the two strings QA read off the build, so a future round
+cannot earn a pass by catching only the generic examples.
+
+**It is scoped to the blocker path deliberately.** *"The app will know it exists
+and can refer to it; it will not start suggesting it"* is the authoring form's
+sentence about a routine and is **true** — AUD-0045 means an owner routine
+genuinely is never suggested. The rule is not "never speak of the future"; it is
+"not on a path where nothing acts".
+
+### The cold-store check, answered
+
+The manual check Round 2 carried is what found QA-84-007, and no automated gate
+could have: every gate begins by loading a scenario. Enumerated after the repair,
+on the deployed build, from a genuinely fresh store and without opening the QA
+laboratory:
+
+- **Now** abstains as before — _"There is no history here yet"_, no invented
+  recommendation, no lifecycle controls — and offers two ordinary ways on:
+  answering one thing about what he is aiming at, and looking at the areas.
+- **Life** lists all eleven areas, every one of them under **Nothing here yet**,
+  with no area claiming a standing.
+- **Every domain page** carries its controls: the aspiration form on the proving
+  domains, and all six authoring controls everywhere.
+- **Insights** carries the second agenda, as it always did.
+
+**There is no remaining point where ordinary owner use cannot continue without the
+QA laboratory.** That is the builder's reading and Round 3 should test it rather
+than accept it.
+
+### Coverage added
+
+- **Synthetic** — a source instrument, `screensGatedOnRecordCount()`, over every
+  feature file that assembles a situation; a domain-page assembly check from an
+  empty store; a confirmation-versus-behaviour test that reads the sentence and
+  then makes the app act, for all three proving domains; a library-wide sweep
+  that no rendered entry contradicts itself about extent; and the blocker-path
+  sweep against the shared class guard.
+- **Browser, three widths** — the first-run Now and its two routes, Life and
+  Career on an empty store, the Health form and the headline that follows it in
+  one case, the complete Timeline row, and the exact blocker note.
+- **Deployed Android gate** — the first-run screens with a thumb, and the
+  Timeline row after a partial completion.
+
+**Every repair was proved by reintroduction**, in the synthetic suite and, for the
+two that render, in the browser as well.
+
+### Verification at the repaired checkpoint
+
+| Gate                                      | Result                                                            |
+| ----------------------------------------- | ----------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)         |
+| Unit / contract / synthetic / adversarial | **1,841 passed** in 83 files (1,834 at round 2)                   |
+| Browser, three widths, one worker         | **690 passed** at three widths, 230 per width (675 at round 2)                                                  |
+| Deployed Android gate                     | **clean — 230 checks** against deployed `cdd9259` (219 at round 2)                                                  |
+| Privacy scan                              | **clean — 286 tracked files**                                     |
+| Block sweep and copy guards               | **PASS**                                                          |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                           |
+| Checkpoint equivalence                    | **PASS** — deployed `cdd9259` serves the same bytes, nothing between                                                    |
+| CI                                        | Verify **success**, Deploy preview **success**                                                       |
+
+### What is still open, and named rather than left to be found
+
+- **Enforcement of a blocker constraint.** Still nothing reads one, still
+  deliberate, still F08's aggregation and later Validity's. D-192 is a guard
+  about saying so, not a step towards doing it.
+- **Semantic capture of what an aim means** — routing 91 package 1 (D-172).
+- **The owner phone check** is owed before release and is not a blocker QA can
+  clear.
+
+<!-- LCO_COMPLETE -->

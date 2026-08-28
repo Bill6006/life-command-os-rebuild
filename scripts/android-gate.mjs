@@ -1515,15 +1515,27 @@ async function main() {
    */
 
   // ---- A first run offers an ordinary way on — QA-84-007 --------------------
-  await page.goto(BASE)
-  await page.waitForSelector('h1:has-text("Now")')
-  const r2Cold = await page.locator('.screen').innerText()
+  /*
+   * A genuinely fresh store, which means a fresh **context**.
+   *
+   * `seedOwnerHistory` ran near the top of this gate and the history lives in
+   * IndexedDB, so navigating back to the root does not produce a first run — it
+   * produces the seeded owner's Now. The first draft of this block did exactly
+   * that and waited thirty seconds for a control that only exists on an empty
+   * store. The failure was honest and the check was not: it did not test what
+   * its own name said.
+   */
+  const coldContext = await browser.newContext({ ...ANDROID })
+  const cold = await coldContext.newPage()
+  await cold.goto(BASE)
+  await cold.waitForSelector('h1:has-text("Now")')
+  const r2Cold = await cold.locator('.screen').innerText()
   check(
     'a first run still refuses to guess',
     /no history here yet/i.test(r2Cold),
     r2Cold.replace(/\s+/g, ' ').trim().slice(0, 120),
   )
-  const r2ToInsights = page.getByTestId('empty-to-insights')
+  const r2ToInsights = cold.getByTestId('empty-to-insights')
   check(
     'and offers an ordinary way on rather than a developer tool',
     (await r2ToInsights.count()) === 1,
@@ -1531,21 +1543,32 @@ async function main() {
   clearsThumb('the way on', (await r2ToInsights.boundingBox())?.height)
   check(
     'and invents no recommendation to fill the screen',
-    (await page.getByTestId('now-actions').count()) === 0,
+    (await cold.getByTestId('now-actions').count()) === 0,
   )
-  await sideways('Now, on a first run')
+  const r2ColdOverflow = await cold.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  )
+  check(
+    'no horizontal overflow (Now, on a first run)',
+    r2ColdOverflow <= 1,
+    `${r2ColdOverflow}px of overflow`,
+  )
 
-  await page.goto(`${BASE}#/life`)
-  await page.waitForSelector('h1:has-text("Life")')
-  const r2Areas = await page.getByRole('link', { name: /Career & Learning/ }).count()
+  await cold.goto(`${BASE}#/life`)
+  await cold.waitForSelector('h1:has-text("Life")')
+  const r2Areas = await cold.getByRole('link', { name: /Career & Learning/ }).count()
   check('Life lists its areas on an empty store', r2Areas === 1)
-  await page.goto(`${BASE}#/life/career`)
-  await page.waitForSelector('h1:has-text("Career")')
+  await cold.goto(`${BASE}#/life/career`)
+  await cold.waitForSelector('h1:has-text("Career")')
   check(
     'and the aspiration control is there before there is any history',
-    (await page.getByTestId('destination-open').count()) === 1,
+    (await cold.getByTestId('destination-open').count()) === 1,
   )
-  await sideways('Career, on a first run')
+  check(
+    'as are the six things he can tell it about',
+    (await cold.getByTestId('authoring-kinds').count()) === 1,
+  )
+  await coldContext.close()
 
   // ---- Timeline does not contradict itself about extent — QA-84-009 ---------
   await loadScenario('The first evening')

@@ -122,13 +122,16 @@ superseded rather than reused.
 
 # Routing Phase 84 — What the owner is trying to become
 
-**Status: YELLOW — REPAIRED AFTER QA ROUND 1 FAIL, AWAITING ROUND 2 RETEST.**
+**Status: YELLOW — REPAIRED AFTER QA ROUND 2 FAIL, AWAITING ROUND 3 RETEST.**
 
-Independent QA returned **FAIL** on Round 1: acceptance items 1, 2 and 4 failed,
-five owner-visible defects were open, and four of them were inside the phase
-gate. Every finding was real. All six are repaired, two owner-directed
-corrections were added to the same round, and the phase is back with the **same**
-Codex conversation for Round 2.
+Independent QA has failed this phase twice and been right twice.
+
+**Round 1** returned FAIL on acceptance items 1, 2 and 4, with six findings.
+**Round 2** confirmed five of those six closed and found four more: a cold-start
+defect the manual owner-use check was added to look for, a Health confirmation
+that the Round 1 repair had made false, a Timeline tag still contradicting its own
+sentence, and a promise on the blocker path that the guard written to forbid it
+did not match. All four are repaired.
 
 It stays YELLOW. A builder conversation may not approve its own phase (D-077),
 and this record says what was built and repaired and where to look at it; it does
@@ -164,14 +167,15 @@ through the same controls, now gets past all eight steps.
 
 ## Checkpoint
 
-| Fact                    | Value                                                                        |
-| ----------------------- | ---------------------------------------------------------------------------- |
-| Product checkpoint      | `94e1716` — the Round 1 repair, and the commit the aggregate gate was run on |
-| Round 1 checkpoint      | `42667ea` — what QA tested and failed                                        |
-| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                  |
-| Owner-visible behaviour | **changed** — Now, Insights, and every domain page                           |
-| Owner phone check       | owed before release; not a blocker QA can clear                              |
-| Independent QA          | **Round 1 FAIL**, repaired; Round 2 dispatched in `docs/NEXT_PROMPT.md`      |
+| Fact                    | Value                                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------------------------- |
+| Product checkpoint      | `cdd9259` — the Round 2 repair, and the commit the aggregate gate was run on                      |
+| Round 2 checkpoint      | `94e1716` — the Round 1 repair, which Round 2 tested and failed                                   |
+| Round 1 checkpoint      | `42667ea` — what Round 1 tested and failed                                                        |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                       |
+| Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                |
+| Owner phone check       | owed before release; not a blocker QA can clear                                                   |
+| Independent QA          | **Round 1 FAIL** and **Round 2 FAIL**, both repaired; Round 3 dispatched in `docs/NEXT_PROMPT.md` |
 
 **The documentation head is a later commit than the product checkpoint**, as it
 was in Round 1. It carries this record, the Round 2 dispatch and two corrected
@@ -183,18 +187,18 @@ trust (D-097, D-180).
 
 At the repaired checkpoint, not at the one QA failed.
 
-| Gate                                      | Result                                                                                                     |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                                                  |
-| Unit / contract / synthetic / adversarial | **1,834 passed** in 83 files (1,812 at Round 1)                                                            |
-| Browser, three widths, one worker         | ****675 passed** at three widths, 225 per width (648 at Round 1)**                                         |
-| Android-style gate, deployed              | ****clean — 219 checks** against deployed `94e1716` (187 at Round 1, none of them this phase's controls)** |
-| Privacy scan                              | ****clean** — 284 tracked files**                                                                          |
-| Block sweep                               | **PASS** — unchanged                                                                                       |
-| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya                                          |
-| Commits not on any remote                 | **none** at the handed-off head (D-180)                                                                    |
-| Checkpoint equivalence                    | ****PASS** — deployed `94e1716` serves the same bytes, nothing between**                                   |
-| CI                                        | **Verify **success**, Deploy preview **success****                                                         |
+| Gate                                      | Result                                                               |
+| ----------------------------------------- | -------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)            |
+| Unit / contract / synthetic / adversarial | **1,841 passed** in 83 files (1,834 at Round 2, 1,812 at Round 1)    |
+| Browser, three widths, one worker         | **690 passed** at three widths, 230 per width (675 at round 2)       |
+| Android-style gate, deployed              | **clean — 230 checks** against deployed `cdd9259` (219 at round 2)   |
+| Privacy scan                              | **clean** — 286 tracked files                                        |
+| Block sweep                               | **PASS** — unchanged                                                 |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya    |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                              |
+| Checkpoint equivalence                    | **PASS** — deployed `cdd9259` serves the same bytes, nothing between |
+| CI                                        | Verify **success**, Deploy preview **success**                       |
 
 ## Independent QA — round 1, and the repair
 
@@ -274,6 +278,57 @@ fails it.
 what he typed, in the prompt's own domain. _"More money"_ under a Career prompt
 stays Career; what the phrase means is routing 91 package 1 (D-172), and neither
 correction opens it.
+
+## Independent QA — round 2, and the repair
+
+**Result: FAIL.** Codex, at High, on the deployed `eaf4536` (bundle-equivalent to
+`94e1716`). Five of the six Round 1 findings closed by their own reproductions;
+QA-84-002 only partly. Four new findings, all real. The full report is
+[`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md), Round 2, committed here
+unedited as `180fcdd`.
+
+**What Round 1 got right, Round 2 kept.** The standalone Health counterfactual now
+changes Now with no Career destination near it, the part-done rung and sentence
+hold, a naturally completed course renders as a course, the weekly question stores
+a weekly recurrence and changes a later Thursday, the blank milestone is honest,
+and canonical section 54 is correct. Items 3, 5, 6 and 7 passed again.
+
+| Finding   | What it was                                                                                                                                                                     | Repair                                                                                                                                                                                                                                                            |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QA-84-007 | on a genuinely fresh store, Now's only control was **Open the QA laboratory** — and in production, hidden, so nothing at all. Life listed no areas; every domain page was blank | One clause in two files: `LifeScreen` and `DomainPage` both gated on `snapshot.records.length === 0`. `InsightsScreen` never did, which is why the agenda was the only door. Both now gate on readiness alone, and Now's abstention names the ways on — **D-189** |
+| QA-84-008 | Health promised _"it will not start suggesting it"_ and then suggested it, one screen later                                                                                     | The sentence described the behaviour QA-84-001's repair had just changed. It now says the app will start suggesting it on evenings there is something to spend on it, which is the condition the generator applies — **D-190**                                    |
+| QA-84-009 | Timeline's tag said **Done** directly above _"Got part of the way"_                                                                                                             | `tagOf(record)` reads the extent; `tagFor(kind)` stays for the schema sweep. A rendered entry is one statement — **D-191**                                                                                                                                        |
+| QA-84-010 | the blocker note said the app could _"offer something that fits next time"_, which nothing performs — and the D-187 guard collected the string without matching it              | The copy says what is recorded and where. The guard is now over the **class** — actor × non-present modality × adaptation verb — in one module all three gates import, rather than three narrower phrase lists — **D-192**                                        |
+
+### The two that are worth reading twice
+
+**QA-84-007 is the product's first impression, and no gate could have seen it.**
+Every automated gate starts by loading a scenario. The manual cold-store check
+was added to Round 2 precisely because nothing walked a first run, and it found
+this on the first screen. The abstention itself was right and is untouched — the
+engine will not guess — but abstaining from a recommendation had been allowed to
+mean having nothing to offer, and those are different things.
+
+**QA-84-010 is the one to learn from.** D-187 forbade exactly this claim, one
+round earlier, and the guard written with it did not catch it — it **collected the
+live string** and its five phrases did not appear in it. Three copies of that list
+had grown, in the synthetic suite, the browser suite and the Android gate, and all
+three were green while the promise rendered. A guard that lists phrases is a
+record of the wordings somebody thought of. D-192 replaces it with the class, in
+one module, and names the two shipped strings in the fixture so a future pass
+cannot be earned on the generic examples.
+
+**QA-84-008 shows how two green tests hold a contradiction open.** One asserted
+the Health sentence said the app would not suggest the step; another proved the
+step becomes a candidate. Both true, neither able to see the other. The
+regression now reads the confirmation and then makes the app do the thing, in one
+test.
+
+**And Round 1's repair produced Round 2's defects.** QA-84-008 exists because
+QA-84-001 was fixed. QA-84-009 exists because QA-84-002 was fixed in the sentence
+and argued away in the tag. That is not an argument against repairing; it is the
+argument for a retest round, and for the four decisions above being about classes
+rather than cases.
 
 ## The six packages
 
