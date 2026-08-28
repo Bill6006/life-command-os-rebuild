@@ -2357,3 +2357,143 @@ Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 5
 repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
 routing 90. Do not ask me to paste the file contents.
 ```
+
+---
+
+## Round 5 repair — the builder's record
+
+**Actor:** Claude / the routing 84 builder conversation. **Appended below QA's
+round 5 rather than inside it** — QA owns every round and the builder does not
+edit them (D-077). Round 5 above is byte-identical to what QA wrote, and it was
+committed on its own as `744dfa9` **before** a line of this repair, which is the
+ordering Round 4 lost and this round puts back.
+
+**Result: QA-84-013 repaired. The phase stays YELLOW.** The builder does not
+declare GREEN. Round 6 is dispatched in `docs/NEXT_PROMPT.md` to the **same**
+Codex conversation at High.
+
+**The finding is right, and it is right about the previous repair's own words.**
+Round 4's record declared the history/Timeline/correction/export boundary and
+did not close it. **Declaring a boundary is not closing one**, and Round 5 walked
+straight through the one that was declared.
+
+### Checkpoint
+
+| Fact                    | Value                                                                     |
+| ----------------------- | ------------------------------------------------------------------------- |
+| Repaired checkpoint     | `1324f66` — the commit the aggregate gate was run on, and the one to test |
+| Round 5 checkpoint      | `f45214b` — deployed as `23ce35f`, what Round 5 tested                     |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/               |
+| Owner-visible behaviour | **unchanged** — no product code changed at all this round                 |
+| QA's Round 5 commit     | `744dfa9` — QA's report, committed unedited, before the repair            |
+
+### Reproduced first
+
+QA's mutation, on this checkpoint, before anything was built:
+
+```diff
+-'action-unable-now': 'Did not fit at the time',
++'action-unable-now': 'The app will choose something better next time',
+```
+
+`blocker-copy.test.tsx`, `destination-and-discovery.test.ts` and
+`timeline.test.ts` — **113 / 113 passed** with the promise in place. The finding
+is exactly as reported.
+
+### What QA-84-013 became
+
+**Why the surface enumeration could not have found it.**
+`blockerSurfacesInSource()` looks for React components whose props include a
+blocker-path type. `describeRecord` is not a component and takes a
+`CanonicalRecord`. The four surfaces that render its sentence — Timeline, the
+domain page's "Recently", the correction list, the export — are covered by
+describing the record **once**, and were covered by nothing when the guard looked
+for panels.
+
+**So the guarantee has three halves**, each proved by the check that can reach
+it:
+
+1. what `blockers.ts` **assembles**, walked through the scenario library;
+2. what the surfaces **compose** in JSX, proved by rendering them;
+3. what a record **reads as**, proved by describing one — `APPROVED_FROM_RECORDS`.
+
+**And the describers are enumerated from source**, which is the part QA insisted
+had to be structural: *"must discover future record renderers without relying on
+a hand-maintained list of the four surfaces QA named."* So it is not a list of
+surfaces at all. `recordTextFunctionsInSource()` returns **every exported
+function in `src/` taking a `CanonicalRecord`** — thirteen of them. Five produce
+owner text and are exercised over every record the blocker path writes; the other
+eight are named in `NOT_OWNER_TEXT` with the reason each gives the owner no
+words. **A fourth describer fails until somebody classifies it.**
+
+**No product code changed.** The copy was honest throughout, which is why five
+rounds of gates and an owner-use walk did not see this. What was defective was
+the guarantee.
+
+### Proved by reintroduction, four ways
+
+1. **QA's exact lifecycle-frame promise.** Fails the catalogue.
+2. **A promise in the generic fallback sentence** — the one reached when the move
+   no longer resolves.
+3. **A promise in the tag** rather than the sentence.
+4. **A new describer nobody classified**, which fails the *source enumeration*
+   rather than the catalogue — the half that makes this last.
+
+Writing it found the unresolvable-recommendation branch, which no ordinary walk
+reaches because the record is written beside the recommendation it is about. It
+is walked now.
+
+### On the cold-store evidence limitation
+
+Round 5 said plainly that it could not manufacture a genuinely fresh store: both
+ordinary origins already held its own Round 4 records, and it declined to clear
+them without authorisation rather than relabel a retained store as fresh. **That
+was the right call and the report is better for saying so.**
+
+There is a technique that needs no clearing and no authorisation, and this
+repository already uses it: **an ephemeral browser context**. `browser.newContext()`
+from a fresh `chromium.launch()` has an empty IndexedDB by construction, so a
+first run is available without touching any existing store.
+`scripts/android-gate.mjs` opens exactly such a context for its own first-run
+checks — the `coldContext` block — and that is the pattern to copy. Round 6's
+dispatch says so.
+
+### What is still true about the guard's limits
+
+**The classifier still cannot decide entailment** (D-193), documented where it
+lives. What has changed across Rounds 3 to 5 is the **catalogue**, which is the
+guarantee, and it is now closed over the three places copy is made rather than
+over the places somebody remembered it appearing.
+
+**The general rule, five findings deep — D-195.** A guard over copy must be
+collected where the copy is **made** and asserted against what the owner
+**reads**. Every version of this guard that enumerated something else — phrases,
+verbs, modules, screens — was wrong in the same way, and each was found by
+somebody writing one ordinary sentence the guard had not imagined.
+
+### Verification at the repaired checkpoint
+
+| Gate                                      | Result                                                            |
+| ----------------------------------------- | ----------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)         |
+| Unit / contract / synthetic / adversarial | **1,855 passed** in 84 files (1,850 at round 5)                   |
+| Browser, three widths, one worker         | **690 passed** at three widths, 230 per width (unchanged from round 5)                                                      |
+| Deployed Android gate                     | **clean — 233 checks** against deployed `1324f66` (unchanged from round 5)                                                      |
+| Privacy scan                              | **clean — 289 tracked files**                                     |
+| Block sweep and copy guards               | **PASS**                                                          |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                           |
+| Checkpoint equivalence                    | **PASS** — deployed `1324f66` serves the same bytes, nothing between                                                        |
+| CI                                        | Verify **success**, Deploy preview **success**                                                           |
+
+### What is still open, and named rather than left to be found
+
+- **Enforcement of a blocker constraint.** Still nothing reads one, still
+  deliberate, still F08's aggregation and later Validity's.
+- **Semantic capture of what an aim means** — routing 91 package 1 (D-172).
+- **The owner phone check** is owed before release and is not a blocker QA can
+  clear.
+- **CASE A and CASE B from a genuinely fresh store**, which Round 5 could not
+  produce and Round 6 owes.
+- **The classifier's entailment boundary** — named, not closed.
+
+<!-- LCO_COMPLETE -->
