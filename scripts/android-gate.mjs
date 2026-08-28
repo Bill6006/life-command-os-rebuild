@@ -1344,7 +1344,7 @@ async function main() {
   await page.goto(`${BASE}#/life/career`)
   await page.waitForSelector('h1:has-text("Career")')
   check(
-    'the aspiration control is r84Closed until it is r84Asked for',
+    'the aspiration control is closed until it is asked for',
     (await page.getByTestId('destination-form').count()) === 0,
   )
   const r84OpenAim = page.getByTestId('destination-open')
@@ -1382,7 +1382,7 @@ async function main() {
     r84Card.replace(/\s+/g, ' ').trim().slice(0, 200),
   )
   check(
-    'what it does not know is r84Named rather than filled — F01',
+    'what it does not know is named rather than filled — F01',
     (await page.getByTestId('destination-missing').count()) >= 1,
     r84Card.replace(/\s+/g, ' ').trim().slice(0, 200),
   )
@@ -1394,7 +1394,7 @@ async function main() {
   await page.waitForSelector('h1:has-text("Career")')
   const r84Happened = await page.locator('.screen').innerText()
   check(
-    'what has actually r84Happened is counted rather than rated',
+    'what has actually happened is counted rather than rated',
     !/%|percent|\bscore\b|\bgrade\b|\bproficien/i.test(r84Happened),
     (r84Happened.match(/[^\n]*(%|percent|score|grade)[^\n]*/i) ?? ['clean'])[0],
   )
@@ -1402,17 +1402,14 @@ async function main() {
     'and a session says what it is not evidence of',
     /not what it came to|does not say|is not/i.test(r84Happened),
   )
-  await sideways('Career, what has actually r84Happened')
+  await sideways('Career, what has actually happened')
 
   // ---- The second agenda, and the confirmation it now shows — D-188 ---------
   await loadScenario('The first evening')
   await page.locator('.nav').getByRole('button', { name: 'Insights' }).tap()
   await page.waitForSelector('h1:has-text("Insights")')
-  const r84Closed = page.getByTestId('discovery-r84Closed')
-  check(
-    'the second agenda is one r84Closed line until it is tapped',
-    (await r84Closed.count()) === 1,
-  )
+  const r84Closed = page.getByTestId('discovery-closed')
+  check('the second agenda is one closed line until it is tapped', (await r84Closed.count()) === 1)
   const r84OpenAgenda = page.getByTestId('discovery-open')
   clearsThumb('the agenda control', (await r84OpenAgenda.boundingBox())?.height)
   await r84OpenAgenda.tap()
@@ -1463,9 +1460,9 @@ async function main() {
 
   const r84Causes = await page
     .getByTestId('blocker-question')
-    .locator('.domain-r84Options .domain-option')
+    .locator('.domain-options .domain-option')
     .count()
-  check('all eight r84Causes are offered on one screen', r84Causes === 8, `${r84Causes} controls`)
+  check('all eight causes are offered on one screen', r84Causes === 8, `${r84Causes} controls`)
   const r84MustStay = page.getByTestId('blocker-must-stay')
   check(
     'including the one for being the only person who can watch somebody',
@@ -1491,17 +1488,17 @@ async function main() {
   )
   const r84Kept = await r84Standing.first().innerText()
   check(
-    'which says what r84Happened and nothing about what follows from it',
+    'which says what happened and nothing about what follows from it',
     /in my care/.test(r84Kept) && !/stop suggesting|won.t suggest|no longer suggest/i.test(r84Kept),
     r84Kept.replace(/\s+/g, ' ').trim(),
   )
-  const r84Lift = page.getByTestId('domain-blocker-r84Lift').first()
+  const r84Lift = page.getByTestId('domain-blocker-lift').first()
   check('and there is always a way out of it', (await r84Lift.count()) === 1)
   clearsThumb('the way out', (await r84Lift.boundingBox())?.height)
   await r84Lift.tap()
   await page.waitForSelector('[data-testid="domain-blocker"]', { state: 'detached' })
   check('one tap takes it back', true)
-  await sideways('Health & Recovery, a r84Standing blocker lifted')
+  await sideways('Health & Recovery, a standing blocker lifted')
 
   // ---- The rest of the app is still standing --------------------------------
   for (const destination of ['Now', 'Life', 'Timeline', 'Insights']) {

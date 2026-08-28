@@ -122,10 +122,17 @@ superseded rather than reused.
 
 # Routing Phase 84 — What the owner is trying to become
 
-**Status: YELLOW — READY FOR INDEPENDENT QA.**
+**Status: YELLOW — REPAIRED AFTER QA ROUND 1 FAIL, AWAITING ROUND 2 RETEST.**
 
-A builder conversation may not approve its own phase (D-077). This record says
-what was built and where to look at it; it does not say the phase passed.
+Independent QA returned **FAIL** on Round 1: acceptance items 1, 2 and 4 failed,
+five owner-visible defects were open, and four of them were inside the phase
+gate. Every finding was real. All six are repaired, two owner-directed
+corrections were added to the same round, and the phase is back with the **same**
+Codex conversation for Round 2.
+
+It stays YELLOW. A builder conversation may not approve its own phase (D-077),
+and this record says what was built and repaired and where to look at it; it does
+not say the phase passed.
 
 Canonical product name: _the destination and discovery structure — canonical
 Phase 9's product contract_. **Routing integer 84** (plan section 43A, D-159) —
@@ -157,30 +164,116 @@ through the same controls, now gets past all eight steps.
 
 ## Checkpoint
 
-| Fact                    | Value                                                       |
-| ----------------------- | ----------------------------------------------------------- |
-| Product checkpoint      | `42667ea` — the commit the aggregate gate was run on        |
-| Deployed at the handoff | `42667ea` — the same commit, no files between them          |
-| CI at the checkpoint    | Verify **success**, Deploy preview **success**              |
-| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/ |
-| Owner-visible behaviour | **changed** — Now, Insights, and every domain page          |
-| Owner phone check       | owed before release; not a blocker QA can clear             |
-| Independent QA          | **not run** — this is the handoff that asks for it          |
+| Fact                    | Value                                                                        |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| Product checkpoint      | `94e1716` — the Round 1 repair, and the commit the aggregate gate was run on |
+| Round 1 checkpoint      | `42667ea` — what QA tested and failed                                        |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                  |
+| Owner-visible behaviour | **changed** — Now, Insights, and every domain page                           |
+| Owner phone check       | owed before release; not a blocker QA can clear                              |
+| Independent QA          | **Round 1 FAIL**, repaired; Round 2 dispatched in `docs/NEXT_PROMPT.md`      |
+
+**The documentation head is a later commit than the product checkpoint**, as it
+was in Round 1. It carries this record, the Round 2 dispatch and two corrected
+check labels in `scripts/android-gate.mjs`; none of it is bundle-relevant, and
+`checkpoint-equivalence.mjs` is the way to confirm that rather than take it on
+trust (D-097, D-180).
 
 ## Exact verification results
 
-| Gate                                      | Result                                                               |
-| ----------------------------------------- | -------------------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)            |
-| Unit / contract / synthetic / adversarial | **1,812 passed** in 83 files (1,765 in 82 before)                    |
-| Browser, three widths, one worker         | **648 passed** at three widths, 216 per width (591 before)           |
-| Android-style gate, deployed              | **clean — 187 checks** against `42667ea`                             |
-| Privacy scan                              | **clean** — 284 tracked files                                        |
-| Block sweep                               | **PASS** — unchanged                                                 |
-| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya    |
-| Commits not on any remote                 | **none** at the handed-off head (D-180)                              |
-| Checkpoint equivalence                    | **PASS** — deployed `42667ea` serves the same bytes, nothing between |
-| CI                                        | Verify **success**, Deploy preview **success**                       |
+At the repaired checkpoint, not at the one QA failed.
+
+| Gate                                      | Result                                                                                                     |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                                                  |
+| Unit / contract / synthetic / adversarial | **1,834 passed** in 83 files (1,812 at Round 1)                                                            |
+| Browser, three widths, one worker         | ****675 passed** at three widths, 225 per width (648 at Round 1)**                                         |
+| Android-style gate, deployed              | ****clean — 219 checks** against deployed `94e1716` (187 at Round 1, none of them this phase's controls)** |
+| Privacy scan                              | ****clean** — 284 tracked files**                                                                          |
+| Block sweep                               | **PASS** — unchanged                                                                                       |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya                                          |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                                                                    |
+| Checkpoint equivalence                    | ****PASS** — deployed `94e1716` serves the same bytes, nothing between**                                   |
+| CI                                        | **Verify **success**, Deploy preview **success****                                                         |
+
+## Independent QA — round 1, and the repair
+
+**Result: FAIL.** Codex, at High, on the deployed `3dbfc9b` (bundle-equivalent to
+`42667ea`). Acceptance items 3, 5, 6 and 7 passed. Items 1, 2 and 4 failed. The
+full report is [`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md), Round 1,
+written and owned by QA and committed here unedited as `328e42f`.
+
+**Every finding was real, and the pattern in them is one thing.** Five of the six
+were reachable only by _using the app_, and every one of them had a passing test
+beside it. The gate was 1,812 assertions and 648 browser cases; the walk that
+found these was a person opening a near-empty store and pressing the controls in
+order. That is D-161's claim about what a capability is, arriving a second time
+in the same phase.
+
+| Finding   | What it was                                                                          | Repair                                                                                                                                                                                                                                                                             |
+| --------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QA-84-001 | a Health destination changed nothing on Now, from the near-empty store               | `healthCandidates` now proposes the Health destination's **next milestone** as a candidate. An owner-created entity ranked by `goal-fit`, no dimension added, and no duration invented — the step is proposed with `durationUnknown`, so the app never says how long it will take. |
+| QA-84-002 | **Only part of it** was counted as a completed session and called _Followed through_ | `readProgress` routes `extent: 'partial'` to its own rung, **part-done**, with its own sentence; `describe.ts` says _Got part of the way_ on Timeline and in the correction list. One distinction, kept by every reader.                                                           |
+| QA-84-003 | a course finished through ordinary controls never appeared as a finished course      | `readProgress` reads `situation.threads` and `thread.finished` rather than a raw `state === 'done'` nothing writes. The dead assumption was in **three** readers, found by a source guard, and all three now read the same thing (DEF-0119's class, one reader out).               |
+| QA-84-004 | the weekly-chunk question stored one calendar date                                   | The form asks **which day of the week** and `authoringRecords` writes a `weekly` recurrence from it. A recurring question stores a recurring fact, and the note no longer points at a control that is not on that screen.                                                          |
+| QA-84-005 | a blank optional next step was confirmed as the literal next step _"that"_           | `milestoneConfirmation()` in `authoring.ts`, so the sentence is a function of what the owner typed and a test can hold it to what is written. It was composed inline in JSX, which is why nothing caught it.                                                                       |
+| QA-84-006 | canonical section 54 told Phase 9 the second agenda shipped on Life                  | Corrected to Insights, which is where DEF-0122, D-169 and the deployed product all put it.                                                                                                                                                                                         |
+
+The punctuation sibling QA named beside QA-84-005 — _"Finish the subnetting
+lab.."_ — is repaired at the composition boundary: `ownerPhrase()` in
+`recommendation.ts` strips trailing terminal punctuation from the owner's own
+words as they enter a generated sentence, so the app never doubles its own full
+stop onto his.
+
+**And the coverage QA said was missing is there.** The deployed Android gate had
+187 checks and touched none of this phase's controls; it now walks the aspiration
+form, the progress panel, the second agenda's proposal, and the blocker question
+with a thumb, on the deployed bytes. The browser suite gained the Health
+counterfactual, the partial-progress copy, the naturally completed course, the
+real discovery obligation flow and the empty milestone confirmation.
+
+### Two owner-directed corrections in the same round
+
+Neither is a QA finding. The owner hit both in real use of the deployed build and
+directed them into this repair; they are named here so Round 2 meets them as
+declared scope rather than as unexplained diff. QA-84-001…006 are unchanged,
+unreprioritised and unreplaced by them.
+
+**An eighth blocker cause — _"Can't leave — someone's in my care"_ (D-187).** Now
+offered a walk while his daughter was asleep and there was nobody else to watch
+her. The nearest of the seven was `someone-needs-me`, which is wrong twice —
+nobody needed his time, he was not free to leave — and `standing: false`, so it
+wrote nothing durable at all. The new cause is `standing: true`, so it becomes a
+constraint on the domain page with **Not true any more** beside it.
+
+**And it promises nothing**, because nothing in the engine acts on it:
+`applyConstraints` never reads `situation.constraints`, and `cautionsFor` matches
+a constraint's concept against a candidate's `leansOn`, which never holds a
+`blocker.*` concept. Making it act is F08's blocker aggregation, adjudicated to
+later Validity. A copy guard asserts that no owner-visible string on the path
+claims a future recommendation will change, and it is proved by reintroduction.
+
+**The discovery card stops bypassing the confirmation contract (D-188,
+DEF-0123).** The owner typed **More money** into the Career prompt, pressed
+**That is it**, and believed he had confirmed an interpretation. `Discovery.tsx`
+never imported `proposeAuthoring`: its destination branch was a direct call to
+the record builder, and no interpretation, no `creates` and no `unknowns` was
+ever shown — while the domain page's form had all three. Same class as QA-84-005
+one surface across.
+
+The repair is `proposeDestination()`, returning the same `AuthoringProposal`
+shape and composing `milestoneConfirmation()`. `AUTHORABLE_KINDS` stays at six:
+D-188 records why widening a closed set to reuse a function was the worse of the
+two available moves. **And the bypass cannot come back** —
+`everyAuthoringSurface()` in `tests/synthetic/journey.ts` reads which feature
+files call a builder that brings something into being and which of them propose
+first, with one named exemption carrying its reason. Putting the direct call back
+fails it.
+
+**No semantic interpretation was added.** The aim is stored byte-identical to
+what he typed, in the prompt's own domain. _"More money"_ under a Career prompt
+stays Career; what the phrase means is routing 91 package 1 (D-172), and neither
+correction opens it.
 
 ## The six packages
 

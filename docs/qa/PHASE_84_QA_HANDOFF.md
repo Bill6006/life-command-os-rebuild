@@ -712,4 +712,177 @@ handoff there exactly as written. Keep Phase 84 YELLOW; do not start routing 90.
 Do not ask me to paste the file contents.
 ```
 
+---
+
+## Round 1 repair — the builder's record
+
+**Actor:** Claude / the routing 84 builder conversation. **This section is the
+builder's and is appended below QA's round rather than inside it** — QA owns
+every round and the builder does not edit them (D-077, `README.md`). QA's Round 1
+above is byte-identical to what QA wrote; it was committed on its own as
+`328e42f` before a line of the repair was written, so the history shows the
+finding preceding the fix.
+
+**Result: every Round 1 finding repaired. The phase stays YELLOW.** The builder
+does not declare GREEN. Round 2 is dispatched in `docs/NEXT_PROMPT.md` to the
+**same** Codex conversation.
+
+### Checkpoint
+
+| Fact                    | Value                                                                             |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| Repaired checkpoint     | `94e1716` — the commit the aggregate gate was run on, and the one to test        |
+| Round 1 checkpoint      | `42667ea` — deployed as `3dbfc9b`, what QA failed                                 |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                       |
+| Owner-visible behaviour | **changed** — Now, Insights, Timeline and every domain page                       |
+| QA's Round 1 commit     | `328e42f` — QA's report, committed unedited                                       |
+| Decisions written first | `25ba1cf` — D-187 and D-188, before the code they govern                          |
+
+**The documentation head is a later commit than the product checkpoint**, as it
+was in Round 1. It carries this record, the Round 2 dispatch and two corrected
+check labels in `scripts/android-gate.mjs`; none of it is bundle-relevant, and
+`checkpoint-equivalence.mjs` is the way to confirm that rather than take it on
+trust (D-097, D-180).
+
+### What each finding became
+
+| Finding   | Repair                                                                                                                                                                                                                                                                                                                                                        | Where                                                                             |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| QA-84-001 | `healthCandidates` proposes the Health destination's **next milestone** as a candidate — an owner-created entity, ranked by `goal-fit`, with **no invented duration** (`durationUnknown` passes `undefined` minutes). No dimension added, no weight moved, AUD-0045's routines deferral intact. The standalone Health counterfactual now holds with no Career destination anywhere near it. | `src/intelligence/candidates.ts`                                                   |
+| QA-84-002 | `extent: 'partial'` routes to its own rung — **part-done** — with its own sentence, and history copy says _Got part of the way_ rather than _Followed through_. Seven rungs now, not six.                                                                                                                                                                       | `src/domain/progress.ts`, `src/intelligence/progress.ts`, `src/features/history/describe.ts` |
+| QA-84-003 | `readProgress` reads `situation.threads` and `thread.finished`. The dead `state === 'done'` assumption was in **three** readers — a source guard found the other two — and all three now read the same thing.                                                                                                                                                   | `src/intelligence/progress.ts`, `src/features/life/Threads.tsx`                    |
+| QA-84-004 | The form asks **which day of the week**; `authoringRecords` writes a `weekly` recurrence from it. The note no longer points at a Day-shape control that is not on that screen.                                                                                                                                                                                  | `src/features/insights/Discovery.tsx`                                              |
+| QA-84-005 | `milestoneConfirmation()` composed in `authoring.ts`, so the sentence is a function of what the owner typed and a test can read it. A blank next step now says _"Leave this empty and nothing is created for it."_                                                                                                                                              | `src/intelligence/authoring.ts`, `src/features/life/DomainPanels.tsx`              |
+| QA-84-006 | Canonical section 54 now says the second agenda shipped on **Insights**.                                                                                                                                                                                                                                                                                       | `docs/CANONICAL_REBUILD_PLAN.md`                                                   |
+| sibling   | `ownerPhrase()` strips trailing terminal punctuation from the owner's words as they enter a generated sentence, so _"Finish the subnetting lab.."_ cannot occur. Applied at the composition boundary, to subject and object.                                                                                                                                    | `src/domain/recommendation.ts`                                                     |
+
+**Three defects the repair itself produced were found and logged**, because the
+repair round is not exempt from the thing this phase is about: DEF-0120 (the
+blocker question nested under a branch it had nothing to do with, invisible at
+360px), DEF-0121 (a new button's accessible name contained the name of the button
+beside it), DEF-0122 (Life exceeded its measured height budget, which is why the
+agenda is on Insights). All three came from the browser suite at three widths.
+
+**And one from the gate discipline itself — D-186.** A browser run was reported
+here as clean when it was not: `tee | tail -6` showed _"622 passed"_ and hid _"26
+failed"_ above it, and the pipeline's exit status was `tail`'s. CI caught it. The
+rule is now that a gate's **exit status** is what is read, never a tail of its
+output.
+
+### Coverage QA asked for and did not have
+
+QA was right that the passing tests beside each finding were false greens, and
+right that the 187-check Android gate touched none of this phase's controls.
+
+- **Deployed Android gate** — a routing 84 block walks the aspiration form (the
+  empty-milestone confirmation included), the progress panel, the second agenda's
+  proposal, and the blocker question with all eight causes, each checked against
+  the 44px thumb target, on the deployed bytes in a Galaxy-class context.
+- **Browser suite** — the Health counterfactual with no Career destination
+  present; the partial-completion copy on the domain page and in history; a
+  course finished through ordinary controls rendering as a finished course; the
+  real discovery obligation flow including the weekday control; and the blank
+  optional milestone confirmation.
+- **Synthetic** — every one of the above as a focused case, plus a scripted
+  reintroduction harness proving each repair's guard fails when the defect is put
+  back.
+
+### Two owner-directed corrections, declared
+
+**Not QA findings.** Codex raised neither in Round 1. They are owner-directed
+scope added to this repair round and are named here so Round 2 meets them as
+declared scope rather than as unexplained diff. **QA-84-001 … QA-84-006 are
+unchanged, unreprioritised and unreplaced.**
+
+**1. An eighth blocker cause — `must-stay`, _"Can't leave — someone's in my
+care"_ (D-187).** The owner could not take the walk Now offered: his daughter was
+asleep and there was nobody else to watch her. The nearest of the seven was
+`someone-needs-me`, semantically wrong (nobody needed his *time*; he was not free
+to leave) and `standing: false`, so nothing durable was written at all. The new
+cause is `standing: true` and becomes a constraint on the domain page with **Not
+true any more** beside it.
+
+**It promises nothing, and that is the load-bearing part.** `applyConstraints`
+never reads `situation.constraints`; `cautionsFor` matches a constraint's concept
+against a candidate's `leansOn`, and no `leansOn` holds a `blocker.*` concept, so
+that branch cannot fire; `constraints.ts` records the non-enforcement as
+deliberate. A copy guard asserts that no owner-visible string on the path claims
+a future recommendation will change — the labels, the statements, the live
+question, its note, the silent line and the constraint description — and it is
+proved by reintroduction. Enforcement is F08's blocker aggregation, adjudicated
+to later Validity.
+
+**2. The discovery card stops bypassing the confirmation contract (D-188,
+DEF-0123).** `Discovery.tsx` never imported `proposeAuthoring`; its destination
+branch called `destinationRecords` directly, so the owner typed **More money**,
+pressed **That is it**, and confirmed an interpretation he was never shown — the
+same class as QA-84-005, one surface across.
+
+`proposeDestination()` now returns the same `AuthoringProposal` shape and
+composes `milestoneConfirmation()`. `AUTHORABLE_KINDS` stays at six; D-188
+records the choice and why widening a closed set to reuse a function was the
+worse of the two available moves. The obligation branch on the same card went
+through `proposeAuthoring` at the same time, from a single draft.
+
+**The bypass cannot come back.** `everyAuthoringSurface()` in
+`tests/synthetic/journey.ts` reads which feature files call a builder returning
+`AuthoringResult` and which of them compose an `AuthoringProposal` first, with
+one named exemption (`DomainPage.tsx`, whose form proposed and confirmed before
+handing the draft over) carrying its reason. Reintroducing the direct call fails
+it by name.
+
+**No semantic interpretation was added by either correction.** The aim is stored
+byte-identical, in the prompt's own domain — _"More money"_ under a Career prompt
+stays Career. D-024, D-025 and D-172 stand; semantic capture is routing 91
+package 1.
+
+### Verification at the repaired checkpoint
+
+| Gate                                      | Result                                                            |
+| ----------------------------------------- | ----------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)         |
+| Unit / contract / synthetic / adversarial | **1,834 passed** in 83 files (1,812 at Round 1)                   |
+| Browser, three widths, one worker         | **PENDING**                                                  |
+| Deployed Android gate                     | ****clean — 219 checks** against deployed `94e1716` (187 at Round 1, none of them this phase's controls)**                                                  |
+| Privacy scan                              | ****clean** — 284 tracked files**                                                  |
+| Block sweep and copy guards               | **PASS**                                                          |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                           |
+| Checkpoint equivalence                    | ****PASS** — deployed `94e1716` serves the same bytes, nothing between**                                                    |
+| CI                                        | **Verify **success**, Deploy preview **success****                                                       |
+
+### One additional Round 2 requirement, owner-directed
+
+**A cold-store owner-use check.** Stated in full in `docs/NEXT_PROMPT.md` and
+summarised here so it is not missed by a reader of this file alone: from a
+**genuinely fresh browser store**, without ever opening the QA laboratory and
+without seeding any fixture, walk the product as an ordinary owner and record
+every point where ordinary use cannot continue without that laboratory.
+
+**On a genuinely empty store Now offers exactly one control — _"Open the QA
+laboratory."_** Confirmed by the builder on the deployed build. It is to be
+recorded **as a cold-start finding in its own right, not as a blocked test**, and
+the link is not to be followed. Life and Insights are still reachable, and
+Insights does carry the second agenda on a cold store.
+
+It carries two cases: **CASE A**, answering the agenda with the ordinary vague
+phrase _"More money"_ and inspecting what the app says it will create and what it
+says it is not assuming **before** confirming, then what was actually written;
+and **CASE B**, _"Can't right now"_ and the caregiving blocker for the real owner
+situation, inspecting what is recorded and what the product then claims.
+
+**It is a _cold-store owner-use check_ and not a sealed one**, because Round 1
+knowledge already exists in that conversation and D-090's sealed-before-repo
+definition cannot honestly be claimed. It is manual owner-use evidence inside
+Round 2 — **not a new automated acceptance instrument**, not a gate, and it
+leaves QA-84-001 … QA-84-006 and every other Round 2 requirement unchanged.
+
+### What is still open, and named rather than left to be found
+
+- **Enforcement of a blocker constraint.** Nothing reads one. D-187 says so in
+  the code and this record says so here; F08's aggregation is later Validity's.
+- **The owner phone check** is owed before release and is not a blocker QA can
+  clear.
+- **Semantic capture of what an aim means** — routing 91 package 1 (D-172).
+  Deliberately absent.
+
 <!-- LCO_COMPLETE -->
