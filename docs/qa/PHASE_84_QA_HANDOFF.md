@@ -2142,4 +2142,218 @@ clean rerun above; it is load, not a defect, and it is now on the record twice.
 - **The classifier's entailment boundary**, and **the history/Timeline/export
   renderers**, both above — named, not closed.
 
-<!-- LCO_COMPLETE -->
+---
+
+## Independent QA Round 5 — 2026-08-28
+
+**Phase:** 84
+
+**Actor:** Codex / the same independent QA conversation that wrote Rounds 1–4.
+
+**Repaired product checkpoint:** `f45214b`.
+
+**Deployed head tested:** `23ce35f629f17a382d98943dfc66922a9f5220e9`; checkpoint equivalence proved that the three intervening files are documentation-only and the served bundle is equivalent to `f45214b`.
+
+**Overall verdict:** **FAIL.**
+
+**New finding:** **QA-84-013 — Blocker.**
+
+**Product acceptance:** **PASS on all seven D-173 items.** The failure is again in the standing D-187/D-193/D-194 guarantee, not in the current owner-visible product behavior.
+
+### The owner-use result
+
+The repaired product still behaves honestly on the seven required paths:
+
+| D-173 acceptance item | Round 5 result |
+| --- | --- |
+| 1. A destination can be named and can change Now | **PASS** |
+| 2. The owner can introduce something without the app inventing meaning | **PASS** |
+| 3. Progress reports only what actually happened | **PASS** |
+| 4. An interruption is not treated as refusal | **PASS** |
+| 5. Blocker copy promises no adaptation the engine does not perform | **PASS in the present product; FAIL as a standing guarantee — QA-84-013** |
+| 6. Correction, private handling and the second agenda remain honest | **PASS** |
+| 7. Standing no-score guards | **PASS** |
+
+The current `action-unable-now` wording is honest: Timeline says, “Did not fit at the time.” The caregiving blocker remains durable and withdrawable, changes no recommendation, and promises no future adaptation. The first-run product still abstains rather than inventing a recommendation; all eleven Life areas and their ordinary routes remain available; Health’s confirmation and recommendation agree; partial work remains partial on Timeline; the second agenda preserves the owner’s words and unknowns; course, recurrence, correction and private behavior remain unchanged; and no score, percentage, grade, rank, readiness number, progress bar, wellness composite or Life Score appeared.
+
+#### Cold-store evidence limitation
+
+Round 5 did not manufacture a fresh-store PASS. Both available ordinary browser origins—the standard preview origin and the trailing-dot origin—already contained the earlier Round 4 owner-use records. The second browser context exposed the same retained stores. Clearing those stores would delete product data and was not authorized; the browser safety boundary also declined the isolated-frame technique and explicitly prohibited a workaround. QA did not open the laboratory, seed a fixture or relabel a retained store as fresh.
+
+The deployed bundle is unchanged from the product checkpoint already given a genuine cold-store PASS in Rounds 3 and 4, and Round 5’s complete browser and Android matrices re-exercised the seven product paths. That evidence supports the product PASSes above, but it is not a fresh manual cold-store repetition. The next independent retest still owes CASE A (“More money”) and CASE B (caregiving) from a sanctioned genuinely fresh store.
+
+### QA-84-013 — action-unable-now history copy sits outside every blocker-promise guard
+
+**Severity:** Blocker.
+
+**Standing decisions:** D-187, D-193 and D-194.
+
+**Classification:** Test-architecture false green; current product copy remains honest.
+
+`src/features/history/describe.ts` owns the shared lifecycle frame for an `action-unable-now` record:
+
+```ts
+'action-unable-now': 'Did not fit at the time',
+```
+
+`describeRecord()` emits that frame for Timeline. The same description crosses into the domain-page “Recently”/correction reader and the owner export. It is therefore an owner-facing blocker rendering boundary exactly of the kind the builder declared but did not close.
+
+The Round 4 repair renders `BlockersPanel`, `BlockerQuestion` and `ResumePanel`, and its structural enumeration finds React function components that directly accept `StandingBlocker`, `BlockerDecision` or `ResumableMove`. `describeRecord()` is not such a component and takes none of those types. Consequently:
+
+- its `action-unable-now` sentence never enters the rendered blocker catalogue;
+- the D-194 source enumeration cannot discover it;
+- Timeline’s own sweeps check readability, chronology, structure, privacy and extent, not the D-187 future-adaptation promise;
+- the domain correction/recent and export sweeps inherit the same sentence but likewise do not apply the adaptation catalogue or classifier to it.
+
+A blocker promise can therefore be written at this ordinary read boundary and remain green everywhere.
+
+#### Reproduction and mutation proof
+
+QA used a disposable detached worktree at checkpoint `f45214b`; the real repository was not edited. The one-line mutation was:
+
+```diff
+-'action-unable-now': 'Did not fit at the time',
++'action-unable-now': 'The app will choose something better next time',
+```
+
+With that unsupported future-adaptation promise in place, this targeted gate remained green:
+
+```text
+npx vitest run tests/synthetic/blocker-copy.test.tsx \
+  tests/synthetic/destination-and-discovery.test.ts \
+  tests/synthetic/timeline.test.ts \
+  tests/synthetic/export-honesty.test.ts \
+  tests/synthetic/g013-export-handoff.test.ts --reporter=verbose
+
+5 files passed; 431 / 431 tests passed.
+```
+
+A temporary probe then called the real `describeRecord()` and proved what the owner receives:
+
+```text
+what-worked: The app will choose something better next time — building a lab with subnetting.
+```
+
+That probe passed 1/1, establishing that the mutated promise was not dead code. Because the shared description is also consumed by the domain recent/correction and export readers where that record is included, the omission is not confined to a test-only Timeline helper.
+
+The worktree was then removed and pruned. No probe, mutation or product edit remains in the repository.
+
+#### Which tests give false confidence
+
+- `tests/synthetic/blocker-copy.test.tsx` proves completeness only for the three rendered React panels and the types its source scanner knows.
+- `tests/synthetic/destination-and-discovery.test.ts` proves the data-side catalogue and classifier boundary, not the shared history description.
+- `tests/synthetic/timeline.test.ts`, `tests/synthetic/export-honesty.test.ts` and `tests/synthetic/g013-export-handoff.test.ts` all accept the unsupported promise while continuing to pass their surface-specific assertions.
+- The Phase 84 browser cases and deployed Android D-187 checks read the three repaired panels, not the `describeRecord()` boundary.
+
+The focused 431/431 result is the required false-green proof. It also explains how the aggregate, browser and Android gates can all remain green without contradicting this finding.
+
+### Mobile, verification and protected-scope result
+
+No new touch-target, horizontal-overflow, sticky-navigation, button-shift, accessible-name, console or mobile interaction defect was found. The deployed Android-style gate read the complete repaired blocker panels and the ordinary owner screens cleanly. Those checks are correct for the surfaces they cover; QA-84-013 is the omitted read boundary.
+
+| Gate | Round 5 result |
+| --- | --- |
+| Checkpoint equivalence | **PASS** — deployed `23ce35f` is bundle-equivalent to repaired checkpoint `f45214b`; only three documentation files intervene |
+| Aggregate `npm run verify` | **PASS** — format, lint, typecheck and production build; 1,850 / 1,850 tests across 84 files |
+| Focused QA-84-013 mutation block | **FALSE GREEN — 431 / 431 passed** with the unsupported promise rendered by the real history describer |
+| Full browser matrix | **PASS — 690 / 690** at 360, 430 and 1,280px; 230 per width; one worker |
+| Deployed Android-style gate | **clean — 233 checks** against deployed `23ce35f` |
+| Privacy scan | **clean — 289 tracked files** |
+| Block sweep and current copy guards | **PASS** |
+| D-193/D-194 catalogue guarantee | **FAIL** at the shared history/Timeline/correction/export read boundary |
+| CI at tested head | **PASS** — workflow run `33209955818` completed successfully for `23ce35f` |
+| Commits on no remote at QA start | **none** |
+
+The protected scope remains intact. Between the Round 4 product checkpoint and its repair, the only product-source change is the intended export of `ResumePanel`; QA changed no product code. No strategy evaluation, pattern-discovery engine, blocker enforcement, semantic interpretation, new domain progression model, owner-routines library, historical backfill, twelfth page, scoring change, visual-language change or orchestrator change appeared. `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` is unchanged and there is no `PHASE_85_*` file. Fatherhood, Timeline’s passive role, the private structural guard and all standing no-score protections remain unchanged. The owner phone check remains owed and is not something QA can clear.
+
+---
+
+## Complete next handoff — repair after Round 5 FAIL
+
+**System:** Claude / builder.
+
+**Model:** Claude, Opus-class.
+
+**Intelligence level:** **Max** — this is the fifth audit-campaign repair and the remaining defect is the guarantee’s cross-layer enumeration boundary.
+
+**Conversation:** **CURRENT** — return to the original routing 84 Claude builder conversation, which owns the still-unresolved phase and its repairs.
+
+```text
+Routing Phase 84 repair after independent QA Round 5 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 5 is the independent QA retest
+and is authoritative for this repair. Keep the Phase field exactly 84.
+
+Keep routing 84 YELLOW. Do not start routing 90 and do not mark the phase GREEN.
+Repair QA-84-013 under canonical plan section 42: reproduce it, write a
+regression, prove that regression fails when the exact unsupported promise is
+reintroduced, fix the root cause, and run the full gate on the final tracked
+checkpoint.
+
+The current owner-visible copy is honest. The defect is that the D-193/D-194
+guarantee ends at three React blocker panels, while an action-unable-now is also
+described by src/features/history/describe.ts and read by Timeline, domain
+Recently/correction and export. QA changed that lifecycle frame to “The app will
+choose something better next time”; the real rendered description contained the
+promise while all five relevant synthetic suites passed, 431/431.
+
+Required outcome: close D-187 structurally over every owner-visible renderer of
+an action-unable-now, not only components that directly accept StandingBlocker,
+BlockerDecision or ResumableMove. The shared history description and every
+Timeline, domain correction/recent and export route that consumes it must enter
+the same deliberate semantic guarantee, or an equivalent structural guarantee
+with no weaker coverage. The enumeration must discover future record renderers
+without relying on a hand-maintained list of the four surfaces QA named.
+
+Prove the class by reintroducing the exact lifecycle-frame promise above and
+showing that the authoritative guard fails before any browser or release gate.
+Prove the honest current frame passes. Keep bidirectional catalogue reachability
+where it is meaningful; do not satisfy the finding with a single phrase assertion
+or by merely adding the current history sentence to another manually assembled
+array. Preserve the shared classifier as a secondary net and document any
+genuine entailment limit rather than claiming it can understand arbitrary prose.
+
+Preserve every Round 5 product PASS and every explicit deferral, especially the
+first-run abstention and ordinary routes, all eleven empty Life areas and domain
+controls, the byte-identical “More money” path and its unknowns, Health’s
+confirmation-to-recommendation agreement, the complete partial Timeline row,
+the truthful restorative silence, the durable caregiving fact and withdrawal
+route, course/recurrence/correction/private behavior, all no-score protections,
+Fatherhood’s untouched growth model, and the absence of blocker enforcement.
+
+Run the clean aggregate gate, full browser suite at 360/430/1280, privacy scan,
+block/copy sweeps and deployed Galaxy-class Android gate. Deploy the repaired
+checkpoint, prove checkpoint equivalence if documentation moves the deployed
+SHA, append the builder’s repair record and a complete Round 6 retest prompt to
+this same QA report, and address that retest to the SAME Codex QA conversation
+at High. The Round 6 QA check still owes CASE A and CASE B from a sanctioned,
+genuinely fresh ordinary browser store; do not call a retained store fresh and
+do not use the QA laboratory.
+
+Do not create a PHASE_85_* file. Do not alter
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md. Do not put the LCO completion marker in
+this QA handoff; for this handoff it belongs only at the end of
+docs/NEXT_PROMPT.md. Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude, Opus-class.
+
+**Level:** Max.
+
+**Conversation:** CURRENT — the original routing 84 builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 5 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 5
+repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
+routing 90. Do not ask me to paste the file contents.
+```
