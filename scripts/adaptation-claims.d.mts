@@ -32,6 +32,9 @@ export const APPROVED_FROM_BLOCKERS_MODULE: readonly string[]
 /** The half the surfaces compose in JSX, proved by rendering them. */
 export const APPROVED_FROM_SURFACES: readonly string[]
 
+/** The half a record reads as, wherever it is read, proved by describing one. */
+export const APPROVED_FROM_RECORDS: readonly string[]
+
 /** Whitespace-insensitive membership of {@link APPROVED_BLOCKER_COPY}. */
 export function isApprovedBlockerCopy(line: string): boolean
 

@@ -1413,6 +1413,79 @@ function takesAMoment(parameters: string): boolean {
 // ---------------------------------------------------------------------------
 
 /**
+ * A function that turns a record into words the owner reads — QA-84-013, D-195.
+ *
+ * D-194 closed the catalogue over the three React panels that *take* a
+ * blocker-path type, and Round 4's repair record declared the rest of the path —
+ * Timeline, the domain page's "Recently", the correction list and the export —
+ * a boundary it had not closed. Round 5 walked through it: changing the shared
+ * lifecycle frame for an `action-unable-now` to *"The app will choose something
+ * better next time"* rendered that promise to the owner while 431 tests passed.
+ *
+ * **Declaring a boundary is not closing one**, and the enumeration that matters
+ * here is not of components but of **describers**: functions that take a
+ * `CanonicalRecord` and produce something a person reads. There are three, they
+ * are the funnel every one of those four surfaces goes through, and a fourth
+ * fails this until somebody classifies it.
+ */
+export interface RecordTextFunction {
+  readonly file: string
+  readonly fn: string
+}
+
+export function recordTextFunctionsInSource(): readonly RecordTextFunction[] {
+  const out: RecordTextFunction[] = []
+  for (const layer of ['features', 'domain', 'intelligence', 'memory']) {
+    for (const file of filesUnder(join(ROOT, 'src', layer))) {
+      const code = withoutComments(readFileSync(file, 'utf8'))
+      for (const match of code.matchAll(/export function ([A-Za-z0-9_]+)\s*\(/g)) {
+        const name = match[1]
+        if (name === undefined || match.index === undefined) continue
+        const open = match.index + match[0].length - 1
+        const close = closingParenAfter(code, open)
+        if (close === undefined) continue
+        if (!/\bCanonicalRecord\b/.test(code.slice(open, close))) continue
+        out.push({ file: relativeToRoot(file), fn: name })
+      }
+    }
+  }
+  return out.sort((a, b) => `${a.file}${a.fn}`.localeCompare(`${b.file}${b.fn}`))
+}
+
+/**
+ * The ones that take a record and give the owner no words for it.
+ *
+ * Named with the reason rather than filtered out silently, because the entry is
+ * the cost of the exemption: a fourth function that reads a record and says
+ * something about it has to be argued for here, in front of whoever reads the
+ * diff. That is exactly what did not happen when `describeRecord` grew a
+ * sentence for an `action-unable-now` and no blocker guard could see it.
+ */
+export const NOT_OWNER_TEXT: readonly { readonly fn: string; readonly why: string }[] = [
+  {
+    fn: 'isWithheldRecord',
+    why: 'answers whether a section withholds it — a boolean, not a sentence',
+  },
+  {
+    fn: 'evidenceSourceOf',
+    why: 'returns the provenance source, which `originOf` is what renders',
+  },
+  { fn: 'isOwnerStated', why: 'a boolean about who wrote it' },
+  { fn: 'bearsConcept', why: 'a type guard over the record kinds that carry a concept' },
+  { fn: 'recordToWire', why: 'serialises for the file format; nothing reads it on a screen' },
+  { fn: 'recordFromWire', why: 'parses the file format' },
+  { fn: 'validateRecord', why: 'answers whether it is well formed' },
+  { fn: 'compareRecordOrder', why: 'orders two records; produces no words' },
+  { fn: 'sortRecords', why: 'orders a list; produces no words' },
+  { fn: 'isCorrectableEvent', why: 'a boolean about whether a correction control is offered' },
+  { fn: 'redateEventRecord', why: 'builds a correction record; its words are the owner’s reason' },
+  { fn: 'planAppend', why: 'decides what an append does to the store' },
+  { fn: 'conceptsMentionedBy', why: 'returns concept ids' },
+  { fn: 'resolveHistory', why: 'resolves supersession and retraction; returns records' },
+  { fn: 'recordFingerprint', why: 'a hash for deduplication' },
+]
+
+/**
  * A component that renders blocker copy of its own — QA-84-012, D-194.
  *
  * D-193 called `APPROVED_BLOCKER_COPY` closed, and it was closed over

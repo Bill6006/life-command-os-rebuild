@@ -351,8 +351,44 @@ export const APPROVED_FROM_SURFACES = [
   'Something else',
 ]
 
+/**
+ * And what a **record** reads as, wherever it is read — QA-84-013, D-195.
+ *
+ * The third half, and the boundary the round 4 repair *declared* rather than
+ * closed. `describeRecord` turns an `action-unable-now` into a sentence, and
+ * Timeline, the domain page's "Recently", the correction list and the export all
+ * render that one sentence. Round 5 changed its lifecycle frame to *"The app
+ * will choose something better next time"* and 431 tests passed while the owner
+ * read the promise.
+ *
+ * The records the blocker path writes are the recommendation it was about, the
+ * inability itself, the standing constraint it can become, and the correction
+ * that withdraws one. `{object}` is the move as history names it, `{reason}` the
+ * owner's own words for taking something back.
+ */
+export const APPROVED_FROM_RECORDS = [
+  // The move the inability was about.
+  'Suggested',
+
+  // The inability, and the form it takes when the move no longer resolves.
+  'Not then',
+  'Did not fit at the time — {object}.',
+  "Said a suggestion here didn't fit at the time.",
+
+  // The durable fact it can become.
+  'Limit',
+
+  // And taking that back.
+  'Withdrawn',
+  'Withdrew an earlier entry — {reason}',
+]
+
 /** Every string the blocker path can put in front of the owner. */
-export const APPROVED_BLOCKER_COPY = [...APPROVED_FROM_BLOCKERS_MODULE, ...APPROVED_FROM_SURFACES]
+export const APPROVED_BLOCKER_COPY = [
+  ...APPROVED_FROM_BLOCKERS_MODULE,
+  ...APPROVED_FROM_SURFACES,
+  ...APPROVED_FROM_RECORDS,
+]
 
 /** Whitespace-insensitive membership, so wrapping in a template cannot matter. */
 export function isApprovedBlockerCopy(line) {

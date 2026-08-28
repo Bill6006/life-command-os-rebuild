@@ -39,6 +39,58 @@ None.
 
 ## Fixed
 
+### DEF-0130 — the shared record describer sat outside every blocker-promise guard
+
+- Status: Fixed
+- Severity: Blocker — a promise written at an ordinary read boundary reached the
+  owner on four surfaces with every gate green
+- Found in: routing 84 / `f45214b`
+- Found by: **independent QA round 5** (QA-84-013), by mutating the shared
+  lifecycle frame in a disposable worktree and watching five suites pass
+- Class: **a guard enumerated over screens rather than over the thing that makes
+  the words.** The fourth variation: DEF-0127 listed phrases, DEF-0128 listed
+  verbs, DEF-0129 listed one module, and this one listed three React panels.
+- Reproduction:
+
+  ```diff
+  -'action-unable-now': 'Did not fit at the time',
+  +'action-unable-now': 'The app will choose something better next time',
+  ```
+
+  `npx vitest run tests/synthetic/blocker-copy.test.tsx
+tests/synthetic/destination-and-discovery.test.ts tests/synthetic/timeline.test.ts
+tests/synthetic/export-honesty.test.ts tests/synthetic/g013-export-handoff.test.ts`
+  → **431 / 431 passed**, while the real `describeRecord` rendered _"The app will
+  choose something better next time — building a lab with subnetting."_
+  Reproduced here on the same checkpoint before anything was built.
+
+- Root cause: `blockerSurfacesInSource()` enumerates React components whose props
+  include `StandingBlocker`, `BlockerDecision` or `ResumableMove`.
+  `describeRecord` is not a component and takes a `CanonicalRecord`, so neither
+  the rendered collector nor the source enumeration could see it — and Timeline,
+  the domain page's "Recently"/correction reader and the owner export all render
+  its one sentence.
+- Repair: a third catalogue half, `APPROVED_FROM_RECORDS`, holding what each
+  record the blocker path writes reads as; a guard that walks the path, collects
+  the records it wrote, and runs **every** describer over them; and
+  `recordTextFunctionsInSource()`, which returns every exported function taking a
+  `CanonicalRecord` so that a fourth describer fails until it is classified. See
+  **D-195**.
+- Regression: five cases in `tests/synthetic/blocker-copy.test.tsx` under
+  _"QA-84-013 — and closed over what a record reads as, wherever it is read"_.
+- Proved by reintroduction four ways: **QA's exact lifecycle-frame promise**; a
+  promise in the generic fallback sentence reached when the move no longer
+  resolves; a promise in the tag; and a **new describer nobody classified**,
+  which fails the source enumeration rather than the catalogue.
+- Siblings: checked by the instrument. It reports thirteen functions taking a
+  `CanonicalRecord`; five produce owner text and are exercised, and the other
+  eight are named in `NOT_OWNER_TEXT` with the reason each gives the owner no
+  words. The unresolvable-recommendation branch was found while writing this and
+  is now walked.
+- Note on scope: the current copy was honest throughout, which is why five rounds
+  of gates and an owner-use walk did not see it. What was defective was the
+  guarantee.
+
 ### DEF-0129 — the closed catalogue was closed over one module, not over the screen
 
 - Status: Fixed

@@ -6569,3 +6569,49 @@ where the owner reads it. Where it is written is an implementation detail, and
 every version of this guard that trusted the writing place has been wrong.
 
 ---
+
+## D-195 — Copy is guarded per record and per describer, not per surface
+
+**Phase:** 84 (QA round 5 repair) · **Status:** Active · Completes **D-193** and
+**D-194**.
+
+Where a rule closes the set of copy a path may render, the enumeration is over
+**the records that path writes** and **the functions that turn a record into
+words** — not over the screens those words appear on. A screen is where copy is
+read; a describer is where it is made, and one describer feeds four screens.
+
+**D-194 enumerated surfaces and closed the catalogue over three React panels.**
+Round 4's repair record then _declared_ the rest — Timeline, the domain page's
+"Recently", the correction list and the export — a boundary it had not closed.
+**Declaring a boundary is not closing one.** Round 5 changed the shared lifecycle
+frame for an `action-unable-now` to _"The app will choose something better next
+time"_, and the real `describeRecord` rendered that promise to the owner while
+431 tests passed across five suites. QA-84-013.
+
+**Why the surface enumeration could not have found it.**
+`blockerSurfacesInSource()` looks for React components whose props include a
+blocker-path type. `describeRecord` is not a component and takes none of those
+types; it takes a `CanonicalRecord`. The four surfaces that render its sentence
+are covered by describing the record once, and were covered by nothing when the
+guard looked for panels.
+
+**So the guarantee has three halves**, each proved by the check that can reach
+it: what `blockers.ts` assembles (walked through the scenario library), what the
+surfaces compose in JSX (rendered), and **what a record reads as** (described).
+
+**And the describers are enumerated from source.** `recordTextFunctionsInSource()`
+returns every exported function in `src/` taking a `CanonicalRecord`, and every
+one must either be exercised by the guard or named in `NOT_OWNER_TEXT` with the
+reason it gives the owner no words. A fourth describer fails until somebody
+classifies it — which is the moment to decide whether its words belong in the
+catalogue. **That is the part that had to be structural**, because the failure
+mode is always the same: a new way of saying something, invisible to a guard that
+knows only the old ways.
+
+**The general rule, five findings deep.** A guard over copy must be collected
+where the copy is **made** and asserted against what the owner **reads**. Every
+version of this guard that enumerated something else — phrases, verbs, modules,
+screens — was wrong in the same way, and each was found by somebody writing one
+ordinary sentence the guard had not imagined.
+
+---

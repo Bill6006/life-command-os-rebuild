@@ -46,6 +46,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   adaptationClaims,
+  APPROVED_FROM_RECORDS,
   APPROVED_FROM_SURFACES,
   isApprovedBlockerCopy,
 } from '../../scripts/adaptation-claims.mjs'
@@ -55,7 +56,17 @@ import { ResumePanel } from '../../src/features/now/NowScreen'
 import { BLOCKER_OPTIONS } from '../../src/intelligence/blockers'
 import { readable } from '../../src/intelligence/lifecycle'
 import { renderRecommendation } from '../../src/domain/recommendation'
-import { blockerSurfacesInSource, openJourney, type JourneyApp } from './journey'
+import { newRecordId } from '../../src/domain/ids'
+import { RECORD_KINDS } from '../../src/domain/records'
+import { describeRecord, tagFor, tagOf } from '../../src/features/history/describe'
+import { originOf, originOfAll } from '../../src/features/history/origin'
+import {
+  blockerSurfacesInSource,
+  NOT_OWNER_TEXT,
+  openJourney,
+  recordTextFunctionsInSource,
+  type JourneyApp,
+} from './journey'
 
 const flat = (text: string) => text.replace(/\s+/g, ' ').trim()
 
@@ -346,5 +357,173 @@ describe('QA-84-012 — the catalogue is closed over what the owner receives', (
       unreached,
       'the catalogue lists surface copy nothing renders — remove it, or the check is guarding nothing',
     ).toEqual([])
+  })
+})
+
+describe('QA-84-013 — and closed over what a record reads as, wherever it is read', () => {
+  /**
+   * Everything the blocker path writes, and every word any describer gives it.
+   *
+   * The boundary the Round 4 repair **declared** rather than closed, which is
+   * not the same thing. `describeRecord` turns an `action-unable-now` into a
+   * sentence, and Timeline, the domain page's "Recently", the correction list
+   * and the owner export all render that one sentence — so all four are covered
+   * by describing the record, and none of them was covered by rendering a panel.
+   *
+   * Round 5 proved the gap by changing the lifecycle frame to *"The app will
+   * choose something better next time"* and watching 431 tests pass while the
+   * owner read the promise.
+   */
+  async function everyRecordString(): Promise<
+    readonly { readonly kind: string; readonly line: string }[]
+  > {
+    const app = await eveningIn()
+    const before = new Set(app.snapshot().records.map((record) => record.id))
+    await app.act('unable-now')
+    await app.sayWhatBlocked('must-stay')
+    const constraint = app.situation().constraints[0]
+    if (constraint !== undefined) await app.withdraw(constraint.source, 'Not true any more')
+
+    const written = app.snapshot().records.filter((record) => !before.has(record.id))
+    const current = app.situation()
+    const context = {
+      entities: current.entities,
+      history: current.view.history,
+      concepts: current.concepts,
+      policy: { surface: 'inspection' as const, revealPrivate: false },
+    }
+
+    const object = 'getting out for a walk'
+    const statement = BLOCKER_OPTIONS['must-stay'].statement('a walk')
+    const recommendation = 'Move for 25 minutes: a walk.'
+    const out: { kind: string; line: string }[] = []
+    const add = (kind: string, line: string | undefined) => {
+      if (line === undefined || line.trim() === '') return
+      /*
+       * The longest owner-supplied phrase first. History names the move as
+       * *"getting out for a walk"*, and replacing the bare move name before
+       * that leaves *"getting out for {move}"* — a placeholder for half a
+       * phrase, and a catalogue entry nobody could ever write.
+       */
+      out.push({
+        kind,
+        line: asTemplate(
+          line.split(object).join('{object}').split('Not true any more').join('{reason}'),
+          { statement, recommendation },
+        ),
+      })
+    }
+
+    for (const record of written) {
+      /*
+       * Every describer, not the one somebody remembered. The set is checked
+       * against source below, so a fourth is a failure rather than an omission.
+       */
+      add(record.kind, describeRecord(record, context)?.text)
+      add(record.kind, tagOf(record))
+      add(record.kind, tagFor(record.kind))
+      const origin = originOf(record)
+      if (origin !== undefined) {
+        add(record.kind, origin.label)
+        add(record.kind, origin.detail)
+      }
+    }
+    const shared = originOfAll(written)
+    if (shared !== undefined) {
+      add('origins', shared.label)
+      add('origins', shared.detail)
+    }
+
+    /*
+     * And the branch where the move no longer resolves, which is the generic
+     * sentence rather than the framed one. An `action-unable-now` whose
+     * recommendation is not in the history reaches it, and no ordinary walk
+     * does — the record is written beside the recommendation it is about.
+     */
+    const orphan = written.find((record) => record.kind === 'action-unable-now')
+    if (orphan !== undefined) {
+      add(
+        'action-unable-now (unresolvable)',
+        describeRecord({ ...orphan, recommendation: newRecordId() }, context)?.text,
+      )
+    }
+
+    return out
+  }
+
+  it('describes every record the blocker path writes in approved words', async () => {
+    const described = await everyRecordString()
+    const unapproved = described.filter((entry) => !isApprovedBlockerCopy(entry.line))
+    expect(
+      unapproved.map((entry) => `${entry.kind}: ${entry.line}`),
+      'a record was described in words nobody approved — add them to APPROVED_FROM_RECORDS with the reason they are honest',
+    ).toEqual([])
+
+    // Not vacuous: the walk really did write the four kinds it is about.
+    const kinds = new Set(described.map((entry) => entry.kind))
+    for (const kind of ['action-recommendation', 'action-unable-now', 'constraint', 'correction']) {
+      expect(kinds, `the walk never wrote a ${kind}`).toContain(kind)
+    }
+    expect(kinds, 'the unresolvable branch was never reached').toContain(
+      'action-unable-now (unresolvable)',
+    )
+  })
+
+  it('and none of those words claims the app will change what it offers', async () => {
+    const described = await everyRecordString()
+    const claiming = described
+      .map((entry) => ({ ...entry, claims: adaptationClaims(entry.line) }))
+      .filter((entry) => entry.claims.length > 0)
+    expect(
+      claiming.map((entry) => `${entry.kind}: ${entry.claims.join(' / ')}`),
+      'a record was described with a promise the engine does not keep',
+    ).toEqual([])
+  })
+
+  it('and every function that turns a record into words is one of the ones above', () => {
+    /*
+     * The enumeration QA asked for: *"must discover future record renderers
+     * without relying on a hand-maintained list of the four surfaces QA
+     * named."* So it is not a list of surfaces at all. It is every exported
+     * function in `src/` that takes a `CanonicalRecord`, minus the ones that
+     * give the owner no words for it — each named with its reason, the way
+     * `NOT_A_CONTROL` and `PROPOSES_ELSEWHERE` are.
+     *
+     * A fourth describer fails here until somebody classifies it, which is the
+     * moment to decide whether its words belong in the catalogue.
+     */
+    const exercised = ['describeRecord', 'tagOf', 'tagFor', 'originOf', 'originOfAll']
+    const unclassified = recordTextFunctionsInSource().filter(
+      (found) =>
+        !exercised.includes(found.fn) && !NOT_OWNER_TEXT.some((exempt) => exempt.fn === found.fn),
+    )
+    expect(
+      unclassified.map((found) => `${found.file}: ${found.fn}`),
+      'a function turns a record into something and no blocker guard asks what it says — exercise it above, or name it in NOT_OWNER_TEXT with the reason it produces no owner text',
+    ).toEqual([])
+
+    // And the instrument is reading something: it finds the describers it should.
+    const names = recordTextFunctionsInSource().map((found) => found.fn)
+    for (const fn of exercised) expect(names, `the instrument cannot see ${fn}`).toContain(fn)
+  })
+
+  it('and the record half of the catalogue cannot rot', async () => {
+    const described = new Set((await everyRecordString()).map((entry) => entry.line))
+    const unreached = APPROVED_FROM_RECORDS.filter((line) => !described.has(flat(line)))
+    expect(
+      unreached,
+      'the catalogue lists record copy nothing describes — remove it, or the check is guarding nothing',
+    ).toEqual([])
+  })
+
+  it('and the four kinds it is about are still record kinds', () => {
+    /*
+     * Said out loud so that a fifth — a blocker that becomes something else, an
+     * inability that grows a field — is a decision somebody makes rather than a
+     * gap that opens quietly.
+     */
+    for (const kind of ['action-recommendation', 'action-unable-now', 'constraint', 'correction']) {
+      expect(RECORD_KINDS, `${kind} is no longer a record kind`).toContain(kind)
+    }
   })
 })
