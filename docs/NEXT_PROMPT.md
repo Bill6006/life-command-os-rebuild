@@ -3,7 +3,7 @@
 **Phase:** 84 — **what the owner is trying to become**
 
 **Actor:** Codex / **independent QA**.
-**Conversation:** **THE SAME ONE** — the Codex conversation that wrote Round 1 of
+**Conversation:** **SAME** — the same Codex conversation that wrote Round 1 of
 `docs/qa/PHASE_84_QA_HANDOFF.md`. Not a new conversation, and not the Claude
 builder.
 **Model:** Codex.
@@ -282,7 +282,7 @@ a gate, and not a substitute for reproducing your own Round 1 findings.
 
 **Model:** Codex.
 **Reasoning level:** **High** — never Max.
-**Conversation:** **the same** Codex conversation that wrote Round 1.
+**Conversation:** **SAME** — the Codex conversation that wrote Round 1.
 
 ```text
 Round 2 retest of routing Phase 84 of Life Command OS: "what the owner is
@@ -386,7 +386,7 @@ Do not ask me to paste file contents.
 ### Short launcher
 
 **Model:** Codex. **Reasoning level:** High — never Max.
-**Conversation:** the **same** Codex conversation that wrote Round 1.
+**Conversation:** **SAME** — the Codex conversation that wrote Round 1, not a new one.
 
 ```text
 Round 2 retest of routing Phase 84 of Life Command OS, after your Round 1 FAIL.
