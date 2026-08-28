@@ -1727,4 +1727,285 @@ rendered text, and the catalogue the copy has to come from.
   clear.
 - **The classifier's entailment boundary**, above — named, not closed.
 
-<!-- LCO_COMPLETE -->
+---
+
+## Round 4 — independent QA retest after the Round 3 repair
+
+**Phase:** 84 — what the owner is trying to become
+
+**Actor:** Codex / independent QA (D-077, D-090).
+
+**Overall result:** **FAIL.** The deployed product remains clean: all seven
+acceptance items pass, QA-84-007 through QA-84-011 remain closed on their own
+paths, and the one owner-visible sentence changed by the repair is truthful and
+nonjudgmental. The phase nevertheless remains **YELLOW** because D-193's closed
+catalogue is not closed over the whole blocker path. Blocker-specific copy is
+composed on the domain and resume surfaces without entering either direction of
+the catalogue check, so an unsupported future-adaptation promise can still be
+introduced while all three importing gates stay green. One new blocking finding,
+QA-84-012, is open.
+
+### Build identity and test configuration
+
+| Fact | Value |
+| --- | --- |
+| QA-tested product checkpoint | `0f9b882` |
+| Deployed Preview SHA read live | `a6d30c333c216c59fd3457e4da3e088d31061e26` |
+| Relationship | `node --use-system-ca scripts/checkpoint-equivalence.mjs 0f9b882 --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json` reported three documentation files and none bundle-relevant |
+| Repository head at QA start | `a6d30c3`, equal to `origin/main`, with a clean worktree |
+| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Manual mobile viewport | 390 × 844 CSS px in Chrome, on the deployed Preview |
+| Cold-store isolation | A DNS-equivalent trailing-dot host, `bill6006.github.io.`, supplied a fresh IndexedDB origin; no scenario was loaded and QA Lab was not opened until both cold-use cases were complete |
+| Android configuration | Galaxy S24-class deployed gate; 360 × 780 CSS px; DPR 3; touch and `isMobile`; Android 14 / Chrome 126 user agent |
+| Browser matrix | Chromium at 360 × 740, 430 × 932 and 1,280 × 900; one worker |
+| QA report commit | Not committed by QA in this round |
+
+### Protocol and cold-store owner-use record
+
+This was the required **cold-store owner-use check**, not a new sealed check.
+Rounds 1 through 3 already existed in this same conversation.
+
+1. A genuinely fresh deployed store opened on ordinary Now without QA Lab. It
+   said **Nothing loaded / There is no history here yet**, invented no
+   recommendation or history, and offered two ordinary routes: **Answer one
+   thing about you** and **Or look at the areas of your life**. QA Lab remained
+   a separate developer link.
+2. Life listed all eleven areas under **Nothing here yet**. All ten distinct
+   pages were reachable. Career, Health and Money offered **Say what you are
+   aiming at**; every page carried all six authoring controls. No area invented
+   a standing.
+3. CASE A entered `More money` under the Career discovery prompt. Before
+   confirmation the card showed the exact words, the Career destination and
+   dated entry it would create, and that it would not assume the next step,
+   starting point or evidence. Career then showed `More money` byte-identical
+   with those unknowns still unknown. Now asked for current energy rather than
+   inventing work; **Enough** produced the walk.
+4. CASE B pressed **Can't right now** and read the repaired note before choosing
+   a cause. It said only that the answer would be kept on its area and could be
+   taken back. **Can’t leave — someone’s in my care** produced the durable
+   Health statement _“a walk means leaving, and I could not — someone was in my
+   care”_ with **Not true any more**. The resume panel said only what was
+   recorded.
+5. After the cold-store cases, **The first evening** was loaded. The restorative
+   move _“Start winding down now and let tonight be a recovery night”_ followed
+   by **Can't right now** rendered: _“This was a restful thing rather than an
+   effortful one, and there is nothing here worth asking about.”_ It is true of
+   the offered move, explains the silence, judges neither the owner nor his
+   choice, and makes no claim about a later recommendation.
+6. The Health destination _“Build sustainable strength”_ with next step _“Lift
+   twice each week”_ promised that the app would suggest the step on evenings
+   with capacity, then did exactly that after **Enough**, chosen over the walk.
+   **Start it → Only part of it** produced the coherent Timeline row **Part done
+   / Got part of the way**.
+
+No screenshot artifact was added. The evidence is the deployed DOM transcript,
+the exact owner steps above, the live build identity, and the source/test
+boundary in QA-84-012.
+
+### Acceptance result
+
+| # | Result | Round 4 evidence |
+| --- | --- | --- |
+| 1. A destination changes the recommendation in Career, Health and Money | **PASS** | The deployed Health confirmation and resulting recommendation agree in one manual path; the independent Career and Money counterfactuals pass in the focused and aggregate synthetic evidence. |
+| 2. A completed session, completed course and milestone are distinct; attendance is not capability | **PASS** | The deployed partial Timeline row is coherent; the naturally completed course, session and owner-set milestone remain distinct in the focused synthetic and three-width browser evidence. |
+| 3. Goal, routine, person, place, skill and obligation are ordinarily authorable | **PASS** | All six controls were present on every cold-store domain page; the ordinary-use and focused synthetic journeys build them from empty. |
+| 4. The second agenda asks for later-useful information and grows quieter | **PASS** | CASE A preserves vague words and unknowns; the real weekly recurrence, later changed decision, skip budget and falling library-wide volume remain green. |
+| 5. “Can't right now” learns a blocker when useful and stays silent when known | **PASS on the live product; standing guard FAIL is QA-84-012** | CASE B captured and exposed the correctable caregiving fact without a future claim; the restorative silence is truthful. The catalogue still does not cover every owner-facing blocker surface. |
+| 6. Correction consequences and private permission | **PASS** | Consequence previews, withdrawal/re-date behavior and private off/on/off structure remain green in the focused, aggregate and browser gates. |
+| 7. Standing no-score guards | **PASS** | No score, percentage, rank, grade, readiness number, wellness composite or Life Score appeared on the tested surfaces; the aggregate sweeps and privacy scan pass. |
+
+QA-84-007 through QA-84-011 remain closed. The classifier catches all seven
+Round 3 counterexamples, including active, nominal and passive forms, and the
+3,248 generated subject × modal × arbitrary-verb proof passes. Its documented
+entailment escape is not this finding. The defect is in what the catalogue fails
+to collect.
+
+### New Round 4 finding
+
+#### QA-84-012 — the “closed” blocker catalogue omits copy composed by the surfaces that render blockers
+
+**Severity:** Blocker. **Acceptance relationship:** D-187, D-193 and the explicit
+Round 4 catalogue-completeness attack. **Type:** false-green test architecture.
+
+**Exact reproduction:**
+
+1. From **The first evening**, answer **Enough**, press **Can't right now**, and
+   choose **Can’t leave — someone’s in my care**.
+2. Read the whole Health panel. In addition to the catalogued blocker statement,
+   it renders **Things you said were in the way**, the explanatory paragraph
+   beginning **These are about the world rather than about one evening**, and
+   **Not true any more**. These strings are composed in
+   `src/features/life/DomainPanels.tsx:769-785`, outside `blockers.ts`.
+3. Return to Now. The blocker path also renders **Where you left off**, **You
+   said this did not fit at the time**, and the paragraph beginning **Nothing
+   here is a nudge** from `src/features/now/NowScreen.tsx:208-234`.
+4. Ask the catalogue whether those exact owner-visible strings are approved:
+
+   ```text
+   node --input-type=module -e "import {isApprovedBlockerCopy} from './scripts/adaptation-claims.mjs'; for (const line of ['Things you said were in the way','These are about the world rather than about one evening, so the app keeps them until you say otherwise. Nothing here is read as you not wanting to.','Not true any more','Where you left off','You said this did not fit at the time.','Nothing here is a nudge. It is on the screen because you started it, and it goes when the day does — not right now is a real place to leave something.']) console.log(isApprovedBlockerCopy(line), line)"
+   ```
+
+   All six print `false`.
+5. Run the two catalogue tests. They pass. Their
+   `everyRenderedBlockerString()` collector at
+   `tests/synthetic/destination-and-discovery.test.ts:2023-2058` does not render
+   an owner surface. It seeds `LEAVE_IT`, `BLOCKER_OPTIONS` labels and
+   statements, then collects the return values of `blockerQuestionFor`. It has
+   no path to JSX-composed copy in `DomainPanels.tsx` or `NowScreen.tsx`.
+6. The browser and Android gates remain green for the same structural reason.
+   The browser case reads `blocker-question` and then only the inner
+   `domain-blocker` row (`tests/browser/phase84.spec.ts:687-722`). The Android
+   gate does the same at `scripts/android-gate.mjs:1464-1505`. Neither reads the
+   domain panel's parent note, and neither applies an exact catalogue check to
+   the resume panel.
+
+This supplies a direct false-green route. Change the domain-panel paragraph to
+_“The app keeps these so it can choose something better next time.”_ The owner
+would see an unsupported future-adaptation promise on the blocker path, while:
+
+- both exact catalogue directions receive the same set as before, because their
+  collector never renders that paragraph;
+- the browser D-187 case still reads only the inner blocker row;
+- the Android D-187 case still reads only the inner blocker row; and
+- the generic rendering tests assert neither catalogue membership nor
+  `adaptationClaims` over the omitted parent copy.
+
+No product edit is needed to establish that reproduction: the source boundaries
+above show that the proposed sentence cannot enter any of the three guards. The
+current omitted strings are honest. The failure is that D-193 says a future edit
+cannot enter without explicit catalogue approval, and these edit points can.
+
+The same review found the interpolation boundary incomplete. The catalogue uses
+`{move}` for blocker statements and the repeated prompt, but UI-composed
+interpolation such as the withdrawal control's accessible name
+(`Not true any more: ${blocker.description}`) is not represented as a rendered
+string. A closed catalogue over data returned by `blockers.ts` is not a closed
+catalogue over what the owner and accessibility tree receive.
+
+**Existing tests that give false confidence:**
+
+- The two QA-84-011 synthetic catalogue tests pass because their “rendered” set
+  is a manually assembled data-model set, not rendered owner copy.
+- `phase84.spec.ts`, _“QA-84-010 — the blocker note claims nothing the engine
+  does not do”_, proves only the question panel contains at least one approved
+  substring. It never proves that every string in that panel, much less every
+  blocker surface, is approved.
+- The earlier D-187 browser case and the Android gate inspect the standing
+  blocker's inner row while excluding the panel title and note by locator.
+- The aggregate 1,846-test gate, 690-case browser matrix and 231-check Android
+  gate are therefore simultaneously green over this omission.
+
+### Mobile, verification and protected-scope result
+
+No touch-target, horizontal-overflow, sticky-navigation, button-shift, console
+or mobile interaction defect was found in the targeted flows.
+
+| Gate | QA result |
+| --- | --- |
+| Aggregate `npm run verify` | **PASS on the clean solo rerun** — 1,846 / 1,846 tests across 83 files; format, lint, typecheck and production build pass. An initial run under parallel load timed out one unrelated block-sweep case; that case passed alone in 13.2 seconds before the full clean rerun passed. |
+| Focused QA-84-011 synthetic block | **PASS — 5 / 5**; confirms the false-green boundary described above |
+| Full browser matrix | **PASS — 690 / 690**, 230 at each of 360, 430 and 1,280px; one worker; 22.3 minutes |
+| Deployed Android-style gate | **clean — 231 checks** against deployed `a6d30c3` |
+| Privacy scan | **clean — 288 tracked files** |
+| Classifier counterexamples | **PASS** — all seven Round 3 active, nominal and passive forms are caught; the documented present-tense entailment boundary remains expected |
+| D-193 catalogue guarantee | **FAIL** — owner-visible blocker copy on other rendering surfaces never enters the bidirectional comparison |
+| Checkpoint equivalence | **PASS** — deployed `a6d30c3` is bundle-equivalent to `0f9b882` |
+| CI at deployed head | **PASS** — workflow run `33199919470` completed successfully for `a6d30c3` |
+| Commits on no remote at QA start | **none** |
+
+The protected scope remains intact. QA changed no product code. No strategy
+evaluation, pattern-discovery engine, blocker enforcement, semantic
+interpretation, new domain progression model, owner-routines library,
+historical backfill, twelfth page, scoring change, visual language or
+orchestrator change appeared. Fatherhood, the private structural guard,
+Timeline's passive role and all standing no-score protections remain unchanged.
+The owner phone check remains owed and is not something QA can clear.
+
+---
+
+## Complete next handoff — repair after Round 4 FAIL
+
+**System:** Claude / builder.
+**Model:** Claude, Opus-class.
+**Intelligence level:** **Max** — this is the fourth audit-campaign repair and
+the remaining defect is the exhaustiveness boundary of the guard itself.
+**Conversation:** **CURRENT** — return to the original routing 84 Claude builder
+conversation, which owns this still-unresolved phase and its repairs.
+
+```text
+Routing Phase 84 repair after independent QA Round 4 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 4 is the independent QA
+retest and is authoritative for this repair. Keep the Phase field exactly 84.
+
+Keep routing 84 YELLOW. Do not start routing 90 and do not mark the phase GREEN.
+Repair QA-84-012 under canonical plan section 42: reproduce it, identify every
+owner-facing blocker rendering boundary, write a regression, prove that
+regression fails when the defect is faithfully reintroduced, fix the root
+cause, and run the full gate on the final tracked checkpoint.
+
+The classifier repair is correct and its documented entailment limit is not the
+finding. The live blocker copy is honest. The defect is that the guarantee named
+by D-193 closes only strings assembled from blockers.ts, while blocker-specific
+copy is also composed in DomainPanels.tsx, NowScreen.tsx and rendered history or
+accessibility text. A future promise inserted into the Health blocker panel's
+parent note is visible to the owner and invisible to the synthetic, browser and
+Android catalogue checks.
+
+Required outcome: catalogue completeness must be structural across the whole
+owner-facing blocker path. Enumerate every branch and surface that can render
+blocker-specific copy — question and silence, option and stored statement,
+standing domain panel, withdrawal control and accessible name, resume panel,
+Timeline/history/correction/export renderers where the blocker reaches them,
+and every interpolation boundary. Nothing owner-facing on that path may enter
+without deliberate catalogue approval, and nothing catalogued may be
+unreachable. Do not satisfy this by adding only the six strings QA named to the
+existing manually assembled collector.
+
+Prove the class by reintroduction in at least two omitted boundaries: a future-
+adaptation promise in the domain blocker panel's parent note, and an unapproved
+string in the resume panel. Each must fail the authoritative catalogue guard.
+Make the browser and deployed Android checks read the complete relevant
+surfaces, rather than a child locator that excludes surrounding copy. Preserve
+the shared classifier as the secondary net and keep the catalogue as the
+guarantee.
+
+Preserve every Round 4 product PASS and every explicit deferral, especially the
+first-run abstention and ordinary routes, all eleven empty Life areas and domain
+controls, the byte-identical “More money” path and its unknowns, Health's
+confirmation-to-recommendation agreement, the complete partial Timeline row,
+the truthful restorative silence, the durable caregiving fact and withdrawal
+route, course/recurrence/correction/private behavior, all no-score protections,
+Fatherhood's untouched growth model, and the absence of blocker enforcement.
+
+Run the clean aggregate gate, full browser suite at 360/430/1280, privacy scan,
+block/copy sweeps and deployed Galaxy-class Android gate. Deploy the repaired
+checkpoint, prove checkpoint equivalence if documentation moves the deployed
+SHA, append the builder's repair record and a complete Round 5 retest prompt to
+this same QA report, and address that retest to the SAME Codex QA conversation
+at High.
+
+Do not create a PHASE_85_* file. Do not alter
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md. Do not put the LCO completion marker in
+this QA handoff; for this handoff it belongs only at the end of
+docs/NEXT_PROMPT.md. Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude, Opus-class. **Level:** Max. **Conversation:** CURRENT — the
+original routing 84 builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 4 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 4
+repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
+routing 90. Do not ask me to paste the file contents.
+```
