@@ -122,16 +122,22 @@ superseded rather than reused.
 
 # Routing Phase 84 — What the owner is trying to become
 
-**Status: YELLOW — REPAIRED AFTER QA ROUND 2 FAIL, AWAITING ROUND 3 RETEST.**
+**Status: YELLOW — REPAIRED AFTER QA ROUND 3 FAIL, AWAITING ROUND 4 RETEST.**
 
-Independent QA has failed this phase twice and been right twice.
+Independent QA has failed this phase three times and been right three times.
 
 **Round 1** returned FAIL on acceptance items 1, 2 and 4, with six findings.
 **Round 2** confirmed five of those six closed and found four more: a cold-start
 defect the manual owner-use check was added to look for, a Health confirmation
 that the Round 1 repair had made false, a Timeline tag still contradicting its own
 sentence, and a promise on the blocker path that the guard written to forbid it
-did not match. All four are repaired.
+did not match.
+
+**Round 3's product half came back clean.** All seven acceptance items passed and
+QA-84-007 through QA-84-010 were closed on the deployed build. Its one finding was
+about the standing guard rather than the product: the copy guard written in the
+Round 2 repair was still a phrase list, and four ordinary words walked through it.
+That is repaired too.
 
 It stays YELLOW. A builder conversation may not approve its own phase (D-077),
 and this record says what was built and repaired and where to look at it; it does
@@ -167,15 +173,16 @@ through the same controls, now gets past all eight steps.
 
 ## Checkpoint
 
-| Fact                    | Value                                                                                             |
-| ----------------------- | ------------------------------------------------------------------------------------------------- |
-| Product checkpoint      | `cdd9259` — the Round 2 repair, and the commit the aggregate gate was run on                      |
-| Round 2 checkpoint      | `94e1716` — the Round 1 repair, which Round 2 tested and failed                                   |
-| Round 1 checkpoint      | `42667ea` — what Round 1 tested and failed                                                        |
-| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                       |
-| Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                |
-| Owner phone check       | owed before release; not a blocker QA can clear                                                   |
-| Independent QA          | **Round 1 FAIL** and **Round 2 FAIL**, both repaired; Round 3 dispatched in `docs/NEXT_PROMPT.md` |
+| Fact                    | Value                                                                                     |
+| ----------------------- | ----------------------------------------------------------------------------------------- |
+| Product checkpoint      | `0f9b882` — the Round 3 repair, and the commit the aggregate gate was run on              |
+| Round 3 checkpoint      | `cdd9259` — the Round 2 repair, which Round 3 tested                                      |     |
+| Round 2 checkpoint      | `94e1716` — the Round 1 repair, which Round 2 tested and failed                           |
+| Round 1 checkpoint      | `42667ea` — what Round 1 tested and failed                                                |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                               |
+| Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                        |
+| Owner phone check       | owed before release; not a blocker QA can clear                                           |
+| Independent QA          | **Rounds 1, 2 and 3 all FAIL**, all repaired; Round 4 dispatched in `docs/NEXT_PROMPT.md` |
 
 **The documentation head is a later commit than the product checkpoint**, as it
 was in Round 1. It carries this record, the Round 2 dispatch and two corrected
@@ -187,18 +194,18 @@ trust (D-097, D-180).
 
 At the repaired checkpoint, not at the one QA failed.
 
-| Gate                                      | Result                                                               |
-| ----------------------------------------- | -------------------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)            |
-| Unit / contract / synthetic / adversarial | **1,841 passed** in 83 files (1,834 at Round 2, 1,812 at Round 1)    |
-| Browser, three widths, one worker         | **690 passed** at three widths, 230 per width (675 at round 2)       |
-| Android-style gate, deployed              | **clean — 230 checks** against deployed `cdd9259` (219 at round 2)   |
-| Privacy scan                              | **clean** — 286 tracked files                                        |
-| Block sweep                               | **PASS** — unchanged                                                 |
-| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya    |
-| Commits not on any remote                 | **none** at the handed-off head (D-180)                              |
-| Checkpoint equivalence                    | **PASS** — deployed `cdd9259` serves the same bytes, nothing between |
-| CI                                        | Verify **success**, Deploy preview **success**                       |
+| Gate                                      | Result                                                                 |
+| ----------------------------------------- | ---------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)              |
+| Unit / contract / synthetic / adversarial | **1,846 passed** in 83 files (1,841 at round 3, 1,812 at round 1)      |
+| Browser, three widths, one worker         | **690 passed** at three widths, 230 per width (unchanged from round 3) |
+| Android-style gate, deployed              | **clean — 231 checks** against deployed `0f9b882` (230 at round 3)     |
+| Privacy scan                              | **clean** — 288 tracked files                                          |
+| Block sweep                               | **PASS** — unchanged                                                   |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya      |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                                |
+| Checkpoint equivalence                    | **PASS** — deployed `0f9b882` serves the same bytes, nothing between   |
+| CI                                        | Verify **success**, Deploy preview **success**                         |
 
 ## Independent QA — round 1, and the repair
 
@@ -329,6 +336,90 @@ QA-84-001 was fixed. QA-84-009 exists because QA-84-002 was fixed in the sentenc
 and argued away in the tag. That is not an argument against repairing; it is the
 argument for a retest round, and for the four decisions above being about classes
 rather than cases.
+
+## Independent QA — round 3, and the repair
+
+**Result: FAIL, and the product half of it was clean.** Codex, at High, on the
+deployed `7810904` (bundle-equivalent to `cdd9259`). **All seven acceptance items
+passed**, and QA-84-007 through QA-84-010 were each closed by their own deployed
+reproduction: nothing invented on a first screen, Health's confirmation and its
+recommendation agreeing, the partial Timeline row one coherent statement, and the
+blocker copy saying only what is recorded. The full report is
+[`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md), Round 3, committed here
+unedited as `7ac575f`.
+
+The one finding was **QA-84-011**, and it was about the guard rather than the
+product.
+
+### The guard, for the third time
+
+**D-192's copy guard was still a phrase list**, and four ordinary sentences walked
+through it:
+
+    The app will choose a more suitable option.
+    The app will pick something else for you.
+    The app will use this when deciding what comes next.
+    The app will prefer an option that works indoors.
+
+Every one is a plain promise the engine cannot keep. Every one returned nothing,
+solely because _choose_, _pick_, _use_ and _prefer_ were absent from a list of
+adaptation verbs. Nominal and passive forms escaped too — _"Future recommendations
+will take this into account"_, _"what you are shown will be different"_.
+
+**QA's sentence for it is the one worth keeping:** _"the old guards listed
+remembered phrases; the replacement takes a cross-product of remembered words and
+calls that the semantic class."_ Three guards have now been written for D-187 and
+two failed the same way — and the second failure was inside the repair for the
+first.
+
+### What the repair is, and what it deliberately is not
+
+**It is not a third list.** Recognising a promise in ordinary English is not
+decidable by a rule, so the repair stops trying to close the space of _sentences_
+and closes the space of _strings_ instead — **D-193**.
+
+**The guarantee is a closed catalogue.** `APPROVED_BLOCKER_COPY` enumerates every
+string the blocker path can put in front of the owner, asserted in **both**
+directions against a walk of the whole scenario library: nothing rendered that is
+not approved, nothing approved that is not rendered. An allowlist over a finite
+set has no escapes. A copy edit fails the gate until somebody adds it deliberately
+— which is the moment to decide what the new sentence promises — and the catalogue
+cannot rot into a list of things the app used to say.
+
+**The classifier is the net, and it no longer reads the verb.** What a promise is
+_about_ is unbounded and any list of it is a list of what somebody remembered.
+What is not unbounded is the grammar that puts a sentence in a later moment:
+**modal auxiliaries are a closed class in English**, and forward deixis is a short
+closed set. A claim is the app — or its output, named or nominalised — plus one of
+those.
+
+**And the proof changed with it**, which was QA's deeper objection: a fixture of
+remembered strings proves only that somebody remembered them. The boundary is now
+generated — **3,248 sentences** over subject × modal × verb, the verbs including
+`frobnicate`, `zorble` and `quibblify`. A guard consulting a verb vocabulary fails
+that sweep on the first unfamiliar word.
+
+**One sentence of owner-visible copy changed.** The restorative silence said
+_"there is nothing the app would do differently"_ — true, and still a statement
+about what the app would do. A denial of a future change is as much a claim about
+the future as an assertion of one, and the reason that branch is silent is a fact
+about the move that was offered. It says that now.
+
+### And what the guard still cannot do, recorded rather than left to be found
+
+**The classifier cannot decide entailment.** _"The app learns from this"_ has no
+modal and no forward reference, is a promise, and escapes it. Any classifier of
+ordinary English will have such escapes, and a guard that claimed completeness
+over ordinary language would be the same mistake a fourth time. That is written
+into the module where it is defined, and it is why the phase relies on the
+catalogue rather than on the classifier.
+
+**The reintroduction found a real weakness before it proved anything.** An
+ordinary, honest-sounding copy edit nobody approved walked past the approval check
+— because that check was sweeping a single evening rather than the library, and
+the repeatedly-blocked branch is not reachable in one. Both directions of the
+catalogue check now walk every scenario, blocked on four days running and answered
+on the same day, to reach all five branches.
 
 ## The six packages
 

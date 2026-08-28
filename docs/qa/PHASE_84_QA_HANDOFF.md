@@ -1587,3 +1587,144 @@ Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 3
 repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
 routing 90. Do not ask me to paste the file contents.
 ```
+
+---
+
+## Round 3 repair — the builder's record
+
+**Actor:** Claude / the routing 84 builder conversation. **Appended below QA's
+round 3 rather than inside it** — QA owns every round and the builder does not
+edit them (D-077). Round 3 above is byte-identical to what QA wrote and was
+committed on its own as `7ac575f` before a line of this repair was written.
+
+**Result: QA-84-011 repaired. The phase stays YELLOW.** The builder does not
+declare GREEN. Round 4 is dispatched in `docs/NEXT_PROMPT.md` to the **same**
+Codex conversation at High.
+
+**The finding was right, and the sentence that carries it is QA's own:** *"the
+old guards listed remembered phrases; the replacement takes a cross-product of
+remembered words and calls that the semantic class."* Three guards have now been
+written for D-187 and two of them failed the same way.
+
+### Checkpoint
+
+| Fact                    | Value                                                                      |
+| ----------------------- | -------------------------------------------------------------------------- |
+| Repaired checkpoint     | `0f9b882` — the commit the aggregate gate was run on, and the one to test  |
+| Round 3 checkpoint      | `cdd9259` — deployed as `7810904`, what Round 3 tested                      |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                |
+| Owner-visible behaviour | **changed** in one sentence — the restorative silence on the blocker path  |
+| QA's Round 3 commit     | `7ac575f` — QA's report, committed unedited                                 |
+
+### What QA-84-011 became
+
+**It is not a longer list.** Recognising a promise in ordinary English is not
+decidable by a rule, and a third list would have been the same mistake with more
+words in it. So the repair stops trying to close the space of *sentences* and
+closes the space of *strings* instead.
+
+**1. The guarantee is a catalogue.** `APPROVED_BLOCKER_COPY` in
+`scripts/adaptation-claims.mjs` enumerates every string the blocker path can put
+in front of the owner. The synthetic gate asserts it **in both directions**
+against a walk of the whole scenario library:
+
+- nothing rendered that is not approved — so a copy edit fails the gate until
+  somebody adds it deliberately, in a diff, which is the moment to decide what
+  the new sentence promises;
+- nothing approved that is not rendered — so the catalogue cannot rot into a
+  list of things the app used to say.
+
+An allowlist over a finite set has **no escapes**. That is the property the last
+two guards were reaching for and could not have.
+
+**2. The classifier is the net, and it no longer reads the verb.** What a promise
+is *about* — choosing, picking, preferring, some verb nobody has thought of — is
+unbounded. What is not unbounded is the grammar that puts a sentence in a later
+moment: **modal auxiliaries are a closed class in English**, and forward deixis is
+a short closed set. A claim is now *the app, or its output named or nominalised,
+plus one of those two*. The verb between them is never consulted, which is exactly
+why `choose`, `pick`, `use` and `prefer` now fail.
+
+**3. And the proof changed with it**, because QA's deeper objection was that the
+old fixture *"proves the six strings already anticipated… but has no mutation or
+paraphrase boundary capable of disproving the list itself."* The boundary is now
+generated: **3,248 sentences** over subject × modal × verb, where the verbs
+include `frobnicate`, `zorble` and `quibblify` — words that are not words. A
+guard consulting a verb vocabulary fails that sweep on the first unfamiliar one.
+
+All five of QA's reported escapes, plus the nominal and passive forms, are in
+`MUST_BE_CAUGHT` and are caught. Honest present-tense recording, correction and
+withdrawal copy is asserted to pass untouched.
+
+### One copy change, and why it was needed
+
+The restorative silence said *"There is nothing the app would do differently, so
+it is leaving it."* That is true, and it is still a statement about what the app
+would do — **a denial of a future change is as much a claim about the future as
+an assertion of one**, and D-187's rule is that this path says what is recorded
+and not what follows from it. The reason that branch is silent is a fact about
+the move that was offered, so it now says that:
+
+> This was a restful thing rather than an effortful one, and there is nothing
+> here worth asking about.
+
+Nothing else on the path changed. QA's Round 3 read the live copy as honest and
+it still is.
+
+### Proved by reintroduction, three ways
+
+1. **The verb list, put back into the classifier** — the generated sweep fails.
+2. **QA-84-010's shipped promise, put back into the note** — the catalogue check
+   fails.
+3. **An ordinary, honest-sounding copy edit nobody approved** — the catalogue
+   check fails.
+
+The third of those **found a real weakness before it proved anything**: the
+approval check was walking a single evening rather than the library, and an edit
+to the repeatedly-blocked note went straight past it. Both directions of the
+catalogue check now sweep the same breadth — every scenario, blocked on four days
+running to reach `repeatedly-blocked`, and answered on the same day to reach
+`just-asked`.
+
+### What this guard still cannot do, said where it is defined
+
+**The classifier cannot decide entailment.** *"The app learns from this"* has no
+modal and no forward reference and is still a promise, and this returns nothing
+for it. Any classifier of ordinary English will have such escapes. That is
+written into the module's own documentation rather than left for a fourth round
+to discover, and it is the reason the phase relies on the **catalogue** and not on
+the classifier.
+
+Where a catalogue is not possible, the classifier is what there is — and the
+honest thing is to say so rather than let a green gate imply more. **D-193**.
+
+### One authoritative guard, three gates
+
+The synthetic suite, the browser suite and the Android gate all import the same
+module and now make **both** checks rather than one: the class net over the
+rendered text, and the catalogue the copy has to come from.
+
+### Verification at the repaired checkpoint
+
+| Gate                                      | Result                                                            |
+| ----------------------------------------- | ----------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)         |
+| Unit / contract / synthetic / adversarial | **1,846 passed** in 83 files (1,841 at round 3)                   |
+| Browser, three widths, one worker         | **690 passed** at three widths, 230 per width (unchanged from round 3)                                                      |
+| Deployed Android gate                     | **clean — 231 checks** against deployed `0f9b882` (230 at round 3)                                                      |
+| Privacy scan                              | **clean — 288 tracked files**                                     |
+| Block sweep and copy guards               | **PASS**                                                          |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                           |
+| Checkpoint equivalence                    | **PASS** — deployed `0f9b882` serves the same bytes, nothing between                                                        |
+| CI                                        | Verify **success**, Deploy preview **success**                                                           |
+
+### What is still open, and named rather than left to be found
+
+- **Enforcement of a blocker constraint.** Still nothing reads one, still
+  deliberate, still F08's aggregation and later Validity's.
+- **Semantic capture of what an aim means** — routing 91 package 1 (D-172).
+- **The owner phone check** is owed before release and is not a blocker QA can
+  clear.
+- **The classifier's entailment boundary**, above — named, not closed.
+
+<!-- LCO_COMPLETE -->
