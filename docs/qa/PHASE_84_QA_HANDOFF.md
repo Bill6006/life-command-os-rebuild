@@ -2009,3 +2009,137 @@ Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 4
 repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
 routing 90. Do not ask me to paste the file contents.
 ```
+
+---
+
+## Round 4 repair — the builder's record
+
+**Actor:** Claude / the routing 84 builder conversation. **Appended below QA's
+round 4 rather than inside it** — QA owns every round and the builder does not
+edit them (D-077). Round 4 above is byte-identical to what QA wrote.
+
+**Result: QA-84-012 repaired. The phase stays YELLOW.** The builder does not
+declare GREEN. Round 5 is dispatched in `docs/NEXT_PROMPT.md` to the **same**
+Codex conversation at High.
+
+**Two process notes, first, because both are the builder's to own.**
+
+**1. QA's round landed after the repair this time, not before it.** Every
+previous round was committed on its own before a line of the fix, so the history
+showed the finding preceding it. This round the repair went in as `f45214b` and
+QA's report as `cbb63f9` after it. QA's text is unedited and complete either way;
+what was lost is the ordering, and the ordering was the point. Rewriting a pushed
+commit to hide it would have cost more than the slip does.
+
+**2. The completion marker.** Round 4's handoff asked for it at the end of
+`docs/NEXT_PROMPT.md` and not in this file. The owner's standing instruction is
+the opposite, and the owner's instruction governs: the marker is the last
+meaningful line of **this** file and appears in no other. That also keeps the
+orchestrator routing the Round 5 dispatch rather than a finished repair — this
+file reads `complete`, `NEXT_PROMPT.md` does not.
+
+### Checkpoint
+
+| Fact                    | Value                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------- |
+| Repaired checkpoint     | `f45214b` — the commit the aggregate gate was run on, and the one to test     |
+| Round 4 checkpoint      | `0f9b882` — deployed as `a6d30c3`, what Round 4 tested                         |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                   |
+| Owner-visible behaviour | **unchanged** — no product copy was edited; `ResumePanel` is exported so a gate can render it |
+| QA's Round 4 commit     | `cbb63f9` — QA's report, committed unedited                                    |
+
+### What QA-84-012 became
+
+**The finding is the third variation on one theme, and worth naming as such.**
+DEF-0127 guarded a rule with a list of phrases. DEF-0128 guarded it with a list
+of verbs. This one guarded it with a list of **one module** — and each time the
+guard was collected where the copy is *written* rather than where it is *read*.
+
+QA's sentence: *"A closed catalogue over data returned by `blockers.ts` is not a
+closed catalogue over what the owner and accessibility tree receive."*
+
+**1. The collector renders.** `tests/synthetic/blocker-copy.test.tsx` mounts
+`BlockersPanel`, `BlockerQuestion` and `ResumePanel` in every branch and reads
+**every text-bearing element and every `aria-label`**. That is the only place an
+interpolated sentence and a template-literal accessible name exist whole — the
+withdrawal control's name, which QA named specifically, appears nowhere in the
+source as a complete string. A seventh string added to one of those panels
+tomorrow fails without anybody having thought of it.
+
+**2. The enumeration of surfaces is structural too.** A collector over three
+components somebody listed is one component away from the same defect.
+`blockerSurfacesInSource()` derives the set from **what the components take** — a
+prop typed `StandingBlocker`, `BlockerDecision` or `ResumableMove` — and the test
+asserts the rendered set equals it. A fourth panel fails until it is rendered.
+
+**3. The catalogue has two halves**, because they are reached differently: one is
+proved by walking the scenario library through `blockerQuestionFor`, the other by
+rendering. Each check is responsible for its own. A single list would let an
+unreachable entry in one half be excused by the other, which is how a catalogue
+becomes a drawer.
+
+**4. And the rendered gates read whole panels.** The browser and Android D-187
+cases read a *child* locator — the question's inner block, the standing blocker's
+own row — so the panel title and the paragraph above the rows were outside every
+assertion. Both now read the panel element by element, plus the accessibility
+tree, and assert both halves of the guard over each sentence.
+
+**No product copy changed.** Round 4 read the live copy as honest and it still
+is. The only source change outside tests is that `ResumePanel` is exported.
+
+### Proved by reintroduction, at the boundaries QA named
+
+1. **QA's own proposed edit** — *"The app keeps these so it can choose something
+   better next time."* in the domain panel's parent note. Fails the synthetic
+   catalogue **and** the browser gate, which was the point of widening it.
+2. **An unapproved string in the resume panel's title.** Fails the catalogue.
+3. **A fourth component taking a `StandingBlocker` that nothing renders.** Fails
+   the surface enumeration.
+
+**Writing it found two more strings the first collector could not reach** — the
+resume panel's bare *"You said this did not fit at the time."*, which is what
+**Just leave it** produces, and its part-done-after-a-blocker form. Both are now
+walked and catalogued.
+
+### What is still true about the guard's limits
+
+**The classifier still cannot decide entailment** (D-193), and that is written
+where it is defined. What changed here is the **catalogue**, which is the
+guarantee: it is now closed over what the owner and the accessibility tree
+receive rather than over one module's exports.
+
+**What it does not cover, said plainly:** history, Timeline, correction and
+export renderers describe an `action-unable-now` in their own words, and those
+words are guarded by the copy catalogues and sweeps those surfaces already have
+rather than by this one. If Round 5 finds a blocker promise there, it is a real
+finding and this record is where the boundary was declared.
+
+### Verification at the repaired checkpoint
+
+| Gate                                      | Result                                                            |
+| ----------------------------------------- | ----------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)         |
+| Unit / contract / synthetic / adversarial | **1,850 passed** in 84 files (1,846 in 83 at round 4)             |
+| Browser, three widths, one worker         | **690 passed** at three widths, 230 per width (unchanged from round 4)                                                      |
+| Deployed Android gate                     | **clean — 233 checks** against deployed `f45214b` (231 at round 4)                                                      |
+| Privacy scan                              | **clean — 288 tracked files**                                     |
+| Block sweep and copy guards               | **PASS**                                                          |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                           |
+| Checkpoint equivalence                    | **PASS** — deployed `f45214b` serves the same bytes, nothing between                                                        |
+| CI                                        | Verify **success**, Deploy preview **success**                                                           |
+
+Round 4 reported one block-sweep case timing out under parallel load and passing
+alone. The same case timed out once here under `npm run verify` and passed on the
+clean rerun above; it is load, not a defect, and it is now on the record twice.
+
+### What is still open, and named rather than left to be found
+
+- **Enforcement of a blocker constraint.** Still nothing reads one, still
+  deliberate, still F08's aggregation and later Validity's.
+- **Semantic capture of what an aim means** — routing 91 package 1 (D-172).
+- **The owner phone check** is owed before release and is not a blocker QA can
+  clear.
+- **The classifier's entailment boundary**, and **the history/Timeline/export
+  renderers**, both above — named, not closed.
+
+<!-- LCO_COMPLETE -->

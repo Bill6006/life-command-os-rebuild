@@ -3,8 +3,8 @@
 **Phase:** 84 — **what the owner is trying to become**
 
 **Actor:** Codex / **independent QA**.
-**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1, 2 and 3
-of `docs/qa/PHASE_84_QA_HANDOFF.md`. Not a new conversation, and not the Claude
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 4 of
+`docs/qa/PHASE_84_QA_HANDOFF.md`. Not a new conversation, and not the Claude
 builder.
 **Model:** Codex.
 **Reasoning level:** **High.**
@@ -14,15 +14,15 @@ for the report format. Independent QA is Codex (D-090); Claude builds. Every
 handoff ends with the model, the level, the conversation and a short copyable
 launcher (D-092, D-083).
 
-**Routing 84 is YELLOW.** You have failed it three times and been right three
-times. **Round 3's product half was clean** — all seven acceptance items passed
-and QA-84-007 through QA-84-010 were closed on the deployed build — and the one
-finding, QA-84-011, was about the standing guard. It is repaired. The repaired
-product checkpoint is `0f9b882`. The builder has not declared GREEN (D-077).
+**Routing 84 is YELLOW.** You have failed it four times and been right four
+times. **Rounds 3 and 4 both came back clean on the product** — all seven
+acceptance items, QA-84-007 through QA-84-011 closed on the deployed build, the
+cold-store walk honest — and both findings were about the standing guard.
+QA-84-012 is repaired. The repaired product checkpoint is `f45214b`. The builder
+has not declared GREEN (D-077).
 
 **The reasoning level is `High`, and it is not a Max phase for QA.** Codex has no
 Max level and the application will not switch to its top level under automation.
-The builder's own level being Max does not change the QA block's.
 
 ---
 
@@ -31,59 +31,55 @@ The builder's own level being Max does not change the QA block's.
 **Your `**Phase:**` field is `84`.** Never `9`, `09`, `8.4` or `9.1` — those
 parse at or below 82 and never route, silently. Plan **section 43A** and
 **D-159** hold the map: 83, 84, 90, 91, 92, 93, 94. **A QA round does not get a
-new integer**; rounds 1…n of this phase all carry **84**, and there must be no
-`PHASE_85_*` file on disk.
+new integer**; rounds 1…n all carry **84**, and there must be no `PHASE_85_*`
+file on disk.
+
+**On the completion marker.** Round 4's handoff asked for it at the end of this
+file and not in the QA report. The owner's standing instruction is the opposite
+and governs: the marker is the last meaningful line of
+`docs/qa/PHASE_84_QA_HANDOFF.md` and appears in no other file. That is also what
+keeps the orchestrator routing **this** dispatch rather than a finished repair.
 
 ---
 
-## What QA-84-011 became
+## What QA-84-012 became
 
-**Your sentence for it is the one the repair was written around:** _"the old
-guards listed remembered phrases; the replacement takes a cross-product of
-remembered words and calls that the semantic class."_ Three guards have now been
-written for D-187 and two failed the same way. **The repair is not a third
-list.**
+**Your finding is the third variation on one theme, and the repair names it as
+such.** DEF-0127 guarded D-187 with a list of phrases; DEF-0128 with a list of
+verbs; DEF-0129 with a list of one module. Each time the guard was collected
+where the copy is _written_ rather than where it is _read_.
 
-**1. The guarantee is a closed catalogue.** `APPROVED_BLOCKER_COPY` enumerates
-every string the blocker path can render, and the synthetic gate asserts it in
-**both** directions against a walk of the whole scenario library — nothing
-rendered that is not approved, nothing approved that is not rendered. An
-allowlist over a finite set has no escapes: a copy edit now fails the gate until
-somebody adds it deliberately, in a diff, which is the moment to decide what the
-new sentence promises.
+**1. The collector renders.** `tests/synthetic/blocker-copy.test.tsx` mounts
+`BlockersPanel`, `BlockerQuestion` and `ResumePanel` in every branch and reads
+every text-bearing element and every `aria-label` — the only place an
+interpolated sentence and a template-literal accessible name exist whole. The
+withdrawal control's name you named specifically appears nowhere in the source as
+a complete string.
 
-**2. The classifier is the net, and it no longer reads the verb.** What a promise
-is _about_ is unbounded and any list of it is a list of what somebody remembered.
-What is not unbounded is the grammar that puts a sentence in a later moment:
-**modal auxiliaries are a closed class in English**, and forward deixis is a short
-closed set. A claim is the app — or its output, named or nominalised — plus one of
-those. `choose`, `pick`, `use` and `prefer` now fail because the verb is never
-consulted at all.
+**2. The enumeration of surfaces is structural too.**
+`blockerSurfacesInSource()` derives the set from what the components **take** — a
+prop typed `StandingBlocker`, `BlockerDecision` or `ResumableMove` — and the test
+asserts the rendered set equals it. A fourth panel fails until it is rendered.
 
-**3. The proof changed with it**, which was your deeper objection. The boundary is
-generated rather than remembered: **3,248 sentences** over subject × modal × verb,
-where the verbs include `frobnicate`, `zorble` and `quibblify`. A guard that
-consults a verb vocabulary fails that sweep on the first unfamiliar word.
+**3. The catalogue has two halves**, one proved by walking the scenario library
+through `blockerQuestionFor` and one by rendering, each responsible for its own
+entries in both directions.
 
-**One copy change.** The restorative silence said _"there is nothing the app would
-do differently"_ — true, and still a statement about what the app would do. A
-denial of a future change is as much a claim about the future as an assertion of
-one. It now says why it is silent in terms of the move that was offered.
+**4. The rendered gates read whole panels**, element by element plus the
+accessibility tree, rather than the child locator you identified.
 
-**And what the classifier still cannot do is written into the module.** It cannot
-decide entailment: _"the app learns from this"_ has no modal and no forward
-reference, is a promise, and returns nothing. That is stated where the guard is
-defined rather than left for a fifth round, and it is why the phase relies on the
-catalogue rather than on the classifier (**D-193**).
+**Proved at the boundaries you named**, including your own proposed edit — _"The
+app keeps these so it can choose something better next time."_ — which now fails
+the synthetic catalogue **and** the browser gate.
+
+**No product copy changed.** You read the live copy as honest and it still is.
 
 ---
 
-## What Round 4 is judging it against
+## What Round 5 is judging it against
 
 The **same seven-item gate** in `PRODUCT_ADJUDICATION.md` section 8, governed by
-**D-173**. All seven passed in Round 3. **Re-verify all seven anyway** — every
-round of this phase has broken something an earlier round passed, twice because
-of a repair.
+**D-173**. All seven passed in Rounds 3 and 4. **Re-verify all seven anyway.**
 
 Plus the standing gates: the aggregate `npm run verify` from a clean checkout,
 the browser suite at three widths, the Android-style gate on the deployed build,
@@ -92,43 +88,39 @@ the privacy scan, the block sweep, and the copy guards.
 ### The cold-store owner-use check, again
 
 **Repeat it**, on the same terms: a genuinely fresh browser store, **no QA
-laboratory**, no seeded fixture, ordinary product screens only, **CASE A** (answer
-the second agenda with _"More money"_, read what it says it will create and what it
-is not assuming before confirming, then inspect what was written) and **CASE B**
-(_"Can't right now"_ and the caregiving blocker for the real owner situation). It
-is a **cold-store owner-use check and not a sealed one**, because Rounds 1 to 3
-already exist in this conversation.
+laboratory**, no seeded fixture, ordinary product screens only, **CASE A**
+(_"More money"_ into the second agenda) and **CASE B** (the caregiving blocker).
+It is a **cold-store owner-use check and not a sealed one**. The trailing-dot
+host remains a good technique.
 
-The trailing-dot host you used for a fresh IndexedDB origin in Round 3 is a good
-technique and worth repeating.
+### And the boundaries this repair declared rather than closed
 
-### And three things worth attacking specifically
+Two, both named in the builder's Round 4 record, and both fair game:
 
-1. **The catalogue, which is now the guarantee.** Can the blocker path render a
-   string that is not in `APPROVED_BLOCKER_COPY` — through a branch the sweep
-   does not walk, a template that interpolates, or a surface that composes copy
-   of its own? The approval check missed exactly that once during this repair: it
-   was walking one evening rather than the library, and an unapproved edit to the
-   repeatedly-blocked note went straight past it.
-2. **The classifier's boundary, which is named rather than closed.** Escapes are
-   expected and the module says so. A finding here is one where the **catalogue**
-   would let a promise through, not one where the classifier alone does — though
-   naming further classifier escapes is useful and welcome.
-3. **The restorative silence's new sentence.** It is the one string this repair
-   changed. Is it true, and does it read as an explanation rather than a verdict
-   on him?
+1. **History, Timeline, correction and export renderers** describe an
+   `action-unable-now` in their own words, and those words are guarded by the
+   copy catalogues and sweeps those surfaces already have — **not** by the
+   blocker catalogue. If a blocker promise can be written there, that is a real
+   finding and the record says so is where the boundary was declared.
+2. **The classifier's entailment limit** (D-193) is unchanged and documented.
+   Escapes there are expected; a finding is one where the **catalogue** would let
+   a promise through.
+
+Beyond those, the thing worth attacking is the new collector itself: is there an
+owner-visible blocker string that is neither in `blockers.ts` nor rendered by one
+of the three enumerated components — a fifth surface, a branch the walk does not
+enter, a string that appears only under a state the four resume walks miss?
 
 ---
 
 ## What must not have happened, and QA should confirm it did not
 
 - **No strategy evaluation** (F03), **no pattern-discovery engine** (F15/F17/F18).
-- **No enforcement of a blocker constraint.** D-187, D-192 and D-193 are about
-  _saying_ so honestly. If a recommendation now changes because of a blocker,
-  that is a finding, not an improvement.
+- **No enforcement of a blocker constraint.** D-187, D-192, D-193 and D-194 are
+  about _saying_ so honestly. If a recommendation now changes because of a
+  blocker, that is a finding, not an improvement.
 - **No semantic interpretation of the owner's words** (D-024, D-025, D-172).
-- **No domain progression models** beyond Career, Health and Money. Fatherhood is
-  outside the proving scope and the growth model is untouched.
+- **No domain progression models** beyond Career, Health and Money.
 - **No owner routines library** (AUD-0045). **No backfill** (D-165). **No twelfth
   domain page.** **No scoring change** (D-137, D-138). **No new visual language.**
 - **No `PHASE_85_*` file**, no alteration of `qa/WHOLE_APP_OWNER_USE_REVIEW.md`,
@@ -136,70 +128,70 @@ technique and worth repeating.
 
 ---
 
-## Handoff — independent QA of routing phase 84, round 4
+## Handoff — independent QA of routing phase 84, round 5
 
 **Model:** Codex.
 **Reasoning level:** **High** — never Max.
-**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1, 2 and 3.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 4.
 
 ```text
-Round 4 retest of routing Phase 84 of Life Command OS: "what the owner is
+Round 5 retest of routing Phase 84 of Life Command OS: "what the owner is
 trying to become."
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-You have failed this phase three times and been right three times. Round 3's
-product half was clean and its one finding, QA-84-011, is repaired. Routing 84
-is still YELLOW at repaired product checkpoint 0f9b882; the builder has not
-declared GREEN (D-077).
+You have failed this phase four times and been right four times. Rounds 3 and
+4 were both clean on the product; both findings were about the standing guard.
+QA-84-012 is repaired. Routing 84 is still YELLOW at repaired product
+checkpoint f45214b; the builder has not declared GREEN (D-077).
 
 Read, in full, and in this order:
 1. docs/qa/README.md            — the protocol. Step 1 is cold use of the
                                   deployed Preview BEFORE any repository
                                   document, and the order is the point.
-2. docs/qa/PHASE_84_QA_HANDOFF.md — your rounds 1, 2 and 3, unedited, with the
+2. docs/qa/PHASE_84_QA_HANDOFF.md — your rounds 1 to 4, unedited, with the
                                   builder's repair records appended below them
 3. docs/PRODUCT_ADJUDICATION.md section 8 — the seven-item gate; section 11 is
                                   the do-not-change list
-4. docs/DECISION_LOG.md D-161..D-169, D-173, D-177..D-193
-5. docs/DEFECT_LEDGER.md DEF-0119..DEF-0128
-6. docs/PHASE_STATUS.md — the routing 84 record, rounds 1 to 3 included
+4. docs/DECISION_LOG.md D-161..D-169, D-173, D-177..D-194
+5. docs/DEFECT_LEDGER.md DEF-0119..DEF-0129
+6. docs/PHASE_STATUS.md — the routing 84 record, rounds 1 to 4 included
 
 Confirm the deployed build against the repaired checkpoint before testing:
-  node --use-system-ca scripts/checkpoint-equivalence.mjs 0f9b882 --deployed \
+  node --use-system-ca scripts/checkpoint-equivalence.mjs f45214b --deployed \
     https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
 
-Repeat the manual COLD-STORE OWNER-USE CHECK on the same terms as rounds 2 and
-3: a genuinely fresh browser store, no QA laboratory, no seeded fixture,
-ordinary screens only, CASE A ("More money" into the second agenda) and CASE B
-(the caregiving blocker) unchanged. It is a cold-store owner-use check, NOT a
-sealed check.
+Repeat the manual COLD-STORE OWNER-USE CHECK on the same terms as rounds 2 to
+4: a genuinely fresh browser store, no QA laboratory, no seeded fixture,
+ordinary screens only, CASE A ("More money") and CASE B (the caregiving
+blocker). It is a cold-store owner-use check, NOT a sealed check.
 
-Then re-verify all seven acceptance items. Every round of this phase has
-broken something an earlier round passed, twice because of a repair.
+Then re-verify all seven acceptance items.
 
 Attack in particular:
-- the catalogue, which is now the guarantee rather than the classifier: can
-  the blocker path render a string that is not in APPROVED_BLOCKER_COPY,
-  through a branch the sweep does not walk or a surface that composes its own
-  copy? The approval check missed exactly that once during this repair.
-- the restorative silence's new sentence, the one string this repair changed:
-  is it true, and does it explain rather than judge?
-- whether anything is invented to fill a first-run screen;
-- whether the Health confirmation and the Health recommendation still agree,
-  and whether any rendered history entry contradicts itself about extent.
+- the new rendering collector: is there an owner-visible blocker string that
+  is neither assembled in blockers.ts nor rendered by BlockersPanel,
+  BlockerQuestion or ResumePanel — a fifth surface, a branch the walk does not
+  enter, a state the four resume walks miss?
+- the two boundaries the builder DECLARED rather than closed, both named in
+  its round 4 record: the history/Timeline/correction/export renderers, which
+  describe an unable-now in their own words and are guarded by their own copy
+  sweeps rather than by the blocker catalogue; and the classifier's
+  documented entailment limit.
+- whether anything is invented to fill a first-run screen, whether Health's
+  confirmation and recommendation still agree, and whether any rendered
+  history entry contradicts itself about extent.
 
-The classifier's entailment boundary is named in the module rather than
-closed, and escapes are expected there. A finding is one where the CATALOGUE
-would let a promise through; naming further classifier escapes is useful and
-welcome but is not the same claim.
+A finding is one where the CATALOGUE would let a promise through, or where
+owner-visible blocker copy exists that no gate asks about. Naming further
+classifier escapes is useful and welcome but is not the same claim.
 
 Use a real Android-style context, read whole screens as a person, and actively
 try to disprove that the repairs hold. Name which automated tests still give
 false confidence.
 
-Write Round 4 into docs/qa/PHASE_84_QA_HANDOFF.md, below the builder's Round 3
+Write Round 5 into docs/qa/PHASE_84_QA_HANDOFF.md, below the builder's Round 4
 repair record. The builder does not edit your rounds and you do not change
 product code. Your **Phase:** field is 84 — a QA round does not get a new
 integer, and you must not create any PHASE_85_* file.
@@ -214,32 +206,30 @@ Do not ask me to paste file contents.
 ### Short launcher
 
 **Model:** Codex. **Reasoning level:** High — never Max.
-**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1, 2 and 3.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 4.
 
 ```text
-Round 4 retest of routing Phase 84 of Life Command OS, after your Round 3 FAIL.
+Round 5 retest of routing Phase 84 of Life Command OS, after your Round 4 FAIL.
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Read docs/qa/PHASE_84_QA_HANDOFF.md in full — your rounds 1 to 3 and the
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full — your rounds 1 to 4 and the
 builder's repair records below them — and execute the QA protocol in
 docs/qa/README.md exactly as written. Step 1 is cold use of the deployed
 Preview before any repository document.
 
-Repaired product checkpoint: 0f9b882. Your **Phase:** field is 84. Do not
+Repaired product checkpoint: f45214b. Your **Phase:** field is 84. Do not
 create any PHASE_85_* file.
 
 Repeat the manual cold-store owner-use check from a genuinely fresh browser
 store without ever opening the QA laboratory, including CASE A and CASE B.
 docs/NEXT_PROMPT.md states it in full, along with what to attack in the
-rebuilt copy guard.
+rebuilt copy catalogue and the two boundaries the builder declared.
 
-Write Round 4 into docs/qa/PHASE_84_QA_HANDOFF.md, below the Round 3 repair
+Write Round 5 into docs/qa/PHASE_84_QA_HANDOFF.md, below the Round 4 repair
 record. Do not change product code, and reproduce the builder's claims rather
 than accepting them.
 
 Do not ask me to paste file contents.
 ```
-
-<!-- LCO_COMPLETE -->

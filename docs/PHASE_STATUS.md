@@ -122,9 +122,10 @@ superseded rather than reused.
 
 # Routing Phase 84 — What the owner is trying to become
 
-**Status: YELLOW — REPAIRED AFTER QA ROUND 3 FAIL, AWAITING ROUND 4 RETEST.**
+**Status: YELLOW — REPAIRED AFTER QA ROUND 4 FAIL, AWAITING ROUND 5 RETEST.**
 
-Independent QA has failed this phase three times and been right three times.
+Independent QA has failed this phase four times and been right four times, and
+**the last two failures were both about the guard rather than the product.**
 
 **Round 1** returned FAIL on acceptance items 1, 2 and 4, with six findings.
 **Round 2** confirmed five of those six closed and found four more: a cold-start
@@ -133,11 +134,17 @@ that the Round 1 repair had made false, a Timeline tag still contradicting its o
 sentence, and a promise on the blocker path that the guard written to forbid it
 did not match.
 
-**Round 3's product half came back clean.** All seven acceptance items passed and
-QA-84-007 through QA-84-010 were closed on the deployed build. Its one finding was
-about the standing guard rather than the product: the copy guard written in the
-Round 2 repair was still a phrase list, and four ordinary words walked through it.
-That is repaired too.
+**Rounds 3 and 4 both came back clean on the product.** All seven acceptance
+items passed in each, QA-84-007 through QA-84-011 are closed on the deployed
+build, and the cold-store walk reads honest from a first run. Each round's single
+finding was about the standing copy guard: Round 3 found it was still a phrase
+list, and Round 4 found that the catalogue which replaced it was closed over one
+module rather than over the screen. Both are repaired.
+
+**Three findings, one theme.** DEF-0127 guarded D-187's rule with a list of
+phrases; DEF-0128 with a list of verbs; DEF-0129 with a list of one module. Each
+time the guard was collected **where the copy is written rather than where it is
+read** — which is now stated as the rule (D-194) rather than rediscovered.
 
 It stays YELLOW. A builder conversation may not approve its own phase (D-077),
 and this record says what was built and repaired and where to look at it; it does
@@ -173,16 +180,17 @@ through the same controls, now gets past all eight steps.
 
 ## Checkpoint
 
-| Fact                    | Value                                                                                     |
-| ----------------------- | ----------------------------------------------------------------------------------------- |
-| Product checkpoint      | `0f9b882` — the Round 3 repair, and the commit the aggregate gate was run on              |
-| Round 3 checkpoint      | `cdd9259` — the Round 2 repair, which Round 3 tested                                      |     |
-| Round 2 checkpoint      | `94e1716` — the Round 1 repair, which Round 2 tested and failed                           |
-| Round 1 checkpoint      | `42667ea` — what Round 1 tested and failed                                                |
-| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                               |
-| Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                        |
-| Owner phone check       | owed before release; not a blocker QA can clear                                           |
-| Independent QA          | **Rounds 1, 2 and 3 all FAIL**, all repaired; Round 4 dispatched in `docs/NEXT_PROMPT.md` |
+| Fact                    | Value                                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------- |
+| Product checkpoint      | `f45214b` — the Round 4 repair, and the commit the aggregate gate was run on          |
+| Round 4 checkpoint      | `0f9b882` — the Round 3 repair, which Round 4 tested                                  |
+| Round 3 checkpoint      | `cdd9259` — the Round 2 repair, which Round 3 tested                                  |
+| Round 2 checkpoint      | `94e1716` — the Round 1 repair, which Round 2 tested and failed                       |
+| Round 1 checkpoint      | `42667ea` — what Round 1 tested and failed                                            |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                           |
+| Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                    |
+| Owner phone check       | owed before release; not a blocker QA can clear                                       |
+| Independent QA          | **Rounds 1 to 4 all FAIL**, all repaired; Round 5 dispatched in `docs/NEXT_PROMPT.md` |
 
 **The documentation head is a later commit than the product checkpoint**, as it
 was in Round 1. It carries this record, the Round 2 dispatch and two corrected
@@ -194,18 +202,18 @@ trust (D-097, D-180).
 
 At the repaired checkpoint, not at the one QA failed.
 
-| Gate                                      | Result                                                                 |
-| ----------------------------------------- | ---------------------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)              |
-| Unit / contract / synthetic / adversarial | **1,846 passed** in 83 files (1,841 at round 3, 1,812 at round 1)      |
-| Browser, three widths, one worker         | **690 passed** at three widths, 230 per width (unchanged from round 3) |
-| Android-style gate, deployed              | **clean — 231 checks** against deployed `0f9b882` (230 at round 3)     |
-| Privacy scan                              | **clean** — 288 tracked files                                          |
-| Block sweep                               | **PASS** — unchanged                                                   |
-| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya      |
-| Commits not on any remote                 | **none** at the handed-off head (D-180)                                |
-| Checkpoint equivalence                    | **PASS** — deployed `0f9b882` serves the same bytes, nothing between   |
-| CI                                        | Verify **success**, Deploy preview **success**                         |
+| Gate                                      | Result                                                                  |
+| ----------------------------------------- | ----------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)               |
+| Unit / contract / synthetic / adversarial | **1,850 passed** in 84 files (1,846 in 83 at round 4, 1,812 at round 1) |
+| Browser, three widths, one worker         | **690 passed** at three widths, 230 per width (unchanged from round 4)  |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `f45214b` (231 at round 4)      |
+| Privacy scan                              | **clean** — 288 tracked files                                           |
+| Block sweep                               | **PASS** — unchanged                                                    |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya       |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                                 |
+| Checkpoint equivalence                    | **PASS** — deployed `f45214b` serves the same bytes, nothing between    |
+| CI                                        | Verify **success**, Deploy preview **success**                          |
 
 ## Independent QA — round 1, and the repair
 
@@ -420,6 +428,77 @@ ordinary, honest-sounding copy edit nobody approved walked past the approval che
 the repeatedly-blocked branch is not reachable in one. Both directions of the
 catalogue check now walk every scenario, blocked on four days running and answered
 on the same day, to reach all five branches.
+
+## Independent QA — round 4, and the repair
+
+**Result: FAIL, and the product half was clean again.** Codex, at High, on the
+deployed `a6d30c3` (bundle-equivalent to `0f9b882`). All seven acceptance items
+passed; QA-84-007 through QA-84-011 remain closed on their own deployed
+reproductions; the cold-store walk found the first-run routes, the byte-identical
+_"More money"_, Health's confirmation agreeing with its recommendation, the
+coherent partial Timeline row and the truthful restorative silence. The full
+report is [`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md), Round 4,
+committed unedited as `cbb63f9`.
+
+The one finding was **QA-84-012**.
+
+### The catalogue was closed over one module, not over the screen
+
+D-193 answered Round 3 by closing a catalogue over the blocker path — and it was
+closed over `blockers.ts`. `BlockersPanel` composes a title, a paragraph and an
+`aria-label` in JSX; `ResumePanel` composes a title, two state sentences and an
+interpolated note. **Six owner-visible strings answered `false` to
+`isApprovedBlockerCopy` and no gate asked them the question.** The browser and
+Android checks read a child locator inside each panel, so the surrounding copy
+was outside every assertion too.
+
+QA's sentence: _"A closed catalogue over data returned by `blockers.ts` is not a
+closed catalogue over what the owner and accessibility tree receive."_
+
+### The repair — D-194
+
+**The collector renders.** `blocker-copy.test.tsx` mounts every surface in every
+branch and reads every text-bearing element and every accessible name. That is
+the only place an interpolated sentence and a template-literal `aria-label` exist
+whole — the withdrawal control's name appears nowhere in the source as a complete
+string.
+
+**And the enumeration of surfaces is structural**, or the next component is
+invisible the same way: `blockerSurfacesInSource()` derives the set from the
+blocker-path types in the components' props, and the rendered set must equal it.
+
+**The catalogue splits into two halves** — the one `blockers.ts` assembles, walked
+through the scenario library, and the one the surfaces compose, proved by
+rendering — each responsible for its own entries in both directions.
+
+**The rendered gates read whole panels**, element by element plus the
+accessibility tree.
+
+**No product copy changed.** Round 4 read the live copy as honest and it still is.
+The only source change outside tests is that `ResumePanel` is exported so a gate
+can render it.
+
+**Proved at the boundaries QA named**, including its own proposed edit — _"The app
+keeps these so it can choose something better next time."_ — which now fails the
+synthetic catalogue and the browser gate. Writing it surfaced two more strings the
+first collector could not reach: the resume panel's bare _"You said this did not
+fit at the time."_, which **Just leave it** produces, and its
+part-done-after-a-blocker form.
+
+### Two boundaries declared rather than closed
+
+Named here so Round 5 meets them as declared scope: **history, Timeline,
+correction and export renderers** describe an `action-unable-now` in their own
+words and are guarded by their own copy sweeps rather than by the blocker
+catalogue; and **the classifier's entailment limit** (D-193) is unchanged and
+documented where it lives.
+
+### One process slip, recorded rather than tidied away
+
+QA's Round 4 report was committed **after** the repair (`f45214b`, then
+`cbb63f9`) rather than before it, which every previous round did. QA's text is
+unedited and complete; what was lost is the ordering, and the ordering was the
+point of committing it first.
 
 ## The six packages
 
