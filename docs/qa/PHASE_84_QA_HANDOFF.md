@@ -885,4 +885,335 @@ leaves QA-84-001 … QA-84-006 and every other Round 2 requirement unchanged.
 - **Semantic capture of what an aim means** — routing 91 package 1 (D-172).
   Deliberately absent.
 
-<!-- LCO_COMPLETE -->
+---
+
+## Round 2 — independent QA retest after the Round 1 repair
+
+**Phase:** 84 — what the owner is trying to become
+
+**Actor:** Codex / independent QA (D-077, D-090).
+
+**Overall result:** **FAIL.** The repaired Health counterfactual, partial-progress
+rung, naturally completed course, weekly recurrence, blank optional milestone
+and canonical-plan correction all reproduce. Four new owner-visible findings
+remain: the required cold-start finding, a false Health milestone confirmation,
+a partial event still tagged **Done**, and blocker copy that promises a future
+adaptation the engine does not perform. Routing 84 stays **YELLOW**.
+
+### Build identity and test configuration
+
+| Fact | Value |
+| --- | --- |
+| QA-tested product checkpoint | `94e1716` |
+| Deployed Preview SHA read live | `eaf45361eb5d3749a45950edba67d3c2d2a32f66` |
+| Relationship | `node --use-system-ca scripts/checkpoint-equivalence.mjs 94e1716 --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json` reported four changed files and none bundle-relevant |
+| Repository head at QA start | `9bd99f5` — one existing, documentation-only local commit not on a remote branch |
+| Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
+| Manual mobile viewport | 360 × 800 CSS px in the live Preview |
+| Android configuration | Galaxy S24-class Playwright context; 360 × 780 CSS px; DPR 3; touch and `isMobile`; Android 14 / Chrome 126 user agent; deployed Preview |
+| Browser matrix | Chromium at 360 × 740, 430 × 932 and 1,280 × 900; one worker |
+| QA report commit | Not committed by QA in this round |
+
+The checkpoint checker without `--use-system-ca` and the first Android-gate
+invocation could not verify this host's certificate chain. Repeating each with
+Node's system certificate store succeeded. That was an environment condition,
+not a product failure; the live browser and the successful equivalence check
+both read deployed SHA `eaf4536`.
+
+### Protocol and cold-store owner-use record
+
+The additional check is a **cold-store owner-use check**, not a sealed check.
+Round 1 knowledge already existed, exactly as the handoff says.
+
+1. A fresh browser store opened on ordinary Now, without opening QA Lab or
+   seeding any fixture. Now said **Nothing loaded / There is no history here
+   yet**, and its only control was **Open the QA laboratory**. This is
+   QA-84-007, recorded as a finding rather than as a blocked test.
+2. Life said there was nothing to report and exposed no area links or owner
+   controls. Insights was the only ordinary route that could continue: **Getting
+   to know you / One answer would help the app know you better.**
+3. CASE A entered `More money` under the Career prompt. Before confirmation the
+   card showed the original words, the Career domain, the destination it would
+   create, and the unknown next step, starting point and evidence. Confirmation
+   preserved `More money` byte-identical; no amount, horizon, Money-domain
+   interpretation or second meaning appeared.
+4. The answer changed Now from **NOTHING LOADED** to **Nothing to suggest just
+   yet**. Answering **Enough** then produced the walk. The owner can therefore
+   eventually reach a useful Now without QA Lab, but only through Insights; the
+   initial Now and initial Life are the two points where ordinary use itself
+   offers no continuation.
+5. CASE B pressed **Can't right now** on that walk and selected **Can’t leave —
+   someone’s in my care**. The durable statement appeared on Health & Recovery
+   with **Not true any more**, and Timeline held the inability and constraint.
+   The question's note nevertheless said the answer was kept so the app could
+   _offer something that fits next time_. Nothing performs that adaptation;
+   this is QA-84-010.
+6. Leaving a discovery proposal created no proposed destination. The agenda did
+   write its normal `discovery-response: skipped` memory, which D-163 requires so
+   a respected skip is not immediately re-asked; that is not an authored object
+   and is not a finding.
+
+No screenshot artifact was added. The evidence is the deployed DOM transcript,
+the exact reproductions below, the live build identity, and the source/test
+boundaries that explain why the green gates missed each line.
+
+### Round 1 repairs and acceptance result
+
+| # | Result | Round 2 evidence |
+| --- | --- | --- |
+| 1. A destination changes the recommendation in Career, Health and Money | **PASS mechanically; blocked semantically by QA-84-008** | The standalone Health counterfactual changed _Move for 25 minutes: a walk_ into _Get some movement in: Lift twice each week_, with no Career destination and no invented duration. The form had just promised it would **not** start suggesting that step. |
+| 2. A completed session, completed course and milestone are distinct; attendance is not capability | **FAIL** | The partial rung and body sentence are repaired, and a three-occasion course renders under **Courses finished** separately from **3 sessions done**. Timeline still puts the tag **Done** above the partial event. See QA-84-009. |
+| 3. Goal, routine, person, place, skill and obligation are ordinarily authorable | **PASS** | All six controls remain present from the near-empty domain page; the focused synthetic journey and the three-width browser suite build or exercise the same routes. |
+| 4. The second agenda asks for later-useful information and grows quieter | **PASS** | After the three destination skips, the real UI asked for a name, start time and weekday. `Evening class`, 19:00, Thursday rendered on Life as **19:00 to 20:00, Thursdays**. Wednesday stayed unchanged; Thursday at 19:30 changed to **Evening class is under way / Nothing worth starting right now** in the same answered store. |
+| 5. “Can't right now” learns a blocker when useful and stays silent when known | **FAIL on the declared D-187 addendum** | Durable capture, correction and the known/restorative silent branches remain held. The owner-visible question note promises a better-fitting future offer that no reader can produce. See QA-84-010. |
+| 6. Correction consequences and private permission | **PASS** | The correction and private-off/on/off paths passed at all three browser widths and in the focused synthetic suite; the repair did not move their boundaries. |
+| 7. Standing no-score guards | **PASS** | No score, percentage, rank, grade, readiness number, wellness composite or Life Score appeared on the retested destination, progress, discovery, blocker, correction or private paths; the focused sweeps and privacy scan passed. |
+
+QA-84-001, QA-84-003, QA-84-004, QA-84-005 and QA-84-006 are closed by
+their reproductions. QA-84-002 is only partly closed because the event's
+sentence and progress rung are correct while its Timeline tag still says the
+opposite.
+
+### New Round 2 findings
+
+#### QA-84-007 — the first screen of a first-run app offers only the QA laboratory
+
+**Severity:** Major / material cold-start defect. **Type:** owner reachability.
+**Acceptance relationship:** required manual evidence inside Round 2; it does
+not create a new automated gate.
+
+**Exact reproduction:**
+
+1. Open the deployed Preview in a genuinely fresh store.
+2. Do not open QA Lab and do not seed a fixture.
+3. Now says _“There is no history here yet”_ and explains that the engine will
+   not guess.
+4. The only control on the screen is **Open the QA laboratory**.
+5. Life exposes no area links or owner controls. Insights is the only ordinary
+   continuation.
+
+The owner can eventually recover through Insights, so this is not a blocked
+test. It is the product claim visible at first contact: when the app knows
+nothing, the first thing it offers the owner is a developer tool.
+
+**Existing tests that gave false confidence:**
+
+- `now.spec.ts` verifies that an empty store refuses to invent a recommendation;
+  it does not verify that an owner-facing next step exists.
+- `shell.spec.ts` verifies that empty Life does not guess; it does not verify
+  that a domain or authoring route remains reachable.
+- No automated gate starts from a genuinely fresh store while refusing QA Lab;
+  this is why the handoff added the manual check.
+
+#### QA-84-008 — Health says it will not suggest the milestone, then suggests it immediately
+
+**Severity:** Blocker. **Acceptance item:** 1 and D-173. **Type:** false
+pre-action consequence / product semantics.
+
+**Exact reproduction:**
+
+1. Load **The first evening** and establish the baseline with **Enough**. Now
+   says _“Move for 25 minutes: a walk.”_
+2. Reset **The first evening**. On Health & Recovery enter destination _“Build
+   sustainable strength”_ and next step _“Lift twice each week”_.
+3. Before saving, the form says: _“The app will know it is what you are working
+   towards; it will not start suggesting it.”_
+4. Save, return to Now and answer **Enough** identically.
+5. Now immediately says _“Get some movement in: Lift twice each week.”_ and
+   names the walk as the option it beat.
+
+The ranking repair itself is right and closes QA-84-001. The confirmation is
+now false because it still describes the pre-repair behavior.
+
+**Source boundary:** `describeMilestone()` in
+`src/intelligence/authoring.ts:750-760` emits the no-suggestion promise for a
+Health `routine`; `healthCandidates()` in
+`src/intelligence/candidates.ts:641-693` now deliberately proposes exactly that
+destination milestone.
+
+**Existing tests that gave false confidence:**
+
+- `destination-and-discovery.test.ts` explicitly expects the Health sentence to
+  contain _“will not start suggesting it”_ while a different test proves the
+  same step becomes a candidate. It holds both halves separately and never asks
+  whether they contradict.
+- `phase84.spec.ts` proves the changed Health headline but never reads the
+  Health milestone confirmation in that counterfactual.
+- The Android gate checks the blank-milestone sentence and the changed controls,
+  not a named Health milestone's consequence.
+
+#### QA-84-009 — Timeline still calls a partial completion “Done”
+
+**Severity:** Blocker. **Acceptance item:** 2. **Type:** remaining semantic
+contradiction / history copy.
+
+**Exact reproduction:**
+
+1. Load **The first evening**, answer **Enough**, press **Start it**, then
+   **Only part of it**.
+2. Now correctly says **Part done**.
+3. Health & Recovery correctly shows **Got part way** and says it is not a
+   session done. Its correction and recent lines say _“Got part of the way.”_
+4. Open Timeline. The event sentence says _“Got part of the way — getting out
+   for a walk.”_ while the tag directly above it says **Done**.
+
+Partial work therefore still does not remain partial everywhere. The repaired
+sentence and the unrepaired event tag contradict each other in one Timeline
+entry.
+
+**Source boundary:** `TAG['action-completion']` remains hard-coded to `Done` in
+`src/features/history/describe.ts:98-104`; the adjacent comment explicitly says
+the tag stays Done for both extents. Only `describeLifecycle()` at lines 411-429
+consults `extent`.
+
+**Existing tests that gave false confidence:**
+
+- The synthetic repair test calls `describeEvents()`, which returns the event
+  sentence and not its tag.
+- The Phase 84 browser repair test inspects the Health screen, not Timeline.
+- The Android gate does not complete a partial move and inspect the resulting
+  Timeline row.
+
+#### QA-84-010 — the blocker question promises a better-fitting future offer that cannot happen
+
+**Severity:** Blocker. **Acceptance relationship:** owner addendum D-187 and the
+Round 2 attack requirement. **Type:** claim wider than evidence.
+
+**Exact reproduction:**
+
+1. From a store where the walk is on Now, press **Can't right now**.
+2. Before choosing any cause, read the note under _“What got in the way?”_
+3. It says: _“This is kept so the app can offer something that fits next time.
+   It is never read as you not wanting to.”_
+4. Choose **Can’t leave — someone’s in my care**. The durable record and its
+   withdrawal control work.
+5. Inspect the engine: as D-187 records, `applyConstraints` never reads blocker
+   constraints and no candidate `leansOn` a `blocker.*` concept.
+
+The note implies exactly the future adaptation D-187 forbids. Recording the
+cause is useful; claiming a better-fitting next offer is not supported.
+
+**Source boundary:** the adaptable branch in
+`src/intelligence/blockers.ts:284-290` composes the promise directly.
+
+**Existing tests that gave false confidence:**
+
+- The synthetic copy guard in
+  `destination-and-discovery.test.ts:1444-1499` blacklists only formulations
+  built around _stop_, _won't_, _no longer_, _avoid_ and _from now on_. It does
+  collect this live note, but its patterns do not match _offer something that
+  fits next time_.
+- `phase84.spec.ts` and `scripts/android-gate.mjs` use still narrower variants
+  of the same blacklist. Both passed while rendering the quoted promise.
+- The reintroduction proves only one already-listed phrase; it does not prove
+  the class _any claim of future recommendation adaptation_.
+
+### Mobile, verification and protected-scope result
+
+No touch-target, overflow, sticky-navigation, button-shift or console defect was
+found in the targeted mobile flows. The native time field required ordinary
+sequential entry before the weekday proposal became confirmable; once entered,
+the control and recurrence behaved correctly.
+
+| Gate | QA result |
+| --- | --- |
+| Aggregate `npm run verify` | **PASS** — 1,834 / 1,834 tests across 83 files; format, lint, typecheck and production build pass |
+| Full browser matrix | **PASS — 675 / 675**, 225 at each of 360, 430 and 1,280px; one worker; 13.4 minutes |
+| Deployed Android-style gate | **clean — 219 checks** against deployed `eaf4536`, using Node's system CA store |
+| Privacy scan | **clean — 286 tracked files** |
+| Block sweep and standing copy/no-score guards | **PASS inside the aggregate suite**; the D-187 promise guard is a demonstrated false green |
+| Checkpoint equivalence | **PASS** — deployed `eaf4536` is bundle-equivalent to `94e1716` |
+| CI at deployed head | **PASS** — workflow run `33138229085` completed successfully for `eaf4536` |
+| Commits on no remote at QA start | **one** — existing documentation-only `9bd99f5`; the tested product/deployed head is remote |
+
+The protected scope remains intact. The repair changed no scoring file or
+ranking weight, added no strategy evaluation or pattern-discovery engine,
+introduced no progression model beyond the three proving domains, did not make
+an arbitrary owner routine recommendable, added no historical backfill or
+twelfth domain page, changed no orchestrator, created no `PHASE_85_*` file, and
+did not alter `qa/WHOLE_APP_OWNER_USE_REVIEW.md`. Fatherhood, private structural
+guards, Timeline's passive role and all standing no-score protections remain as
+they were.
+
+---
+
+## Complete next handoff — repair after Round 2 FAIL
+
+**System:** Claude / builder.
+**Model:** Claude, Opus-class.
+**Intelligence level:** **Max** — this is audit-campaign repair across owner
+confirmation semantics, history representation, cold-start reachability and a
+copy guard that asserts the wrong class.
+**Conversation:** **CURRENT** — return to the original routing 84 Claude builder
+conversation, which owns the still-unresolved phase and its repairs.
+
+```text
+Routing Phase 84 repair after independent QA Round 2 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 2 is the independent QA
+retest and is authoritative for this repair. Keep the Phase field exactly 84.
+
+Keep routing 84 YELLOW. Do not start routing 90 and do not mark the phase GREEN.
+Repair QA-84-007 through QA-84-010 under canonical plan section 42: reproduce
+each defect, identify the whole class, write a regression, prove that regression
+fails when the defect is faithfully reintroduced, fix the root cause, and run
+the full gate on the final tracked checkpoint.
+
+Required outcomes:
+
+1. A genuinely empty first-run store must offer an ordinary owner route rather
+   than making QA Lab the only control on Now. Preserve truthful abstention: do
+   not invent a recommendation merely to fill the screen. Re-run the cold-store
+   owner-use path without QA Lab and enumerate every ordinary continuation.
+2. A Health destination milestone's confirmation must agree with what
+   `healthCandidates` now does. The repair must preserve the standalone Health
+   counterfactual, the absence of invented minutes, D-021, and the explicit
+   owner-routines-library deferral.
+3. Partial work must remain partial in every part of a rendered history entry,
+   including Timeline's tag. A full completion must still be distinguishable,
+   and part-done must remain resumable and later completable.
+4. No owner-visible blocker string may promise or imply future recommendation
+   adaptation while blocker constraints are capture-only. Replace the phrase
+   blacklist with a guard over the actual semantic class, and prove it fails on
+   the deployed wording QA found, not only on “stop suggesting.” Preserve the
+   durable caregiving cause and its withdrawal route; do not implement blocker
+   enforcement in this phase.
+
+Preserve every Round 2 pass: the Health ranking change itself, the part-done
+progress rung and sentence, naturally completed course rendering, the real
+weekly recurrence and later changed decision, the blank-milestone behavior,
+canonical section 54, all six ordinary authoring routes, correction/private
+semantics and the no-score guards. Preserve every explicit deferral and protected
+surface.
+
+Add deployed Android-style and three-width browser coverage for each repaired
+owner surface, including the complete Timeline row and the exact blocker note.
+Run the clean aggregate gate, full browser suite at 360/430/1280, privacy scan,
+block/copy sweeps, and deployed Galaxy-class Android gate. Deploy the repaired
+checkpoint, prove checkpoint equivalence if documentation moves the deployed
+SHA, append the builder's repair record and a complete retest prompt to this same
+QA report, and address that retest to the SAME Codex QA conversation at High.
+
+Do not create a PHASE_85_* file. Do not alter
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md. Do not ask the owner to paste file
+contents.
+```
+
+### Short launcher
+
+**Model:** Claude, Opus-class. **Level:** Max. **Conversation:** CURRENT — the
+original routing 84 builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 2 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 2
+repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
+routing 90. Do not ask me to paste the file contents.
+```
