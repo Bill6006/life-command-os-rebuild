@@ -1,0 +1,23 @@
+/**
+ * Types for {@link ./adaptation-claims.mjs}.
+ *
+ * The module itself is plain ESM because `scripts/android-gate.mjs` is a node
+ * script that cannot import TypeScript, and QA-84-010's finding was that the
+ * three gates had each grown their own narrower copy of the rule. One
+ * definition, three importers — and this file is what lets the two TypeScript
+ * importers see it as something other than `any`.
+ */
+
+/** The claims of future recommendation adaptation in one owner-visible string. */
+export function adaptationClaims(text: string): readonly string[]
+
+/** The strings among `strings` that make such a claim, with the fragments found. */
+export function claimingStrings(
+  strings: readonly string[],
+): readonly { readonly line: string; readonly claims: readonly string[] }[]
+
+/** Wordings the guard must catch, including the two that actually shipped. */
+export const MUST_BE_CAUGHT: readonly string[]
+
+/** Honest sentences the guard must leave alone. */
+export const MUST_BE_ALLOWED: readonly string[]

@@ -137,14 +137,30 @@ function groupsFrom(domains: readonly DomainCoverage[]): readonly Group[] {
 export function LifeScreen() {
   const memory = useMemory()
 
+  /*
+   * A store with nothing in it still has a situation — QA-84-007, D-189.
+   *
+   * This read `!memory.ready || memory.snapshot.records.length === 0`, and the
+   * second half was the defect. `assembleSituation` on an empty view is
+   * perfectly well defined — `InsightsScreen` has always called it that way,
+   * which is why the second agenda was the **only** thing an owner could reach
+   * on a first run. The record count was standing in for "there is nothing to
+   * say", and it also switched off every control that exists so he can write
+   * the first record.
+   *
+   * What is empty is the **report**, not the page. The panels below already
+   * say nothing when they have nothing: `DestinationPanel` renders its own
+   * "nothing named yet" line, `ProgressPanel` returns null on empty rungs, and
+   * `AuthoringPanel` never needed a history at all.
+   */
   const situation = useMemo(() => {
-    if (!memory.ready || memory.snapshot.records.length === 0) return undefined
+    if (!memory.ready) return undefined
     return assembleSituation(memory.view, {
       now: memory.now,
       zone: memory.zone,
       weekStartsOn: memory.weekStartsOn,
     })
-  }, [memory.ready, memory.snapshot, memory.view, memory.now, memory.zone, memory.weekStartsOn])
+  }, [memory.ready, memory.view, memory.now, memory.zone, memory.weekStartsOn])
 
   const coverage = situation?.coverage
 

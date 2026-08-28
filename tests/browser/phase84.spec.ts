@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { adaptationClaims } from '../../scripts/adaptation-claims.mjs'
 
 /**
  * Routing Phase 84, in a real browser — "what the owner is trying to become".
@@ -698,19 +699,27 @@ test.describe('owner addendum — “I can’t leave, someone’s in my care”'
 
     const asked = page.getByTestId('blocker-question')
     await expect(asked).toBeVisible()
+    /*
+     * The same rule the synthetic suite and the Android gate apply, from the
+     * same module — QA-84-010. Three narrower copies of one blacklist existed
+     * here, and all three passed while the deployed note promised *"the app can
+     * offer something that fits next time"*.
+     */
     const onScreen = await asked.innerText()
-    for (const promise of [/stop suggesting/i, /won.t suggest/i, /no longer suggest/i]) {
-      expect(onScreen, 'the question promised a change the engine cannot make').not.toMatch(promise)
-    }
+    expect(
+      adaptationClaims(onScreen),
+      'the question promised a change the engine cannot make',
+    ).toEqual([])
 
     await page.getByTestId('blocker-must-stay').click()
     await page.goto(`${APP}#/life/health-recovery`)
     const standing = page.getByTestId('domain-blocker')
     await expect(standing.first()).toBeVisible()
     const recorded = await standing.first().innerText()
-    for (const promise of [/stop suggesting/i, /won.t suggest/i, /no longer suggest/i]) {
-      expect(recorded, 'the record promised a change the engine cannot make').not.toMatch(promise)
-    }
+    expect(
+      adaptationClaims(recorded),
+      'the record promised a change the engine cannot make',
+    ).toEqual([])
   })
 })
 
@@ -752,5 +761,122 @@ test.describe('owner addendum — the discovery card says what it will do first'
     // Career has no aspiration on it: reading a proposal is not agreeing to one.
     await openCareer(page)
     await expect(page.locator('body')).not.toContainText('More money')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// QA round 2 — the four the retest found, on the screens they were found on
+// ---------------------------------------------------------------------------
+
+test.describe('what independent QA found on the repaired build', () => {
+  test('QA-84-007 — a first-run store offers ordinary ways on, not a developer tool', async ({
+    page,
+  }) => {
+    /*
+     * A genuinely fresh store: no scenario, no QA laboratory. The abstention is
+     * unchanged and is right — the engine will not guess — but abstaining from a
+     * recommendation is not the same as having nothing to offer.
+     */
+    await page.goto(APP)
+    await expect(page.getByRole('heading', { level: 1, name: 'Now' })).toBeVisible()
+    await expect(page.locator('.primary-surface__headline')).toContainText('no history here yet')
+
+    await expect(page.getByTestId('empty-to-insights')).toBeVisible()
+    await expect(page.getByTestId('empty-to-life')).toBeVisible()
+
+    // And nothing was invented to fill the screen.
+    await expect(page.getByTestId('now-actions')).toHaveCount(0)
+  })
+
+  test('QA-84-007 — and Life and its pages carry their controls on an empty store', async ({
+    page,
+  }) => {
+    await page.goto(`${APP}#/life`)
+    await expect(page.getByRole('heading', { level: 1, name: 'Life' })).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: 'Career & Learning' }),
+      'Life listed no areas on a first run',
+    ).toBeVisible()
+
+    await openCareer(page)
+    await expect(
+      page.getByTestId('destination-open'),
+      'the aspiration control was switched off by an empty history',
+    ).toBeVisible()
+    await expect(page.getByTestId('authoring-kinds')).toBeVisible()
+  })
+
+  test('QA-84-008 — what Health promises is what Health then does', async ({ page }) => {
+    /*
+     * The contradiction QA met in two consecutive screens: the form said the
+     * app would **not** start suggesting the step, and the next screen suggested
+     * it. Both halves are read here, in one case, in the order the owner met
+     * them.
+     */
+    await loadInQa(page, 'The first evening')
+    await page.goto(`${APP}#/life/health-recovery`)
+    await page.getByTestId('destination-open').click()
+    await page.getByTestId('destination-aim-input').fill('Build sustainable strength')
+    await page.getByTestId('destination-milestone-input').fill('Lift twice each week')
+
+    const form = page.getByTestId('destination-form')
+    const promise = await form.innerText()
+    expect(promise, 'the form still denies the suggestion it is about to make').not.toMatch(
+      /will not start suggesting/,
+    )
+    expect(promise).toMatch(/start suggesting it/)
+
+    await page.getByTestId('destination-save').click()
+    await expect(page.getByTestId('destination-aim')).toContainText('Build sustainable strength')
+
+    await go(page, 'Now')
+    await answerGuideWith(page, ['Enough', 'Nothing'])
+    await expect(
+      page.locator('.primary-surface__headline'),
+      'the step was promised and not proposed',
+    ).toContainText('Lift twice each week')
+  })
+
+  test('QA-84-009 — Timeline does not call a partial completion Done', async ({ page }) => {
+    await loadInQa(page, 'The first evening')
+    await go(page, 'Now')
+    await answerGuideWith(page, ['Enough', 'Nothing'])
+    const actions = page.getByTestId('now-actions')
+    await actions.getByRole('button', { name: 'Start it' }).click()
+    await expect(actions.getByRole('button', { name: 'Only part of it' })).toBeEnabled()
+    await actions.getByRole('button', { name: 'Only part of it' }).click()
+    await expect(page.locator('.rows')).toContainText('Part done')
+
+    await go(page, 'Timeline')
+    /*
+     * The whole row, not the sentence. The defect was that the tag and the
+     * sentence sat one above the other and said opposite things, so reading
+     * either one alone is how it survived a round.
+     */
+    const row = page
+      .locator('.timeline__entry, .tl-entry, li')
+      .filter({ hasText: 'Got part of the way' })
+      .first()
+    await expect(row).toBeVisible()
+    const text = await row.innerText()
+    expect(text, 'the tag above the sentence still says Done').not.toMatch(/\bDone\b/)
+    expect(text).toMatch(/Part done/)
+  })
+
+  test('QA-84-010 — the blocker note claims nothing the engine does not do', async ({ page }) => {
+    await loadInQa(page, 'The first evening')
+    await go(page, 'Now')
+    await answerGuideWith(page, ['Enough', 'Nothing'])
+    await page.getByTestId('now-actions').getByRole('button', { name: "Can't right now" }).click()
+
+    const asked = page.getByTestId('blocker-question')
+    await expect(asked).toBeVisible()
+    const note = await asked.innerText()
+
+    // The exact string QA read, gone.
+    expect(note).not.toMatch(/offer something that fits next time/)
+    expect(note).not.toMatch(/stop putting it in front of you/)
+    // And the class, from the module all three gates share.
+    expect(adaptationClaims(note), 'the note promised a future adaptation').toEqual([])
   })
 })

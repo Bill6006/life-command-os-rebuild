@@ -21,6 +21,8 @@
  */
 import { chromium, devices } from '@playwright/test'
 
+import { adaptationClaims } from './adaptation-claims.mjs'
+
 const BASE = process.argv[2] ?? 'https://bill6006.github.io/life-command-os-rebuild/preview/'
 
 /** A Galaxy S24-class context: touch, Android Chrome, device pixel ratio 3. */
@@ -1471,10 +1473,16 @@ async function main() {
   clearsThumb('that cause', (await r84MustStay.boundingBox())?.height)
 
   const r84Asked = await page.getByTestId('blocker-question').innerText()
+  /*
+   * The same rule the other two gates apply, from the same module — QA-84-010.
+   * This carried its own narrower copy of a phrase blacklist and passed while
+   * the note promised *"the app can offer something that fits next time"*.
+   */
+  const r84Claims = adaptationClaims(r84Asked)
   check(
     'and the question promises no change the engine cannot make — D-187',
-    !/stop suggesting|won.t suggest|no longer suggest|from now on/i.test(r84Asked),
-    r84Asked.replace(/\s+/g, ' ').trim().slice(0, 200),
+    r84Claims.length === 0,
+    r84Claims.join(' / ') || r84Asked.replace(/\s+/g, ' ').trim().slice(0, 200),
   )
   await sideways('Now, what was in the way')
 
@@ -1489,7 +1497,7 @@ async function main() {
   const r84Kept = await r84Standing.first().innerText()
   check(
     'which says what happened and nothing about what follows from it',
-    /in my care/.test(r84Kept) && !/stop suggesting|won.t suggest|no longer suggest/i.test(r84Kept),
+    /in my care/.test(r84Kept) && adaptationClaims(r84Kept).length === 0,
     r84Kept.replace(/\s+/g, ' ').trim(),
   )
   const r84Lift = page.getByTestId('domain-blocker-lift').first()
@@ -1499,6 +1507,76 @@ async function main() {
   await page.waitForSelector('[data-testid="domain-blocker"]', { state: 'detached' })
   check('one tap takes it back', true)
   await sideways('Health & Recovery, a standing blocker lifted')
+
+  /*
+   * ------------------------------------------------------------------------
+   * QA round 2 — the four the retest found, on a handset
+   * ------------------------------------------------------------------------
+   */
+
+  // ---- A first run offers an ordinary way on — QA-84-007 --------------------
+  await page.goto(BASE)
+  await page.waitForSelector('h1:has-text("Now")')
+  const r2Cold = await page.locator('.screen').innerText()
+  check(
+    'a first run still refuses to guess',
+    /no history here yet/i.test(r2Cold),
+    r2Cold.replace(/\s+/g, ' ').trim().slice(0, 120),
+  )
+  const r2ToInsights = page.getByTestId('empty-to-insights')
+  check(
+    'and offers an ordinary way on rather than a developer tool',
+    (await r2ToInsights.count()) === 1,
+  )
+  clearsThumb('the way on', (await r2ToInsights.boundingBox())?.height)
+  check(
+    'and invents no recommendation to fill the screen',
+    (await page.getByTestId('now-actions').count()) === 0,
+  )
+  await sideways('Now, on a first run')
+
+  await page.goto(`${BASE}#/life`)
+  await page.waitForSelector('h1:has-text("Life")')
+  const r2Areas = await page.getByRole('link', { name: /Career & Learning/ }).count()
+  check('Life lists its areas on an empty store', r2Areas === 1)
+  await page.goto(`${BASE}#/life/career`)
+  await page.waitForSelector('h1:has-text("Career")')
+  check(
+    'and the aspiration control is there before there is any history',
+    (await page.getByTestId('destination-open').count()) === 1,
+  )
+  await sideways('Career, on a first run')
+
+  // ---- Timeline does not contradict itself about extent — QA-84-009 ---------
+  await loadScenario('The first evening')
+  await openNow()
+  for (let taps = 0; taps < 4; taps += 1) {
+    if ((await page.getByTestId('now-actions').count()) > 0) break
+    const options = page.locator('.now-option')
+    if ((await options.count()) === 0) break
+    const enough = options.filter({ hasText: /Enough|Nothing/ })
+    await ((await enough.count()) > 0 ? enough.first() : options.first()).tap()
+    await page.waitForTimeout(150)
+  }
+  await page.getByTestId('now-actions').getByRole('button', { name: 'Start it' }).tap()
+  await page.getByTestId('now-actions').getByRole('button', { name: 'Only part of it' }).tap()
+  await page.waitForSelector('.rows')
+
+  await page.locator('.nav').getByRole('button', { name: 'Timeline' }).tap()
+  await page.waitForSelector('h1:has-text("Timeline")')
+  const r2Timeline = await page.locator('.screen').innerText()
+  const r2Row = (r2Timeline.match(/[^\n]*\n?[^\n]*Got part of the way[^\n]*/) ?? [''])[0]
+  check(
+    'the partial event reads as partial on Timeline',
+    /Got part of the way/.test(r2Timeline),
+    r2Timeline.replace(/\s+/g, ' ').trim().slice(0, 160),
+  )
+  check(
+    'and its tag does not say the opposite one line above it',
+    /Part done/.test(r2Row) && !/\bDone\b/.test(r2Row.replace(/Part done/g, '')),
+    r2Row.replace(/\s+/g, ' ').trim(),
+  )
+  await sideways('Timeline, a partial completion')
 
   // ---- The rest of the app is still standing --------------------------------
   for (const destination of ['Now', 'Life', 'Timeline', 'Insights']) {

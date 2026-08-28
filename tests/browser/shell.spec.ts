@@ -78,16 +78,39 @@ test.describe('mobile layout', () => {
 
   test('the fixed nav does not cover the end of the content', async ({ page }) => {
     await open(page, '#/life')
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 
+    /*
+     * Scroll and measure together, and keep doing it until it settles.
+     *
+     * This scrolled once and measured once, which was safe only while empty
+     * Life was a single short panel that could not grow. It can now: QA-84-007
+     * removed the record-count short-circuit, so the areas render on a
+     * first-run store and the page becomes taller **after** the heading appears.
+     * A single scroll then lands against the old height and the measurement
+     * reads a page that has since grown — a race, and one that reports the nav
+     * covering content it does not cover.
+     *
+     * The claim is unchanged and is still the real one: when the owner has
+     * scrolled as far as the page goes, the last panel is above the bar.
+     */
     const nav = page.locator('.nav')
     const lastPanel = page.locator('.panel').last()
 
-    const navBox = await nav.boundingBox()
-    const panelBox = await lastPanel.boundingBox()
-    expect(navBox).not.toBeNull()
-    expect(panelBox).not.toBeNull()
-    expect(panelBox!.y + panelBox!.height).toBeLessThanOrEqual(navBox!.y + 1)
+    await expect
+      .poll(
+        async () => {
+          await page.evaluate(() => {
+            const bottom = document.documentElement.scrollHeight
+            window.scrollTo(0, bottom)
+          })
+          const navBox = await nav.boundingBox()
+          const panelBox = await lastPanel.boundingBox()
+          if (navBox === null || panelBox === null) return null
+          return Math.round(panelBox.y + panelBox.height - navBox.y)
+        },
+        { message: 'the fixed nav covers the end of Life' },
+      )
+      .toBeLessThanOrEqual(1)
   })
 
   test('keyboard focus is visible on the navigation', async ({ page }) => {
@@ -241,9 +264,34 @@ test.describe('Life reports how each area stands', () => {
   })
 
   test('reports nothing at all rather than guessing, with no history loaded', async ({ page }) => {
+    /*
+     * The claim is unchanged; what proves it is not.
+     *
+     * This read the title of a panel that said the areas exist and that nothing
+     * could be reported about them. QA-84-007 removed the record-count
+     * short-circuit that produced it (D-189), because a screen with no controls
+     * on it was the whole of what a first-run owner was offered — so Life now
+     * lists its areas from an empty store and every one of them lands in
+     * **Nothing here yet**.
+     *
+     * That is the same statement made properly: the areas are named, none of
+     * them claims a standing, and nothing is asked of him. So the test asserts
+     * that rather than a panel title.
+     */
     await page.goto(`${APP_LIFE}#/life`)
     await expect(page.getByRole('heading', { level: 1, name: 'Life' })).toBeVisible()
-    await expect(page.locator('.panel__title').first()).toContainText('none of them optional')
+
+    const screen = page.locator('.screen')
+    await expect(screen, 'Life named no areas at all').toContainText('Career & Learning')
+    await expect(screen, 'an area was given a standing on an empty store').toContainText(
+      'Nothing here yet',
+    )
+
+    // And nothing invented: no area is urgent, catching up or going quiet when
+    // the app has never been told anything.
+    for (const claimed of ['Needs a check-in', 'Going quiet', 'Catching up', 'Recent']) {
+      await expect(screen, `an empty store produced “${claimed}”`).not.toContainText(claimed)
+    }
   })
 
   test('does not overflow sideways with eleven areas on screen', async ({ page }) => {

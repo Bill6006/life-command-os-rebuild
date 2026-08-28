@@ -237,6 +237,25 @@ function ResumePanel({
   )
 }
 
+/**
+ * The first screen of a first run — QA-84-007, D-189.
+ *
+ * ## What it said, and why that was the whole product in one screen
+ *
+ * *"There is no history here yet"*, and then one control: **Open the QA
+ * laboratory**. In production even that was hidden, so the first thing an
+ * ordinary owner met was a screen with nothing on it at all. The abstention is
+ * right and stays exactly as it was — the engine will not guess, and D-018 and
+ * G-009 are why. What was wrong is that **abstaining from a recommendation was
+ * treated as having nothing to offer**, and the two are not the same thing.
+ *
+ * ## So it names the ways on, and they are ordinary ones
+ *
+ * Both were already there and neither was reachable from here: the second
+ * agenda on Insights asks what he is aiming at, and Life is where every area's
+ * own page is. Nothing is invented to fill the screen — these are links to
+ * controls that exist, and the headline still says the app knows nothing.
+ */
 function EmptyNow() {
   return (
     <Screen title="Now">
@@ -246,6 +265,28 @@ function EmptyNow() {
           something plausible about a life it knows nothing about.
         </p>
       </PrimarySurface>
+
+      <Panel title="Where to start">
+        <p>
+          Nothing here needs filling in before the app is useful. The quickest way in is to answer
+          one thing about what you are aiming at — the app keeps your words exactly as you write
+          them, and tells you what it will make of them before it makes anything.
+        </p>
+        <p>
+          <a
+            className="qa-link"
+            href={hashForDestination('insights')}
+            data-testid="empty-to-insights"
+          >
+            Answer one thing about you
+          </a>
+        </p>
+        <p>
+          <a className="qa-link" href={hashForDestination('life')} data-testid="empty-to-life">
+            Or look at the areas of your life
+          </a>
+        </p>
+      </Panel>
 
       {isProduction ? null : (
         <Panel title="Try a life on">

@@ -6298,3 +6298,166 @@ sentence a surface composes inline is a sentence no test can hold to what is
 actually written.
 
 ---
+
+## D-189 — An empty history is a reason to report nothing, not a reason to offer nothing
+
+**Phase:** 84 (QA round 2 repair) · **Status:** Active
+
+A screen may not decide it has nothing to show because the store has no records
+in it. Readiness is a reason to wait; a record count is not. Where a screen
+assembles a situation, it assembles one from an empty view — which
+`assembleSituation` has always supported — and each panel says nothing for
+itself when it has nothing to say.
+
+**The defect this closes is the product's first impression.** `LifeScreen` and
+`DomainPage` both opened with
+
+    if (!memory.ready || memory.snapshot.records.length === 0) return undefined
+
+and that second clause switched off every control that exists **so the owner can
+write the first record**: the aspiration form, the six authoring controls, the
+area links. `InsightsScreen` never had it. So on a genuinely fresh store Life was
+blank, every domain page was blank, and Now — which correctly declines to guess —
+offered exactly one control: **Open the QA laboratory**. In production even that
+is hidden, so the first screen of the app was empty. QA-84-007.
+
+**Abstaining from a recommendation is not the same as having nothing to offer.**
+The abstention itself is right and is untouched: D-018 and G-009 mean the engine
+says it does not know rather than inventing something plausible. What was wrong
+was treating that silence as the whole of what the product had for him. Now keeps
+the headline and adds the ways on that already existed and were unreachable from
+it.
+
+**Nothing is invented to fill the screen**, and that is the boundary. The links
+go to controls that exist; no recommendation, no placeholder history and no
+suggested first move appears. A screen that abstains and then offers a route is
+honest; one that abstains and then guesses is the thing the abstention was for.
+
+**The guard is a source instrument**, `screensGatedOnRecordCount()`, because the
+defect was a condition rather than a rendering: it reports any file that
+assembles a situation and also gates on the store's record count. It reads the
+**store's** emptiness specifically — `Discovery.tsx` checks whether a _built
+result_ is empty before writing, which is a different claim and a correct one.
+
+---
+
+## D-190 — A confirmation that describes engine behaviour is re-read whenever that behaviour moves
+
+**Phase:** 84 (QA round 2 repair) · **Status:** Active
+
+Where the app tells the owner what it will do before it does it, that sentence is
+a claim about the engine, and it is only true of the engine as it stands. When a
+generator, a ranking or a reader changes what the app does, **every confirmation
+describing that behaviour is part of the change** — and the test that protects it
+must hold both halves at once.
+
+**Why this needed saying.** QA-84-001 made `healthCandidates` propose a Health
+destination's next milestone. The confirmation on the form that creates that
+milestone said _"The app will know it is what you are working towards; it will
+not start suggesting it"_ — accurate before the repair, false after it, and false
+within the same round. The owner read that sentence and then, on the next screen,
+was suggested the step. QA-84-008.
+
+**Two green tests held it open, and that is the instructive part.** One asserted
+the Health sentence contained _"will not start suggesting it"_. Another proved the
+same step becomes a candidate. Each was true; together they were a contradiction,
+and nothing in either could see the other. **A pair of tests that each hold one
+half of a contradiction will never fail.** So the regression reads the
+confirmation and then makes the app do the thing, on one path, and compares.
+
+**The wording carries the condition the generator actually applies.** Health's
+generator returns nothing at all unless the body has something to spend, so the
+sentence says so rather than promising a suggestion that a run of bad nights
+would not produce. And it remains squarely outside AUD-0045: this sentence is
+only ever composed for a **destination's next step**, which is the one routine
+the app proposes; a routine the owner introduces through the authoring control is
+still never suggested, and that form's own sentence still says so, truthfully.
+
+---
+
+## D-191 — A rendered history entry is one statement
+
+**Phase:** 84 (QA round 2 repair) · **Status:** Active
+
+A tag and the sentence beneath it are one thing the owner reads, not two things
+that may disagree. Where a record carries a distinction the owner made, every
+part of its rendered entry carries it.
+
+**The round 1 repair is the argument for the rule.** _"Only part of it"_ was
+being counted as a completed session and called _Followed through_. The repair
+gave a partial completion its own progress rung and its own sentence, and left
+the tag alone with a comment arguing that a tag is one word and the sentence
+carries the meaning. On Timeline the tag sits **directly above** the sentence, so
+the entry read
+
+    Done
+    Got part of the way — getting out for a walk.
+
+QA-84-009. The owner's own distinction, contradicted inside a single row, by a
+repair that had just been made for that distinction.
+
+**`TAGS` is keyed on record kind, and a kind is not always one thing.** Two
+entries of one kind can be different things to the owner — a completion and a
+partial completion are the plainest case. So `tagFor(kind)` remains for the
+exhaustiveness sweep, which is a claim about the schema, and `tagOf(record)` is
+what a surface renders, which is a claim about an entry.
+
+**The guard is over the library rather than the case**: for every record in every
+scenario, the tag and the sentence may not disagree about extent. That is the
+class — _a rendered entry contradicting itself_ — rather than the one contradiction
+that was found.
+
+---
+
+## D-192 — A guard against a promise asserts the class, in one place
+
+**Phase:** 84 (QA round 2 repair) · **Status:** Active
+
+Where a rule forbids a kind of claim, the guard is written over the **class** of
+claim and lives in **one module** that every gate imports. A list of phrases is
+not a guard; it is a record of the wordings somebody already thought of.
+
+**D-187 said the blocker path may not promise a future adaptation. The guard
+written with it blacklisted five formulations** built around _stop_, _won't_, _no
+longer_, _avoid_ and _from now on_. On the deployed build the note under _"What
+got in the way?"_ said
+
+    This is kept so the app can offer something that fits next time.
+
+and a second branch said _"so the app can stop putting it in front of you at the
+wrong moment."_ The guard **collected the first string** and did not match it.
+Three narrower copies of that same list existed — in the synthetic suite, the
+browser suite and the Android gate — and all three passed while the promise
+rendered. QA-84-010.
+
+**The class has three parts** and `scripts/adaptation-claims.mjs` asks for all
+three rather than for a sentence: an **actor** (the app, or an unnamed _it_), a
+**modality that is not the present** (_can_, _will_, _would_, _next time_, _from
+now on_, _later_, _again_), and an **adaptation verb** — something about what is
+put in front of him. The cross product is a few hundred formulations from three
+short lists, and it catches wordings nobody wrote down.
+
+**No negation exemption.** The first draft carried a list of negators that
+cancelled a match, and it immediately let through _"the app will no longer put
+this in front of you"_ — reading the _no_ in _no longer_ as a denial. **A negated
+promise is still a promise.** Honest denials pass on their own merits, because
+they contain no adaptation verb: _"there is nothing the app would do differently"_
+is about doing nothing.
+
+**It is plain ESM under `scripts/`** for one reason: `scripts/android-gate.mjs`
+cannot import TypeScript, and the finding was that the three gates had drifted
+into three different rules. A guard that says different things in different places
+is not a guard.
+
+**Scope is the path, not the vocabulary.** _"The app will know it exists and can
+refer to it; it will not start suggesting it"_ is the authoring form's sentence
+about a routine and is **true** — AUD-0045 means an owner routine genuinely is
+never suggested. The rule is not "never speak of the future"; it is "not on a path
+where nothing acts".
+
+**And the reintroduction proves the class, not the case.** The old guard passed
+its own reintroduction — one already-listed phrase — while the shipped string
+sailed through it. The exported `MUST_BE_CAUGHT` names the two strings QA read off
+the build, so a future pass cannot be earned by catching only the generic examples.
+
+---

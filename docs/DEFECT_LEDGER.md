@@ -39,6 +39,139 @@ None.
 
 ## Fixed
 
+### DEF-0127 — a promise the engine cannot keep, and the guard written to stop it
+
+- Status: Fixed
+- Severity: Blocker — the exact class D-187 was written to prevent, on the screen
+  D-187 is about, already in the tree when D-187 was written
+- Found in: routing 84 / `94e1716`
+- Found by: **independent QA round 2** (QA-84-010), reading the note under
+  _"What got in the way?"_ on the deployed build
+- Class: **a copy guard that asserts the phrases somebody thought of rather than
+  the claim the rule forbids** — and, beneath it, _the same rule maintained
+  separately in three gates_.
+- Reproduction: from a store where the walk is on Now, press **Can't right now**
+  and read the note before choosing a cause. It said _"This is kept so the app
+  can offer something that fits next time."_ A second branch, reached after a
+  move has failed to fit more than once, said _"so the app can stop putting it in
+  front of you at the wrong moment."_ Nothing performs either: `applyConstraints`
+  never reads `situation.constraints`, and `cautionsFor` matches a constraint's
+  concept against a candidate's `leansOn`, which never holds a `blocker.*`
+  concept.
+- Root cause: the copy predates D-187 and was never swept, because the sweep
+  written **with** D-187 blacklisted five formulations — _stop_, _won't_, _no
+  longer_, _avoid_, _from now on_ — and neither string contains any of them. The
+  synthetic guard collected the live note and did not match it. The browser suite
+  and the Android gate each carried a narrower copy of the same list.
+- Repair: both notes now say what is recorded and where, and nothing about what
+  follows. The guard is `scripts/adaptation-claims.mjs` — actor × non-present
+  modality × adaptation verb — in one module imported by all three gates.
+- Regression: `tests/synthetic/destination-and-discovery.test.ts` — _"QA-84-010 —
+  nothing on the blocker path claims the app will change what it offers"_ and
+  _"— and the guard catches the wording that shipped, not only the one it was
+  written for"_; `tests/browser/phase84.spec.ts` and `scripts/android-gate.mjs`
+  assert the same module against the deployed strings. Proved by reintroducing
+  the exact deployed note in both the synthetic and browser gates.
+- Siblings: checked. The repeated-inability branch carried its own promise and is
+  repaired with it; the silent branch's _"there is nothing the app would do
+  differently"_ is a denial and correctly survives. The authoring form's _"it will
+  not start suggesting it"_ about a routine is **true** (AUD-0045) and is outside
+  this guard's path by design.
+
+### DEF-0126 — Timeline called a partial completion "Done", one line above a sentence saying otherwise
+
+- Status: Fixed
+- Severity: Blocker — the owner's own distinction, contradicted inside a single
+  rendered row
+- Found in: routing 84 / `94e1716`
+- Found by: independent QA round 2 (QA-84-009)
+- Class: **a rendered entry that contradicts itself**, from a table keyed on
+  record kind where the kind is not the whole of what an entry is.
+- Reproduction: **The first evening**, answer **Enough**, **Start it**, then
+  **Only part of it**. Now says **Part done**; Health & Recovery says **Got part
+  way**; Timeline shows the tag **Done** directly above _"Got part of the way —
+  getting out for a walk."_
+- Root cause: `TAGS['action-completion']` is `'Done'` and the table is keyed on
+  kind alone. The round 1 repair fixed the sentence and left the tag, with a
+  comment arguing that a tag is one word and a domain page shows no tag at all —
+  which was true of the domain page and false of Timeline, where the two sit one
+  above the other.
+- Repair: `tagOf(record)` returns `'Part done'` for a partial completion and is
+  what every surface renders; `tagFor(kind)` stays for the schema's
+  exhaustiveness sweep.
+- Regression: `tests/synthetic/destination-and-discovery.test.ts` — _"QA-84-009 —
+  and no rendered entry in the library contradicts itself about extent"_, which
+  walks every record in every scenario rather than this one case; plus the
+  deployed Timeline row in `phase84.spec.ts` and `scripts/android-gate.mjs`.
+  Proved by reintroduction in both.
+- Siblings: checked — the export composer used the same tag and now uses `tagOf`.
+  No other record kind carries an extent today; the library sweep is what will
+  see the next one.
+
+### DEF-0125 — the Health form promised the app would not suggest the step, then it suggested it
+
+- Status: Fixed
+- Severity: Blocker — a false pre-action consequence, on the path D-173 protects
+- Found in: routing 84 / `94e1716`
+- Found by: independent QA round 2 (QA-84-008)
+- Class: **a confirmation describing an engine behaviour that has since moved**,
+  with no compiler edge between the two and a pair of tests each holding one half.
+- Reproduction: on Health & Recovery, name the destination _"Build sustainable
+  strength"_ with next step _"Lift twice each week"_. The form says _"The app will
+  know it is what you are working towards; it will not start suggesting it."_
+  Save, return to Now, answer **Enough** — Now says _"Get some movement in: Lift
+  twice each week."_
+- Root cause: `describeMilestone` was written when Health's milestone was inert.
+  QA-84-001's repair made `healthCandidates` propose exactly that milestone, which
+  is the whole of that repair, and the sentence was not re-read.
+- Repair: the Health wording now says the app will start suggesting it **on
+  evenings there is something to spend on it**, which is the condition the
+  generator actually applies.
+- Regression: `tests/synthetic/destination-and-discovery.test.ts` — _"QA-84-008 —
+  no confirmation denies a suggestion the app then makes"_, which reads the
+  sentence and then makes the app do the thing, for every proving domain, in one
+  test; and `phase84.spec.ts` reads the form and the resulting headline in one
+  browser case. Proved by reintroducing the old sentence.
+- Siblings: checked. Career's and Money's sentences promise a suggestion and their
+  generators make one. The authoring form's routine sentence still says the app
+  will not suggest it, and that is still true — AUD-0045 is untouched.
+
+### DEF-0124 — the first screen of a first run offered only a developer tool
+
+- Status: Fixed
+- Severity: Major — the product's first impression, and in production a screen
+  with nothing on it at all
+- Found in: routing 84 / `94e1716`
+- Found by: independent QA round 2 (QA-84-007), in the manual cold-store
+  owner-use check
+- Class: **a screen treating an empty history as an empty page**, and so
+  switching off the controls that exist to end the emptiness.
+- Reproduction: open the deployed Preview in a genuinely fresh store without
+  opening the QA laboratory. Now says _"There is no history here yet"_ and its
+  only control is **Open the QA laboratory** — hidden in production, leaving
+  nothing. Life exposes no area links. Every domain page says _"Nothing loaded"_.
+  Insights is the only ordinary route that continues, because it is the only one
+  that never had the guard.
+- Root cause: `LifeScreen` and `DomainPage` both opened with `if (!memory.ready ||
+memory.snapshot.records.length === 0) return undefined`. The second clause is
+  not a readiness check.
+- Repair: both now gate on readiness alone, as `InsightsScreen` always has, and
+  Now's abstention names the ordinary ways on — the second agenda, and Life —
+  without inventing a recommendation.
+- Regression: `tests/synthetic/destination-and-discovery.test.ts` —
+  _"QA-84-007 — no screen decides it has nothing to offer because the store is
+  empty"_, a source instrument over every feature file that assembles a
+  situation, plus a test that every domain page assembles from an empty store;
+  browser cases for the first-run Now, Life and Career; and the same walk in the
+  deployed Android gate. Proved by reintroduction.
+- Siblings: checked with the instrument rather than by reading — it reports every
+  file that assembles a situation and gates on the store's record count, and
+  reports none. `Discovery.tsx`'s check that a _built result_ is non-empty is a
+  different claim and is correct.
+- Note on scope: QA-84-007 came from a manual cold-store owner-use check that no
+  automated gate performed, which is why it took nine rounds of green gates and a
+  person with a fresh browser to find.
+
 ### DEF-0123 — the discovery card wrote an aspiration without ever proposing one
 
 - Status: Fixed

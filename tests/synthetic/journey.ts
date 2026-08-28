@@ -1413,6 +1413,47 @@ function takesAMoment(parameters: string): boolean {
 // ---------------------------------------------------------------------------
 
 /**
+ * A screen that decides it has nothing to offer because the store is empty.
+ *
+ * QA-84-007's class, read off the tree. `LifeScreen` and `DomainPage` both
+ * assembled their situation behind
+ *
+ *     if (!memory.ready || memory.snapshot.records.length === 0) return undefined
+ *
+ * and the second half of that condition is not a readiness check — it is a
+ * judgement that an empty history means an empty page. It switched off every
+ * control that exists so the owner can write the first record, on the two
+ * screens those controls live on, which is why a first-run Now offering only
+ * the QA laboratory was the *whole* of what the product offered.
+ *
+ * `InsightsScreen` never had it. That is the shape of the rule: readiness is a
+ * reason to wait, a record count is not.
+ */
+export interface RecordCountGate {
+  readonly file: string
+  readonly guard: string
+}
+
+export function screensGatedOnRecordCount(): readonly RecordCountGate[] {
+  const out: RecordCountGate[] = []
+  for (const file of filesUnder(join(ROOT, 'src', 'features'))) {
+    const code = withoutComments(readFileSync(file, 'utf8'))
+    if (!code.includes('assembleSituation(')) continue
+    /*
+     * The **store's** emptiness, not any array's. `Discovery.tsx` checks
+     * `built.records.length === 0` before writing, which is a different claim
+     * and a correct one: nothing is recorded as answered that produced nothing.
+     */
+    for (const match of code.matchAll(
+      /(?:memory\.)?snapshot\.records\.length\s*(?:===|<=?)\s*0/g,
+    )) {
+      out.push({ file: relativeToRoot(file), guard: match[0] })
+    }
+  }
+  return out.sort((a, b) => a.file.localeCompare(b.file))
+}
+
+/**
  * The shape a propose-and-confirm control returns, named the way `BUNDLE` is.
  *
  * A second proposal type is an edit here with a sentence saying why — the same

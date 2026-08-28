@@ -97,11 +97,9 @@ const TAGS = {
   decision: 'Decision',
   'action-recommendation': 'Suggested',
   'action-start': 'Started',
+  // What a whole completion is called. A partial one is {@link PART_DONE_TAG},
+  // which this table cannot express because it is keyed on kind alone.
   'action-completion': 'Done',
-  // The tag stays 'Done' for both, and the **sentence** carries the extent —
-  // QA-84-002. A tag is one word on a chronological list and a domain page's
-  // "Recently" shows no tag at all, so a distinction that lived only there
-  // would be invisible on the surface the defect was reported from.
   'action-decline': 'Passed',
   'action-unable-now': 'Not then',
   outcome: 'Result',
@@ -128,8 +126,46 @@ const TAGS = {
   'imported-legacy-record': 'Kept',
 } as const satisfies Record<CanonicalRecord['kind'], string>
 
+/**
+ * The tag for a **kind**, which is what the exhaustiveness sweep asks for.
+ *
+ * Every record kind has one, and a twenty-first kind is a compile error here
+ * rather than an undefined tag on whichever history contains it. What it cannot
+ * answer is what a particular *entry* is called, because two entries of one kind
+ * are not always the same thing — see {@link tagOf}.
+ */
 export function tagFor(kind: CanonicalRecord['kind']): string {
   return TAGS[kind]
+}
+
+/**
+ * What a partial completion is called, wherever it is named — QA-84-009.
+ *
+ * The same two words Now puts on the row he can pick back up, because one thing
+ * should have one name on every screen that shows it (D-178's discipline,
+ * applied to copy).
+ */
+const PART_DONE_TAG = 'Part done'
+
+/**
+ * The tag **an entry** carries, extent included — QA-84-009.
+ *
+ * The round 1 repair gave a partial completion its own sentence and left the
+ * tag alone, on the argument that a tag is one word and the sentence carries the
+ * meaning. That was wrong in the plainest possible way: on Timeline the two sit
+ * one above the other, so the entry read
+ *
+ *     Done
+ *     Got part of the way — getting out for a walk.
+ *
+ * and the owner's own distinction was contradicted inside a single row. **A
+ * rendered entry is one statement**, not a tag and a sentence that may disagree,
+ * and `history-agrees-with-itself` in `timeline.test.ts` is the guard that says
+ * so for every record in the library rather than for this one case.
+ */
+export function tagOf(record: CanonicalRecord): string {
+  if (record.kind === 'action-completion' && record.extent === 'partial') return PART_DONE_TAG
+  return TAGS[record.kind]
 }
 
 function lowerFirst(text: string): string {
@@ -300,7 +336,7 @@ export function describeRecord(
   context: DescribeContext,
 ): DescribedRecord | undefined {
   const { entities, history, concepts, policy } = context
-  const tag = tagFor(record.kind)
+  const tag = tagOf(record)
   const origin = originOf(record)
 
   if (!mayShowDetail(record.privacy, policy)) {

@@ -36,7 +36,20 @@ import { snapshotFromWire } from '../../src/memory/snapshot'
 import { buildView } from '../../src/memory/view'
 import { SCENARIOS } from '../../src/synthetic/scenarios'
 import { ownerPhrase } from '../../src/domain/recommendation'
-import { everyAuthoringSurface, openJourney, PROPOSES_ELSEWHERE, type JourneyApp } from './journey'
+import {
+  everyAuthoringSurface,
+  openJourney,
+  PROPOSES_ELSEWHERE,
+  screensGatedOnRecordCount,
+  type JourneyApp,
+} from './journey'
+import {
+  adaptationClaims,
+  MUST_BE_ALLOWED,
+  MUST_BE_CAUGHT,
+} from '../../scripts/adaptation-claims.mjs'
+import { describeRecord, tagOf } from '../../src/features/history/describe'
+import { assembleDomainPageData, LIFE_PAGES } from '../../src/features/life/domainPages'
 
 /** The first evening, opened and answered the way an evening opens. */
 async function eveningIn(): Promise<JourneyApp> {
@@ -1677,7 +1690,7 @@ describe('owner addendum — the discovery card stops bypassing the confirmation
     for (const [domain, expected] of [
       [DOMAIN.career, 'currently studying'],
       [DOMAIN.money, 'money thing that is open'],
-      [DOMAIN.health, 'will not start suggesting it'],
+      [DOMAIN.health, 'start suggesting it on evenings there is something to spend'],
     ] as const) {
       const sentence = milestoneConfirmation('Finish the AWS course', domain, 'that area')
       expect(sentence).toContain('Finish the AWS course')
@@ -1745,5 +1758,234 @@ describe('owner addendum — the discovery card stops bypassing the confirmation
         !PROPOSES_ELSEWHERE.some((exempt) => exempt.file === asItWas.file),
       'the guard would have passed the bug it was written for',
     ).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// QA-84 round 2 — the four the retest found
+// ---------------------------------------------------------------------------
+
+describe('QA-84 round 2 — the repairs', () => {
+  it('QA-84-007 — no screen decides it has nothing to offer because the store is empty', () => {
+    /*
+     * The finding is one clause in two files rather than one screen's copy.
+     * `LifeScreen` and `DomainPage` both began
+     *
+     *     if (!memory.ready || memory.snapshot.records.length === 0) return undefined
+     *
+     * and the second half switched off every control that exists so the owner
+     * can write the first record. `InsightsScreen` never had it, which is
+     * exactly why the second agenda was the only thing QA could reach on a
+     * first run — and why Now's only control was a developer tool.
+     *
+     * Readiness is a reason to wait. A record count is not.
+     */
+    const gated = screensGatedOnRecordCount()
+    expect(
+      gated.map((screen) => `${screen.file} gates on ${screen.guard}`),
+      'a screen treats an empty history as an empty page',
+    ).toEqual([])
+  })
+
+  it('QA-84-007 — and every ordinary control assembles from a store with nothing in it', () => {
+    /*
+     * The other half: removing the guard is only worth doing if what was behind
+     * it works. `assembleSituation` on an empty view is well defined — it is the
+     * call `InsightsScreen` has always made — and each domain page assembles
+     * its own data from it.
+     */
+    const moment = {
+      now: instant(Date.parse('2026-05-06T20:00:00Z')),
+      zone: timeZone('America/Denver'),
+      weekStartsOn: 1 as const,
+    }
+    const empty = snapshotFromWire({ schemaVersion: 1, records: [], entities: [] })
+    const situation = assembleSituation(buildView(empty.snapshot, moment), moment)
+
+    expect(situation.coverage.domains.length, 'Life had no areas to list').toBeGreaterThan(0)
+    for (const page of LIFE_PAGES) {
+      const data = assembleDomainPageData(situation, page)
+      expect(data, `${page.slug} could not assemble from an empty store`).toBeDefined()
+    }
+
+    // And the aspiration control belongs on the proving domains, which is the
+    // route a cold-store owner actually needs.
+    const career = LIFE_PAGES.find((page) => page.slug === 'career')
+    expect(career, 'the Career page is gone').toBeDefined()
+    expect(career!.domains.some((domain) => PROVING_DOMAINS.includes(domain))).toBe(true)
+  })
+
+  it('QA-84-008 — no confirmation denies a suggestion the app then makes', async () => {
+    /*
+     * The class, and why two green tests held it open.
+     *
+     * One test asserted the Health sentence contained *"will not start
+     * suggesting it"*. Another proved the same step becomes a candidate. Each
+     * was true on its own; together they were a contradiction the owner met in
+     * two consecutive screens, and neither test could see the other.
+     *
+     * So this reads the confirmation and then **makes the app do the thing**, on
+     * one path, for every proving domain.
+     */
+    const contradictions: string[] = []
+    for (const domain of PROVING_DOMAINS) {
+      const app = await eveningIn()
+      const area = app.situation().domains.labelFor(domain)
+      const step = `Lift twice each week`
+      const sentence = milestoneConfirmation(step, domain, area)
+
+      const named = await app.nameDestination({
+        aim: `Something better in ${area}`,
+        domain,
+        milestone: step,
+      })
+      expect(named.done, named.note).toBe(true)
+
+      const onScreen = sentenceOf(app)
+      const suggested = onScreen.includes(step)
+      const denied = /not start suggesting/.test(sentence)
+      if (denied && suggested) {
+        contradictions.push(`${area}: “${sentence}” — and then Now said “${onScreen}”`)
+      }
+
+      // Health is the one the repair changed, and its half has to hold rather
+      // than merely not contradict: the step is named, and the sentence says so.
+      if (domain === DOMAIN.health) {
+        expect(sentence, 'the Health confirmation still denies the suggestion').toContain(
+          'start suggesting it',
+        )
+        expect(onScreen, 'the Health milestone was promised and not proposed').toContain(step)
+      }
+    }
+    expect(contradictions, 'a confirmation described the behaviour before the repair').toEqual([])
+  })
+
+  it('QA-84-009 — a partial completion is partial in the tag as well as the sentence', async () => {
+    const app = await eveningIn()
+    await app.act('start')
+    const part = await app.act('part-done')
+    expect(part.done, part.note).toBe(true)
+
+    const completion = app
+      .snapshot()
+      .records.filter((record) => record.kind === 'action-completion')
+      .at(-1)
+    expect(completion, 'nothing recorded the partial completion').toBeDefined()
+    expect(tagOf(completion!), 'Timeline still calls it Done').toBe('Part done')
+  })
+
+  it('QA-84-009 — and no rendered entry in the library contradicts itself about extent', () => {
+    /*
+     * The class rather than the case: **a rendered entry is one statement.** On
+     * Timeline the tag sits directly above the sentence, so an entry whose tag
+     * says one thing and whose sentence says another is a contradiction inside a
+     * single row — which is what the round 1 repair left, having fixed the
+     * sentence and argued that a tag was only one word.
+     */
+    const contradictions: string[] = []
+    for (const entry of SCENARIOS) {
+      const loaded = snapshotFromWire(entry.build())
+      const moment = { now: entry.now, zone: entry.zone, weekStartsOn: entry.weekStartsOn ?? 1 }
+      const view = buildView(loaded.snapshot, moment)
+      const situation = assembleSituation(view, moment)
+      const context = {
+        entities: situation.entities,
+        history: view.history,
+        concepts: situation.concepts,
+        policy: { surface: 'inspection' as const, revealPrivate: false },
+      }
+      for (const record of view.history.effective) {
+        const described = describeRecord(record, context)
+        if (described === undefined) continue
+        const saysPart = /part of the way|part done/i.test(described.text)
+        const tagSaysPart = /part/i.test(tagOf(record))
+        if (saysPart !== tagSaysPart) {
+          contradictions.push(`${entry.id}: “${tagOf(record)}” above “${described.text}”`)
+        }
+      }
+    }
+    expect(contradictions, 'a rendered entry disagrees with itself about extent').toEqual([])
+  })
+
+  it('QA-84-010 — nothing on the blocker path claims the app will change what it offers', async () => {
+    /*
+     * The guard QA asked for: **the class, not the phrases.**
+     *
+     * The old one blacklisted five formulations around *stop*, *won't*, *no
+     * longer*, *avoid* and *from now on*. It collected the live note and did not
+     * match it, because the note said *"so the app can offer something that fits
+     * next time"*. Three copies of that list existed — synthetic, browser,
+     * Android — and all three passed while the promise rendered.
+     *
+     * `adaptationClaims` asks for an actor, a modality that is not the present,
+     * and a verb about what is put in front of him. One definition, in
+     * `scripts/adaptation-claims.mjs`, imported by all three gates.
+     *
+     * It is scoped to **this path** deliberately. *"The app will know it exists
+     * and can refer to it; it will not start suggesting it"* is the authoring
+     * form's sentence about a routine, and it is **true** — AUD-0045 means an
+     * owner routine genuinely is never suggested. The rule is not "never speak
+     * of the future"; it is "not on a path where nothing acts".
+     */
+    const strings: string[] = []
+    for (const cause of BLOCKER_CAUSES) {
+      const option = BLOCKER_OPTIONS[cause]
+      strings.push(option.label, option.statement('a walk'))
+    }
+
+    const app = await eveningIn()
+    await app.act('unable-now')
+    const asked = app.blockerFor()
+    if (asked?.ask === true) strings.push(asked.prompt, asked.note)
+    await app.sayWhatBlocked('must-stay')
+    const silent = app.blockerFor()
+    if (silent?.ask === false) strings.push(silent.detail)
+    for (const constraint of app.situation().constraints) strings.push(constraint.description)
+
+    /*
+     * And the branch a repeated inability reaches, which carried a promise of
+     * its own that QA did not have to quote because the first one was enough.
+     */
+    const repeated = await eveningIn()
+    for (let evenings = 0; evenings < 3; evenings += 1) {
+      await repeated.act('unable-now')
+      const step = repeated.blockerFor()
+      if (step?.ask === true) strings.push(step.prompt, step.note)
+      if (step?.ask === false) strings.push(step.detail)
+      repeated.travelDays(1)
+    }
+
+    const claiming = strings
+      .map((line) => ({ line, claims: adaptationClaims(line) }))
+      .filter((found) => found.claims.length > 0)
+
+    expect(
+      claiming.map((found) => `${found.line} → ${found.claims.join(' / ')}`),
+      'the blocker path promised an adaptation the engine does not perform',
+    ).toEqual([])
+    expect(strings.length, 'the sweep read nothing, so it proved nothing').toBeGreaterThan(10)
+  })
+
+  it('QA-84-010 — and the guard catches the wording that shipped, not only the one it was written for', () => {
+    /*
+     * The reintroduction, done properly. The old guard passed its own
+     * reintroduction test — one already-listed phrase — while the deployed
+     * string sailed through it. So the proof is the two strings QA actually read
+     * off the build, the round 1 phrase, and wordings nobody wrote down.
+     */
+    for (const line of MUST_BE_CAUGHT) {
+      expect(adaptationClaims(line), `not caught: “${line}”`).not.toEqual([])
+    }
+    for (const line of MUST_BE_ALLOWED) {
+      expect(adaptationClaims(line), `wrongly caught: “${line}”`).toEqual([])
+    }
+
+    // Named, so this cannot pass by catching only the generic examples.
+    expect(MUST_BE_CAUGHT).toContain(
+      'This is kept so the app can offer something that fits next time. It is never read as you not wanting to.',
+    )
+    expect(MUST_BE_CAUGHT).toContain(
+      'This is kept so the app can stop putting it in front of you at the wrong moment.',
+    )
   })
 })

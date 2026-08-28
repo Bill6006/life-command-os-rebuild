@@ -268,7 +268,15 @@ export function blockerQuestionFor(
       ask: true,
       because: 'repeatedly-blocked',
       prompt: `${moveName} has not fitted more than once. What is getting in the way?`,
-      note: 'This is kept so the app can stop putting it in front of you at the wrong moment.',
+      /*
+       * What is recorded, and where — QA-84-010, D-192.
+       *
+       * This said *"so the app can stop putting it in front of you at the wrong
+       * moment"*, which is a promise nothing keeps: no reader anywhere consults
+       * a blocker constraint. D-187 said not to write sentences like this one
+       * and the sentence was already in the tree when D-187 was written.
+       */
+      note: 'This is kept with the evening it happened on, and shown on the area it belongs to.',
       options: Object.values(BLOCKER_OPTIONS),
     }
   }
@@ -285,7 +293,15 @@ export function blockerQuestionFor(
     ask: true,
     because: 'adaptable',
     prompt: 'What got in the way?',
-    note: 'This is kept so the app can offer something that fits next time. It is never read as you not wanting to.',
+    /*
+     * The string QA read off the deployed build — QA-84-010.
+     *
+     * *"so the app can offer something that fits next time"*: the exact future
+     * adaptation D-187 forbids, promised on the screen D-187 is about. The
+     * second sentence is kept because it is true and is the point — an inability
+     * is not a preference (D-045).
+     */
+    note: 'This is kept on the area it belongs to, where you can take it back. It is never read as you not wanting to.',
     options: Object.values(BLOCKER_OPTIONS),
   }
 }

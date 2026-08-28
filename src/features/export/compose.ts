@@ -17,7 +17,7 @@ import { insightsFor, type InsightsReport } from '../../intelligence/insights'
 import { assembleSituation, type Situation } from '../../intelligence/situation'
 import type { RecordId } from '../../domain/ids'
 import { evidenceSourceOf, type ProvenanceSource } from '../../domain/records'
-import { describeRecord, tagFor, type DescribeContext } from '../history/describe'
+import { describeRecord, tagOf, type DescribeContext } from '../history/describe'
 import { originOfSources, type RecordOrigin } from '../history/origin'
 import type { HistorySource } from '../memory/memoryContext'
 import { assembleTimeline, type TimelineData } from '../timeline/timelineEntries'
@@ -864,7 +864,7 @@ function privateSection(request: ExportRequest): readonly string[] {
     lines.push(
       bullet(
         withOrigin(
-          `${localDayIdAt(record.occurredAt, record.zone)} · ${tagFor(record.kind)}: ${described.text}`,
+          `${localDayIdAt(record.occurredAt, record.zone)} · ${tagOf(record)}: ${described.text}`,
           described.origin,
         ),
       ),

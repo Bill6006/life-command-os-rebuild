@@ -746,7 +746,37 @@ export function milestoneConfirmation(
   return describeMilestone(named, domain, area)
 }
 
-/** What making this the next step will mean, said before it is made. */
+/**
+ * What making this the next step will mean, said before it is made.
+ *
+ * ## The Health sentence was true when it was written and false when it shipped
+ *
+ * QA-84-008. It said *"the app will know it is what you are working towards; it
+ * will not start suggesting it"* — an accurate description of the behaviour
+ * QA-84-001 then went and changed. `healthCandidates` proposes a Health
+ * destination's next milestone, which is the whole of that repair, so within one
+ * round the owner was told the app would not suggest the step and then shown it
+ * suggested, in the next screen, on the same evening.
+ *
+ * **The class is not "a stale string".** It is *a confirmation that describes an
+ * engine behaviour*, which has to be re-read every time that behaviour moves —
+ * and there is no compiler edge between `candidates.ts` and this sentence. What
+ * closes it is a test that reads the confirmation and then makes the app do the
+ * thing, on one path, rather than two tests each holding one half.
+ *
+ * ## Why the Health wording is still not the Career wording
+ *
+ * `healthCandidates` returns nothing at all unless the body has something to
+ * spend — no usable strain reading, or any strain at all, and the generator is
+ * silent. Saying it will simply "start suggesting" the step would overclaim in
+ * the other direction on a run of bad nights, so the sentence carries the
+ * condition the generator actually applies.
+ *
+ * **And it is still not AUD-0045.** A routine the owner introduces through the
+ * authoring control is never suggested; a routine that is not a destination's
+ * next step is never suggested. This sentence is only ever composed for a
+ * destination's next step, which is the one thing that is.
+ */
 export function describeMilestone(name: string, domain: LifeDomainId, area: string): string {
   const kind = milestoneEntityKind(domain)
   if (kind === 'learning-topic') {
@@ -756,7 +786,7 @@ export function describeMilestone(name: string, domain: LifeDomainId, area: stri
     return `The next step in ${area}: “${name}”. The app will treat this as the money thing that is open, and start suggesting you deal with it.`
   }
   if (kind === 'routine') {
-    return `The next step in ${area}: “${name}”. The app will know it is what you are working towards; it will not start suggesting it.`
+    return `The next step in ${area}: “${name}”. The app will treat this as what you are working towards, and start suggesting it on evenings there is something to spend on it.`
   }
   return `The next step in ${area}: “${name}”.`
 }
