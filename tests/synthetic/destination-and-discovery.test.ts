@@ -18,7 +18,7 @@ import {
   PROVING_DOMAINS,
   type AuthorableKind,
 } from '../../src/intelligence/authoring'
-import { BLOCKER_CAUSES, BLOCKER_OPTIONS } from '../../src/intelligence/blockers'
+import { BLOCKER_CAUSES, BLOCKER_OPTIONS, LEAVE_IT } from '../../src/intelligence/blockers'
 import {
   CORRECTION_GESTURES,
   correctionConsequence,
@@ -45,6 +45,8 @@ import {
 } from './journey'
 import {
   adaptationClaims,
+  APPROVED_BLOCKER_COPY,
+  isApprovedBlockerCopy,
   MUST_BE_ALLOWED,
   MUST_BE_CAUGHT,
 } from '../../scripts/adaptation-claims.mjs'
@@ -1987,5 +1989,246 @@ describe('QA-84 round 2 — the repairs', () => {
     expect(MUST_BE_CAUGHT).toContain(
       'This is kept so the app can stop putting it in front of you at the wrong moment.',
     )
+  })
+})
+
+// ---------------------------------------------------------------------------
+// QA-84 round 3 — the guard, for the third time
+// ---------------------------------------------------------------------------
+
+describe('QA-84-011 — the adaptation guard, rebuilt on what is actually closed', () => {
+  const flat = (line: string) => line.replace(/\s+/g, ' ').trim()
+
+  /**
+   * The catalogue stores a sentence containing the move's own name once, as
+   * `{move}`, rather than once per move in the library.
+   */
+  const asTemplate = (line: string) =>
+    flat(line).replace(
+      /^.*? has not fitted more than once\./,
+      '{move} has not fitted more than once.',
+    )
+
+  /**
+   * Every string the blocker path puts in front of the owner, collected by
+   * **using the app** across the whole scenario library.
+   *
+   * `blockerQuestionFor` has five branches and one evening reaches one of them.
+   * Blocking the same move on consecutive days is what reaches
+   * `repeatedly-blocked`; answering a cause and looking again the same day is
+   * what reaches `just-asked`; a restorative move is what reaches the silence.
+   * Sweeping one evening was the first draft of this, and an unapproved edit to
+   * the repeatedly-blocked note walked straight past it.
+   */
+  async function everyRenderedBlockerString(): Promise<ReadonlySet<string>> {
+    const seen = new Set<string>()
+    seen.add(flat(LEAVE_IT))
+    for (const cause of BLOCKER_CAUSES) {
+      seen.add(flat(BLOCKER_OPTIONS[cause].label))
+      seen.add(flat(BLOCKER_OPTIONS[cause].statement('{move}')))
+    }
+
+    const collect = (decision: ReturnType<JourneyApp['blockerFor']>) => {
+      if (decision === undefined) return
+      if (decision.ask) {
+        seen.add(asTemplate(decision.prompt))
+        seen.add(flat(decision.note))
+      } else {
+        seen.add(flat(decision.detail))
+      }
+    }
+
+    for (const entry of SCENARIOS) {
+      const running = await openJourney(entry.id)
+      for (let days = 0; days < 4; days += 1) {
+        const blocked = await running.act('unable-now')
+        if (!blocked.done) break
+        collect(running.blockerFor())
+        running.travelDays(1)
+      }
+
+      const answered = await openJourney(entry.id)
+      const first = await answered.act('unable-now')
+      if (first.done) {
+        await answered.sayWhatBlocked('too-tired')
+        collect(answered.blockerFor())
+      }
+    }
+    return seen
+  }
+
+  it('renders only copy that has been approved — the check with no escapes', async () => {
+    /*
+     * The guarantee, and the reason it is an allowlist.
+     *
+     * Two guards have now been written for D-187 and both failed the same way.
+     * The first listed five phrases and the shipped string used none of them
+     * (QA-84-010). The second took a cross-product of an actor list, a modality
+     * list and an **adaptation verb** list, and QA-84-011 broke it with four
+     * ordinary words — *choose*, *pick*, *use*, *prefer*.
+     *
+     * The lesson is not that the third list should be longer. It is that
+     * **recognising a promise in ordinary English is not decidable by a rule**,
+     * so the thing to close is not the space of sentences but the space of
+     * strings: the blocker path renders a finite set, and this holds it to
+     * exactly that set. A copy edit fails here until somebody adds it
+     * deliberately — which is the moment to decide whether it promises
+     * anything.
+     */
+    const rendered = [...(await everyRenderedBlockerString())]
+    const unapproved = rendered.filter((line) => !isApprovedBlockerCopy(line))
+    expect(
+      unapproved,
+      'the blocker path rendered copy nobody approved — add it to APPROVED_BLOCKER_COPY with the reason it is honest',
+    ).toEqual([])
+
+    // And it is not vacuous: the walk really did reach every branch.
+    expect(rendered.length, 'the sweep collected almost nothing').toBeGreaterThanOrEqual(
+      APPROVED_BLOCKER_COPY.length,
+    )
+  })
+
+  it('and the catalogue cannot rot: every approved string is one the path can reach', async () => {
+    /*
+     * The other direction, which is what stops an allowlist becoming a drawer.
+     * A string nothing renders any more is a string nobody is checking, and
+     * leaving it in would let the catalogue drift into a list of things the app
+     * used to say.
+     *
+     * `already-known` renders a constraint in the owner's own words rather than
+     * app copy, so it is not in the catalogue and nothing here sweeps for it.
+     */
+    const rendered = await everyRenderedBlockerString()
+    const unreached = APPROVED_BLOCKER_COPY.filter((line) => !rendered.has(flat(line)))
+    expect(
+      unreached,
+      'the catalogue lists copy the path never renders — remove it, or the check is guarding nothing',
+    ).toEqual([])
+  })
+
+  it('catches the promises the verb list let through — QA-84-011 exactly', () => {
+    // The four QA reported, verbatim, plus the nominal and passive forms.
+    for (const line of [
+      'The app will choose a more suitable option.',
+      'The app will pick something else for you.',
+      'The app will use this when deciding what comes next.',
+      'The app will prefer an option that works indoors.',
+      'Future recommendations will take this into account.',
+      'The app remembers this for future recommendations.',
+      'Recommendations will be different next time.',
+    ]) {
+      expect(adaptationClaims(line), `QA-84-011 escape still escapes: “${line}”`).not.toEqual([])
+    }
+
+    for (const line of MUST_BE_CAUGHT) {
+      expect(adaptationClaims(line), `not caught: “${line}”`).not.toEqual([])
+    }
+    for (const line of MUST_BE_ALLOWED) {
+      expect(adaptationClaims(line), `wrongly caught: “${line}”`).toEqual([])
+    }
+  })
+
+  it('does not depend on knowing the verb — the boundary the last fixture could not draw', () => {
+    /*
+     * QA-84-011's real objection: the old fixture proved the six strings
+     * somebody had already thought of, and had *"no mutation or paraphrase
+     * boundary capable of disproving the list itself"*.
+     *
+     * This is that boundary. It builds every sentence in subject × modal ×
+     * verb, where the verbs include ones no guard would list and three that are
+     * not words at all — `frobnicate`, `zorble`, `quibblify`. A guard that
+     * consults a verb vocabulary fails on the first unfamiliar one. This one
+     * never looks at the verb: what it reads is a subject that is the app or
+     * its output, and a **modal auxiliary**, which is a closed class in English
+     * and cannot grow.
+     */
+    const subjects = [
+      'The app',
+      'The engine',
+      'It',
+      'This',
+      'That',
+      'Recommendations',
+      'The suggestion',
+      'What you are shown',
+    ]
+    const modals = [
+      'will',
+      'would',
+      'can',
+      'could',
+      'may',
+      'might',
+      'must',
+      'shall',
+      'should',
+      'is going to',
+      'needs to',
+      'ought to',
+      "won't",
+      'will not',
+    ]
+    const verbs = [
+      'choose',
+      'pick',
+      'prefer',
+      'use',
+      'decide',
+      'weigh',
+      'rank',
+      'reorder',
+      'downrank',
+      'swap',
+      'substitute',
+      'withhold',
+      'suppress',
+      'promote',
+      'demote',
+      'remember',
+      'learn',
+      'note',
+      'factor',
+      'consider',
+      'skip',
+      'hide',
+      'surface',
+      'elevate',
+      'sideline',
+      'frobnicate',
+      'zorble',
+      'quibblify',
+    ]
+
+    const escaped: string[] = []
+    for (const subject of subjects) {
+      for (const modal of modals) {
+        for (const verb of verbs) {
+          const line = `${subject} ${modal} ${verb} something else for you.`
+          if (adaptationClaims(line).length === 0) escaped.push(line)
+        }
+      }
+    }
+    expect(escaped.slice(0, 5), 'a generated promise escaped the guard').toEqual([])
+    expect(
+      subjects.length * modals.length * verbs.length,
+      'the sweep shrank, so it proves less than it did',
+    ).toBeGreaterThan(3000)
+  })
+
+  it('and still leaves honest present-tense copy alone', () => {
+    /*
+     * The other half of the boundary, and the reason the guard is scoped to a
+     * path rather than to a vocabulary. Recording, correcting and withdrawing
+     * are all things the owner does now, and the copy for them says so.
+     */
+    for (const line of [
+      ...APPROVED_BLOCKER_COPY,
+      'Recorded on your Health & Recovery page, where you can take it back.',
+      'You said this was in the way.',
+      '“Not true any more” takes it back.',
+      'Nothing about it changes what the app suggests.',
+    ]) {
+      expect(adaptationClaims(line), `honest copy was flagged: “${line}”`).toEqual([])
+    }
   })
 })

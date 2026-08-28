@@ -21,7 +21,7 @@
  */
 import { chromium, devices } from '@playwright/test'
 
-import { adaptationClaims } from './adaptation-claims.mjs'
+import { adaptationClaims, containsApprovedBlockerCopy } from './adaptation-claims.mjs'
 
 const BASE = process.argv[2] ?? 'https://bill6006.github.io/life-command-os-rebuild/preview/'
 
@@ -1483,6 +1483,11 @@ async function main() {
     'and the question promises no change the engine cannot make — D-187',
     r84Claims.length === 0,
     r84Claims.join(' / ') || r84Asked.replace(/\s+/g, ' ').trim().slice(0, 200),
+  )
+  check(
+    'and every word of it comes from the approved catalogue — D-193',
+    containsApprovedBlockerCopy(r84Asked),
+    r84Asked.replace(/\s+/g, ' ').trim().slice(0, 200),
   )
   await sideways('Now, what was in the way')
 

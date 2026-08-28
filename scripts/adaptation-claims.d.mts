@@ -16,8 +16,21 @@ export function claimingStrings(
   strings: readonly string[],
 ): readonly { readonly line: string; readonly claims: readonly string[] }[]
 
-/** Wordings the guard must catch, including the two that actually shipped. */
+/** Wordings the guard must catch, including the ones that actually shipped. */
 export const MUST_BE_CAUGHT: readonly string[]
+
+/**
+ * Every string the blocker path can put in front of the owner — the closed set
+ * the synthetic gate holds it to. This, rather than the classifier, is what has
+ * no escapes.
+ */
+export const APPROVED_BLOCKER_COPY: readonly string[]
+
+/** Whitespace-insensitive membership of {@link APPROVED_BLOCKER_COPY}. */
+export function isApprovedBlockerCopy(line: string): boolean
+
+/** Whether rendered text contains copy the catalogue approves. */
+export function containsApprovedBlockerCopy(text: string): boolean
 
 /** Honest sentences the guard must leave alone. */
 export const MUST_BE_ALLOWED: readonly string[]

@@ -6461,3 +6461,61 @@ sailed through it. The exported `MUST_BE_CAUGHT` names the two strings QA read o
 the build, so a future pass cannot be earned by catching only the generic examples.
 
 ---
+
+## D-193 — A rule about what may not be said is guarded by closing the set of what is said
+
+**Phase:** 84 (QA round 3 repair) · **Status:** Active · Supersedes the guard
+mechanism of **D-192**; D-192's rule about the class stands.
+
+Where a rule forbids a kind of **claim**, the guard has two parts and they do
+different jobs:
+
+1. **A closed catalogue of the copy that path renders**, asserted in both
+   directions — nothing rendered that is not approved, nothing approved that is
+   not rendered. This is the guarantee. It has no escapes, because it is an
+   allowlist over a finite set rather than an attempt to recognise a claim.
+2. **A classifier over the class**, built only from **closed grammatical
+   classes**, shared by every gate. This is a net for new copy, and it is
+   best-effort by nature.
+
+**Three guards have now been written for D-187 and two of them failed the same
+way.** The first listed five phrases and the shipped string used none of them
+(QA-84-010). The second took a cross-product of an actor list, a modality list
+and an _adaptation verb_ list, and QA-84-011 broke it in four ordinary words:
+
+    The app will choose a more suitable option.
+    The app will pick something else for you.
+    The app will use this when deciding what comes next.
+    The app will prefer an option that works indoors.
+
+Every one is a plain promise; every one returned nothing, solely because
+_choose_, _pick_, _use_ and _prefer_ were absent from the list. QA's sentence for
+it is the one to keep: _"the old guards listed remembered phrases; the
+replacement takes a cross-product of remembered words and calls that the semantic
+class."_
+
+**The lesson is not that the third list should be longer.** Recognising a promise
+in ordinary English is not decidable by a rule, and any classifier will have
+escapes — _"the app learns from this"_ has no modal and no forward reference and
+is still a promise. A guard that claims completeness over ordinary language is
+the mistake, not the list.
+
+**So the classifier stopped consulting the verb.** What a promise is _about_ is
+unbounded. What is not unbounded is the grammar that puts a sentence in a later
+moment: the **modal auxiliaries**, which are a closed class in English, and
+**forward deixis**, which is a short closed set. A claim is the app — or its
+output, named or nominalised — plus one of those. The verb between them is never
+read, which is why _choose_, _pick_ and _prefer_ now fail and why a verb nobody
+has invented yet will fail too.
+
+**And the proof changed with it.** A fixture of remembered strings proves only
+that somebody remembered them, which was QA-84-011's real objection. The boundary
+is now generated: subject × modal × verb over a vocabulary that includes words
+that are not words at all — _frobnicate_, _zorble_, _quibblify_ — and every one
+of the several thousand sentences must be caught. **A guard with a verb list in
+it fails that sweep on the first unfamiliar word.**
+
+**Where a catalogue is not possible**, the classifier is what there is, and the
+honest thing is to say so where it lives rather than let a green gate imply more.
+
+---

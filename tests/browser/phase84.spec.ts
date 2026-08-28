@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { adaptationClaims } from '../../scripts/adaptation-claims.mjs'
+import { adaptationClaims, containsApprovedBlockerCopy } from '../../scripts/adaptation-claims.mjs'
 
 /**
  * Routing Phase 84, in a real browser — "what the owner is trying to become".
@@ -876,7 +876,12 @@ test.describe('what independent QA found on the repaired build', () => {
     // The exact string QA read, gone.
     expect(note).not.toMatch(/offer something that fits next time/)
     expect(note).not.toMatch(/stop putting it in front of you/)
-    // And the class, from the module all three gates share.
+    // And both halves of the shared guard, from the module all three gates use:
+    // the class net, and the catalogue the copy has to come from.
     expect(adaptationClaims(note), 'the note promised a future adaptation').toEqual([])
+    expect(
+      containsApprovedBlockerCopy(note),
+      'the question rendered copy that is not in APPROVED_BLOCKER_COPY',
+    ).toBe(true)
   })
 })

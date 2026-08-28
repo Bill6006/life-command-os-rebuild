@@ -39,6 +39,57 @@ None.
 
 ## Fixed
 
+### DEF-0128 — the guard that replaced a phrase list was a phrase list
+
+- Status: Fixed
+- Severity: Blocker — the standing protection for D-187 did not hold, so a future
+  copy edit could restore the forbidden behaviour with every gate green
+- Found in: routing 84 / `cdd9259`
+- Found by: **independent QA round 3** (QA-84-011), by writing four ordinary
+  sentences and running them through the guard
+- Class: **a guard that enumerates what somebody remembered and calls it a
+  class.** The same class as DEF-0127 one layer deeper: that entry replaced five
+  phrases with a cross-product of three word lists, and the unbounded dimension —
+  the verb — was still a list.
+- Reproduction:
+
+  ```
+  node --input-type=module -e "import {adaptationClaims} from './scripts/adaptation-claims.mjs'; for (const l of ['The app will choose a more suitable option.','The app will pick something else for you.','The app will use this when deciding what comes next.','The app will prefer an option that works indoors.','Future recommendations will take this into account.','The app remembers this for future recommendations.','Recommendations will be different next time.']) console.log(JSON.stringify(adaptationClaims(l)), l)"
+  ```
+
+  Every line is a promise the engine cannot keep. Every line returned `[]`.
+
+- Root cause: `ADAPTATION_VERBS` — a finite list of what a promise might be
+  _about_. `choose`, `pick`, `use` and `prefer` were not in it, and nominal and
+  passive forms (_"Future recommendations will…"_, _"what you are shown will…"_)
+  had no listed subject either.
+- Repair, in two parts. **The guarantee is a closed catalogue**:
+  `APPROVED_BLOCKER_COPY` enumerates every string the blocker path renders, and
+  the synthetic gate asserts both directions against a walk of the whole scenario
+  library — nothing rendered that is not approved, nothing approved that is not
+  rendered. **The classifier is the net**, rebuilt with no verb list at all: a
+  subject that is the app or its output, plus a modal auxiliary (a closed class
+  in English) or forward deixis. See **D-193**.
+- Regression: `tests/synthetic/destination-and-discovery.test.ts` — five cases
+  under _"QA-84-011 — the adaptation guard, rebuilt on what is actually closed"_.
+  The one that answers QA's objection is **"does not depend on knowing the
+  verb"**: 3,248 generated sentences over subject × modal × verb, the verbs
+  including three that are not English words. A guard with a verb list fails it
+  on the first unfamiliar one.
+- Proved by reintroduction, three ways: putting a verb list back into the
+  classifier fails the generated sweep; putting QA-84-010's shipped promise back
+  into the note fails the catalogue check; and an ordinary, honest-sounding copy
+  edit nobody approved fails it too. The third of those found a real weakness
+  first — the approval check was walking one evening rather than the library, and
+  an edit to the repeatedly-blocked note went straight past it.
+- Siblings: checked. The browser suite and the Android gate import the same
+  module and now make both checks rather than one. `already-known` renders the
+  owner's own words rather than app copy and is deliberately outside the
+  catalogue.
+- Note on honesty: the classifier still cannot decide entailment — _"the app
+  learns from this"_ escapes it — and the module says so where it is defined.
+  That is why the catalogue, not the classifier, is what the phase relies on.
+
 ### DEF-0127 — a promise the engine cannot keep, and the guard written to stop it
 
 - Status: Fixed

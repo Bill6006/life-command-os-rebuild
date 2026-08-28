@@ -285,7 +285,18 @@ export function blockerQuestionFor(
     return {
       ask: false,
       because: 'nothing-would-change',
-      detail: 'There is nothing the app would do differently, so it is leaving it.',
+      /*
+       * Why it is not asking, without a claim about later — QA-84-011, D-193.
+       *
+       * This said *"there is nothing the app would do differently"*, which is
+       * true and is still a statement about what the app would do. D-187's rule
+       * is that this path says what is recorded and not what follows from it,
+       * and a denial of a future change is as much a claim about the future as
+       * an assertion of one. The reason it is silent is a fact about **the move
+       * that was offered**, which is a fact about now.
+       */
+      detail:
+        'This was a restful thing rather than an effortful one, and there is nothing here worth asking about.',
     }
   }
 

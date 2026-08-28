@@ -1,7 +1,7 @@
 /**
- * Does this sentence claim the app will change what it offers? — QA-84-010, D-192.
+ * Does this sentence claim the app will change what it offers? — D-193.
  *
- * ## Why this exists, and why it is not another list of phrases
+ * ## Three attempts, and why the first two failed the same way
  *
  * D-187 says the blocker path may record what was in the way and may not say
  * what will follow from it, because nothing follows from it: `applyConstraints`
@@ -9,158 +9,182 @@
  * concept against a candidate's `leansOn`, which never holds a `blocker.*`
  * concept.
  *
- * The guard written for that rule blacklisted five formulations built around
- * *stop*, *won't*, *no longer*, *avoid* and *from now on*. It **collected the
- * live string** and did not match it, because the string on the deployed build
- * said
+ * **The first guard listed five phrases** — *stop*, *won't*, *no longer*,
+ * *avoid*, *from now on* — and the deployed build said *"so the app can offer
+ * something that fits next time"*. The guard collected that string into its
+ * sweep and did not match it. QA-84-010.
  *
- *     This is kept so the app can offer something that fits next time.
+ * **The second guard took a cross-product** of an actor list, a modality list
+ * and an *adaptation verb* list, and called that the semantic class. It is not.
+ * QA-84-011 broke it in four words:
  *
- * and a second one said *"so the app can stop putting it in front of you at the
- * wrong moment"* — a promise built from words the list did not contain. Three
- * separate narrower copies of that same list existed, in the synthetic suite,
- * the browser suite and the Android gate, and all three passed while the promise
- * rendered. **That is what a phrase blacklist is: a record of the wordings
- * somebody already thought of.**
+ *     The app will choose a more suitable option.
+ *     The app will pick something else for you.
+ *     The app will use this when deciding what comes next.
+ *     The app will prefer an option that works indoors.
  *
- * ## The class, stated as a rule
+ * Every one is a plain promise. Every one returned `[]`, solely because
+ * *choose*, *pick*, *use* and *prefer* were not in the list. QA's sentence for
+ * it is the one that lands: *"the old guards listed remembered phrases; the
+ * replacement takes a cross-product of remembered words and calls that the
+ * semantic class."*
  *
- * A claim of future recommendation adaptation has three parts, and this asks for
- * all three rather than for a sentence:
+ * ## What is different this time, stated so it can be attacked
  *
- * 1. **an actor** — the app, or an unnamed *it* doing the app's work;
- * 2. **a modality** that is not the present — *can*, *could*, *will*, *would*,
- *    *is going to*, *from now on*, *next time*, *in future*, *later*, *again*;
- * 3. **an adaptation verb** — something about what is put in front of him:
- *    suggest, offer, propose, recommend, put, show, bring up, fit, avoid, skip,
- *    stop, change, adapt, adjust, tailor, take into account, work around.
+ * **There is no verb list.** That is the change. What a promise is *about* —
+ * choosing, picking, preferring, offering, remembering, some verb nobody has
+ * thought of — is unbounded, and any list of it is a list of what somebody
+ * remembered. What is *not* unbounded is the grammar that makes a sentence a
+ * claim about a later moment:
  *
- * The cross product is a few hundred formulations from three short lists, and it
- * catches wordings nobody wrote down — which is the whole difference between a
- * guard about a class and a guard about the cases somebody remembered.
+ * 1. **A modal auxiliary is a closed class in English.** *can, could, may,
+ *    might, must, shall, should, will, would*, their negations and
+ *    contractions, and the semi-modals *going to*, *have to*, *need to*,
+ *    *ought to*. There is no tenth modal waiting to be discovered.
+ * 2. **Forward deixis is a small closed set**: *next time*, *later*, *in
+ *    future*, *from now on*, *again*, *going forward*, *what comes next*.
  *
- * ## What it deliberately allows
+ * So a claim is: **the app, or its output, as the thing being spoken about,
+ * plus one of those two.** The verb between them is not consulted, which is
+ * precisely why *choose*, *pick* and *prefer* now fail — and why a verb nobody
+ * has invented yet will fail too.
  *
- * **Denials, and they need no exemption.** *"There is nothing the app would do
- * differently, so it is leaving it"* is the sentence the silent branch exists to
- * say, and it passes because it contains no adaptation verb at all — it is about
- * doing nothing. The first draft of this guard *did* carry a list of negators
- * that cancelled a match, and that list immediately let through *"the app will
- * no longer put this in front of you"*, because it read the *no* in *no longer*
- * as a denial. **A negated promise is still a promise**, and dropping the
- * exemption made the rule both simpler and stricter.
+ * ## And what this still cannot do, said plainly
  *
- * **The present tense.** *"This is kept"*, *"it is recorded here"*, *"you can
- * take it back"* — all fine, and all about what is true now.
+ * **It cannot decide entailment.** *"The app learns from this"* implies a future
+ * adaptation and contains no modal and no forward deixis, so this returns `[]`
+ * for it. Any classifier of ordinary English will have such escapes, and a guard
+ * that claimed otherwise would be the third version of the same mistake.
  *
- * ## Where it lives, and why here rather than in a test file
+ * **So this is not the guarantee. {@link APPROVED_BLOCKER_COPY} is.** The blocker
+ * path renders a *closed set* of strings, enumerated there, and the synthetic
+ * gate asserts that the set it actually renders is exactly that set. A new or
+ * edited string fails the gate until somebody adds it deliberately, in a diff,
+ * with the reason it is honest — which is the moment to think about what it
+ * promises. That check has no escapes at all, because it is an allowlist over a
+ * finite set rather than an attempt to recognise a promise.
  *
- * One definition, imported by all three gates. It is plain ESM under `scripts/`
- * for exactly one reason: `scripts/android-gate.mjs` is a node script that
- * cannot import TypeScript, and the finding was that the three gates had drifted
- * into three different rules. A guard that says different things in different
- * places is not a guard.
+ * **This classifier is the net over the catalogue**, and it runs in the browser
+ * and Android gates as well, where only rendered text is available and an exact
+ * match is not possible.
+ *
+ * ## Where it lives
+ *
+ * Plain ESM under `scripts/` for one reason: `scripts/android-gate.mjs` cannot
+ * import TypeScript, and QA-84-010's finding was that three gates had drifted
+ * into three different rules. One definition, three importers.
  */
 
-/** Who the sentence says is acting. Unnamed `it` counts — the copy uses both. */
-const ACTORS = ['the app', 'it', 'this', 'the engine', 'now']
+/**
+ * What the sentence is speaking about, when what it says is a promise.
+ *
+ * The app itself, the unnamed *it* the copy uses for it, and **its output** —
+ * QA-84-011's *"Future recommendations will take this into account"* and
+ * *"Recommendations will be different next time"* name no app at all.
+ */
+const SUBJECTS = [
+  'the app',
+  'the engine',
+  'it',
+  'this',
+  'that',
+  'recommendation',
+  'recommendations',
+  'suggestion',
+  'suggestions',
+  /*
+   * And its output named without naming it — *"what you are shown will be
+   * different"*. A nominalisation of the same thing, which is why it belongs
+   * here rather than in a list of its own.
+   */
+  'what you are shown',
+  'what you are offered',
+  'what is offered',
+  'what it offers',
+  'what it suggests',
+  'what you see',
+]
 
-/** Anything that is not the present. A promise is always about a later moment. */
-const MODALITIES = [
-  'can',
-  'could',
+/**
+ * The modal auxiliaries, which are a closed class.
+ *
+ * This is the load-bearing claim of the whole guard: English has nine modals and
+ * a handful of semi-modals, and that is the complete list. A promise about the
+ * app's later behaviour is grammatically obliged to use one of them, or to place
+ * itself in the future by deixis ({@link LATER}).
+ */
+const MODALS = [
   'will',
-  'would',
   "won't",
   'will not',
-  'is going to',
-  'going to',
-  'shall',
+  "'ll",
+  'would',
+  "wouldn't",
+  'would not',
+  'can',
+  "can't",
+  'cannot',
+  'can not',
+  'could',
+  "couldn't",
+  'could not',
   'may',
   'might',
-  'starts to',
-  'start to',
-  'stops',
-  'from now on',
+  'must',
+  'shall',
+  'should',
+  "shouldn't",
+  'should not',
+  'is going to',
+  'are going to',
+  'going to',
+  'has to',
+  'have to',
+  'needs to',
+  'need to',
+  'ought to',
+]
+
+/** Forward deixis: a later occasion, named without a modal. */
+const LATER = [
   'next time',
+  'later',
   'in future',
   'in the future',
-  'later',
-  'again',
-  'another time',
+  'future',
+  'from now on',
+  'from then on',
   'going forward',
+  'another time',
+  'what comes next',
+  'comes next',
+  'again',
+  'afterwards',
+  'tomorrow',
+  'the next one',
 ]
 
-/** What the claim is about: the thing the app puts in front of him. */
-const ADAPTATION_VERBS = [
-  'suggest',
-  'suggests',
-  'suggesting',
-  'offer',
-  'offers',
-  'offering',
-  'propose',
-  'proposes',
-  'proposing',
-  'recommend',
-  'recommends',
-  'recommending',
-  'put',
-  'puts',
-  'putting',
-  'show',
-  'shows',
-  'showing',
-  'bring',
-  'brings',
-  'bringing',
-  'ask',
-  'asks',
-  'asking',
-  'fit',
-  'fits',
-  'fitting',
-  'avoid',
-  'avoids',
-  'avoiding',
-  'skip',
-  'skips',
-  'skipping',
-  'stop',
-  'stops',
-  'stopping',
-  'change',
-  'changes',
-  'changing',
-  'adapt',
-  'adapts',
-  'adapting',
-  'adjust',
-  'adjusts',
-  'adjusting',
-  'tailor',
-  'tailors',
-  'tailoring',
-  'work around',
-  'works around',
-  'take into account',
-  'takes into account',
-]
-
-const WORD = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+')
+const escaped = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+')
 
 /**
- * Every window in `text` that names an actor and then, close behind it, a
- * modality and an adaptation verb.
+ * How close a modal has to sit behind its subject to be that subject's modal.
  *
- * "Close behind" is a bounded lookahead rather than a parse: the copy on these
- * paths is one or two short sentences, and a window wide enough to cross from
- * one claim into an unrelated one would report a promise nobody made.
+ * Two words, which allows an adverb or a negator — *the app will never*, *it
+ * would not* — and no more. Widening it is how the honest sentence *"where you
+ * can take it back"* becomes a false positive: **you** are the one who can, and
+ * the *it* four words earlier is an object rather than the thing acting.
  */
-const WINDOW = 60
+const ADJACENT = 2
+
+function words(text) {
+  return text
+    .toLowerCase()
+    .split(/[^a-z']+/)
+    .filter(Boolean)
+}
 
 /**
- * The claims of future adaptation in a piece of owner-visible copy.
+ * The claims of future recommendation adaptation in one owner-visible string.
  *
  * Returns the offending fragments, so a failure names what it found rather than
  * only that it found something.
@@ -170,25 +194,54 @@ export function adaptationClaims(text) {
   const lower = text.toLowerCase()
   const found = []
 
-  for (const actor of ACTORS) {
-    const at = new RegExp(`\\b${WORD(actor)}\\b`, 'g')
-    for (const match of lower.matchAll(at)) {
+  const hasLater = LATER.some((later) => new RegExp(`\\b${escaped(later)}\\b`).test(lower))
+
+  for (const subject of SUBJECTS) {
+    for (const match of lower.matchAll(new RegExp(`\\b${escaped(subject)}\\b`, 'g'))) {
       const start = match.index ?? 0
-      const window = lower.slice(start, start + WINDOW)
+      const fragment = () => text.slice(start, start + 70).trim()
 
-      const modality = MODALITIES.find((word) => new RegExp(`\\b${WORD(word)}\\b`).test(window))
-      if (modality === undefined) continue
+      /*
+       * A later occasion named anywhere in the same string, with the app or its
+       * output somewhere in it, is a claim about that occasion whether or not a
+       * modal appears — *"the app remembers this for future recommendations"*.
+       */
+      if (hasLater) {
+        found.push(fragment())
+        continue
+      }
 
-      const verb = ADAPTATION_VERBS.find((word) => new RegExp(`\\b${WORD(word)}\\b`).test(window))
-      if (verb === undefined) continue
-
-      found.push(text.slice(start, start + WINDOW).trim())
+      // Otherwise the modal has to be this subject's own.
+      if (modalRightAfter(lower, start + match[0].length)) found.push(fragment())
     }
   }
+
+  /*
+   * And a later occasion can be the subject itself — *"the next one will be
+   * easier"*, *"next time it is shorter"*. No app is named, and the claim is
+   * still about what the app does then.
+   */
+  for (const later of LATER) {
+    for (const match of lower.matchAll(new RegExp(`\\b${escaped(later)}\\b`, 'g'))) {
+      const start = match.index ?? 0
+      if (modalRightAfter(lower, start + match[0].length)) {
+        found.push(text.slice(start, start + 70).trim())
+      }
+    }
+  }
+
   return [...new Set(found)]
 }
 
-/** Whether any owner-visible string in `strings` claims future adaptation. */
+/** Whether a modal auxiliary sits within {@link ADJACENT} words of `from`. */
+function modalRightAfter(lower, from) {
+  const window = words(lower.slice(from))
+    .slice(0, ADJACENT + 1)
+    .join(' ')
+  return MODALS.some((modal) => new RegExp(`\\b${escaped(modal)}\\b`).test(window))
+}
+
+/** Whether any owner-visible string in `strings` makes such a claim. */
 export function claimingStrings(strings) {
   const out = []
   for (const line of strings) {
@@ -199,27 +252,125 @@ export function claimingStrings(strings) {
 }
 
 /**
+ * Every string the blocker path can put in front of the owner — the guarantee.
+ *
+ * A closed set, and the synthetic gate asserts that what the path actually
+ * renders is **exactly** this set: nothing here that is not rendered, nothing
+ * rendered that is not here. So a copy edit fails the gate until it is added
+ * deliberately, which is the moment somebody has to decide whether the new
+ * sentence promises anything.
+ *
+ * That is the check with no escapes. {@link adaptationClaims} cannot have that
+ * property, because recognising a promise in ordinary English is not decidable
+ * by a rule — and two rounds of QA findings are what it cost to say so rather
+ * than write a third word list.
+ *
+ * `{move}` stands where the move's own name goes, so a statement is listed once
+ * rather than once per move.
+ */
+export const APPROVED_BLOCKER_COPY = [
+  // The eight causes he can choose between.
+  'No time',
+  'There was not enough time.',
+  'Not where I can do it',
+  '{move} needs somewhere I was not.',
+  'Too tired',
+  'There was nothing left in the tank.',
+  'Someone needed me',
+  'Somebody else needed the time.',
+  'Can’t leave — someone’s in my care',
+  '{move} means leaving, and I could not — someone was in my care.',
+  'Sore',
+  'The body was not up to it.',
+  "Haven't got what I need",
+  '{move} needs something I have not got.',
+  'Something came up',
+  'Something came up.',
+
+  // The two questions, and the notes under them.
+  'What got in the way?',
+  'This is kept on the area it belongs to, where you can take it back. It is never read as you not wanting to.',
+  '{move} has not fitted more than once. What is getting in the way?',
+  'This is kept with the evening it happened on, and shown on the area it belongs to.',
+  'Just leave it',
+
+  // And the three silences, each of which says why it is silent.
+  'You have already said what was in the way today.',
+  'This was a restful thing rather than an effortful one, and there is nothing here worth asking about.',
+]
+
+/** Whitespace-insensitive membership, so wrapping in a template cannot matter. */
+export function isApprovedBlockerCopy(line) {
+  const flat = (text) => String(text).replace(/\s+/g, ' ').trim()
+  const wanted = flat(line)
+  return APPROVED_BLOCKER_COPY.some((approved) => flat(approved) === wanted)
+}
+
+/**
+ * Whether a rendered blob contains copy from the catalogue.
+ *
+ * The browser and Android gates read whole panels rather than the values in
+ * `blockers.ts`, so an exact match is not available to them. What is available
+ * is the positive half: the panel has to contain something the catalogue
+ * approves. Together with {@link adaptationClaims} over the same blob, that is
+ * the rendered-side form of the two checks the synthetic gate makes exactly.
+ */
+export function containsApprovedBlockerCopy(text) {
+  if (typeof text !== 'string') return false
+  const flat = String(text).replace(/\s+/g, ' ').trim()
+  return APPROVED_BLOCKER_COPY.some((approved) => {
+    const wanted = approved.replace(/\s+/g, ' ').trim()
+    if (wanted.includes('{move}')) return false
+    return flat.includes(wanted)
+  })
+}
+
+/**
  * The wordings this guard must catch, and the ones it must not.
  *
- * Exported so the guard is proved against them from every gate rather than
- * asserted about. The first two are **the strings that actually shipped** —
- * QA-84-010 read them off the deployed build — and the third is the round 1
- * reintroduction, which the old blacklist did catch and which must keep failing.
+ * Exported so every gate proves the guard against them rather than asserting
+ * about it. The list is **evidence, not the rule** — QA-84-011's objection to
+ * the last version was precisely that its fixture proved the strings somebody
+ * had already thought of. What disproves the rule itself is the generated sweep
+ * in `destination-and-discovery.test.ts`, which builds subject × modal ×
+ * *arbitrary* verb — invented words included — and requires every one to be
+ * caught. A guard with a verb list in it fails that sweep on the first
+ * unfamiliar word.
  */
 export const MUST_BE_CAUGHT = [
+  // The two that shipped — QA-84-010 read them off the deployed build.
   'This is kept so the app can offer something that fits next time. It is never read as you not wanting to.',
   'This is kept so the app can stop putting it in front of you at the wrong moment.',
+  // The round 1 reintroduction.
   'A walk means leaving, and I could not — the app will stop suggesting it.',
+  // The seven QA-84-011 broke the verb list with.
+  'The app will choose a more suitable option.',
+  'The app will pick something else for you.',
+  'The app will use this when deciding what comes next.',
+  'The app will prefer an option that works indoors.',
+  'Future recommendations will take this into account.',
+  'The app remembers this for future recommendations.',
+  'Recommendations will be different next time.',
+  // And wordings nobody has written down.
   'From now on the app will avoid this.',
   'The app will no longer put this in front of you.',
   'It will suggest something that fits better next time.',
+  'The engine ought to weigh this next time.',
+  'That would change what you are shown.',
+  // The two the generated sweep found before this list did.
+  'What you are shown will be different.',
+  'The next one will be easier.',
 ]
 
 /** And the honest sentences, which must survive the guard untouched. */
 export const MUST_BE_ALLOWED = [
-  'There is nothing the app would do differently, so it is leaving it.',
-  'This is kept with the evening it happened on. It is never read as you not wanting to.',
+  'This is kept with the evening it happened on, and shown on the area it belongs to.',
+  'This is kept on the area it belongs to, where you can take it back. It is never read as you not wanting to.',
   'A walk means leaving, and I could not — someone was in my care.',
   'Recorded on your Health & Recovery page, where you can take it back.',
-  'You said this was in the way. Nothing about it changes what the app suggests.',
+  'You have already said what was in the way today.',
+  'This was a restful thing rather than an effortful one, and there is nothing here worth asking about.',
+  'The body was not up to it.',
+  'Not where I can do it',
+  '“Not true any more” takes it back.',
 ]
