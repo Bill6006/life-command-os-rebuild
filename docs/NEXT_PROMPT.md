@@ -12,64 +12,56 @@ Canonical plan section 42 governs the repair workflow. Section 43A and D-159
 govern routing. Keep the Phase field exactly **84**: a QA round does not create
 Phase 85.
 
-**Routing 84 remains YELLOW.** Independent QA Round 7 passed all seven D-173
-product acceptance items and failed the standing D-187/D-193/D-194/D-195/D-196
-guarantee. The repaired product checkpoint tested was `d78b765`; deployed
-documentation head `3f5e70c` was proved bundle-equivalent. The builder has not
-declared GREEN (D-077).
+**Routing 84 remains YELLOW.** Independent QA Round 8 passed all seven D-173
+product acceptance items and failed the standing D-187/D-193/D-194/D-195/D-196/
+D-197 final-owner-text guarantee. The repaired product checkpoint tested was
+9c4cb5f; deployed documentation head 9773a9a was proved bundle-equivalent. The
+builder has not declared GREEN (D-077).
 
 ---
 
-## What Round 7 proved
+## What Round 8 proved
 
-**QA-84-015 — Blocker:** D-196's final-owner-text guarantee has two independent
-false-greens.
+The current product behavior remains honest, including both genuinely fresh
+CASE A and CASE B journeys. Three structural false-greens remain:
 
-First, export legitimately composes a date, tag and origin around the canonical
-record sentence. Its guard says that scaffolding is not itself a sentence, but
-the assertion rejects sentence-shaped scaffolding only when its length exceeds
-60 characters. QA inserted **“This needs special care.”** before each exported
-history sentence. The owner-visible document contained the additional sentence
-while all **331/331** relevant blocker and export tests passed.
+1. **QA-84-016:** copy keyed to Now's resumable state stays visible when the
+   blocker question is dismissed, so the rendered delta subtracts it.
+   “This needs special care.” passed 14/14 synthetic and 6/6 delta cases.
+2. **QA-84-017:** export validates only the first line containing the
+   describer's text. A separate blocker-derived bullet promising a better next
+   suggestion passed 441/441 relevant tests. A missing matching line also
+   continues silently per record.
+3. **QA-84-018:** blockerHostsInSource sees only literal JSX tags named
+   BlockerQuestion, BlockersPanel or ResumePanel. Importing BlockerQuestion as
+   Surface and rendering Surface through a wrapper passed 14/14 blocker-copy
+   tests and TypeScript without entering the inventory.
 
-Second, the blocker-surface catalogue discovers React components only when
-their props contain one of three named blocker types. QA inserted the same
-sentence in `NowScreen`, beside `BlockerQuestion` and controlled by the parent's
-local blocker state. The unapproved copy rendered on the ordinary blocker path,
-but the synthetic catalogue passed **13/13** and the corresponding browser case
-passed **3/3** at all three widths. `NowScreen` takes no named blocker prop, and
-the tests render or inspect only the child region.
-
-Neither proof is a natural-language entailment escape. Both are structural
-omissions from the claimed closed set. The current product copy remains honest;
-Round 7's fresh CASE A and CASE B contexts and all seven acceptance items pass.
-The complete evidence and exact mutations are appended to
-`docs/qa/PHASE_84_QA_HANDOFF.md`. Read it in full before editing.
+The exact mutations, evidence and full Round 8 report are appended to
+docs/qa/PHASE_84_QA_HANDOFF.md. Read it in full before editing.
 
 ---
 
 ## Required repair
 
-Make D-196 true at the actual final rendered/exported owner-text boundary.
+Reproduce all three exact mutations before changing the guards. Make every one
+fail an authoritative pre-release guard.
 
-- Reproduce both exact Round 7 mutations before editing the guard.
-- Make the export mutation fail without a sentence-length heuristic. Permit the
-  legitimate date/tag/origin structure exactly; do not infer legitimacy from
-  how short the remaining text is.
-- Make parent-composed blocker-path copy enter the closed approval guarantee
-  even when the parent takes no `StandingBlocker`, `BlockerDecision` or
-  `ResumableMove` prop and imports no `describeRecord`.
-- Do not close the surface proof by adding `NowScreen`, another named prop type,
-  another named import or **“This needs special care.”** to a manual list.
-- Preserve the exact Timeline/domain value comparisons, catalogue halves and
-  describer inventory where they remain useful, but do not call them final
-  owner-text coverage until both mutations fail an authoritative pre-release
-  guard.
-- Reconsider a brand or approved constructor if useful. A brand alone does not
-  discover copy composed by a parent from local state, so demonstrate closure
-  at that boundary as well.
+- Close parent-composed blocker copy that remains after one surface is
+  dismissed; do not equate a transition delta with the whole final screen.
+- Close the whole blocker-derived export output, not only one line selected by
+  described.text. Assert each expected record is reached and inspect every
+  additional line it causes.
+- Replace or honestly narrow the literal-tag host inventory. Ordinary aliases,
+  wrappers, mapped components and createElement must not create untracked
+  blocker hosts.
+- Do not repair by adding mutation strings, Surface, wrapper names, tag aliases,
+  import names, prop types or manual host names to lists.
+- Preserve the exact catalogue halves, describer inventory and Timeline/domain
+  identity checks where useful, but do not call them final owner-text coverage
+  until all three values the owner receives are protected.
 
-Preserve every Round 7 product PASS and explicit deferral: both fresh-store
+Preserve every Round 8 product PASS and explicit deferral: both fresh-store
 cases; first-run abstention and ordinary routes; all eleven Life areas; the
 byte-identical “More money” path and its unknowns; Health's
 confirmation-to-recommendation agreement; complete partial Timeline rows;
@@ -81,7 +73,7 @@ Do not add strategy evaluation, pattern discovery, blocker enforcement,
 semantic interpretation, new domain progression models, an owner-routines
 library, historical backfill, a twelfth page, scoring, a new visual language or
 an orchestrator change. Do not alter
-`docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md`. Do not create a `PHASE_85_*` file.
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md. Do not create a PHASE_85_* file.
 
 ---
 
@@ -92,14 +84,14 @@ block/copy sweeps and deployed Galaxy-class Android gate. Deploy the repaired
 checkpoint and prove checkpoint equivalence if documentation moves the deployed
 SHA.
 
-Append the builder's repair record below Round 7 in the same QA report. Then
-write a complete Round 8 retest prompt addressed to the **SAME Codex QA
-conversation** at **High**. Round 8 must repeat CASE A and CASE B from new
+Append the builder's repair record below Round 8 in the same QA report. Then
+write a complete Round 9 retest prompt addressed to the **SAME Codex QA
+conversation** at **High**. Round 9 must repeat CASE A and CASE B from new
 ephemeral browser contexts, using ordinary product screens only and never
 opening the QA laboratory.
 
 For this owner handoff, the LCO completion marker belongs only as the last
-meaningful line of `docs/qa/PHASE_84_QA_HANDOFF.md`. Do not add it to this file.
+meaningful line of docs/qa/PHASE_84_QA_HANDOFF.md. Do not add it to this file.
 Do not ask the owner to paste file contents.
 
 ---
@@ -113,14 +105,12 @@ Do not ask the owner to paste file contents.
 **Conversation:** CURRENT — the original routing 84 builder conversation.
 
 ```text
-Routing Phase 84 repair after independent QA Round 7 FAIL.
+Routing Phase 84 repair after independent QA Round 8 FAIL.
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 7
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 8
 repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
 routing 90. Do not ask me to paste the file contents.
 ```
-
-<!-- LCO_COMPLETE -->

@@ -351,6 +351,7 @@ builder does not edit your rounds and you do not change product code.
 Do not ask me to paste file contents.
 ```
 
+
 ---
 
 ## Round 1 — independent QA, first submission
@@ -3549,3 +3550,296 @@ them.
 
 Do not ask me to paste file contents.
 ```
+---
+
+## Round 8 — independent QA retest
+
+**Phase:** 84 — **what the owner is trying to become**
+
+**Actor:** Codex / independent QA.
+**Model:** Codex.
+**Reasoning level:** **High**.
+**Conversation:** **SAME** — the Codex QA conversation that wrote Rounds 1 to 7.
+
+**Result: FAIL.** The present product behavior is clean for the sixth
+consecutive round, all seven D-173 acceptance items pass, and QA-84-015's two
+exact mutations now fail. The standing final-owner-text guarantee is still not
+closed. Three independent disposable mutations crossed the new boundaries with
+their relevant gates green: **QA-84-016, QA-84-017 and QA-84-018**.
+
+QA tested repaired product checkpoint 9c4cb5f. The deployed documentation head
+9773a9a is bundle-equivalent: checkpoint-equivalence reported only
+docs/NEXT_PROMPT.md, docs/PHASE_STATUS.md and this QA report between them.
+
+### Cold owner-use result — two new empty contexts
+
+CASE A and CASE B each ran at 430×932 in its own new Playwright browser process
+and context, with the clock fixed at Friday 18:58 local. After the app created
+its empty databases, QA enumerated every IndexedDB object store and asserted
+that every store held zero rows. No retained browser data was read or cleared,
+and the QA laboratory was never opened.
+
+#### CASE A — “More money”
+
+From the empty store, Now abstained honestly and offered ordinary routes.
+Insights asked the Career & Learning question. The proposal preserved **More
+money** byte-identically, proposed only a Career aim, and explicitly left the
+next step, starting point and progress meaning unknown. After confirmation,
+Career & Learning and Timeline both showed **More money** byte-identically.
+Nothing supplied a second meaning, baseline, target measure, next step or score.
+
+#### CASE B — caregiving
+
+From a second empty store, QA used Life → Health & Recovery to name **Move
+more**, with **Take a ten-minute walk** as the optional next step. The
+confirmation said the app could suggest that step when capacity allowed; after
+the ordinary **Enough** answer, Now did so. QA chose **Can't right now**, waited
+for the blocker question, and chose **Can’t leave — someone’s in my care**.
+
+Health & Recovery durably showed **Take a ten-minute walk means leaving, and I
+could not — someone was in my care**, with **Not true any more**. Timeline kept
+the inability as **Not then / Did not fit at the time** and the standing fact as
+**Limit**. No blocker enforcement, score or future-adaptation promise appeared.
+
+### Acceptance result
+
+| D-173 acceptance item | Round 8 result |
+| --- | --- |
+| 1. A desired outcome in Career, Health and Money changes the recommendation | **PASS** |
+| 2. Session, course and milestone remain distinct; attendance is not capability | **PASS** |
+| 3. Goal, routine, person, place, skill and obligation are authorable from empty | **PASS** |
+| 4. The second agenda is later-useful and asks less as it learns | **PASS** |
+| 5. Can't right now is durable and correctable, and stays silent when known | **PASS in the present product; FAIL as a standing copy guarantee — QA-84-016…018** |
+| 6. Correction previews consequences; private data is stored, not inferred | **PASS** |
+| 7. No scores, grades, ranks, shares or percentages about the owner or child | **PASS** |
+
+The first-run routes, all eleven Life areas, Health's
+confirmation-to-recommendation agreement, partial Timeline rows, restorative
+silence, course completion, weekly recurrence, corrections, private handling,
+Fatherhood's growth model and the deliberate absence of blocker enforcement all
+remain intact.
+
+### QA-84-016 — the rendered delta subtracts persistent blocker-path copy
+
+**Severity:** Blocker.
+
+**Standing decisions:** D-187, D-193, D-194 and D-197.
+
+**Classification:** Test-architecture false green; current copy is honest.
+
+D-197 says the Now delta proves everything that appears because the blocker
+question is present. But **Can't right now** also creates a resumable move.
+ResumePanel remains after the owner dismisses BlockerQuestion. Copy a parent
+keys to that resumable state therefore appears in both snapshots and is removed
+from the set difference.
+
+QA added this beside the ordinary resume panel at checkpoint 9c4cb5f:
+
+~~~diff
+ {resumable === undefined ? null : (
+-  <ResumePanel ... />
++  <>
++    <p className="note">This needs special care.</p>
++    <ResumePanel ... />
++  </>
+ )}
+~~~
+
+The unapproved sentence rendered on Now after **Can't right now**, stayed after
+**Just leave it**, and therefore never entered the delta. The synthetic blocker
+catalogue passed **14 / 14**. Both D-197 delta cases passed **6 / 6** at 360,
+430 and 1,280px. This directly disproves the claim that a parent's blocker copy
+cannot avoid arriving and leaving with the surface.
+
+The browser-only placement is not merely a cost. The browser proof itself is
+false-green on an ordinary path, while the aggregate gate has no parent-screen
+equivalent.
+
+### QA-84-017 — export validates one matching line and ignores added lines
+
+**Severity:** Blocker.
+
+**Standing decisions:** D-187, D-193, D-195, D-196 and D-197.
+
+**Classification:** Final-export-value false green; current export is honest.
+
+APPROVED_EXPORT_SCAFFOLDS exactly validates the one row found by:
+
+~~~text
+text.split('\n').find((row) => row.includes(described.text))
+~~~
+
+It does not validate the rest of the export output caused by that blocker
+record. QA left the approved line unchanged and added a second,
+blocker-derived bullet:
+
+~~~diff
+ lines.push(the existing approved blocker-history line)
++if (entry.tag === 'Not then' || entry.tag === 'Limit') {
++  lines.push(bullet('The app will choose something better next time.'))
++}
+~~~
+
+The exported history then contained the exact kind of promise D-187 forbids.
+The guard found and approved the original line, never inspected the new line,
+and all five relevant suites passed: blocker-copy, export-honesty,
+g013-export-handoff, Timeline, and destination/discovery — **441 / 441**.
+
+There is a second vacuity in the same loop: when no line contains one record's
+described text, it continues silently; the final checked-greater-than-zero
+assertion proves only that some blocker line was found somewhere. The repair
+must close over every final exported line attributable to every blocker record,
+not one line selected by the canonical sentence.
+
+### QA-84-018 — a JSX alias is invisible to blockerHostsInSource
+
+**Severity:** Blocker.
+
+**Standing decisions:** D-194 and D-197.
+
+**Classification:** Source-inventory false green.
+
+blockerHostsInSource searches for literal JSX tags named BlockerQuestion,
+BlockersPanel or ResumePanel. Ordinary component indirection avoids those
+spellings. QA added:
+
+~~~tsx
+import type { ComponentProps } from 'react'
+import { BlockerQuestion as Surface } from './DomainPanels'
+
+export function WrappedBlockerHost(props: ComponentProps<typeof Surface>) {
+  return <Surface {...props} />
+}
+~~~
+
+This is a blocker host and its JSX renders the real surface, but the inventory
+reports no host because the tag is named Surface. The complete blocker-copy
+suite passed **14 / 14**, including the host-coverage assertion, and TypeScript
+passed. A screen can now consume that wrapper without writing any enumerated
+surface tag. The same escape applies to mapped components and
+React.createElement.
+
+This is not fixed by adding Surface, this wrapper or another spelling to the
+regex. The structural claim must be based on the value/component graph the
+owner can receive, or the proof must stop claiming exhaustive host discovery.
+
+### Verification and protected-scope result
+
+The disposable worktree was removed after all three proofs. The tracked product
+tree was never edited.
+
+| Gate | Round 8 result |
+| --- | --- |
+| Checkpoint equivalence | **PASS** — deployed 9773a9a is bundle-equivalent to product checkpoint 9c4cb5f; three documentation files intervene |
+| Aggregate npm run verify | **PASS** — format, lint, typecheck, production build and **1,860 / 1,860 tests** in 84 files |
+| Persistent parent-copy mutation | **FALSE GREEN — 14 / 14 synthetic and 6 / 6 focused browser checks passed** |
+| Added export-promise line mutation | **FALSE GREEN — 441 / 441 relevant tests passed** |
+| JSX wrapper/alias mutation | **FALSE GREEN — 14 / 14 blocker-copy tests and TypeScript passed** |
+| Full browser matrix | **PASS — 696 / 696** at 360, 430 and 1,280px, one worker, no retry or flake |
+| Deployed Android-style gate | **clean — 233 checks** against deployed 9773a9a |
+| Privacy scan | **clean — 289 tracked files** |
+| Block sweep and current copy guards | **PASS** |
+| CI at deployed head | **PASS** — workflow run 33232599461 completed successfully |
+| Commits on no remote at QA start | **none** |
+
+The first aggregate invocation stopped before a project assertion because the
+local executable shims were absent. QA restored dependencies from the lockfile
+with npm ci; the complete rerun above is the authoritative result.
+
+No strategy evaluation, pattern discovery, blocker enforcement, semantic
+interpretation, new domain progression model, owner-routines library,
+historical backfill, twelfth page, scoring change, new visual language or
+orchestrator change appeared. docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md remains
+unchanged and no PHASE_85_* file exists. The owner phone check remains owed.
+
+---
+
+## Complete next handoff — repair after Round 8 FAIL
+
+**System:** Claude / builder.
+
+**Model:** Claude, Opus-class.
+
+**Intelligence level:** **Max** — three independently reproduced omissions
+remain in the asserted final-owner-text guarantee.
+
+**Conversation:** **CURRENT** — return to the original routing 84 Claude builder
+conversation.
+
+~~~text
+Routing Phase 84 repair after independent QA Round 8 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 8 is the authoritative
+independent retest. Keep the Phase field exactly 84, keep routing 84 YELLOW, do
+not start routing 90 and do not mark the phase GREEN.
+
+Repair QA-84-016, QA-84-017 and QA-84-018 under canonical plan section 42.
+Reproduce all three exact false-greens before changing the guards:
+
+1. Parent copy keyed to Now's resumable state stays visible after the blocker
+   question is dismissed, so the rendered delta subtracts it. “This needs
+   special care.” passed 14/14 synthetic and 6/6 delta checks.
+2. Export checks only the first line containing described.text. A separate
+   blocker-derived bullet promising “The app will choose something better next
+   time.” passed all 441 relevant tests. Also close the per-record silent
+   continue when no matching line is found.
+3. blockerHostsInSource sees only three literal JSX tag names. A wrapper that
+   imports BlockerQuestion as Surface and renders <Surface {...props} /> passed
+   the complete blocker-copy suite and TypeScript without entering the host
+   inventory.
+
+Required outcome: prove the complete final owner-visible/exported blocker-path
+copy, not one transition delta, one matching export line, or three tag
+spellings. Do not repair by adding the mutation strings, Surface, wrapper names,
+more tag aliases, more import names, more prop types or more manual host names.
+Either establish closure over the final values/component graph or narrow the
+documented guarantee honestly and add an authoritative mechanism that catches
+all three mutations before release.
+
+Preserve all seven current product passes and both fresh-store cases. Preserve
+first-run abstention and ordinary routes, all eleven Life areas,
+byte-identical “More money” and its unknowns, Health's confirmation matching its
+recommendation, partial Timeline rows, durable caregiving and withdrawal,
+truthful restorative silence, course/recurrence/correction/private behavior,
+all no-score protections, Fatherhood's growth model and the absence of blocker
+enforcement.
+
+Run the clean aggregate gate, full browser suite at 360/430/1280, privacy scan,
+block/copy sweeps and deployed Galaxy-class Android gate. Prove each exact
+mutation fails. Deploy the repaired checkpoint and prove checkpoint equivalence
+if documentation moves the SHA.
+
+Append the builder's repair record below Round 8 in this same report. Then write
+a complete Round 9 retest prompt addressed to the SAME Codex QA conversation at
+High. Round 9 must repeat CASE A and CASE B from new ephemeral contexts, using
+ordinary product screens only and never opening the QA laboratory.
+
+Do not create a PHASE_85_* file. Do not alter
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md. Do not put the LCO completion marker in
+docs/NEXT_PROMPT.md; for this owner handoff it belongs only at the end of this
+QA report. Do not ask the owner to paste file contents.
+~~~
+
+### Short launcher
+
+**Model:** Claude, Opus-class.
+
+**Reasoning level:** Max.
+
+**Conversation:** CURRENT — the original routing 84 builder conversation.
+
+~~~text
+Routing Phase 84 repair after independent QA Round 8 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 8
+repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
+routing 90. Do not ask me to paste the file contents.
+~~~
+
+<!-- LCO_COMPLETE -->
