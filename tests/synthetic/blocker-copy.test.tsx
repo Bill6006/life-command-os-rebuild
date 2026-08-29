@@ -843,7 +843,7 @@ describe('QA-84-014 — and closed over the value the owner actually reads', () 
 })
 
 describe('QA-84-025 — and over every document the owner can select', () => {
-  it('walks the whole selection space, not its endpoints', { timeout: 60_000 }, () => {
+  it('walks every selection on every history', { timeout: 600_000 }, async () => {
     /*
      * Ten checkboxes are **1,023 documents**, and the owner produces any of
      * them with taps.
@@ -870,22 +870,47 @@ describe('QA-84-025 — and over every document the owner can select', () => {
      * two together are what "every document" means; neither is a sample of the
      * other.
      */
-    const blockerKinds = ['action-unable-now', 'constraint', 'correction']
-    const withBlockers = SCENARIOS.filter((entry) => {
-      const { loaded } = contextFor(entry.id)
-      return loaded.view().history.effective.some((record) => blockerKinds.includes(record.kind))
-    })
-    expect(withBlockers.length, 'no history in the library records a blocker').toBeGreaterThan(0)
-    const entry = withBlockers[0]!
-
+    /*
+     * **Every selection on every history** — QA-84-030.
+     *
+     * Round 10 walked all 1,023 selections on one blocker-bearing history, and
+     * every section on every history, and called the pair complete. Round 11
+     * added a sentence that appears only for `overview`+`corrections` AND when
+     * the record holds a `context` entry — a scenario the selection walk never
+     * used. **Exhaustive coverage of each axis separately is not exhaustive
+     * coverage of their product**, which is the same error as reading one
+     * navigation surface, one leaf, or the endpoints of a selection: a
+     * projection mistaken for the space.
+     *
+     * So the product is walked: every non-empty selection, on every history.
+     * That is 1,023 x the library, which is large but finite, and finite is the
+     * whole argument — there is no sampling left to be wrong about.
+     */
     const offenders: string[] = []
     const total = 2 ** EXPORT_SECTION_IDS.length - 1
-    for (let mask = 1; mask <= total; mask += 1) {
-      const selection = EXPORT_SECTION_IDS.filter((_id, at) => (mask >> at) & 1)
-      const document = composeFor(entry.id, selection).text
-      for (const line of document.split('\n')) {
+    for (const entry of SCENARIOS) {
+      /*
+       * The distinct lines first, then the classifier.
+       *
+       * A section's text is identical in every document that contains it, so
+       * across 1,023 selections the same line arrives hundreds of times.
+       * Classifying the set instead of the stream is the difference between a
+       * gate that runs and one that starves the worker's heartbeat — which is
+       * how the first version of this failed: 15 passed, exit 1.
+       */
+      const lines = new Set<string>()
+      for (let mask = 1; mask <= total; mask += 1) {
+        const selection = EXPORT_SECTION_IDS.filter((_id, at) => (mask >> at) & 1)
+        for (const line of composeFor(entry.id, selection).text.split('\n')) {
+          if (line.trim() !== '') lines.add(line)
+        }
+        // Let the runner breathe; a synchronous minute looks like a hung worker.
+        if (mask % 64 === 0) await new Promise((resume) => setTimeout(resume, 0))
+      }
+
+      for (const line of lines) {
         for (const claim of adaptationClaimsOnAnyScreen(withoutApprovedNonPromises(line))) {
-          offenders.push(`${selection.join('+')}: “${claim}”`)
+          offenders.push(`${entry.id}: “${claim}”`)
         }
       }
     }

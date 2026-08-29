@@ -74,6 +74,14 @@ export function contextFor(scenarioId: string): ScenarioContext {
   return context
 }
 
+interface ScenarioEngines {
+  readonly decision: ReturnType<typeof decide>
+  readonly insights: ReturnType<typeof insightsFor>
+  readonly timeline: ReturnType<typeof assembleTimeline>
+}
+
+const engines = new Map<string, ScenarioEngines>()
+
 export function composeFor(
   scenarioId: string,
   sections: readonly ExportSectionId[],
@@ -84,12 +92,32 @@ export function composeFor(
   if (held !== undefined) return held
 
   const { loaded, situation, moment } = contextFor(scenarioId)
+
+  /*
+   * The decision, the insights and the timeline are functions of the history,
+   * not of which sections were ticked — so they are worked out once per
+   * scenario rather than once per document.
+   *
+   * QA-84-030 made the guarantee a walk over every selection on every history,
+   * which is 1,023 documents per scenario. Recomputing all three for each of
+   * them made the walk cost minutes; they are identical every time.
+   */
+  let parts = engines.get(scenarioId)
+  if (parts === undefined) {
+    parts = {
+      decision: decide(loaded.view(), moment),
+      insights: insightsFor(situation),
+      timeline: assembleTimeline(situation),
+    }
+    engines.set(scenarioId, parts)
+  }
+
   const result = composeExport({
     sections,
     situation,
-    decision: decide(loaded.view(), moment),
-    insights: insightsFor(situation),
-    timeline: assembleTimeline(situation),
+    decision: parts.decision,
+    insights: parts.insights,
+    timeline: parts.timeline,
     source,
     app: TEST_APP,
     // A fixed real moment, so a scenario's own clock never dates the document.

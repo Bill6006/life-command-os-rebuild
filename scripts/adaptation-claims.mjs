@@ -661,6 +661,68 @@ export function withoutApprovedNonPromises(line) {
   return left
 }
 
+/**
+ * What the app says about its own future, that D-187 does not forbid — D-201.
+ *
+ * The scan in `rendered-copy-scan.mjs` reads **every string the built app can
+ * render**, so for the first time the app-wide rule meets all of the product's
+ * copy at once rather than whatever a sweep happened to reach. Fifteen shipped
+ * sentences trip it, and every one is honest. They fall into three kinds, and
+ * the kind is the reason:
+ *
+ * - **Promises to do nothing.** *"it will not start suggesting it"*, *"will
+ *   never decide you have got there"*, *"will not invent one"*, *"will not
+ *   assume"*. A negated future is the opposite of the claim D-187 forbids, and
+ *   telling one from the other needs to parse negation.
+ * - **Confirmations of behaviour the engine actually has.** Naming a next step
+ *   really does make the engine propose it — that is QA-84-001's repair, built
+ *   in this phase and covered by acceptance item 1. Refusing to let the app say
+ *   so would make the confirmation dishonest in the other direction.
+ * - **Statements about a backup or a restore.** What the app will do with a
+ *   file, which is not a recommendation at all.
+ *
+ * **The cost is the largest this module carries, and it is the point.** Any new
+ * or edited sentence anywhere in the product that speaks about what the app
+ * will do fails this gate until somebody writes down why it is honest. That is
+ * a tax on ordinary copy work, accepted because the alternative — eight rounds
+ * of it — was a guarantee that read as whole-app and was not.
+ */
+export const APPROVED_FUTURE_COPY = [
+  // Promises to do nothing.
+  '”. The app will know it exists and can refer to it; it will not start suggesting it.',
+  'This is kept as what would count. The app will never decide you have got there.',
+  'This is kept as what would count. The app will never decide you have got there — it holds what you said would show it.',
+  'Leave it empty and the app will not invent one.',
+  'The app will not assume ',
+
+  // Confirmations of behaviour the engine has, built and covered by D-173 item 1.
+  '”. The app will treat this as what you are currently studying, and start suggesting work on it.',
+  '”. The app will treat this as the money thing that is open, and start suggesting you deal with it.',
+  '”. The app will treat this as what you are working towards, and start suggesting it on evenings there is something to spend on it.',
+  'This becomes a milestone with its own date, and the app will start suggesting work towards it.',
+  'a span the app will work around, or a promise with a date on it',
+
+  // What a backup or a restore does with a file.
+  'The restore was written and checked, and then the app could not read the database again. Nothing was undone.',
+  'The backup was written and checked once, so it is probably there. What the app cannot do is read the database again to confirm it. Close the app and open it again to see what is actually stored — and do not restore anything else over this until you have.',
+  'The app will try to bring these back on its own.',
+  ' becomes what the app reads from now on.',
+  'This replaces what the app has here, and is what it reads from now on.',
+]
+
+/** Those removed, so anything written beside one is still classified. */
+export function withoutApprovedFutureCopy(line) {
+  const flat = (text) =>
+    String(text ?? '')
+      .replace(/\s+/g, ' ')
+      .trim()
+  let left = flat(line)
+  for (const approved of APPROVED_FUTURE_COPY) {
+    left = left.split(flat(approved)).join(' ')
+  }
+  return left
+}
+
 /** Every string the blocker path can put in front of the owner. */
 export const APPROVED_BLOCKER_COPY = [
   ...APPROVED_FROM_BLOCKERS_MODULE,
@@ -795,13 +857,26 @@ export function readingUnits(root) {
    * composed review when the element it was read from is inside the control
    * that holds it, and never because two strings match.
    */
-  const generatedRoot = root.closest?.('[data-testid="export-text"]') ?? null
-  const inGenerated = (element) =>
-    generatedRoot !== null || element.closest('[data-testid="export-text"]') !== null
+  /*
+   * The composed review is a **control's own value**, not a subtree —
+   * QA-84-029.
+   *
+   * Round 10 asked `closest('[data-testid="export-text"]')`, so anything under
+   * an ancestor carrying that marker counted as generated. Round 11 moved the
+   * marker onto a wrapper holding the textarea *and* an ordinary paragraph, and
+   * the paragraph inherited a provenance it never had. **DOM containment is not
+   * composition provenance.** What the composer produced is exactly the string
+   * the control holds, so only that string is generated: the element must carry
+   * the marker itself, and the text must be its own `value`.
+   */
+  const isComposedControl = (element) =>
+    typeof element.getAttribute === 'function' &&
+    element.getAttribute('data-testid') === 'export-text' &&
+    typeof element.value === 'string'
 
-  const push = (text, element) => {
+  const push = (text, element, generated = false) => {
     const value = flat(text)
-    if (value !== '') out.push({ text: value, generated: inGenerated(element) })
+    if (value !== '') out.push({ text: value, generated })
   }
 
   for (const element of [root, ...root.querySelectorAll('*')]) {
@@ -821,7 +896,8 @@ export function readingUnits(root) {
     push(element.getAttribute('title'), element)
     push(element.getAttribute('alt'), element)
     if (typeof element.value === 'string' && element.type !== 'password') {
-      for (const part of element.value.split('\n')) push(part, element)
+      const composed = isComposedControl(element)
+      for (const part of element.value.split('\n')) push(part, element, composed)
     }
     for (const pseudo of ['::before', '::after']) {
       const content = getComputedStyle(element, pseudo).content
@@ -839,7 +915,9 @@ export function readingUnits(root) {
      * lines, so they are separate units, and a proximity window never reads
      * the end of one line against the start of the next.
      */
-    for (const part of String(element.textContent ?? '').split('\n')) push(part, element)
+    for (const part of String(element.textContent ?? '').split('\n')) {
+      push(part, element, isComposedControl(element))
+    }
   }
 
   const seen = new Set()

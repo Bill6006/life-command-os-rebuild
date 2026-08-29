@@ -6975,3 +6975,82 @@ rule stays blunt and the exceptions stay visible**, at the declared cost that
 editing any of those sentences fails the gate until the new wording is approved.
 
 ---
+
+## D-201 — The completeness claim stops being about states
+
+**Phase:** 84 (QA round 11 repair) · **Status:** Active · Changes the **kind** of
+the whole-app claim that **D-198**, **D-199** and **D-200** each tried to make by
+exploring further.
+
+Eight rounds attacked the same sentence — _no screen the owner can reach
+promises an adaptation_ — and eight rounds found the same shape of hole: some
+set was explored and called every state. Components, then screens, then routes,
+then presses. Round 11 ended the argument by finding two holes that **cannot be
+closed by exploring harder**:
+
+- **QA-84-027.** The promise sat behind _type `show`, then press_. A sweep that
+  presses every button never supplies the word, and no sweep can guess it. The
+  reachable-state space is not enumerable by a machine that does not know the
+  passwords.
+- **QA-84-031.** The promise arrived a second after the screen looked settled.
+  Two equal reads 100ms apart declared stability; **any** settle window can be
+  outlasted by a longer timer.
+
+Widening the sweep again would have been the ninth version of the same mistake.
+
+**So the claim changes kind.** Whatever state the owner reaches, and whenever it
+arrives, the words on the screen came from a string in the bundle that ships.
+**That set is finite, knowable exactly, and indifferent to how a state was
+reached or how late it appeared.** `scripts/rendered-copy-scan.mjs` reads every
+string literal and template piece out of the built owner-facing chunk and
+classifies each one.
+
+It is parsed with **acorn**, the parser the toolchain already carries, now
+declared as a dependency rather than borrowed transitively. That is not
+incidental: the first draft used a hand-written tokenizer and mis-read three
+fragments of React's own minified code as product copy. **A hand-written parser
+inside a guard is D-197's mistake**; using a real one is not.
+
+**What it does not establish, stated because the pair only works if both halves
+are named.** It cannot see a sentence assembled at runtime from pieces that are
+each innocent — `'The app will ' + verb + ' next time'` is three strings in the
+bundle and one sentence on the screen. **Static covers every state; dynamic
+covers composition.** The browser sweeps therefore stay exactly as they are, and
+neither is a sample of the other.
+
+**And the cost is the largest this campaign has accepted.** Fifteen shipped
+sentences trip the rule, all honest, now listed in `APPROVED_FUTURE_COPY` with
+their reasons: promises to do **nothing** (_"will never decide you have got
+there"_), confirmations of behaviour the engine really has (naming a next step
+does make the engine propose it — acceptance item 1), and statements about what
+a backup or restore will do with a file. From here, **any new or edited sentence
+anywhere in the product that speaks about what the app will do fails the gate
+until somebody writes down why it is honest.** That is a tax on ordinary copy
+work. It is accepted because the alternative, demonstrated eight times, is a
+guarantee that reads as whole-app and is not.
+
+### The three that were narrower, and are closed exactly
+
+**A document's nodes are not everything rendered inside it (QA-84-028).**
+`readingUnits` walked one document; the promise went into a same-origin
+`<iframe srcDoc>` on a crawled route. Every frame in the tree is now read. A
+frame that genuinely cannot be read is **reported as a hole**, not skipped — and
+the surrounding `catch` now rethrows anything that is not a cross-origin or
+detached-frame error, because the first draft swallowed a `ReferenceError` from a
+half-applied edit and reported every frame unreadable, which looked exactly like
+a finding and was not.
+
+**DOM containment is not composition provenance (QA-84-029).** Round 10 asked
+`closest('[data-testid="export-text"]')`, so Round 11 moved the marker onto a
+wrapper holding the textarea _and_ an ordinary paragraph, and the paragraph
+inherited a provenance it never had. What the composer produced is exactly the
+string the control holds, so the element must carry the marker **itself** and the
+text must be that control's own — whichever property it is read from.
+
+**Exhaustive coverage of each axis is not coverage of their product
+(QA-84-030).** All 1,023 selections on one history, plus every section on every
+history, missed a rule keyed on a selection **and** on a record only another
+history has. The product is now walked whole: every non-empty selection on every
+history. Large, finite, and with no sampling left to be wrong about.
+
+---

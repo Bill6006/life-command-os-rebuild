@@ -8,6 +8,7 @@ import {
   isApprovedBlockerCopy,
   isApprovedWhenBlocked,
   readingUnits,
+  type ReadingUnit,
   withoutApprovedNonPromises,
 } from '../../scripts/adaptation-claims.mjs'
 
@@ -1139,6 +1140,42 @@ function declaredRoutes(): readonly string[] {
   return [...primary, ...secondary].filter((name) => name !== 'qa').map((name) => `#/${name}`)
 }
 
+/**
+ * Every reading unit in every browsing context on the page — QA-84-028.
+ *
+ * `readingUnits` walks one document. Round 11 put the prohibited sentence in a
+ * same-origin `<iframe srcDoc>` on More: visible on a crawled ordinary route,
+ * and invisible to a collector that only ever entered the outer document.
+ * **Reading a document's nodes is not reading everything the browser renders
+ * inside it.**
+ *
+ * Playwright already enumerates the frame tree, so every frame is asked. A
+ * cross-origin frame cannot be read from the page's context — the product has
+ * none, and the count below fails if one ever appears without this being
+ * revisited.
+ */
+async function unitsEverywhere(page: Page): Promise<readonly ReadingUnit[]> {
+  const out: ReadingUnit[] = []
+  for (const frame of page.frames()) {
+    try {
+      out.push(...(await frame.locator('body').evaluate(readingUnits)))
+    } catch (error) {
+      /*
+       * Only a frame this page genuinely cannot read is tolerated, and even
+       * then it is **reported** rather than skipped, because it is a hole in
+       * the claim. Anything else is a fault in the collector and is rethrown —
+       * the first draft swallowed a `ReferenceError` from a half-applied edit
+       * and reported every frame unreadable, which looked exactly like a
+       * finding and was not.
+       */
+      const why = error instanceof Error ? error.message : String(error)
+      if (!/cross-origin|detached|Target closed/i.test(why)) throw error
+      out.push({ text: `UNREADABLE FRAME: ${frame.url()} — ${why}`, generated: false })
+    }
+  }
+  return out
+}
+
 /** Every `#/` link on the page, wherever it is — header, screen or footer. */
 async function linksOn(page: Page): Promise<readonly string[]> {
   return page.evaluate(() =>
@@ -1192,7 +1229,7 @@ async function sweepEveryRoute(page: Page): Promise<{
 
     await page.goto(`${APP}${route}`)
     await page.waitForSelector('h1')
-    for (const unit of await page.locator('body').evaluate(readingUnits)) {
+    for (const unit of await unitsEverywhere(page)) {
       everything.add(unit.text)
       if (unit.generated) generated.add(unit.text)
       else prosed.add(unit.text)
@@ -1267,7 +1304,7 @@ async function sweepEveryPress(page: Page): Promise<ReadonlySet<string>> {
     await page.waitForSelector('h1')
 
     const collect = async () => {
-      for (const unit of await page.locator('body').evaluate(readingUnits)) seen.add(unit.text)
+      for (const unit of await unitsEverywhere(page)) seen.add(unit.text)
     }
     await collect()
 

@@ -39,6 +39,52 @@ None.
 
 ## Fixed
 
+### DEF-0136 — five more, and the reason exploring further had stopped working
+
+- Status: Fixed
+- Severity: Blocker — a promise the engine cannot keep could reach the owner
+  behind a typed word, inside a frame, through inherited provenance, in a
+  document produced by an ordinary pair of choices, or one second late, with
+  every gate green
+- Found in: routing 84 / `dc121e3`
+- Found by: **independent QA round 11** (QA-84-027 … QA-84-031), one at each seam
+  the Round 11 dispatch named
+- Class: **two kinds at once.** Three were the familiar one — a set explored and
+  called complete (frames, provenance, the Cartesian product). Two were not
+  closable that way at all: an owner action _sequence_ nothing can guess, and a
+  write that lands after any stability window.
+- Reproduction, all five confirmed here before anything was built:
+  - **027** — type `show`, then press, on More → the press sweep reported
+    **3 passed in 57.2s**.
+  - **028** — a same-origin `<iframe srcDoc>` on More → **3 passed**.
+  - **029** — the marker moved onto a wrapper holding the textarea and an
+    ordinary paragraph → **3 passed**.
+  - **030** — a sentence keyed to `overview`+`corrections` **and** a `context`
+    record → the whole synthetic file **15 passed**.
+  - **031** — the promise scheduled one second after the blocker state →
+    **6 passed**, with a real build. _(A first attempt was built while
+    `tsc -b` was failing, so the browser ran the previous bundle and proved
+    nothing; it was redone.)_
+- Repair — see **D-201**. The completeness claim moves from exploration to the
+  finite set of strings the built app can render, parsed with a real parser; the
+  browser sweeps stay, because static covers every state and dynamic covers
+  composition. The other three are closed exactly: every frame, provenance by the
+  control itself, and the whole selection-by-history product.
+- Regression: `scripts/rendered-copy-scan.mjs`, run from `npm run verify` after
+  the build; the frame-aware sweeps and the narrowed provenance in
+  `tests/browser/phase84.spec.ts`; the product walk in
+  `tests/synthetic/blocker-copy.test.tsx`.
+- Proved by reintroduction: all five of QA's exact mutations, each built and run.
+  **027 and 031 fail the static scan**, which is the point of it — neither is
+  reachable by any sweep. **029 fails on the check that the composed document
+  must still be identifiable**, which is that self-check doing its job.
+- Siblings: fifteen shipped sentences trip the rule for the first time, because
+  the rule had never met all of the product's copy at once. Every one is honest
+  and is listed with its reason.
+- Note on scope: the current copy was honest throughout, for the ninth round
+  running, and both fresh-store cases passed again. What was defective was the
+  guarantee — and this time the kind of guarantee, not its extent.
+
 ### DEF-0135 — four more ways past the guarantee, and a gate that raced
 
 - Status: Fixed
