@@ -6923,7 +6923,7 @@ navigates away. Presses compound deliberately: a state two presses in is still a
 state the owner can be in, and the claim is one-directional — more states can
 only find more. It is **not** the sweep the catalogue comparison uses, because
 that one needs two states differing by exactly one cause; this one wanders, and
-answers only *is there a promise anywhere the owner can get to*. Every click is
+answers only _is there a promise anywhere the owner can get to_. Every click is
 bounded and its failure swallowed: a gate that fails because a control was busy
 is a gate about timing, which is precisely what went wrong below.
 
@@ -6937,7 +6937,7 @@ which ones mattered.
 
 **3. Provenance is not a property of a string.** D-199 excluded the composed
 review from the catalogue check by removing every screen line **equal to** a
-line of the export. Round 10 rendered *"This needs special care."* on Data once a
+line of the export. Round 10 rendered _"This needs special care."_ on Data once a
 blocker existed and put the same words in the document, and the ordinary
 sentence was erased along with the generated one (QA-84-024). A unit is now part
 of the composed review when **the element it was read from** is inside the
@@ -6965,9 +6965,9 @@ for it.
 
 **And the exception list is named for what it holds.** Round 9's
 `APPROVED_PRODUCT_DESCRIPTION` had one entry; pressing buttons reached two more
-honest sentences — Now's *"The engine **will** not guess"*, which is a promise to
-do nothing, and a Timeline record reading *"Left one of the app's questions for
-**another time**"*, which describes what already happened. Neither is a product
+honest sentences — Now's _"The engine **will** not guess"_, which is a promise to
+do nothing, and a Timeline record reading _"Left one of the app's questions for
+**another time**"_, which describes what already happened. Neither is a product
 description, so the list is `APPROVED_NOT_A_PROMISE`. Each would need a different
 piece of understanding to dismiss automatically — negation, tense, what an adverb
 attaches to — and every one of those is a parser inside a guard (D-197). **The

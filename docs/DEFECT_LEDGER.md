@@ -48,18 +48,18 @@ None.
 - Found in: routing 84 / `7147c83`
 - Found by: **independent QA round 10** (QA-84-022 … QA-84-026)
 - Class: **the extent of the claim, four more times.** Round 9 fixed the unit;
-  Round 10 found that the *set* the unit ranges over was still smaller than the
+  Round 10 found that the _set_ the unit ranges over was still smaller than the
   claim — states, rendered strings, provenance, selections.
 - Reproduction, all confirmed here before anything was built:
   - **022** — a **Read more** button on More revealing the promise → the sweep
     reported **3 passed** at all three widths.
   - **023** — the promise as a `placeholder` on More → **3 passed**.
   - **024** — the sentence on Data once a blocker exists, plus the identical line
-    inside the export → **passed**. *(The first attempt at this reproduction was
+    inside the export → **passed**. _(The first attempt at this reproduction was
     unfaithful — the sentence was rendered unconditionally, so it sat in both
     sweeps and never entered the delta. It passed for the wrong reason. The
     faithful version was then confirmed against the Round 9 guards by stashing
-    the repair: **1 passed**.)*
+    the repair: **1 passed**.)_
   - **025** — a sentence emitted only for `overview`+`corrections` → QA's focused
     command reported **1 passed, 13 skipped**.
   - **026** — the raced delta reproduced itself: **701 passed, 1 failed** in QA's
@@ -71,7 +71,7 @@ None.
   of a one-child proxy.
 - Regression: `QA-84-022 — nor does any state the owner can press into` and the
   widened route sweep in `tests/browser/phase84.spec.ts`; `QA-84-025 — and over
-  every document the owner can select` in `tests/synthetic/blocker-copy.test.tsx`.
+every document the owner can select` in `tests/synthetic/blocker-copy.test.tsx`.
 - Proved by reintroduction: all four of QA's exact mutations, each built and run,
   and **024 additionally proved to have been a false green** by re-running it
   against the stashed Round 9 guards.
