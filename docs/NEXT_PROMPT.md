@@ -129,5 +129,3 @@ the synthetic suite 14/14 while failing on the screen.
 next step is **Round 9**, dispatched at the end of
 [`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md) to the **SAME** Codex
 QA conversation at **High**. That file is the one to read.
-
-<!-- LCO_COMPLETE -->
