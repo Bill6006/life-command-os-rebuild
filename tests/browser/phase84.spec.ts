@@ -1,5 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { adaptationClaims, containsApprovedBlockerCopy } from '../../scripts/adaptation-claims.mjs'
+import {
+  adaptationClaims,
+  containsApprovedBlockerCopy,
+  isApprovedBlockerCopy,
+} from '../../scripts/adaptation-claims.mjs'
 
 /**
  * Routing Phase 84, in a real browser — "what the owner is trying to become".
@@ -932,5 +936,126 @@ test.describe('what independent QA found on the repaired build', () => {
       containsApprovedBlockerCopy(note),
       'the question rendered copy that is not in APPROVED_BLOCKER_COPY',
     ).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// QA-84-015 — what is on screen *because* the blocker is
+// ---------------------------------------------------------------------------
+
+/**
+ * Every sentence the whole screen is showing.
+ *
+ * The screen, not a panel. Round 7's escape was a sentence written **beside**
+ * the blocker question by the screen that renders it, and every check this phase
+ * had was scoped to the question's own subtree.
+ */
+async function everySentenceOnScreen(page: Page): Promise<readonly string[]> {
+  return page.locator('.screen').evaluate((root) => {
+    const out: string[] = []
+    const flat = (text: string) => text.replace(/\s+/g, ' ').trim()
+    for (const element of [root, ...root.querySelectorAll('*')]) {
+      const node = element as HTMLElement
+      if (node.querySelector('*') === null) {
+        const text = flat(node.textContent ?? '')
+        if (text !== '') out.push(text)
+      }
+      const label = node.getAttribute('aria-label')
+      if (label !== null) out.push(flat(label))
+    }
+    return [...new Set(out)]
+  })
+}
+
+test.describe('what is on screen because the blocker is', () => {
+  test('QA-84-015 — the blocker question brings only approved copy with it', async ({ page }) => {
+    /*
+     * The check Round 7's Proof B asked for, and the reason it is a **delta**.
+     *
+     * `blockerSurfacesInSource()` finds components by the blocker types in their
+     * props. `NowScreen` takes none — it derives `blocked` and `blockerDecision`
+     * from local state — so a sentence written beside `<BlockerQuestion>` inside
+     * the same branch was invisible to every enumeration this phase had, and the
+     * synthetic catalogue passed 13/13 while the browser case passed 3/3.
+     *
+     * What a parent cannot avoid is that its sentence appears **with** the
+     * question and goes **with** it. So: read the whole screen with the question
+     * up, dismiss it with the control the app already offers, read the whole
+     * screen again, and require everything in the difference to be approved
+     * copy. That is exactly "what is on screen because the blocker is",
+     * wherever it was written and whatever the writer takes as props.
+     */
+    await loadInQa(page, 'The first evening')
+    await go(page, 'Now')
+    await answerGuideWith(page, ['Enough', 'Nothing'])
+    await page.getByTestId('now-actions').getByRole('button', { name: "Can't right now" }).click()
+
+    const asked = page.getByTestId('blocker-question')
+    await expect(asked).toBeVisible()
+    const withQuestion = await everySentenceOnScreen(page)
+
+    await page.getByTestId('blocker-leave').click()
+    await expect(asked).toHaveCount(0)
+    const without = new Set(await everySentenceOnScreen(page))
+
+    const brought = withQuestion.filter((line) => !without.has(line))
+    expect(
+      brought.length,
+      'dismissing the question changed nothing, so nothing was compared',
+    ).toBeGreaterThan(3)
+
+    const unapproved = brought.filter(
+      (line) => !isApprovedBlockerCopy(line) && !containsApprovedBlockerCopy(line),
+    )
+    expect(
+      unapproved,
+      'the blocker question brought copy nobody approved onto the screen with it',
+    ).toEqual([])
+
+    for (const line of brought) {
+      expect(adaptationClaims(line), `“${line}” promised a future adaptation`).toEqual([])
+    }
+  })
+
+  test('QA-84-015 — and so does the standing blocker on a domain page', async ({ page }) => {
+    /*
+     * The same delta on the other host. `DomainPage` renders `BlockersPanel`,
+     * and the way to make the panel go is the control the owner already has.
+     */
+    await loadInQa(page, 'The first evening')
+    await go(page, 'Now')
+    await answerGuideWith(page, ['Enough', 'Nothing'])
+    await page.getByTestId('now-actions').getByRole('button', { name: "Can't right now" }).click()
+    await page.getByTestId('blocker-must-stay').click()
+
+    await page.goto(`${APP}#/life/health-recovery`)
+    await expect(page.getByTestId('domain-blocker').first()).toBeVisible()
+    const withBlocker = await everySentenceOnScreen(page)
+
+    await page.getByTestId('domain-blocker-lift').first().click()
+    await expect(page.getByTestId('domain-blocker')).toHaveCount(0)
+    const without = new Set(await everySentenceOnScreen(page))
+
+    const statement = 'a walk means leaving, and I could not — someone was in my care.'
+    const brought = withBlocker
+      .filter((line) => !without.has(line))
+      .map((line) => line.split(statement).join('{statement}'))
+    expect(brought.length, 'lifting it changed nothing, so nothing was compared').toBeGreaterThan(2)
+
+    const unapproved = brought.filter(
+      (line) =>
+        line !== '{statement}' &&
+        !line.startsWith('Not true any more: ') &&
+        !isApprovedBlockerCopy(line) &&
+        !containsApprovedBlockerCopy(line),
+    )
+    expect(
+      unapproved,
+      'the standing blocker panel brought copy nobody approved onto the page with it',
+    ).toEqual([])
+
+    for (const line of brought) {
+      expect(adaptationClaims(line), `“${line}” promised a future adaptation`).toEqual([])
+    }
   })
 })

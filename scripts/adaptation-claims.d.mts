@@ -35,6 +35,12 @@ export const APPROVED_FROM_SURFACES: readonly string[]
 /** The half a record reads as, wherever it is read, proved by describing one. */
 export const APPROVED_FROM_RECORDS: readonly string[]
 
+/** The shapes an export line may have around a record's sentence. */
+export const APPROVED_EXPORT_SCAFFOLDS: readonly string[]
+
+/** Whether a normalised export line is one of those shapes and nothing more. */
+export function isApprovedExportShape(shape: string): boolean
+
 /** Whitespace-insensitive membership of {@link APPROVED_BLOCKER_COPY}. */
 export function isApprovedBlockerCopy(line: string): boolean
 

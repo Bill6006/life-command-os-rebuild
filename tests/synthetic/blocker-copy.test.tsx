@@ -49,6 +49,7 @@ import {
   APPROVED_FROM_RECORDS,
   APPROVED_FROM_SURFACES,
   isApprovedBlockerCopy,
+  isApprovedExportShape,
 } from '../../scripts/adaptation-claims.mjs'
 import { CONCEPT } from '../../src/domain/concepts'
 import { BlockersPanel, BlockerQuestion } from '../../src/features/life/DomainPanels'
@@ -61,6 +62,7 @@ import { RECORD_KINDS } from '../../src/domain/records'
 import { describeRecord, tagFor, tagOf } from '../../src/features/history/describe'
 import { originOf, originOfAll } from '../../src/features/history/origin'
 import {
+  blockerHostsInSource,
   blockerSurfacesInSource,
   NOT_OWNER_TEXT,
   openJourney,
@@ -693,13 +695,23 @@ describe('QA-84-014 — and closed over the value the owner actually reads', () 
         const line = text.split('\n').find((row) => row.includes(described.text))
         if (line === undefined) continue
         checked += 1
-        const scaffolding = line.split(described.text).join('').trim()
         /*
-         * What may sit around the sentence: a bullet, a date, a tag, an origin
-         * note. What may not: another sentence.
+         * The shape, permitted exactly — QA-84-015.
+         *
+         * This asked whether the leftover was sentence-shaped **and longer than
+         * sixty characters**, which is not the claim D-196 made. Round 7 put
+         * *"This needs special care."* — twenty-four characters — in front of
+         * every exported sentence and 331 tests passed. Nothing is inferred
+         * from length now: the line is normalised back to its parts and must be
+         * one of the approved shapes.
          */
-        if (/[a-z]{3,}[^.]*\.\s*$/.test(scaffolding) && scaffolding.length > 60) {
-          offenders.push(`${id}: “${scaffolding}” around “${described.text}”`)
+        const origin = originOf(record)
+        let shape = line.split(described.text).join('{text}')
+        if (origin !== undefined) shape = shape.split(origin.label).join('{origin}')
+        shape = shape.split(described.tag).join('{tag}')
+        shape = shape.replace(/\b\d{4}-\d{2}-\d{2}\b/g, '{day}')
+        if (!isApprovedExportShape(shape)) {
+          offenders.push(`${id}: export line shape “${shape}” is not one anybody approved`)
         }
         for (const claim of adaptationClaims(line)) {
           offenders.push(`${id}: export line claims “${claim}”`)
@@ -735,5 +747,38 @@ describe('QA-84-014 — and closed over the value the owner actually reads', () 
     // And the instrument is reading something rather than returning nothing.
     const found = recordTextSinksInSource().map((sink) => sink.file)
     for (const file of exercised) expect(found, `the instrument cannot see ${file}`).toContain(file)
+  })
+})
+
+describe('QA-84-015 — and every screen that puts a blocker surface on the page', () => {
+  it('is one the rendered delta covers', () => {
+    /*
+     * Round 7's Proof B: a sentence written **beside** `<BlockerQuestion>` by the
+     * screen that renders it. `NowScreen` takes no blocker prop — it derives
+     * `blocked` and `blockerDecision` from local state — and imports no
+     * `describeRecord`, so every enumeration this phase had was blind to it.
+     *
+     * What a parent cannot avoid is writing the tag. `blockerHostsInSource()`
+     * finds the JSX, and the copy those hosts bring with them is checked by the
+     * delta in `phase84.spec.ts`: the screen with the surface up, the screen
+     * with it dismissed, and everything in the difference approved.
+     *
+     * **This is the coverage bookkeeping, not the copy proof.** Round 7 said not
+     * to close the proof by naming `NowScreen` in a list, and the proof is the
+     * delta. What this asserts is that no *new* host appears without one.
+     */
+    const covered = ['/src/features/now/NowScreen.tsx', '/src/features/life/DomainPage.tsx']
+    const hosts = blockerHostsInSource()
+    expect(hosts.length, 'the instrument found no blocker hosts at all').toBeGreaterThan(0)
+
+    const uncovered = hosts.filter((host) => !covered.includes(host.file))
+    expect(
+      uncovered.map((host) => `${host.file} renders ${host.renders}`),
+      'a screen puts a blocker surface on the page and no rendered delta covers it — add one in phase84.spec.ts',
+    ).toEqual([])
+
+    // And it really is reading the JSX: both known hosts are found.
+    const files = new Set(hosts.map((host) => host.file))
+    for (const file of covered) expect(files, `the instrument cannot see ${file}`).toContain(file)
   })
 })

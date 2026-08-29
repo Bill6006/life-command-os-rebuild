@@ -6676,3 +6676,52 @@ enumerated by what cannot be avoided — the import, the type in the props, the
 record kind — and asserted against what the owner **reads**.
 
 ---
+
+## D-197 — An exception is permitted exactly, and a screen's blocker copy is proved by what appears with it
+
+**Phase:** 84 (QA round 7 repair) · **Status:** Active · Completes **D-196**.
+
+Two rules, from the two ways D-196's guarantee was still open.
+
+**1. Where a guard grants an exception, the exception is enumerated, not
+measured.** D-196 let the export compose "a date, a tag and an origin" around a
+record's sentence and checked that the leftover _"is not itself a sentence"_ — by
+asking whether it was **longer than sixty characters**. Those are not the same
+claim. Round 7 inserted _"This needs special care."_ — twenty-four characters —
+before every exported history sentence and 331 tests passed. The scaffolding is
+now normalised back to `{day}`, `{tag}`, `{text}`, `{origin}` and must match one
+of `APPROVED_EXPORT_SCAFFOLDS` exactly. **Nothing is inferred from how short an
+addition happens to be**, which is the general form: a threshold in a guard is a
+guess about the thing it is meant to establish.
+
+**2. A screen's blocker copy is whatever appears with the blocker surface and
+goes with it.** D-194 enumerated blocker components by the types in their props.
+Round 7 wrote one sentence beside `<BlockerQuestion>` inside the same branch of
+`NowScreen`, which takes no blocker prop — it derives `blocked` and
+`blockerDecision` from local state — and imports no `describeRecord`. **Every
+enumeration this phase had built was blind to it**: the synthetic catalogue
+passed 13/13 and the browser case 3/3 while the sentence rendered.
+
+**What a parent cannot avoid is that its sentence arrives with the surface and
+leaves with it.** So the copy is proved by a **rendered delta**: the whole screen
+with the surface up, the whole screen with it dismissed, and everything in the
+difference must be approved. That is exactly _"what is on screen because the
+blocker is"_, wherever it was written and whatever the writer takes as props.
+
+**The enumeration of hosts is separate and structural.**
+`blockerHostsInSource()` finds every file whose JSX contains a blocker surface
+tag, which a parent also cannot avoid. A new host fails until a delta covers it.
+Naming `NowScreen` in a list would have been the wrong repair and Round 7 said
+so; what is listed is which hosts have coverage, and that list is checked against
+the JSX rather than trusted.
+
+**And the copy check is not a source parse, deliberately.** The first attempt
+read the JSX branch around the tag and pulled the author's text out of it. It
+does not work honestly — the enclosing `{` of a JSX expression is not
+distinguishable from a block brace by counting, and the extractor walked out of
+the branch and reported `const [conceptDraft, setConceptDraft] = useState('')` as
+owner copy. **A half-written parser inside a guard is the same mistake as a
+half-written classifier.** The enumeration is done where it is exact, in source;
+the copy is checked where it exists, on the screen.
+
+---

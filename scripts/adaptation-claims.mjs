@@ -383,6 +383,38 @@ export const APPROVED_FROM_RECORDS = [
   'Withdrew an earlier entry — {reason}',
 ]
 
+/**
+ * The shapes an export line may have around a record's sentence — QA-84-015.
+ *
+ * The export is the one sink that legitimately composes: a bullet, sometimes a
+ * date, sometimes the tag, sometimes an origin. D-196 said the scaffolding "is
+ * not itself a sentence" and the check asked whether the leftover was **longer
+ * than sixty characters**, which is not the same claim. Round 7 inserted
+ * *"This needs special care."* — twenty-four characters — before every exported
+ * history sentence, and 331 tests passed.
+ *
+ * So the scaffolding is permitted **exactly**, the way the copy is: normalise a
+ * line by putting `{text}`, `{tag}`, `{day}` and `{origin}` back, and the result
+ * must be one of these. There is no length in it and nothing is inferred from
+ * how short an addition happens to be.
+ */
+export const APPROVED_EXPORT_SCAFFOLDS = [
+  '- {text}',
+  '- {tag}: {text}',
+  '- {day} · {tag}: {text}',
+  '- {day} — {text}',
+  '- {text} · {origin}',
+  '- {tag}: {text} · {origin}',
+  '- {day} · {tag}: {text} · {origin}',
+  '- {day} — {text} · {origin}',
+]
+
+/** Whether an export line is one of those shapes and nothing more. */
+export function isApprovedExportShape(shape) {
+  const flat = String(shape).replace(/\s+/g, ' ').trim()
+  return APPROVED_EXPORT_SCAFFOLDS.some((approved) => approved.replace(/\s+/g, ' ').trim() === flat)
+}
+
 /** Every string the blocker path can put in front of the owner. */
 export const APPROVED_BLOCKER_COPY = [
   ...APPROVED_FROM_BLOCKERS_MODULE,

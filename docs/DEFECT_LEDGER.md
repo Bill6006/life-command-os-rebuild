@@ -39,6 +39,71 @@ None.
 
 ## Fixed
 
+### DEF-0132 — a length threshold and a props-based enumeration, both wider than their prose
+
+- Status: Fixed
+- Severity: Blocker — two independent routes for unapproved owner-visible copy to
+  reach the owner with every gate green
+- Found in: routing 84 / `d78b765`
+- Found by: **independent QA round 7** (QA-84-015), with two disposable mutations
+- Class: **a guard whose exception is measured rather than enumerated**, and
+  **an enumeration keyed on something a writer can simply not do.** The sixth and
+  seventh variations in this phase.
+- Reproduction A, in the export:
+
+  ```diff
+  -lines.push(bullet(withOrigin(`${entry.tag}: ${entry.text}`, entry.origin)))
+  +lines.push(
+  +  bullet(withOrigin(`${entry.tag}: This needs special care. ${entry.text}`, entry.origin)),
+  +)
+  ```
+
+  → **331 / 331 passed.** The check removed the describer's text and rejected
+  sentence-shaped leftovers **only above sixty characters**; the inserted
+  sentence is twenty-four.
+
+- Reproduction B, in `NowScreen`:
+
+  ```diff
+   {blockerDecision === undefined || blocked === undefined ? null : (
+  -  <BlockerQuestion ... />
+  +  <>
+  +    <p className="note">This needs special care.</p>
+  +    <BlockerQuestion ... />
+  +  </>
+   )}
+  ```
+
+  → synthetic catalogue **13 / 13**, browser case **3 / 3** at all widths.
+  `blockerSurfacesInSource()` finds components by the blocker types in their
+  props; `NowScreen` has none and imports no `describeRecord`.
+
+  Both reproduced here before anything was built.
+
+- Repair. **A:** `APPROVED_EXPORT_SCAFFOLDS` — the line is normalised back to
+  `{day}`, `{tag}`, `{text}`, `{origin}` and must match an approved shape
+  exactly. No length appears in the check. **B:** a **rendered delta** in
+  `phase84.spec.ts` — the whole screen with the blocker surface up, the whole
+  screen with it dismissed, everything in the difference approved — plus
+  `blockerHostsInSource()`, which finds every file whose JSX renders a blocker
+  surface so a new host fails until a delta covers it. See **D-197**.
+- Regression: the export shape assertion in
+  `tests/synthetic/blocker-copy.test.tsx`, two delta cases in
+  `tests/browser/phase84.spec.ts`, and the host-coverage case.
+- Proved by reintroduction three ways: **QA's exact export mutation** fails the
+  shape assertion by name; **QA's exact `NowScreen` mutation** fails the delta,
+  which reports `"This needs special care."`; and **a new blocker host nobody
+  covered** fails the enumeration.
+- Siblings: checked. A first attempt to read the branch copy out of source was
+  written and **discarded** — the enclosing `{` of a JSX expression is not
+  distinguishable from a block brace by counting, and the extractor reported
+  `const [conceptDraft, setConceptDraft] = useState('')` as owner copy. That is
+  recorded in D-197 rather than left as a silence, because a half-written parser
+  in a guard is the same mistake as a half-written classifier.
+- Note on scope: the current copy was honest throughout, for the fifth round
+  running, and Round 7's fresh CASE A and CASE B both passed. What was defective
+  was the guarantee.
+
 ### DEF-0131 — copy composed after the describer returned, where no guard was looking
 
 - Status: Fixed
