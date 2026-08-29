@@ -2998,4 +2998,291 @@ them.
 Do not ask me to paste file contents.
 ```
 
+## Independent QA Round 7 — 2026-08-28
+
+**Phase:** 84
+
+**Actor:** Codex / the same independent QA conversation that wrote Rounds 1–6.
+
+**Repaired product checkpoint:** `d78b765`.
+
+**Deployed head tested:** `3f5e70c91c720bece24ecc4137b92f57d1933da4`;
+checkpoint equivalence proved that the two files between it and `d78b765` are
+documentation-only and do not change the served bundle.
+
+**Overall verdict:** **FAIL.**
+
+**New finding:** **QA-84-015 — Blocker.**
+
+**Product acceptance:** **PASS on all seven D-173 items.** The present product
+is clean for the fifth consecutive QA round. The failure is again in the
+standing D-187/D-193/D-194/D-195/D-196 guarantee, not in current owner-visible
+behavior.
+
+### Fresh owner-use result
+
+Round 7 opened a new Chromium process and a separate ephemeral context for each
+case at 430×932. Both contexts began with empty IndexedDB, touched no retained
+browser data, used ordinary product screens only and never opened the QA
+laboratory.
+
+The first CASE B attempt happened after the real clock had entered Friday late
+night, when the product correctly abstained rather than presenting a move. That
+was not treated as a product failure. QA discarded that context and repeated
+both cases from new empty contexts with the browser clock fixed at Friday
+18:58 local — an ordinary evening in which the paths under test are reachable.
+
+#### CASE A — “More money” through the second agenda
+
+From an empty store, Insights asked its Career & Learning question. Before
+confirmation the proposal preserved **“More money”** byte-identically, proposed
+an aim, and explicitly declined to assume a next step, starting point or what
+would count as progress. After confirmation, Career & Learning and Timeline
+showed the same owner words byte-identically. No second meaning, baseline,
+target measure, next step or score was invented.
+
+#### CASE B — caregiving blocker through ordinary use
+
+From a second empty store, QA used Life → Health & Recovery to name **Move
+more**, with **Take a ten-minute walk** as the optional next step. The
+confirmation accurately described what the product then did: after an ordinary
+**Enough** energy answer, Now recommended the named walk. QA chose **Can't right
+now** and then **Can’t leave — someone’s in my care**.
+
+The Health page kept the constraint durably, identified it as a fact about the
+world rather than unwillingness, and offered **Not true any more**. Timeline
+kept the inability as **Not then / Did not fit at the time** and the constraint
+as **Limit**. No score or promise of future recommendation adaptation appeared.
+
+### Acceptance result
+
+| D-173 acceptance item | Round 7 result |
+| --- | --- |
+| 1. A destination can be named and can change Now | **PASS** |
+| 2. The owner can introduce something without the app inventing meaning | **PASS** |
+| 3. Progress reports only what actually happened | **PASS** |
+| 4. An interruption is not treated as refusal | **PASS** |
+| 5. Blocker copy promises no adaptation the engine does not perform | **PASS in the present product; FAIL as a standing guarantee — QA-84-015** |
+| 6. Correction, private handling and the second agenda remain honest | **PASS** |
+| 7. Standing no-score guards | **PASS** |
+
+The first-run abstention and ordinary routes, all eleven Life areas, Health's
+confirmation-to-recommendation agreement, partial Timeline rows, restorative
+silence, caregiving capture and withdrawal, course/recurrence/correction/private
+behavior, Fatherhood's growth model and the absence of blocker enforcement all
+remain intact.
+
+### QA-84-015 — the final-owner-text guarantee still has two open boundaries
+
+**Severity:** Blocker.
+
+**Standing decisions:** D-187, D-193, D-194, D-195 and D-196.
+
+**Classification:** Test-architecture false green; current owner-visible copy
+remains honest.
+
+D-196 states the right invariant: a sink renders the describer's value and does
+not add to it. The Round 6 repair enforces identity at Timeline and the domain
+assemblers. It gives export an exception for legitimate date/tag/origin
+scaffolding, and discovers blocker JSX surfaces by three named prop types.
+
+Both exception boundaries are wider than the prose says. QA proved each with a
+separate disposable mutation at `d78b765`. The real repository was not edited,
+and the detached worktree was removed after the proofs.
+
+#### Proof A — a short export sentence passes the “no sentence” assertion
+
+QA changed the real history export line:
+
+```diff
+-lines.push(bullet(withOrigin(`${entry.tag}: ${entry.text}`, entry.origin)))
++lines.push(
++  bullet(withOrigin(`${entry.tag}: This needs special care. ${entry.text}`, entry.origin)),
++)
+```
+
+That owner-visible sentence is neither the describer's value nor legitimate
+date/tag/origin scaffolding. Nevertheless all relevant blocker and export gates
+passed:
+
+```text
+npm exec vitest -- run tests/synthetic/blocker-copy.test.tsx \
+  tests/synthetic/export-honesty.test.ts \
+  tests/synthetic/g013-export-handoff.test.ts
+
+3 files passed; 331 / 331 tests passed.
+```
+
+The false green is deterministic. The assertion removes `described.text`, then
+rejects sentence-shaped scaffolding only when its length is greater than 60.
+The new sentence is short, so the test accepts it. This is not an entailment or
+classifier escape: D-196 explicitly claims that the remaining scaffolding is
+not itself a sentence, and the assertion does not establish that claim.
+
+#### Proof B — copy composed by a parent escapes the closed surface catalogue
+
+QA then restored the export and added one sentence beside the ordinary blocker
+question in `NowScreen`:
+
+```diff
+ {blockerDecision === undefined || blocked === undefined ? null : (
+-  <BlockerQuestion ... />
++  <>
++    <p className="note">This needs special care.</p>
++    <BlockerQuestion ... />
++  </>
+ )}
+```
+
+The sentence renders whenever the blocker question renders. It is app-owned
+blocker-path copy and is absent from the approved catalogue. The synthetic
+catalogue still passed **13/13**, and the exact Phase 84 browser case still
+passed **3/3** at 360, 430 and 1,280px.
+
+`blockerSurfacesInSource()` discovers a component only when its destructured
+props contain the literal type `StandingBlocker`, `BlockerDecision` or
+`ResumableMove`. `NowScreen` takes no such prop; it derives `blocked` and
+`blockerDecision` as local state. The test renders `BlockerQuestion`, not the
+parent screen around it. The browser check likewise reads the question locator,
+not the whole blocker-path region. The claimed closed catalogue therefore does
+not close over copy composed by a parent.
+
+The sink enumeration has the same declared boundary: it finds files importing
+`describeRecord`. A parent that derives owner text from local blocker state or
+record fields without that import is invisible by construction. “Every sink
+must import `describeRecord`” is an architectural preference, not a fact the
+current source structure makes impossible to violate.
+
+#### The branded-type trade
+
+Round 6 was right that a brand alone would make deliberate composition visible,
+not impossible. Round 7 does not require a brand specifically. It does require
+the guarantee to reach the actual final rendered/exported value without relying
+on a length threshold, a named-import convention or three named prop types. A
+brand or approved constructor may be part of that closure, but neither proof
+above may remain green after the repair.
+
+### Mobile, verification and protected-scope result
+
+No product, mobile, accessibility, privacy or owner-use defect was found.
+
+| Gate | Round 7 result |
+| --- | --- |
+| Checkpoint equivalence | **PASS** — deployed `3f5e70c` is bundle-equivalent to repaired product checkpoint `d78b765`; only two documentation files intervene |
+| Aggregate `npm run verify` | **PASS** — format, lint, typecheck, production build and **1,859 / 1,859 tests** across 84 files |
+| Export mutation block | **FALSE GREEN — 331 / 331 passed** with an unapproved sentence in exported blocker history |
+| Parent-surface mutation block | **FALSE GREEN — 13 / 13 synthetic and 3 / 3 focused browser checks passed** with unapproved blocker-path copy on Now |
+| Full browser matrix | **PASS — 690 / 690** at 360, 430 and 1,280px; 230 per width; one worker; no retry or flake |
+| Deployed Android-style gate | **clean — 233 checks** against deployed `3f5e70c` |
+| Privacy scan | **clean — 289 tracked files** |
+| Block sweep and current copy guards | **PASS** |
+| D-196 final-owner-text guarantee | **FAIL** at export scaffolding and parent-composed blocker copy |
+| CI at deployed head | **PASS** — workflow run `33223240599` completed successfully for `3f5e70c` |
+| Commits on no remote at QA start | **one** — `7dce4ed`, a marker-only QA-document commit; no product bytes |
+
+The protected scope remains intact. QA changed no product code. No strategy
+evaluation, pattern-discovery engine, blocker enforcement, semantic
+interpretation, new domain progression model, owner-routines library,
+historical backfill, twelfth page, scoring change, visual-language change or
+orchestrator change appeared. `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` is
+unchanged and there is no `PHASE_85_*` file. The owner phone check remains owed
+and is not something QA can clear.
+
+---
+
+## Complete next handoff — repair after Round 7 FAIL
+
+**System:** Claude / builder.
+
+**Model:** Claude, Opus-class.
+
+**Intelligence level:** **Max** — this is the seventh audit-campaign repair and
+D-196's asserted final-owner-text boundary is still incomplete.
+
+**Conversation:** **CURRENT** — return to the original routing 84 Claude builder
+conversation, which owns this still-unresolved phase and its repairs.
+
+```text
+Routing Phase 84 repair after independent QA Round 7 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 7 is the independent QA
+retest and is authoritative for this repair. Keep the Phase field exactly 84.
+
+Keep routing 84 YELLOW. Do not start routing 90 and do not mark the phase GREEN.
+Repair QA-84-015 under canonical plan section 42: reproduce both false-greens,
+write regressions that fail for both exact mutations, fix the root cause, and
+run the full gate on the final tracked checkpoint.
+
+The current product copy is honest. The guard is not closed at two boundaries:
+
+1. Export claims its date/tag/origin scaffolding is not a sentence, but the
+   assertion ignores sentence-shaped scaffolding unless it is longer than 60
+   characters. Adding “This needs special care.” before the describer's history
+   sentence passed all 331 relevant blocker/export tests.
+2. The blocker surface catalogue discovers components only when their props
+   contain one of three named types. Adding the same sentence in NowScreen,
+   beside the ordinary BlockerQuestion and controlled by its local blocker
+   state, passed the 13-test synthetic catalogue and the corresponding browser
+   case at all three widths.
+
+Required outcome: make D-196 true at the actual final rendered and exported
+owner-text boundary. Legitimate export structure must be permitted exactly, not
+by a sentence-length heuristic. Blocker-path copy composed by a parent from
+local state or record fields must enter the same approval guarantee even when
+the parent takes no named blocker prop and imports no describeRecord. Do not
+close this by merely adding NowScreen, another import, another prop type or the
+mutation sentence to a hand-maintained list.
+
+Reintroduce both exact QA mutations. Each must fail an authoritative guard
+before browser or release gates. Preserve the existing catalogue halves,
+describer inventory and exact Timeline/domain value comparisons where useful,
+but do not call the result closed until both values the owner actually receives
+are evaluated. Reconsider the brand/constructor option if it helps, while
+recognising that a brand alone does not discover parent-composed local-state
+copy.
+
+Preserve every Round 7 product PASS and explicit deferral, especially the two
+fresh-store cases, first-run abstention and ordinary routes, all eleven Life
+areas, byte-identical “More money” behavior and its unknowns, Health's
+confirmation-to-recommendation agreement, partial Timeline rows, truthful
+restorative silence, durable caregiving and withdrawal, course, recurrence,
+correction and private behavior, all no-score protections, Fatherhood's
+untouched growth model, and the absence of blocker enforcement.
+
+Run the clean aggregate gate, full browser suite at 360/430/1280, privacy scan,
+block/copy sweeps and deployed Galaxy-class Android gate. Deploy the repaired
+checkpoint, prove checkpoint equivalence if documentation moves the deployed
+SHA, append the builder's repair record and a complete Round 8 retest prompt to
+this same QA report, and address that retest to the SAME Codex QA conversation
+at High. Round 8 must repeat CASE A and CASE B from new ephemeral browser
+contexts, ordinary screens only, without opening the QA laboratory.
+
+Do not create a PHASE_85_* file. Do not alter
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md. Do not put the LCO completion marker in
+docs/NEXT_PROMPT.md; for this owner handoff it belongs only at the end of this
+QA report. Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude, Opus-class.
+
+**Reasoning level:** Max.
+
+**Conversation:** CURRENT — the original routing 84 builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 7 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 7
+repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
+routing 90. Do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->
