@@ -114,3 +114,20 @@ Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 8
 repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
 routing 90. Do not ask me to paste the file contents.
 ```
+
+---
+
+## Done — 2026-08-29
+
+This handoff was executed. QA-84-016, QA-84-017 and QA-84-018 are repaired at
+**`9d7d186`**; QA's Round 8 is committed alone and unedited at `61870e7`, the
+repair on top of it. All three of Round 8's exact mutations were reproduced
+before the repair and are caught after it, and the aliased wrapper still passes
+the synthetic suite 14/14 while failing on the screen.
+
+**Routing 84 stays YELLOW.** The builder does not declare GREEN (D-077). The
+next step is **Round 9**, dispatched at the end of
+[`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md) to the **SAME** Codex
+QA conversation at **High**. That file is the one to read.
+
+<!-- LCO_COMPLETE -->

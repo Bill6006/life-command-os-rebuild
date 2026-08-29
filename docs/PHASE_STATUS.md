@@ -146,15 +146,24 @@ module rather than over the screen; Round 5 found that closing it over three
 screens left the shared record describer outside — the boundary the Round 4
 repair had **declared** and not closed. All three are repaired.
 
-**Five findings, one theme, and it is now the rule rather than a rediscovery.**
+**Eight findings, one theme, and it is now the rule rather than a rediscovery.**
 DEF-0127 guarded D-187 with a list of phrases; DEF-0128 with a list of verbs;
-DEF-0129 with a list of one module; DEF-0130 with a list of three screens; and
+DEF-0129 with a list of one module; DEF-0130 with a list of three screens;
 DEF-0131 asserted against the describer's output rather than the value the owner
-receives. **Copy is collected where it is made, enumerated by what cannot be
-avoided — the import, the type in the props, the record kind — and asserted
-against what the owner reads** (D-195, D-196). Every version that enumerated
-something else was wrong in the same way, and each was found by somebody writing
-one ordinary sentence the guard had not imagined.
+receives; DEF-0132 measured an exception with a length threshold and enumerated
+components by their props; and DEF-0133 broke three more — a transition, a
+matching line, a tag name. **Copy is collected where it is made, enumerated by
+what cannot be avoided, and asserted against what the owner reads** (D-195,
+D-196). Every version that enumerated something else was wrong in the same way,
+and each was found by somebody writing one ordinary sentence the guard had not
+imagined.
+
+**Round 8 is where the enumeration stops.** Every feature a guard used to
+identify _the blocker path_ — the prop type, the import, the JSX tag, the
+transition — is something the person writing the code can choose differently, so
+**the claim is now over the screens the owner can reach**, walked from the app's
+own navigation, before a block and after one. A screen cannot be aliased
+(D-198).
 
 It stays YELLOW. A builder conversation may not approve its own phase (D-077),
 and this record says what was built and repaired and where to look at it; it does
@@ -192,7 +201,8 @@ through the same controls, now gets past all eight steps.
 
 | Fact                    | Value                                                                                                  |
 | ----------------------- | ------------------------------------------------------------------------------------------------------ |
-| Product checkpoint      | `9c4cb5f` — the Round 7 repair, and the commit the aggregate gate was run on                           |
+| Product checkpoint      | `9d7d186` — the Round 8 repair, and the commit the aggregate gate was run on                           |
+| Round 8 checkpoint      | `9c4cb5f` — the Round 7 repair, which Round 8 tested                                                   |
 | Round 7 checkpoint      | `d78b765` — the Round 6 repair, which Round 7 tested                                                   |
 | Round 6 checkpoint      | `1324f66` — the Round 5 repair, which Round 6 tested                                                   |
 | Round 5 checkpoint      | `f45214b` — the Round 4 repair, which Round 5 tested                                                   |
@@ -203,7 +213,7 @@ through the same controls, now gets past all eight steps.
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                            |
 | Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                     |
 | Owner phone check       | owed before release; not a blocker QA can clear                                                        |
-| Independent QA          | **Rounds 1 to 7 all FAIL**, all repaired; Round 8 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md` |
+| Independent QA          | **Rounds 1 to 8 all FAIL**, all repaired; Round 9 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md` |
 
 **The documentation head is a later commit than the product checkpoint**, as it
 was in Round 1. It carries this record, the Round 2 dispatch and two corrected
@@ -215,18 +225,18 @@ trust (D-097, D-180).
 
 At the repaired checkpoint, not at the one QA failed.
 
-| Gate                                      | Result                                                                                                                  |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                                                               |
-| Unit / contract / synthetic / adversarial | **1,860 passed** in 84 files (1,859 at round 7, 1,812 at round 1)                                                       |
-| Browser, three widths, one worker         | **696 passed** at three widths on a clean re-run; one case aborted a navigation once and passed alone and on the re-run |
-| Android-style gate, deployed              | **clean — 233 checks** against deployed `9c4cb5f`                                                                       |
-| Privacy scan                              | **clean** — 289 tracked files                                                                                           |
-| Block sweep                               | **PASS** — unchanged                                                                                                    |
-| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya                                                       |
-| Commits not on any remote                 | **none** at the handed-off head (D-180)                                                                                 |
-| Checkpoint equivalence                    | **PASS** — deployed `9c4cb5f` serves the same bytes, nothing between                                                    |
-| CI                                        | Verify **success**, Deploy preview **success**                                                                          |
+| Gate                                      | Result                                                                                              |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                                           |
+| Unit / contract / synthetic / adversarial | **1,860 passed** in 84 files (unchanged at round 8 — no product code moved; 1,812 at round 1)       |
+| Browser, three widths, one worker         | **702 passed** at three widths, one worker, **zero failures**                                       |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `9d7d186`**                                                 |
+| Privacy scan                              | **clean** — 289 tracked files                                                                       |
+| Block sweep                               | **PASS** — unchanged                                                                                |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya                                   |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                                                             |
+| Checkpoint equivalence                    | **PASS** — the deployed Preview serves `9d7d186` itself; re-proved after the documentation commit** |
+| CI                                        | Verify **success**, Deploy preview **success**                                                      |
 
 ## Independent QA — round 1, and the repair
 
@@ -695,6 +705,76 @@ browser gate rather than the aggregate one.
 
 **No product code changed.** Proved by reintroduction three ways: both of QA's
 exact mutations, and a new blocker host nobody covered.
+
+## Independent QA — round 8, and the repair
+
+**Result: FAIL, and the product half was clean for the sixth round running.**
+Codex, at High, on the deployed `9773a9a` (bundle-equivalent to `9c4cb5f`). All
+seven acceptance items passed, QA-84-007 through QA-84-015 remain closed, and
+both fresh-store cases passed again from new ephemeral contexts. The full report
+is [`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md), Round 8, committed
+unedited as `61870e7` before the repair.
+
+Three findings, three disposable mutations, and **one class**: every guard that
+broke identified _the blocker path_ by something the person writing the code can
+simply choose differently.
+
+### QA-84-016 — the delta's premise was false
+
+Round 7 claimed a parent's blocker copy _"arrives with the surface and leaves
+with it"_. It does not. **Can't right now** writes the blocker **and** leaves a
+resumable move, so `ResumePanel` is on the screen in both halves of the
+comparison; a sentence keyed to it sat in both snapshots and the subtraction
+removed it. _"This needs special care."_ passed 14/14 synthetic and 6/6 delta.
+
+The comparison is now against the screens **before the block** — the only state
+that reliably contains no blocker copy.
+
+### QA-84-017 — a check over one line is not a check over the document
+
+The export check found the row containing `described.text`, validated its shape
+and stopped. A second bullet beside it, reading _"The app will choose something
+better next time."_, passed **441/441**. And when no row matched a record it
+`continue`d in silence, so `checked > 0` proved only that _some_ line existed.
+
+Three claims replace it, none of which selects a line: every line is
+classifier-clean, the day blocks hold **exactly one bullet per timeline entry**,
+and every blocker record's line is **found** — a miss is a failure — and shaped.
+
+### QA-84-018 — a component can be named anything
+
+`blockerHostsInSource()` found hosts by the literal JSX tag.
+`import { BlockerQuestion as Surface }` behind a two-line wrapper passed the
+complete suite and the typecheck without entering the inventory. A list of
+imports, of prop types, or of any other spelling would have gone the same way.
+
+**The inventory is deleted, not narrowed** — Round 8 offered exactly that
+alternative — and the coverage claim moved to a route sweep that reads the app's
+**own** navigation and visits every screen it finds, before a block and after
+one. **A screen the owner can reach cannot be aliased.** Everything the block
+brought with it must be approved by name, in the blocker catalogue or in the new
+and separately named `APPROVED_WHEN_A_MOVE_IS_BLOCKED` — Now's no-action line,
+Timeline's total, Insights' counts, the correction control. The cost is stated
+where the list is defined: an unrelated Insights edit will fail the blocker gate
+until it is approved there. That is accepted, because the alternative is the one
+Round 8 broke twice.
+
+### Two calibrations, deliberately
+
+Over the whole app the blocker-path rule flags honest sentences — _"the app
+cannot work out on its own"_ — because its subjects include a bare `it` and its
+modals include ability. **Narrowing the shared rule until the noise stopped would
+be tuning a guard to pass.** `adaptationClaimsOnAnyScreen` is a second
+calibration with a principled difference — a **named** subject and **futurity**,
+never ability — and the three wordings it misses are named in the test.
+
+**No product code changed.** Proved by reintroduction: all three of QA's exact
+mutations, plus a non-promise bullet and an aliased wrapper hosting copy on a
+standing screen. D-198 and DEF-0133.
+
+**And one honest limit, stated rather than found.** The crawl reaches what the
+app's navigation reaches. A screen linked from nowhere and reachable only by
+typing its URL would not be swept; Round 9 is asked to look for one.
 
 ## The six packages
 

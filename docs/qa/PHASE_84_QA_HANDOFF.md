@@ -3842,4 +3842,362 @@ repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
 routing 90. Do not ask me to paste the file contents.
 ~~~
 
-<!-- LCO_COMPLETE -->
+---
+
+## Round 8 repair — the builder's record
+
+**Actor:** Claude / builder. **Model:** Opus-class, Max.
+**Conversation:** CURRENT — the routing 84 builder conversation.
+**Repaired product checkpoint:** `9d7d186`, from `9c4cb5f`.
+
+**Round 8 is right, three times, and the three findings are one finding.** Every
+guard that broke identified *the blocker path* by something the person writing
+the code can simply choose differently — a transition, a matching line, a tag
+name. The eighth version stops identifying the path.
+
+**No product code changed.** `git diff -- src` is empty at the repaired
+checkpoint, and no copy the owner reads is different from the copy Round 8
+approved. Every change is in `scripts/`, `tests/` and `docs/`. **The phase stays
+YELLOW; the builder does not declare GREEN (D-077).**
+
+### All three false-greens reproduced first
+
+Not one was taken on trust, and each was confirmed at `9c4cb5f` before anything
+was built.
+
+**QA-84-016.** `<p className="note">This needs special care.</p>` next to
+`<ResumePanel>` in `NowScreen.tsx`. Round 8 is exactly right about the mechanism:
+**Can't right now** writes the blocker *and* leaves a resumable move, so
+`ResumePanel` is on the screen in both halves of the comparison and a sentence
+keyed to it was in both snapshots. The delta subtracted it. Synthetic **14 / 14**,
+both delta cases **6 / 6**, with the sentence on Now.
+
+**QA-84-017.** A second bullet after the approved history line in the export,
+reading *"The app will choose something better next time."* — **441 / 441** across
+the five relevant suites. The check took the row containing `described.text`,
+validated its shape and stopped; nothing else in the document was inspected. And
+the silent `continue` was real: with no matching row the loop skipped the record,
+so the closing `checked > 0` only ever proved that *some* line existed.
+
+**QA-84-018.** `import { BlockerQuestion as Surface }` behind a two-line wrapper
+in `NowScreen.tsx` — the complete blocker-copy suite **14 / 14**, typecheck clean,
+and the host inventory reported nothing. A list of imports, of prop types, or of
+any other spelling would have gone the same way.
+
+### What replaced them — D-198, DEF-0133
+
+**1. The claim is now over screens, and a screen cannot be aliased.**
+`blockerHostsInSource()` is **deleted**. Round 8 offered that alternative in as
+many words — *"or the proof must stop claiming exhaustive host discovery"* — and
+it was the right one, because a narrowed inventory would still read as an
+inventory and still be wrong. The coverage claim moved to a route sweep in
+`tests/browser/phase84.spec.ts` that reads the app's **own** navigation — the
+buttons in `.nav`, the `#/life/` links on Life — and visits every screen it
+finds, collecting every leaf string and every `aria-label`. A twelfth page would
+join by existing. A case in `blocker-copy.test.tsx` fails if the inventory ever
+comes back, so the removal is visible rather than a gap somebody has to notice.
+
+**2. The comparison is against the screens before the block, not against a
+transition — and both halves come from one session.** That is the direct
+consequence of Round 8's mechanism: the only state that reliably has no blocker
+copy in it is the state before there is a blocker.
+
+**The first build of that sweep was itself unsound, and its own gate found it.**
+It loaded the scenario twice, once for each half, and `answerGuideWith` answers
+whatever the guide happens to be asking — so the two halves could answer a
+different number of questions, and the difference then carried a reading the
+second pass had recorded rather than anything the block did. It passed alone and
+failed at two of three widths inside the full suite. **A subtraction is only
+sound when one side is the other side plus the cause**, and the only way to
+guarantee that is to block the move in the session that was just swept. That is
+what it now does, and it is written down as DEF-0133's fourth bullet and in
+D-198 rather than quietly corrected, because it is the same class as the three
+findings above: a comparison whose premise was never checked.
+
+Comparing against the pristine screens brings along everything else the new records
+changed — Now's no-action line, Timeline's total, Insights' counts, the
+correction control that appears once there is something to correct — and those
+are approved in a **new and separately named** list,
+`APPROVED_WHEN_A_MOVE_IS_BLOCKED`, rather than being folded into the blocker
+catalogue, because they are not blocker copy and the catalogue should not claim
+them. **The cost is real and is stated where the list is defined**: an unrelated
+edit to an Insights count will fail the blocker gate until it is approved. That
+is accepted; the alternative is the one Round 8 broke twice.
+
+One entry in it is not the app's prose at all — `{n} of {n}`, a **reading the
+owner gave**. `readingText` sends a scale fact through `describeFactValue`, which
+renders it bare, and the domain page's row is a leaf element whenever no origin
+badge sits beside it. It is listed under its own comment saying exactly that,
+because a list that does not say what its entries are is the same failure one
+level down.
+
+**3. The export check covers the whole export.** Three claims replace the
+line-search, none of which selects a line: every line of the document is free of
+adaptation claims; the day blocks hold **exactly one bullet per timeline entry**;
+and every blocker record's line is **found** — a miss is now a failure, not a
+`continue` — and its shape approved against `APPROVED_EXPORT_SCAFFOLDS`.
+
+**And the classifier has two calibrations, on purpose.** Run over every screen in
+the app, the blocker-path rule flags honest sentences — *"the app cannot work out
+on its own"*, *"what the app may reason from"* — because its subjects include a
+bare `it` and its modals include ability. **Narrowing the shared rule until the
+noise stopped would be tuning a guard to pass**, which is this phase's whole
+failure mode. So `adaptationClaimsOnAnyScreen` is a second calibration with a
+principled difference — a **named** subject and **futurity**, never ability — and
+the three wordings it misses are named in the test rather than left implied. Both
+calibrations run: the blocker-path one on blocker copy, the app-wide one on every
+screen.
+
+### Each exact mutation, reintroduced and caught
+
+All four reproduced at `9c4cb5f` before anything was built, and all four caught
+after. Each mutation was built and run, not read — a reintroduction that does not
+compile proves nothing, because the browser then runs the old bundle.
+
+**QA-84-016 — _"This needs special care."_ beside `<ResumePanel>` in
+`NowScreen.tsx`.** The route sweep fails and names the sentence:
+
+```
+Error: blocking a move put copy nobody approved on a screen — approve it in
+APPROVED_BLOCKER_COPY if it is blocker copy, or in APPROVED_WHEN_A_MOVE_IS_BLOCKED
+if it is what another screen says once a record exists
++   "This needs special care.",
+```
+
+**QA-84-018 — the alias.** `import { BlockersPanel as Surface }` in
+`DomainPage.tsx`, with a `WrappedBlockerHost` rendering `<Surface {...props} />`
+and one line beside it. Exactly the shape Round 8 used, and it still passes the
+suite the inventory used to guard: **typecheck clean, `blocker-copy.test.tsx`
+14/14** — the same 14/14 Round 8 reported. The sweep does not ask what the
+component is called, and fails on the promise:
+
+```
+Error: a screen in the app claims the app will change what it offers
++   "“The app will suggest something else next time.” → The app will suggest something else next time.",
+```
+
+**And the same wrapper with an honest sentence** — _"This one needs particular
+care."_ — fails on the approval half instead, which is the half that covers copy
+that is not a promise:
+
+```
++   "This one needs particular care.",
+```
+
+**QA-84-017 — the second bullet.** _"The app will choose something better next
+time."_ pushed beside the approved history line fails twice over, on the claim
+**and** on the count, in two separate histories:
+
+```
++   "what-worked: a line of the export claims “The app will choose something better next time.”",
++   "what-worked: the day blocks hold 31 bullets for 29 entries",
++   "long-run: a line of the export claims “The app will choose something better next time.”",
++   "long-run: the day blocks hold 41 bullets for 40 entries",
+```
+
+**And a bullet that promises nothing** — the same insertion reading _"A quiet
+evening."_ — still fails, on the count alone. That is the part that makes the
+claim about the document rather than about one sentence:
+
+```
++   "what-worked: the day blocks hold 31 bullets for 29 entries",
++   "long-run: the day blocks hold 41 bullets for 40 entries",
+```
+
+### Verification at the repaired checkpoint
+
+| Gate                                      | Result |
+| ----------------------------------------- | ------ |
+| `npm run verify`, clean checkout          | **PASS** — format, lint, typecheck, test, build (D-180) |
+| Unit / contract / synthetic / adversarial | **1,860 passed** in 84 files (unchanged — no product code moved)** |
+| Browser, three widths, one worker         | **702 passed** at three widths on one worker, zero failures** |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `9d7d186`** |
+| Privacy scan                              | **clean — 289 tracked files** |
+| Block sweep / copy guards                 | **PASS** — no percentage, rank, grade or score about him or Adaya |
+| Commits not on any remote                 | **none** at the handed-off head (D-180) |
+| Checkpoint equivalence                    | **PASS** — the deployed Preview serves `9d7d186` itself; re-proved after the documentation commit** |
+| CI                                        | Verify **success**, Deploy preview **success** |
+
+### What did not change, and is not being claimed
+
+No blocker enforcement — D-187 still promises capture and not adaptation, and
+nothing reads a `blocker.*` constraint. No semantic interpretation of the owner's
+words. No scoring change, no new visual language, no twelfth domain page, no
+`PHASE_85_*` file, and `qa/WHOLE_APP_OWNER_USE_REVIEW.md` is untouched. All seven
+D-173 acceptance items and both fresh-store cases are preserved; Round 9 should
+verify that rather than take it from here.
+
+**One honest limit, stated rather than discovered.** The sweep walks the screens
+the app's own navigation reaches. A screen reachable **only** by typing a URL
+nothing links to would not be swept — the crawl asserts it found more than ten,
+which is the whole current app, but that is an assertion about today's tree, not
+a proof that no such orphan can exist. Round 9 is invited to look for one.
+
+**And the completion marker is in `docs/NEXT_PROMPT.md`, not here.** Round 8's
+handoff asked for it at the end of this report; the owner's dispatch for this
+turn required the opposite, and the owner's placement governs. This report ends
+with the Round 9 dispatch instead.
+
+---
+
+## Round 9 — the retest dispatch
+
+**Actor:** Codex / **independent QA**.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 8.
+**Model:** Codex.
+**Reasoning level:** **High** — never Max.
+
+**Routing 84 is YELLOW.** You have failed it eight times and been right eight
+times. **Rounds 3 to 8 have all been clean on the product**; all eight of those
+findings were about the standing guard, and the eighth version is the first that
+stops naming the blocker path at all.
+
+### What to judge it against
+
+The **same seven-item gate** in `PRODUCT_ADJUDICATION.md` section 8, governed by
+**D-173**. All seven passed in Rounds 3 to 8. **Re-verify all seven anyway.**
+
+Plus the standing gates: the aggregate `npm run verify` from a clean checkout,
+the browser suite at three widths, the Android-style gate on the deployed build,
+the privacy scan, the block sweep and the copy guards.
+
+**Repeat CASE A and CASE B from new ephemeral browser contexts**, ordinary
+product screens only, never opening the QA laboratory.
+
+### What is worth attacking
+
+1. **The route crawl, which is now the whole coverage claim.** It reads the
+   `.nav` buttons and the `#/life/` links on Life. Is there a screen an owner
+   can reach that neither of those two lists contains — a route behind a
+   condition, a panel that only appears in a state the crawl never enters, a
+   modal, a page reachable only by URL? The builder has already conceded this as
+   the honest limit; find one.
+2. **The two calibrations.** `adaptationClaims` runs on blocker copy;
+   `adaptationClaimsOnAnyScreen` runs on every screen and requires a **named**
+   subject and **futurity**. Is there a promise an owner would read as one that
+   the app-wide rule does not catch — a pronoun subject on a screen, a promise
+   split across two elements so neither string contains both halves, a future
+   sense with no modal (*"next time it picks something else"*)?
+3. **`APPROVED_WHEN_A_MOVE_IS_BLOCKED`.** Fourteen strings from Now, Timeline,
+   Insights and the correction control, approved because a whole-screen
+   comparison sees them. Is any of them actually blocker copy that has been
+   waved through under a different name? Is the template normalisation in the
+   sweep — `{statement}`, `{object}`, `{n}`, `{day}` — wide enough to let a real
+   difference normalise into an approved string?
+4. **The export's three claims.** Every line classifier-clean; one bullet per
+   timeline entry; every blocker record's line found and shaped. Is there an
+   export the owner can produce where the bullet count is right and the content
+   is still wrong — a merged line, a record with no timeline entry, a second
+   document the check never sees?
+5. **That the removal of `blockerHostsInSource()` left nothing behind.** The
+   claim is that no source-level host enumeration remains anywhere. Check it.
+
+### The rules that still hold
+
+No strategy evaluation, no pattern-discovery engine, **no enforcement of a
+blocker constraint** (D-187 and D-192 to D-198 are about *saying* so honestly),
+no semantic interpretation of the owner's words (D-024, D-025, D-172), no domain
+progression models beyond Career, Health and Money, no owner routines library
+(AUD-0045), no backfill (D-165), no twelfth domain page, no scoring change
+(D-137, D-138), no new visual language, no `PHASE_85_*` file, no alteration of
+`qa/WHOLE_APP_OWNER_USE_REVIEW.md`, no orchestrator change.
+
+### Handoff
+
+```text
+Round 9 retest of routing Phase 84 of Life Command OS: "what the owner is
+trying to become."
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You have failed this phase eight times and been right eight times. Rounds 3 to
+8 were all clean on the product; every finding in them was about the standing
+guard. QA-84-016, QA-84-017 and QA-84-018 are repaired, and all three of your
+exact mutations were reproduced before the repair and are caught after it.
+Routing 84 is still YELLOW at repaired product checkpoint 9d7d186; the builder
+has not declared GREEN (D-077).
+
+Read, in full, and in this order:
+1. docs/qa/README.md            — the protocol. Step 1 is cold use of the
+                                  deployed Preview BEFORE any repository
+                                  document.
+2. docs/qa/PHASE_84_QA_HANDOFF.md — your rounds 1 to 8, unedited, with the
+                                  builder's repair records appended below
+                                  them. This dispatch is at its end.
+3. docs/PRODUCT_ADJUDICATION.md section 8 — the seven-item gate; section 11 is
+                                  the do-not-change list
+4. docs/DECISION_LOG.md D-161..D-169, D-173, D-177..D-198
+5. docs/DEFECT_LEDGER.md DEF-0119..DEF-0133
+6. docs/PHASE_STATUS.md — the routing 84 record, rounds 1 to 8 included
+
+Confirm the deployed build against the repaired checkpoint before testing:
+  node --use-system-ca scripts/checkpoint-equivalence.mjs 9d7d186 --deployed \
+    https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Repeat CASE A ("More money" into the second agenda) and CASE B (the caregiving
+blocker) from NEW EPHEMERAL BROWSER CONTEXTS, ordinary product screens only,
+never opening the QA laboratory. Then re-verify all seven acceptance items.
+
+The guard no longer names the blocker path. It walks every screen the app's own
+navigation reaches, before a block and after one, and requires every string on
+every one of them to make no future claim, and every string the block brought
+with it to be approved by name. Attack that:
+
+- the route crawl: is there a screen an owner can reach that the .nav buttons
+  and the #/life/ links do not lead to? The builder concedes a URL-only orphan
+  would not be swept. Find one.
+- the two calibrations: adaptationClaimsOnAnyScreen needs a NAMED subject and
+  futurity. Is there a promise an owner would read as one that it misses — a
+  pronoun subject, a promise split across two elements, a future sense with no
+  modal?
+- APPROVED_WHEN_A_MOVE_IS_BLOCKED: is anything in those fourteen strings
+  actually blocker copy waved through under another name? Is the template
+  normalisation wide enough that a real difference normalises into an approved
+  string?
+- the export's three claims: is there an owner-producible export where the
+  bullet count is right and the content is still wrong?
+- that no source-level host enumeration is left anywhere after
+  blockerHostsInSource() was deleted.
+
+Write Round 9 into docs/qa/PHASE_84_QA_HANDOFF.md, below this dispatch. The
+builder does not edit your rounds and you do not change product code. Your
+**Phase:** field is 84 — a QA round does not get a new integer, and you must
+not create any PHASE_85_* file.
+
+End your response with the four lines and a launcher (D-092): model, reasoning
+level, conversation, and a short copyable prompt naming the file the next
+conversation must read.
+
+Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High — never Max.
+
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 8.
+
+```text
+Round 9 retest of routing Phase 84 of Life Command OS, after your Round 8 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full — your rounds 1 to 8, the builder's
+repair records, and the round 9 dispatch at its end — and execute the QA
+protocol in docs/qa/README.md exactly as written.
+
+Repaired product checkpoint: 9d7d186. Your **Phase:** field is 84. Do not
+create any PHASE_85_* file.
+
+Repeat CASE A and CASE B from new ephemeral browser contexts, never opening
+the QA laboratory.
+
+Write Round 9 into the same QA report, below the round 9 dispatch. Do not
+change product code, and reproduce the builder's claims rather than accepting
+them.
+
+Do not ask me to paste file contents.
+```
+
