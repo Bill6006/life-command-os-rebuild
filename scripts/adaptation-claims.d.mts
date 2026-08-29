@@ -11,6 +11,13 @@
 /** The claims of future recommendation adaptation in one owner-visible string. */
 export function adaptationClaims(text: string): readonly string[]
 
+/**
+ * The same class, calibrated for every screen: a **named** subject and
+ * **futurity**, never ability. Narrower than {@link adaptationClaims}, which
+ * stays broad on the blocker path where the copy is short and controlled.
+ */
+export function adaptationClaimsOnAnyScreen(text: string): readonly string[]
+
 /** The strings among `strings` that make such a claim, with the fragments found. */
 export function claimingStrings(
   strings: readonly string[],
@@ -37,6 +44,12 @@ export const APPROVED_FROM_RECORDS: readonly string[]
 
 /** The shapes an export line may have around a record's sentence. */
 export const APPROVED_EXPORT_SCAFFOLDS: readonly string[]
+
+/** Copy other screens show once a move has been blocked. Not blocker copy. */
+export const APPROVED_WHEN_A_MOVE_IS_BLOCKED: readonly string[]
+
+/** Whether a line is one of those. */
+export function isApprovedWhenBlocked(line: string): boolean
 
 /** Whether a normalised export line is one of those shapes and nothing more. */
 export function isApprovedExportShape(shape: string): boolean

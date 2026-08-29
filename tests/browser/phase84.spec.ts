@@ -1,8 +1,10 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import {
   adaptationClaims,
+  adaptationClaimsOnAnyScreen,
   containsApprovedBlockerCopy,
   isApprovedBlockerCopy,
+  isApprovedWhenBlocked,
 } from '../../scripts/adaptation-claims.mjs'
 
 /**
@@ -1056,6 +1058,258 @@ test.describe('what is on screen because the blocker is', () => {
 
     for (const line of brought) {
       expect(adaptationClaims(line), `“${line}” promised a future adaptation`).toEqual([])
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// QA-84-016 and QA-84-018 — every screen the owner can reach, not every
+// component somebody could name
+// ---------------------------------------------------------------------------
+
+/**
+ * Every screen the owner can reach, read off the running app.
+ *
+ * This is the enumeration that finally has nothing avoidable in it. Round 7's
+ * host inventory keyed on the literal JSX tag and Round 8 defeated it with
+ * `import { BlockerQuestion as Surface }` — and would have defeated a list of
+ * imports, of prop types, or of anything else a component can be spelled as.
+ *
+ * **A screen the owner can reach cannot be aliased.** It is behind the bottom
+ * bar or behind a link on Life, and this walks both rather than being told what
+ * they are — so a twelfth page or a fifth destination joins the sweep by
+ * existing, and no list in this file has to be kept up to date.
+ *
+ * The QA laboratory is excluded, and only that: it is a developer tool, not a
+ * screen the product offers as part of the owner's life.
+ */
+async function everyRoute(page: Page): Promise<readonly string[]> {
+  await page.goto(`${APP}#/now`)
+  await page.waitForSelector('h1')
+  const destinations = await page
+    .locator('.nav')
+    .evaluate((nav) =>
+      [...nav.querySelectorAll('button')].map((button) => (button.textContent ?? '').trim()),
+    )
+
+  await page.goto(`${APP}#/life`)
+  await page.waitForSelector('h1')
+  const pages = await page
+    .locator('.screen')
+    .evaluate((screen) =>
+      [...screen.querySelectorAll('a[href]')]
+        .map((link) => link.getAttribute('href') ?? '')
+        .filter((href) => href.includes('#/life/')),
+    )
+
+  const routes = new Set<string>()
+  for (const destination of destinations) {
+    if (destination === '') continue
+    routes.add(`#/${destination.toLowerCase()}`)
+  }
+  for (const href of pages) routes.add(href.slice(href.indexOf('#/')))
+  return [...routes]
+}
+
+/** Every sentence and every accessible name on one screen. */
+async function sentencesOn(page: Page, route: string): Promise<readonly string[]> {
+  await page.goto(`${APP}${route}`)
+  await page.waitForSelector('h1')
+  return page.locator('.screen').evaluate((root) => {
+    const out: string[] = []
+    const flat = (text: string) => text.replace(/\s+/g, ' ').trim()
+    for (const element of [root, ...root.querySelectorAll('*')]) {
+      const node = element as HTMLElement
+      if (node.querySelector('*') === null) {
+        const text = flat(node.textContent ?? '')
+        if (text !== '') out.push(text)
+      }
+      const label = node.getAttribute('aria-label')
+      if (label !== null) out.push(flat(label))
+    }
+    return [...new Set(out)]
+  })
+}
+
+async function sweepEveryRoute(page: Page): Promise<ReadonlySet<string>> {
+  const seen = new Set<string>()
+  const routes = await everyRoute(page)
+  expect(routes.length, 'the crawl found almost no screens').toBeGreaterThan(10)
+  for (const route of routes) {
+    for (const sentence of await sentencesOn(page, route)) seen.add(sentence)
+  }
+  return seen
+}
+
+test.describe('everything a blocker puts on any screen', () => {
+  test('QA-84-016/018 — no screen in the app promises an adaptation, before or after a block', async ({
+    page,
+  }) => {
+    /*
+     * Round 8 broke the last two ways this was checked, and both breaks share a
+     * shape: **the guard identified "the blocker path" by something a writer can
+     * simply not do.**
+     *
+     * **QA-84-016** — the delta compared the screen with the blocker question up
+     * against the screen with it dismissed, on the claim that a parent's copy
+     * "arrives with the surface and leaves with it". It does not: **Can't right
+     * now** also creates a resumable move and `ResumePanel` stays, so a sentence
+     * keyed to *that* state sat in both snapshots and the subtraction removed it.
+     *
+     * **QA-84-018** — the host inventory looked for the literal JSX tag, and
+     * `import { BlockerQuestion as Surface }` is not that tag. Nor would a list
+     * of imports, prop types, or any other spelling of a component have held.
+     *
+     * ## So this stops identifying the path, and checks every screen
+     *
+     * A screen the owner can reach cannot be aliased: it is behind the bottom bar
+     * or behind a link on Life, and this walks both rather than being told what
+     * they are. **Every string on every one of them, before a block and after
+     * one, must make no claim that the app will change what it offers.** That is
+     * D-187's actual rule, and there is nowhere left to write a promise that this
+     * does not read — not beside a surface, not through a wrapper, not on a
+     * screen nobody thought of.
+     *
+     * ## What this does not do, and why
+     *
+     * It does not require every string it reads to be **in the catalogue**. The
+     * delta between the two sweeps is not blocker copy: it is Now's no-action
+     * sentence, Insights' counts, Timeline's total, the correction panel that
+     * appears once there is something correctable. Cataloguing those as blocker
+     * copy would make the catalogue mean something it does not mean, and would
+     * make an unrelated Insights edit fail the blocker gate.
+     *
+     * The catalogue therefore covers what it genuinely covers — `blockers.ts`,
+     * the three surfaces' own rendered copy, what a record reads as, and the
+     * export's shapes — and **D-198 says so plainly instead of claiming the
+     * whole path**. An unapproved but honest sentence beside a blocker surface
+     * is not caught here; a promise is, wherever it is.
+     */
+    const statement = 'a walk means leaving, and I could not — someone was in my care.'
+    const sweepBoth = async (): Promise<readonly string[]> => [...(await sweepEveryRoute(page))]
+
+    /*
+     * Both sweeps come from **one** session, and that is load-bearing.
+     *
+     * The first version of this loaded the scenario twice and answered the
+     * guide twice. `answerGuideWith` answers whatever is being asked, so the
+     * two passes could answer a different number of questions — and the delta
+     * then carried a reading the second pass had recorded rather than anything
+     * the block did. It passed alone and failed inside the full suite, which
+     * is the signature of a comparison whose two halves are not the same run.
+     *
+     * Blocking the move in the session that was just swept makes the pre-block
+     * state literally the state the block happened to.
+     */
+    await loadInQa(page, 'The first evening')
+    await go(page, 'Now')
+    await answerGuideWith(page, ['Enough', 'Nothing'])
+    const before = await sweepBoth()
+    expect(before.length, 'the crawl read almost nothing before the block').toBeGreaterThan(40)
+
+    await go(page, 'Now')
+    await answerGuideWith(page, ['Enough', 'Nothing'])
+    await page.getByTestId('now-actions').getByRole('button', { name: "Can't right now" }).click()
+    await expect(page.getByTestId('blocker-question')).toBeVisible()
+    await page.getByTestId('blocker-must-stay').click()
+    const after = await sweepBoth()
+
+    /*
+     * The app-wide calibration, not the blocker path's. `adaptationClaims` is
+     * tuned for short controlled copy — a bare `it` counts as the app, and
+     * `can` counts as a modality — and over the whole product that flags honest
+     * sentences like *"the app cannot work out on its own"*. Narrowing the
+     * shared rule until those went quiet would be tuning a guard to pass.
+     * `adaptationClaimsOnAnyScreen` is a second calibration with a principled
+     * difference: a **named** subject and **futurity**, never ability.
+     */
+    const claiming: string[] = []
+    for (const line of [...before, ...after]) {
+      for (const claim of adaptationClaimsOnAnyScreen(line)) claiming.push(`“${line}” → ${claim}`)
+    }
+    expect(claiming, 'a screen in the app claims the app will change what it offers').toEqual([])
+
+    /*
+     * And the whole difference, which is what closes QA-84-016.
+     *
+     * The comparison is against the screens **before** the block, not against
+     * the same screen with one surface dismissed. Round 7's version compared
+     * those two and Round 8 disproved the claim underneath it: **Can't right
+     * now** also leaves a resumable move, so `ResumePanel` stays and a sentence
+     * keyed to it sat in both snapshots and was subtracted away.
+     *
+     * Comparing against the pristine screens brings along everything else the
+     * new records changed — Now's no-action line, Timeline's total, Insights'
+     * counts, the correction control that appears once there is something to
+     * correct. Those are approved in `APPROVED_WHEN_A_MOVE_IS_BLOCKED`, under
+     * that name rather than as blocker copy, because that is what they are.
+     */
+    const asTemplate = (line: string) =>
+      line
+        .split(statement)
+        .join('{statement}')
+        .split('getting out for a walk')
+        .join('{object}')
+        .split('Getting out for a walk')
+        .join('Getting out for {move}')
+        .split('not right now')
+        .join('{state}')
+        .replace(/\b\d{4}-\d{2}-\d{2}\b/g, '{day}')
+        .replace(/\d+/g, '{n}')
+
+    const brought = after.filter((line) => !before.includes(line)).map(asTemplate)
+    expect(brought.length, 'blocking a move changed nothing anywhere').toBeGreaterThan(4)
+
+    const unapproved = brought.filter(
+      (line) =>
+        line !== '{statement}' &&
+        !line.startsWith('Not true any more: ') &&
+        !isApprovedBlockerCopy(line) &&
+        !containsApprovedBlockerCopy(line) &&
+        !isApprovedWhenBlocked(line),
+    )
+    expect(
+      unapproved,
+      'blocking a move put copy nobody approved on a screen — approve it in APPROVED_BLOCKER_COPY if it is blocker copy, or in APPROVED_WHEN_A_MOVE_IS_BLOCKED if it is what another screen says once a record exists',
+    ).toEqual([])
+  })
+
+  test('QA-84-016 — and the blocker surfaces themselves carry only approved copy', async ({
+    page,
+  }) => {
+    /*
+     * The catalogue's own claim, on the two surfaces it covers, read from the
+     * whole panel rather than a child locator. This is the part that **is**
+     * closed: what `BlockerQuestion` and `BlockersPanel` put on the page is
+     * exactly what somebody approved.
+     */
+    const statement = 'a walk means leaving, and I could not — someone was in my care.'
+
+    await loadInQa(page, 'The first evening')
+    await go(page, 'Now')
+    await answerGuideWith(page, ['Enough', 'Nothing'])
+    await page.getByTestId('now-actions').getByRole('button', { name: "Can't right now" }).click()
+
+    const asked = page.getByTestId('blocker-question')
+    await expect(asked).toBeVisible()
+    for (const sentence of await everySentenceIn(asked)) {
+      expect(
+        containsApprovedBlockerCopy(sentence) || isApprovedBlockerCopy(sentence),
+        `the question rendered copy nobody approved: “${sentence}”`,
+      ).toBe(true)
+    }
+
+    await page.getByTestId('blocker-must-stay').click()
+    await page.goto(`${APP}#/life/health-recovery`)
+    const panel = page.locator('.panel', { has: page.getByTestId('domain-blocker') }).first()
+    await expect(panel).toBeVisible()
+    for (const sentence of await everySentenceIn(panel)) {
+      const line = sentence.split(statement).join('{statement}')
+      if (line === '{statement}' || line.startsWith('Not true any more: ')) continue
+      expect(
+        containsApprovedBlockerCopy(line) || isApprovedBlockerCopy(line),
+        `the standing panel rendered copy nobody approved: “${line}”`,
+      ).toBe(true)
     }
   })
 })

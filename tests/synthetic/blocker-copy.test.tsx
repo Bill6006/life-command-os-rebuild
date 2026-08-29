@@ -34,6 +34,8 @@
  * `ResumableMove` — and the last test here asserts that the set rendered below
  * is exactly that set.
  */
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { describe, expect, it } from 'vitest'
@@ -62,7 +64,6 @@ import { RECORD_KINDS } from '../../src/domain/records'
 import { describeRecord, tagFor, tagOf } from '../../src/features/history/describe'
 import { originOf, originOfAll } from '../../src/features/history/origin'
 import {
-  blockerHostsInSource,
   blockerSurfacesInSource,
   NOT_OWNER_TEXT,
   openJourney,
@@ -666,22 +667,29 @@ describe('QA-84-014 — and closed over the value the owner actually reads', () 
     expect(checked, 'no blocker row was checked on any domain page').toBeGreaterThan(0)
   })
 
-  it('and the export carries the describer’s sentence with nothing added to it', () => {
+  it('and the export carries the describer’s sentence with nothing added anywhere', async () => {
     /*
-     * The export **does** compose — a date, a tag and an origin around the
-     * sentence — so "identical" is the wrong test for it. What is right is that
-     * the sentence it carries is the describer's, and that nothing else in the
-     * line makes a claim: the scaffolding is a date and a word.
+     * QA-84-017, and the two vacuities it named.
+     *
+     * The old check took the **one** line found by
+     * `text.split('\n').find((row) => row.includes(described.text))`, validated
+     * its shape, and looked no further. So a second bullet pushed beside the
+     * approved one — *"The app will choose something better next time."* — was
+     * never inspected, and 441 tests passed with that promise in the owner's
+     * export. And when no line matched a record it `continue`d in silence, so
+     * the closing `checked > 0` proved only that *some* blocker line existed
+     * somewhere.
+     *
+     * Three claims now, and none of them selects a single line:
+     *
+     * 1. **every** line of the document is free of adaptation claims;
+     * 2. the history section holds **exactly one bullet per timeline entry** —
+     *    an added bullet is a count mismatch whatever it says;
+     * 3. every blocker record's line is **found**, and its shape approved.
      */
     const offenders: string[] = []
     let checked = 0
     for (const entry of SCENARIOS) {
-      /*
-       * The export harness's own scenario context, so the describer is asked
-       * the same question the document asked it. Composing an export runs the
-       * whole decision and the insights report; the harness memoises that, and
-       * its comment records what happened when it did not.
-       */
       const { situation, loaded } = contextFor(entry.id)
       const id = entry.id
       const blockers = loaded
@@ -689,22 +697,59 @@ describe('QA-84-014 — and closed over the value the owner actually reads', () 
         .history.effective.filter((record) => BLOCKER_KINDS.includes(record.kind as never))
       if (blockers.length === 0) continue
       const text = composeFor(entry.id, ['history']).text
+      const lines = text.split('\n')
+
+      // 1. Nothing anywhere in the document promises an adaptation.
+      for (const line of lines) {
+        for (const claim of adaptationClaims(line)) {
+          offenders.push(`${id}: a line of the export claims “${claim}”`)
+        }
+      }
+
+      /*
+       * 2. One bullet per entry, counted rather than sampled.
+       *
+       * The history is written as day blocks — a bolded label with its date,
+       * then one bullet per entry — so the bullets that follow a day label are
+       * exactly the entries. `assembleTimeline` is what those blocks are built
+       * from, so the two numbers are the same number, or somebody has added a
+       * line. Counting every bullet in the document instead would sweep in the
+       * "About this document" list, which is what a first draft of this did.
+       */
+      const shown = assembleTimeline(situation).days.reduce(
+        (total, day) => total + day.entries.length,
+        0,
+      )
+      let inDay = false
+      let bullets = 0
+      for (const line of lines) {
+        if (/^\*\*.+\*\* \(\d{4}-\d{2}-\d{2}\)$/.test(line)) {
+          inDay = true
+          continue
+        }
+        if (!inDay) continue
+        if (line.startsWith('- ')) bullets += 1
+        else if (line.trim() !== '') inDay = false
+      }
+      if (bullets !== shown) {
+        offenders.push(`${id}: the day blocks hold ${bullets} bullets for ${shown} entries`)
+      }
+
+      // 3. Every blocker record is reached, and its line is a shape somebody approved.
       for (const record of blockers) {
         const described = describeRecord(record, inspectionContext(situation, false))
         if (described === undefined) continue
-        const line = text.split('\n').find((row) => row.includes(described.text))
-        if (line === undefined) continue
+        const line = lines.find((row) => row.includes(described.text))
+        if (line === undefined) {
+          /*
+           * Not a silent `continue`. A record the export cannot show is a fact
+           * about the export, and the old loop swallowed it — which is how a
+           * check can pass while covering nothing.
+           */
+          offenders.push(`${id}: no export line carries “${described.text}”`)
+          continue
+        }
         checked += 1
-        /*
-         * The shape, permitted exactly — QA-84-015.
-         *
-         * This asked whether the leftover was sentence-shaped **and longer than
-         * sixty characters**, which is not the claim D-196 made. Round 7 put
-         * *"This needs special care."* — twenty-four characters — in front of
-         * every exported sentence and 331 tests passed. Nothing is inferred
-         * from length now: the line is normalised back to its parts and must be
-         * one of the approved shapes.
-         */
         const origin = originOf(record)
         let shape = line.split(described.text).join('{text}')
         if (origin !== undefined) shape = shape.split(origin.label).join('{origin}')
@@ -713,12 +758,9 @@ describe('QA-84-014 — and closed over the value the owner actually reads', () 
         if (!isApprovedExportShape(shape)) {
           offenders.push(`${id}: export line shape “${shape}” is not one anybody approved`)
         }
-        for (const claim of adaptationClaims(line)) {
-          offenders.push(`${id}: export line claims “${claim}”`)
-        }
       }
     }
-    expect(offenders, 'an export line says more about a blocker than the describer did').toEqual([])
+    expect(offenders, 'the export says more about a blocker than the describer did').toEqual([])
     expect(checked, 'no blocker line was found in any export').toBeGreaterThan(0)
   })
 
@@ -750,35 +792,29 @@ describe('QA-84-014 — and closed over the value the owner actually reads', () 
   })
 })
 
-describe('QA-84-015 — and every screen that puts a blocker surface on the page', () => {
-  it('is one the rendered delta covers', () => {
+describe('QA-84-018 — and the host inventory that claimed too much is gone', () => {
+  it('is replaced by the route sweep, which is where the claim now lives', () => {
     /*
-     * Round 7's Proof B: a sentence written **beside** `<BlockerQuestion>` by the
-     * screen that renders it. `NowScreen` takes no blocker prop — it derives
-     * `blocked` and `blockerDecision` from local state — and imports no
-     * `describeRecord`, so every enumeration this phase had was blind to it.
+     * `blockerHostsInSource()` found hosts by the literal JSX tag, and Round 8
+     * defeated it with `import { BlockerQuestion as Surface }`. A list of
+     * imports, of prop types, or of any other spelling would have gone the same
+     * way: **a component can be named anything.**
      *
-     * What a parent cannot avoid is writing the tag. `blockerHostsInSource()`
-     * finds the JSX, and the copy those hosts bring with them is checked by the
-     * delta in `phase84.spec.ts`: the screen with the surface up, the screen
-     * with it dismissed, and everything in the difference approved.
+     * Round 8 offered the alternative in as many words — *"or the proof must
+     * stop claiming exhaustive host discovery"* — and that is what happened. The
+     * instrument is deleted rather than narrowed, because a narrowed version
+     * would still read as an inventory and still be wrong, and the coverage
+     * claim moved to `phase84.spec.ts`, which walks **every screen the owner can
+     * reach** and compares it against the same screens before the block. A
+     * screen cannot be aliased.
      *
-     * **This is the coverage bookkeeping, not the copy proof.** Round 7 said not
-     * to close the proof by naming `NowScreen` in a list, and the proof is the
-     * delta. What this asserts is that no *new* host appears without one.
+     * This case exists so the removal is deliberate and visible rather than a
+     * gap somebody has to notice.
      */
-    const covered = ['/src/features/now/NowScreen.tsx', '/src/features/life/DomainPage.tsx']
-    const hosts = blockerHostsInSource()
-    expect(hosts.length, 'the instrument found no blocker hosts at all').toBeGreaterThan(0)
-
-    const uncovered = hosts.filter((host) => !covered.includes(host.file))
+    const journey = readFileSync(join(process.cwd(), 'tests/synthetic/journey.ts'), 'utf8')
     expect(
-      uncovered.map((host) => `${host.file} renders ${host.renders}`),
-      'a screen puts a blocker surface on the page and no rendered delta covers it — add one in phase84.spec.ts',
-    ).toEqual([])
-
-    // And it really is reading the JSX: both known hosts are found.
-    const files = new Set(hosts.map((host) => host.file))
-    for (const file of covered) expect(files, `the instrument cannot see ${file}`).toContain(file)
+      /export function blockerHostsInSource/.test(journey),
+      'the unsound host inventory is back — the route sweep in phase84.spec.ts is the coverage claim',
+    ).toBe(false)
   })
 })

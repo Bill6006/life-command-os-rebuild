@@ -6725,3 +6725,82 @@ half-written classifier.** The enumeration is done where it is exact, in source;
 the copy is checked where it exists, on the screen.
 
 ---
+
+## D-198 — The screen is the boundary, and the whole export is the boundary
+
+**Phase:** 84 (QA round 8 repair) · **Status:** Active · Supersedes the host
+enumeration of **D-197**; its export rule and its two calibrations stand.
+
+Three rules, from the three ways Round 8 got past the last set.
+
+**1. A guard over what the owner reads is scoped to the screens the owner can
+reach, not to the components that render them.** Every enumeration this phase
+built on how a component is _spelled_ — its prop types (D-194), the module it
+imports (D-196), the JSX tag it writes (D-197) — was defeated by writing it
+differently. QA-84-018 did it in two lines:
+
+    import { BlockerQuestion as Surface } from './DomainPanels'
+    export function WrappedBlockerHost(props) { return <Surface {...props} /> }
+
+**A screen the owner can reach cannot be aliased.** It is behind the bottom bar
+or behind a link on Life, and the sweep walks both rather than being told what
+they are, so a twelfth page joins by existing. The host inventory is **deleted**
+rather than narrowed — Round 8 offered exactly that alternative — because a
+narrowed version would still read as an inventory and still be wrong.
+
+**2. A comparison that subtracts is made against the state before the cause, not
+against a transition.** D-197 claimed a parent's blocker copy "arrives with the
+surface and leaves with it". It does not: **Can't right now** also creates a
+resumable move, `ResumePanel` stays after the question is dismissed, and copy
+keyed to _that_ state sat in both snapshots and was subtracted away. QA-84-016.
+
+The sweep now compares every screen against the same screens **before the block**,
+**in one session**. The first build of it loaded the scenario twice and answered
+the guide twice, and `answerGuideWith` answers whatever is being asked — so the
+two halves could answer a different number of questions, and the difference then
+carried a reading the second pass had recorded. It passed alone and failed at two
+of three widths inside the full suite, which is the signature of a comparison
+whose halves are not the same run. **A subtraction is only sound when one side is
+the other side plus the cause**, and the only way to guarantee that is to block
+the move in the session that was just swept.
+
+Comparing against the pristine screens brings along everything else the new records changed — Now's no-action line,
+Timeline's total, Insights' counts, the correction control that appears once there
+is something to correct — and those are approved in
+`APPROVED_WHEN_A_MOVE_IS_BLOCKED`, **under that name rather than as blocker
+copy**, because that is what they are. The cost is real and is why the list is
+separate: an unrelated edit to an Insights count will fail the blocker gate until
+it is approved. That is accepted, because the alternative is a guard that names
+some feature of the blocker path and is wrong about it.
+
+It also holds one thing that is not the app's prose at all — `{n} of {n}`, which
+is a **reading the owner gave**. `readingText` sends a scale fact through
+`describeFactValue`, which renders it bare, and the row is a leaf whenever no
+origin badge sits beside it. A reading recorded on the way to blocking a move
+lands in the difference like anything else. It is listed under its own comment
+rather than quietly, because a list that does not say what its entries are is the
+same failure one level down.
+
+**3. A guard over generated output covers the whole output, not a line found by
+searching it.** The export check took the one row containing the describer's
+sentence, validated its shape, and looked no further — so a second bullet pushed
+beside it was never inspected, and 441 tests passed with a promise in the owner's
+document. It also `continue`d in silence when no row matched, so its closing
+`checked > 0` proved only that _some_ line existed. QA-84-017.
+
+Three claims replace it, none of which selects a line: every line of the document
+is free of adaptation claims; the day blocks hold **exactly one bullet per
+timeline entry**; and every blocker record's line is **found** — a miss is a
+failure, not a `continue` — and its shape approved.
+
+**And the classifier has two calibrations, deliberately.** Run over every screen,
+the blocker-path rule flags honest sentences — _"the app cannot work out on its
+own"_, _"what the app may reason from"_ — because its subjects include a bare
+`it` and its modals include ability. **Narrowing the shared rule until the noise
+stopped would be tuning a guard to pass**, which is the failure this phase keeps
+finding. So `adaptationClaimsOnAnyScreen` is a second calibration with a
+principled difference: a **named** subject and **futurity**, never ability. It
+misses three wordings the blocker-path rule catches, and those three are named in
+the test rather than left implied.
+
+---

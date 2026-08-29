@@ -39,6 +39,58 @@ None.
 
 ## Fixed
 
+### DEF-0133 — three guards, three ways past them
+
+- Status: Fixed
+- Severity: Blocker — unapproved owner-visible copy, and an unsupported promise
+  in the owner's export, could each reach him with every gate green
+- Found in: routing 84 / `9c4cb5f`
+- Found by: **independent QA round 8** (QA-84-016, QA-84-017, QA-84-018), with
+  three disposable mutations
+- Class: the same one, three more times — **a guard scoped by something the
+  writer can choose**. The delta assumed copy leaves with the surface; the export
+  check assumed one line was the output; the host inventory assumed a component
+  keeps its name.
+- Reproduction, all three confirmed here before anything was built:
+  - **016** — `<p>This needs special care.</p>` beside `<ResumePanel>`, which
+    stays after the question is dismissed → synthetic **14 / 14**, both delta
+    cases **6 / 6**.
+  - **017** — a second bullet after the approved history line → **441 / 441**
+    across five suites, with _"The app will choose something better next time."_
+    in the export.
+  - **018** — `import { BlockerQuestion as Surface }` behind a wrapper →
+    **14 / 14** and a clean typecheck, with no host reported.
+- Repair, and it is three rules rather than three patches — see **D-198**. The
+  sweep walks **every screen the owner can reach**, read off the app's own
+  navigation, and compares against those screens **before the block**. The export
+  check covers every line, counts one bullet per entry, and fails when a record's
+  line is missing. The host inventory is **deleted**; Round 8 offered that
+  alternative explicitly and it was the right one.
+- Regression: two cases in `tests/browser/phase84.spec.ts` (the route sweep and
+  the surfaces' own copy), the rewritten export case in
+  `tests/synthetic/blocker-copy.test.tsx`, and a case that fails if the deleted
+  inventory returns.
+- **And the first build of the sweep was itself unsound, found by its own gate.**
+  It loaded the scenario twice — once for each half of the comparison — and
+  `answerGuideWith` answers whatever the guide asks, so the two halves could
+  answer a different number of questions and the difference carried a reading the
+  second pass had recorded. It passed alone and failed at two of three widths in
+  the full suite. Both sweeps now come from **one** session, so the pre-block
+  state is literally the state the block happened to. Recorded rather than
+  quietly fixed, because it is the same class as the three findings above: a
+  comparison whose premise was not checked.
+- Proved by reintroduction: **QA's exact 016 mutation** now fails the sweep,
+  which names the sentence; **QA's exact 017 mutation** fails on both the
+  adaptation claim and the bullet count, and a **non-promise** added bullet fails
+  on the count alone; **018** is closed by construction, since the sweep asks
+  about screens rather than components.
+- Siblings: checked. `APPROVED_WHEN_A_MOVE_IS_BLOCKED` is a second list, named
+  for what it holds — copy other screens show once a record exists — rather than
+  folded into the blocker catalogue, so neither list claims to be the other.
+- Note on scope: the current copy was honest throughout, for the sixth round
+  running, and both fresh-store cases passed again. What was defective was the
+  guarantee.
+
 ### DEF-0132 — a length threshold and a props-based enumeration, both wider than their prose
 
 - Status: Fixed

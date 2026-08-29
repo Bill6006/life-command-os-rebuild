@@ -1413,74 +1413,23 @@ function takesAMoment(parameters: string): boolean {
 // ---------------------------------------------------------------------------
 
 /**
- * A screen that puts a blocker surface on the page, and the copy it puts beside
- * it — QA-84-015, D-197.
+ * **The blocker-host inventory was here, and is deliberately gone — QA-84-018.**
  *
- * D-194 enumerated blocker components by the **types in their props**, and
- * Round 7 went round it in three lines:
+ * It found hosts by the literal JSX tag — `BlockerQuestion`, `BlockersPanel`,
+ * `ResumePanel` — and Round 8 defeated it in two lines:
  *
- *     {blockerDecision === undefined || blocked === undefined ? null : (
- *       <>
- *         <p className="note">This needs special care.</p>
- *         <BlockerQuestion ... />
- *       </>
- *     )}
+ *     import { BlockerQuestion as Surface } from './DomainPanels'
+ *     export function WrappedBlockerHost(props) { return <Surface {...props} /> }
  *
- * That sentence renders whenever the blocker question renders, and it is
- * app-owned blocker copy. `NowScreen` takes no `StandingBlocker`,
- * `BlockerDecision` or `ResumableMove` prop — it derives both from local state —
- * and imports no `describeRecord`, so **every enumeration this phase has built
- * was blind to it**, and the catalogue passed 13/13 while the browser case
- * passed 3/3.
+ * A list of imports would have gone the same way, and so would a list of prop
+ * types: **a component can be named anything**, and every enumeration this phase
+ * built on how one is spelled has been wrong.
  *
- * **What a parent cannot avoid is rendering the surface.** To put a sentence
- * beside the blocker question you must write `<BlockerQuestion` somewhere, and
- * to have it appear with the question you must put it in the same branch. So
- * this finds the tag in the JSX and reads the branch around it: the enclosing
- * expression container, whatever the parent takes and whatever it imports.
- *
- * Naming `NowScreen` would have been the wrong repair, and Round 7 said so.
- */
-const BLOCKER_SURFACE_TAGS = ['BlockerQuestion', 'BlockersPanel', 'ResumePanel'] as const
-
-export interface BlockerHost {
-  readonly file: string
-  /** Which surface it renders, so a failure says why the file qualified. */
-  readonly renders: string
-}
-
-export function blockerHostsInSource(): readonly BlockerHost[] {
-  const out: BlockerHost[] = []
-  for (const file of filesUnder(join(ROOT, 'src', 'features'))) {
-    if (!file.endsWith('.tsx')) continue
-    const code = withoutComments(readFileSync(file, 'utf8'))
-    for (const tag of BLOCKER_SURFACE_TAGS) {
-      // The tag as JSX, not as an import or a type annotation.
-      if (!new RegExp(`<${tag}[\\s/>]`).test(code)) continue
-      out.push({ file: relativeToRoot(file), renders: tag })
-    }
-  }
-  return out.sort((a, b) => `${a.file}${a.renders}`.localeCompare(`${b.file}${b.renders}`))
-}
-
-/**
- * **And the copy itself is checked by rendering, not by reading the source.**
- *
- * The first draft of this repair tried to read the JSX branch around the tag and
- * pull the author's literal text out of it. It does not work honestly: the
- * enclosing `{` of a JSX expression is not distinguishable from a block brace by
- * counting, so the extractor walked out of the branch and reported
- * `const [conceptDraft, setConceptDraft] = useState('')` as owner copy. Tightening
- * that into a lexer is a parser, and a half-written parser inside a guard is the
- * same mistake as a half-written classifier: it would pass until somebody wrote
- * the branch slightly differently.
- *
- * So the *enumeration* is here, where it is exact, and the *copy* is checked
- * where the copy actually exists — in `phase84.spec.ts`, by taking the screen
- * with the blocker surface on it and again with it dismissed, and requiring
- * everything in the difference to be approved. That difference is precisely
- * "what is on screen because the blocker is", wherever the parent wrote it and
- * whatever the parent takes.
+ * Round 8 named the alternative — *"the proof must stop claiming exhaustive host
+ * discovery"* — so it stopped. What replaces it is in `phase84.spec.ts`: a walk
+ * of **every screen the owner can reach**, read off the app's own navigation,
+ * compared against the same screens before a move was blocked. A screen cannot
+ * be aliased. See **D-198**.
  */
 
 /**

@@ -241,6 +241,107 @@ function modalRightAfter(lower, from) {
   return MODALS.some((modal) => new RegExp(`\\b${escaped(modal)}\\b`).test(window))
 }
 
+/**
+ * The same class, calibrated for **every screen** rather than the blocker path.
+ *
+ * QA-84-016 and QA-84-018 pushed the check off the blocker path and onto every
+ * route in the app, because every identifier for "the blocker path" this phase
+ * has tried — the prop type, the import, the JSX tag, the transition — turned out
+ * to be something a writer can simply not do. A screen the owner can reach is not
+ * avoidable.
+ *
+ * **But {@link adaptationClaims} is calibrated for short, controlled copy.** Run
+ * over the whole product it flags honest sentences — *"the app cannot work out on
+ * its own"*, *"what the app may reason from"* — because its subjects include a
+ * bare `it` and its modals include ability (*can*, *may*). On the blocker path
+ * that breadth is right; everywhere it is noise, and **narrowing the shared rule
+ * until the noise went away would be tuning a guard to pass**, which is the
+ * failure this phase keeps finding.
+ *
+ * So this is a second calibration, not a replacement, and the difference is
+ * principled: **a named subject and futurity**. The app or its output by name —
+ * never a pronoun — and a modal that places the sentence later (*will*, *won't*,
+ * *going to*) or forward deixis. Ability is not futurity: *"the app cannot read
+ * it"* says what is true now.
+ *
+ * Every wording in {@link MUST_BE_CAUGHT} is still caught by it.
+ */
+const NAMED_SUBJECTS = [
+  'the app',
+  'the engine',
+  'recommendation',
+  'recommendations',
+  'suggestion',
+  'suggestions',
+  'what you are shown',
+  'what you are offered',
+  'what is offered',
+  'what it offers',
+  'what it suggests',
+]
+
+const FUTURE_MODALS = [
+  "won't",
+  'will not',
+  'will',
+  "'ll",
+  'is going to',
+  'are going to',
+  'going to',
+]
+
+export function adaptationClaimsOnAnyScreen(text) {
+  if (typeof text !== 'string' || text.trim() === '') return []
+  const lower = text.toLowerCase()
+  const found = []
+
+  for (const subject of NAMED_SUBJECTS) {
+    for (const match of lower.matchAll(new RegExp(`\\b${escaped(subject)}\\b`, 'g'))) {
+      const start = match.index ?? 0
+      const fragment = text.slice(start, start + 70).trim()
+      /*
+       * The deixis has to be **near** the subject, exactly as the modal is.
+       *
+       * Unbounded, a paragraph is enough to convict: the private permission
+       * note says the app cannot read an entry, and two clauses later that
+       * turning the setting off stops any future use — one honest sentence
+       * about now and one about a setting, joined only by sharing a
+       * paragraph. The modal branch was already adjacency-bounded, so this
+       * makes the rule consistent rather than looser.
+       */
+      const near = lower.slice(start, start + 70)
+      if (LATER.some((later) => new RegExp(`\\b${escaped(later)}\\b`).test(near))) {
+        found.push(fragment)
+        continue
+      }
+      const window = words(lower.slice(start + match[0].length))
+        .slice(0, ADJACENT + 1)
+        .join(' ')
+      if (FUTURE_MODALS.some((modal) => new RegExp(`\\b${escaped(modal)}\\b`).test(window))) {
+        found.push(fragment)
+      }
+    }
+  }
+
+  /*
+   * And a later occasion as the subject itself — *"the next one will be
+   * easier"* — which names no app and is still about what it will do.
+   */
+  for (const later of LATER) {
+    for (const match of lower.matchAll(new RegExp(`\\b${escaped(later)}\\b`, 'g'))) {
+      const start = match.index ?? 0
+      const window = words(lower.slice(start + match[0].length))
+        .slice(0, ADJACENT + 1)
+        .join(' ')
+      if (FUTURE_MODALS.some((modal) => new RegExp(`\\b${escaped(modal)}\\b`).test(window))) {
+        found.push(text.slice(start, start + 70).trim())
+      }
+    }
+  }
+
+  return [...new Set(found)]
+}
+
 /** Whether any owner-visible string in `strings` makes such a claim. */
 export function claimingStrings(strings) {
   const out = []
@@ -413,6 +514,72 @@ export const APPROVED_EXPORT_SCAFFOLDS = [
 export function isApprovedExportShape(shape) {
   const flat = String(shape).replace(/\s+/g, ' ').trim()
   return APPROVED_EXPORT_SCAFFOLDS.some((approved) => approved.replace(/\s+/g, ' ').trim() === flat)
+}
+
+/**
+ * And what appears **elsewhere in the app** once a move has been blocked —
+ * QA-84-016, D-198.
+ *
+ * Not blocker copy, and labelled so. Blocking a move writes records, and records
+ * change what other screens have to say: Now has no move left to offer, Timeline
+ * has two more rows and a new total, Insights has one more occasion to count, the
+ * domain page grows a correction control because there is now something to
+ * correct.
+ *
+ * **It is here because the check that closes QA-84-016 is a whole-screen
+ * comparison**, and a whole-screen comparison sees all of it. Round 7 claimed a
+ * parent's blocker copy "arrives with the surface and leaves with it"; Round 8
+ * disproved that — `ResumePanel` stays after the question is dismissed, so
+ * copy keyed to it sat in both snapshots and the subtraction removed it. The
+ * only sound comparison is against the screens **before the block**, and that
+ * one brings this along with it.
+ *
+ * **The cost is real and is the reason this list is separate.** An unrelated
+ * edit to Now's no-action sentence or to an Insights count will fail the blocker
+ * gate until it is approved here. That is a tax on other work, accepted because
+ * the alternative — the one Round 8 broke twice — is a guard that names some
+ * feature of the blocker path and is wrong about it.
+ */
+export const APPROVED_WHEN_A_MOVE_IS_BLOCKED = [
+  // Now, which has nothing left to offer this evening.
+  'Nothing pressing',
+  'Nothing new for today.',
+  'Nothing else worth asking right now.',
+  'Everything this history has to suggest has already been in front of you today, and tomorrow starts again.',
+
+  // Timeline, which has more rows and says so.
+  '— replaced an earlier entry',
+  'That is the whole record — {n} entries.',
+
+  // Insights, which has one more occasion to count and still will not guess.
+  'Still gathering',
+  'Getting out for {move}',
+  '{n} so far — {n} more occasions like these',
+  'Current energy after {object}',
+  '{n} so far — not enough to compare yet — {n} with it, {n} recorded without it, and {n} of each is the least this can be said over.',
+
+  /*
+   * The domain page's reading rows, which carry a value the owner gave.
+   *
+   * `readingText` (`domainPages.ts`) sends a scale fact through
+   * `describeFactValue`, which renders it bare — "3 of 5" — and the row is a
+   * leaf element whenever there is no origin badge beside it. A reading
+   * recorded on the way to blocking a move therefore lands in the difference.
+   * It is a number he reported, not a sentence the app composed.
+   */
+  '{n} of {n}',
+
+  // The domain page, which now has something to correct.
+  'Something here wrong?',
+  'Nothing is deleted. An entry you withdraw stays in your history, marked as withdrawn.',
+  'Correct: Did not fit at the time — {object}.',
+]
+
+/** Whether a line is copy the app shows elsewhere once a move is blocked. */
+export function isApprovedWhenBlocked(line) {
+  const flat = (text) => String(text).replace(/\s+/g, ' ').trim()
+  const wanted = flat(line)
+  return APPROVED_WHEN_A_MOVE_IS_BLOCKED.some((approved) => flat(approved) === wanted)
 }
 
 /** Every string the blocker path can put in front of the owner. */
