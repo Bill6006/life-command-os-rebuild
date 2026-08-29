@@ -165,6 +165,15 @@ transition — is something the person writing the code can choose differently, 
 own navigation, before a block and after one. A screen cannot be aliased
 (D-198).
 
+**And round 10 is where the set the unit ranges over stops being smaller than
+the claim.** Round 9's four repairs were right and three of them were applied to
+too small a set: routes rather than the states the owner presses into, DOM text
+rather than everything the browser renders as words, and singles-plus-all rather
+than the 1,023 documents ten checkboxes make. The fourth, the subtraction that
+kept the composed review out of the catalogue, inferred provenance from string
+equality. And the oldest delta measured a screen that was still being written
+(D-200).
+
 **And round 9 is where the unit stops being smaller than the claim.** Widening
 to "every screen" was right and was applied three times too narrowly: the routes
 came from one navigation surface, the sentences from DOM leaves, and "the whole
@@ -207,22 +216,23 @@ through the same controls, now gets past all eight steps.
 
 ## Checkpoint
 
-| Fact                    | Value                                                                                                   |
-| ----------------------- | ------------------------------------------------------------------------------------------------------- |
-| Product checkpoint      | `7147c83` — the Round 9 repair, and the commit the aggregate gate was run on                            |
-| Round 9 checkpoint      | `9d7d186` — the Round 8 repair, which Round 9 tested                                                    |
-| Round 8 checkpoint      | `9c4cb5f` — the Round 7 repair, which Round 8 tested                                                    |
-| Round 7 checkpoint      | `d78b765` — the Round 6 repair, which Round 7 tested                                                    |
-| Round 6 checkpoint      | `1324f66` — the Round 5 repair, which Round 6 tested                                                    |
-| Round 5 checkpoint      | `f45214b` — the Round 4 repair, which Round 5 tested                                                    |
-| Round 4 checkpoint      | `0f9b882` — the Round 3 repair, which Round 4 tested                                                    |
-| Round 3 checkpoint      | `cdd9259` — the Round 2 repair, which Round 3 tested                                                    |
-| Round 2 checkpoint      | `94e1716` — the Round 1 repair, which Round 2 tested and failed                                         |
-| Round 1 checkpoint      | `42667ea` — what Round 1 tested and failed                                                              |
-| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                             |
-| Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                      |
-| Owner phone check       | owed before release; not a blocker QA can clear                                                         |
-| Independent QA          | **Rounds 1 to 9 all FAIL**, all repaired; Round 10 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md` |
+| Fact                    | Value                                                                                                    |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| Product checkpoint      | `dc121e3` — the Round 10 repair, and the commit the aggregate gate was run on                            |
+| Round 10 checkpoint     | `7147c83` — the Round 9 repair, which Round 10 tested                                                    |
+| Round 9 checkpoint      | `9d7d186` — the Round 8 repair, which Round 9 tested                                                     |
+| Round 8 checkpoint      | `9c4cb5f` — the Round 7 repair, which Round 8 tested                                                     |
+| Round 7 checkpoint      | `d78b765` — the Round 6 repair, which Round 7 tested                                                     |
+| Round 6 checkpoint      | `1324f66` — the Round 5 repair, which Round 6 tested                                                     |
+| Round 5 checkpoint      | `f45214b` — the Round 4 repair, which Round 5 tested                                                     |
+| Round 4 checkpoint      | `0f9b882` — the Round 3 repair, which Round 4 tested                                                     |
+| Round 3 checkpoint      | `cdd9259` — the Round 2 repair, which Round 3 tested                                                     |
+| Round 2 checkpoint      | `94e1716` — the Round 1 repair, which Round 2 tested and failed                                          |
+| Round 1 checkpoint      | `42667ea` — what Round 1 tested and failed                                                               |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                              |
+| Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                       |
+| Owner phone check       | owed before release; not a blocker QA can clear                                                          |
+| Independent QA          | **Rounds 1 to 10 all FAIL**, all repaired; Round 11 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md` |
 
 **The documentation head is a later commit than the product checkpoint**, as it
 has been every round. At round 8 it is `73de27e`, and it carries exactly three
@@ -235,18 +245,18 @@ against the deployed Preview it reports those three files and the same bytes.
 
 At the repaired checkpoint, not at the one QA failed.
 
-| Gate                                      | Result                                                                                        |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                                     |
-| Unit / contract / synthetic / adversarial | **1,860 passed** in 84 files (unchanged at round 9 — no product code moved; 1,812 at round 1) |
-| Browser, three widths, one worker         | **702 passed** at three widths, one worker, **zero failures**                                 |
-| Android-style gate, deployed              | **clean — 233 checks** against deployed `7147c83`                                             |
-| Privacy scan                              | **clean** — 289 tracked files                                                                 |
-| Block sweep                               | **PASS** — unchanged                                                                          |
-| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya                             |
-| Commits not on any remote                 | **none** at the handed-off head (D-180)                                                       |
-| Checkpoint equivalence                    | **PASS** — the deployed Preview serves `7147c83` itself, no files between                     |
-| CI                                        | Verify **success**, Deploy preview **success**                                                |
+| Gate                                      | Result                                                                    |
+| ----------------------------------------- | ------------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                 |
+| Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files (one new case at round 10; 1,812 at round 1) |
+| Browser, three widths, one worker         | **705 passed** at three widths, one worker, **zero failures**             |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `dc121e3`                         |
+| Privacy scan                              | **clean** — 289 tracked files                                             |
+| Block sweep                               | **PASS** — unchanged                                                      |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya         |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                                   |
+| Checkpoint equivalence                    | **PASS** — the deployed Preview serves `dc121e3` itself, no files between |
+| CI                                        | Verify **success**, Deploy preview **success**                            |
 
 ## Independent QA — round 1, and the repair
 
@@ -855,6 +865,65 @@ D-199 and DEF-0134.
 a linked screen cannot be missed; a parameterised sub-route reachable only by a
 button and linked from nowhere still could. Clicking every button to find out is
 not something a guard may do — buttons write records.
+
+## Independent QA — round 10, and the repair
+
+**Result: FAIL, and the product half was clean for the eighth round running.**
+Codex, at High, on the deployed `111229e` (bundle-equivalent to `7147c83`). All
+seven acceptance items passed, QA-84-007 through QA-84-021 remain closed, and
+both fresh-store cases passed again from new ephemeral contexts. The full report
+is [`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md), Round 10, committed
+unedited as `82831a8` before the repair.
+
+Five findings. Round 9 had established that the unit of a claim must be as big as
+the claim; Round 10 found four places where **the set that unit ranges over** was
+still smaller — and one place where the gate measured something still moving.
+
+### QA-84-022 — route reachability is not owner-state reachability
+
+An ordinary **Read more** button on More, with the promise behind it, passed all
+three widths. This is wider than the limit the Round 9 dispatch conceded: no
+second route is needed. A second sweep now presses every button on every
+reachable route and reads the screen after each press.
+
+### QA-84-023 — `textContent` is not everything the browser renders
+
+The promise as a `placeholder`. The accessible name was collected; the visible
+text was not. The collector now reads `placeholder`, `title`, `alt`, what a text
+control holds and CSS `content` — **enumerated because HTML enumerates them.**
+
+### QA-84-024 — provenance is not a property of a string
+
+Round 9 removed the composed review from the catalogue check by deleting screen
+lines **equal to** a line of the export. The same words on Data and in the
+document erased the screen's own sentence. Provenance is now decided where the
+string is read: inside the export control, or not.
+
+### QA-84-025 — a combinatorial choice is not its endpoints
+
+Ten checkboxes are **1,023 documents**. The guard composed singles and the full
+set; a sentence keyed to `overview`+`corrections` was never composed. The
+selection space is now walked exactly, on a blocker-bearing history, while the
+content space stays every section on every history — and the test says which is
+which.
+
+### QA-84-026 — a gate that a rerun fixes was measuring the wrong thing
+
+The oldest delta clicked, waited for one child to disappear, and read. Dismissing
+the question also rewrites Now, and that write can land later — so eleven
+ordinary lines were attributed to the blocker, and the case passed alone
+afterwards. The screen is now read until two consecutive reads agree.
+
+**No product code changed.** All four false greens were reproduced first, and
+**one reproduction was wrong on the first attempt and is recorded as such**: the
+QA-84-024 sentence was rendered unconditionally, so it never entered the delta
+and passed for the wrong reason. The faithful version was checked against the
+Round 9 guards by stashing the repair. D-200 and DEF-0135.
+
+**And the limit is stated rather than found.** The press sweep presses one button
+at a time from each route's arrival state. A state needing a particular sequence,
+or a gesture that is not a press — hover, drag, long press, focus, typing — is
+not reached. Round 11 is asked to build one.
 
 ## The six packages
 

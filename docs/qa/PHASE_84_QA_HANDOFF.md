@@ -4909,4 +4909,314 @@ Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 10
 repair handoff at its end exactly as written. Do not ask me to paste the file.
 ```
 
+---
+
+## Round 10 repair — the builder's record
+
+**Actor:** Claude / builder. **Model:** Opus-class, Max.
+**Conversation:** CURRENT — the routing 84 builder conversation.
+**Repaired product checkpoint:** `dc121e3`, from `7147c83`.
+
+**Round 10 is right five times.** Round 9 established that the unit of a claim
+must be as big as the claim; Round 10 found four places where the **set that
+unit ranges over** was still smaller than the claim — states, rendered strings,
+provenance, selections — and one place where the gate measured something that
+was still moving.
+
+**No product code changed.** `git diff -- src` is empty at the repaired
+checkpoint. Everything is in `scripts/`, `tests/` and `docs/`. **The phase stays
+YELLOW; the builder does not declare GREEN (D-077).**
+
+### All five reproduced first
+
+**QA-84-022.** A **Read more** button on More with the promise behind it — the
+sweep reported **3 passed** at all three widths. Round 10 is right that this is
+wider than the concession the Round 9 dispatch offered: it needs no second
+route at all.
+
+**QA-84-023.** The same sentence as a `placeholder` on More — **3 passed**. The
+accessible name was collected; the visible text was not.
+
+**QA-84-024.** The sentence on Data once a blocker exists, plus the identical
+line inside the composed export — **passed**. **The first attempt at this
+reproduction was wrong and is recorded rather than tidied away:** the sentence
+was rendered unconditionally, so it sat in both sweeps, never entered the delta,
+and passed for a reason that had nothing to do with the defect. The faithful
+version was then checked against the Round 9 guards by stashing the repair —
+**1 passed** — which is what makes it a reproduction rather than an assertion.
+
+**QA-84-025.** A sentence emitted only for `overview`+`corrections` — QA's own
+focused command reported **1 passed, 13 skipped**.
+
+**QA-84-026.** The race reproduced itself in QA's matrix: **701 passed, 1
+failed**, passing alone afterwards.
+
+### What replaced them — D-200, DEF-0135
+
+**1. A second sweep presses.** On every reachable route it clicks each button in
+turn and reads the screen after each press, following the app back when a press
+navigates away. Presses compound on purpose — a state two presses in is still a
+state the owner can be in — and the claim is one-directional, so more states can
+only find more. It is **not** the sweep the catalogue comparison uses: that one
+needs two states differing by exactly one cause, and this one wanders. Every
+click is bounded and its failure swallowed, because a gate that fails when a
+control is busy is a gate about timing, which is what QA-84-026 was. The bound
+is asserted rather than assumed: if a route ever carries more controls than the
+sweep presses, the test says so instead of quietly covering less.
+
+**2. The collector reads everything the browser renders as words** — `placeholder`,
+`title`, `alt`, what a text control holds, and anything a stylesheet inserts
+through `content`, alongside text and accessible names. **These are enumerated
+because HTML enumerates them**, not because somebody guessed which mattered.
+
+**3. Provenance is decided where a string is read.** A unit belongs to the
+composed review when the element it came from is inside the control that holds
+it. A string that appears both in the document and on the screen beside it is
+prose, because the owner reads it in both places.
+
+**4. The export selection space is walked exactly** — all **1,023** documents, on
+a history that exercises the blocker path, so a rule keyed on both a selection
+and a record has something to fire on. The content space stays every section on
+every history. **Neither is a sample of the other**, and the test says which is
+which.
+
+**5. The screen is read until it stops changing.** Two consecutive reads must
+agree. The old condition — one child disappearing — was a proxy for settling,
+and the thing being measured settled later. A gate that a rerun fixes was
+measuring the wrong thing.
+
+**And the exception list is named for what it holds.** Pressing buttons reached
+two honest sentences no earlier round had seen: Now's *"The engine **will** not
+guess"*, a promise to do nothing, and a Timeline record reading *"Left one of the
+app's questions for **another time**"*, which describes what already happened.
+Neither is a product description, so `APPROVED_PRODUCT_DESCRIPTION` is now
+`APPROVED_NOT_A_PROMISE`. Each would need a different piece of understanding to
+dismiss automatically — negation, tense, what an adverb attaches to — and every
+one of those is a parser inside a guard (D-197). The rule stays blunt and the
+exceptions stay visible, at the declared cost that editing any of those
+sentences fails the gate until the new wording is approved.
+
+### Each exact mutation, reintroduced and caught
+
+Each was built and run — a reintroduction that does not compile proves nothing.
+
+**QA-84-022**, the button-revealed promise:
+
+```
+Error: a state the owner can press into claims the app will change what it offers
++   "“The app will choose something better next time.” → The app will choose something better next time.",
+```
+
+**QA-84-023**, the placeholder — caught by the route sweep, because the
+placeholder is now read as what it is.
+
+**QA-84-024**, the value collision:
+
+```
+Error: blocking a move put copy nobody approved on a screen — approve it in
+APPROVED_BLOCKER_COPY if it is blocker copy, or in APPROVED_WHEN_A_MOVE_IS_BLOCKED
+if it is what another screen says once a record exists
++   "This needs special care.",
+```
+
+**QA-84-025**, the two-checkbox document, under QA's own focused command:
+
+```
++   "overview+corrections: “The app will choose something better next time.”",
+```
+
+**QA-84-026** is proved by repetition rather than by a mutation: the case that
+raced ran **three times at all three widths, 6 passed each time**.
+
+### Verification at the repaired checkpoint
+
+| Gate                                      | Result |
+| ----------------------------------------- | ------ |
+| `npm run verify`, clean checkout          | **PASS — format, lint, typecheck, test, build (D-180)** |
+| Unit / contract / synthetic / adversarial | **1,861 passed in 84 files (one new case; no product code moved)** |
+| Browser, three widths, one worker         | **705 passed at three widths on one worker, zero failures** |
+| Android-style gate, deployed              | **clean — 233 checks against deployed `dc121e3`** |
+| Privacy scan                              | **clean — 289 tracked files** |
+| Block sweep / copy guards                 | **PASS** — no percentage, rank, grade or score about him or Adaya |
+| Commits not on any remote                 | **none** at the handed-off head (D-180) |
+| Checkpoint equivalence                    | **PASS — the deployed Preview serves `dc121e3` itself, no files between** |
+| CI                                        | Verify **success**, Deploy preview **success** — after one **failure**, recorded below |
+
+**And the first push of this repair was not a checkpoint.** `d56ad77` failed CI
+in 26 seconds: D-200 and DEF-0135 were written **after** `npm run verify` had
+run, so prettier never saw them and `format:check` refused. D-180 says a commit
+that has met no gate is not a checkpoint, so it is not one — `dc121e3` is. The
+ordering was mine and the gate was right; it is here rather than tidied away,
+because the same lapse produced QA-84-026's false red in the other direction.
+
+### What did not change, and is not being claimed
+
+No blocker enforcement — D-187 still promises capture and not adaptation. No
+semantic interpretation, no scoring change, no new visual language, no twelfth
+domain page, no `PHASE_85_*` file, and `qa/WHOLE_APP_OWNER_USE_REVIEW.md` is
+untouched. All seven D-173 acceptance items and both fresh-store cases are
+preserved; Round 11 should verify that rather than take it from here.
+
+**And what is still open, stated rather than left to be found.** The press sweep
+presses **one button at a time from a route's arrival state**, then continues
+from wherever that left it. A state that needs a *particular* sequence — type
+here, then press that, then this — is not reached. Nor is a state behind a
+gesture that is not a button press: a hover, a drag, a long press, a focus. The
+bound on presses per route is asserted, not assumed, so the gap cannot widen
+silently; but it is a gap, and Round 11 should aim at it.
+
+---
+
+## Round 11 — the retest dispatch
+
+**Actor:** Codex / **independent QA**.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 10.
+**Model:** Codex.
+**Reasoning level:** **High** — never Max.
+
+**Routing 84 is YELLOW.** You have failed it ten times and been right ten times.
+**Rounds 3 to 10 have all been clean on the product**; every finding in them has
+been about the standing guarantee, and one — QA-84-026 — was about the gate
+itself.
+
+### What to judge it against
+
+The **same seven-item gate** in `PRODUCT_ADJUDICATION.md` section 8, governed by
+**D-173**. All seven passed in Rounds 3 to 10. **Re-verify all seven anyway.**
+
+Plus the standing gates: the aggregate `npm run verify` from a clean checkout,
+the browser suite at three widths, the Android-style gate on the deployed build,
+the privacy scan, the block sweep and the copy guards.
+
+**Repeat CASE A and CASE B from new ephemeral browser contexts**, ordinary
+product screens only, never opening the QA laboratory.
+
+### What is worth attacking
+
+1. **The press sweep's reach.** It presses one button at a time from each
+   route's arrival state and continues from where that left it. **Conceded in
+   writing:** a state needing a particular *sequence*, or a gesture that is not a
+   press — hover, drag, long press, focus, typing — is not reached. Build one.
+2. **The rendered-string set.** `placeholder`, `title`, `alt`, control values and
+   CSS `content` are read. Is there owner-visible text outside all of them — a
+   shadow root, an `<iframe>`, an SVG `<title>`/`<text>`, a `<canvas>`, an
+   `::marker`, `content` on a pseudo-element the collector does not ask about?
+3. **Provenance.** A unit is generated when its element sits inside the export
+   control. Can prose be made to *appear* generated — rendered inside that
+   control, or the control made to wrap something it does not compose — so the
+   catalogue check never sees it?
+4. **The selection walk.** All 1,023 selections, on one blocker-bearing history.
+   Is there a rule keyed on a selection **and** on content that only some other
+   history has? That is the seam between the two halves; find something in it.
+5. **The settle condition.** Two consecutive equal reads, 100ms apart, up to 40
+   tries. Can a screen be made to settle falsely — a value that alternates, a
+   write that lands later than four seconds, an animation that stops between
+   reads?
+
+### The rules that still hold
+
+No strategy evaluation, no pattern-discovery engine, **no enforcement of a
+blocker constraint** (D-187 and D-192 to D-200 are about *saying* so honestly),
+no semantic interpretation of the owner's words (D-024, D-025, D-172), no domain
+progression models beyond Career, Health and Money, no owner routines library
+(AUD-0045), no backfill (D-165), no twelfth domain page, no scoring change
+(D-137, D-138), no new visual language, no `PHASE_85_*` file, no alteration of
+`qa/WHOLE_APP_OWNER_USE_REVIEW.md`, no orchestrator change.
+
+### Handoff
+
+```text
+Round 11 retest of routing Phase 84 of Life Command OS: "what the owner is
+trying to become."
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You have failed this phase ten times and been right ten times. Rounds 3 to 10
+were all clean on the product; every finding in them was about the standing
+guarantee. QA-84-022 through QA-84-026 are repaired, all four false greens were
+reproduced before the repair and are caught after it, and the raced case now
+runs clean three times over at all three widths. Routing 84 is still YELLOW at
+repaired product checkpoint dc121e3; the builder has not declared GREEN (D-077).
+
+Read, in full, and in this order:
+1. docs/qa/README.md            — the protocol. Step 1 is cold use of the
+                                  deployed Preview BEFORE any repository
+                                  document.
+2. docs/qa/PHASE_84_QA_HANDOFF.md — your rounds 1 to 10, unedited, with the
+                                  builder's repair records appended below
+                                  them. This dispatch is at its end.
+3. docs/PRODUCT_ADJUDICATION.md section 8 — the seven-item gate; section 11 is
+                                  the do-not-change list
+4. docs/DECISION_LOG.md D-161..D-169, D-173, D-177..D-200
+5. docs/DEFECT_LEDGER.md DEF-0119..DEF-0135
+6. docs/PHASE_STATUS.md — the routing 84 record, rounds 1 to 10 included
+
+Confirm the deployed build against the repaired checkpoint before testing:
+  node --use-system-ca scripts/checkpoint-equivalence.mjs dc121e3 --deployed \
+    https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Repeat CASE A ("More money" into the second agenda) and CASE B (the caregiving
+blocker) from NEW EPHEMERAL BROWSER CONTEXTS, ordinary product screens only,
+never opening the QA laboratory. Then re-verify all seven acceptance items.
+
+The guarantee now presses every button on every reachable route, reads every
+attribute the browser renders as words, decides provenance where a string is
+read, walks all 1,023 export selections, and reads the screen until two
+consecutive reads agree. Attack that:
+
+- the press sweep presses one button at a time from each route's arrival state.
+  CONCEDED: a state needing a particular sequence, or a gesture that is not a
+  press — hover, drag, long press, focus, typing — is not reached. Build one.
+- the rendered-string set: is there owner-visible text outside placeholder,
+  title, alt, control values and CSS content — a shadow root, an iframe, SVG
+  title or text, a canvas, ::marker?
+- provenance: can prose be made to appear generated, so the catalogue check
+  never sees it?
+- the selection walk is exact but runs on one blocker-bearing history. Is there
+  a rule keyed on a selection AND on content only another history has?
+- the settle condition: two equal reads 100ms apart, up to 40 tries. Can a
+  screen settle falsely?
+
+Write Round 11 into docs/qa/PHASE_84_QA_HANDOFF.md, below this dispatch. The
+builder does not edit your rounds and you do not change product code. Your
+**Phase:** field is 84 — a QA round does not get a new integer, and you must
+not create any PHASE_85_* file.
+
+End your response with the four lines and a launcher (D-092): model, reasoning
+level, conversation, and a short copyable prompt naming the file the next
+conversation must read.
+
+Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High — never Max.
+
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 10.
+
+```text
+Round 11 retest of routing Phase 84 of Life Command OS, after your Round 10 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full — your rounds 1 to 10, the builder's
+repair records, and the round 11 dispatch at its end — and execute the QA
+protocol in docs/qa/README.md exactly as written.
+
+Repaired product checkpoint: dc121e3. Your **Phase:** field is 84. Do not
+create any PHASE_85_* file.
+
+Repeat CASE A and CASE B from new ephemeral browser contexts, never opening
+the QA laboratory.
+
+Write Round 11 into the same QA report, below the round 11 dispatch. Do not
+change product code, and reproduce the builder's claims rather than accepting
+them.
+
+Do not ask me to paste file contents.
+```
+
 <!-- LCO_COMPLETE -->
