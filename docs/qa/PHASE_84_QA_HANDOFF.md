@@ -4011,11 +4011,11 @@ claim about the document rather than about one sentence:
 | `npm run verify`, clean checkout          | **PASS** — format, lint, typecheck, test, build (D-180) |
 | Unit / contract / synthetic / adversarial | **1,860 passed** in 84 files (unchanged — no product code moved)** |
 | Browser, three widths, one worker         | **702 passed** at three widths on one worker, zero failures** |
-| Android-style gate, deployed              | **clean — 233 checks** against deployed `9d7d186`** |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `9d7d186` |
 | Privacy scan                              | **clean — 289 tracked files** |
 | Block sweep / copy guards                 | **PASS** — no percentage, rank, grade or score about him or Adaya |
 | Commits not on any remote                 | **none** at the handed-off head (D-180) |
-| Checkpoint equivalence                    | **PASS** — the deployed Preview serves `9d7d186` itself; re-proved after the documentation commit** |
+| Checkpoint equivalence                    | **PASS** — the deployed Preview serves `9d7d186` itself; re-proved after the documentation commit |
 | CI                                        | Verify **success**, Deploy preview **success** |
 
 ### What did not change, and is not being claimed

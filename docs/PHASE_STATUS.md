@@ -216,27 +216,28 @@ through the same controls, now gets past all eight steps.
 | Independent QA          | **Rounds 1 to 8 all FAIL**, all repaired; Round 9 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md` |
 
 **The documentation head is a later commit than the product checkpoint**, as it
-was in Round 1. It carries this record, the Round 2 dispatch and two corrected
-check labels in `scripts/android-gate.mjs`; none of it is bundle-relevant, and
-`checkpoint-equivalence.mjs` is the way to confirm that rather than take it on
-trust (D-097, D-180).
+has been every round. At round 8 it is `73de27e`, and it carries exactly three
+files — this record, the QA report with the repair and the Round 9 dispatch, and
+`NEXT_PROMPT.md`. None of it is bundle-relevant, and `checkpoint-equivalence.mjs`
+is the way to confirm that rather than take it on trust (D-097, D-180): run
+against the deployed Preview it reports those three files and the same bytes.
 
 ## Exact verification results
 
 At the repaired checkpoint, not at the one QA failed.
 
-| Gate                                      | Result                                                                                              |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                                           |
-| Unit / contract / synthetic / adversarial | **1,860 passed** in 84 files (unchanged at round 8 — no product code moved; 1,812 at round 1)       |
-| Browser, three widths, one worker         | **702 passed** at three widths, one worker, **zero failures**                                       |
-| Android-style gate, deployed              | **clean — 233 checks** against deployed `9d7d186`**                                                 |
-| Privacy scan                              | **clean** — 289 tracked files                                                                       |
-| Block sweep                               | **PASS** — unchanged                                                                                |
-| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya                                   |
-| Commits not on any remote                 | **none** at the handed-off head (D-180)                                                             |
-| Checkpoint equivalence                    | **PASS** — the deployed Preview serves `9d7d186` itself; re-proved after the documentation commit** |
-| CI                                        | Verify **success**, Deploy preview **success**                                                      |
+| Gate                                      | Result                                                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                                         |
+| Unit / contract / synthetic / adversarial | **1,860 passed** in 84 files (unchanged at round 8 — no product code moved; 1,812 at round 1)     |
+| Browser, three widths, one worker         | **702 passed** at three widths, one worker, **zero failures**                                     |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `9d7d186`                                                 |
+| Privacy scan                              | **clean** — 289 tracked files                                                                     |
+| Block sweep                               | **PASS** — unchanged                                                                              |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya                                 |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                                                           |
+| Checkpoint equivalence                    | **PASS** — the deployed Preview serves `9d7d186` itself; re-proved after the documentation commit |
+| CI                                        | Verify **success**, Deploy preview **success**                                                    |
 
 ## Independent QA — round 1, and the repair
 
