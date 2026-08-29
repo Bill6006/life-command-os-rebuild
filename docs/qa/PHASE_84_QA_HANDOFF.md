@@ -3285,4 +3285,267 @@ repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
 routing 90. Do not ask me to paste the file contents.
 ```
 
-<!-- LCO_COMPLETE -->
+---
+
+## Round 7 repair — the builder's record
+
+**Actor:** Claude / the routing 84 builder conversation. **Appended below QA's
+round 7 rather than inside it** — QA owns every round and the builder does not
+edit them (D-077). Round 7 above is byte-identical to what QA wrote and was
+committed on its own as `2ec77b3` before a line of this repair.
+
+**Result: QA-84-015 repaired, both proofs. The phase stays YELLOW.** The builder
+does not declare GREEN. Round 8 is dispatched below.
+
+**On the completion marker.** The owner's instruction this round places it as the
+last meaningful line of `docs/NEXT_PROMPT.md` and in no other handoff file, so
+this report carries none — which also keeps the orchestrator routing **this**
+report, where the Round 8 retest is.
+
+### Checkpoint
+
+| Fact                    | Value                                                                     |
+| ----------------------- | ------------------------------------------------------------------------- |
+| Repaired checkpoint     | `9c4cb5f` — the commit the aggregate gate was run on, and the one to test |
+| Round 7 checkpoint      | `d78b765` — deployed as `3f5e70c`, what Round 7 tested                     |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/               |
+| Owner-visible behaviour | **unchanged** — no product code changed at all this round                 |
+| QA's Round 7 commit     | `2ec77b3` — QA's report, committed unedited, before the repair            |
+
+### Reproduced first, both of them
+
+**A**, in the export — `331 / 331 passed` with *"This needs special care."* in
+front of every exported history sentence.
+**B**, in `NowScreen` — the synthetic catalogue `13 / 13` and the browser case
+`3 / 3` at all three widths, with the same sentence rendering beside the blocker
+question.
+
+Both exactly as reported.
+
+### A — an exception is enumerated, not measured
+
+D-196 let the export compose *"a date, a tag and an origin"* around a record's
+sentence and asserted that the leftover **"is not itself a sentence"** — by
+asking whether it was **longer than sixty characters**. Those are not the same
+claim, and the inserted sentence is twenty-four.
+
+The line is now normalised back to `{day}`, `{tag}`, `{text}`, `{origin}` and
+must match `APPROVED_EXPORT_SCAFFOLDS` **exactly**. No length appears in the
+check. The general form is worth stating: **a threshold in a guard is a guess
+about the thing the guard is meant to establish.**
+
+### B — a screen's blocker copy is whatever appears with the surface
+
+`blockerSurfacesInSource()` finds components by the blocker types in their props.
+`NowScreen` has none — it derives `blocked` and `blockerDecision` from local
+state — and imports no `describeRecord`. **Every enumeration this phase had built
+was blind to a sentence written beside `<BlockerQuestion>` in its own branch.**
+
+What a parent cannot avoid is that its sentence **arrives with the surface and
+leaves with it**. So the copy is proved by a **rendered delta**: the whole screen
+with the surface up, the whole screen with it dismissed, and everything in the
+difference must be approved. That is exactly *"what is on screen because the
+blocker is"*, wherever it was written and whatever the writer takes as props.
+Both hosts have one — Now's blocker question, and the domain page's standing
+panel.
+
+**The hosts are enumerated separately and structurally.**
+`blockerHostsInSource()` finds every file whose JSX contains a blocker surface
+tag, which a parent also cannot avoid. A new host fails until a delta covers it.
+Naming `NowScreen` in a list would have been the wrong repair and Round 7 said
+so; what is listed is which hosts *have* coverage, checked against the JSX rather
+than trusted.
+
+### One thing written and discarded, recorded rather than hidden
+
+The first attempt at B read the JSX branch around the tag and pulled the author's
+text out of it in source. **It does not work honestly.** The enclosing `{` of a
+JSX expression is not distinguishable from a block brace by counting, so the
+extractor walked out of the branch and reported
+`const [conceptDraft, setConceptDraft] = useState('')` as owner copy. Tightening
+that into a lexer is writing a parser, and **a half-written parser inside a guard
+is the same mistake as a half-written classifier** — it passes until somebody
+writes the branch slightly differently.
+
+So the enumeration is done in source, where it is exact, and the copy is checked
+on the screen, where it exists. That places B's proof in the browser suite rather
+than the aggregate gate, which is a real cost and is named here rather than
+glossed: it is a pre-release gate, not a pre-browser one.
+
+### Proved by reintroduction, three ways
+
+1. **QA's exact export mutation** — fails the shape assertion, which names the
+   shape: `- {tag}: This needs special care. {text}`.
+2. **QA's exact `NowScreen` mutation** — fails the delta, which names the
+   sentence.
+3. **A new blocker host nobody covered** — fails the enumeration.
+
+### Verification at the repaired checkpoint
+
+| Gate                                      | Result                                                                                       |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                                    |
+| Unit / contract / synthetic / adversarial | **1,860 passed** in 84 files (1,859 at round 7)                                              |
+| Browser, three widths, one worker         | **696 passed** at three widths on a clean re-run (694 at round 7, plus the two delta cases)  |
+| Deployed Android gate                     | **clean — 233 checks** against deployed `9c4cb5f`                                           |
+| Privacy scan                              | **clean — 289 tracked files**                                                                |
+| Block sweep and copy guards               | **PASS**                                                                                     |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                                                      |
+| Checkpoint equivalence                    | **PASS** — deployed `9c4cb5f` serves the same bytes, nothing between                        |
+| CI                                        | Verify **success**, Deploy preview **success**                                               |
+
+**One browser case aborted a navigation on the first full run** —
+`net::ERR_ABORTED; maybe frame was detached?` inside `page.goto`, which is the
+dual-stack class `playwright.config.ts` already documents in its own comment. It
+passed alone and on the full re-run above. Recorded rather than dismissed; it is
+the third such observation in this phase.
+
+### What is still open, and named rather than left to be found
+
+- **Enforcement of a blocker constraint.** Still nothing reads one, still
+  deliberate, still F08's aggregation and later Validity's.
+- **Semantic capture of what an aim means** — routing 91 package 1 (D-172).
+- **The owner phone check** is owed before release and is not a blocker QA can
+  clear.
+- **The classifier's entailment boundary** (D-193) — named, not closed.
+- **B's proof lives in the browser gate**, above — named, not hidden.
+
+---
+
+## Round 8 — the retest dispatch
+
+**Actor:** Codex / **independent QA**.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 7.
+**Model:** Codex.
+**Reasoning level:** **High** — never Max.
+
+**Routing 84 is YELLOW.** You have failed it seven times and been right seven
+times. **Rounds 3 to 7 have all been clean on the product**; all five findings
+were about the standing guard. QA-84-015 is repaired at `9c4cb5f`.
+
+### What to judge it against
+
+The **same seven-item gate** in `PRODUCT_ADJUDICATION.md` section 8, governed by
+**D-173**. All seven passed in Rounds 3 to 7. **Re-verify all seven anyway.**
+
+Plus the standing gates: the aggregate `npm run verify` from a clean checkout,
+the browser suite at three widths, the Android-style gate on the deployed build,
+the privacy scan, the block sweep and the copy guards.
+
+**Repeat CASE A and CASE B from new ephemeral browser contexts**, ordinary
+product screens only, never opening the QA laboratory.
+
+### What is worth attacking
+
+1. **The rendered delta, which is now the proof for parent-composed copy.** It
+   compares the screen with a blocker surface up against the screen with it
+   dismissed. Is there owner-visible blocker copy that does **not** disappear
+   when the surface is dismissed — written by a parent but left on screen
+   afterwards, or rendered on a screen the delta does not walk?
+2. **`APPROVED_EXPORT_SCAFFOLDS`.** Eight shapes are permitted exactly. Is there
+   a real export line whose legitimate shape is missing — so the guard is
+   passing by never reaching it — or a way to compose a promise that normalises
+   into an approved shape?
+3. **`blockerHostsInSource()`**, which finds hosts by the surface tag in JSX. Can
+   a screen put blocker copy on the page without writing one of those tags —
+   through an indirection, a wrapper component, a mapped render?
+4. **That B's proof is in the browser gate rather than the aggregate one.** If
+   you think that is not good enough, say so.
+
+### The rules that still hold
+
+No strategy evaluation, no pattern-discovery engine, **no enforcement of a
+blocker constraint** (D-187 and D-192 to D-197 are about *saying* so honestly),
+no semantic interpretation of the owner's words (D-024, D-025, D-172), no domain
+progression models beyond Career, Health and Money, no owner routines library
+(AUD-0045), no backfill (D-165), no twelfth domain page, no scoring change
+(D-137, D-138), no new visual language, no `PHASE_85_*` file, no alteration of
+`qa/WHOLE_APP_OWNER_USE_REVIEW.md`, no orchestrator change.
+
+### Handoff
+
+```text
+Round 8 retest of routing Phase 84 of Life Command OS: "what the owner is
+trying to become."
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You have failed this phase seven times and been right seven times. Rounds 3 to
+7 were all clean on the product; all five findings were about the standing
+guard. QA-84-015 is repaired, both proofs. Routing 84 is still YELLOW at
+repaired product checkpoint 9c4cb5f; the builder has not declared GREEN
+(D-077).
+
+Read, in full, and in this order:
+1. docs/qa/README.md            — the protocol. Step 1 is cold use of the
+                                  deployed Preview BEFORE any repository
+                                  document.
+2. docs/qa/PHASE_84_QA_HANDOFF.md — your rounds 1 to 7, unedited, with the
+                                  builder's repair records appended below
+                                  them. This dispatch is at its end.
+3. docs/PRODUCT_ADJUDICATION.md section 8 — the seven-item gate; section 11 is
+                                  the do-not-change list
+4. docs/DECISION_LOG.md D-161..D-169, D-173, D-177..D-197
+5. docs/DEFECT_LEDGER.md DEF-0119..DEF-0132
+6. docs/PHASE_STATUS.md — the routing 84 record, rounds 1 to 7 included
+
+Confirm the deployed build against the repaired checkpoint before testing:
+  node --use-system-ca scripts/checkpoint-equivalence.mjs 9c4cb5f --deployed \
+    https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Repeat CASE A ("More money" into the second agenda) and CASE B (the caregiving
+blocker) from NEW EPHEMERAL BROWSER CONTEXTS, ordinary product screens only,
+never opening the QA laboratory. Then re-verify all seven acceptance items.
+
+Attack in particular:
+- the rendered delta, which is now the proof for parent-composed copy: is
+  there owner-visible blocker copy that does NOT disappear when the surface is
+  dismissed, or that appears on a screen the delta does not walk?
+- APPROVED_EXPORT_SCAFFOLDS: is a legitimate export shape missing, so the
+  guard passes by never reaching it? Can a promise normalise into an approved
+  shape?
+- blockerHostsInSource(), which finds hosts by the surface tag in JSX: can a
+  screen put blocker copy on the page without writing one of those tags?
+- that B's proof lives in the browser gate rather than the aggregate one. If
+  that is not good enough, say so.
+
+Write Round 8 into docs/qa/PHASE_84_QA_HANDOFF.md, below this dispatch. The
+builder does not edit your rounds and you do not change product code. Your
+**Phase:** field is 84 — a QA round does not get a new integer, and you must
+not create any PHASE_85_* file.
+
+End your response with the four lines and a launcher (D-092): model, reasoning
+level, conversation, and a short copyable prompt naming the file the next
+conversation must read.
+
+Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High — never Max.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 7.
+
+```text
+Round 8 retest of routing Phase 84 of Life Command OS, after your Round 7 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full — your rounds 1 to 7, the builder's
+repair records, and the round 8 dispatch at its end — and execute the QA
+protocol in docs/qa/README.md exactly as written.
+
+Repaired product checkpoint: 9c4cb5f. Your **Phase:** field is 84. Do not
+create any PHASE_85_* file.
+
+Repeat CASE A and CASE B from new ephemeral browser contexts, never opening
+the QA laboratory.
+
+Write Round 8 into the same QA report, below the round 8 dispatch. Do not
+change product code, and reproduce the builder's claims rather than accepting
+them.
+
+Do not ask me to paste file contents.
+```

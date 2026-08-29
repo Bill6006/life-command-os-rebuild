@@ -122,10 +122,10 @@ superseded rather than reused.
 
 # Routing Phase 84 — What the owner is trying to become
 
-**Status: YELLOW — REPAIRED AFTER QA ROUND 6 FAIL, AWAITING ROUND 7 RETEST.**
+**Status: YELLOW — REPAIRED AFTER QA ROUND 7 FAIL, AWAITING ROUND 8 RETEST.**
 
-Independent QA has failed this phase six times and been right six times, and
-**the last four failures were all about the guard rather than the product.**
+Independent QA has failed this phase seven times and been right seven times, and
+**the last five failures were all about the guard rather than the product.**
 
 **Round 1** returned FAIL on acceptance items 1, 2 and 4, with six findings.
 **Round 2** confirmed five of those six closed and found four more: a cold-start
@@ -134,7 +134,7 @@ that the Round 1 repair had made false, a Timeline tag still contradicting its o
 sentence, and a promise on the blocker path that the guard written to forbid it
 did not match.
 
-**Rounds 3 to 6 all came back clean on the product**, and Round 6 also paid
+**Rounds 3 to 7 all came back clean on the product**, and Round 6 also paid
 Round 5's evidence debt: CASE A and CASE B both passed from genuinely fresh
 ephemeral browser contexts, with empty IndexedDB, no retained data touched and
 the laboratory never opened. All seven acceptance
@@ -192,7 +192,8 @@ through the same controls, now gets past all eight steps.
 
 | Fact                    | Value                                                                                                  |
 | ----------------------- | ------------------------------------------------------------------------------------------------------ |
-| Product checkpoint      | `d78b765` — the Round 6 repair, and the commit the aggregate gate was run on                           |
+| Product checkpoint      | `9c4cb5f` — the Round 7 repair, and the commit the aggregate gate was run on                           |
+| Round 7 checkpoint      | `d78b765` — the Round 6 repair, which Round 7 tested                                                   |
 | Round 6 checkpoint      | `1324f66` — the Round 5 repair, which Round 6 tested                                                   |
 | Round 5 checkpoint      | `f45214b` — the Round 4 repair, which Round 5 tested                                                   |
 | Round 4 checkpoint      | `0f9b882` — the Round 3 repair, which Round 4 tested                                                   |
@@ -202,7 +203,7 @@ through the same controls, now gets past all eight steps.
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                            |
 | Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                     |
 | Owner phone check       | owed before release; not a blocker QA can clear                                                        |
-| Independent QA          | **Rounds 1 to 6 all FAIL**, all repaired; Round 7 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md` |
+| Independent QA          | **Rounds 1 to 7 all FAIL**, all repaired; Round 8 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md` |
 
 **The documentation head is a later commit than the product checkpoint**, as it
 was in Round 1. It carries this record, the Round 2 dispatch and two corrected
@@ -214,18 +215,18 @@ trust (D-097, D-180).
 
 At the repaired checkpoint, not at the one QA failed.
 
-| Gate                                      | Result                                                                                                               |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                                                            |
-| Unit / contract / synthetic / adversarial | **1,859 passed** in 84 files (1,855 at round 6, 1,812 at round 1)                                                    |
-| Browser, three widths, one worker         | **690 passed** at three widths on a clean re-run; one case failed once under load and passed alone and on the re-run |
-| Android-style gate, deployed              | **clean — 233 checks** against deployed `d78b765`                                                                    |
-| Privacy scan                              | **clean** — 289 tracked files                                                                                        |
-| Block sweep                               | **PASS** — unchanged                                                                                                 |
-| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya                                                    |
-| Commits not on any remote                 | **none** at the handed-off head (D-180)                                                                              |
-| Checkpoint equivalence                    | **PASS** — deployed `d78b765` serves the same bytes, nothing between                                                 |
-| CI                                        | Verify **success**, Deploy preview **success**                                                                       |
+| Gate                                      | Result                                                                                                                  |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                                                               |
+| Unit / contract / synthetic / adversarial | **1,860 passed** in 84 files (1,859 at round 7, 1,812 at round 1)                                                       |
+| Browser, three widths, one worker         | **696 passed** at three widths on a clean re-run; one case aborted a navigation once and passed alone and on the re-run |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `9c4cb5f`                                                                       |
+| Privacy scan                              | **clean** — 289 tracked files                                                                                           |
+| Block sweep                               | **PASS** — unchanged                                                                                                    |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya                                                       |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                                                                                 |
+| Checkpoint equivalence                    | **PASS** — deployed `9c4cb5f` serves the same bytes, nothing between                                                    |
+| CI                                        | Verify **success**, Deploy preview **success**                                                                          |
 
 ## Independent QA — round 1, and the repair
 
@@ -644,6 +645,56 @@ full re-run. No product code changed this round. It is written down because
 calling something flake on one observation is how a real intermittent gets lost;
 it is the second of its kind in this phase, after the block-sweep case Rounds 4
 and 5 both saw.
+
+## Independent QA — round 7, and the repair
+
+**Result: FAIL, and the product half was clean for the fifth round running.**
+Codex, at High, on the deployed `3f5e70c` (bundle-equivalent to `d78b765`). All
+seven acceptance items passed, QA-84-007 through QA-84-014 remain closed, and
+both fresh-store cases passed again from new ephemeral contexts. The full report
+is [`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md), Round 7, committed
+unedited as `2ec77b3` before the repair.
+
+The one finding, **QA-84-015**, carried two independent proofs — and both were
+against the guard rather than the product.
+
+### A — an exception that was measured rather than enumerated
+
+D-196 let the export compose a date, a tag and an origin around a record's
+sentence, and asserted the leftover _"is not itself a sentence"_ by asking
+whether it was **longer than sixty characters**. Those are not the same claim.
+_"This needs special care."_ is twenty-four, and 331 tests passed with it in
+front of every exported history sentence.
+
+The line is now normalised back to `{day}`, `{tag}`, `{text}`, `{origin}` and
+must match an approved shape **exactly**. **A threshold in a guard is a guess
+about the thing the guard is meant to establish.**
+
+### B — copy a parent wrote beside the surface
+
+`blockerSurfacesInSource()` finds components by the blocker types in their props.
+`NowScreen` has none — it derives `blocked` and `blockerDecision` from local
+state — and imports no `describeRecord`, so one sentence beside
+`<BlockerQuestion>` in its own branch was invisible to **every** enumeration this
+phase had built. The catalogue passed 13/13 and the browser case 3/3.
+
+What a parent cannot avoid is that its sentence arrives with the surface and
+leaves with it, so the copy is proved by a **rendered delta**: the whole screen
+with the surface up, the whole screen with it dismissed, everything in the
+difference approved. The hosts are enumerated from the JSX tag, which a parent
+also cannot avoid, so a new host fails until a delta covers it.
+
+### And one attempt written and discarded
+
+The first version of B read the JSX branch in source. It does not work honestly —
+the enclosing `{` of a JSX expression is not distinguishable from a block brace
+by counting, and the extractor reported a `useState` line as owner copy.
+**A half-written parser inside a guard is the same mistake as a half-written
+classifier.** D-197 records it, and records the cost: B's proof lives in the
+browser gate rather than the aggregate one.
+
+**No product code changed.** Proved by reintroduction three ways: both of QA's
+exact mutations, and a new blocker host nobody covered.
 
 ## The six packages
 

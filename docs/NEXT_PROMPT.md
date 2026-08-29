@@ -122,3 +122,5 @@ Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 7
 repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
 routing 90. Do not ask me to paste the file contents.
 ```
+
+<!-- LCO_COMPLETE -->
