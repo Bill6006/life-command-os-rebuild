@@ -39,6 +39,43 @@ None.
 
 ## Fixed
 
+### DEF-0134 — three ways past a guarantee that had just been widened
+
+- Status: Fixed
+- Severity: Blocker — a promise the engine cannot keep could reach the owner on
+  a screen, in a sentence, or in a document he can produce, with every gate green
+- Found in: routing 84 / `9d7d186`
+- Found by: **independent QA round 9** (QA-84-019, QA-84-020, QA-84-021)
+- Class: **the unit of the claim was smaller than the claim.** Round 8 widened
+  the guarantee from components to screens; each of these three is that same
+  widening stopping one level too early — one navigation surface instead of the
+  route set, one DOM leaf instead of a sentence, one section instead of every
+  document.
+- Reproduction, all three confirmed here before anything was built:
+  - **019** — `<p>The app will choose something better next time.</p>` on
+    `DataScreen` → the sweep reported **3 passed** at all three widths.
+  - **020** — the same sentence split across two `<span>`s inside one `<p>` on
+    Now, a route already crawled → **3 passed**.
+  - **021** — the sentence added to `correctionsSection()` → QA's focused
+    command reported **1 passed, 13 skipped**, and the **entire suite of 1,860
+    tests passed** with the promise in the owner's Corrections document.
+- Repair — three rules, see **D-199**. Route seeds come from the routing
+  contract and are followed transitively through links; the reading unit is what
+  the browser lays out as one run of text, split on newlines; the export
+  guarantee runs over every id in `EXPORT_SECTION_IDS`, alone and together.
+- Regression: the two route-sweep cases in `tests/browser/phase84.spec.ts` and
+  the widened export case in `tests/synthetic/blocker-copy.test.tsx`.
+- Proved by reintroduction: all three of QA's exact mutations, each built and
+  run. **021 fails under QA's own focused command**, which is the command that
+  reported the false green.
+- Siblings: checked, and wider than reported. The leaf-only rule was in **four**
+  collectors, not the two QA named — the third sweep helper and
+  `scripts/android-gate.mjs` had it too. All four now share one definition.
+- Note on scope: the current copy was honest throughout, for the seventh round
+  running, and both fresh-store cases passed again. What was defective was the
+  guarantee — and one honest sentence, `REBUILD_PHASE.summary`, came inside the
+  net when the net widened and is now approved by name with its reason.
+
 ### DEF-0133 — three guards, three ways past them
 
 - Status: Fixed

@@ -6804,3 +6804,99 @@ misses three wordings the blocker-path rule catches, and those three are named i
 the test rather than left implied.
 
 ---
+
+## D-199 — The route set, the reading unit, and every document the owner can select
+
+**Phase:** 84 (QA round 9 repair) · **Status:** Active · Extends **D-198**,
+which was right about the boundary and wrong about how to find it three times
+over.
+
+Round 8 moved the guarantee from components to **screens the owner can reach**.
+Round 9 kept that and broke the three things underneath it: which screens those
+are, what a sentence is, and which document "the export" means.
+
+**1. A coverage claim taken from one navigation surface is a claim about that
+surface.** The crawl read the `.nav` buttons and the `#/life/` links on Life,
+and its own comment claimed a fifth destination would "join the sweep by
+existing". **More** is behind a button in the header. **Data** is behind a link
+on More. Neither was ever visited, and a plain future-tense promise on the Data
+screen passed all three widths (QA-84-019). Adding the header would have been
+the same mistake with a bigger number.
+
+The route set is now **seeded from the routing contract** — `routing.ts` is
+where a destination becomes one, because `destinationFromHash` sends anything it
+does not declare to Now — and then **followed transitively** through every `#/`
+link on every screen visited, to a fixed point. Sub-pages arrive that way. It is
+read as text rather than imported, because `routing.ts` pulls in the Vite
+compile-time defines and importing it from a spec throws (D-197), and it is read
+with `indexOf` rather than a regex, because `\[` inside a template literal
+collapses to `[` and the pattern that reaches `RegExp` throws where it stands.
+
+`#/qa` is the one exclusion and it is not a choice: `QA_AVAILABLE` is
+`!isProduction`, so the route does not exist in the product. The check fails if
+that stops being true, so the exclusion cannot outlive its reason.
+
+**2. A leaf node is a unit of markup. A sentence is a unit of meaning.** Four
+collectors — three in the browser spec, one in the Android gate — took elements
+with no element children and read their text. Two lines defeated all four:
+
+    <p><span>The app</span> <span>will choose something better next time.</span></p>
+
+The owner reads one sentence; the guard read _"The app"_ and _"will choose
+something better next time."_, and both are honest alone (QA-84-020).
+**A classifier is only as good as the unit it is given.**
+
+The unit is now what the browser lays out as one run of text: an element none of
+whose descendants is a block, decided by `getComputedStyle` rather than by a
+list of tags — a `<div>` set to `inline` reads as one sentence and a `<span>`
+set to `block` does not, and only the computed value knows which. Leaves still
+come through, so this strictly widens what is checked. It also splits on
+newlines, because a `<textarea>` can hold a whole composed document, and a
+proximity window over one enormous string would read the end of one line against
+the start of the next.
+
+**3. "The whole export" is every document the owner can select.** D-198 said
+every line of the document is free of adaptation claims, and then composed
+`['history']`. There are **ten** selectable sections and ten composers. Round 9
+put the promise in `correctionsSection()` and **all 1,860 tests passed** with it
+sitting in a document the owner can produce from Data in two taps (QA-84-021).
+The sections now come from `EXPORT_SECTION_IDS` — the list the product itself
+offers — each composed alone and all composed together.
+
+**And the two claims are scoped differently, on purpose.** The promise check
+runs over **everything** the crawl reads, chrome included. The catalogue check —
+everything the block brought must be approved by name — runs over that **minus
+the composed review**, because Data renders the export in a `<textarea>` and
+blocking a move rewrites the document. Approving its lines by name would mean
+listing every line of every document the app can compose. The exclusion is not a
+claim that the document is safe: it is guarded line by line over every
+selectable section in the synthetic suite, which is where QA-84-021 now fails.
+The subtraction is checked rather than trusted — the composed document must be
+non-empty and must have been found, so it cannot quietly start subtracting
+nothing, or everything.
+
+**One false positive, enumerated rather than tuned away.**
+`REBUILD_PHASE.summary` has described the product since Phase 8; More renders it
+and the Overview export includes it, so widening brought it inside the net. The
+app-wide rule flags it on _"watches what happens **afterwards**"_ — a named
+subject and forward deixis two words later. That is sequence, not futurity, and
+the deixis belongs to _"what happens"_ rather than to anything the app says it
+will do; telling them apart needs to know which verb an adverb attaches to, and
+**a half-written parser inside a guard is D-197's mistake**. The branch is not
+removable either: requiring a modal would drop three real promises that carry
+none — _"the app can offer something that fits next time"_, _"remembers this for
+future recommendations"_, _"ought to weigh this next time"_. So the sentence is
+listed exactly, like every other exception in the module, and the cost is
+declared: editing the product's self-description fails the gate until the new
+wording is approved, which is precisely when somebody might promise something
+the engine does not do.
+
+**What is still open, stated rather than found.** A destination cannot be missed
+— the contract seeds it. A screen reachable by a link cannot be missed — the
+crawl follows it. A **parameterised** sub-route reachable only by a button that
+sets the hash, linked from nowhere, would still be missed; clicking every button
+on every screen to find out is not something a guard may do, because buttons
+write records. The `#/life/` family is counted against the plan's ten pages so
+that the one parameterised family in the product cannot silently shrink.
+
+---

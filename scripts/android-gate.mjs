@@ -21,7 +21,11 @@
  */
 import { chromium, devices } from '@playwright/test'
 
-import { adaptationClaims, containsApprovedBlockerCopy } from './adaptation-claims.mjs'
+import {
+  adaptationClaims,
+  containsApprovedBlockerCopy,
+  readingUnits,
+} from './adaptation-claims.mjs'
 
 const BASE = process.argv[2] ?? 'https://bill6006.github.io/life-command-os-rebuild/preview/'
 
@@ -1515,19 +1519,7 @@ async function main() {
    * on a green board.
    */
   const r84Panel = page.locator('.panel', { has: page.getByTestId('domain-blocker') }).first()
-  const r84Sentences = await r84Panel.evaluate((root) => {
-    const out = []
-    const flat = (text) => text.replace(/\s+/g, ' ').trim()
-    for (const element of [root, ...root.querySelectorAll('*')]) {
-      if (element.querySelector('*') === null) {
-        const text = flat(element.textContent ?? '')
-        if (text !== '') out.push(text)
-      }
-      const label = element.getAttribute('aria-label')
-      if (label !== null) out.push(flat(label))
-    }
-    return [...new Set(out)]
-  })
+  const r84Sentences = await r84Panel.evaluate(readingUnits)
   const r84Statement = 'a walk means leaving, and I could not — someone was in my care.'
   const r84Promises = r84Sentences.filter((line) => adaptationClaims(line).length > 0)
   check(

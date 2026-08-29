@@ -62,3 +62,16 @@ export function containsApprovedBlockerCopy(text: string): boolean
 
 /** Honest sentences the guard must leave alone. */
 export const MUST_BE_ALLOWED: readonly string[]
+
+/**
+ * What the owner reads as one sentence, collected in the browser.
+ *
+ * Pass it to `evaluate()`; it is self-contained on purpose.
+ */
+export function readingUnits(root: Element): string[]
+
+/** The product's own description of itself, approved exactly. */
+export const APPROVED_PRODUCT_DESCRIPTION: readonly string[]
+
+/** That description removed, so anything written beside it is still classified. */
+export function withoutApprovedProductDescription(line: string): string

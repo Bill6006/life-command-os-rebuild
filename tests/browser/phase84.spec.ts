@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import {
   adaptationClaims,
@@ -5,6 +7,8 @@ import {
   containsApprovedBlockerCopy,
   isApprovedBlockerCopy,
   isApprovedWhenBlocked,
+  readingUnits,
+  withoutApprovedProductDescription,
 } from '../../scripts/adaptation-claims.mjs'
 
 /**
@@ -46,20 +50,7 @@ async function go(page: Page, name: 'Now' | 'Life' | 'Timeline' | 'Insights') {
  * element, plus the accessibility tree with it.
  */
 async function everySentenceIn(panel: Locator): Promise<readonly string[]> {
-  return panel.evaluate((root) => {
-    const out: string[] = []
-    const flat = (text: string) => text.replace(/\s+/g, ' ').trim()
-    for (const element of [root, ...root.querySelectorAll('*')]) {
-      const node = element as HTMLElement
-      if (node.querySelector('*') === null) {
-        const text = flat(node.textContent ?? '')
-        if (text !== '') out.push(text)
-      }
-      const label = node.getAttribute('aria-label')
-      if (label !== null) out.push(flat(label))
-    }
-    return [...new Set(out)]
-  })
+  return panel.evaluate(readingUnits)
 }
 
 async function openCareer(page: Page) {
@@ -953,20 +944,7 @@ test.describe('what independent QA found on the repaired build', () => {
  * had was scoped to the question's own subtree.
  */
 async function everySentenceOnScreen(page: Page): Promise<readonly string[]> {
-  return page.locator('.screen').evaluate((root) => {
-    const out: string[] = []
-    const flat = (text: string) => text.replace(/\s+/g, ' ').trim()
-    for (const element of [root, ...root.querySelectorAll('*')]) {
-      const node = element as HTMLElement
-      if (node.querySelector('*') === null) {
-        const text = flat(node.textContent ?? '')
-        if (text !== '') out.push(text)
-      }
-      const label = node.getAttribute('aria-label')
-      if (label !== null) out.push(flat(label))
-    }
-    return [...new Set(out)]
-  })
+  return page.locator('.screen').evaluate(readingUnits)
 }
 
 test.describe('what is on screen because the blocker is', () => {
@@ -1068,77 +1046,165 @@ test.describe('what is on screen because the blocker is', () => {
 // ---------------------------------------------------------------------------
 
 /**
- * Every screen the owner can reach, read off the running app.
+ * Every screen the owner can reach — QA-84-019, D-199.
  *
- * This is the enumeration that finally has nothing avoidable in it. Round 7's
- * host inventory keyed on the literal JSX tag and Round 8 defeated it with
- * `import { BlockerQuestion as Surface }` — and would have defeated a list of
- * imports, of prop types, or of anything else a component can be spelled as.
+ * Round 8's version read the `.nav` buttons and the `#/life/` links on Life,
+ * and its comment claimed a fifth destination would "join the sweep by
+ * existing". **That was false, and Round 9 proved it in one line.** `More` is
+ * behind a button in the header, not in the bottom bar; `Data` is behind a link
+ * on More, not on Life. Neither was ever visited, and a plain future-tense
+ * promise added to the Data screen passed all three widths.
  *
- * **A screen the owner can reach cannot be aliased.** It is behind the bottom
- * bar or behind a link on Life, and this walks both rather than being told what
- * they are — so a twelfth page or a fifth destination joins the sweep by
- * existing, and no list in this file has to be kept up to date.
+ * The lesson is the campaign's own, one level up: **a coverage claim taken from
+ * one navigation surface is a claim about that surface, not about the app.**
+ * Two surfaces are no better than one; the fix is not to add the header.
  *
- * The QA laboratory is excluded, and only that: it is a developer tool, not a
- * screen the product offers as part of the owner's life.
+ * ## So the route set comes from the routing contract, and then from the links
+ *
+ * `routing.ts` is where a destination becomes a destination — nothing is
+ * reachable that it does not declare, because `destinationFromHash` sends
+ * anything else to Now. So the seeds are read from that file, and the crawl
+ * then follows every `#/` link it finds on every screen it visits, to a fixed
+ * point. Sub-pages like `#/life/health-recovery` arrive that way, and so would
+ * any screen reached from anywhere by a link.
+ *
+ * It is read as **text** rather than imported: `routing.ts` imports
+ * `buildInfo.ts`, which reads Vite's compile-time defines, and importing it
+ * from a spec throws `__LCOS_COMMIT_SHA__ is not defined` (D-197). The read is
+ * two `as const` arrays and nothing else — deliberately not a parser (D-197
+ * again) — and it fails loudly if either array stops being found.
+ *
+ * ## The one exclusion, and why it is not a choice
+ *
+ * `#/qa` is excluded. It is not a screen the product offers: `QA_AVAILABLE` is
+ * `!isProduction`, so in production the route resolves to Now and the screen's
+ * code is never downloaded. The check below fails if that stops being true, so
+ * the exclusion cannot outlive its reason.
  */
-async function everyRoute(page: Page): Promise<readonly string[]> {
-  await page.goto(`${APP}#/now`)
-  await page.waitForSelector('h1')
-  const destinations = await page
-    .locator('.nav')
-    .evaluate((nav) =>
-      [...nav.querySelectorAll('button')].map((button) => (button.textContent ?? '').trim()),
-    )
+function declaredRoutes(): readonly string[] {
+  const source = readFileSync(join(process.cwd(), 'src/platform/routing.ts'), 'utf8')
 
-  await page.goto(`${APP}#/life`)
-  await page.waitForSelector('h1')
-  const pages = await page
-    .locator('.screen')
-    .evaluate((screen) =>
-      [...screen.querySelectorAll('a[href]')]
-        .map((link) => link.getAttribute('href') ?? '')
-        .filter((href) => href.includes('#/life/')),
+  const declared = (name: string): readonly string[] => {
+    /*
+     * `indexOf` rather than a regex, because the regex spelling of this is a
+     * trap: `\[` inside a template literal collapses to `[`, and the pattern
+     * that reaches `RegExp` is an unbalanced character class that throws where
+     * it stands. Two string searches cannot be got wrong that way.
+     */
+    const at = source.indexOf(`export const ${name} = [`)
+    expect(at, `routing.ts no longer declares ${name} as a literal array`).toBeGreaterThan(-1)
+    const close = source.indexOf(']', at)
+    const names = [...source.slice(at, close).matchAll(/'([a-z-]+)'/g)].map(
+      (match) => match[1] ?? '',
     )
-
-  const routes = new Set<string>()
-  for (const destination of destinations) {
-    if (destination === '') continue
-    routes.add(`#/${destination.toLowerCase()}`)
+    expect(
+      names.length,
+      `${name} read as empty — the source read has stopped working`,
+    ).toBeGreaterThan(0)
+    return names
   }
-  for (const href of pages) routes.add(href.slice(href.indexOf('#/')))
-  return [...routes]
+
+  const primary = declared('PRIMARY_DESTINATIONS')
+  const secondary = declared('SECONDARY_DESTINATIONS')
+
+  // The exclusion below is only honest while the laboratory is non-production.
+  expect(
+    source.includes('QA_AVAILABLE = !isProduction'),
+    'the QA laboratory is no longer production-gated, so the sweep may not skip it',
+  ).toBe(true)
+
+  return [...primary, ...secondary].filter((name) => name !== 'qa').map((name) => `#/${name}`)
 }
 
-/** Every sentence and every accessible name on one screen. */
-async function sentencesOn(page: Page, route: string): Promise<readonly string[]> {
-  await page.goto(`${APP}${route}`)
-  await page.waitForSelector('h1')
-  return page.locator('.screen').evaluate((root) => {
-    const out: string[] = []
-    const flat = (text: string) => text.replace(/\s+/g, ' ').trim()
-    for (const element of [root, ...root.querySelectorAll('*')]) {
-      const node = element as HTMLElement
-      if (node.querySelector('*') === null) {
-        const text = flat(node.textContent ?? '')
-        if (text !== '') out.push(text)
-      }
-      const label = node.getAttribute('aria-label')
-      if (label !== null) out.push(flat(label))
+/** Every `#/` link on the page, wherever it is — header, screen or footer. */
+async function linksOn(page: Page): Promise<readonly string[]> {
+  return page.evaluate(() =>
+    [...document.querySelectorAll('a[href]')]
+      .map((link) => link.getAttribute('href') ?? '')
+      .filter((href) => href.includes('#/'))
+      .map((href) => href.slice(href.indexOf('#/'))),
+  )
+}
+
+/**
+ * Every string on every screen the owner can reach, and which of them are prose.
+ *
+ * The whole document rather than `.screen`, because the owner reads the header
+ * too, and a promise written into the app's chrome would appear on every screen
+ * while belonging to none of them.
+ *
+ * Two sets come back, and the difference between them is the honest part.
+ *
+ * `everything` is what the owner can read anywhere. **The promise check runs
+ * over all of it** — that is D-187's rule and it should be as wide as the app.
+ *
+ * `prose` is that minus the composed review, and it is what the **catalogue**
+ * check runs over. Data shows the export in a `<textarea>`, so blocking a move
+ * rewrites that document — dozens of generated lines enter the delta, none of
+ * which is copy anybody wrote for the blocker path. Approving them by name
+ * would mean listing every line of every document the app can compose, and the
+ * list would be wrong again on the next record.
+ *
+ * **The exclusion is not a promise that the document is safe.** It is guarded,
+ * line by line, over **every selectable section**, in
+ * `tests/synthetic/blocker-copy.test.tsx` — which is where Round 9's
+ * QA-84-021 mutation now fails. What is excluded here is proved there, and the
+ * subtraction is checked rather than trusted: the composed document must be
+ * non-empty, so this cannot quietly start subtracting nothing — or everything.
+ */
+async function sweepEveryRoute(page: Page): Promise<{
+  everything: ReadonlySet<string>
+  prose: ReadonlySet<string>
+}> {
+  const queue = [...declaredRoutes()]
+  const visited = new Set<string>()
+  const everything = new Set<string>()
+  const composed = new Set<string>()
+
+  while (queue.length > 0) {
+    const route = queue.shift()
+    if (route === undefined || visited.has(route) || route.startsWith('#/qa')) continue
+    visited.add(route)
+
+    await page.goto(`${APP}${route}`)
+    await page.waitForSelector('h1')
+    for (const sentence of await page.locator('body').evaluate(readingUnits)) {
+      everything.add(sentence)
     }
-    return [...new Set(out)]
-  })
-}
 
-async function sweepEveryRoute(page: Page): Promise<ReadonlySet<string>> {
-  const seen = new Set<string>()
-  const routes = await everyRoute(page)
-  expect(routes.length, 'the crawl found almost no screens').toBeGreaterThan(10)
-  for (const route of routes) {
-    for (const sentence of await sentencesOn(page, route)) seen.add(sentence)
+    const preview = page.getByTestId('export-text')
+    if ((await preview.count()) > 0) {
+      const document = await preview.inputValue()
+      expect(
+        document.length,
+        'the composed review is empty, so subtracting it proves nothing',
+      ).toBeGreaterThan(200)
+      for (const line of document.split('\n')) {
+        const flat = line.replace(/\s+/g, ' ').trim()
+        if (flat !== '') composed.add(flat)
+      }
+    }
+
+    for (const href of await linksOn(page)) if (!visited.has(href)) queue.push(href)
   }
-  return seen
+
+  expect(visited.size, 'the crawl found almost no screens').toBeGreaterThan(10)
+
+  /*
+   * And the one parameterised family, counted.
+   *
+   * Destinations cannot be missed — they are seeded from the contract. The
+   * `#/life/<page>` routes are not in it: they are reached by following Life's
+   * links, so they are the part of the crawl that could silently stop working.
+   * The plan fixes the count at ten baseline pages (D-078, D-168), so a link
+   * that stops being a link fails here rather than quietly shrinking coverage.
+   */
+  const pages = [...visited].filter((route) => route.startsWith('#/life/'))
+  expect(pages.length, 'the crawl stopped following the links on Life').toBeGreaterThanOrEqual(10)
+  expect(composed.size, 'the composed review was never found on any screen').toBeGreaterThan(20)
+
+  const prose = new Set([...everything].filter((line) => !composed.has(line)))
+  return { everything, prose }
 }
 
 test.describe('everything a blocker puts on any screen', () => {
@@ -1186,7 +1252,10 @@ test.describe('everything a blocker puts on any screen', () => {
      * is not caught here; a promise is, wherever it is.
      */
     const statement = 'a walk means leaving, and I could not — someone was in my care.'
-    const sweepBoth = async (): Promise<readonly string[]> => [...(await sweepEveryRoute(page))]
+    const sweepBoth = async () => {
+      const { everything, prose } = await sweepEveryRoute(page)
+      return { everything: [...everything], prose: [...prose] }
+    }
 
     /*
      * Both sweeps come from **one** session, and that is load-bearing.
@@ -1205,7 +1274,10 @@ test.describe('everything a blocker puts on any screen', () => {
     await go(page, 'Now')
     await answerGuideWith(page, ['Enough', 'Nothing'])
     const before = await sweepBoth()
-    expect(before.length, 'the crawl read almost nothing before the block').toBeGreaterThan(40)
+    expect(
+      before.everything.length,
+      'the crawl read almost nothing before the block',
+    ).toBeGreaterThan(40)
 
     await go(page, 'Now')
     await answerGuideWith(page, ['Enough', 'Nothing'])
@@ -1224,8 +1296,19 @@ test.describe('everything a blocker puts on any screen', () => {
      * difference: a **named** subject and **futurity**, never ability.
      */
     const claiming: string[] = []
-    for (const line of [...before, ...after]) {
-      for (const claim of adaptationClaimsOnAnyScreen(line)) claiming.push(`“${line}” → ${claim}`)
+    for (const line of [...before.everything, ...after.everything]) {
+      /*
+       * The product's own description of itself is removed first, and only it —
+       * see `APPROVED_PRODUCT_DESCRIPTION`. Widening the sweep from `.screen`
+       * to the whole document, and from leaves to what the owner reads as one
+       * sentence, brought `REBUILD_PHASE.summary` inside the net on More and,
+       * as part of the composed review, on Data. It is a false positive on a
+       * descriptive "afterwards", the branch that flags it catches three real
+       * promises that carry no modal, and removal keeps anything written
+       * beside it classified.
+       */
+      const left = withoutApprovedProductDescription(line)
+      for (const claim of adaptationClaimsOnAnyScreen(left)) claiming.push(`“${line}” → ${claim}`)
     }
     expect(claiming, 'a screen in the app claims the app will change what it offers').toEqual([])
 
@@ -1257,7 +1340,7 @@ test.describe('everything a blocker puts on any screen', () => {
         .replace(/\b\d{4}-\d{2}-\d{2}\b/g, '{day}')
         .replace(/\d+/g, '{n}')
 
-    const brought = after.filter((line) => !before.includes(line)).map(asTemplate)
+    const brought = after.prose.filter((line) => !before.prose.includes(line)).map(asTemplate)
     expect(brought.length, 'blocking a move changed nothing anywhere').toBeGreaterThan(4)
 
     const unapproved = brought.filter(

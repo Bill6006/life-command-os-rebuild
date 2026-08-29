@@ -48,10 +48,12 @@ import { describe, expect, it } from 'vitest'
 
 import {
   adaptationClaims,
+  adaptationClaimsOnAnyScreen,
   APPROVED_FROM_RECORDS,
   APPROVED_FROM_SURFACES,
   isApprovedBlockerCopy,
   isApprovedExportShape,
+  withoutApprovedProductDescription,
 } from '../../scripts/adaptation-claims.mjs'
 import { CONCEPT } from '../../src/domain/concepts'
 import { BlockersPanel, BlockerQuestion } from '../../src/features/life/DomainPanels'
@@ -80,6 +82,7 @@ import { SCENARIOS } from '../../src/synthetic/scenarios'
 import { assembleDomainPageData, LIFE_PAGES } from '../../src/features/life/domainPages'
 import { assembleTimeline } from '../../src/features/timeline/timelineEntries'
 import { composeFor, contextFor } from './exportHarness'
+import { EXPORT_SECTION_IDS, type ExportSectionId } from '../../src/features/export/sections'
 
 const flat = (text: string) => text.replace(/\s+/g, ' ').trim()
 
@@ -696,6 +699,52 @@ describe('QA-84-014 — and closed over the value the owner actually reads', () 
         .view()
         .history.effective.filter((record) => BLOCKER_KINDS.includes(record.kind as never))
       if (blockers.length === 0) continue
+      /*
+       * **Every document the owner can select**, not the one this check used to
+       * compose - QA-84-021.
+       *
+       * Round 8 asserted "every line of the document is free of adaptation
+       * claims" and then composed ['history']. There are ten selectable
+       * sections and ten composers; Round 9 put the promise in
+       * correctionsSection() and the whole suite - 1,860 tests - stayed green,
+       * with the sentence sitting in a document the owner can produce from the
+       * Data screen in two taps.
+       *
+       * The list is EXPORT_SECTION_IDS, which is what the product itself
+       * offers, so an eleventh section is covered by existing. Each is composed
+       * alone and all of them are composed together, because a composer can
+       * also write something only when it is asked for beside another.
+       */
+      const everySelection: readonly (readonly ExportSectionId[])[] = [
+        ...EXPORT_SECTION_IDS.map((one) => [one] as readonly ExportSectionId[]),
+        EXPORT_SECTION_IDS,
+      ]
+      for (const selection of everySelection) {
+        const document = composeFor(entry.id, selection).text
+        for (const line of document.split('\n')) {
+          /*
+           * The **app-wide** calibration here, and the blocker-path one below
+           * on the history document, for exactly the reason D-198 gives.
+           *
+           * `adaptationClaims` counts a bare `it` as the app and reads ability
+           * as modality, which is right for the short controlled copy the
+           * blocker path writes and wrong for Overview, whose job is to
+           * describe the whole product in prose. Run over it, the narrow rule
+           * flags a dozen honest sentences. **Narrowing the shared rule until
+           * that stopped would be tuning a guard to pass** — so the rule that
+           * runs over arbitrary product prose is the one already written for
+           * arbitrary product prose: a named subject and futurity, never
+           * ability. It catches Round 9's exact mutation, and the three
+           * wordings it misses are the three D-198 names.
+           */
+          for (const claim of adaptationClaimsOnAnyScreen(
+            withoutApprovedProductDescription(line),
+          )) {
+            offenders.push(`${id}: the ${selection.join('+')} export claims “${claim}”`)
+          }
+        }
+      }
+
       const text = composeFor(entry.id, ['history']).text
       const lines = text.split('\n')
 

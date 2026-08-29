@@ -569,6 +569,17 @@ export const APPROVED_WHEN_A_MOVE_IS_BLOCKED = [
    */
   '{n} of {n}',
 
+  /*
+   * Data, which now has a record to say the size of.
+   *
+   * Beside the composed review it states what that document covers. It arrived
+   * with QA-84-019: Data is a screen the owner can reach and the crawl had
+   * never visited it. The document itself is subtracted before this list is
+   * consulted and guarded section by section in the synthetic suite; this is
+   * the screen's own sentence about it.
+   */
+  '{day} to {day}, {n} entries',
+
   // The domain page, which now has something to correct.
   'Something here wrong?',
   'Nothing is deleted. An entry you withdraw stays in your history, marked as withdrawn.',
@@ -580,6 +591,62 @@ export function isApprovedWhenBlocked(line) {
   const flat = (text) => String(text).replace(/\s+/g, ' ').trim()
   const wanted = flat(line)
   return APPROVED_WHEN_A_MOVE_IS_BLOCKED.some((approved) => flat(approved) === wanted)
+}
+
+/**
+ * The product's own description of itself — QA-84-021, D-199.
+ *
+ * One sentence, and it is here rather than suppressed quietly.
+ *
+ * `REBUILD_PHASE.summary` in `buildInfo.ts` has been the product's description
+ * of itself since Phase 8. `MoreScreen` renders it and the Overview export
+ * section includes it, so widening the guarantee to **every screen** and
+ * **every selectable document** brought it inside the net for the first time.
+ * The app-wide rule flags it on *"watches what happens **afterwards**"* — a
+ * named subject, and forward deixis two words later.
+ *
+ * **It is a false positive, and the rule is still right.** "Afterwards" there
+ * is sequence, not futurity: it describes the follow-up reading the app already
+ * takes, and the deixis belongs to *"what happens"* rather than to anything the
+ * app says it will do. Telling those apart needs to know which verb the adverb
+ * attaches to, and **a half-written parser inside a guard is the mistake D-197
+ * already recorded**.
+ *
+ * **And the branch that flags it is not removable.** Requiring a future modal
+ * would drop three promises that carry none, all of them real:
+ *
+ *   - "This is kept so the app can offer something that fits next time."
+ *   - "The app remembers this for future recommendations."
+ *   - "The engine ought to weigh this next time."
+ *
+ * So the sentence is enumerated, exactly, like every other exception in this
+ * module. **The cost is declared:** editing that summary fails this gate until
+ * the new wording is approved here — which is the point, because the next
+ * edit to the product's self-description is exactly when somebody might
+ * promise something the engine does not do.
+ */
+export const APPROVED_PRODUCT_DESCRIPTION = [
+  'The app decides, explains itself, watches what happens afterwards, learns from it, and ' +
+    'notices when a life area has gone quiet rather than carrying on as though a months-old ' +
+    'picture were today’s.',
+]
+
+/**
+ * The line with the product's own description taken out of it.
+ *
+ * Removal rather than a whitelist, so a promise written **beside** the approved
+ * sentence is still classified — the same shape as
+ * `containsApprovedBlockerCopy`.
+ */
+export function withoutApprovedProductDescription(line) {
+  const flat = String(line ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  let left = flat
+  for (const approved of APPROVED_PRODUCT_DESCRIPTION) {
+    left = left.split(approved.replace(/\s+/g, ' ').trim()).join(' ')
+  }
+  return left
 }
 
 /** Every string the blocker path can put in front of the owner. */
@@ -664,3 +731,66 @@ export const MUST_BE_ALLOWED = [
   'Not where I can do it',
   '“Not true any more” takes it back.',
 ]
+
+/**
+ * What the owner reads as one sentence — QA-84-020, D-199.
+ *
+ * **This runs in the browser**, and it is passed to `evaluate()` rather than
+ * called here, so it must stay self-contained: no imports, no closure over
+ * anything in this module.
+ *
+ * Every collector in this repository used to take elements with **no element
+ * children** and read their text. Round 9 defeated that with two lines:
+ *
+ *     <p><span>The app</span> <span>will choose something better next time.</span></p>
+ *
+ * The owner reads one sentence. The guard read *"The app"* — a named subject
+ * with no futurity — and *"will choose something better next time."* — futurity
+ * with no named subject — and both are honest on their own. **A classifier is
+ * only as good as the unit it is given**, and a leaf node is not a unit of
+ * meaning; it is a unit of markup.
+ *
+ * So the unit is the element the browser lays out as one run of text: an
+ * element none of whose descendants is a block. That is read from
+ * `getComputedStyle`, which is what the browser actually did, rather than from
+ * a list of tags somebody would have to keep — a `<div>` set to `inline` reads
+ * as one sentence and a `<span>` set to `block` does not, and only the computed
+ * value knows which.
+ *
+ * Leaves still come through: a leaf has no descendants, so it trivially
+ * qualifies. This strictly widens what is checked.
+ */
+export function readingUnits(root) {
+  const out = []
+  const flat = (text) =>
+    String(text ?? '')
+      .replace(/\s+/g, ' ')
+      .trim()
+  const isInline = (element) => {
+    const display = getComputedStyle(element).display
+    return display.startsWith('inline') || display === 'contents' || display.startsWith('ruby')
+  }
+
+  for (const element of [root, ...root.querySelectorAll('*')]) {
+    const label = element.getAttribute('aria-label')
+    if (label !== null) out.push(flat(label))
+
+    // A container of blocks is not a sentence; its blocks are.
+    if ([...element.querySelectorAll('*')].some((child) => !isInline(child))) continue
+
+    /*
+     * Split on newlines first, because a `<textarea>` or `<pre>` can hold a
+     * whole composed document in one text node. The Data screen shows the
+     * export that way: taken whole it is one "unit" thousands of characters
+     * long, and a classifier with a proximity window would then read a subject
+     * at the end of one line against a modal at the start of the next. The
+     * owner reads those as separate lines, so they are separate units. HTML
+     * that has no newlines in it is unaffected.
+     */
+    for (const part of String(element.textContent ?? '').split('\n')) {
+      const text = flat(part)
+      if (text !== '') out.push(text)
+    }
+  }
+  return [...new Set(out)]
+}
