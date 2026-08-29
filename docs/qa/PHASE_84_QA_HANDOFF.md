@@ -4666,3 +4666,247 @@ them.
 Do not ask me to paste file contents.
 ```
 
+---
+
+## Round 10 — independent QA retest
+
+**Phase:** 84
+**Result:** **FAIL**
+**Product checkpoint tested:** `7147c83`
+**Deployed SHA tested:** `111229e5fe415a946c8ba121a90eff2a188556e0` — bundle-equivalent to `7147c83`; only `docs/NEXT_PROMPT.md`, `docs/PHASE_STATUS.md` and this report differ
+**Mobile:** deployed Galaxy S24-class Android context, 360×780 CSS px, DPR 3, touch and Android Chrome UA; **233 checks passed**. CASE A and CASE B each used a separate new Chromium process and ephemeral 430×932 context in `America/New_York`, fixed to Friday 18:58 local.
+**Actor:** Codex, High, same QA conversation as Rounds 1–9
+
+The repaired product remains honest and all seven D-173 items pass. Round 10
+nevertheless found four independent **Blocker** false greens in the standing
+D-187/D-198 guarantee, plus one **Major** race in the guarantee's own full
+browser gate. Every disposable mutation below was restored before the full
+gates; no product or test code is left changed.
+
+### Cold owner-use
+
+Both cases began with zero rows in every `entities`, `malformed`, `meta` and
+`records` object store in both the owner and laboratory databases. Each used a
+new browser process and context, neither opened `#/qa`, and neither inherited or
+cleared retained state.
+
+- **CASE A — More money: PASS.** Empty-store Now abstained. The second agenda
+  preserved **More money** byte-identically under Career & Learning, disclosed
+  that the next step, starting point and meaning of progress were unknown, and
+  inferred no financial meaning. Career and Timeline rendered the same words.
+- **CASE B — caregiving: PASS.** Life → Health named **Move more** and **Take a
+  ten-minute walk**. Its confirmation matched Now's suggestion after **Enough**.
+  **Can't right now** → **Can’t leave — someone’s in my care** produced the
+  durable statement **Take a ten-minute walk means leaving, and I could not —
+  someone was in my care**, with **Not true any more**. Timeline rendered **Not
+  then / Did not fit at the time** and **Limit**. No future-adaptation promise
+  appeared.
+
+### Acceptance result
+
+| D-173 item | Round 10 |
+| --- | --- |
+| 1. Desired outcomes in Career, Health and Money change the recommendation | **PASS** |
+| 2. Session, course and milestone stay distinct; attendance is not capability | **PASS** |
+| 3. Goal, routine, person, place, skill and obligation are authorable from empty | **PASS** |
+| 4. The second agenda is later-useful and asks less as it learns | **PASS** |
+| 5. Can't-right-now is durable/correctable and stays silent when known | **PASS in current product; standing guarantee FAIL — QA-84-022…025** |
+| 6. Corrections preview consequences; private evidence can be stored without inference | **PASS** |
+| 7. No score, percentage, share, rank or grade about the owner or child | **PASS** |
+
+The known deferrals are unchanged: no blocker enforcement; no semantic
+interpretation; no strategy or pattern-discovery engine; no extra domain
+progression models; no owner routines library; no backfill; no twelfth domain
+page; no scoring or visual-language change. `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md`
+is untouched and no `PHASE_85_*` file exists.
+
+### QA-84-022 — the route crawl never opens button-revealed state
+
+**Severity:** Blocker. **Decisions:** D-187, D-198.
+**Class:** route reachability is not owner-state reachability.
+
+The fixed-point crawl visits route URLs and follows `#/` anchors, but reads only
+the initial state of each route. On the already-seeded More route, add local
+`open` state, a **Read more** button, and this conditional sibling:
+
+```tsx
+{open ? <p>The app will choose something better next time.</p> : null}
+```
+
+Run:
+
+```text
+npx playwright test tests/browser/phase84.spec.ts --grep "QA-84-016/018" --workers=1
+```
+
+**Observed:** **3 passed** at mobile-small, mobile-large and desktop. The owner
+can reveal the exact prohibited promise with one ordinary button press, while
+the test titled _“no screen in the app promises an adaptation”_ never enters
+that state. This is wider than the dispatch's parameterised-sub-route
+concession: no second route is required.
+
+### QA-84-023 — an owner-visible placeholder is not a reading unit
+
+**Severity:** Blocker. **Decisions:** D-187, D-193, D-198.
+**Class:** the collector equates DOM text with all text the browser renders.
+
+On More, add:
+
+```tsx
+<input aria-label="Future note" placeholder="The app will choose something better next time." />
+```
+
+The benign accessible name is collected, but the visible placeholder is not in
+`textContent`; `readingUnits()` does not inspect `placeholder`. The same focused
+command reports **3 passed**. The owner reads the prohibited sentence on a
+crawled ordinary route, independently of QA-84-022 because no interaction is
+needed.
+
+### QA-84-024 — Data subtraction erases unrelated prose by value
+
+**Severity:** Blocker. **Decisions:** D-193, D-198.
+**Class:** provenance is inferred from string equality after rendering.
+
+On Data after a blocker, render the unapproved ordinary sentence **This needs
+special care.** outside the export, and append the identical line to the
+`export-text` textarea value. The route sweep builds a set of textarea lines and
+removes every equal line from the whole screen before applying the catalogue.
+
+**Observed:** the same focused route command reports **3 passed**. The sentence
+is not export content merely because an equal line occurs in the export, but
+the subtraction removes it from `prose` and the promise-only check over
+`everything` does not enforce catalogue approval. A non-empty export does not
+make this provenance inference sound.
+
+### QA-84-025 — singles plus all sections do not cover selectable documents
+
+**Severity:** Blocker. **Decisions:** D-187, D-198.
+**Class:** a combinatorial owner choice is represented by its endpoints.
+
+In `composeExport()`, add the prohibited sentence only when exactly `overview`
+and `corrections` are selected:
+
+```ts
+if (chosen.length === 2 && chosen.includes('overview') && chosen.includes('corrections')) {
+  lines.push('The app will choose something better next time.', '')
+}
+```
+
+Run QA's focused command:
+
+```text
+npx vitest run tests/synthetic/blocker-copy.test.tsx --reporter=verbose -t "export carries the describer"
+```
+
+**Observed:** **1 passed, 13 skipped**. The guard composes each single section
+and the ten-section document; it never composes this ordinary two-checkbox
+document. Section order is canonical, but selection interaction is real and
+owner-producible.
+
+### QA-84-026 — the blocker delta races the state transition it measures
+
+**Severity:** Major. **Decision:** D-198.
+**Class:** an asynchronous whole-screen delta uses disappearance of one child as
+its stability condition.
+
+The prescribed full browser command produced **701 passed, 1 failed**. At
+mobile-large, QA-84-015 expected no unapproved blocker-introduced lines but
+reported eleven unrelated pre-dismissal lines, including **Move**, **Stop
+suggesting that**, **See evidence**, and the ordinary guide question and answer
+labels. The failure snapshot was already on **Nothing new for today** with the
+unable-now episode under **Where you left off**.
+
+The test clicks `blocker-leave`, waits only for `blocker-question` to disappear,
+and immediately reads the whole screen. The state write can replace the rest of
+Now after that child has gone, so the before/after set difference attributes the
+old decision screen to the blocker. The exact mobile-large test passed in
+isolation immediately afterward (**1 passed in 1.6s**), confirming the gate is
+nondeterministic. This is a false red rather than shipped bad copy, but a
+claimed full standing gate cannot depend on render timing.
+
+### Remaining directed attacks
+
+- The two literal `indexOf` seed reads remain structurally brittle, but no
+  separate current product route was invented merely to restate that design
+  risk; QA-84-022 is the concrete owner-state counterexample.
+- `APPROVED_PRODUCT_DESCRIPTION` was inspected. No independent concrete escape
+  beyond the four reproduced false greens is reported.
+- Backup and clipboard paths were exercised by the Android/browser gates. The
+  concrete selectable-document miss is QA-84-025.
+
+### Verification on the restored tree
+
+| Gate | Result |
+| --- | --- |
+| Checkpoint equivalence | **PASS** — deployed `111229e` bundle-equivalent to `7147c83`; three documentation files only |
+| `npm run verify` | **PASS** — format, lint, typecheck, test, build |
+| Unit / contract / synthetic / adversarial | **1,860 passed** in 84 files |
+| Browser, three widths, one worker | **FAIL — 701 passed, 1 raced** in 15.2 minutes; exact failed case then **passed 1/1** in isolation |
+| Android-style deployed gate | **clean — 233 checks** |
+| Privacy scan | **clean — 289 tracked files** |
+| Block sweep / current copy | **PASS on current copy; false-green guarantee proved by QA-84-022…025** |
+
+### Overall verdict and repair requirement
+
+**FAIL. Routing Phase 84 remains YELLOW.** The live product passes, but D-198
+still cannot support its whole-app claim: ordinary button state, rendered
+placeholder text, value-colliding Data prose and intermediate export selections
+all admit prohibited or unapproved copy while the named guards stay green. The
+full browser gate also has a real synchronization race.
+
+The builder must reproduce QA-84-022 through QA-84-025 exactly before repair;
+stabilize and regress QA-84-026; identify each whole class; repair the root
+causes under plan section 42; prove the repaired regressions by reintroduction;
+rerun every full gate without accepting a focused rerun as a substitute for a
+failed matrix; deploy a repaired checkpoint; preserve all seven product PASSes
+and deferrals; keep Phase 84 YELLOW; and dispatch Round 11 to this same QA
+conversation. Do not start routing 90.
+
+---
+
+## Round 10 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** **Max** — the audit-repair campaign rule applies across
+route state, rendered semantics, export provenance and combinatorial selection.
+**Conversation:** **CURRENT** — the original routing 84 Claude builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 10 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 10 at the end contains four
+new Blockers, QA-84-022 through QA-84-025, and one Major gate race, QA-84-026.
+Execute the Round 10 repair handoff exactly as written.
+
+Keep Phase 84 YELLOW. Reproduce each exact false-green mutation before repair;
+stabilize the raced whole-screen delta; identify and repair every whole class
+under plan section 42; add regressions and prove them by reintroduction; run the
+aggregate, full three-width browser, deployed Android, privacy, block-sweep and
+copy-guard gates; deploy the repaired checkpoint; preserve all seven product
+PASSes and every deferral; and append a Round 11 retest dispatch for the SAME
+Codex QA conversation at High.
+
+Do not edit QA's Round 10, alter docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a
+PHASE_85_* file or start routing 90. Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** Max.
+**Conversation:** CURRENT — the original routing 84 Claude builder conversation.
+
+```text
+Continue routing Phase 84 after independent QA Round 10 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 10
+repair handoff at its end exactly as written. Do not ask me to paste the file.
+```
+
+<!-- LCO_COMPLETE -->

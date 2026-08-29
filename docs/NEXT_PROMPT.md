@@ -54,5 +54,3 @@ one limit is conceded to it in writing: a parameterised sub-route reachable only
 by a button and linked from nowhere would still not be swept.
 
 Decisions **D-199**; defects **DEF-0134**. Do not start routing 90.
-
-<!-- LCO_COMPLETE -->
