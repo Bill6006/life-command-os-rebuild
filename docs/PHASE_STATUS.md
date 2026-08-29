@@ -165,6 +165,14 @@ transition — is something the person writing the code can choose differently, 
 own navigation, before a block and after one. A screen cannot be aliased
 (D-198).
 
+**And round 9 is where the unit stops being smaller than the claim.** Widening
+to "every screen" was right and was applied three times too narrowly: the routes
+came from one navigation surface, the sentences from DOM leaves, and "the whole
+export" from one of ten selectable documents. The route set is now seeded from
+the routing contract and followed through links to a fixed point; the sentence
+is what the browser lays out as one run of text; and the export guarantee runs
+over every id the product offers (D-199).
+
 It stays YELLOW. A builder conversation may not approve its own phase (D-077),
 and this record says what was built and repaired and where to look at it; it does
 not say the phase passed.
@@ -199,21 +207,22 @@ through the same controls, now gets past all eight steps.
 
 ## Checkpoint
 
-| Fact                    | Value                                                                                                  |
-| ----------------------- | ------------------------------------------------------------------------------------------------------ |
-| Product checkpoint      | `9d7d186` — the Round 8 repair, and the commit the aggregate gate was run on                           |
-| Round 8 checkpoint      | `9c4cb5f` — the Round 7 repair, which Round 8 tested                                                   |
-| Round 7 checkpoint      | `d78b765` — the Round 6 repair, which Round 7 tested                                                   |
-| Round 6 checkpoint      | `1324f66` — the Round 5 repair, which Round 6 tested                                                   |
-| Round 5 checkpoint      | `f45214b` — the Round 4 repair, which Round 5 tested                                                   |
-| Round 4 checkpoint      | `0f9b882` — the Round 3 repair, which Round 4 tested                                                   |
-| Round 3 checkpoint      | `cdd9259` — the Round 2 repair, which Round 3 tested                                                   |
-| Round 2 checkpoint      | `94e1716` — the Round 1 repair, which Round 2 tested and failed                                        |
-| Round 1 checkpoint      | `42667ea` — what Round 1 tested and failed                                                             |
-| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                            |
-| Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                     |
-| Owner phone check       | owed before release; not a blocker QA can clear                                                        |
-| Independent QA          | **Rounds 1 to 8 all FAIL**, all repaired; Round 9 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md` |
+| Fact                    | Value                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------- |
+| Product checkpoint      | `7147c83` — the Round 9 repair, and the commit the aggregate gate was run on                            |
+| Round 9 checkpoint      | `9d7d186` — the Round 8 repair, which Round 9 tested                                                    |
+| Round 8 checkpoint      | `9c4cb5f` — the Round 7 repair, which Round 8 tested                                                    |
+| Round 7 checkpoint      | `d78b765` — the Round 6 repair, which Round 7 tested                                                    |
+| Round 6 checkpoint      | `1324f66` — the Round 5 repair, which Round 6 tested                                                    |
+| Round 5 checkpoint      | `f45214b` — the Round 4 repair, which Round 5 tested                                                    |
+| Round 4 checkpoint      | `0f9b882` — the Round 3 repair, which Round 4 tested                                                    |
+| Round 3 checkpoint      | `cdd9259` — the Round 2 repair, which Round 3 tested                                                    |
+| Round 2 checkpoint      | `94e1716` — the Round 1 repair, which Round 2 tested and failed                                         |
+| Round 1 checkpoint      | `42667ea` — what Round 1 tested and failed                                                              |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                             |
+| Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                      |
+| Owner phone check       | owed before release; not a blocker QA can clear                                                         |
+| Independent QA          | **Rounds 1 to 9 all FAIL**, all repaired; Round 10 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md` |
 
 **The documentation head is a later commit than the product checkpoint**, as it
 has been every round. At round 8 it is `73de27e`, and it carries exactly three
@@ -226,18 +235,18 @@ against the deployed Preview it reports those three files and the same bytes.
 
 At the repaired checkpoint, not at the one QA failed.
 
-| Gate                                      | Result                                                                                            |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                                         |
-| Unit / contract / synthetic / adversarial | **1,860 passed** in 84 files (unchanged at round 8 — no product code moved; 1,812 at round 1)     |
-| Browser, three widths, one worker         | **702 passed** at three widths, one worker, **zero failures**                                     |
-| Android-style gate, deployed              | **clean — 233 checks** against deployed `9d7d186`                                                 |
-| Privacy scan                              | **clean** — 289 tracked files                                                                     |
-| Block sweep                               | **PASS** — unchanged                                                                              |
-| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya                                 |
-| Commits not on any remote                 | **none** at the handed-off head (D-180)                                                           |
-| Checkpoint equivalence                    | **PASS** — the deployed Preview serves `9d7d186` itself; re-proved after the documentation commit |
-| CI                                        | Verify **success**, Deploy preview **success**                                                    |
+| Gate                                      | Result                                                                                        |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                                     |
+| Unit / contract / synthetic / adversarial | **1,860 passed** in 84 files (unchanged at round 9 — no product code moved; 1,812 at round 1) |
+| Browser, three widths, one worker         | **702 passed** at three widths, one worker, **zero failures**                                 |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `7147c83`                                             |
+| Privacy scan                              | **clean** — 289 tracked files                                                                 |
+| Block sweep                               | **PASS** — unchanged                                                                          |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya                             |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                                                       |
+| Checkpoint equivalence                    | **PASS** — the deployed Preview serves `7147c83` itself, no files between                     |
+| CI                                        | Verify **success**, Deploy preview **success**                                                |
 
 ## Independent QA — round 1, and the repair
 
@@ -776,6 +785,76 @@ standing screen. D-198 and DEF-0133.
 **And one honest limit, stated rather than found.** The crawl reaches what the
 app's navigation reaches. A screen linked from nowhere and reachable only by
 typing its URL would not be swept; Round 9 is asked to look for one.
+
+## Independent QA — round 9, and the repair
+
+**Result: FAIL, and the product half was clean for the seventh round running.**
+Codex, at High, on the deployed `4d9afbf` (bundle-equivalent to `9d7d186`). All
+seven acceptance items passed, QA-84-007 through QA-84-018 remain closed, and
+both fresh-store cases passed again from new ephemeral contexts. The full report
+is [`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md), Round 9, committed
+unedited as `5dca44a` before the repair.
+
+Three findings, and they are one finding: **the unit of the claim was smaller
+than the claim.** Round 8 moved the guarantee from components to screens the
+owner can reach; each of these three is that widening stopping one level too
+early.
+
+### QA-84-019 — one navigation surface is not the app
+
+The crawl read the `.nav` buttons and Life's `#/life/` links, and its own comment
+claimed a fifth destination would "join the sweep by existing". **More** is
+behind a button in the header; **Data** is behind a link on More. A plain
+future-tense promise on the Data screen passed all three widths.
+
+Adding the header would have been the same mistake with a bigger number. The
+route set is now seeded from **`routing.ts`** — where a destination becomes one —
+and followed transitively through every `#/` link to a fixed point.
+
+### QA-84-020 — a leaf node is a unit of markup, not of meaning
+
+`<p><span>The app</span> <span>will choose something better next time.</span></p>`
+on an already-crawled route. The owner reads one sentence; the collector read
+two fragments, each honest alone. **A classifier is only as good as the unit it
+is given.**
+
+The unit is now what the browser lays out as one run of text — an element with no
+block-level descendant, decided by `getComputedStyle` rather than a tag list —
+split on newlines, because Data holds a whole composed document in a
+`<textarea>`. **The class was wider than the two sites Round 9 named:** the
+leaf-only rule was in four collectors, including the Android gate. All four now
+share one definition.
+
+### QA-84-021 — "the whole export" was one of ten documents
+
+D-198 asserted every line of the document is clean, and composed `['history']`.
+There are ten selectable sections and ten composers. The promise went into
+`correctionsSection()` and **all 1,860 tests passed** with it in a document the
+owner can produce from Data in two taps.
+
+The guarantee now runs over every id in `EXPORT_SECTION_IDS`, each alone and all
+together. The catalogue check subtracts the composed review — otherwise blocking
+a move drags dozens of generated lines into the delta — and that subtraction is
+checked rather than trusted, while the document itself is guarded section by
+section where QA-84-021 now fails.
+
+### One false positive, enumerated rather than tuned away
+
+`REBUILD_PHASE.summary` has described the product since Phase 8, and widening
+brought it inside the net. The app-wide rule flags it on _"watches what happens
+**afterwards**"_ — sequence, not futurity. Telling that apart needs to know which
+verb an adverb attaches to, and the branch is not removable: requiring a modal
+would drop three real promises that carry none. So it is listed exactly, with the
+cost declared.
+
+**No product code changed.** Proved by reintroduction: all three of QA's exact
+mutations, each built and run, with 021 failing under QA's own focused command.
+D-199 and DEF-0134.
+
+**And the limit is stated rather than found.** A destination cannot be missed and
+a linked screen cannot be missed; a parameterised sub-route reachable only by a
+button and linked from nowhere still could. Clicking every button to find out is
+not something a guard may do — buttons write records.
 
 ## The six packages
 

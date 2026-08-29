@@ -4348,4 +4348,321 @@ Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 9
 repair handoff at its end exactly as written. Do not ask me to paste the file.
 ```
 
-<!-- LCO_COMPLETE -->
+---
+
+## Round 9 repair — the builder's record
+
+**Actor:** Claude / builder. **Model:** Opus-class, Max.
+**Conversation:** CURRENT — the routing 84 builder conversation.
+**Repaired product checkpoint:** `7147c83`, from `9d7d186`.
+
+**Round 9 is right three times, and the three findings are one finding: the unit
+of the claim was smaller than the claim.** Round 8 moved the guarantee from
+components to screens the owner can reach. Each of these three is that same
+widening stopping one level too early — **one navigation surface** instead of
+the route set, **one DOM leaf** instead of a sentence, **one section** instead of
+every document.
+
+**No product code changed.** `git diff -- src` is empty at the repaired
+checkpoint. Everything is in `scripts/`, `tests/` and `docs/`. **The phase stays
+YELLOW; the builder does not declare GREEN (D-077).**
+
+### All three false-greens reproduced first
+
+**QA-84-019.** `<p>The app will choose something better next time.</p>` on
+`DataScreen` — the sweep reported **3 passed** at all three widths. Round 9 is
+exactly right about the mechanism, and right that it is not a missing entry:
+`everyRoute()` read the `.nav` buttons and Life's `#/life/` links, and its own
+comment claimed a fifth destination would "join the sweep by existing". **More**
+is behind a button in the header; **Data** is behind a link on More.
+
+**QA-84-020.** The same sentence split across two `<span>`s inside one `<p>` on
+Now — a route already crawled — **3 passed**. The owner reads one sentence; the
+collector read *"The app"* and *"will choose something better next time."*, and
+each is honest alone.
+
+**QA-84-021.** The sentence added to `correctionsSection()`. QA's focused
+command reported **1 passed, 13 skipped** — and the **whole suite of 1,860 tests
+passed**, with the promise sitting in a document the owner can produce from Data
+in two taps.
+
+### What replaced them — D-199, DEF-0134
+
+**1. The route set is seeded from the routing contract and followed through
+links.** `routing.ts` is where a destination becomes one — `destinationFromHash`
+sends anything it does not declare to Now — so the seeds are read from there, and
+the crawl then follows every `#/` link on every screen it visits to a fixed
+point. Sub-pages arrive that way. **Adding the header would have been the same
+mistake with a bigger number.**
+
+It is read as text rather than imported, because `routing.ts` pulls in the Vite
+compile-time defines and importing it from a spec throws (D-197) — and with
+`indexOf` rather than a regex, because `\[` inside a template literal collapses
+to `[` and the pattern that reaches `RegExp` throws where it stands. That was
+caught before it shipped, by running it.
+
+`#/qa` is the one exclusion and it is not a choice: `QA_AVAILABLE` is
+`!isProduction`, so the route does not exist in the product. The check fails if
+that stops being true.
+
+**2. The reading unit is what the browser lays out as one run of text.** An
+element none of whose descendants is a block, decided by `getComputedStyle`
+rather than by a list of tags — a `<div>` set to `inline` reads as one sentence
+and a `<span>` set to `block` does not, and only the computed value knows which.
+Leaves still come through, so this strictly widens what is checked. It also
+splits on newlines, because Data holds a whole composed document in a
+`<textarea>` and a proximity window over one enormous string would read the end
+of one line against the start of the next.
+
+**The class was wider than the two sites Round 9 named.** The leaf-only rule was
+in **four** collectors — the third sweep helper and `scripts/android-gate.mjs`
+had it too. All four now share one definition, `readingUnits`.
+
+**3. The export guarantee runs over every document the owner can select.** Ten
+ids in `EXPORT_SECTION_IDS`, each composed alone and all composed together,
+because a composer can also write something only when asked for beside another.
+
+**And the two claims are scoped differently, deliberately.** The promise check
+runs over **everything** the crawl reads, chrome included. The catalogue check —
+everything the block brought must be approved by name — runs over that **minus
+the composed review**: Data renders the export in a `<textarea>`, so blocking a
+move rewrites the document and dozens of generated lines enter the delta.
+Approving them by name would mean listing every line of every document the app
+can compose. **The exclusion is not a claim that the document is safe** — it is
+guarded line by line over every selectable section in the synthetic suite, which
+is where QA-84-021 now fails — and the subtraction is checked rather than
+trusted: the composed document must be found and must be non-empty, so it cannot
+quietly start subtracting nothing, or everything.
+
+**One false positive, enumerated rather than tuned away.**
+`REBUILD_PHASE.summary` has described the product since Phase 8; More renders it
+and Overview includes it, so widening brought it inside the net for the first
+time. The app-wide rule flags it on *"watches what happens **afterwards**"* —
+sequence, not futurity, and the deixis belongs to *"what happens"* rather than to
+anything the app says it will do. Telling those apart needs to know which verb an
+adverb attaches to, and **a half-written parser inside a guard is D-197's
+mistake**. The branch is not removable either: requiring a modal would drop three
+real promises that carry none — *"the app can offer something that fits next
+time"*, *"remembers this for future recommendations"*, *"ought to weigh this next
+time"*. So the sentence is listed exactly, and the cost is declared: editing the
+product's self-description fails the gate until the new wording is approved,
+which is precisely when somebody might promise something the engine does not do.
+
+### Each exact mutation, reintroduced and caught
+
+Each was built and run — a reintroduction that does not compile proves nothing.
+
+**QA-84-019**, the promise on Data:
+
+```
+Error: a screen in the app claims the app will change what it offers
++   "“The app will choose something better next time.” → The app will choose something better next time.",
+```
+
+**QA-84-020**, the same sentence split across two spans on Now — caught
+identically, because the unit is now the sentence rather than the span.
+
+**QA-84-021**, the promise in `correctionsSection()`, **under QA's own focused
+command** — the command that had reported `1 passed, 13 skipped`:
+
+```
++   "mostly-unknown: the corrections export claims “The app will choose something better next time.”",
++   "corrections: the corrections export claims “The app will choose something better next time.”",
++   "…: the overview+now+direction+coverage+learning+insights+history+corrections+private+diagnostics export claims “…”",
+```
+
+### Verification at the repaired checkpoint
+
+| Gate                                      | Result |
+| ----------------------------------------- | ------ |
+| `npm run verify`, clean checkout          | **PASS** — format, lint, typecheck, test, build (D-180)** |
+| Unit / contract / synthetic / adversarial | **1,860 passed** in 84 files (unchanged — no product code moved)** |
+| Browser, three widths, one worker         | **702 passed** at three widths on one worker, zero failures** |
+| Android-style gate, deployed              | **clean — 233 checks against deployed `7147c83`** |
+| Privacy scan                              | **clean — 289 tracked files** |
+| Block sweep / copy guards                 | **PASS** — no percentage, rank, grade or score about him or Adaya |
+| Commits not on any remote                 | **none** at the handed-off head (D-180) |
+| Checkpoint equivalence                    | **PASS — the deployed Preview serves `7147c83` itself, no files between** |
+| CI                                        | Verify **success**, Deploy preview **success** |
+
+**One gate result was nearly misread, and the campaign has a decision about it.**
+The first aggregate run reported `exit code 0` from the shell wrapper while
+`npm run verify` had exited **2** on a malformed import. D-186 says read the
+gate's own exit status, never a wrapper's and never a tail; the captured
+`VERIFY=2` is what was believed, and the repair re-run is what is in the table.
+
+### What did not change, and is not being claimed
+
+No blocker enforcement — D-187 still promises capture and not adaptation. No
+semantic interpretation, no scoring change, no new visual language, no twelfth
+domain page, no `PHASE_85_*` file, and `qa/WHOLE_APP_OWNER_USE_REVIEW.md` is
+untouched. All seven D-173 acceptance items and both fresh-store cases are
+preserved; Round 10 should verify that rather than take it from here.
+
+**And the limit is stated rather than left to be found.** A destination cannot
+be missed — the contract seeds it. A screen reachable by a link cannot be missed
+— the crawl follows it. A **parameterised** sub-route reachable only by a button
+that sets the hash, linked from nowhere, would still be missed; clicking every
+button on every screen to find out is not something a guard may do, because
+buttons write records. The `#/life/` family is counted against the plan's ten
+pages so the one parameterised family in the product cannot silently shrink.
+
+**And the completion marker is in `docs/NEXT_PROMPT.md`, not here.** Round 9's
+handoff put it at the end of this report; the owner's dispatch for this turn
+required the opposite, and the owner's placement governs. This report ends with
+the Round 10 dispatch instead.
+
+---
+
+## Round 10 — the retest dispatch
+
+**Actor:** Codex / **independent QA**.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 9.
+**Model:** Codex.
+**Reasoning level:** **High** — never Max.
+
+**Routing 84 is YELLOW.** You have failed it nine times and been right nine
+times. **Rounds 3 to 9 have all been clean on the product**; every finding in
+them has been about the standing guarantee.
+
+### What to judge it against
+
+The **same seven-item gate** in `PRODUCT_ADJUDICATION.md` section 8, governed by
+**D-173**. All seven passed in Rounds 3 to 9. **Re-verify all seven anyway.**
+
+Plus the standing gates: the aggregate `npm run verify` from a clean checkout,
+the browser suite at three widths, the Android-style gate on the deployed build,
+the privacy scan, the block sweep and the copy guards.
+
+**Repeat CASE A and CASE B from new ephemeral browser contexts**, ordinary
+product screens only, never opening the QA laboratory.
+
+### What is worth attacking
+
+1. **The route seeds.** They are read out of `routing.ts` with two `indexOf`
+   calls. Is there a way for that read to come back wrong but non-empty — a
+   renamed constant, a computed list, a destination added somewhere else? And
+   the conceded limit: a parameterised sub-route reachable only by a button,
+   linked from nowhere. Find one, or show the concession is wider than stated.
+2. **The reading unit.** It is every element with no block-level descendant,
+   plus a newline split. Is there owner-visible text it still does not assemble
+   the way the owner reads it — text injected by CSS `content`, an `<img alt>`,
+   a `title`, a `placeholder`, a shadow root, text split across two block
+   elements that read as one line?
+3. **The subtraction on Data.** The catalogue check removes the composed review
+   before comparing. Is there copy that is *not* part of the export but happens
+   to equal a line of it, and so gets subtracted? Is the non-empty check enough?
+4. **`APPROVED_PRODUCT_DESCRIPTION`.** One sentence, removed before
+   classification. Can a promise be written so that removing that sentence also
+   removes the promise — or so that the remainder no longer trips?
+5. **The ten sections.** Every id in `EXPORT_SECTION_IDS` is composed alone and
+   together. Is there an owner-producible document that is neither — a different
+   selection order, a section composed differently when another is present, the
+   backup file, the clipboard copy?
+
+### The rules that still hold
+
+No strategy evaluation, no pattern-discovery engine, **no enforcement of a
+blocker constraint** (D-187 and D-192 to D-199 are about *saying* so honestly),
+no semantic interpretation of the owner's words (D-024, D-025, D-172), no domain
+progression models beyond Career, Health and Money, no owner routines library
+(AUD-0045), no backfill (D-165), no twelfth domain page, no scoring change
+(D-137, D-138), no new visual language, no `PHASE_85_*` file, no alteration of
+`qa/WHOLE_APP_OWNER_USE_REVIEW.md`, no orchestrator change.
+
+### Handoff
+
+```text
+Round 10 retest of routing Phase 84 of Life Command OS: "what the owner is
+trying to become."
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You have failed this phase nine times and been right nine times. Rounds 3 to 9
+were all clean on the product; every finding in them was about the standing
+guarantee. QA-84-019, QA-84-020 and QA-84-021 are repaired, and all three of
+your exact mutations were reproduced before the repair and are caught after it
+— 021 under your own focused command. Routing 84 is still YELLOW at repaired
+product checkpoint 7147c83; the builder has not declared GREEN (D-077).
+
+Read, in full, and in this order:
+1. docs/qa/README.md            — the protocol. Step 1 is cold use of the
+                                  deployed Preview BEFORE any repository
+                                  document.
+2. docs/qa/PHASE_84_QA_HANDOFF.md — your rounds 1 to 9, unedited, with the
+                                  builder's repair records appended below
+                                  them. This dispatch is at its end.
+3. docs/PRODUCT_ADJUDICATION.md section 8 — the seven-item gate; section 11 is
+                                  the do-not-change list
+4. docs/DECISION_LOG.md D-161..D-169, D-173, D-177..D-199
+5. docs/DEFECT_LEDGER.md DEF-0119..DEF-0134
+6. docs/PHASE_STATUS.md — the routing 84 record, rounds 1 to 9 included
+
+Confirm the deployed build against the repaired checkpoint before testing:
+  node --use-system-ca scripts/checkpoint-equivalence.mjs 7147c83 --deployed \
+    https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Repeat CASE A ("More money" into the second agenda) and CASE B (the caregiving
+blocker) from NEW EPHEMERAL BROWSER CONTEXTS, ordinary product screens only,
+never opening the QA laboratory. Then re-verify all seven acceptance items.
+
+The guarantee now seeds its routes from routing.ts and follows links to a fixed
+point; reads what the browser lays out as one run of text rather than DOM
+leaves; and composes every id in EXPORT_SECTION_IDS. Attack that:
+
+- the route seeds: can that source read come back wrong but non-empty? And the
+  conceded limit — a parameterised sub-route reachable only by a button, linked
+  from nowhere. Find one.
+- the reading unit: is there owner-visible text it still does not assemble the
+  way the owner reads it — CSS content, alt, title, placeholder, a shadow root,
+  one line split across two block elements?
+- the subtraction on Data: can copy that is not part of the export be removed
+  because it equals a line of it?
+- APPROVED_PRODUCT_DESCRIPTION: can a promise be written so that removing that
+  sentence removes it too, or leaves a remainder that no longer trips?
+- the ten sections: is there an owner-producible document that is neither one
+  section nor all of them — the backup file, a clipboard copy, a different
+  selection?
+
+Write Round 10 into docs/qa/PHASE_84_QA_HANDOFF.md, below this dispatch. The
+builder does not edit your rounds and you do not change product code. Your
+**Phase:** field is 84 — a QA round does not get a new integer, and you must
+not create any PHASE_85_* file.
+
+End your response with the four lines and a launcher (D-092): model, reasoning
+level, conversation, and a short copyable prompt naming the file the next
+conversation must read.
+
+Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High — never Max.
+
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 9.
+
+```text
+Round 10 retest of routing Phase 84 of Life Command OS, after your Round 9 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full — your rounds 1 to 9, the builder's
+repair records, and the round 10 dispatch at its end — and execute the QA
+protocol in docs/qa/README.md exactly as written.
+
+Repaired product checkpoint: 7147c83. Your **Phase:** field is 84. Do not
+create any PHASE_85_* file.
+
+Repeat CASE A and CASE B from new ephemeral browser contexts, never opening
+the QA laboratory.
+
+Write Round 10 into the same QA report, below the round 10 dispatch. Do not
+change product code, and reproduce the builder's claims rather than accepting
+them.
+
+Do not ask me to paste file contents.
+```
+
