@@ -65,8 +65,18 @@ import {
   NOT_OWNER_TEXT,
   openJourney,
   recordTextFunctionsInSource,
+  recordTextSinksInSource,
   type JourneyApp,
 } from './journey'
+import { DISCREET_PRIMARY } from '../../src/domain/privacy'
+import { DOMAIN } from '../../src/domain/domains'
+import { assembleSituation } from '../../src/intelligence/situation'
+import { snapshotFromWire } from '../../src/memory/snapshot'
+import { buildView } from '../../src/memory/view'
+import { SCENARIOS } from '../../src/synthetic/scenarios'
+import { assembleDomainPageData, LIFE_PAGES } from '../../src/features/life/domainPages'
+import { assembleTimeline } from '../../src/features/timeline/timelineEntries'
+import { composeFor, contextFor } from './exportHarness'
 
 const flat = (text: string) => text.replace(/\s+/g, ' ').trim()
 
@@ -525,5 +535,205 @@ describe('QA-84-013 — and closed over what a record reads as, wherever it is r
     for (const kind of ['action-recommendation', 'action-unable-now', 'constraint', 'correction']) {
       expect(RECORD_KINDS, `${kind} is no longer a record kind`).toContain(kind)
     }
+  })
+})
+
+describe('QA-84-014 — and closed over the value the owner actually reads', () => {
+  /**
+   * The record kinds the blocker path writes, which are the rows this is about.
+   *
+   * Named here rather than inferred, and asserted against `RECORD_KINDS` in the
+   * QA-84-013 block above so a fifth is a decision rather than a gap.
+   */
+  const BLOCKER_KINDS = ['action-unable-now', 'constraint', 'correction'] as const
+
+  /**
+   * **A sink renders the describer's value. It does not add to it.**
+   *
+   * That is the whole invariant, and it is the one QA-84-014 broke. D-195
+   * catalogued what `describeRecord` *returns*; `assembleTimeline` took that
+   * value, appended one more sentence from the same record, and put the result
+   * on screen. The catalogue was asked about the honest half.
+   *
+   * Comparing the final value against the describer's own output needs no
+   * normalisation, no placeholders and no second catalogue: any composition at
+   * all — a promise, a helpful clause, a stray full stop — makes them differ.
+   */
+  function timelineContext(situation: ReturnType<typeof assembleSituation>) {
+    return {
+      entities: situation.entities,
+      history: situation.view.history,
+      concepts: situation.concepts,
+      policy: DISCREET_PRIMARY,
+    }
+  }
+
+  function inspectionContext(
+    situation: ReturnType<typeof assembleSituation>,
+    revealPrivate: boolean,
+  ) {
+    return {
+      entities: situation.entities,
+      history: situation.view.history,
+      concepts: situation.concepts,
+      policy: { surface: 'inspection' as const, revealPrivate },
+    }
+  }
+
+  function everyScenario() {
+    return SCENARIOS.map((entry) => {
+      const loaded = snapshotFromWire(entry.build())
+      const moment = { now: entry.now, zone: entry.zone, weekStartsOn: entry.weekStartsOn ?? 1 }
+      const view = buildView(loaded.snapshot, moment)
+      return { id: entry.id, situation: assembleSituation(view, moment), view }
+    })
+  }
+
+  it('Timeline shows what the describer said, and nothing appended to it', () => {
+    /*
+     * QA's exact mutation site. It read
+     *
+     *     text: record.kind === 'action-unable-now'
+     *       ? `${described.text} The app will choose something better next time.`
+     *       : described.text,
+     *
+     * and 118 tests passed while the promise rendered.
+     */
+    const composed: string[] = []
+    let checked = 0
+    for (const { id, situation, view } of everyScenario()) {
+      const context = timelineContext(situation)
+      const byId = new Map(view.history.effective.map((record) => [record.id, record]))
+      for (const day of assembleTimeline(situation, 500).days) {
+        for (const entry of day.entries) {
+          const record = byId.get(entry.id)
+          if (record === undefined || !BLOCKER_KINDS.includes(record.kind as never)) continue
+          const described = describeRecord(record, context)
+          if (described === undefined) continue
+          checked += 1
+          if (entry.text !== described.text) {
+            composed.push(`${id}: “${entry.text}” for a describer that said “${described.text}”`)
+          }
+          if (entry.tag !== described.tag) {
+            composed.push(`${id}: tag “${entry.tag}” for a describer that said “${described.tag}”`)
+          }
+        }
+      }
+    }
+    expect(
+      composed,
+      'a Timeline row says more than the describer did — a sink may render a described record and may not add to it',
+    ).toEqual([])
+    expect(checked, 'no blocker row was checked, so nothing was proved').toBeGreaterThan(0)
+  })
+
+  it('and so do the domain page’s recent list and its correction list', () => {
+    /*
+     * The class rather than the case. QA put the promise in Timeline; the same
+     * append in either of these would have been just as invisible, and both
+     * take a `Situation` rather than a record, so neither is discoverable by
+     * looking for describers.
+     */
+    const composed: string[] = []
+    let checked = 0
+    for (const { id, situation, view } of everyScenario()) {
+      const byId = new Map(view.history.effective.map((record) => [record.id, record]))
+      for (const page of LIFE_PAGES) {
+        const data = assembleDomainPageData(situation, page)
+        const context = inspectionContext(situation, page.domains.includes(DOMAIN.privateHealth))
+        for (const [what, rows] of [
+          ['recent', data.recentChanges],
+          ['correctable', data.correctable],
+        ] as const) {
+          for (const row of rows) {
+            const record = byId.get(row.id)
+            if (record === undefined || !BLOCKER_KINDS.includes(record.kind as never)) continue
+            const described = describeRecord(record, context)
+            if (described === undefined) continue
+            checked += 1
+            if (row.text !== described.text) {
+              composed.push(
+                `${id} ${page.slug} ${what}: “${row.text}” for a describer that said “${described.text}”`,
+              )
+            }
+          }
+        }
+      }
+    }
+    expect(composed, 'a domain page row says more than the describer did').toEqual([])
+    expect(checked, 'no blocker row was checked on any domain page').toBeGreaterThan(0)
+  })
+
+  it('and the export carries the describer’s sentence with nothing added to it', () => {
+    /*
+     * The export **does** compose — a date, a tag and an origin around the
+     * sentence — so "identical" is the wrong test for it. What is right is that
+     * the sentence it carries is the describer's, and that nothing else in the
+     * line makes a claim: the scaffolding is a date and a word.
+     */
+    const offenders: string[] = []
+    let checked = 0
+    for (const entry of SCENARIOS) {
+      /*
+       * The export harness's own scenario context, so the describer is asked
+       * the same question the document asked it. Composing an export runs the
+       * whole decision and the insights report; the harness memoises that, and
+       * its comment records what happened when it did not.
+       */
+      const { situation, loaded } = contextFor(entry.id)
+      const id = entry.id
+      const blockers = loaded
+        .view()
+        .history.effective.filter((record) => BLOCKER_KINDS.includes(record.kind as never))
+      if (blockers.length === 0) continue
+      const text = composeFor(entry.id, ['history']).text
+      for (const record of blockers) {
+        const described = describeRecord(record, inspectionContext(situation, false))
+        if (described === undefined) continue
+        const line = text.split('\n').find((row) => row.includes(described.text))
+        if (line === undefined) continue
+        checked += 1
+        const scaffolding = line.split(described.text).join('').trim()
+        /*
+         * What may sit around the sentence: a bullet, a date, a tag, an origin
+         * note. What may not: another sentence.
+         */
+        if (/[a-z]{3,}[^.]*\.\s*$/.test(scaffolding) && scaffolding.length > 60) {
+          offenders.push(`${id}: “${scaffolding}” around “${described.text}”`)
+        }
+        for (const claim of adaptationClaims(line)) {
+          offenders.push(`${id}: export line claims “${claim}”`)
+        }
+      }
+    }
+    expect(offenders, 'an export line says more about a blocker than the describer did').toEqual([])
+    expect(checked, 'no blocker line was found in any export').toBeGreaterThan(0)
+  })
+
+  it('and every sink that reads a described record is one of the three above', () => {
+    /*
+     * The enumeration, and why it is by **import** rather than by type. A sink
+     * takes whatever it takes — `assembleTimeline` takes a `Situation`, the
+     * domain assembler takes a page, the export takes a request — so nothing
+     * about its signature says it renders a record. What every one of them must
+     * do is import `describeRecord`, because that is the only way to have a
+     * described record at all.
+     *
+     * A fourth sink is discovered the moment it exists.
+     */
+    const exercised = [
+      '/src/features/timeline/timelineEntries.ts',
+      '/src/features/life/domainPages.ts',
+      '/src/features/export/compose.ts',
+    ]
+    const unexercised = recordTextSinksInSource().filter((sink) => !exercised.includes(sink.file))
+    expect(
+      unexercised.map((sink) => sink.file),
+      'a file reads a described record and no guard asks what it does with it — walk it above',
+    ).toEqual([])
+
+    // And the instrument is reading something rather than returning nothing.
+    const found = recordTextSinksInSource().map((sink) => sink.file)
+    for (const file of exercised) expect(found, `the instrument cannot see ${file}`).toContain(file)
   })
 })

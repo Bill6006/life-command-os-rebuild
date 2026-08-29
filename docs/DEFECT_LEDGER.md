@@ -39,6 +39,59 @@ None.
 
 ## Fixed
 
+### DEF-0131 — copy composed after the describer returned, where no guard was looking
+
+- Status: Fixed
+- Severity: Blocker — an unsupported promise rendered on an ordinary Timeline row
+  with every gate green
+- Found in: routing 84 / `1324f66`
+- Found by: **independent QA round 6** (QA-84-014), by mutating the Timeline sink
+  in a disposable worktree and probing the real output
+- Class: **a guard that asserts against an intermediate value rather than the one
+  the owner receives.** The fifth variation: DEF-0127 listed phrases, DEF-0128
+  listed verbs, DEF-0129 listed one module, DEF-0130 listed three screens, and
+  this one checked the describer's output rather than the sink's.
+- Reproduction, inside `assembleTimeline`:
+
+  ```diff
+  -text: described.text,
+  +text:
+  +  record.kind === 'action-unable-now'
+  +    ? `${described.text} The app will choose something better next time.`
+  +    : described.text,
+  ```
+
+  `blocker-copy.test.tsx`, `timeline.test.ts` and `destination-and-discovery.test.ts`
+  → **118 / 118 passed** while an ordinary `action-unable-now` row carried the
+  promise. Reproduced here before anything was built.
+
+- Root cause: `recordTextFunctionsInSource()` enumerates functions taking a
+  `CanonicalRecord`. `assembleTimeline` takes a `Situation` and holds the record
+  as local data, as do the domain page's assembler and the export composer — so
+  no signature identifies them, and the catalogue was asked about the honest
+  describer output instead of the composed row.
+- Repair: the guard now compares **the final value at every sink** against the
+  describer's own output for the same record and the same policy, which needs no
+  catalogue of its own — any composition makes them differ. Sinks are enumerated
+  by **import** (`recordTextSinksInSource()`), because a sink must import
+  `describeRecord` to have a described value at all whatever else it takes. The
+  export, which legitimately composes a date and a tag around the sentence, is
+  asserted differently: the sentence is the describer's, the scaffolding is not
+  itself a sentence, and the line makes no adaptation claim. See **D-196**.
+- Regression: four cases in `tests/synthetic/blocker-copy.test.tsx` under
+  _"QA-84-014 — and closed over the value the owner actually reads"_.
+- Proved by reintroduction four ways, and QA asked for more than one boundary:
+  **QA's exact `assembleTimeline` mutation**; the same append in the domain
+  page's **recent list**; the same append in its **correction list**; and a
+  **fourth file importing `describeRecord`** that nothing walks, which fails the
+  sink enumeration rather than the value comparison.
+- Siblings: checked by the instrument, which reports three files under
+  `src/features/` importing `describeRecord` and requires each to be walked.
+- Note on scope: the current copy was honest throughout, for the fourth round
+  running. What was defective was the guarantee, and Round 6 also paid Round 5's
+  evidence debt — CASE A and CASE B both passed from genuinely fresh ephemeral
+  browser contexts.
+
 ### DEF-0130 — the shared record describer sat outside every blocker-promise guard
 
 - Status: Fixed

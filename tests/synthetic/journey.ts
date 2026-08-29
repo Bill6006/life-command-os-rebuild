@@ -1413,6 +1413,45 @@ function takesAMoment(parameters: string): boolean {
 // ---------------------------------------------------------------------------
 
 /**
+ * A place that takes a described record and puts it in front of the owner.
+ *
+ * QA-84-014, D-196. D-195 catalogued what a **describer returns**, and a surface
+ * can take that value and compose one more sentence from the same record before
+ * anything reaches a screen. QA's mutation did exactly that, inside
+ * `assembleTimeline`:
+ *
+ *     text: record.kind === 'action-unable-now'
+ *       ? `${described.text} The app will choose something better next time.`
+ *       : described.text,
+ *
+ * The promise rendered on an ordinary Timeline row and 118 tests passed. The
+ * describer inventory could not see it, because `assembleTimeline` takes a
+ * `Situation` — the record is local data inside it — and the catalogue was
+ * asked about the honest value the describer returned rather than the value the
+ * owner read.
+ *
+ * **A sink cannot hide.** Whatever else it takes, it has to import
+ * `describeRecord` to have a described record at all, so importing it is what
+ * this looks for. A fourth sink is discovered the moment it exists.
+ */
+export interface RecordTextSink {
+  readonly file: string
+}
+
+export function recordTextSinksInSource(): readonly RecordTextSink[] {
+  const out: RecordTextSink[] = []
+  for (const file of filesUnder(join(ROOT, 'src', 'features'))) {
+    const relative = relativeToRoot(file)
+    // The describer itself is where the value is made, not a place that reads it.
+    if (relative.endsWith('/history/describe.ts')) continue
+    const code = withoutComments(readFileSync(file, 'utf8'))
+    if (!/import\s*\{[^}]*\bdescribeRecord\b[^}]*\}/.test(code)) continue
+    out.push({ file: relative })
+  }
+  return out.sort((a, b) => a.file.localeCompare(b.file))
+}
+
+/**
  * A function that turns a record into words the owner reads — QA-84-013, D-195.
  *
  * D-194 closed the catalogue over the three React panels that *take* a

@@ -6615,3 +6615,64 @@ screens — was wrong in the same way, and each was found by somebody writing on
 ordinary sentence the guard had not imagined.
 
 ---
+
+## D-196 — A sink renders the describer's value and does not add to it
+
+**Phase:** 84 (QA round 6 repair) · **Status:** Active · Completes **D-195**.
+
+Where a rule closes the set of copy a path may render, the guard asserts against
+**the value the owner actually receives**, and the invariant that makes that
+checkable is: **a surface renders a described record's value unchanged.** A place
+that reads a described record may choose whether to show it and may not add to
+it.
+
+**D-195 catalogued what a describer returns, which is not what the owner reads.**
+Round 6 put one line inside `assembleTimeline`:
+
+    text: record.kind === 'action-unable-now'
+      ? `${described.text} The app will choose something better next time.`
+      : described.text,
+
+The promise rendered on an ordinary Timeline row. The catalogue was asked about
+the honest half — the describer's own output — and 118 tests passed. QA-84-014.
+
+**Why the describer inventory could not find it.** `recordTextFunctionsInSource()`
+looks for functions taking a `CanonicalRecord`. `assembleTimeline` takes a
+`Situation`; the record is local data inside it. The same is true of the domain
+page's assembler and the export composer. **No signature says "this renders a
+record"**, so the enumeration has to key on something else.
+
+**It keys on the import.** Whatever else a sink takes, it must import
+`describeRecord` to have a described value at all. `recordTextSinksInSource()`
+returns every file under `src/features/` that does, and each must be walked by
+the guard. A fourth sink is discovered the moment it exists, and the thing that
+makes that reliable is that there is no other way to obtain the value.
+
+**And the check needs no catalogue of its own**, which is the part worth keeping.
+Comparing the final value against the describer's own output requires no
+placeholders, no normalisation and no second list: any composition at all — a
+promise, a helpful clause, a stray full stop — makes the two differ. The
+catalogue still guards what the describer says; this guards that nothing is added
+after it.
+
+**The export is the one sink that legitimately composes** — a date, a tag and an
+origin around the sentence — so identity is the wrong test there. What is
+asserted instead is that the sentence it carries is the describer's, that the
+scaffolding around it is not itself a sentence, and that the whole line makes no
+adaptation claim.
+
+**Why not a branded type.** Making `DescribedRecord.text` opaque would turn the
+mutation into a compile error, which is attractive. It was not done, for two
+reasons. A brand is satisfied by a named constructor, so it makes accidental
+composition impossible and deliberate composition merely visible — it is not
+itself the guarantee QA asked for, which is over **values**. And it would put a
+typing change through eight product call sites during a QA loop that has been
+clean on the product for four consecutive rounds. The value-level check catches
+accidental and deliberate composition alike, and fails in `npm run verify`, which
+is before any browser or release gate.
+
+**Five findings, one rule, now complete.** Copy is collected where it is **made**,
+enumerated by what cannot be avoided — the import, the type in the props, the
+record kind — and asserted against what the owner **reads**.
+
+---
