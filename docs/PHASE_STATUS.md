@@ -122,10 +122,10 @@ superseded rather than reused.
 
 # Routing Phase 84 — What the owner is trying to become
 
-**Status: YELLOW — REPAIRED AFTER QA ROUND 5 FAIL, AWAITING ROUND 6 RETEST.**
+**Status: YELLOW — REPAIRED AFTER QA ROUND 6 FAIL, AWAITING ROUND 7 RETEST.**
 
-Independent QA has failed this phase five times and been right five times, and
-**the last three failures were all about the guard rather than the product.**
+Independent QA has failed this phase six times and been right six times, and
+**the last four failures were all about the guard rather than the product.**
 
 **Round 1** returned FAIL on acceptance items 1, 2 and 4, with six findings.
 **Round 2** confirmed five of those six closed and found four more: a cold-start
@@ -134,7 +134,10 @@ that the Round 1 repair had made false, a Timeline tag still contradicting its o
 sentence, and a promise on the blocker path that the guard written to forbid it
 did not match.
 
-**Rounds 3, 4 and 5 all came back clean on the product.** All seven acceptance
+**Rounds 3 to 6 all came back clean on the product**, and Round 6 also paid
+Round 5's evidence debt: CASE A and CASE B both passed from genuinely fresh
+ephemeral browser contexts, with empty IndexedDB, no retained data touched and
+the laboratory never opened. All seven acceptance
 items passed in each, QA-84-007 through QA-84-012 are closed on the deployed
 build, and the cold-store walk reads honest from a first run. Each round's single
 finding was about the standing copy guard: Round 3 found it was still a phrase
@@ -143,13 +146,15 @@ module rather than over the screen; Round 5 found that closing it over three
 screens left the shared record describer outside — the boundary the Round 4
 repair had **declared** and not closed. All three are repaired.
 
-**Four findings, one theme, and it is now the rule rather than a rediscovery.**
+**Five findings, one theme, and it is now the rule rather than a rediscovery.**
 DEF-0127 guarded D-187 with a list of phrases; DEF-0128 with a list of verbs;
-DEF-0129 with a list of one module; DEF-0130 with a list of three screens. **A
-guard over copy must be collected where the copy is made and asserted against
-what the owner reads** — D-195. Every version that enumerated something else was
-wrong in the same way, and each was found by somebody writing one ordinary
-sentence the guard had not imagined.
+DEF-0129 with a list of one module; DEF-0130 with a list of three screens; and
+DEF-0131 asserted against the describer's output rather than the value the owner
+receives. **Copy is collected where it is made, enumerated by what cannot be
+avoided — the import, the type in the props, the record kind — and asserted
+against what the owner reads** (D-195, D-196). Every version that enumerated
+something else was wrong in the same way, and each was found by somebody writing
+one ordinary sentence the guard had not imagined.
 
 It stays YELLOW. A builder conversation may not approve its own phase (D-077),
 and this record says what was built and repaired and where to look at it; it does
@@ -185,18 +190,19 @@ through the same controls, now gets past all eight steps.
 
 ## Checkpoint
 
-| Fact                    | Value                                                                                 |
-| ----------------------- | ------------------------------------------------------------------------------------- |
-| Product checkpoint      | `1324f66` — the Round 5 repair, and the commit the aggregate gate was run on          |
-| Round 5 checkpoint      | `f45214b` — the Round 4 repair, which Round 5 tested                                  |
-| Round 4 checkpoint      | `0f9b882` — the Round 3 repair, which Round 4 tested                                  |
-| Round 3 checkpoint      | `cdd9259` — the Round 2 repair, which Round 3 tested                                  |
-| Round 2 checkpoint      | `94e1716` — the Round 1 repair, which Round 2 tested and failed                       |
-| Round 1 checkpoint      | `42667ea` — what Round 1 tested and failed                                            |
-| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                           |
-| Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                    |
-| Owner phone check       | owed before release; not a blocker QA can clear                                       |
-| Independent QA          | **Rounds 1 to 5 all FAIL**, all repaired; Round 6 dispatched in `docs/NEXT_PROMPT.md` |
+| Fact                    | Value                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| Product checkpoint      | `d78b765` — the Round 6 repair, and the commit the aggregate gate was run on                           |
+| Round 6 checkpoint      | `1324f66` — the Round 5 repair, which Round 6 tested                                                   |
+| Round 5 checkpoint      | `f45214b` — the Round 4 repair, which Round 5 tested                                                   |
+| Round 4 checkpoint      | `0f9b882` — the Round 3 repair, which Round 4 tested                                                   |
+| Round 3 checkpoint      | `cdd9259` — the Round 2 repair, which Round 3 tested                                                   |
+| Round 2 checkpoint      | `94e1716` — the Round 1 repair, which Round 2 tested and failed                                        |
+| Round 1 checkpoint      | `42667ea` — what Round 1 tested and failed                                                             |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                            |
+| Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                     |
+| Owner phone check       | owed before release; not a blocker QA can clear                                                        |
+| Independent QA          | **Rounds 1 to 6 all FAIL**, all repaired; Round 7 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md` |
 
 **The documentation head is a later commit than the product checkpoint**, as it
 was in Round 1. It carries this record, the Round 2 dispatch and two corrected
@@ -208,18 +214,18 @@ trust (D-097, D-180).
 
 At the repaired checkpoint, not at the one QA failed.
 
-| Gate                                      | Result                                                                     |
-| ----------------------------------------- | -------------------------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                  |
-| Unit / contract / synthetic / adversarial | **1,855 passed** in 84 files (1,850 at round 5, 1,812 at round 1)          |
-| Browser, three widths, one worker         | **690 passed** at three widths, 230 per width (unchanged from round 5)     |
-| Android-style gate, deployed              | **clean — 233 checks** against deployed `1324f66` (unchanged from round 5) |
-| Privacy scan                              | **clean** — 289 tracked files                                              |
-| Block sweep                               | **PASS** — unchanged                                                       |
-| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya          |
-| Commits not on any remote                 | **none** at the handed-off head (D-180)                                    |
-| Checkpoint equivalence                    | **PASS** — deployed `1324f66` serves the same bytes, nothing between       |
-| CI                                        | Verify **success**, Deploy preview **success**                             |
+| Gate                                      | Result                                                                                                               |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                                                            |
+| Unit / contract / synthetic / adversarial | **1,859 passed** in 84 files (1,855 at round 6, 1,812 at round 1)                                                    |
+| Browser, three widths, one worker         | **690 passed** at three widths on a clean re-run; one case failed once under load and passed alone and on the re-run |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `d78b765`                                                                    |
+| Privacy scan                              | **clean** — 289 tracked files                                                                                        |
+| Block sweep                               | **PASS** — unchanged                                                                                                 |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya                                                    |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                                                                              |
+| Checkpoint equivalence                    | **PASS** — deployed `d78b765` serves the same bytes, nothing between                                                 |
+| CI                                        | Verify **success**, Deploy preview **success**                                                                       |
 
 ## Independent QA — round 1, and the repair
 
@@ -566,6 +572,78 @@ There is a technique that needs neither clearing nor authorisation and this
 repository already uses it — an **ephemeral browser context**, which has an empty
 IndexedDB by construction. `scripts/android-gate.mjs` opens one for its own
 first-run checks. Round 6's dispatch says so.
+
+## Independent QA — round 6, and the repair
+
+**Result: FAIL, and the product half was clean for the fourth round running.**
+Codex, at High, on the deployed `875e40e` (bundle-equivalent to `1324f66`). All
+seven acceptance items passed and QA-84-007 through QA-84-013 remain closed. The
+full report is [`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md), Round 6,
+committed unedited as `a524e87` before the repair.
+
+**Round 6 also paid Round 5's evidence debt.** CASE A and CASE B each ran in its
+own **genuinely fresh ephemeral browser context** at 430×932 — empty IndexedDB,
+no retained data touched, the laboratory never opened. _"More money"_ survived
+byte-identical with its unknowns named; the caregiving blocker produced its
+durable statement with **Not true any more** and promised nothing. Both cases are
+recorded as passed and are no longer owed.
+
+The one finding was **QA-84-014**.
+
+### The guard asked about the honest half
+
+D-195 catalogued what a **describer returns**. One line inside `assembleTimeline`
+took that value and appended a sentence from the same record:
+
+    text: record.kind === 'action-unable-now'
+      ? `${described.text} The app will choose something better next time.`
+      : described.text,
+
+The promise rendered on an ordinary Timeline row and 118 tests passed. It was
+reproduced here, on the same checkpoint, before anything was built.
+
+**Why the describer inventory could not find it.**
+`recordTextFunctionsInSource()` looks for functions taking a `CanonicalRecord`.
+`assembleTimeline` takes a `Situation` and holds the record as local data, as do
+the domain page's assembler and the export composer. No signature says _"this
+renders a record."_
+
+### The repair — D-196
+
+**One sentence:** a sink renders the describer's value and does not add to it.
+
+**The enumeration keys on the import**, because whatever else a sink takes it
+must import `describeRecord` to have a described value at all.
+`recordTextSinksInSource()` returns the three files under `src/features/` that
+do, and each is walked. A fourth is discovered the moment it exists.
+
+**And the check needs no catalogue of its own.** Comparing the final value
+against the describer's own output, for the same record under the same policy,
+needs no placeholders and no second list — any composition makes them differ. The
+export, which legitimately composes a date and a tag around the sentence, is
+asserted differently: the sentence is the describer's, the scaffolding is not
+itself a sentence, and the line makes no adaptation claim.
+
+**A branded type was weighed and not taken**, and D-196 records why rather than
+leaving it a silence: a brand is satisfied by a named constructor, so it makes
+accidental composition impossible and deliberate composition merely visible — it
+is not itself a guarantee over values — and it would put a typing change through
+eight product call sites during a loop that has been clean on the product for
+four rounds. Round 7 is invited to disagree.
+
+**No product code changed.** Proved by reintroduction at four boundaries, which
+is what Round 6 asked for: QA's exact mutation, the same append in the domain
+page's recent list, the same append in its correction list, and a fourth file
+importing `describeRecord` that nothing walks.
+
+### One browser case, recorded rather than dismissed
+
+`now.spec.ts` — _"writes the result down without ever asking for it"_ — failed
+once at 430px under sustained load, passed alone in 3.3 seconds and passed on the
+full re-run. No product code changed this round. It is written down because
+calling something flake on one observation is how a real intermittent gets lost;
+it is the second of its kind in this phase, after the block-sweep case Rounds 4
+and 5 both saw.
 
 ## The six packages
 

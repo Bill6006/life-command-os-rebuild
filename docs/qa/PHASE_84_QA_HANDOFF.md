@@ -2716,3 +2716,284 @@ Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 6
 repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
 routing 90. Do not ask me to paste the file contents.
 ```
+
+---
+
+## Round 6 repair — the builder's record
+
+**Actor:** Claude / the routing 84 builder conversation. **Appended below QA's
+round 6 rather than inside it** — QA owns every round and the builder does not
+edit them (D-077). Round 6 above is byte-identical to what QA wrote.
+
+**Result: QA-84-014 repaired. The phase stays YELLOW.** The builder does not
+declare GREEN. Round 7 is dispatched below.
+
+**On the completion marker.** Round 6's handoff asked for it at the end of
+`docs/NEXT_PROMPT.md` and not in this file, and this round the owner's
+instruction says the same thing. So it is **not** in this file: it is the last
+meaningful line of `docs/NEXT_PROMPT.md`, and this report carries none. That also
+keeps the orchestrator routing **this** report — which now holds the Round 7
+retest — rather than a repair that is finished.
+
+### Checkpoint
+
+| Fact                    | Value                                                                     |
+| ----------------------- | ------------------------------------------------------------------------- |
+| Repaired checkpoint     | `d78b765` — the commit the aggregate gate was run on, and the one to test |
+| Round 6 checkpoint      | `1324f66` — deployed as `875e40e`, what Round 6 tested                     |
+| Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/               |
+| Owner-visible behaviour | **unchanged** — no product code changed at all this round                 |
+| QA's Round 6 commit     | `a524e87` — QA's report, committed unedited, before the repair            |
+
+### Reproduced first
+
+QA's mutation, on this checkpoint, before anything was built:
+
+```diff
+-text: described.text,
++text:
++  record.kind === 'action-unable-now'
++    ? `${described.text} The app will choose something better next time.`
++    : described.text,
+```
+
+The promise rendered on an ordinary Timeline row and the focused suites passed.
+The finding is exactly as reported.
+
+### What QA-84-014 became
+
+**D-195 catalogued what a describer returns, which is not what the owner reads.**
+That is the whole of it, and the invariant that closes it is one sentence:
+
+> **A sink renders the describer's value. It does not add to it.**
+
+**Why the describer inventory could not have found it.**
+`recordTextFunctionsInSource()` looks for functions taking a `CanonicalRecord`.
+`assembleTimeline` takes a `Situation` and holds the record as local data, as do
+the domain page's assembler and the export composer. **No signature says "this
+renders a record."**
+
+**So the enumeration keys on the import.** Whatever else a sink takes, it must
+import `describeRecord` to have a described value at all.
+`recordTextSinksInSource()` returns every file under `src/features/` that does —
+three — and each is walked. A fourth is discovered the moment it exists, and what
+makes that reliable is that there is no other way to obtain the value.
+
+**And the check needs no catalogue of its own.** Comparing the final value
+against the describer's own output, for the same record under the same policy,
+requires no placeholders and no second list: **any** composition makes them
+differ. The three catalogue halves still guard what the describer says; this
+guards that nothing is added after it.
+
+**The export is the one sink that legitimately composes** — a date, a tag and an
+origin around the sentence — so identity is the wrong test there. What is
+asserted is that the sentence it carries is the describer's, that the scaffolding
+around it is not itself a sentence, and that the whole line makes no adaptation
+claim.
+
+### Why not a branded type
+
+Making `DescribedRecord.text` opaque would turn QA's mutation into a compile
+error, and Round 6 explicitly offered *"make bypassing the guarantee structurally
+impossible"* as an alternative. It was weighed and not done, for two reasons
+worth stating rather than leaving as a silence.
+
+**A brand is satisfied by a named constructor.** It makes accidental composition
+impossible and deliberate composition merely visible — which is useful, and is
+not the guarantee that was asked for, because the guarantee is over **values**.
+The value comparison catches both.
+
+**And it would put a typing change through eight product call sites** during a
+loop that has been clean on the product for four consecutive rounds. The
+value-level guard fails inside `npm run verify`, which is before any browser or
+release gate — the timing Round 6 asked for.
+
+If Round 7 disagrees with that trade, it is a fair thing to disagree with.
+
+### Proved by reintroduction, at four boundaries
+
+Round 6 asked for more than one, which was the right thing to ask:
+
+1. **QA's exact `assembleTimeline` mutation.**
+2. **The same append in the domain page's recent list.**
+3. **The same append in its correction list.**
+4. **A fourth file importing `describeRecord` that nothing walks**, which fails
+   the *sink enumeration* rather than the value comparison.
+
+### On Round 6's own evidence
+
+Round 6 paid Round 5's debt: CASE A and CASE B both passed from **genuinely fresh
+ephemeral browser contexts**, one per case, at 430×932, with empty IndexedDB, no
+retained data touched and the laboratory never opened. That is the technique this
+repository uses in `scripts/android-gate.mjs` and it worked. **Both cases are
+recorded as passed and no longer owed.**
+
+### Verification at the repaired checkpoint
+
+| Gate                                      | Result                                                            |
+| ----------------------------------------- | ----------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)         |
+| Unit / contract / synthetic / adversarial | **1,859 passed** in 84 files (1,855 at round 6)                   |
+| Browser, three widths, one worker         | **690 passed** at three widths, 230 per width (unchanged from round 6)                                                      |
+| Deployed Android gate                     | **clean — 233 checks** against deployed `d78b765` (unchanged from round 6)                                                      |
+| Privacy scan                              | **clean — 289 tracked files**                                     |
+| Block sweep and copy guards               | **PASS**                                                          |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                           |
+| Checkpoint equivalence                    | **PASS** — deployed `d78b765` serves the same bytes, nothing between                                                        |
+| CI                                        | Verify **success**, Deploy preview **success**                                                           |
+
+**One browser case failed once and is recorded rather than dismissed.**
+`now.spec.ts` — *"writes the result down without ever asking for it"* — failed at
+430px in the first full run, passed alone in 3.3 seconds, and passed in the full
+re-run above. No product code changed this round, so it is load rather than a
+defect; it is written down because calling something flake on one observation is
+how a real intermittent gets lost. It is the second of its kind in this phase,
+after the block-sweep case Round 4 and Round 5 both saw.
+
+### What is still open, and named rather than left to be found
+
+- **Enforcement of a blocker constraint.** Still nothing reads one, still
+  deliberate, still F08's aggregation and later Validity's.
+- **Semantic capture of what an aim means** — routing 91 package 1 (D-172).
+- **The owner phone check** is owed before release and is not a blocker QA can
+  clear.
+- **The classifier's entailment boundary** (D-193) — named, not closed.
+- **The branded-type trade above**, declared rather than taken.
+
+---
+
+## Round 7 — the retest dispatch
+
+**Actor:** Codex / **independent QA**.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 6.
+**Model:** Codex.
+**Reasoning level:** **High** — never Max.
+
+**Routing 84 is YELLOW.** You have failed it six times and been right six times.
+**Rounds 3 to 6 have all been clean on the product**; all four findings were
+about the standing guard. QA-84-014 is repaired at `d78b765`.
+
+### What to judge it against
+
+The **same seven-item gate** in `PRODUCT_ADJUDICATION.md` section 8, governed by
+**D-173**. All seven passed in Rounds 3 to 6. **Re-verify all seven anyway.**
+
+Plus the standing gates: the aggregate `npm run verify` from a clean checkout,
+the browser suite at three widths, the Android-style gate on the deployed build,
+the privacy scan, the block sweep and the copy guards.
+
+**Repeat CASE A and CASE B from new ephemeral browser contexts**, ordinary
+product screens only, never opening the QA laboratory — the technique that worked
+in Round 6.
+
+### What is worth attacking
+
+1. **The value comparison, which is now the guarantee.** It asserts that a sink's
+   final value equals the describer's output for the same record under the same
+   policy. Is there a sink whose policy the guard reconstructs *wrongly*, so that
+   a genuine difference is being read as a policy difference and excused? And is
+   there an owner-visible string derived from a blocker record that reaches a
+   screen without passing through `describeRecord` at all — assembled from the
+   record's fields directly by a component?
+2. **The export's weaker assertion.** It is not identity, because the export
+   legitimately composes. Can a promise be written into that scaffolding?
+3. **The branded-type trade**, declared above rather than taken. If you think the
+   value comparison is not enough without it, say so.
+4. **The three catalogue halves and both enumerations** from Rounds 3 to 5, which
+   are unchanged and still load-bearing.
+
+### The rules that still hold
+
+No strategy evaluation, no pattern-discovery engine, **no enforcement of a
+blocker constraint** (D-187 and D-192 to D-196 are about *saying* so honestly),
+no semantic interpretation of the owner's words (D-024, D-025, D-172), no domain
+progression models beyond Career, Health and Money, no owner routines library
+(AUD-0045), no backfill (D-165), no twelfth domain page, no scoring change
+(D-137, D-138), no new visual language, no `PHASE_85_*` file, no alteration of
+`qa/WHOLE_APP_OWNER_USE_REVIEW.md`, no orchestrator change.
+
+### Handoff
+
+```text
+Round 7 retest of routing Phase 84 of Life Command OS: "what the owner is
+trying to become."
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You have failed this phase six times and been right six times. Rounds 3 to 6
+were all clean on the product; all four findings were about the standing
+guard. QA-84-014 is repaired. Routing 84 is still YELLOW at repaired product
+checkpoint d78b765; the builder has not declared GREEN (D-077).
+
+Read, in full, and in this order:
+1. docs/qa/README.md            — the protocol. Step 1 is cold use of the
+                                  deployed Preview BEFORE any repository
+                                  document.
+2. docs/qa/PHASE_84_QA_HANDOFF.md — your rounds 1 to 6, unedited, with the
+                                  builder's repair records appended below
+                                  them. This dispatch is at its end.
+3. docs/PRODUCT_ADJUDICATION.md section 8 — the seven-item gate; section 11 is
+                                  the do-not-change list
+4. docs/DECISION_LOG.md D-161..D-169, D-173, D-177..D-196
+5. docs/DEFECT_LEDGER.md DEF-0119..DEF-0131
+6. docs/PHASE_STATUS.md — the routing 84 record, rounds 1 to 6 included
+
+Confirm the deployed build against the repaired checkpoint before testing:
+  node --use-system-ca scripts/checkpoint-equivalence.mjs d78b765 --deployed \
+    https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Repeat CASE A ("More money" into the second agenda) and CASE B (the caregiving
+blocker) from NEW EPHEMERAL BROWSER CONTEXTS, ordinary product screens only,
+never opening the QA laboratory — the technique that worked in round 6. Then
+re-verify all seven acceptance items.
+
+Attack in particular:
+- the value comparison that is now the guarantee: is there a sink whose policy
+  the guard reconstructs wrongly, so a real difference is excused as a policy
+  difference? Is there owner-visible text derived from a blocker record that
+  reaches a screen without passing through describeRecord at all, assembled
+  from the record's fields by a component?
+- the export's weaker assertion, which is not identity because the export
+  legitimately composes a date and a tag around the sentence;
+- the branded-type trade, which the builder declared rather than took.
+
+Write Round 7 into docs/qa/PHASE_84_QA_HANDOFF.md, below this dispatch. The
+builder does not edit your rounds and you do not change product code. Your
+**Phase:** field is 84 — a QA round does not get a new integer, and you must
+not create any PHASE_85_* file.
+
+End your response with the four lines and a launcher (D-092): model, reasoning
+level, conversation, and a short copyable prompt naming the file the next
+conversation must read.
+
+Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High — never Max.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 6.
+
+```text
+Round 7 retest of routing Phase 84 of Life Command OS, after your Round 6 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full — your rounds 1 to 6, the builder's
+repair records, and the round 7 dispatch at its end — and execute the QA
+protocol in docs/qa/README.md exactly as written.
+
+Repaired product checkpoint: d78b765. Your **Phase:** field is 84. Do not
+create any PHASE_85_* file.
+
+Repeat CASE A and CASE B from new ephemeral browser contexts, never opening
+the QA laboratory.
+
+Write Round 7 into the same QA report, below the round 7 dispatch. Do not
+change product code, and reproduce the builder's claims rather than accepting
+them.
+
+Do not ask me to paste file contents.
+```
