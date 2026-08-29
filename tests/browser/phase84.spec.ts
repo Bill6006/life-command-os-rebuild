@@ -8,7 +8,7 @@ import {
   isApprovedBlockerCopy,
   isApprovedWhenBlocked,
   readingUnits,
-  withoutApprovedProductDescription,
+  withoutApprovedNonPromises,
 } from '../../scripts/adaptation-claims.mjs'
 
 /**
@@ -50,7 +50,7 @@ async function go(page: Page, name: 'Now' | 'Life' | 'Timeline' | 'Insights') {
  * element, plus the accessibility tree with it.
  */
 async function everySentenceIn(panel: Locator): Promise<readonly string[]> {
-  return panel.evaluate(readingUnits)
+  return (await panel.evaluate(readingUnits)).map((unit) => unit.text)
 }
 
 async function openCareer(page: Page) {
@@ -944,7 +944,30 @@ test.describe('what independent QA found on the repaired build', () => {
  * had was scoped to the question's own subtree.
  */
 async function everySentenceOnScreen(page: Page): Promise<readonly string[]> {
-  return page.locator('.screen').evaluate(readingUnits)
+  /*
+   * Read when the screen has stopped changing — QA-84-026, D-200.
+   *
+   * This used to click, wait for one child to disappear, and read. Round 10
+   * caught it: dismissing the blocker question also rewrites the rest of Now,
+   * and the write can land **after** that child has gone. The set difference
+   * then attributes the whole previous decision screen to the blocker, and the
+   * gate fails on eleven ordinary lines that nobody put there. It passed on a
+   * rerun, which is the definition of the problem.
+   *
+   * **A whole-screen comparison needs a whole-screen stability condition.** So
+   * the screen is read until two consecutive reads agree: the thing being
+   * measured is what settles, rather than a proxy for it.
+   */
+  let last: string[] = []
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    const now = (await page.locator('.screen').evaluate(readingUnits)).map((unit) => unit.text)
+    if (attempt > 0 && now.length === last.length && now.every((line, at) => line === last[at])) {
+      return now
+    }
+    last = now
+    await page.waitForTimeout(100)
+  }
+  return last
 }
 
 test.describe('what is on screen because the blocker is', () => {
@@ -1159,7 +1182,8 @@ async function sweepEveryRoute(page: Page): Promise<{
   const queue = [...declaredRoutes()]
   const visited = new Set<string>()
   const everything = new Set<string>()
-  const composed = new Set<string>()
+  const generated = new Set<string>()
+  const prosed = new Set<string>()
 
   while (queue.length > 0) {
     const route = queue.shift()
@@ -1168,21 +1192,10 @@ async function sweepEveryRoute(page: Page): Promise<{
 
     await page.goto(`${APP}${route}`)
     await page.waitForSelector('h1')
-    for (const sentence of await page.locator('body').evaluate(readingUnits)) {
-      everything.add(sentence)
-    }
-
-    const preview = page.getByTestId('export-text')
-    if ((await preview.count()) > 0) {
-      const document = await preview.inputValue()
-      expect(
-        document.length,
-        'the composed review is empty, so subtracting it proves nothing',
-      ).toBeGreaterThan(200)
-      for (const line of document.split('\n')) {
-        const flat = line.replace(/\s+/g, ' ').trim()
-        if (flat !== '') composed.add(flat)
-      }
+    for (const unit of await page.locator('body').evaluate(readingUnits)) {
+      everything.add(unit.text)
+      if (unit.generated) generated.add(unit.text)
+      else prosed.add(unit.text)
     }
 
     for (const href of await linksOn(page)) if (!visited.has(href)) queue.push(href)
@@ -1201,11 +1214,88 @@ async function sweepEveryRoute(page: Page): Promise<{
    */
   const pages = [...visited].filter((route) => route.startsWith('#/life/'))
   expect(pages.length, 'the crawl stopped following the links on Life').toBeGreaterThanOrEqual(10)
-  expect(composed.size, 'the composed review was never found on any screen').toBeGreaterThan(20)
+  expect(
+    generated.size,
+    'the composed review was never found on any screen, so nothing is being subtracted',
+  ).toBeGreaterThan(20)
 
-  const prose = new Set([...everything].filter((line) => !composed.has(line)))
+  /*
+   * `prose` is what was **not** read from inside the composed review, decided
+   * when it was read rather than by what a string happens to look like.
+   * QA-84-024 put *"This needs special care."* on Data and the same words in
+   * the document; the value-based subtraction erased the screen's own sentence
+   * along with the generated one. A string that appears in both places is
+   * prose, because the owner reads it in both places.
+   */
+  const prose = new Set([...everything].filter((line) => prosed.has(line)))
   return { everything, prose }
 }
+
+/**
+ * Every state the owner can press into, one route at a time — QA-84-022, D-200.
+ *
+ * The crawl visits routes and reads them as they arrive. Round 10 put the
+ * prohibited sentence behind an ordinary **Read more** button on More and the
+ * whole matrix stayed green: the owner reaches the promise with one press, and
+ * nothing ever pressed. **Route reachability is not owner-state reachability**,
+ * and the concession the Round 10 dispatch offered — a parameterised sub-route
+ * — was narrower than the hole.
+ *
+ * So this presses. On each route it clicks every button in turn, reading the
+ * screen after each one, and follows the app back if a press navigated away.
+ * Presses compound on purpose: a second press from a changed screen is another
+ * state the owner can be in, and this claim is one-directional — anything found
+ * is real, and more states can only find more.
+ *
+ * **It is deliberately not the delta's sweep.** The catalogue comparison needs
+ * two states that differ by exactly one cause; this one wanders. It answers
+ * only the question that does not need a controlled comparison: *is there a
+ * promise anywhere the owner can get to.*
+ *
+ * Each click is given a short timeout and its failure is swallowed. A button
+ * that refuses, a dialog, a control that has gone: none of those is a finding,
+ * and a sweep that fails on them would be a gate about timing rather than about
+ * copy — which is exactly what QA-84-026 was.
+ */
+async function sweepEveryPress(page: Page): Promise<ReadonlySet<string>> {
+  const seen = new Set<string>()
+  page.on('dialog', (dialog) => void dialog.dismiss().catch(() => {}))
+
+  for (const route of declaredRoutes()) {
+    if (route.startsWith('#/qa')) continue
+    await page.goto(`${APP}${route}`)
+    await page.waitForSelector('h1')
+
+    const collect = async () => {
+      for (const unit of await page.locator('body').evaluate(readingUnits)) seen.add(unit.text)
+    }
+    await collect()
+
+    const buttons = await page.locator('button').count()
+    for (let at = 0; at < Math.min(buttons, PRESSES_PER_ROUTE); at += 1) {
+      try {
+        await page.locator('button').nth(at).click({ timeout: 1500 })
+      } catch {
+        continue
+      }
+      await collect()
+      if (!page.url().endsWith(route)) {
+        await page.goto(`${APP}${route}`)
+        await page.waitForSelector('h1')
+      }
+    }
+  }
+  return seen
+}
+
+/**
+ * How many controls one route is pressed through.
+ *
+ * Not a claim that a route has no more than this: a bound, declared, so the
+ * cost of the sweep is knowable. Every route in the product is well under it,
+ * and the check below fails if one stops being.
+ */
+const PRESSES_PER_ROUTE = 40
 
 test.describe('everything a blocker puts on any screen', () => {
   test('QA-84-016/018 — no screen in the app promises an adaptation, before or after a block', async ({
@@ -1299,7 +1389,7 @@ test.describe('everything a blocker puts on any screen', () => {
     for (const line of [...before.everything, ...after.everything]) {
       /*
        * The product's own description of itself is removed first, and only it —
-       * see `APPROVED_PRODUCT_DESCRIPTION`. Widening the sweep from `.screen`
+       * see `APPROVED_NOT_A_PROMISE`. Widening the sweep from `.screen`
        * to the whole document, and from leaves to what the owner reads as one
        * sentence, brought `REBUILD_PHASE.summary` inside the net on More and,
        * as part of the composed review, on Data. It is a false positive on a
@@ -1307,7 +1397,7 @@ test.describe('everything a blocker puts on any screen', () => {
        * promises that carry no modal, and removal keeps anything written
        * beside it classified.
        */
-      const left = withoutApprovedProductDescription(line)
+      const left = withoutApprovedNonPromises(line)
       for (const claim of adaptationClaimsOnAnyScreen(left)) claiming.push(`“${line}” → ${claim}`)
     }
     expect(claiming, 'a screen in the app claims the app will change what it offers').toEqual([])
@@ -1354,6 +1444,47 @@ test.describe('everything a blocker puts on any screen', () => {
     expect(
       unapproved,
       'blocking a move put copy nobody approved on a screen — approve it in APPROVED_BLOCKER_COPY if it is blocker copy, or in APPROVED_WHEN_A_MOVE_IS_BLOCKED if it is what another screen says once a record exists',
+    ).toEqual([])
+  })
+
+  test('QA-84-022 — nor does any state the owner can press into', async ({ page }) => {
+    /*
+     * The same rule as the case above, over states rather than routes. See
+     * `sweepEveryPress`: every button on every reachable route, pressed, with
+     * the screen read after each press.
+     *
+     * The bound is declared rather than hidden — if a route ever carries more
+     * controls than the sweep presses, this says so instead of quietly covering
+     * less than it claims.
+     */
+    await loadInQa(page, 'The first evening')
+
+    const busiest = await (async () => {
+      let most = 0
+      for (const route of declaredRoutes()) {
+        if (route.startsWith('#/qa')) continue
+        await page.goto(`${APP}${route}`)
+        await page.waitForSelector('h1')
+        most = Math.max(most, await page.locator('button').count())
+      }
+      return most
+    })()
+    expect(
+      busiest,
+      'a route now has more controls than the press sweep presses, so it covers less than it says',
+    ).toBeLessThanOrEqual(PRESSES_PER_ROUTE)
+
+    const reachable = await sweepEveryPress(page)
+    expect(reachable.size, 'the press sweep read almost nothing').toBeGreaterThan(40)
+
+    const claiming: string[] = []
+    for (const line of reachable) {
+      const left = withoutApprovedNonPromises(line)
+      for (const claim of adaptationClaimsOnAnyScreen(left)) claiming.push(`“${line}” → ${claim}`)
+    }
+    expect(
+      claiming,
+      'a state the owner can press into claims the app will change what it offers',
     ).toEqual([])
   })
 

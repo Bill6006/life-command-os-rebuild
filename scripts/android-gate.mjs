@@ -1519,7 +1519,7 @@ async function main() {
    * on a green board.
    */
   const r84Panel = page.locator('.panel', { has: page.getByTestId('domain-blocker') }).first()
-  const r84Sentences = await r84Panel.evaluate(readingUnits)
+  const r84Sentences = (await r84Panel.evaluate(readingUnits)).map((unit) => unit.text)
   const r84Statement = 'a walk means leaving, and I could not — someone was in my care.'
   const r84Promises = r84Sentences.filter((line) => adaptationClaims(line).length > 0)
   check(

@@ -53,7 +53,7 @@ import {
   APPROVED_FROM_SURFACES,
   isApprovedBlockerCopy,
   isApprovedExportShape,
-  withoutApprovedProductDescription,
+  withoutApprovedNonPromises,
 } from '../../scripts/adaptation-claims.mjs'
 import { CONCEPT } from '../../src/domain/concepts'
 import { BlockersPanel, BlockerQuestion } from '../../src/features/life/DomainPanels'
@@ -715,6 +715,9 @@ describe('QA-84-014 — and closed over the value the owner actually reads', () 
        * alone and all of them are composed together, because a composer can
        * also write something only when it is asked for beside another.
        */
+      /*
+       * Every section, on every history — the content half.
+       */
       const everySelection: readonly (readonly ExportSectionId[])[] = [
         ...EXPORT_SECTION_IDS.map((one) => [one] as readonly ExportSectionId[]),
         EXPORT_SECTION_IDS,
@@ -737,9 +740,7 @@ describe('QA-84-014 — and closed over the value the owner actually reads', () 
            * ability. It catches Round 9's exact mutation, and the three
            * wordings it misses are the three D-198 names.
            */
-          for (const claim of adaptationClaimsOnAnyScreen(
-            withoutApprovedProductDescription(line),
-          )) {
+          for (const claim of adaptationClaimsOnAnyScreen(withoutApprovedNonPromises(line))) {
             offenders.push(`${id}: the ${selection.join('+')} export claims “${claim}”`)
           }
         }
@@ -838,6 +839,62 @@ describe('QA-84-014 — and closed over the value the owner actually reads', () 
     // And the instrument is reading something rather than returning nothing.
     const found = recordTextSinksInSource().map((sink) => sink.file)
     for (const file of exercised) expect(found, `the instrument cannot see ${file}`).toContain(file)
+  })
+})
+
+describe('QA-84-025 — and over every document the owner can select', () => {
+  it('walks the whole selection space, not its endpoints', { timeout: 60_000 }, () => {
+    /*
+     * Ten checkboxes are **1,023 documents**, and the owner produces any of
+     * them with taps.
+     *
+     * Round 9's guard composed each section alone and all ten together and
+     * called that every document. Round 10 added a sentence that appears only
+     * when exactly `overview` and `corrections` are ticked; that document was
+     * never composed, and the suite stayed green with the promise in it.
+     * **"Singles plus the whole thing" is two shapes out of a space of a
+     * thousand**, which is the same error as reading one navigation surface or
+     * one DOM leaf: the sample was mistaken for the set.
+     *
+     * ## Why the selection space is walked here and the content space is not
+     *
+     * A rule keyed on the *selection* lives in `composeExport`, which is handed
+     * a selection and a situation — so which sections were ticked is decided
+     * there, the same way for every history. That space is small enough to walk
+     * exactly, so it is walked exactly, on a history that **exercises the
+     * blocker path**, so a rule keyed on both a selection and a blocker record
+     * has something to fire on.
+     *
+     * A rule keyed on the *content* of a section lives in that section's
+     * composer, and the case above walks every section on every history. The
+     * two together are what "every document" means; neither is a sample of the
+     * other.
+     */
+    const blockerKinds = ['action-unable-now', 'constraint', 'correction']
+    const withBlockers = SCENARIOS.filter((entry) => {
+      const { loaded } = contextFor(entry.id)
+      return loaded.view().history.effective.some((record) => blockerKinds.includes(record.kind))
+    })
+    expect(withBlockers.length, 'no history in the library records a blocker').toBeGreaterThan(0)
+    const entry = withBlockers[0]!
+
+    const offenders: string[] = []
+    const total = 2 ** EXPORT_SECTION_IDS.length - 1
+    for (let mask = 1; mask <= total; mask += 1) {
+      const selection = EXPORT_SECTION_IDS.filter((_id, at) => (mask >> at) & 1)
+      const document = composeFor(entry.id, selection).text
+      for (const line of document.split('\n')) {
+        for (const claim of adaptationClaimsOnAnyScreen(withoutApprovedNonPromises(line))) {
+          offenders.push(`${selection.join('+')}: “${claim}”`)
+        }
+      }
+    }
+
+    expect(
+      offenders.slice(0, 5),
+      'a document the owner can select claims the app will change what it offers',
+    ).toEqual([])
+    expect(total, 'the selection space is not the power set of the sections').toBe(1023)
   })
 })
 

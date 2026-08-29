@@ -594,56 +594,68 @@ export function isApprovedWhenBlocked(line) {
 }
 
 /**
- * The product's own description of itself — QA-84-021, D-199.
+ * Sentences the app-wide rule flags that are not promises of adaptation.
  *
- * One sentence, and it is here rather than suppressed quietly.
+ * Round 9 opened this with one entry and called it
+ * `APPROVED_PRODUCT_DESCRIPTION`. Round 10 pressed buttons and reached two more
+ * honest sentences, neither of them a product description, so the list is named
+ * for what it holds: **copy the net catches and D-187 does not forbid.**
  *
- * `REBUILD_PHASE.summary` in `buildInfo.ts` has been the product's description
- * of itself since Phase 8. `MoreScreen` renders it and the Overview export
- * section includes it, so widening the guarantee to **every screen** and
- * **every selectable document** brought it inside the net for the first time.
- * The app-wide rule flags it on *"watches what happens **afterwards**"* — a
- * named subject, and forward deixis two words later.
+ * It is a list rather than a smarter rule, and that is the point. Each of these
+ * needs a different piece of understanding to dismiss — negation, tense, what an
+ * adverb attaches to — and every one of those is a parser inside a guard, which
+ * is the mistake D-197 recorded. **The rule stays blunt and the exceptions stay
+ * visible.**
  *
- * **It is a false positive, and the rule is still right.** "Afterwards" there
- * is sequence, not futurity: it describes the follow-up reading the app already
- * takes, and the deixis belongs to *"what happens"* rather than to anything the
- * app says it will do. Telling those apart needs to know which verb the adverb
- * attaches to, and **a half-written parser inside a guard is the mistake D-197
- * already recorded**.
- *
- * **And the branch that flags it is not removable.** Requiring a future modal
- * would drop three promises that carry none, all of them real:
- *
- *   - "This is kept so the app can offer something that fits next time."
- *   - "The app remembers this for future recommendations."
- *   - "The engine ought to weigh this next time."
- *
- * So the sentence is enumerated, exactly, like every other exception in this
- * module. **The cost is declared:** editing that summary fails this gate until
- * the new wording is approved here — which is the point, because the next
- * edit to the product's self-description is exactly when somebody might
- * promise something the engine does not do.
+ * The cost is declared: editing any of these sentences fails the gate until the
+ * new wording is approved here. That is when somebody is most likely to promise
+ * something the engine does not do.
  */
-export const APPROVED_PRODUCT_DESCRIPTION = [
+export const APPROVED_NOT_A_PROMISE = [
+  /*
+   * `REBUILD_PHASE.summary` — the product's description of itself since Phase 8,
+   * rendered on More and included in the Overview export. Flagged on *"watches
+   * what happens **afterwards**"*: sequence, not futurity, and the deixis
+   * belongs to "what happens" rather than to anything the app says it will do.
+   */
   'The app decides, explains itself, watches what happens afterwards, learns from it, and ' +
     'notices when a life area has gone quiet rather than carrying on as though a months-old ' +
-    'picture were today’s.',
+    'picture were today' +
+    String.fromCharCode(8217) +
+    's.',
+
+  /*
+   * Now, when it has nothing to go on. Flagged on *"The engine **will** not
+   * guess"* — a named subject and a future modal, and a **negation**: it is a
+   * promise to do nothing, which is the opposite of promising a recommendation
+   * will change. Reached only by pressing into the empty state, which is why
+   * nine rounds never saw it.
+   */
+  'The engine will not guess. With nothing to go on it says so, rather than offering ' +
+    'something plausible about a life it knows nothing about.',
+
+  /*
+   * A record describer, on Timeline. Flagged on *"the app" … "another time"* —
+   * a named subject and forward deixis. It describes **what already happened**:
+   * the owner left a question, and the sentence is the record of that, not an
+   * undertaking about the next one.
+   */
+  'Left one of the app' + String.fromCharCode(8217) + 's questions for another time.',
 ]
 
 /**
- * The line with the product's own description taken out of it.
+ * The line with those sentences taken out of it.
  *
- * Removal rather than a whitelist, so a promise written **beside** the approved
+ * Removal rather than a whitelist, so a promise written **beside** an approved
  * sentence is still classified — the same shape as
  * `containsApprovedBlockerCopy`.
  */
-export function withoutApprovedProductDescription(line) {
+export function withoutApprovedNonPromises(line) {
   const flat = String(line ?? '')
     .replace(/\s+/g, ' ')
     .trim()
   let left = flat
-  for (const approved of APPROVED_PRODUCT_DESCRIPTION) {
+  for (const approved of APPROVED_NOT_A_PROMISE) {
     left = left.split(approved.replace(/\s+/g, ' ').trim()).join(' ')
   }
   return left
@@ -771,26 +783,72 @@ export function readingUnits(root) {
     return display.startsWith('inline') || display === 'contents' || display.startsWith('ruby')
   }
 
+  /*
+   * Where a string came from, which is the only sound way to subtract one —
+   * QA-84-024, D-200.
+   *
+   * Round 9 removed the composed review from the catalogue check by deleting
+   * every screen line **equal to** a line of the export. Round 10 rendered
+   * *"This needs special care."* on Data and put the same words in the
+   * document, and the ordinary sentence vanished with the generated one.
+   * **Provenance is not a property of a string.** A unit is part of the
+   * composed review when the element it was read from is inside the control
+   * that holds it, and never because two strings match.
+   */
+  const generatedRoot = root.closest?.('[data-testid="export-text"]') ?? null
+  const inGenerated = (element) =>
+    generatedRoot !== null || element.closest('[data-testid="export-text"]') !== null
+
+  const push = (text, element) => {
+    const value = flat(text)
+    if (value !== '') out.push({ text: value, generated: inGenerated(element) })
+  }
+
   for (const element of [root, ...root.querySelectorAll('*')]) {
-    const label = element.getAttribute('aria-label')
-    if (label !== null) out.push(flat(label))
+    /*
+     * Everything the browser renders as words, not everything in `textContent`
+     * — QA-84-023, D-200.
+     *
+     * A `placeholder` is on the screen and is not text content, and Round 10
+     * put the prohibited sentence in one. The same is true of `title`, of an
+     * image's `alt`, of what a text control currently holds, and of anything a
+     * stylesheet inserts through `content`. These are the attributes the
+     * **browser** turns into words for the owner; they are enumerated because
+     * HTML enumerates them, not because somebody guessed which ones mattered.
+     */
+    push(element.getAttribute('aria-label'), element)
+    push(element.getAttribute('placeholder'), element)
+    push(element.getAttribute('title'), element)
+    push(element.getAttribute('alt'), element)
+    if (typeof element.value === 'string' && element.type !== 'password') {
+      for (const part of element.value.split('\n')) push(part, element)
+    }
+    for (const pseudo of ['::before', '::after']) {
+      const content = getComputedStyle(element, pseudo).content
+      if (typeof content === 'string' && content !== 'none' && content !== 'normal') {
+        push(content.replace(/^["']|["']$/g, ''), element)
+      }
+    }
 
     // A container of blocks is not a sentence; its blocks are.
     if ([...element.querySelectorAll('*')].some((child) => !isInline(child))) continue
 
     /*
-     * Split on newlines first, because a `<textarea>` or `<pre>` can hold a
-     * whole composed document in one text node. The Data screen shows the
-     * export that way: taken whole it is one "unit" thousands of characters
-     * long, and a classifier with a proximity window would then read a subject
-     * at the end of one line against a modal at the start of the next. The
-     * owner reads those as separate lines, so they are separate units. HTML
-     * that has no newlines in it is unaffected.
+     * Split on newlines, because a `<textarea>` or `<pre>` can hold a whole
+     * composed document in one text node. The owner reads those as separate
+     * lines, so they are separate units, and a proximity window never reads
+     * the end of one line against the start of the next.
      */
-    for (const part of String(element.textContent ?? '').split('\n')) {
-      const text = flat(part)
-      if (text !== '') out.push(text)
-    }
+    for (const part of String(element.textContent ?? '').split('\n')) push(part, element)
   }
-  return [...new Set(out)]
+
+  const seen = new Set()
+  const units = []
+  for (const unit of out) {
+    const key = `${unit.generated ? 'G' : 'P'}|${unit.text}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    units.push(unit)
+  }
+  return units
 }

@@ -39,6 +39,49 @@ None.
 
 ## Fixed
 
+### DEF-0135 — four more ways past the guarantee, and a gate that raced
+
+- Status: Fixed
+- Severity: Blocker — a promise the engine cannot keep could reach the owner
+  behind a button, in a placeholder, or in a document he can tick into existence,
+  with every gate green; plus a Major nondeterministic gate
+- Found in: routing 84 / `7147c83`
+- Found by: **independent QA round 10** (QA-84-022 … QA-84-026)
+- Class: **the extent of the claim, four more times.** Round 9 fixed the unit;
+  Round 10 found that the *set* the unit ranges over was still smaller than the
+  claim — states, rendered strings, provenance, selections.
+- Reproduction, all confirmed here before anything was built:
+  - **022** — a **Read more** button on More revealing the promise → the sweep
+    reported **3 passed** at all three widths.
+  - **023** — the promise as a `placeholder` on More → **3 passed**.
+  - **024** — the sentence on Data once a blocker exists, plus the identical line
+    inside the export → **passed**. *(The first attempt at this reproduction was
+    unfaithful — the sentence was rendered unconditionally, so it sat in both
+    sweeps and never entered the delta. It passed for the wrong reason. The
+    faithful version was then confirmed against the Round 9 guards by stashing
+    the repair: **1 passed**.)*
+  - **025** — a sentence emitted only for `overview`+`corrections` → QA's focused
+    command reported **1 passed, 13 skipped**.
+  - **026** — the raced delta reproduced itself: **701 passed, 1 failed** in QA's
+    own matrix, passing alone afterwards.
+- Repair — five rules, see **D-200**. A press sweep over every button on every
+  reachable route; a collector that reads every attribute the browser renders as
+  words; provenance decided where a string is read rather than by its value; the
+  export selection space walked exactly; and a settle-until-stable read in place
+  of a one-child proxy.
+- Regression: `QA-84-022 — nor does any state the owner can press into` and the
+  widened route sweep in `tests/browser/phase84.spec.ts`; `QA-84-025 — and over
+  every document the owner can select` in `tests/synthetic/blocker-copy.test.tsx`.
+- Proved by reintroduction: all four of QA's exact mutations, each built and run,
+  and **024 additionally proved to have been a false green** by re-running it
+  against the stashed Round 9 guards.
+- Siblings: the press sweep reached two honest sentences no earlier round had
+  seen. Both are enumerated in `APPROVED_NOT_A_PROMISE` with their reasons rather
+  than tuned away.
+- Note on scope: the current copy was honest throughout, for the eighth round
+  running, and both fresh-store cases passed again. What was defective was the
+  guarantee — and one of the five was the gate itself.
+
 ### DEF-0134 — three ways past a guarantee that had just been widened
 
 - Status: Fixed

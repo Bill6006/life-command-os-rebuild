@@ -68,10 +68,16 @@ export const MUST_BE_ALLOWED: readonly string[]
  *
  * Pass it to `evaluate()`; it is self-contained on purpose.
  */
-export function readingUnits(root: Element): string[]
+export interface ReadingUnit {
+  readonly text: string
+  /** True when this string came from inside the composed review control. */
+  readonly generated: boolean
+}
 
-/** The product's own description of itself, approved exactly. */
-export const APPROVED_PRODUCT_DESCRIPTION: readonly string[]
+export function readingUnits(root: Element): ReadingUnit[]
 
-/** That description removed, so anything written beside it is still classified. */
-export function withoutApprovedProductDescription(line: string): string
+/** Sentences the app-wide rule flags that are not promises of adaptation. */
+export const APPROVED_NOT_A_PROMISE: readonly string[]
+
+/** Those removed, so anything written beside one is still classified. */
+export function withoutApprovedNonPromises(line: string): string

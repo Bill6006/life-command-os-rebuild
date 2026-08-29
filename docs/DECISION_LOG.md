@@ -6900,3 +6900,78 @@ write records. The `#/life/` family is counted against the plan's ten pages so
 that the one parameterised family in the product cannot silently shrink.
 
 ---
+
+## D-200 — Owner-reachable state, everything the browser renders, provenance, and the whole selection
+
+**Phase:** 84 (QA round 10 repair) · **Status:** Active · Extends **D-199**,
+which was right about the boundary and wrong about its extent four more times.
+
+Round 9 said the unit of a claim must be as big as the claim. Round 10 found
+four places where it still was not, and one place where the gate measured a
+moving thing.
+
+**1. Route reachability is not owner-state reachability.** The crawl visited
+routes and read them as they arrived. An ordinary **Read more** button on More,
+with the prohibited sentence behind it, passed all three widths (QA-84-022) —
+and the concession D-199 offered, a parameterised sub-route reachable only by a
+button, was **narrower than the actual hole**: no second route was needed at
+all. A screen has states, and the owner presses into them.
+
+So a second sweep presses. On every reachable route it clicks each button in
+turn and reads the screen after each press, following the app back when a press
+navigates away. Presses compound deliberately: a state two presses in is still a
+state the owner can be in, and the claim is one-directional — more states can
+only find more. It is **not** the sweep the catalogue comparison uses, because
+that one needs two states differing by exactly one cause; this one wanders, and
+answers only *is there a promise anywhere the owner can get to*. Every click is
+bounded and its failure swallowed: a gate that fails because a control was busy
+is a gate about timing, which is precisely what went wrong below.
+
+**2. `textContent` is not everything the browser renders.** A `placeholder` is on
+the screen and is not text content, and Round 10 put the prohibited sentence in
+one (QA-84-023). So the collector now also reads `placeholder`, `title`, `alt`,
+what a text control currently holds, and anything a stylesheet inserts through
+`content`. **These are enumerated because HTML enumerates them** — they are the
+attributes the browser turns into words — rather than because somebody guessed
+which ones mattered.
+
+**3. Provenance is not a property of a string.** D-199 excluded the composed
+review from the catalogue check by removing every screen line **equal to** a
+line of the export. Round 10 rendered *"This needs special care."* on Data once a
+blocker existed and put the same words in the document, and the ordinary
+sentence was erased along with the generated one (QA-84-024). A unit is now part
+of the composed review when **the element it was read from** is inside the
+control that holds it, decided as it is read. A string that appears in both
+places is prose, because the owner reads it in both places.
+
+**4. A combinatorial choice is not its endpoints.** The export guarantee composed
+each section alone and all ten together. Ten checkboxes are **1,023 documents**,
+and Round 10 added a sentence that appears only when exactly `overview` and
+`corrections` are ticked (QA-84-025). The selection space is now walked
+**exactly** — it is small enough to — on a history that exercises the blocker
+path, so a rule keyed on both a selection and a record has something to fire on.
+The content space stays every section on every history. Neither is a sample of
+the other, and saying which is which is the part that makes the pair a claim
+rather than a hope.
+
+**5. A whole-screen comparison needs a whole-screen stability condition.** The
+oldest delta clicked, waited for one child to disappear, and read. Dismissing
+the blocker question also rewrites the rest of Now, and that write can land after
+the child has gone — so the difference attributed eleven ordinary lines to the
+blocker, and the case passed on a rerun (QA-84-026). **A gate that a rerun fixes
+is a gate that was measuring the wrong thing.** The screen is now read until two
+consecutive reads agree: what settles is the thing being measured, not a proxy
+for it.
+
+**And the exception list is named for what it holds.** Round 9's
+`APPROVED_PRODUCT_DESCRIPTION` had one entry; pressing buttons reached two more
+honest sentences — Now's *"The engine **will** not guess"*, which is a promise to
+do nothing, and a Timeline record reading *"Left one of the app's questions for
+**another time**"*, which describes what already happened. Neither is a product
+description, so the list is `APPROVED_NOT_A_PROMISE`. Each would need a different
+piece of understanding to dismiss automatically — negation, tense, what an adverb
+attaches to — and every one of those is a parser inside a guard (D-197). **The
+rule stays blunt and the exceptions stay visible**, at the declared cost that
+editing any of those sentences fails the gate until the new wording is approved.
+
+---
