@@ -3,66 +3,58 @@
 **Phase:** 84 — **what the owner is trying to become**
 
 **Actor:** Codex / **independent QA**.
-**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 10.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 11.
 **Model:** Codex.
 **Reasoning level:** **High** — never Max.
 
-**Routing 84 is YELLOW.** The Round 10 repair is done at **`dc121e3`**. The next
-step is **Round 11**, and the complete dispatch is at the end of
-[`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md) — that file is the one
-to read, in full.
+**Routing 84 is YELLOW.** You have failed it eleven times and been right eleven
+times. **Rounds 3 to 11 have all been clean on the product**; every finding has
+been about the standing guarantee, and Round 11's was that the guarantee was the
+wrong _kind_.
+
+QA-84-027 through QA-84-031 are repaired at **`3930260`**. All five were
+reproduced before the repair and are caught after it — and two of them, the
+typed word and the one-second-late write, are caught by a gate that never has to
+reach the state at all.
+
+**The complete Round 12 dispatch, with everything worth attacking and why, is at
+the end of [`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md), below the
+builder's Round 11 repair record. Read that file in full.**
 
 ---
 
-## What was repaired
+## What changed, in one paragraph
 
-QA-84-022 … QA-84-026, from Codex's Round 10 at `82831a8`. Round 9 had
-established that the unit of a claim must be as big as the claim; Round 10 found
-four places where **the set that unit ranges over** was still smaller, and one
-place where the gate measured something still moving.
+Eight rounds attacked one sentence — _no screen the owner can reach promises an
+adaptation_ — and eight found the same shape of hole: a set explored and called
+every state. Round 11 put a promise behind a typed word no sweep can guess, and
+another one second after the screen looked settled. **So the completeness claim
+stopped being about states.** `scripts/rendered-copy-scan.mjs` parses the built
+owner-facing bundle with **acorn** and classifies every one of its **4,003**
+strings, so a promise is caught whatever state shows it and however late. It
+runs from `npm run verify` after the build.
 
-- **QA-84-022** — the crawl visited routes and read them as they arrived. A
-  **Read more** button on More hid the promise from all three widths. A second
-  sweep now presses every button on every reachable route.
-- **QA-84-023** — `textContent` is not everything the browser renders. The
-  collector now reads `placeholder`, `title`, `alt`, control values and CSS
-  `content`.
-- **QA-84-024** — provenance was inferred from string equality, so prose that
-  matched an export line was erased with it. It is now decided where the string
-  is read.
-- **QA-84-025** — ten checkboxes are **1,023 documents**; the guard composed two
-  shapes. The selection space is now walked exactly.
-- **QA-84-026** — the delta clicked, waited for one child to disappear, and read
-  a screen still being written. It now reads until two consecutive reads agree.
+**What it cannot do is stated with it:** a sentence composed at runtime from
+innocent pieces is invisible to it. That is what the browser sweeps are for, and
+they stay. **Static covers every state; dynamic covers composition.**
 
-All four false greens were reproduced before the repair and are caught after it.
-**No product code changed:** `git diff -- src` is empty.
+The other three are closed exactly — every frame is read, provenance is the
+control's own text rather than anything under an ancestor carrying the marker,
+and every selection on every history is walked.
 
-Gates at `dc121e3`: `npm run verify` **PASS** (84 files, **1,861** tests),
-browser **705 / 705** at 360/430/1280 with zero failures, privacy scan clean at
-289 files, deployed Android gate **clean at 233 checks**, checkpoint equivalence
-exact, CI green.
+## Gates at `3930260`
 
-**Two things are recorded rather than tidied away.** The first attempt at
-reproducing QA-84-024 was unfaithful and passed for the wrong reason; the
-faithful version was then checked against the Round 9 guards by stashing the
-repair. And the first push, `d56ad77`, failed CI in 26 seconds because D-200 and
-DEF-0135 were written after `npm run verify` had already run — so it met no gate
-(D-180) and is not a checkpoint.
+`npm run verify` **PASS** (84 files, **1,861** tests, and the new scan clean at
+4,003 strings); browser **705 / 705** at 360/430/1280 with zero failures;
+privacy clean at 289 files; deployed Android gate **clean at 233 checks**;
+checkpoint equivalence exact; CI green.
 
-Decisions **D-200**; defects **DEF-0135**.
+**Two of my own mistakes are recorded rather than tidied away** — a
+reintroduction built while `tsc -b` was failing, so the browser ran the old
+bundle and proved nothing; and a `catch` that swallowed a `ReferenceError` and
+reported every frame unreadable, which looked exactly like a finding.
 
----
-
-## What Round 11 is asked to attack
-
-The dispatch in the QA report has the detail. In short: the press sweep's reach —
-**conceded in writing**, a state needing a particular _sequence_, or a gesture
-that is not a press, is not reached; the rendered-string set; whether prose can
-be made to _look_ generated; the seam between the exact selection walk and the
-per-history content walk; and whether a screen can be made to settle falsely.
+Decisions **D-201**; defects **DEF-0136**.
 
 **Routing 84 stays YELLOW.** A builder conversation may not approve its own phase
 (D-077). Do not start routing 90.
-
-<!-- LCO_COMPLETE -->

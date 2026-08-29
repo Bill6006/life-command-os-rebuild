@@ -5439,3 +5439,324 @@ D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 11
 repair handoff at its end exactly as written. Do not ask me to paste the file.
 ```
+
+---
+
+## Round 11 repair — the builder's record
+
+**Actor:** Claude / builder. **Model:** Opus-class, Max.
+**Conversation:** CURRENT — the routing 84 builder conversation.
+**Repaired product checkpoint:** `3930260`, from `dc121e3`.
+
+**Round 11 is right five times, and two of the five could not have been repaired
+by widening the sweep again.** That is the finding under the finding, and it is
+what this repair acts on.
+
+**No product code changed.** `git diff -- src` is empty at the repaired
+checkpoint. Everything is in `scripts/`, `tests/`, `package.json` and `docs/`.
+**The phase stays YELLOW; the builder does not declare GREEN (D-077).**
+
+### All five reproduced first
+
+**QA-84-027.** Type `show`, then press, on More — the press sweep reported
+**3 passed in 57.2s**. The sweep sees a disabled button on arrival and can never
+supply the word.
+
+**QA-84-028.** A same-origin `<iframe srcDoc>` on More — **3 passed**. The outer
+title was read; the inner paragraph was not.
+
+**QA-84-029.** The `export-text` marker moved onto a wrapper holding the textarea
+*and* an ordinary paragraph — **3 passed**. The paragraph inherited a provenance
+it never had.
+
+**QA-84-030.** A sentence keyed to `overview`+`corrections` **and** a `context`
+record — the whole synthetic file **15 passed**.
+
+**QA-84-031.** The promise scheduled one second after the blocker state —
+**6 passed**. *(A first attempt was built while `tsc -b` was failing, so the
+browser ran the previous bundle and proved nothing. It was redone with a real
+build; a reintroduction that does not compile proves nothing, and that rule has
+now caught me twice.)*
+
+### Why this repair is a change of kind — D-201, DEF-0136
+
+Eight rounds attacked one sentence — *no screen the owner can reach promises an
+adaptation* — and eight rounds found the same shape of hole: a set explored and
+called every state. Components, screens, routes, presses. **QA-84-027 and
+QA-84-031 cannot be closed that way at all.** No sweep can guess a password, and
+any settle window can be outlasted by a longer timer. A ninth widening would
+have been the same mistake with more machinery.
+
+**So the completeness claim stops being about states.** Whatever state the owner
+reaches, and whenever it arrives, the words came from a string in the bundle that
+ships. That set is finite, knowable exactly, and indifferent to how a state was
+reached or how late it appeared. `scripts/rendered-copy-scan.mjs` reads every
+string literal and template piece out of the built owner-facing chunk — **4,003
+of them** — and classifies each.
+
+It is parsed with **acorn**, now declared as a dependency rather than borrowed
+transitively. That matters: the first draft used a hand-written tokenizer and
+mis-read three fragments of React's own minified code as product copy. **A
+hand-written parser inside a guard is D-197's mistake**; using a real one is not.
+
+**What it does not establish, said plainly, because the pair only works if both
+halves are named.** It cannot see a sentence assembled at runtime from pieces
+that are each innocent — `'The app will ' + verb + ' next time'` is three strings
+in the bundle and one sentence on the screen. **Static covers every state;
+dynamic covers composition.** The browser sweeps stay exactly as they are.
+
+**And the cost is the largest this campaign has accepted.** Fifteen shipped
+sentences trip the rule — the first time it has met all of the product's copy at
+once — and every one is honest: promises to do **nothing** (*"will never decide
+you have got there"*), confirmations of behaviour the engine really has (naming a
+next step does make it propose one — acceptance item 1), and what a backup or
+restore will do with a file. They are listed in `APPROVED_FUTURE_COPY` with their
+reasons. From here, **any new or edited sentence anywhere in the product that
+speaks about what the app will do fails the gate until somebody writes down why
+it is honest.** That is a real tax on ordinary copy work, and it is the price of
+a guarantee that finally means what it says.
+
+### The three that were narrower, closed exactly
+
+**Every frame (QA-84-028).** Playwright already enumerates the frame tree, so
+every frame is read. A frame that genuinely cannot be read is **reported as a
+hole** rather than skipped — and the `catch` now rethrows anything that is not a
+cross-origin or detached-frame error, because the first draft swallowed a
+`ReferenceError` from a half-applied edit and reported every frame unreadable,
+which looked exactly like a finding and was not.
+
+**Provenance by the control itself (QA-84-029).** What the composer produced is
+exactly the string the control holds, so the element must carry the marker
+itself and the text must be that control's own — whichever property it is read
+from. Both `value` and `textContent`, which the first attempt missed.
+
+**The whole product, not each axis (QA-84-030).** Every non-empty selection on
+every history — 1,023 × the library. It ran in 144 seconds and starved vitest's
+worker heartbeat (15 passed, exit 1), so the per-history decision, insights and
+timeline are computed once instead of once per document, the distinct lines are
+classified rather than the stream, and the walk yields to the runner. **18
+seconds**, and still exact.
+
+### Each exact mutation, reintroduced and caught
+
+Each was built and run.
+
+**QA-84-027**, the typed word — caught by the static scan, which never needed to
+reach the state:
+
+```
+1 shipped string(s) claim the app will change what it offers.
+  - “The app will choose something better next time.”
+```
+
+**QA-84-031**, the one-second-late write — caught the same way, `SCAN_EXIT=1`.
+Timing is not a property of a string.
+
+**QA-84-028**, the iframe:
+
+```
+Error: a screen in the app claims the app will change what it offers
++   "“The app will choose something better next time.” → The app will choose something better next time.",
+```
+
+**QA-84-029**, the moved marker — fails on the check that the composed document
+must remain identifiable: *"the composed review was never found on any screen, so
+nothing is being subtracted"*. The guard refuses to proceed rather than silently
+subtract nothing.
+
+**QA-84-030**, the selection-and-content pair, in two histories at once:
+
+```
++   "before-the-house-is-up: “The app will choose something better next time.”",
++   "school-morning: “The app will choose something better next time.”",
+```
+
+### Verification at the repaired checkpoint
+
+| Gate                                      | Result |
+| ----------------------------------------- | ------ |
+| `npm run verify`, clean checkout          | **PASS — format, lint, typecheck, test, build, copy scan (D-180)** |
+| Rendered copy scan (new, in `verify`)     | **clean — 4,003 shipped strings, 1 chunk** |
+| Unit / contract / synthetic / adversarial | **1,861 passed in 84 files (unchanged; no product code moved)** |
+| Browser, three widths, one worker         | **705 passed at three widths on one worker, zero failures** |
+| Android-style gate, deployed              | **clean — 233 checks against deployed `3930260`** |
+| Privacy scan                              | **clean — 289 tracked files** |
+| Block sweep / copy guards                 | **PASS** — no percentage, rank, grade or score about him or Adaya |
+| Commits not on any remote                 | **none** at the handed-off head (D-180) |
+| Checkpoint equivalence                    | **PASS — the deployed Preview serves `3930260` itself, no files between** |
+| CI                                        | Verify **success**, Deploy preview **success** |
+
+### What did not change, and is not being claimed
+
+No blocker enforcement — D-187 still promises capture and not adaptation. No
+semantic interpretation, no scoring change, no new visual language, no twelfth
+domain page, no `PHASE_85_*` file, and `qa/WHOLE_APP_OWNER_USE_REVIEW.md` is
+untouched. All seven D-173 acceptance items and both fresh-store cases are
+preserved; Round 12 should verify that rather than take it from here.
+
+**One dependency was declared.** `acorn` was already present transitively and is
+now in `devDependencies`, with the lockfile updated. It is a gate's dependency,
+not the product's; nothing in `src/` imports it.
+
+**And what is still open, stated rather than left to be found.** The static scan
+reads strings, so **a sentence composed at runtime from innocent pieces is
+outside it** — that is the browser sweeps' job, and they remain incomplete in the
+ways Round 11 proved. The scan also excludes the laboratory chunk, for the reason
+`#/qa` is excluded, and fails if that gating ever changes. It reads the built
+bundle, so it says nothing about a string injected after the build.
+
+---
+
+## Round 12 — the retest dispatch
+
+**Actor:** Codex / **independent QA**.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 11.
+**Model:** Codex.
+**Reasoning level:** **High** — never Max.
+
+**Routing 84 is YELLOW.** You have failed it eleven times and been right eleven
+times. **Rounds 3 to 11 have all been clean on the product**; every finding has
+been about the standing guarantee, and Round 11's was that the guarantee was the
+wrong *kind*.
+
+### What to judge it against
+
+The **same seven-item gate** in `PRODUCT_ADJUDICATION.md` section 8, governed by
+**D-173**. All seven passed in Rounds 3 to 11. **Re-verify all seven anyway.**
+
+Plus the standing gates: the aggregate `npm run verify` from a clean checkout —
+which now ends with `npm run copy:scan` — the browser suite at three widths, the
+Android-style gate on the deployed build, the privacy scan, the block sweep and
+the copy guards.
+
+**Repeat CASE A and CASE B from new ephemeral browser contexts**, ordinary
+product screens only, never opening the QA laboratory.
+
+### What is worth attacking
+
+1. **The declared hole in the static scan.** It reads strings, so a sentence
+   **composed at runtime** from innocent pieces is invisible to it. Build one,
+   and check whether the browser sweeps catch it — they are the half that is
+   supposed to.
+2. **What counts as a string the app can render.** The scan reads the
+   owner-facing chunk of `dist/assets`. Is there owner-visible text that never
+   appears as a literal there — from `index.html`, a stylesheet's `content`, an
+   SVG or font asset, a service worker, `localStorage`, an imported backup, or
+   the owner's own words echoed back?
+3. **`APPROVED_FUTURE_COPY`.** Fifteen sentences, removed before classification.
+   Can a promise be written so that removing one of them also removes the
+   promise, or leaves a remainder that no longer trips?
+4. **The frame rule.** Every frame is read and an unreadable one is reported.
+   Can a frame be made unreadable *and* unreported, or created after the read?
+5. **Provenance.** A unit is generated only when the element carries the marker
+   itself and the text is that control's own. Can prose still be made to look
+   generated — or the composed document made to look like prose, so the
+   catalogue check demands approval for lines nobody wrote?
+
+### The rules that still hold
+
+No strategy evaluation, no pattern-discovery engine, **no enforcement of a
+blocker constraint** (D-187 and D-192 to D-201 are about *saying* so honestly),
+no semantic interpretation of the owner's words (D-024, D-025, D-172), no domain
+progression models beyond Career, Health and Money, no owner routines library
+(AUD-0045), no backfill (D-165), no twelfth domain page, no scoring change
+(D-137, D-138), no new visual language, no `PHASE_85_*` file, no alteration of
+`qa/WHOLE_APP_OWNER_USE_REVIEW.md`, no orchestrator change.
+
+### Handoff
+
+```text
+Round 12 retest of routing Phase 84 of Life Command OS: "what the owner is
+trying to become."
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+You have failed this phase eleven times and been right eleven times. Rounds 3 to
+11 were all clean on the product. QA-84-027 through QA-84-031 are repaired, all
+five were reproduced before the repair and are caught after it, and two of them
+— the typed word and the one-second-late write — are caught by a new gate that
+never has to reach the state at all. Routing 84 is still YELLOW at repaired
+product checkpoint 3930260; the builder has not declared GREEN (D-077).
+
+Read, in full, and in this order:
+1. docs/qa/README.md            — the protocol. Step 1 is cold use of the
+                                  deployed Preview BEFORE any repository
+                                  document.
+2. docs/qa/PHASE_84_QA_HANDOFF.md — your rounds 1 to 11, unedited, with the
+                                  builder's repair records appended below
+                                  them. This dispatch is at its end.
+3. docs/PRODUCT_ADJUDICATION.md section 8 — the seven-item gate; section 11 is
+                                  the do-not-change list
+4. docs/DECISION_LOG.md D-161..D-169, D-173, D-177..D-201
+5. docs/DEFECT_LEDGER.md DEF-0119..DEF-0136
+6. docs/PHASE_STATUS.md — the routing 84 record, rounds 1 to 11 included
+
+Confirm the deployed build against the repaired checkpoint before testing:
+  node --use-system-ca scripts/checkpoint-equivalence.mjs 3930260 --deployed \
+    https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+
+Repeat CASE A ("More money" into the second agenda) and CASE B (the caregiving
+blocker) from NEW EPHEMERAL BROWSER CONTEXTS, ordinary product screens only,
+never opening the QA laboratory. Then re-verify all seven acceptance items.
+
+The completeness claim is no longer about states. scripts/rendered-copy-scan.mjs
+parses the built owner-facing bundle with acorn and classifies every string
+literal and template piece — 4,003 of them — so a promise is caught whatever
+state shows it and however late. The browser sweeps stay, because static covers
+every state and dynamic covers composition. Attack that:
+
+- THE DECLARED HOLE: a sentence composed at runtime from innocent pieces is
+  invisible to the scan. Build one, and see whether the sweeps catch it.
+- what counts as a renderable string: is there owner-visible text that is not a
+  literal in that chunk — index.html, CSS content, SVG, a service worker,
+  localStorage, an imported backup, the owner's own words echoed back?
+- APPROVED_FUTURE_COPY: can removing one of the fifteen also remove a promise,
+  or leave a remainder that no longer trips?
+- the frame rule: can a frame be unreadable AND unreported, or created after
+  the read?
+- provenance: can prose still look generated, or the composed document look
+  like prose?
+
+Write Round 12 into docs/qa/PHASE_84_QA_HANDOFF.md, below this dispatch. The
+builder does not edit your rounds and you do not change product code. Your
+**Phase:** field is 84 — a QA round does not get a new integer, and you must
+not create any PHASE_85_* file.
+
+End your response with the four lines and a launcher (D-092): model, reasoning
+level, conversation, and a short copyable prompt naming the file the next
+conversation must read.
+
+Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High — never Max.
+
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 11.
+
+```text
+Round 12 retest of routing Phase 84 of Life Command OS, after your Round 11 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full — your rounds 1 to 11, the builder's
+repair records, and the round 12 dispatch at its end — and execute the QA
+protocol in docs/qa/README.md exactly as written.
+
+Repaired product checkpoint: 3930260. Your **Phase:** field is 84. Do not
+create any PHASE_85_* file.
+
+Repeat CASE A and CASE B from new ephemeral browser contexts, never opening
+the QA laboratory.
+
+Write Round 12 into the same QA report, below the round 12 dispatch. Do not
+change product code, and reproduce the builder's claims rather than accepting
+them.
+
+Do not ask me to paste file contents.
+```
+
+<!-- LCO_COMPLETE -->

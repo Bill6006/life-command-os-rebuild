@@ -165,6 +165,15 @@ transition — is something the person writing the code can choose differently, 
 own navigation, before a block and after one. A screen cannot be aliased
 (D-198).
 
+**And round 11 is where the claim stops being about states at all.** Eight
+rounds had attacked one sentence and eight had found a set explored and called
+every state. Round 11 put a promise behind a typed word no sweep can guess, and
+another one second after the screen looked settled — two holes that widening
+cannot close. The completeness claim now rests on the **finite set of strings
+the built app can render**, parsed with a real parser; the browser sweeps stay,
+because static covers every state and dynamic covers composition, and D-201 says
+which is which (D-201).
+
 **And round 10 is where the set the unit ranges over stops being smaller than
 the claim.** Round 9's four repairs were right and three of them were applied to
 too small a set: routes rather than the states the owner presses into, DOM text
@@ -218,7 +227,8 @@ through the same controls, now gets past all eight steps.
 
 | Fact                    | Value                                                                                                    |
 | ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| Product checkpoint      | `dc121e3` — the Round 10 repair, and the commit the aggregate gate was run on                            |
+| Product checkpoint      | `3930260` — the Round 11 repair, and the commit the aggregate gate was run on                            |
+| Round 11 checkpoint     | `dc121e3` — the Round 10 repair, which Round 11 tested                                                   |
 | Round 10 checkpoint     | `7147c83` — the Round 9 repair, which Round 10 tested                                                    |
 | Round 9 checkpoint      | `9d7d186` — the Round 8 repair, which Round 9 tested                                                     |
 | Round 8 checkpoint      | `9c4cb5f` — the Round 7 repair, which Round 8 tested                                                     |
@@ -232,7 +242,7 @@ through the same controls, now gets past all eight steps.
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                              |
 | Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                       |
 | Owner phone check       | owed before release; not a blocker QA can clear                                                          |
-| Independent QA          | **Rounds 1 to 10 all FAIL**, all repaired; Round 11 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md` |
+| Independent QA          | **Rounds 1 to 11 all FAIL**, all repaired; Round 12 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md` |
 
 **The documentation head is a later commit than the product checkpoint**, as it
 has been every round. At round 8 it is `73de27e`, and it carries exactly three
@@ -248,14 +258,15 @@ At the repaired checkpoint, not at the one QA failed.
 | Gate                                      | Result                                                                    |
 | ----------------------------------------- | ------------------------------------------------------------------------- |
 | `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                 |
-| Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files (one new case at round 10; 1,812 at round 1) |
+| Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files (unchanged at round 11; 1,812 at round 1)    |
 | Browser, three widths, one worker         | **705 passed** at three widths, one worker, **zero failures**             |
-| Android-style gate, deployed              | **clean — 233 checks** against deployed `dc121e3`                         |
+| Rendered copy scan (new)                  | **clean — 4,003 shipped strings**                                         |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `3930260`                         |
 | Privacy scan                              | **clean** — 289 tracked files                                             |
 | Block sweep                               | **PASS** — unchanged                                                      |
 | Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya         |
 | Commits not on any remote                 | **none** at the handed-off head (D-180)                                   |
-| Checkpoint equivalence                    | **PASS** — the deployed Preview serves `dc121e3` itself, no files between |
+| Checkpoint equivalence                    | **PASS** — the deployed Preview serves `3930260` itself, no files between |
 | CI                                        | Verify **success**, Deploy preview **success**                            |
 
 ## Independent QA — round 1, and the repair
@@ -924,6 +935,64 @@ Round 9 guards by stashing the repair. D-200 and DEF-0135.
 at a time from each route's arrival state. A state needing a particular sequence,
 or a gesture that is not a press — hover, drag, long press, focus, typing — is
 not reached. Round 11 is asked to build one.
+
+## Independent QA — round 11, and the repair
+
+**Result: FAIL, and the product half was clean for the ninth round running.**
+Codex, at High, on the deployed `95fc985` (bundle-equivalent to `dc121e3`). All
+seven acceptance items passed, QA-84-007 through QA-84-026 remain closed, and
+both fresh-store cases passed again from new ephemeral contexts. The full report
+is [`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md), Round 11, committed
+unedited as `650e826` before the repair.
+
+Five findings, one at each seam the Round 10 dispatch had named — and the finding
+under them is that **the guarantee was the wrong kind**.
+
+### The two that ended the argument
+
+**QA-84-027** put the promise behind _type `show`, then press_. A sweep that
+presses every button never supplies the word, and no sweep can guess it.
+**QA-84-031** made the promise arrive a second after the screen looked settled;
+any settle window can be outlasted by a longer timer.
+
+Eight rounds had attacked one sentence — _no screen the owner can reach promises
+an adaptation_ — and eight rounds found a set explored and called every state.
+A ninth widening would have been the same mistake with more machinery.
+
+**So the completeness claim stopped being about states.** Whatever state the
+owner reaches, and whenever it arrives, the words came from a string in the
+bundle that ships. `scripts/rendered-copy-scan.mjs` parses the built
+owner-facing chunk with **acorn** — a real parser, because a hand-written one
+mis-read three fragments of React's own code as product copy — and classifies
+every one of its **4,003** strings. It runs from `npm run verify` after the
+build.
+
+**What it cannot do is stated with it:** a sentence composed at runtime from
+innocent pieces is invisible to it. That is what the browser sweeps are for, and
+they stay. Static covers every state; dynamic covers composition.
+
+**The cost is the largest this campaign has accepted.** Fifteen shipped
+sentences trip the rule — all honest, all now in `APPROVED_FUTURE_COPY` with
+their reasons — and from here any edited sentence that speaks about what the app
+will do fails the gate until somebody writes down why it is honest.
+
+### The three that were narrower
+
+- **QA-84-028** — a same-origin `<iframe>` was visible and unread. Every frame is
+  now read, and an unreadable one is **reported as a hole** rather than skipped.
+- **QA-84-029** — the `export-text` marker moved onto a wrapper, and an ordinary
+  paragraph inherited a provenance it never had. The element must carry the
+  marker itself and the text must be that control's own.
+- **QA-84-030** — 1,023 selections on one history plus every section on every
+  history missed a rule keyed on both. The whole product is now walked; making it
+  affordable took memoising the per-history engine work and classifying distinct
+  lines rather than the stream — 144 seconds to 18.
+
+**No product code changed.** All five were reproduced first, and two of my own
+mistakes are recorded with them: a reintroduction built while `tsc -b` was
+failing (so the browser ran the old bundle and proved nothing), and a `catch`
+that swallowed a `ReferenceError` and reported every frame unreadable, which
+looked exactly like a finding. D-201 and DEF-0136.
 
 ## The six packages
 
