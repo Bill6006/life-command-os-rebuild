@@ -2496,4 +2496,223 @@ somebody writing one ordinary sentence the guard had not imagined.
   produce and Round 6 owes.
 - **The classifier's entailment boundary** — named, not closed.
 
-<!-- LCO_COMPLETE -->
+---
+
+## Independent QA Round 6 — 2026-08-28
+
+**Phase:** 84
+
+**Actor:** Codex / the same independent QA conversation that wrote Rounds 1–5.
+
+**Repaired product checkpoint:** `1324f66`.
+
+**Deployed head tested:** `875e40eff682dc0b8fe40be5f3f78071a93c0b03`; checkpoint equivalence proved that the three intervening files are documentation-only and the served bundle is equivalent to `1324f66`.
+
+**Overall verdict:** **FAIL.**
+
+**New finding:** **QA-84-014 — Blocker.**
+
+**Product acceptance:** **PASS on all seven D-173 items.** The present product is clean for the fourth consecutive round. The failure is again in the standing D-187/D-193/D-194/D-195 guarantee.
+
+### Genuinely fresh owner-use result
+
+Round 6 paid the evidence debt from Round 5. QA launched a fresh Chromium process and opened a separate ephemeral browser context for each case at 430×932. Each context began with empty IndexedDB, touched no retained browser data, used ordinary product screens only and never opened the QA laboratory.
+
+#### CASE A — “More money” through the second agenda
+
+From a genuinely empty store, Now said there was no history and refused to guess. Insights asked its one question about Career & Learning. Before confirmation, the product said exactly what it proposed:
+
+- an aim in Career & Learning, preserving **“More money”** in the owner's words;
+- one dated entry recording that he named it;
+- no assumption about the next step, starting point or what would count as progress.
+
+After confirmation, the Career page showed **More money** byte-identically, named the starting point and next step as unknown, and Timeline contained exactly the discovery response and the aim. Nothing silently inferred a second meaning, a step, a baseline, a target measure or a score.
+
+#### CASE B — caregiving blocker through ordinary use
+
+From a second genuinely empty store, QA used Life → Health & Recovery to name **Move more** with **Take a ten-minute walk** as its optional next step. The confirmation said the app would begin suggesting that named step when an evening could hold it. On Now, an ordinary energy answer produced that recommendation. QA chose **Can't right now**, then **Can’t leave — someone’s in my care**.
+
+The product recorded the constraint durably on Health & Recovery:
+
+> Take a ten-minute walk means leaving, and I could not — someone was in my care.
+
+It explicitly said the fact was about the world, not unwillingness, offered **Not true any more**, and promised no change in future recommendations. Timeline kept the inability as **Not then / Did not fit at the time** and the durable constraint as **Limit**. No score, percentage, grade, rank, progress share or adaptation claim appeared.
+
+### Acceptance result
+
+| D-173 acceptance item | Round 6 result |
+| --- | --- |
+| 1. A destination can be named and can change Now | **PASS** |
+| 2. The owner can introduce something without the app inventing meaning | **PASS** |
+| 3. Progress reports only what actually happened | **PASS** |
+| 4. An interruption is not treated as refusal | **PASS** |
+| 5. Blocker copy promises no adaptation the engine does not perform | **PASS in the present product; FAIL as a standing guarantee — QA-84-014** |
+| 6. Correction, private handling and the second agenda remain honest | **PASS** |
+| 7. Standing no-score guards | **PASS** |
+
+The first-run abstention and ordinary routes, all eleven Life areas, Health confirmation-to-recommendation agreement, partial Timeline rows, restorative silence, caregiving capture and withdrawal, course/recurrence/correction/private behavior, Fatherhood's growth model and the absence of blocker enforcement all remain intact.
+
+### QA-84-014 — copy composed after a describer bypasses the describer catalogue
+
+**Severity:** Blocker.
+
+**Standing decisions:** D-187, D-193, D-194 and D-195.
+
+**Classification:** Test-architecture false green; current owner-visible copy remains honest.
+
+D-195 states the right invariant: copy must be collected where it is made and asserted against what the owner reads. The Round 5 repair closes a third catalogue half over exported functions whose parameter list contains `CanonicalRecord`. It exercises five such functions and classifies the rest as `NOT_OWNER_TEXT`.
+
+That is a useful describer inventory, but it does not assert against what the owner reads after the describer returns. A surface can take `described.text`, compose one more sentence from the same record's fields, and put the result on screen. The source scanner cannot discover that boundary because the surrounding function accepts a `Situation`, page model or props rather than a `CanonicalRecord`; the record is local data inside it. The catalogue therefore approves the honest describer output and never sees the appended sentence.
+
+#### Reproduction and mutation proof
+
+QA used a disposable detached worktree at `1324f66`; the real repository was not edited. The one mutation was inside `assembleTimeline()` at the owner-visible Timeline entry sink:
+
+```diff
+-text: described.text,
++text:
++  record.kind === 'action-unable-now'
++    ? `${described.text} The app will choose something better next time.`
++    : described.text,
+```
+
+The actual Timeline output now contained the unsupported promise on an ordinary `action-unable-now` row. A temporary probe walked the real scenario library through `assembleTimeline()` and found an entry containing both **“Did not fit at the time”** and **“The app will choose something better next time.”** The probe passed 1/1, proving the mutation reached owner-visible output rather than dead code.
+
+With that promise in place, the repaired catalogue and the most relevant surface gates remained green:
+
+```text
+npx vitest run tests/synthetic/blocker-copy.test.tsx \
+  tests/synthetic/timeline.test.ts \
+  tests/synthetic/destination-and-discovery.test.ts --reporter=verbose
+
+3 files passed; 118 / 118 tests passed.
+```
+
+The disposable worktree and probe were removed and pruned. No mutation, probe or product edit remains.
+
+#### Why this is the promised Round 6 attack
+
+The Round 6 dispatch asked whether owner-visible blocker text could be composed in a surface directly from a record's fields rather than through an enumerated describer. This mutation does exactly that. It is not a new classifier escape: the unsupported sentence is ordinary and already caught when it enters any of the three catalogue halves. It escapes because it enters none of them.
+
+The source enumerator's claim is also narrower than its prose: it matches `export function …` declarations under four source layers whose parameter text contains the literal `CanonicalRecord`. It does not and cannot establish that every downstream owner-text sink is represented. Even a perfect inventory of record describers would not close the post-description composition shown above.
+
+#### Which tests give false confidence
+
+- `tests/synthetic/blocker-copy.test.tsx` validates what `blockers.ts` assembles, what three React panels compose, and what five record describers return. It never inspects copy composed at the Timeline sink after `describeRecord()` returns.
+- `tests/synthetic/timeline.test.ts` sweeps content, chronology, tags, privacy, readability and record counts but applies no blocker adaptation guarantee to the final `TimelineEntry.text`.
+- `tests/synthetic/destination-and-discovery.test.ts` applies the catalogue to the paths it assembles, not the final record text rendered by Timeline.
+- The Phase 84 browser and Android D-187 checks read the blocker question, standing panel and resume panel. Their ordinary Timeline checks do not ask the final row whether it promises future adaptation.
+
+The focused 118/118 result is the false-green proof. It explains how all current release gates can pass without contradicting this finding.
+
+### Mobile, verification and protected-scope result
+
+No touch-target, horizontal-overflow, sticky-navigation, control-shift, accessible-name, console or mobile interaction defect was found. Both fresh owner-use cases completed at a Galaxy-class viewport, and the deployed Android gate read the repaired blocker panels and ordinary screens cleanly.
+
+| Gate | Round 6 result |
+| --- | --- |
+| Checkpoint equivalence | **PASS** — deployed `875e40e` is bundle-equivalent to repaired checkpoint `1324f66`; only three documentation files intervene |
+| Aggregate `npm run verify` | **PASS** — format, lint, typecheck and production build; 1,855 / 1,855 tests across 84 files |
+| Focused QA-84-014 mutation block | **FALSE GREEN — 118 / 118 passed** with the unsupported promise in final Timeline text |
+| Owner-output mutation probe | **PASS — 1 / 1**, proving the promise reached an ordinary Timeline entry |
+| Full browser matrix | **PASS — 690 / 690** at 360, 430 and 1,280px; 230 per width; one worker |
+| Deployed Android-style gate | **clean — 233 checks** against deployed `875e40e` |
+| Privacy scan | **clean — 289 tracked files** |
+| Block sweep and current copy guards | **PASS** |
+| D-195 final-owner-text guarantee | **FAIL** at post-description surface composition |
+| CI at tested head | **PASS** — workflow run `33217294337` completed successfully for `875e40e` |
+| Commits on no remote at QA start | **none** |
+
+The protected scope remains intact. The Round 5 repair changed no product code and QA changed none. No strategy evaluation, pattern-discovery engine, blocker enforcement, semantic interpretation, new domain progression model, owner-routines library, historical backfill, twelfth page, scoring change, visual-language change or orchestrator change appeared. `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md` is unchanged and there is no `PHASE_85_*` file. The owner phone check remains owed and is not something QA can clear.
+
+---
+
+## Complete next handoff — repair after Round 6 FAIL
+
+**System:** Claude / builder.
+
+**Model:** Claude, Opus-class.
+
+**Intelligence level:** **Max** — this is the sixth audit-campaign repair, and D-195's asserted-against-what-the-owner-reads half is still incomplete.
+
+**Conversation:** **CURRENT** — return to the original routing 84 Claude builder conversation, which owns this still-unresolved phase and its repairs.
+
+```text
+Routing Phase 84 repair after independent QA Round 6 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 6 is the independent QA
+retest and is authoritative for this repair. Keep the Phase field exactly 84.
+
+Keep routing 84 YELLOW. Do not start routing 90 and do not mark the phase GREEN.
+Repair QA-84-014 under canonical plan section 42: reproduce it, write a
+regression, prove that regression fails when the exact direct-Timeline promise
+is reintroduced, fix the root cause, and run the full gate on the final tracked
+checkpoint.
+
+The current owner-visible copy is honest. The defect is that the Round 5 repair
+catalogues what record describers return but does not assert against copy a
+surface composes after a describer returns. QA appended “The app will choose
+something better next time” directly to TimelineEntry.text when the local record
+was action-unable-now. The real Timeline output contained the promise while the
+blocker catalogue, Timeline and destination/discovery suites passed 118/118.
+
+Required outcome: make D-195 true at the final owner-text boundary. Every
+owner-visible sink reached by blocker-path records must reject unapproved
+post-description composition, including Timeline, domain Recently/correction,
+export and any sibling that joins tags, origin labels, descriptions or local
+record fields. The mechanism must discover future sinks or make bypassing the
+guard structurally impossible; do not replace the describer list with a manual
+list of the four surfaces QA named.
+
+Prove the class with QA's exact assembleTimeline mutation. It must fail the
+authoritative guard before browser or release gates. Check the siblings by
+putting an unsupported promise after the describer at more than one read boundary.
+Preserve the three existing catalogue halves and the describer inventory where
+they remain useful, but do not call them a final-owner-text guarantee until the
+value actually rendered or exported is what the guard evaluates. A phrase-only
+assertion or adding Timeline to another hand-maintained array does not close the
+finding.
+
+Preserve every Round 6 product PASS and every explicit deferral, especially the
+fresh-store CASE A and CASE B behavior, first-run abstention and ordinary routes,
+all eleven Life areas, the byte-identical “More money” path and its unknowns,
+Health's confirmation-to-recommendation agreement, complete partial Timeline
+rows, truthful restorative silence, durable caregiving and withdrawal, course,
+recurrence, correction and private behavior, all no-score protections,
+Fatherhood's untouched growth model, and the absence of blocker enforcement.
+
+Run the clean aggregate gate, full browser suite at 360/430/1280, privacy scan,
+block/copy sweeps and deployed Galaxy-class Android gate. Deploy the repaired
+checkpoint, prove checkpoint equivalence if documentation moves the deployed
+SHA, append the builder's repair record and a complete Round 7 retest prompt to
+this same QA report, and address that retest to the SAME Codex QA conversation
+at High. Round 7 must repeat CASE A and CASE B from new ephemeral browser
+contexts, ordinary screens only, without opening the QA laboratory.
+
+Do not create a PHASE_85_* file. Do not alter
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md. Do not put the LCO completion marker in
+this QA handoff; for this handoff it belongs only at the end of
+docs/NEXT_PROMPT.md. Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude, Opus-class.
+
+**Level:** Max.
+
+**Conversation:** CURRENT — the original routing 84 builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 6 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 6
+repair handoff there exactly as written. Keep Phase 84 YELLOW; do not start
+routing 90. Do not ask me to paste the file contents.
+```
