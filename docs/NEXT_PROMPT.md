@@ -64,3 +64,5 @@ per-history content walk; and whether a screen can be made to settle falsely.
 
 **Routing 84 stays YELLOW.** A builder conversation may not approve its own phase
 (D-077). Do not start routing 90.
+
+<!-- LCO_COMPLETE -->
