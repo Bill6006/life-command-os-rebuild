@@ -7054,3 +7054,75 @@ history has. The product is now walked whole: every non-empty selection on every
 history. Large, finite, and with no sampling left to be wrong about.
 
 ---
+
+## D-202 — Two halves with a gap between them, and what is left open
+
+**Phase:** 84 (QA round 12 repair) · **Status:** Active · Corrects the
+"whole-app" language of **D-201** and narrows what this campaign claims.
+
+D-201 split the guarantee in two and said so: _static covers every state; dynamic
+covers composition._ Round 12's finding is that **the intersection of the two
+holes is not empty.** A sentence composed at runtime, in a state no sweep
+reaches, is in neither half. Four of the five findings are that gap in a
+tractable form; the fifth is the general case, and it is not closed.
+
+**1. Adjacent literals are one sentence (QA-84-032).** The static scan read each
+string separately, so `'The app will ' + 'choose something better ' + 'next
+time' + '.'` was four innocent strings. It now joins the pieces of a `+` chain, a
+template's quasis and an array's elements, and classifies **both** the
+space-joined and the bare-joined form, because which one the code produces
+depends on where the spaces were put. This is the composition rule the dynamic
+half was supposed to be sole owner of; it now owns only the part that needs
+**data**.
+
+**2. A stylesheet renders words (QA-84-033).** `content: "…"` puts a sentence on
+the screen that no JavaScript string holds. The browser collector already read
+`::before` and `::after`; the static scan read no CSS at all. It now parses every
+shipped stylesheet's `content` declarations, and `::marker` joins the
+pseudo-elements the browser collector asks about. _A first repair attempt wrote
+the rule against `src/index.css` — a file that exists in no import graph. It is
+recorded rather than tidied away: the guard was green because the promise never
+shipped, which is the same false green this campaign keeps finding._
+
+**3. An approval is a claim about a place (QA-84-034).** `APPROVED_FUTURE_COPY`
+matched text anywhere, so a sentence honest on the milestone surface was
+transplanted verbatim under **A blocker**, where `this` names the blocker and the
+promise is false. **An exception is only honest where it was reasoned about.**
+Each of the seventeen entries now names the source files it may live in, checked
+in both directions: the same words elsewhere is a transplant and fails, and a
+listed file that no longer contains them is a stale approval and fails too —
+because an exception nothing needs is a hole waiting for the sentence to return
+somewhere else. Two entries are joined forms that appear in no file literally, so
+they pin on the piece that does.
+
+**4. Carrying the marker is not being the thing (QA-84-036).** D-201 moved
+provenance onto the element itself, which was right and still trusted an
+assertion: a second textarea with the same `data-testid` and the export's own
+label inherited the composed review's exemption. There is exactly one composed
+review, so the sweep now asserts exactly that before reading anything. **A
+self-declared identity is checkable only by counting the declarations.**
+
+**5. The late frame, narrowed and named (QA-84-035).** A frame attached after the
+collector asked is invisible to it. The sweep now subscribes to `frameattached`
+for the whole session and reads every frame that ever attached and still lives.
+**This narrows the hole; it does not close it.** Proved both ways here: a frame
+appearing one second in is caught, and QA's own ten-second frame is _not_ — the
+crawl finishes in three. What caught QA's is the static scan, which does not care
+when a frame appears.
+
+### What remains open, stated rather than claimed
+
+**A sentence composed at runtime from data, in a state nothing reaches, is not
+covered by either half.** The static scan sees the pieces and cannot know what
+the engine will put between them; the sweeps would see the sentence and cannot
+get to the state. This is not a gap that a wider sweep or a cleverer parser
+closes — deciding it is deciding what the program prints, and D-197 forbids the
+half-parser that pretending otherwise would need.
+
+So the guarantee is written down at its true size. **Every string the app ships,
+and every literal composition of them, is checked; every state the sweeps reach
+is checked; a runtime composition in an unreached state is not.** D-201's
+"whole-app" phrasing overstated this and is superseded here. Making that
+statement smaller and true is the point of the round.
+
+---

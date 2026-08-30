@@ -83,7 +83,16 @@ export const APPROVED_NOT_A_PROMISE: readonly string[]
 export function withoutApprovedNonPromises(line: string): string
 
 /** What the app says about its own future that D-187 does not forbid. */
-export const APPROVED_FUTURE_COPY: readonly string[]
+export interface ApprovedFutureCopy {
+  /** The sentence, as it is classified and removed. */
+  readonly text: string
+  /** A shorter anchor to look for in source, when `text` is a joined form. */
+  readonly pin?: string
+  /** The source files this sentence is allowed to live in, and no others. */
+  readonly in: readonly string[]
+}
+
+export const APPROVED_FUTURE_COPY: readonly ApprovedFutureCopy[]
 
 /** Those removed, so anything written beside one is still classified. */
 export function withoutApprovedFutureCopy(line: string): string

@@ -39,6 +39,55 @@ None.
 
 ## Fixed
 
+### DEF-0137 — the gap between the two halves of D-201
+
+- Status: Fixed, with one part **open and named**
+- Severity: Blocker — a promise the engine cannot keep could reach the owner
+  assembled from innocent pieces, out of a stylesheet, transplanted from a place
+  it was honest, from an impostor control, or in a frame that arrives late, with
+  every gate green
+- Found in: routing 84 / `3930260`
+- Found by: **independent QA round 12** (QA-84-032 … QA-84-036), aimed straight
+  at the seam D-201 declared
+- Class: **the intersection of two declared holes.** D-201 said static covers
+  every state and dynamic covers composition. Round 12 showed the two do not
+  meet: a composed sentence in an unreached state is in neither.
+- Reproduction, all five confirmed here before anything was built:
+  - **032** — four adjacent literals behind a typed word → copy scan **clean**.
+  - **033** — the sentence in a stylesheet's `content` → copy scan **clean**.
+  - **034** — an approved sentence transplanted under **A blocker** → **clean**.
+  - **035** — an iframe scheduled ten seconds after mount → **1 passed**.
+  - **036** — a second textarea carrying `export-text` and the export's own label
+    → **1 passed**.
+- Repair — see **D-202**. Literal composition joined and classified; every
+  shipped stylesheet's `content` read; approvals pinned to the files they were
+  reasoned about in, checked both ways; exactly one composed review asserted; and
+  every frame that ever attached read before the crawl concludes.
+- Regression: `scripts/rendered-copy-scan.mjs` (composition, CSS, approval
+  homes), run from `npm run verify`; the single-marker invariant and
+  `rememberFrames` in `tests/browser/phase84.spec.ts`.
+- Proved by reintroduction: all five of QA's exact mutations, each built and run.
+  **035 is the interesting one** — QA's ten-second frame is _not_ caught
+  dynamically, because the crawl finishes in three seconds; it is caught by the
+  static scan, and the late-frame read was proved separately against a one-second
+  frame. Saying which gate caught what is the difference between a repair and a
+  coincidence.
+- **Not closed:** a sentence composed at runtime **from data** in a state no
+  sweep reaches. Named in D-202 rather than papered over. Every mechanical form
+  of it is now caught; the general form is not decidable by any gate this
+  campaign can build.
+- Siblings: two more honest sentences reached the approval list, both joined
+  forms of the correction consequence that the new composition rule found for the
+  first time.
+- Note on scope: the current copy was honest throughout, for the tenth round
+  running, and both fresh-store cases passed again. What was defective was the
+  guarantee — this time the seam between its two halves.
+- **Two of my own false greens are recorded**: the CSS repair first written
+  against `src/index.css`, an orphan file in no import graph; and a
+  reintroduction whose mutation never ran because an earlier `git checkout` in
+  the same `&&` chain failed and took the chain down with it. Both looked like
+  passes.
+
 ### DEF-0136 — five more, and the reason exploring further had stopped working
 
 - Status: Fixed

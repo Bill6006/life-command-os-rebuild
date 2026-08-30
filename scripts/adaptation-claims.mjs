@@ -662,13 +662,14 @@ export function withoutApprovedNonPromises(line) {
 }
 
 /**
- * What the app says about its own future, that D-187 does not forbid — D-201.
+ * What the app says about its own future, that D-187 does not forbid — D-201,
+ * and **where each sentence is allowed to say it** — D-202.
  *
  * The scan in `rendered-copy-scan.mjs` reads **every string the built app can
  * render**, so for the first time the app-wide rule meets all of the product's
- * copy at once rather than whatever a sweep happened to reach. Fifteen shipped
- * sentences trip it, and every one is honest. They fall into three kinds, and
- * the kind is the reason:
+ * copy at once rather than whatever a sweep happened to reach. Seventeen
+ * shipped sentences trip it, and every one is honest. They fall into three
+ * kinds, and the kind is the reason:
  *
  * - **Promises to do nothing.** *"it will not start suggesting it"*, *"will
  *   never decide you have got there"*, *"will not invent one"*, *"will not
@@ -686,31 +687,123 @@ export function withoutApprovedNonPromises(line) {
  * will do fails this gate until somebody writes down why it is honest. That is
  * a tax on ordinary copy work, accepted because the alternative — eight rounds
  * of it — was a guarantee that read as whole-app and was not.
+ *
+ * **And an approval is a claim about a place, not about words — QA-84-034.**
+ * Round 12 moved the milestone sentence verbatim under a panel titled *A
+ * blocker*, where `this` names the blocker and the promise is false, and this
+ * list waved it through because all it knew was the text. So each entry names
+ * the source files it may live in, and `rendered-copy-scan.mjs` checks that
+ * claim in both directions. Two entries are **joined** forms, produced by the
+ * composition rule rather than written anywhere, so they carry a `pin` — the
+ * piece that does appear in source — to be looked for instead.
  */
 export const APPROVED_FUTURE_COPY = [
   // Promises to do nothing.
-  '”. The app will know it exists and can refer to it; it will not start suggesting it.',
-  'This is kept as what would count. The app will never decide you have got there.',
-  'This is kept as what would count. The app will never decide you have got there — it holds what you said would show it.',
-  'Leave it empty and the app will not invent one.',
-  'The app will not assume ',
+  {
+    text: '”. The app will know it exists and can refer to it; it will not start suggesting it.',
+    in: ['src/intelligence/authoring.ts'],
+  },
+  {
+    text: 'This is kept as what would count. The app will never decide you have got there.',
+    in: ['src/features/life/DomainPanels.tsx'],
+  },
+  {
+    text:
+      'This is kept as what would count. The app will never decide you have got there — it ' +
+      'holds what you said would show it.',
+    in: ['src/intelligence/discovery.ts'],
+  },
+  {
+    text: 'Leave it empty and the app will not invent one.',
+    in: ['src/features/life/DomainPanels.tsx'],
+  },
+  {
+    text: 'The app will not assume ',
+    in: ['src/features/insights/Discovery.tsx', 'src/features/life/DomainPanels.tsx'],
+  },
 
   // Confirmations of behaviour the engine has, built and covered by D-173 item 1.
-  '”. The app will treat this as what you are currently studying, and start suggesting work on it.',
-  '”. The app will treat this as the money thing that is open, and start suggesting you deal with it.',
-  '”. The app will treat this as what you are working towards, and start suggesting it on evenings there is something to spend on it.',
-  'This becomes a milestone with its own date, and the app will start suggesting work towards it.',
-  'a span the app will work around, or a promise with a date on it',
+  {
+    text:
+      '”. The app will treat this as what you are currently studying, and start suggesting ' +
+      'work on it.',
+    in: ['src/intelligence/authoring.ts'],
+  },
+  {
+    text:
+      '”. The app will treat this as the money thing that is open, and start suggesting you ' +
+      'deal with it.',
+    in: ['src/intelligence/authoring.ts'],
+  },
+  {
+    text:
+      '”. The app will treat this as what you are working towards, and start suggesting it on ' +
+      'evenings there is something to spend on it.',
+    in: ['src/intelligence/authoring.ts'],
+  },
+  {
+    text:
+      'This becomes a milestone with its own date, and the app will start suggesting work ' +
+      'towards it.',
+    in: ['src/features/life/DomainPanels.tsx', 'src/intelligence/discovery.ts'],
+  },
+  {
+    text: 'a span the app will work around, or a promise with a date on it',
+    in: ['src/intelligence/authoring.ts'],
+  },
+
+  /*
+   * The consequence a correction states before it acts. Found for the first
+   * time by the composition rule added for QA-84-032: the two quasis of a
+   * template join into this, which is why the joined form does not appear in
+   * source and the pin is the piece that does. It is a promise to **stop**
+   * concluding something, which the withdrawal really does.
+   */
+  {
+    text: 'The app stops concluding , from now on.',
+    pin: 'The app stops concluding ',
+    in: ['src/intelligence/corrections.ts'],
+  },
+  {
+    text: 'The app stops concluding  , from now on.',
+    pin: 'The app stops concluding ',
+    in: ['src/intelligence/corrections.ts'],
+  },
 
   // What a backup or a restore does with a file.
-  'The restore was written and checked, and then the app could not read the database again. Nothing was undone.',
-  'The backup was written and checked once, so it is probably there. What the app cannot do is read the database again to confirm it. Close the app and open it again to see what is actually stored — and do not restore anything else over this until you have.',
-  'The app will try to bring these back on its own.',
-  ' becomes what the app reads from now on.',
-  'This replaces what the app has here, and is what it reads from now on.',
+  {
+    text:
+      'The restore was written and checked, and then the app could not read the database ' +
+      'again. Nothing was undone.',
+    in: ['src/features/memory/MemoryProvider.tsx'],
+  },
+  {
+    text:
+      'The backup was written and checked once, so it is probably there. What the app cannot ' +
+      'do is read the database again to confirm it. Close the app and open it again to see ' +
+      'what is actually stored — and do not restore anything else over this until you have.',
+    in: ['src/features/data/DataScreen.tsx'],
+  },
+  {
+    text: 'The app will try to bring these back on its own.',
+    in: ['src/features/life/standing.ts'],
+  },
+  {
+    text: ' becomes what the app reads from now on.',
+    in: ['src/intelligence/corrections.ts'],
+  },
+  {
+    text: 'This replaces what the app has here, and is what it reads from now on.',
+    in: ['src/features/life/DomainPage.tsx'],
+  },
 ]
 
-/** Those removed, so anything written beside one is still classified. */
+/**
+ * Those removed, so anything written beside one is still classified.
+ *
+ * Removal is by text; **where** each sentence is allowed to live is checked
+ * separately, by `rendered-copy-scan.mjs`, against the `in` field above.
+ */
 export function withoutApprovedFutureCopy(line) {
   const flat = (text) =>
     String(text ?? '')
@@ -718,7 +811,7 @@ export function withoutApprovedFutureCopy(line) {
       .trim()
   let left = flat(line)
   for (const approved of APPROVED_FUTURE_COPY) {
-    left = left.split(flat(approved)).join(' ')
+    left = left.split(flat(approved.text)).join(' ')
   }
   return left
 }
@@ -899,7 +992,14 @@ export function readingUnits(root) {
       const composed = isComposedControl(element)
       for (const part of element.value.split('\n')) push(part, element, composed)
     }
-    for (const pseudo of ['::before', '::after']) {
+    /*
+     * Every pseudo-element that can carry `content` — QA-84-033.
+     *
+     * Round 12 put the promise in a `::marker` rule. `content` renders words
+     * from `::before`, `::after` and `::marker` alike, so all three are asked;
+     * the list is the CSS specification's, not a guess about which ones matter.
+     */
+    for (const pseudo of ['::before', '::after', '::marker']) {
       const content = getComputedStyle(element, pseudo).content
       if (typeof content === 'string' && content !== 'none' && content !== 'normal') {
         push(content.replace(/^["']|["']$/g, ''), element)

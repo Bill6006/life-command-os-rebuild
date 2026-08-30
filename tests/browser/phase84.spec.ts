@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Frame, type Locator, type Page } from '@playwright/test'
 import {
   adaptationClaims,
   adaptationClaimsOnAnyScreen,
@@ -1141,6 +1141,26 @@ function declaredRoutes(): readonly string[] {
 }
 
 /**
+ * Frames that arrive after the collector looked — QA-84-035.
+ *
+ * `page.frames()` is a snapshot. Round 12 attached an iframe ten seconds after
+ * mount, so every sweep read More and left before it existed. **Enumerating the
+ * frame tree at read time is not a rule about frames**, so the page is
+ * subscribed to instead: every frame the session ever attaches is remembered,
+ * and the sweep reads them all at the end whether or not they were present when
+ * their route was visited.
+ *
+ * This narrows the hole rather than closing it — a frame attached after the
+ * whole suite has finished is still outside — and D-202 says so. What closes
+ * the content is the static scan, which does not care when a frame appears.
+ */
+function rememberFrames(page: Page): Set<Frame> {
+  const attached = new Set<Frame>()
+  page.on('frameattached', (frame) => attached.add(frame))
+  return attached
+}
+
+/**
  * Every reading unit in every browsing context on the page — QA-84-028.
  *
  * `readingUnits` walks one document. Round 11 put the prohibited sentence in a
@@ -1156,6 +1176,23 @@ function declaredRoutes(): readonly string[] {
  */
 async function unitsEverywhere(page: Page): Promise<readonly ReadingUnit[]> {
   const out: ReadingUnit[] = []
+
+  /*
+   * Exactly one control may claim to be the composed review — QA-84-036.
+   *
+   * Round 12 rendered a second read-only textarea carrying the same
+   * `data-testid`, the same accessible label, and an unapproved value, and the
+   * collector believed it. **Carrying the marker is an assertion of provenance,
+   * not proof of one**, and the only thing that makes the assertion checkable
+   * is that the app composes exactly one such document. If a second appears,
+   * this says so rather than trusting either.
+   */
+  const marked = await page.locator('[data-testid="export-text"]').count()
+  expect(
+    marked,
+    'more than one control claims to be the composed review, so provenance cannot be trusted',
+  ).toBeLessThanOrEqual(1)
+
   for (const frame of page.frames()) {
     try {
       out.push(...(await frame.locator('body').evaluate(readingUnits)))
@@ -1216,6 +1253,7 @@ async function sweepEveryRoute(page: Page): Promise<{
   everything: ReadonlySet<string>
   prose: ReadonlySet<string>
 }> {
+  const attached = rememberFrames(page)
   const queue = [...declaredRoutes()]
   const visited = new Set<string>()
   const everything = new Set<string>()
@@ -1236,6 +1274,24 @@ async function sweepEveryRoute(page: Page): Promise<{
     }
 
     for (const href of await linksOn(page)) if (!visited.has(href)) queue.push(href)
+  }
+
+  /*
+   * And every frame the session ever attached, read now — QA-84-035. A frame
+   * that appeared after its own route was left is still one the owner can see,
+   * so it is read here rather than missed by a snapshot taken too early.
+   */
+  for (const frame of attached) {
+    if (frame.isDetached()) continue
+    try {
+      for (const unit of await frame.locator('body').evaluate(readingUnits)) {
+        everything.add(unit.text)
+        if (!unit.generated) prosed.add(unit.text)
+      }
+    } catch (error) {
+      const why = error instanceof Error ? error.message : String(error)
+      if (!/cross-origin|detached|Target closed|Execution context/i.test(why)) throw error
+    }
   }
 
   expect(visited.size, 'the crawl found almost no screens').toBeGreaterThan(10)
