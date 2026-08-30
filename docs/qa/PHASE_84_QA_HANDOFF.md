@@ -6184,4 +6184,240 @@ must survive. No blocker enforcement, no semantic interpretation, no scoring
 change, no new visual language, no orchestrator change. Phase 84 stays YELLOW
 until QA says otherwise; the builder may not approve its own phase.
 
-<!-- LCO_COMPLETE -->
+## Round 13 — independent QA retest
+
+**Phase:** 84
+**Result:** **FAIL**
+**Product checkpoint tested:** `5b9fe99`
+**Deployed SHA tested:** `01ce1f393234c243aa1142c67264035d172adedb` —
+bundle-equivalent to `5b9fe99`; only `docs/NEXT_PROMPT.md`,
+`docs/PHASE_STATUS.md` and this report differ
+**Mobile:** CASE A and CASE B each used a separate new Chromium process and
+ephemeral 430×932 context in `America/New_York`, fixed to Friday 18:58 local.
+The final deployed Android gate used its Galaxy S24-class 360×780 CSS-pixel,
+DPR 3, touch and Android Chrome context.
+**Actor:** Codex, High, same QA conversation as Rounds 1–12
+
+The repaired product remains honest and all seven D-173 items pass. Round 13
+nevertheless found three independent **Blocker** false greens in claims D-202
+still makes: approval provenance is lost after literal joining, literal joining
+does not cover helper composition, and the unique generated marker does not
+identify the generated review. It also found one **Major** overclaim: an
+attached frame that detaches before the final read is remembered and then
+deliberately skipped. Every disposable mutation was restored before the full
+gates; no product, script or test code is left changed.
+
+### Cold owner-use
+
+Both cases began with zero rows in every `entities`, `malformed`, `meta` and
+`records` object store in both the owner and laboratory databases. Each used a
+new browser process and context, neither opened `#/qa`, and neither inherited or
+cleared retained state.
+
+- **CASE A — More money: PASS.** Empty-store Now abstained. The second agenda
+  preserved **More money** byte-identically under Career & Learning, stated that
+  the next step, starting point and meaning of progress were unknown, and made
+  no financial inference. Career and Timeline rendered the same words.
+- **CASE B — caregiving: PASS.** Life → Health named **Move more** and **Take a
+  ten-minute walk**. Its confirmation matched Now's suggestion after **Enough**.
+  **Can't right now** → **Can’t leave — someone’s in my care** wrote the durable
+  statement **Take a ten-minute walk means leaving, and I could not — someone
+  was in my care**, with **Not true any more**. Timeline rendered **Not then / Did
+  not fit at the time** and **Limit**. No future-adaptation promise appeared.
+
+### Acceptance result
+
+| D-173 item | Round 13 |
+| --- | --- |
+| 1. Desired outcomes in Career, Health and Money change the recommendation | **PASS** |
+| 2. Session, course and milestone stay distinct; attendance is not capability | **PASS** |
+| 3. Goal, routine, person, place, skill and obligation are authorable from empty | **PASS** |
+| 4. The second agenda is later-useful and asks less as it learns | **PASS** |
+| 5. Can't-right-now is durable/correctable and stays silent when known | **PASS in current product; standing guarantee FAIL — QA-84-037…040** |
+| 6. Corrections preview consequences; private evidence can be stored without inference | **PASS** |
+| 7. No score, percentage, share, rank or grade about the owner or child | **PASS** |
+
+The known deferrals are unchanged: no blocker enforcement; no semantic
+interpretation; no strategy or pattern-discovery engine; no extra domain
+progression models; no owner routines library; no backfill; no twelfth domain
+page; no scoring or visual-language change. `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md`
+is untouched and no `PHASE_85_*` file exists.
+
+The declared runtime-data case in D-202 was not counted as a defect. It remains
+exactly what D-202 says it is: runtime composition in an unreached state is not
+covered. These findings instead show that three things D-202 says are covered
+are not, and that one supporting frame claim is wider than its implementation.
+
+### QA-84-037 — approval provenance disappears after composition
+
+**Severity:** Blocker. **Decisions:** D-187, D-198, D-202.
+**Class:** source-file approval is checked before a joined result is globally
+removed, so the result no longer carries the origin the approval is meant to
+constrain.
+
+On More, add a text field and a **Show** button disabled until the owner types
+`show`. Under **A blocker**, render:
+
+```ts
+[
+  'This becomes a milestone with its own date, and the app',
+  'will start suggesting work towards it.',
+].join(' ')
+```
+
+Neither source fragment is the approved sentence. The scanner correctly joins
+them, but then removes the approved result globally; its source pin only checks
+that the literal sentence remains in its approved home and is absent as a
+literal from unapproved files. More therefore manufactures the same approved
+words in a context where `this` means a blocker and the promise is false.
+
+**Observed:** copy scan **clean — 5,417 shipped strings**; focused
+`QA-84-022 — nor` **3 passed in 1.0m**. Typing `show` rendered the exact approved
+milestone promise under **A blocker**. A calibration whose first fragment
+contained **the app will start** was correctly rejected; splitting into two
+individually innocent fragments is what false-greens.
+
+### QA-84-038 — helper composition is outside the literal joiner
+
+**Severity:** Blocker. **Decisions:** D-187, D-198, D-202.
+**Class:** the three recognized syntax shapes are not every literal
+composition, so “every literal composition” is wider than the evaluator.
+
+On More, use a local helper whose reduction inserts spaces, then render the
+result behind the same typed prerequisite:
+
+```ts
+function stitch(...parts: string[]) {
+  return parts.reduce(
+    (joined, part) => (joined ? `${joined} ${part}` : part),
+    '',
+  )
+}
+
+stitch('The app', 'will choose', 'something better', 'next time.')
+```
+
+The arguments are all literals, and the output is a literal composition, but
+the AST evaluator does not follow the helper call or its reduction. The press
+sweep does not type the prerequisite.
+
+**Observed:** copy scan **clean — 5,418 shipped strings**; focused
+`QA-84-022 — nor` **3 passed in 1.0m**. Typing `show` rendered **The app will
+choose something better next time.**
+
+### QA-84-039 — uniqueness does not establish generated-review identity
+
+**Severity:** Blocker. **Decisions:** D-193, D-198, D-202.
+**Class:** exactly one element carrying a marker proves marker cardinality, not
+that its value is the review the application composed.
+
+Keep exactly one real marked export textarea, but replace its value with a
+25-line non-review document ending with **This needs special care.** The marker
+count remains one and the value exceeds the minimum document-size assertion;
+the generated review itself is no longer rendered anywhere.
+
+**Observed:** copy scan **clean — 5,413 shipped strings**; focused
+`QA-84-016/018` **3 passed in 14.8s**. The marked control self-identifies as
+generated, so the catalogue excludes an unapproved value even though no
+composed export is present. Count and size do not prove identity or content.
+
+### QA-84-040 — remembered detached frames are skipped
+
+**Severity:** Major. **Decisions:** D-198, D-202.
+**Class:** `frameattached` remembers an object for the session, but the final
+collector expressly skips it once detached.
+
+On More, mount an iframe whose base64-decoded `srcDoc` contains **The app will
+choose something better next time.**, give it a pending image, and remove the
+frame after 10ms. Encoding keeps the exact text out of the shipped string
+catalogue. Browser instrumentation observed the frame attach and detach:
+
+```json
+{"events":["attached:","detached:about:srcdoc"],"currentFrames":["main"]}
+```
+
+**Observed:** copy scan **clean — 5,416 shipped strings**; focused
+`QA-84-016/018` at mobile-small **1 passed in 7.3s**. The mutation passes because
+the remembered frame satisfies `frame.isDetached()` at the final read and is
+skipped. This is deliberately **Major**, not Blocker: with a 100ms or one-second
+lifetime the gate correctly failed, while the 10ms form was not established as
+owner-readable. It disproves the supporting claim that every frame ever
+attached is read, but it does not establish a current product promise an owner
+can read.
+
+### Verification on the restored tree
+
+| Gate | Result |
+| --- | --- |
+| Checkpoint equivalence | **PASS** — deployed `01ce1f3` is bundle-equivalent to repaired checkpoint `5b9fe99`; only the three routing documents differ |
+| `npm run verify` | **PASS** — format, lint, typecheck, test, build, copy scan |
+| Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files |
+| Rendered copy scan | **clean — 5,410 shipped strings**, 1 script chunk, 2 stylesheets |
+| Browser, three widths, one worker | **705 passed** in 16.8 minutes; zero failures or retries |
+| Android-style deployed gate | **clean — 233 checks** |
+| Privacy scan | **clean — 290 tracked files** |
+| Block sweep / current copy | **PASS on current copy; false-green guarantee proved by QA-84-037…040** |
+| Restored implementation tree | **clean** — `git diff --exit-code -- src scripts tests package.json package-lock.json` |
+
+### Overall verdict and repair requirement
+
+**FAIL. Routing Phase 84 remains YELLOW.** The product itself passes. D-202's
+narrowed guarantee still overstates the static half: approved joined text loses
+its source, a simple helper composition is not joined, and a marker can assert
+generated provenance without the generated document. The frame lifecycle claim
+also skips a frame the session did observe once that frame detaches.
+
+The builder must reproduce QA-84-037 through QA-84-040 exactly before repair;
+identify and repair all four whole classes under plan section 42; prove each
+regression by reintroduction; rerun every full gate; deploy a repaired
+checkpoint; preserve all seven product PASSes and every deferral; keep Phase 84
+YELLOW; and dispatch Round 14 to this same QA conversation. Do not start routing
+90.
+
+---
+
+## Round 13 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** **Max** — the audit-repair campaign rule applies across
+bundle semantics, composition evaluation, contextual approval, generated-value
+provenance and frame lifecycle.
+**Conversation:** **CURRENT** — the original routing 84 Claude builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 13 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 13 at the end contains three
+new Blockers and one Major, QA-84-037 through QA-84-040. Execute the Round 13
+repair handoff exactly as written.
+
+Keep Phase 84 YELLOW. Reproduce each exact false-green or overclaim mutation
+before repair; identify and repair every whole class under plan section 42; add
+regressions and prove them by reintroduction; run the aggregate, full
+three-width browser, deployed Android, privacy, block-sweep and copy-guard
+gates; deploy the repaired checkpoint; preserve all seven product PASSes and
+every deferral; and append a Round 14 retest dispatch for the SAME Codex QA
+conversation at High.
+
+Do not edit QA's Round 13, alter docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a
+PHASE_85_* file or start routing 90. Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** Max.
+**Conversation:** CURRENT — the original routing 84 Claude builder conversation.
+
+```text
+Continue routing Phase 84 after independent QA Round 13 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 13
+repair handoff at its end exactly as written. Do not ask me to paste the file.
+```
