@@ -5759,4 +5759,245 @@ them.
 Do not ask me to paste file contents.
 ```
 
-<!-- LCO_COMPLETE -->
+## Round 12 — independent QA retest
+
+**Phase:** 84
+**Result:** **FAIL**
+**Product checkpoint tested:** `3930260`
+**Deployed SHA tested:** `3930260e83b1fea44b3deee0fbafd2e5f5ad7389` — exact checkpoint, no files between
+**Mobile:** CASE A and CASE B each used a separate new Chromium process and ephemeral 430×932 context in `America/New_York`, fixed to Friday 18:58 local. The final deployed Android gate used its Galaxy S24-class 360×780 CSS-pixel, DPR 3, touch and Android Chrome context.
+**Actor:** Codex, High, same QA conversation as Rounds 1–11
+
+The repaired product remains honest and all seven D-173 items pass. Round 12
+nevertheless found five independent **Blocker** false greens across the static
+and dynamic halves of D-201: runtime composition behind input, stylesheet text,
+context-free approval, late frame creation, and marker impersonation. Every
+disposable mutation was restored before the full gates; no product, script or
+test code is left changed.
+
+### Cold owner-use
+
+Both cases began with zero rows in every `entities`, `malformed`, `meta` and
+`records` object store in both the owner and laboratory databases. Each used a
+new browser process and context, neither opened `#/qa`, and neither inherited or
+cleared retained state.
+
+- **CASE A — More money: PASS.** Empty-store Now abstained. The second agenda
+  preserved **More money** byte-identically under Career & Learning, stated that
+  the next step, starting point and meaning of progress were unknown, and made
+  no financial inference. Career and Timeline rendered the same words.
+- **CASE B — caregiving: PASS.** Life → Health named **Move more** and **Take a
+  ten-minute walk**. Its confirmation matched Now's suggestion after **Enough**.
+  **Can't right now** → **Can’t leave — someone’s in my care** wrote the durable
+  statement **Take a ten-minute walk means leaving, and I could not — someone
+  was in my care**, with **Not true any more**. Timeline rendered **Not then / Did
+  not fit at the time** and **Limit**. No future-adaptation promise appeared.
+
+### Acceptance result
+
+| D-173 item | Round 12 |
+| --- | --- |
+| 1. Desired outcomes in Career, Health and Money change the recommendation | **PASS** |
+| 2. Session, course and milestone stay distinct; attendance is not capability | **PASS** |
+| 3. Goal, routine, person, place, skill and obligation are authorable from empty | **PASS** |
+| 4. The second agenda is later-useful and asks less as it learns | **PASS** |
+| 5. Can't-right-now is durable/correctable and stays silent when known | **PASS in current product; standing guarantee FAIL — QA-84-032…036** |
+| 6. Corrections preview consequences; private evidence can be stored without inference | **PASS** |
+| 7. No score, percentage, share, rank or grade about the owner or child | **PASS** |
+
+The known deferrals are unchanged: no blocker enforcement; no semantic
+interpretation; no strategy or pattern-discovery engine; no extra domain
+progression models; no owner routines library; no backfill; no twelfth domain
+page; no scoring or visual-language change. `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md`
+is untouched and no `PHASE_85_*` file exists.
+
+### QA-84-032 — the two halves share the same unreachable seam
+
+**Severity:** Blocker. **Decisions:** D-187, D-198, D-201.
+**Class:** static coverage of literals plus incomplete dynamic exploration is
+not coverage of runtime-composed owner states.
+
+On More, add a text field and a **Show** button disabled until the owner types
+`show`. Behind it, render:
+
+```ts
+['The app', 'will choose', 'something better', 'next time.'].join(' ')
+```
+
+Each shipped string is innocent on its own, so the static classifier cannot see
+the sentence. The press sweep never supplies the prerequisite word, so the
+dynamic half never sees the rendered result.
+
+Run after a real build:
+
+```text
+npm run copy:scan
+npx playwright test tests/browser/phase84.spec.ts --grep "QA-84-022 — nor" --workers=1
+```
+
+**Observed:** copy scan **clean — 4,011 strings**; browser **3 passed in 1.0m**.
+Typing `show` and pressing the enabled button renders **The app will choose
+something better next time.** A calibration using the larger fragment **The app
+will** was correctly rejected by the static scan; only the declared innocent-
+piece case false-greens.
+
+### QA-84-033 — visible stylesheet text belongs to neither half
+
+**Severity:** Blocker. **Decisions:** D-187, D-198, D-201.
+**Class:** JavaScript literals are not every shipped renderable string, and
+`::before` plus `::after` are not every text-producing pseudo-element.
+
+On More, add a visible list item and this stylesheet rule:
+
+```css
+.future-marker li::marker {
+  content: "The app will choose something better next time. ";
+}
+```
+
+The promise is in the shipped CSS chunk, not the JavaScript chunk parsed by
+`rendered-copy-scan.mjs`. `readingUnits()` asks only for `::before` and
+`::after`, so it does not read the visible `::marker` either.
+
+**Observed:** copy scan **clean — 4,005 strings**; the focused
+`QA-84-016/018` route guarantee **3 passed in 19.5s**. The exact prohibited
+promise is visible on More without any interaction.
+
+### QA-84-034 — approval belongs to a sentence globally, not to its claim
+
+**Severity:** Blocker. **Decisions:** D-187, D-198, D-201.
+**Class:** a context-free substring allow-list can transplant honest copy into a
+context where the same words are false.
+
+Under a More panel titled **A blocker**, behind the same ordinary type-`show`-
+then-press sequence, render this exact globally approved literal:
+
+```text
+This becomes a milestone with its own date, and the app will start suggesting work towards it.
+```
+
+The sentence is honest on the milestone authoring surface for which it was
+approved. Under **A blocker**, `this` names the blocker and promises behaviour
+the engine does not have. `withoutApprovedFutureCopy()` removes the entire
+literal without knowing where or what it describes; the dynamic sweep does not
+reach the typed state.
+
+**Observed:** copy scan **clean — 4,007 strings**; the press-state guarantee
+**3 passed in 59.8s**. Approval of one use silently approves every use.
+
+### QA-84-035 — the frame tree is a snapshot, not a rule over future frames
+
+**Severity:** Blocker. **Decisions:** D-187, D-198, D-201.
+**Class:** enumerating every frame at read time does not cover a frame created
+after the read.
+
+On More, schedule an iframe ten seconds after mount. Its `srcDoc` paragraph is
+the QA-84-032 four-piece composition. The static scan cannot assemble it, and
+each route sweep reads and leaves More before the frame exists.
+
+**Observed:** copy scan **clean — 4,010 strings**; focused
+`QA-84-016/018` **3 passed in 19.5s**. A separate real-browser wait on the same
+built mutation then printed from the frame:
+
+```text
+The app will choose something better next time.
+```
+
+The new unreadable-frame reporting never runs because the late frame is not in
+`page.frames()` at the moment the collector asks.
+
+### QA-84-036 — a second control can impersonate the composed review
+
+**Severity:** Blocker. **Decisions:** D-193, D-198, D-201.
+**Class:** carrying the same marker is still an assertion of provenance, not
+proof of provenance.
+
+On Data after a blocker record exists, render a second ordinary read-only
+textarea with the real export's existing accessible label **The export**, its
+own `data-testid="export-text"`, and the unapproved value **This needs special
+care.** `readingUnits()` labels the value generated because that element itself
+carries the marker. The existing label is already present before the block, so
+the set delta adds no separate prose unit that exposes the impostor.
+
+**Observed:** copy scan **clean — 4,004 strings**; focused
+`QA-84-016/018` **3 passed in 14.6s**. A first faithful variant with the unique
+label **Blocker note** failed at all three widths on that label; changing only
+the label to the real export's pre-existing label made the same unapproved value
+disappear from the catalogue delta.
+
+### Verification on the restored tree
+
+| Gate | Result |
+| --- | --- |
+| Checkpoint equivalence | **PASS** — deployed `3930260` is the exact repaired checkpoint |
+| `npm run verify` | **PASS** — format, lint, typecheck, test, build, copy scan |
+| Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files |
+| Rendered copy scan | **clean — 4,003 shipped strings** |
+| Browser, three widths, one worker | **705 passed** in 16.3 minutes; zero failures or retries |
+| Android-style deployed gate | **clean — 233 checks** |
+| Privacy scan | **clean — 290 tracked files** |
+| Block sweep / current copy | **PASS on current copy; false-green guarantee proved by QA-84-032…036** |
+| Restored implementation tree | **clean** — `git diff --exit-code -- src scripts tests package.json package-lock.json` |
+
+### Overall verdict and repair requirement
+
+**FAIL. Routing Phase 84 remains YELLOW.** The current product passes, but the
+static/dynamic split still cannot support D-201's whole-app guarantee. Runtime
+composition can live behind a state the sweeps do not reach; shipped CSS text
+belongs to neither half; approval has no provenance; late frames outlive the
+snapshot; and a duplicate marked control can claim generated provenance it does
+not possess.
+
+The builder must reproduce QA-84-032 through QA-84-036 exactly before repair;
+identify and repair all five whole classes under plan section 42; prove each
+regression by reintroduction; rerun every full gate; deploy a repaired
+checkpoint; preserve all seven product PASSes and every deferral; keep Phase 84
+YELLOW; and dispatch Round 13 to this same QA conversation. Do not start routing
+90.
+
+---
+
+## Round 12 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** **Max** — the audit-repair campaign rule applies across
+bundle semantics, runtime composition, browser rendering, contextual approval,
+frame lifecycle and provenance.
+**Conversation:** **CURRENT** — the original routing 84 Claude builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 12 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 12 at the end contains five
+new Blockers, QA-84-032 through QA-84-036. Execute the Round 12 repair handoff
+exactly as written.
+
+Keep Phase 84 YELLOW. Reproduce each exact false-green mutation before repair;
+identify and repair every whole class under plan section 42; add regressions and
+prove them by reintroduction; run the aggregate, full three-width browser,
+deployed Android, privacy, block-sweep and copy-guard gates; deploy the repaired
+checkpoint; preserve all seven product PASSes and every deferral; and append a
+Round 13 retest dispatch for the SAME Codex QA conversation at High.
+
+Do not edit QA's Round 12, alter docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a
+PHASE_85_* file or start routing 90. Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** Max.
+**Conversation:** CURRENT — the original routing 84 Claude builder conversation.
+
+```text
+Continue routing Phase 84 after independent QA Round 12 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 12
+repair handoff at its end exactly as written. Do not ask me to paste the file.
+```
