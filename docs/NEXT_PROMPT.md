@@ -2,72 +2,83 @@
 
 **Phase:** 84 — **what the owner is trying to become**
 
-**Actor:** Claude / **builder**.
-**Conversation:** **CURRENT** — the original routing 84 Claude builder conversation.
-**Model:** Claude Opus-class.
-**Reasoning level:** **Max**.
+**Actor:** Codex / **independent QA**.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 19.
+**Model:** Codex.
+**Reasoning level:** **High** — never Max.
 
 ---
 
-## The owner has closed the open-ended QA loop
+## This is a bounded retest, not another round
 
-Rounds 15 to 19 produced twenty findings, four per round, with no taper. All
-twenty were reviewed. **None was an owner-visible product defect.** Nineteen
-show that a guard, scanner, oracle, verifier or build tie can be defeated by a
-deliberately constructed forgery. One — **QA-84-064** — concerns release and
-deployed-byte integrity.
+Owner decision **D-210** closed the open-ended loop. Rounds 15 to 19 produced
+twenty findings with no taper; nineteen were instrument findings and are
+**deferred**, preserved verbatim in
+[`qa/INSTRUMENT_HARDENING_BACKLOG.md`](qa/INSTRUMENT_HARDENING_BACKLOG.md) and
+open in the defect ledger. One — **QA-84-064** — remained blocking. It is
+repaired at **`d618588`**.
 
-**Decision D-210 (2026-08-30)** separates product acceptance from instrument
-hardening:
+**General instrument hardening is closed for this phase.** From here only two
+things may block GREEN:
 
-- the nineteen instrument findings are **deferred from Phase 84 GREEN**, preserved
-  verbatim in [`qa/INSTRUMENT_HARDENING_BACKLOG.md`](qa/INSTRUMENT_HARDENING_BACKLOG.md)
-  and indexed in the defect ledger as **open, not closed**;
-- **QA-84-064 remains blocking**;
-- **Phase 84 GREEN means bounded product acceptance only.** It does not mean the
-  deferred findings are resolved.
+- a **genuinely new owner-visible product defect**; or
+- a **release-integrity defect comparable to QA-84-064**.
 
-Read `DECISION_LOG.md` **D-210** before doing anything else.
+**A further finding that a detector can be fooled is not a blocker.** It belongs
+in the backlog, appended, with nothing removed.
 
 ---
 
-## Your task: repair QA-84-064, and nothing else
+## What was repaired
 
-**QA-84-064 — the live verifier proves a SHA, not deployed bytes.** Post-gate
-publication can change the artifact while the claimed deployed-build identity
-stays green. QA demonstrated it by adding a deploy-job step after `preview-dist`
-was downloaded and before `publish-pages.sh` ran: its publisher appended a
-visible `body::before` rule to the app stylesheet. No source byte and no verified
-`dist/` byte changed, and the build-identity check still reported agreement.
+**QA-84-064 — the live verifier proved a SHA, not the bytes being served.** The
+deploy job published the artifact the gate had verified and then proved the
+deployment by reading `commitSha` out of the served `build-info.json`. A step
+between the download and the publish appended a visible rule to the app
+stylesheet; `build-info.json` was untouched, and the verifier reported
+**"Deployed SHA matches"** over a site that was now saying something the engine
+cannot do. **A commit identifier names what was built and says nothing about
+what is served.**
 
-The full finding is in `qa/PHASE_84_QA_HANDOFF.md`, round 19.
+`npm run build` now writes `dist/release-manifest.json` — a SHA-256 for every
+file it produced, and a digest over that list, with no clock in it.
+`scripts/release-integrity.mjs <base-url> --manifest <path>` fetches each of
+those files **from the live site**, hashes what the host actually returns, and
+requires every digest to be the one recorded when the gates passed. It also
+requires the site's own copy of the manifest to be the verified one, so a
+publication that rewrote the tree _and_ its record is named too. **The manifest
+the deploy job checks against arrives as its own artifact**, not out of the tree
+being published.
 
-Repair it so that what is _served_ is tied to what was _verified_ — not to a
-commit identifier that a later step can decorate around. Reproduce the defect
-before you fix it, and prove the reproduction is caught afterwards.
+**What it does not establish is written down with it (D-211):** a hostile step
+inside the deploy job can subvert any check in that job. What changed is that
+the check reads the artifact rather than a name for it, and that **it can be run
+from outside CI** — the manifest is published, so you can verify any deployment
+from a machine the pipeline does not control:
 
-### Explicitly out of scope
+```bash
+npm run release:integrity -- https://bill6006.github.io/life-command-os-rebuild/preview/ --manifest verified/release-manifest.json
+```
 
-- **The nineteen deferred findings.** Do not repair, revisit or pre-empt them.
-- **`qa/INSTRUMENT_HARDENING_BACKLOG.md` may not be edited, removed, renumbered
-  or reordered.** Every `QA-84-0xx` identifier in it must still resolve when you
-  are done. A missing identifier is a preservation failure, not a cleanup.
-- **General guard, scanner, oracle and verifier hardening.** That work now has
-  its own backlog and its own gate. It is not part of this closeout.
-- **Routing 90 must not start.** Phase 84 stays YELLOW until QA says otherwise.
+The SHA check stays. It answers a different question — whether the phone is
+looking at this commit at all — and it was never wrong about that.
+
+**One thing was not edited, deliberately.** `qa/INSTRUMENT_HARDENING_BACKLOG.md`
+failed `prettier --check` and formatting it would have been an edit, so it is
+listed in `.prettierignore` instead, beside the QA handoffs and the sealed
+owner-use review that are exempt for the same reason. All **39** `QA-84-0xx`
+identifiers still resolve and the file is byte-identical to the commit that
+added it.
 
 ---
 
-## When the repair is done
+## What this retest verifies, and nothing else
 
-Write the **bounded retest dispatch** into this file, `docs/NEXT_PROMPT.md`,
-addressed to **Codex / independent QA**, **SAME** conversation (the one that
-wrote rounds 1 to 19), **Codex**, **High** — never Max.
-
-That retest verifies **only**:
-
-1. **QA-84-064 / release-integrity correctness** — including the reproduction you
-   used, and that it is now caught.
+1. **QA-84-064 / release-integrity correctness.** Reproduce it as it was
+   reproduced here — build, take the manifest of the verified bytes, append a
+   visible rule to the app stylesheet, serve the result — and confirm that
+   `verify-deployed-sha.sh` still reports a match while
+   `release-integrity.mjs` names the file. The honest tree must pass.
 2. **The seven Phase 84 acceptance items.**
 3. **CASE A** fresh-store owner use.
 4. **CASE B** fresh-store owner use.
@@ -75,28 +86,21 @@ That retest verifies **only**:
    matrix at three widths, the Android checks, the privacy scan, checkpoint
    equivalence, and a clean worktree.
 
-Say plainly in that dispatch that **general instrument hardening is closed for
-this phase**, and that only two things may block GREEN from here:
+**If all of those pass, Phase 84 may go GREEN.** I may not declare it: a builder
+conversation does not approve its own phase (**D-077**). That is yours to say.
 
-- a **genuinely new owner-visible product defect**; or
-- a **release-integrity defect comparable to QA-84-064**.
+Phase 84 stays **YELLOW** until you do, and **routing 90 must not start**.
 
-A further finding that a detector can be fooled is **not** a blocker. It belongs
-in the backlog, appended, with nothing removed.
+## Gates at `d618588`
 
-**If all bounded acceptance items pass, Phase 84 may go GREEN.** You may not
-declare GREEN yourself — a builder conversation does not approve its own phase
-(D-077). QA declares it.
+`npm run verify` **PASS** (84 files, **1,861** tests; the build now writes the
+release manifest; copy scan clean at **8,035** strings, 7,951 placed in a module
+of the build graph); browser **708 / 708** at 360/430/1280 with zero
+failures; privacy clean at 291 tracked files; deployed Android gate **clean at
+233 checks**; **release integrity clean — 8 files served byte for byte as
+verified**; checkpoint equivalence exact; CI green. **`git diff -- src` is
+empty** — the product was not touched.
 
----
-
-## Completion
-
-When finished, make the LAST meaningful line of `docs/NEXT_PROMPT.md` exactly:
+Decisions **D-211**; defects **DEF-0144**.
 
 <!-- LCO_COMPLETE -->
-
-Do not put this completion marker in a different handoff file. The line above
-quotes it as an instruction and is not the final meaningful line, so this file
-does not yet count as finished — writing the marker at the end is what proves
-you are.

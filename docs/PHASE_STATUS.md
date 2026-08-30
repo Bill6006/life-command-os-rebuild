@@ -174,6 +174,18 @@ the built app can render**, parsed with a real parser; the browser sweeps stay,
 because static covers every state and dynamic covers composition, and D-201 says
 which is which (D-201).
 
+**And round 19 is where the owner closed the loop.** Rounds 15 to 19 produced
+twenty findings, four per round, with no taper; nineteen were guard, scanner,
+oracle or verifier findings and **none was an owner-visible product defect**.
+Owner decision **D-210** defers those nineteen to
+[`qa/INSTRUMENT_HARDENING_BACKLOG.md`](qa/INSTRUMENT_HARDENING_BACKLOG.md),
+open and unedited, and keeps exactly one blocking: **QA-84-064**, which is about
+release rather than about a detector. The deployment proved itself by reading a
+commit identifier out of the served `build-info.json`, and a step between the
+gate and the publish could change everything else without touching it. What is
+served is now proved against a digest of what was verified (D-211). **Phase 84
+GREEN, when QA declares it, means bounded product acceptance only.**
+
 **And round 18 is where the guarantee stops covering one kind of thing while
 claiming all of them.** The tie to `dist/` walked script chunks only, so a
 plugin keyed on `isWrite` put a promise in the shipped stylesheet; `content: 'a'
@@ -300,7 +312,8 @@ through the same controls, now gets past all eight steps.
 
 | Fact                    | Value                                                                                                                                                           |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Product checkpoint      | `dea2fdd` — the Round 18 repair, and the commit the aggregate gate was run on. **It changes no bundle byte**: the repair is entirely in `scripts/` and `tests/` |
+| Product checkpoint      | `d618588` — the bounded closeout under D-210: QA-84-064 repaired. **It changes no bundle byte**: the repair is in `scripts/`, the workflow and the build script |
+| Round 19 checkpoint     | `16100ae` — the Round 18 repair, which Round 19 tested                                                                                                          |
 | Round 18 checkpoint     | `6062756` — the Round 17 repair, which Round 18 tested                                                                                                          |
 | Round 17 checkpoint     | `462dfe2` — the Round 16 repair, which Round 17 tested                                                                                                          |
 | Round 16 checkpoint     | `9457b23` — the Round 15 repair, which Round 16 tested                                                                                                          |
@@ -322,7 +335,7 @@ through the same controls, now gets past all eight steps.
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                     |
 | Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                                                                              |
 | Owner phone check       | owed before release; not a blocker QA can clear                                                                                                                 |
-| Independent QA          | **Rounds 1 to 18 all FAIL**, all repaired; Round 19 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md`                                                        |
+| Independent QA          | **Rounds 1 to 19 all FAIL**; nineteen findings deferred by **D-210**, QA-84-064 repaired. A **bounded retest** is dispatched at the end of `NEXT_PROMPT.md`     |
 
 **The documentation head is a later commit than the product checkpoint**, as it
 has been every round. At round 8 it is `73de27e`, and it carries exactly three
@@ -341,7 +354,8 @@ At the repaired checkpoint, not at the one QA failed.
 | Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files (unchanged at round 11; 1,812 at round 1)         |
 | Browser, three widths, one worker         | **708 passed** at three widths, one worker, **zero failures**                  |
 | Rendered copy scan                        | **clean — 8,035 shipped strings**, 7,951 placed in a module of the build graph |
-| Android-style gate, deployed              | **clean — 233 checks** against deployed `dea2fdd`                              |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `d618588`                              |
+| Release integrity, deployed               | **clean — 8 files served byte for byte as verified** (D-211)                   |
 | Privacy scan                              | **clean** — 290 tracked files                                                  |
 | Block sweep                               | **PASS** — unchanged                                                           |
 | Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya              |
