@@ -47,22 +47,23 @@
  * the route crawl: `QA_AVAILABLE` is `!isProduction`, so it is not code the
  * product ships to the owner. The check below fails if that stops being true.
  */
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import * as acorn from 'acorn'
-import * as esbuild from 'esbuild'
-import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
+import { build } from 'vite'
 import {
   APPROVED_FUTURE_COPY,
   adaptationClaimsOnAnyScreen,
   couldCloseAClaim,
   couldOpenAClaim,
+  LONGEST_CLOSER,
+  LONGEST_OPENER,
   withoutApprovedNonPromises,
   withoutApprovedFutureCopy,
 } from './adaptation-claims.mjs'
 
-const ASSETS = 'dist/assets'
 const LABORATORY = 'QaScreen'
+const SHIPPED = 'dist/assets'
 
 /**
  * Every string a module ships, and every sentence its adjacent literals make —
@@ -87,7 +88,7 @@ const LABORATORY = 'QaScreen'
  * named in D-202 rather than implied, because assembling it needs to know what
  * the data is, which is running the program.
  */
-function stringsIn(source, originAt = () => null) {
+function stringsIn(source) {
   const found = new Map()
   const seen = new Set()
   const structural = new Set(['type', 'start', 'end', 'loc', 'range'])
@@ -96,16 +97,10 @@ function stringsIn(source, originAt = () => null) {
     if (typeof value !== 'string' || value === '') return
     let known = found.get(value)
     if (known === undefined) {
-      known = { at: new Set(), disputed: new Set(), joined: false }
+      known = { at: new Set(), joined: false }
       found.set(value, known)
     }
     if (joined) known.joined = true
-    for (const piece of from) {
-      const origin = originAt(piece.at, piece.text)
-      if (origin === null) continue
-      if (origin.agrees) known.at.add(origin.file)
-      else known.disputed.add(origin.file)
-    }
   }
 
   /**
@@ -225,43 +220,59 @@ function stringsIn(source, originAt = () => null) {
     record(run.map((piece) => piece.text).join(''), run, true)
 
     /*
-     * And the pairs that could actually form one — QA-84-051.
+     * And the pairs that could actually form one — QA-84-051, QA-84-056.
      *
      * The whole-run join assumes every piece renders. Round 16 called a helper
-     * that returns its first and third arguments and drops the second, with the
-     * dropped one long enough to push the subject and its verb apart: every
-     * word the owner read was a literal argument, and this guard put a hundred
-     * and twenty characters of scaffolding between them.
+     * that dropped its second argument, with the dropped one long enough to
+     * push a subject and its verb apart; Round 17 did it again and **split the
+     * subject** across `'The '` and `'app '`, so neither piece opened a claim
+     * on its own and no pair was built at all.
      *
      * **Widening the classifier's window is the wrong answer** — unbounded, it
      * convicts the private-permission note, which joins an honest sentence
      * about now to an honest sentence about a setting. What is true is that any
-     * two pieces might end up beside each other, because what happens to the
-     * pieces between them is a computation this does not evaluate.
+     * two stretches of a run might end up beside each other, because what
+     * happens to the pieces between them is a computation this does not
+     * evaluate.
      *
-     * Testing every ordered pair says that and costs the square of the run,
-     * which on this bundle does not finish. So only the pairs that could carry
-     * a claim are built: a piece that names a subject, with a later piece that
-     * carries a modal or a deixis. That is not a sample of the pairs — it is
-     * all of the pairs the rule could ever fire on, and the rest are silence
-     * either way.
+     * So an opener is the **shortest run of adjacent pieces ending here** that
+     * can open a claim, and a closer the shortest run starting here that can
+     * close one. Neither search is capped by a number chosen for it: nothing in
+     * the vocabulary is longer than its longest phrase, and the phrase must be
+     * contiguous, so a window wider than that can never newly match.
      */
-    const opens = []
-    for (let index = 0; index < run.length; index += 1) {
-      const piece = run[index]
-      if (piece !== undefined && couldOpenAClaim(piece.text)) opens.push(index)
-    }
-    if (opens.length > 0) {
-      for (let index = 1; index < run.length; index += 1) {
-        const later = run[index]
-        if (later === undefined || !couldCloseAClaim(later.text)) continue
-        for (const first of opens) {
-          if (first >= index - 1) continue
-          const earlier = run[first]
-          if (earlier === undefined) continue
-          record(`${earlier.text} ${later.text}`, [earlier, later], true)
-          record(`${earlier.text}${later.text}`, [earlier, later], true)
+    const openers = []
+    for (let to = 0; to < run.length; to += 1) {
+      let text = ''
+      for (let from = to; from >= 0; from -= 1) {
+        text = `${run[from]?.text ?? ''}${text}`
+        if (couldOpenAClaim(text)) {
+          openers.push({ to, text, pieces: run.slice(from, to + 1) })
+          break
         }
+        if (text.length > LONGEST_OPENER) break
+      }
+    }
+
+    const closers = []
+    for (let from = 0; from < run.length; from += 1) {
+      let text = ''
+      for (let to = from; to < run.length; to += 1) {
+        text = `${text}${run[to]?.text ?? ''}`
+        if (couldCloseAClaim(text)) {
+          closers.push({ from, text, pieces: run.slice(from, to + 1) })
+          break
+        }
+        if (text.length > LONGEST_CLOSER) break
+      }
+    }
+
+    for (const opener of openers) {
+      for (const closer of closers) {
+        if (closer.from <= opener.to + 1) continue
+        const both = [...opener.pieces, ...closer.pieces]
+        record(`${opener.text} ${closer.text}`, both, true)
+        record(`${opener.text}${closer.text}`, both, true)
       }
     }
   }
@@ -335,8 +346,7 @@ function contentIn(css, name) {
     const raw = (match[1] ?? '').trim()
     for (const piece of raw.matchAll(/"([^"]*)"|'([^']*)'/g)) {
       const value = piece[1] ?? piece[2] ?? ''
-      if (value !== '')
-        found.set(value, { at: new Set([name]), disputed: new Set(), joined: false })
+      if (value !== '') found.set(value, { at: new Set(), joined: false })
     }
   }
   return found
@@ -382,9 +392,11 @@ function flattened(text) {
     .trim()
 }
 
-/** A sourcemap source, as a path in this repository. */
+/** A module id from the build graph, as a path in this repository. */
 function repoPath(source) {
   let at = String(source).split(SEPARATOR).join('/')
+  const root = process.cwd().split(SEPARATOR).join('/')
+  if (at.toLowerCase().startsWith(root.toLowerCase() + '/')) at = at.slice(root.length + 1)
   while (at.startsWith('../')) at = at.slice(3)
   return at.startsWith('./') ? at.slice(2) : at
 }
@@ -420,203 +432,239 @@ function repoPath(source) {
  *   which is the case Round 14 could keep alive with a discarded expression.
  */
 /**
- * Whether the module the map names really says those words — QA-84-052.
+ * Where each approved sentence is allowed to live, and where each shipped
+ * occurrence of it actually came from — D-207.
  *
- * The first version of this asked whether the **first twenty characters** of a
- * string turned up within a line either side of the mapped position. Round 16
- * answered it with a comment sharing exactly those twenty characters and
- * nothing else, which is what a measurement inside a guard buys you (D-197):
- * the number was a guess about how source is wrapped, and it was answerable
- * without the sentence being there at all.
+ * This question has been answered four different ways and broken four times.
+ * D-203 read `src` and asked what a file *could* compose; Round 14 imported an
+ * approved sentence from a `.js` module beside the repository. D-204 traced the
+ * built chunk's sourcemap; Round 15 rewrote the map. D-205 corroborated the map
+ * against the files on disk and against its own positions; Round 16 made all of
+ * those statements agree on the wrong module. D-206 walked the app's relative
+ * imports from the repository; Round 17 added a **Vite alias**, which that walk
+ * does not resolve, and then forged the one thing left to catch it.
  *
- * So the whole credited text must be in the module the map names, with no
- * window and no prefix. This is a **tripwire, not the provenance** — what a
- * module produces is settled from the repository by `reachableModules`, and
- * this only reports a build whose own account disagrees with itself.
+ * Every one of those is the same mistake: **a second account of what the build
+ * did.** A resolver written here is not the resolver that built the app, and a
+ * map is the build talking about itself.
+ *
+ * So the build is asked to hand over its own graph. Vite is run in process,
+ * and Rollup's output gives, for every chunk, the **rendered code of each
+ * module in it**. That is not an account of provenance — it is the shipped
+ * bytes, already grouped by the module they came from, by the tool that put
+ * them there. An alias, a conditional export, a plugin-generated module: all of
+ * them arrive here resolved, because the thing that resolved them is what
+ * produced this.
+ *
+ * Two consequences worth stating:
+ *
+ * - **"can compose" is gone.** A module is a producer of a sentence when its
+ *   *rendered* code carries it, so a literal the bundler dropped is not
+ *   production, and a sentence that ships has a producer by construction rather
+ *   than by pairing two separate facts (QA-84-055).
+ * - **stylesheets are in the graph too.** Vite lists every `.css` module of a
+ *   chunk, and a `content:` string in the emitted stylesheet is attributed to
+ *   the graph stylesheet that carries it. A shipped `content:` nobody can place
+ *   fails, rather than being copy with no owner.
+ *
+ * The coverage claim still comes from the whole chunk: every string in the
+ * finished file is classified, whether or not any module accounts for it. What
+ * the modules add is **which** module, for the strings where that matters.
  */
-function saysIt(content, text) {
-  const wanted = flattened(text)
-  return wanted === '' || flattened(content).includes(wanted)
+/**
+ * Whether the build this scan just made is the build that shipped — D-207.
+ *
+ * Running Vite in process is what makes the module graph available, and it is
+ * also a build **made for the guard**. If it diverged from the deployed one —
+ * by mode, by environment, by plugin order — the owner would be reading copy
+ * this never saw, and nothing here would notice. So it is compared against
+ * `dist/`, which is what `npm run verify` built a moment earlier and what the
+ * deploy publishes.
+ *
+ * The chunks are paired by **content**, not by name. A first version paired
+ * them by stripping the hash off the filename and immediately mis-read
+ * `index-C3-1N9fH.js`, because a content hash can contain a dash of its own.
+ * Pairing by what the files say needs no such rule, and is the thing being
+ * claimed anyway.
+ *
+ * Two things are masked, and only two: the **content-hash filenames** chunks
+ * use to refer to each other, and the **build stamp** the product embeds. Both
+ * differ between any two builds of identical source, neither is copy, and the
+ * second is what makes the first differ. The pairing must be one to one, so a
+ * chunk that shipped and was not built here fails as loudly as the reverse.
+ */
+function settled(text) {
+  return String(text)
+    .replace(/[/][/]# sourceMappingURL=.*$/m, '')
+    .replace(/-[A-Za-z0-9_-]{8}[.](js|css)/g, '-HASH.$1')
+    .replace(/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:[.][0-9]+)?Z/g, 'WHEN')
+    .trimEnd()
 }
 
-/**
- * Whether the map's account of a module matches the module — QA-84-046.
- *
- * `sourcesContent` is the build's copy of every file it read. When a name is
- * changed without its content, the map ends up claiming that one module has
- * two different bodies, and comparing each against the file on disk says so at
- * once. Sources with no file here — a dependency published without its source,
- * a virtual module — are skipped rather than guessed at.
- */
-function mapDisagreesWithDisk(raw, name) {
-  const complaints = []
-  const sources = raw.sources ?? []
-  const contents = raw.sourcesContent ?? []
-  const plain = (text) => String(text).split('\r\n').join('\n')
+function differsFromShipped(chunks) {
+  const onDisk = new Map(
+    readdirSync(SHIPPED)
+      .filter((file) => file.endsWith('.js'))
+      .map((file) => [file, settled(readFileSync(join(SHIPPED, file), 'utf8'))]),
+  )
 
-  for (let index = 0; index < sources.length; index += 1) {
-    const file = repoPath(sources[index])
-    const claimed = contents[index]
-    if (claimed === null || claimed === undefined) {
-      complaints.push(`${name}: the map carries no source for ${file}, so nothing can corroborate`)
-      complaints.push('the strings it is credited with.')
+  const complaints = []
+  for (const chunk of chunks) {
+    const mine = settled(chunk.code)
+    const match = [...onDisk.entries()].find(([, shipped]) => shipped === mine)
+    if (match === undefined) {
+      complaints.push(`${chunk.fileName} is not any of the files that shipped`)
       continue
     }
-    if (!existsSync(file)) continue
-    if (plain(claimed) !== plain(readFileSync(file, 'utf8'))) {
-      complaints.push(`${name}: the map's copy of ${file} is not what is on disk, so its`)
-      complaints.push('attributions describe a module this repository does not contain.')
-    }
+    onDisk.delete(match[0])
+  }
+  for (const file of onDisk.keys()) {
+    complaints.push(`${file} shipped and this build did not produce it`)
   }
   return complaints
 }
 
-/**
- * What each module the app actually imports can put together — QA-84-050,
- * QA-84-052, D-206.
- *
- * Provenance moved to the built chunk's sourcemap in D-204 and was corroborated
- * against that same build in D-205. Round 16 showed the limit of both: a map
- * that is **consistently** wrong — the name, the content and the position all
- * agreeing on a module that really does contain the sentence — satisfies every
- * check made inside the account, because every one of those checks is another
- * statement by the same build.
- *
- * So the question *which module produces these words* is answered from the
- * repository instead, which is not a statement the build gets to make. The app
- * is walked from its entry through its **relative** imports, each module is
- * stripped to JavaScript and read with the bundle's own extractor, and a module
- * produces an approved sentence when anything it can compose carries those
- * words.
- *
- * Two things keep this honest rather than merely different:
- *
- * - **the bundle still says what ships.** Source alone cannot tell a live
- *   sentence from one the bundler deleted, which is what QA-84-042 exploited;
- *   the approval check keeps asking the artefact that question.
- * - **an import that cannot be resolved fails the scan.** A resolver that
- *   quietly skips what it does not understand would shrink the set it claims to
- *   have walked, and a guard that passes by having nothing to say is D-186's
- *   mistake.
- */
-function reachableModules(entry) {
-  const found = new Map()
-  const queue = [entry.split(SEPARATOR).join('/')]
-  const seen = new Set()
-  const unresolved = []
+async function shippedByModule() {
+  const bundled = await build({
+    logLevel: 'silent',
+    build: { write: false, sourcemap: false },
+  })
+  const outputs = Array.isArray(bundled) ? bundled : [bundled]
 
-  const resolve = (from, specifier) => {
-    const base = join(dirname(from), specifier).split(SEPARATOR).join('/')
-    const candidates = [
-      base,
-      `${base}.ts`,
-      `${base}.tsx`,
-      `${base}.js`,
-      `${base}.jsx`,
-      `${base}/index.ts`,
-      `${base}/index.tsx`,
-      `${base}/index.js`,
-    ]
-    // A specifier written with an extension the compiler rewrites: '../x.js'
-    // is how TypeScript refers to '../x.ts'.
-    if (/[.]js$/.test(base)) {
-      candidates.push(base.replace(/[.]js$/, '.ts'), base.replace(/[.]js$/, '.tsx'))
-    }
-    for (const candidate of candidates) {
-      if (existsSync(candidate) && statSync(candidate).isFile()) return candidate
-    }
-    return null
-  }
+  const shipped = new Map()
+  const stylesheets = new Set()
+  const built = []
+  let chunks = 0
+  let sheets = 0
 
-  /*
-   * A stylesheet or a JSON file is a module to the bundler and not code to
-   * read here — the stylesheets are read separately, from the built CSS. They
-   * are resolved so an unresolvable import is still a failure, and then set
-   * aside rather than handed to a TypeScript transform that would choke on
-   * them, which is the shape of the crash Round 14 found (QA-84-045).
-   */
-  const isCode = (file) => /[.](?:m|c)?[jt]sx?$/.test(file)
-
-  while (queue.length > 0) {
-    const file = queue.pop()
-    if (file === undefined || seen.has(file)) continue
-    seen.add(file)
-
-    const source = readFileSync(file, 'utf8')
-    const { code } = esbuild.transformSync(source, {
-      loader: file.endsWith('.tsx') ? 'tsx' : file.endsWith('.jsx') ? 'jsx' : 'ts',
-      format: 'esm',
-      target: 'esnext',
-    })
-
-    found.set(file, [...stringsIn(code).keys()].map(flattened))
-
-    const tree = acorn.parse(code, { ecmaVersion: 'latest', sourceType: 'module' })
-    for (const statement of tree.body) {
-      const specifier =
-        (statement.type === 'ImportDeclaration' ||
-          statement.type === 'ExportNamedDeclaration' ||
-          statement.type === 'ExportAllDeclaration') &&
-        statement.source !== null &&
-        statement.source !== undefined
-          ? String(statement.source.value)
-          : null
-      if (specifier === null) continue
-      if (!specifier.startsWith('.')) continue
-      const at = resolve(file, specifier)
-      if (at === null) unresolved.push(`${file} imports ${specifier}, which could not be found`)
-      else if (isCode(at)) queue.push(at)
+  const remember = (from, origin) => {
+    for (const [value, found] of from) {
+      let known = shipped.get(value)
+      if (known === undefined) {
+        known = { at: new Set(), joined: false }
+        shipped.set(value, known)
+      }
+      if (found.joined) known.joined = true
+      if (origin !== null) known.at.add(origin)
+      for (const already of found.at) known.at.add(already)
     }
   }
 
-  return { found, unresolved }
+  for (const one of outputs) {
+    for (const item of one.output) {
+      const laboratory = item.fileName.includes(LABORATORY)
+      if (item.type === 'chunk') {
+        /*
+         * Stylesheets are collected from **every** chunk, the laboratory's
+         * included, because the emitted CSS is read the same way — D-202. Only
+         * the laboratory's *code* is skipped, for the reason  is skipped
+         * by the route crawl.
+         */
+        for (const [id] of Object.entries(item.modules)) {
+          if (id.endsWith('.css')) stylesheets.add(repoPath(id))
+        }
+        built.push(item)
+        if (laboratory) continue
+        chunks += 1
+        // The finished file, for coverage: nothing in it goes unclassified.
+        remember(stringsIn(item.code), null)
+        // And each module's own rendered bytes, for provenance.
+        for (const [id, rendered] of Object.entries(item.modules)) {
+          const code = rendered?.code
+          if (typeof code !== 'string' || code === '') continue
+          remember(stringsIn(code), repoPath(id))
+        }
+        continue
+      }
+
+      if (!item.fileName.endsWith('.css')) continue
+      sheets += 1
+      const unplaced = []
+      for (const [value] of contentIn(String(item.source), item.fileName)) {
+        const from = [...stylesheets].filter(
+          (sheet) => existsSync(sheet) && readFileSync(sheet, 'utf8').includes(value),
+        )
+        if (from.length === 0) unplaced.push(value)
+        for (const sheet of from) {
+          remember(new Map([[value, { at: new Set(), joined: false }]]), sheet)
+        }
+        if (from.length === 0) {
+          remember(new Map([[value, { at: new Set(), joined: false }]]), null)
+        }
+      }
+      if (unplaced.length > 0) {
+        console.error(`${item.fileName} renders text no stylesheet in the module graph carries:`)
+        for (const value of unplaced.slice(0, 10)) console.error(`  - ${JSON.stringify(value)}`)
+        console.error('Copy nobody can place is copy nobody approved.')
+        process.exit(1)
+      }
+    }
+  }
+
+  const complaints = differsFromShipped(built)
+  if (complaints.length > 0) {
+    for (const complaint of complaints) console.error(`${complaint}.`)
+    console.error('This scan builds the app to read its module graph, and that build must be')
+    console.error('the one that shipped. Run npm run build first; if it was, the two differ.')
+    process.exit(1)
+  }
+
+  return { shipped, chunks, sheets, stylesheets }
 }
 
-function approvalsAwayFromHome(shipped, composable) {
+/**
+ * Which module each approved sentence ships from, and whether that was allowed.
+ *
+ * Three ways to fail, and they say different things: a module that ships the
+ * words and is not listed is a **transplant**; a listed module that no longer
+ * ships them is a **stale approval**; and a sentence in the bundle that no
+ * module accounts for is **unplaced**, which is the case Round 17 made by
+ * putting the words in a stylesheet while the approved module merely still
+ * contained them.
+ */
+function approvalsAwayFromHome(shipped) {
   const wrong = []
   for (const approved of APPROVED_FUTURE_COPY) {
     const pin = flattened(approved.pin ?? approved.text)
 
     let ships = false
-    const disputed = new Set()
+    let unplaced = false
+    const producing = new Set()
     for (const [text, known] of shipped) {
       if (!flattened(text).includes(pin)) continue
       ships = true
-      for (const origin of known.disputed) disputed.add(origin)
+      /*
+       * A **literal** that ships must have come from a module; a **join** is
+       * this guard's own construction over the finished chunk, and one whose
+       * pieces sit in two different modules belongs to neither. So only an
+       * unplaced literal is an anomaly — which is exactly the case Round 17
+       * built, a sentence rendered from a stylesheet while its approved module
+       * merely still contained it.
+       */
+      if (known.at.size === 0 && !known.joined) unplaced = true
+      for (const origin of known.at) producing.add(origin)
     }
 
     if (!ships) {
       wrong.push({ pin, file: approved.in.join(', '), why: 'is not in the bundle at all' })
       continue
     }
-
-    /*
-     * Who can produce it is answered from the repository, not from the build.
-     * A module the app imports and which can compose these words is a producer,
-     * whatever the map says about where the bytes came from.
-     */
-    const producing = [...composable.entries()]
-      .filter(([, strings]) => strings.some((value) => value.includes(pin)))
-      .map(([file]) => file)
-
-    for (const file of producing) {
-      if (!approved.in.includes(file)) {
-        wrong.push({ pin, file, why: 'is imported by the app and can say it, without approval' })
+    if (unplaced) {
+      wrong.push({ pin, file: '(no module in the build graph)', why: 'also ships it' })
+    }
+    for (const origin of producing) {
+      if (!approved.in.includes(origin)) {
+        wrong.push({ pin, file: origin, why: 'ships it without approval' })
       }
     }
     for (const file of approved.in) {
-      if (!producing.includes(file)) wrong.push({ pin, file, why: 'can no longer say it' })
-    }
-
-    // And the build's own account must not disagree with itself about it.
-    for (const origin of disputed) {
-      wrong.push({ pin, file: origin, why: 'is credited with it but does not contain it' })
+      if (!producing.has(file)) wrong.push({ pin, file, why: 'no longer ships it' })
     }
   }
   return wrong
 }
 
-function main() {
+async function main() {
   const routing = readFileSync(join('src', 'platform', 'routing.ts'), 'utf8')
   if (!routing.includes('QA_AVAILABLE = !isProduction')) {
     console.error(
@@ -625,118 +673,38 @@ function main() {
     process.exit(1)
   }
 
-  const files = readdirSync(ASSETS).filter((name) => name.endsWith('.js'))
-  const chunks = files.filter((name) => !name.startsWith(LABORATORY))
-  if (chunks.length === 0) {
-    console.error(`No owner-facing bundle found in ${ASSETS}. Run npm run build first.`)
+  if (!existsSync(SHIPPED)) {
+    console.error(`No ${SHIPPED} to compare against. Run npm run build first.`)
     process.exit(1)
   }
 
-  /*
-   * Every shipped string, and the module it came from.
-   *
-   * The sourcemap is not optional — without it every origin is unknown, the
-   * approval check silently has nothing to compare, and this would report a
-   * clean run while checking nothing. So a chunk without a map is a failure,
-   * not a fallback (D-186: read the gate's own status, and do not let a gate
-   * pass by having nothing to say).
-   */
-  const shipped = new Map()
-  const mapped = new Set()
-  const remember = (from) => {
-    for (const [value, found] of from) {
-      let known = shipped.get(value)
-      if (known === undefined) {
-        known = { at: new Set(), disputed: new Set(), joined: false }
-        shipped.set(value, known)
-      }
-      if (found.joined) known.joined = true
-      for (const origin of found.at) known.at.add(origin)
-      for (const origin of found.disputed) known.disputed.add(origin)
-    }
-  }
+  const { shipped, chunks, sheets, stylesheets } = await shippedByModule()
 
-  for (const name of chunks) {
-    const at = join(ASSETS, `${name}.map`)
-    if (!existsSync(at)) {
-      console.error(`${name} ships without a sourcemap, so no string in it can be traced to the`)
-      console.error('module that produced it. The build must emit sourcemaps for this to check')
-      console.error('anything at all.')
-      process.exit(1)
-    }
-    const raw = JSON.parse(readFileSync(at, 'utf8'))
-    for (const source of raw.sources ?? []) {
-      const file = repoPath(source)
-      if (!file.startsWith('node_modules/')) mapped.add(file)
-    }
-    for (const complaint of mapDisagreesWithDisk(raw, name)) {
-      console.error(complaint)
-      process.exit(1)
-    }
-
-    const tracer = new TraceMap(raw)
-    const bodies = new Map()
-    raw.sources.forEach((source, index) => {
-      bodies.set(source, String(raw.sourcesContent?.[index] ?? ''))
-    })
-
-    const originAt = (node, text) => {
-      if (node === null || typeof node !== 'object' || node.loc === undefined) return null
-      const found = originalPositionFor(tracer, {
-        line: node.loc.start.line,
-        column: node.loc.start.column,
-      })
-      if (found.source === null || found.source === undefined) return null
-      return {
-        file: repoPath(found.source),
-        agrees: saysIt(bodies.get(found.source) ?? '', text),
-      }
-    }
-    remember(stringsIn(readFileSync(join(ASSETS, name), 'utf8'), originAt))
-  }
-
-  const sheets = readdirSync(ASSETS).filter((name) => name.endsWith('.css'))
-  if (sheets.length === 0) {
-    console.error(`No stylesheet found in ${ASSETS}. The scan would not see rendered CSS text.`)
+  if (chunks === 0) {
+    console.error('The build produced no owner-facing chunk.')
     process.exit(1)
   }
-  for (const name of sheets) remember(contentIn(readFileSync(join(ASSETS, name), 'utf8'), name))
-
+  if (sheets === 0) {
+    console.error('The build produced no stylesheet, so the scan would not see rendered CSS text.')
+    process.exit(1)
+  }
+  if (stylesheets.size === 0) {
+    console.error('No stylesheet is in the module graph, so no CSS text could be placed.')
+    process.exit(1)
+  }
   if (shipped.size < 1000) {
     console.error(`Only ${shipped.size} strings were read — the scan is not seeing the bundle.`)
     process.exit(1)
   }
 
-  const traced = [...shipped.values()].filter((known) => known.at.size > 0).length
-  if (traced < shipped.size / 2) {
-    console.error(`Only ${traced} of ${shipped.size} strings could be traced to a module.`)
+  const placed = [...shipped.values()].filter((known) => known.at.size > 0).length
+  if (placed < shipped.size / 2) {
+    console.error(`Only ${placed} of ${shipped.size} strings could be placed in a module.`)
     console.error('Provenance is the whole approval check, so this is a failure, not a warning.')
     process.exit(1)
   }
 
-  const { found: composable, unresolved } = reachableModules(join('src', 'main.tsx'))
-  if (unresolved.length > 0) {
-    console.error('The app has imports this scan could not follow, so the set of modules it')
-    console.error('claims to have read is smaller than the app:')
-    for (const complaint of unresolved) console.error(`  - ${complaint}`)
-    process.exit(1)
-  }
-
-  /*
-   * And the map may not name a module of this repository that the walk never
-   * reached. The map is not trusted for provenance any more, but it is still
-   * the build's inventory, and a repo-local module in it that the walk missed
-   * means the walk is the thing that is wrong.
-   */
-  const missed = [...mapped].filter((file) => !composable.has(file) && existsSync(file))
-  if (missed.length > 0) {
-    console.error('The build compiled modules of this repository that the import walk never')
-    console.error('reached, so provenance would be answered from an incomplete set:')
-    for (const file of missed.slice(0, 20)) console.error(`  - ${file}`)
-    process.exit(1)
-  }
-
-  const wrong = approvalsAwayFromHome(shipped, composable)
+  const wrong = approvalsAwayFromHome(shipped)
   if (wrong.length > 0) {
     console.error(
       `${wrong.length} approved sentence(s) are not where they were approved.\n` +
@@ -752,7 +720,7 @@ function main() {
   for (const [value, known] of shipped) {
     const left = withoutApprovedFutureCopy(withoutApprovedNonPromises(value))
     for (const claim of adaptationClaimsOnAnyScreen(left)) {
-      offenders.push({ claim, value, origins: new Set([...known.at, ...known.disputed]) })
+      offenders.push({ claim, value, origins: known.at })
     }
   }
 
@@ -762,7 +730,7 @@ function main() {
         'Approve one in APPROVED_FUTURE_COPY, with the reason, or change the copy.\n',
     )
     for (const { claim, value, origins } of offenders.slice(0, 40)) {
-      const from = origins.size === 0 ? 'an untraceable module' : [...origins].join(', ')
+      const from = origins.size === 0 ? 'no module in the graph' : [...origins].join(', ')
       console.error(
         `  - “${claim}”\n    in: ${JSON.stringify(value.slice(0, 160))}\n    from: ${from}`,
       )
@@ -771,9 +739,9 @@ function main() {
   }
 
   console.log(
-    `Rendered copy scan clean — ${shipped.size} shipped strings (${traced} traced to a module) ` +
-      `across ${chunks.length} script chunk(s) and ${sheets.length} stylesheet(s).`,
+    `Rendered copy scan clean — ${shipped.size} shipped strings (${placed} placed in a module) ` +
+      `across ${chunks} script chunk(s) and ${sheets} stylesheet(s).`,
   )
 }
 
-main()
+await main()

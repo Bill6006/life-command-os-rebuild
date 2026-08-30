@@ -39,6 +39,70 @@ None.
 
 ## Fixed
 
+### DEF-0142 — the fifth account of the build, and a proof that did not transfer
+
+- Status: Fixed
+- Severity: Blocker ×4 — an aliased module could ship an approved sentence and be
+  laundered by the one check left to catch it; a stylesheet could render a
+  sentence its approved module no longer ships; a subject split across two
+  pieces evaded the pair set; and nine fabricated section bodies rode on one
+  honest one
+- Found in: routing 84 / `462dfe2`
+- Found by: **independent QA round 17** (QA-84-054 … QA-84-057) — the sixth
+  round running in which every weakness the builder's own dispatch named became
+  a working false green, and the fifth in which all of them did
+- Class: **a second account of what the build did, and a part-wise proof read as
+  a whole one.**
+- Reproduction, all four confirmed here before anything was built, each matching
+  QA's own count:
+  - **054** — a Vite alias, the sentence in the aliased module, then the map's
+    identity and `sourcesContent` for it replaced by the approved module's →
+    **clean at 7,962 strings, 7,890 traced** (QA: 7,962 / 7,890).
+  - **055** — the sentence left in its approved module only as an unused
+    literal, and rendered on More from CSS `content:` → **clean at 7,964 /
+    7,892** (QA: 7,964 / 7,892).
+  - **056** — `qaRound17Render('The ', 'app ', <dropped>, ['will choose ', …])`
+    → **clean at 7,978 / 7,906** (QA: 7,976 / 7,904).
+  - **057** — the real **Recent record** block preserved and the other nine
+    sections fabricated → identity and app-wide guards **6 passed** (QA: 6
+    passed).
+- Repair — see **D-207**. Vite is run in process and Rollup's per-module rendered
+  code is the provenance; openers and closers may be assembled from adjacent
+  pieces, bounded by the vocabulary's own longest phrase; and the composed
+  review is compared against what the copy control hands over.
+- Regression: `scripts/rendered-copy-scan.mjs` (`shippedByModule`, unplaceable
+  CSS, unplaced literals), `LONGEST_OPENER`/`LONGEST_CLOSER` in
+  `scripts/adaptation-claims.mjs`, and `QA-84-039/043/048/053/057` in
+  `tests/browser/phase84.spec.ts`.
+- Proved by reintroduction: all four, each built and run. **054** fails with
+  _`qa-round17/copy.ts` ships it without approval_ — and there is no map left to
+  forge; **055** fails with both halves stated, _`src/styles/base.css` ships it
+  without approval_ and _`src/features/life/DomainPanels.tsx` no longer ships
+  it_; **056** fails on the assembled pair _"The app will choose"_; **057** fails
+  with _the field and the copy control do not hold the same document_. Round 16's
+  own impostor fails on that same assertion.
+- **A probe decided the shape of 057's repair, and is recorded because it ruled
+  out the obvious answer.** Grounding every section the way the record section
+  was grounded is not available: over the real product only three of ten
+  sections contribute a line another screen also renders, so requiring it
+  everywhere would have failed the honest product. What the app does have is a
+  second way of handing the same document over.
+- **One weakness was closed rather than shipped**: running Vite in process makes
+  a build **for the guard**, so each chunk is now compared against `dist/` byte
+  for byte, masking only the content-hash filenames and the build stamp. Proved
+  by leaving `dist` stale: _assets/index-BSPaUGsR.js is not any of the files that
+  shipped_ and _index-CvM30a-s.js shipped and this build did not produce it_. The
+  pairing is by **content**, after a first version mis-read `index-C3-1N9fH.js`
+  by stripping the hash off the name — a content hash can contain a dash.
+- Siblings: none. All seventeen approvals resolve to exactly their listed modules
+  from the build graph, and the shipped-string count moved from 7,962 to
+  **8,035**. `@jridgewell/trace-mapping` and `esbuild` are no longer declared,
+  because nothing imports them any more; the scan also runs in **4.5 seconds**
+  rather than twenty-nine, since it no longer parses a whole minified chunk to
+  find positions.
+- Note on scope: the current copy was honest throughout, for the fifteenth round
+  running, and both fresh-store cases passed again.
+
 ### DEF-0141 — an account that agrees with itself, and two claims that mistook variation for substance
 
 - Status: Fixed

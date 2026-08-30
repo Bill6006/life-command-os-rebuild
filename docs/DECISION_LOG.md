@@ -7499,3 +7499,99 @@ guard does not evaluate — in a state no sweep reaches is covered by neither
 half. Nothing here narrows that.
 
 ---
+
+## D-207 — Ask the build for its own graph, and ask the app for its own document
+
+**Phase:** 84 (QA round 17 repair) · **Status:** Active · Ends the provenance
+argument that ran through **D-203** to **D-206**, and replaces the part-wise
+proof of the composed review.
+
+Five rounds have now asked _which module produced these words_, and five answers
+have been broken. It is worth writing down as one line, because the shape is the
+same every time and the fix is the same shape too.
+
+| Answer                                              | Broken by                                                |
+| --------------------------------------------------- | -------------------------------------------------------- |
+| D-203 — read `src`, ask what a file could compose   | a `.js` module beside the repository (R14)               |
+| D-204 — trace the built chunk's sourcemap           | the map rewritten (R15)                                  |
+| D-205 — corroborate the map against disk and itself | a map made consistently wrong (R16)                      |
+| D-206 — walk the app's relative imports             | a **Vite alias**, which that walk does not resolve (R17) |
+
+Every one of them is **a second account of what the build did.** A resolver
+written here is not the resolver that built the app; a map is the build talking
+about itself; a corroboration inside one account is that account again.
+
+### 1. The build hands over its own graph (QA-84-054, QA-84-055)
+
+Vite is now run in process, and Rollup's output gives, for each chunk, the
+**rendered code of every module in it**. That is not an account of provenance —
+it is the shipped bytes, already grouped by the module they came from, by the
+tool that put them there. An alias, a conditional export, a plugin-generated
+module: all of them arrive resolved, because the thing that resolved them is
+what produced this. There is no map to forge and no resolver to disagree with.
+
+**And the build the guard makes is tied to the build that shipped.** Running
+Vite in process is what makes the graph available, and it is also a build made
+for the guard; if it diverged from the deployed one, the owner would be reading
+copy this never saw. So each chunk is compared against `dist/`, byte for byte,
+with exactly two things masked: the **content-hash filenames** chunks use to
+refer to each other, and the **build stamp** the product embeds. Both differ
+between any two builds of identical source, neither is copy, and the second is
+what makes the first differ.
+
+Two consequences, and the second is Round 17's other finding:
+
+- **"can compose" is gone.** A module produces a sentence when its _rendered_
+  code carries it, so a literal the bundler dropped is not production, and a
+  shipped sentence has a producer by construction rather than by pairing _this
+  module could say it_ with _the words ship somewhere_ — which is exactly what
+  QA-84-055 pulled apart, leaving an unused literal in the approved module and
+  rendering the sentence from a stylesheet.
+- **stylesheets are in the graph.** Vite lists every `.css` module of a chunk,
+  so a `content:` string in the emitted stylesheet is attributed to the graph
+  stylesheet that carries it, and **a shipped `content:` nobody can place fails**
+  rather than being copy with no owner.
+
+Coverage still comes from the whole chunk — every string in the finished file is
+classified, whether or not a module accounts for it. What the modules add is
+_which_ module, where that matters. A **literal** in the chunk that no module
+accounts for is an anomaly; a **join** whose pieces sit in two modules belongs to
+neither, and is not.
+
+### 2. An opener may be assembled (QA-84-056)
+
+D-206 built the pairs that could carry a claim by asking, of each piece, whether
+it could open one. Round 17 wrote the subject as `'The '` and `'app '`: neither
+piece opens a claim, so no pair was built, and the dropped middle argument kept
+the whole-run join out of the classifier's reach.
+
+An opener is now the **shortest run of adjacent pieces ending here** that can
+open a claim, and a closer the shortest run starting here that can close one.
+Neither search is capped by a number chosen for it: nothing in the vocabulary is
+longer than its longest phrase, and a phrase must be contiguous, so a window
+wider than that can never newly match. **The bound is the vocabulary's, not a
+guess** — which is the difference D-197 has always drawn.
+
+### 3. The app hands over its own document (QA-84-057)
+
+D-206 grounded the composed review one section at a time: the record section's
+contribution had to include something Timeline renders. Round 17 kept that
+section honest and invented the other nine. **Proving one section's body does
+not transfer to the others**, and adding a check per section would only move the
+line to whichever section had none — a probe over the real product found that
+only three of ten sections contribute anything another screen also renders, so
+requiring it everywhere would have been false.
+
+The app already hands the same document over twice: the field shows it and the
+copy control puts it on the clipboard. Reading it back and comparing gives the
+**whole document at once**, with nothing left for a fabricated section to hide
+in. An impostor that changes the field must now change the composition itself,
+at which point it is the composition.
+
+### What is still open, unchanged
+
+A sentence the app composes by **running** — over data, or by a computation this
+guard does not evaluate — in a state no sweep reaches is covered by neither
+half. Nothing here narrows that.
+
+---

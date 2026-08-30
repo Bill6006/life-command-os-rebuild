@@ -1496,8 +1496,9 @@ async function sweepEveryPress(page: Page): Promise<ReadonlySet<string>> {
 const PRESSES_PER_ROUTE = 40
 
 test.describe('everything a blocker puts on any screen', () => {
-  test('QA-84-039/043/048/053 — the composed review answers to each section and to the history', async ({
+  test('QA-84-039/043/048/053/057 — the composed review is the document the app hands over', async ({
     page,
+    context,
   }) => {
     /*
      * The sweep exempts the composed review from the catalogue comparison,
@@ -1527,6 +1528,36 @@ test.describe('everything a blocker puts on any screen', () => {
 
     const review = page.locator('[data-testid="export-text"]')
     await expect(review).toHaveCount(1)
+
+    /*
+     * And it is the document the app itself hands over — QA-84-057.
+     *
+     * Every check below establishes something about a **part**: that a heading
+     * tracks its box, that the record section's lines are the record. Round 17
+     * kept one real section and invented the other nine, and every part-wise
+     * check that touched the real one passed. **Proving one section's body does
+     * not transfer to the others**, and adding a check per section would only
+     * move the line to whichever section had none.
+     *
+     * The app already has a second way of handing the same document over: the
+     * copy control puts `composed.text` on the clipboard. Reading it back and
+     * comparing gives the whole document at once, with nothing left over for a
+     * fabricated section to hide in — an impostor that changes the field must
+     * now change the composition itself, at which point it *is* the
+     * composition. Newlines are normalised because the clipboard writes CRLF.
+     */
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+    await page.getByRole('button', { name: 'Copy the export' }).click()
+    const handedOver = await page.evaluate(() => navigator.clipboard.readText())
+    const plain = (text: string) => text.split('\r\n').join('\n')
+    expect(
+      plain(handedOver),
+      'the field and the copy control do not hold the same document, so the field is not the composed review',
+    ).toBe(plain(await review.inputValue()))
+    expect(
+      handedOver.length,
+      'the app copied nothing, so the comparison proves nothing',
+    ).toBeGreaterThan(0)
 
     const boxes = page.locator('input[type="checkbox"][data-testid^="section-"]')
     const count = await boxes.count()

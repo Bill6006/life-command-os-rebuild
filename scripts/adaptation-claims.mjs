@@ -305,6 +305,25 @@ const FUTURE_MODALS = [
  * end up beside each other, and these two predicates say which pairs could
  * possibly matter — so the scan can test all of them without testing all pairs.
  */
+/**
+ * How far back, and how far forward, an opener or a closer can reach — D-207.
+ *
+ * Round 17 wrote the subject as two pieces, `'The '` and `'app '`, so neither
+ * piece opened a claim on its own and no pair was ever built. An opener may
+ * therefore be **assembled** from adjacent pieces — but assembling without a
+ * bound is the square of the run again.
+ *
+ * The bound is not a guess: nothing in the vocabulary is longer than its
+ * longest phrase, and the phrase has to be contiguous in the rendered text, so
+ * a window wider than that can never newly open or close a claim. These are
+ * the lengths of the vocabulary itself, with room for the spacing between
+ * pieces.
+ */
+export const LONGEST_OPENER = Math.max(...NAMED_SUBJECTS.map((subject) => subject.length)) + 8
+
+export const LONGEST_CLOSER =
+  Math.max(...FUTURE_MODALS.map((modal) => modal.length), ...LATER.map((later) => later.length)) + 8
+
 export function couldOpenAClaim(text) {
   const lower = String(text ?? '').toLowerCase()
   return NAMED_SUBJECTS.some((subject) => new RegExp(`\\b${escaped(subject)}\\b`).test(lower))

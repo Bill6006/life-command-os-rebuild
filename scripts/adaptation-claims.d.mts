@@ -16,6 +16,10 @@ export function adaptationClaims(text: string): readonly string[]
  * **futurity**, never ability. Narrower than {@link adaptationClaims}, which
  * stays broad on the blocker path where the copy is short and controlled.
  */
+export const LONGEST_OPENER: number
+
+export const LONGEST_CLOSER: number
+
 export function couldOpenAClaim(text: string): boolean
 
 export function couldCloseAClaim(text: string): boolean
