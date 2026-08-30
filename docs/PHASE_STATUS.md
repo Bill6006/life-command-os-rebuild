@@ -174,6 +174,18 @@ the built app can render**, parsed with a real parser; the browser sweeps stay,
 because static covers every state and dynamic covers composition, and D-201 says
 which is which (D-201).
 
+**And round 15 is where reading turns into corroborating.** D-204 read the
+product instead of modelling it, which was right; Round 15 rewrote the
+**sourcemap** — with no change to any shipped JavaScript — and a caught
+transplant went clean, wrote one sentence as four sibling `<span>`s that the
+syntax tree separates and the screen joins, put the chosen sections' headings
+over thirty invented lines, and put a second marked control on a route the
+identity proof never visits. The map is now checked against the files on disk
+and against its own positions; a call contributes its arguments' text and an
+element's type is dropped from the join; the document must answer to the history
+as well as the selection; and the marker's exemption is scoped to the screen
+that proved it (D-205).
+
 **And round 14 is where the guard stops modelling the product and starts
 reading it.** D-203 inferred provenance from a directory and a file extension,
 production from what source _could_ compose, and grouping from a list of seven
@@ -255,7 +267,8 @@ through the same controls, now gets past all eight steps.
 
 | Fact                    | Value                                                                                                                                                           |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Product checkpoint      | `e68900f` — the Round 14 repair, and the commit the aggregate gate was run on. **It changes no bundle byte**: the repair is entirely in `scripts/` and `tests/` |
+| Product checkpoint      | `9457b23` — the Round 15 repair, and the commit the aggregate gate was run on. **It changes no bundle byte**: the repair is entirely in `scripts/` and `tests/` |
+| Round 15 checkpoint     | `e68900f` — the Round 14 repair, which Round 15 tested                                                                                                          |
 | Round 14 checkpoint     | `c42a974` — the Round 13 repair, which Round 14 tested                                                                                                          |
 | Round 13 checkpoint     | `5b9fe99` — the Round 12 repair, which Round 13 tested                                                                                                          |
 | Round 12 checkpoint     | `3930260` — the Round 11 repair, which Round 12 tested                                                                                                          |
@@ -273,7 +286,7 @@ through the same controls, now gets past all eight steps.
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                     |
 | Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                                                                              |
 | Owner phone check       | owed before release; not a blocker QA can clear                                                                                                                 |
-| Independent QA          | **Rounds 1 to 14 all FAIL**, all repaired; Round 15 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md`                                                        |
+| Independent QA          | **Rounds 1 to 15 all FAIL**, all repaired; Round 16 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md`                                                        |
 
 **The documentation head is a later commit than the product checkpoint**, as it
 has been every round. At round 8 it is `73de27e`, and it carries exactly three
@@ -291,8 +304,8 @@ At the repaired checkpoint, not at the one QA failed.
 | `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)              |
 | Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files (unchanged at round 11; 1,812 at round 1) |
 | Browser, three widths, one worker         | **708 passed** at three widths, one worker, **zero failures**          |
-| Rendered copy scan                        | **clean — 7,985 shipped strings**, 7,975 traced to a module            |
-| Android-style gate, deployed              | **clean — 233 checks** against deployed `e68900f`                      |
+| Rendered copy scan                        | **clean — 8,182 shipped strings**, 8,157 traced and corroborated       |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `9457b23`                      |
 | Privacy scan                              | **clean** — 290 tracked files                                          |
 | Block sweep                               | **PASS** — unchanged                                                   |
 | Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya      |

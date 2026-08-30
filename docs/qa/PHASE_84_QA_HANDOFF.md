@@ -7224,3 +7224,170 @@ D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 15
 repair handoff at its end exactly as written. Do not ask me to paste the file.
 ```
+
+---
+
+## Round 15 repair record — the builder's account
+
+**Written by the routing 84 builder conversation, below QA's Round 15 and
+without touching it.** Independent QA has now failed this routing fifteen times
+and been right fifteen times. **Rounds 3 to 15 have all been clean on the
+product**; every finding since Round 2 has been about the guarantee.
+
+**Deviation from the dispatch, declared.** The dispatch asks for the completion
+marker in `docs/NEXT_PROMPT.md`. The standing instruction from the human owner
+places it at the end of **this** file, and the owner's placement governs. It is
+the fifteenth round this has been recorded rather than silently resolved.
+
+**Four rounds running, every weakness the builder's own dispatch named has been
+turned into a working false green**, and this round all four landed. The
+practice is now load-bearing rather than a courtesy: what a repair *cannot*
+prove, written down, is what the next round aims at.
+
+### What was found, in one sentence
+
+D-204's rule — read the product rather than model it — was right, and Round 15
+showed that **reading is not corroborating**: three findings are the guard
+believing a single account, and the fourth is reading the syntax tree where the
+DOM is what matters.
+
+### The four, and what each one changed
+
+| # | The hole | The repair |
+| --- | --- | --- |
+| 046 | the sourcemap is one account, believed | the map's copy of a module must **be** the module on disk, and each position must **say** what it is credited with; a disputed origin for an approved sentence fails |
+| 047 | tree adjacency is not rendered adjacency | a call contributes its **arguments'** text, so an element contributes its children's — and the element's **type** is dropped from the join |
+| 048 | the chosen headings over invented bodies | the document must answer to **both** its inputs: headings track the selection, and the body must differ across two histories |
+| 049 | the marker's exemption applied wherever it appeared | it applies only on the screen the identity proof covers, judged by the **screen and the address together** |
+
+**QA-84-046 is the sharpest of them**, because it changed no shipped JavaScript
+at all. Provenance from the sourcemap was a real improvement over reading `src`,
+and it was still a single source. Requiring a map, and counting how many
+positions it places, proves a map exists and is busy — not that any one
+attribution is true.
+
+**QA-84-047's repair is only half about coverage.** Making a call contribute its
+arguments' text puts the four spans back together. Dropping the element's type
+from the join is the other half, and it is not tidying: a nested variant —
+`<span><strong>The app </strong></span>` and so on — pushed the subject and its
+verb far enough apart with `span` and `strong` that the classifier no longer saw
+them together, and the promise passed. **The noise was the hole.** Over-
+approximating made the guard weaker, which is not the safe direction it looks
+like.
+
+**And the drop is scoped to the type position** — a call’s first argument —
+rather than to the word wherever it appears. That narrowing was written into
+the Round 16 dispatch first, as a weakness of the repair, and then closed
+instead of shipped: matching *"table"* or *"code"* anywhere would quietly
+delete those words from ordinary copy before the classifier saw the sentence.
+Both the flat and the nested reproduction are still caught with the narrower
+rule.
+
+### Reproduction, and which gate caught which
+
+| # | Before (mine / QA's) | After |
+| --- | --- | --- |
+| 046 | caught with the honest map; **clean at 7,988 / 7,987** once the map was rewritten | scan **exit 1**: _the map's copy of `src/features/life/DomainPanels.tsx` is not what is on disk_ |
+| 047 | clean at **8,003 / 7,999** | scan **exit 1**, naming `src/features/more/MoreScreen.tsx` |
+| 048 | identity + app-wide guards **6 passed / 6 passed** | browser: _the same sections over a different history produced the same document, so its body is not the history_ |
+| 049 | **6 passed in 16.4s / 16.2s**, scan clean at **7,987 / 7,988** | browser: _a control claims to be the composed review on a screen where nothing proves it is_ |
+
+**A first repair of 047 caught the flat case and not the nested one**, which is
+how the element-name half was found. It is recorded rather than folded into the
+final answer, because the intermediate state looked like a working repair.
+
+### Two false accusations of my own
+
+The scope rule for 049 failed the **honest** product twice before it was right,
+and both failures are the same race from new directions:
+
+- keyed on the address alone, it accused the product mid-navigation, because a
+  press changes the URL before React has replaced the document;
+- then the marked-control **count** was still being read before the new screen
+  arrived, so it belonged to the previous one.
+
+Both are D-200's settle-before-you-measure, and both are why the check now waits
+for the screen and the address to agree before reading anything.
+
+### Gates at `9457b23`
+
+| Gate | Result |
+| --- | --- |
+| `npm run verify` | **PASS** — format, lint, typecheck, **1,861 tests** in 84 files, build, copy scan |
+| Rendered copy scan | **clean — 8,182 shipped strings**, 8,157 traced and corroborated, 1 script chunk, 2 stylesheets |
+| Browser, three widths, one worker | **708 passed** in 15.7 minutes, **zero failures** |
+| Privacy scan | **clean — 290 tracked files** |
+| Deployed Android gate | **clean — 233 checks** |
+| Checkpoint equivalence | **exact** |
+| `git diff -- src` | **empty** — the product was not touched, for the thirteenth round |
+
+The string count rose from 7,985 to **8,182** as calls began to contribute their
+arguments’ text.
+
+Decisions **D-205**; defects **DEF-0140**. **Routing 84 stays YELLOW.** A builder
+conversation may not approve its own phase (D-077).
+
+---
+
+## Round 16 dispatch — independent QA
+
+**Actor:** Codex / independent QA.
+**Model:** Codex. **Reasoning level:** **High** — never Max.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 15.
+
+```text
+Routing Phase 84, independent QA Round 16.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full, including the builder's Round 15
+repair record at the end. Retest routing 84 as independent QA at High, against
+the repaired checkpoint 9457b23.
+
+Repeat CASE A and CASE B from new ephemeral contexts, as in every previous
+round, and never open the QA laboratory to do it.
+
+Commit your round alone and first. Do not edit the builder's records, alter
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a PHASE_85_* file, or start
+routing 90. Do not ask me to paste file contents.
+```
+
+### What Round 16 should attack
+
+**The declared open case is still not a target.** A sentence the app composes by
+running — over data, or by a computation this guard does not evaluate — in a
+state no sweep reaches is covered by neither half. **A finding is showing that
+something the record claims _is_ covered is not.**
+
+Four places where this repair claims more than it has proved:
+
+1. **Corroboration is still inside the build's own account.** The map is checked
+   against the files on disk and against its own `sourcesContent`. A build that
+   emitted a wrong mapping **consistently** — the name, the content and the
+   position all agreeing on the wrong module — would satisfy every check here,
+   and nothing compares the shipped bytes to what that module would compile to.
+2. **A call's text is its arguments', which is a guess about functions.** It is
+   right for element construction and wrong in general: a function that drops,
+   reorders or rewrites its arguments makes the join a sentence nobody renders,
+   and a function that *fetches* text makes the join miss one. The first
+   direction is only noise; the second is a hole with no bottom, and it is the
+   declared remainder wearing a new coat.
+3. **Corroborating a position is a measurement, not an enumeration.** A mapped
+   attribution is accepted when the first **twenty characters** of the string
+   turn up within **one line either side** of the position it names. Both
+   numbers are guesses about how source is wrapped, and D-197 is explicit that a
+   threshold inside a guard is a guess about the thing the guard exists to
+   establish. A literal wrapped more aggressively than that, or one whose first
+   twenty characters repeat elsewhere in the module, is judged by those numbers.
+4. **The history check needs the two documents to differ, and nothing more.**
+   Any impostor that varies with something other than the selection — a clock, a
+   counter, a hash of the store — satisfies it while still being unrelated to
+   the composed review.
+
+**And the standing invariants, again.** Seven product PASSes and every deferral
+must survive. No blocker enforcement, no semantic interpretation, no scoring
+change, no new visual language, no orchestrator change. Phase 84 stays YELLOW
+until QA says otherwise; the builder may not approve its own phase.
+
+<!-- LCO_COMPLETE -->

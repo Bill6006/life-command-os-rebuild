@@ -3,65 +3,58 @@
 **Phase:** 84 — **what the owner is trying to become**
 
 **Actor:** Codex / **independent QA**.
-**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 14.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 15.
 **Model:** Codex.
 **Reasoning level:** **High** — never Max.
 
-**Routing 84 is YELLOW.** You have failed it fourteen times and been right
-fourteen times. **Rounds 3 to 14 have all been clean on the product**; every
+**Routing 84 is YELLOW.** You have failed it fifteen times and been right
+fifteen times. **Rounds 3 to 15 have all been clean on the product**; every
 finding has been about the standing guarantee.
 
-QA-84-041 through QA-84-045 are repaired at **`e68900f`**. All five were
-reproduced before the repair — four of them reproducing **your own number
-exactly** — and all five are caught after it.
+QA-84-046 through QA-84-049 are repaired at **`9457b23`**. All four were
+reproduced before the repair and are caught after it.
 
-**The complete Round 15 dispatch, with everything worth attacking and why, is at
+**The complete Round 16 dispatch, with everything worth attacking and why, is at
 the end of [`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md), below the
-builder's Round 14 repair record. Read that file in full.**
+builder's Round 15 repair record. Read that file in full.**
 
 ---
 
 ## What changed, in one paragraph
 
-D-203 described the product to itself in three places and inferred a fourth.
-Provenance read `src/**` and matched on the **extension**, so an approved
-sentence imported from a `.js` module beside the repository shipped unseen; it
-asked what source **can** compose, so a dead expression the bundler deletes kept
-a stale approval alive; grouping was a list of seven constructs, and computed
-property names were an eighth; and a document that _responds_ to the section
-selection was taken for the document _composed from_ it. Now provenance is
-traced from the built chunk's **sourcemap**, so it follows the modules that
-actually shipped; grouping is read **off the syntax tree** as runs of adjacent
-literal-yielding children, so nothing enumerates a construct and nothing can
-omit one; and identity is checked **section by section** against the app's own
-headings. The `esbuild` source pass is gone, which is also why a valid ambient
-declaration no longer crashes the scan.
+D-204's rule — read the product rather than model it — was right, and Round 15
+showed that **reading is not corroborating**. The sourcemap was one account and
+was believed, so rewriting it (with no change to any shipped JavaScript) laundered
+a transplant; now the map's copy of a module must **be** the module on disk, and
+each position must **say** what it is credited with. Grouping was read off the
+syntax tree, but a sentence written as four sibling `<span>`s is separate in the
+tree and one line on the screen; now a call contributes its **arguments'** text,
+and an element's **type** is dropped from the join. The composed review proved
+identity by its headings, so headings arrived over thirty invented lines; now the
+document must answer to the **history** as well as the selection. And the
+marker's exemption was granted wherever it appeared while what justified it ran
+only on Data; now it is scoped to the screen the identity proof covers.
 
-**The through-line is one sentence (D-204): a guard that models the product is
-guessing; a guard that reads the product is not.**
-
-## Gates at `e68900f`
+## Gates at `9457b23`
 
 `npm run verify` **PASS** (84 files, **1,861** tests, copy scan clean at
-**7,985** strings, **7,975** traced to a module); browser **708 /
+**8,182** strings, **8,157** traced and corroborated); browser **708 /
 708** at 360/430/1280 with zero failures; privacy clean at 290 files;
 deployed Android gate **clean at 233 checks**; checkpoint equivalence
 exact; CI green. **`git diff -- src` is empty** — the product was not touched,
-for the twelfth round running.
+for the thirteenth round running.
 
-**My first repair of QA-84-044 did not work, and that is recorded rather than
-tidied away.** It asked whether a property key was `computed` — a question about
-source the bundler had already answered by emitting `{ "The app": 0 }`. The
-reproduction stayed green through it and said so, which is the only reason it
-was caught.
+**A first repair of QA-84-047 caught the flat case and not a nested one**, and
+that is recorded rather than folded away: the joined text carried the element
+names, and `span`/`strong` between the subject and its verb pushed them out of
+the classifier's reach. Over-approximating had made the guard _weaker_.
 
-**And one more hole was closed while writing the record up**: an approved
-sentence that also ships from a position the sourcemap cannot place now fails,
-because an origin nobody could read is not an origin that agrees.
+**And the scope rule for QA-84-049 falsely accused the honest product twice**
+before it was right — once keyed on the address alone, once on a marked-control
+count taken before the new screen had arrived. Both are D-200's race, and both
+are why the check now settles first.
 
-Decisions **D-204**; defects **DEF-0139**.
+Decisions **D-205**; defects **DEF-0140**.
 
 **Routing 84 stays YELLOW.** A builder conversation may not approve its own phase
 (D-077). Do not start routing 90.
-
-<!-- LCO_COMPLETE -->
