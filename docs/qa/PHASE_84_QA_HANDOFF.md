@@ -6421,3 +6421,167 @@ D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 13
 repair handoff at its end exactly as written. Do not ask me to paste the file.
 ```
+
+---
+
+## Round 13 repair record — the builder's account
+
+**Written by the routing 84 builder conversation, below QA's Round 13 and
+without touching it.** Independent QA has now failed this routing thirteen times
+and been right thirteen times. **Rounds 3 to 13 have all been clean on the
+product**; every finding since Round 2 has been about the guarantee.
+
+**Deviation from the dispatch, declared.** The dispatch asks for the completion
+marker in `docs/NEXT_PROMPT.md`. The standing instruction from the human owner
+places it at the end of **this** file, and the owner's placement governs. It is
+the thirteenth round this has been recorded rather than silently resolved.
+
+**And Round 13 hit all four of the places the Round 12 dispatch named.** That is
+worth saying plainly: the dispatch listed the approval pin reading source rather
+than the bundle, the two joined forms being guesses, the composed review being
+counted rather than identified, and `frameattached` covering only a
+three-second window. QA took every one of them and made each into a working
+false green.
+
+### What was found, in one sentence
+
+D-202 claimed three things it did not have — **an approval about production, a
+joiner over every literal composition, and an identified composed review** —
+because in each case a property was checked against *how copy is written* and
+then used as a property of *what copy becomes*.
+
+### The four, and what each one changed
+
+| # | The hole | The repair |
+| --- | --- | --- |
+| 037 | approval pinned the **literal**; removal erased the **join** | the bundle's own extractor now reads source too, so an approval is about what a file can **produce** — written whole or assembled |
+| 038 | "every literal composition" was three syntax shapes | the constructs in which the language writes an **ordered group of literals** are enumerated: `+` chains, template quasis, array literals, object values, sequence expressions, argument lists, multi-declarator statements |
+| 039 | one marker proves cardinality, and a size floor proves size | identity is **demonstrated**: the composed review changes when the sections are unticked and returns when they come back |
+| 040 | a remembered frame was skipped once detached | the read **starts when the frame attaches**, and a frame that still cannot be read is **reported as a hole** |
+
+**QA-84-038 is the one that changes a claim rather than a mechanism.** Following
+the helper would have been the wrong repair: a helper can reverse, filter or
+rewrite its arguments, and an evaluator that chases user functions is the
+interpreter-inside-a-guard D-197 forbids. So the guard covers what is
+enumerable — the constructs the language uses to write an ordered sequence — and
+**the claim shrinks to match**: not _every literal composition_, but _every
+ordered group of literals the language writes down_. A computation over those
+literals is outside it, which is the same frontier D-202 already declared for
+data. The frontier did not move; its description was wrong and is now right.
+
+### Reproduction, and which gate caught which
+
+Each mutation reproduced **QA's own number**, which is the strongest evidence
+available that the reproduction was faithful rather than merely similar.
+
+| # | Before (mine / QA's) | After |
+| --- | --- | --- |
+| 037 | copy scan clean at **5,417 / 5,417** | scan **exit 1**: _`src/features/more/MoreScreen.tsx` is not approved to say it_ |
+| 038 | copy scan clean at **5,418 / 5,418** | scan **exit 1**, naming the shipped sentence |
+| 039 | focused **3 passed in 14.7s / 14.8s** | browser fails at all three widths: _the marked control did not change when every section was unticked_ |
+| 040 | focused **1 passed in 7.2s / 7.3s** | browser **1 failed**: _a frame appeared and could not be read_ |
+
+**And the two frame paths are distinguishable, which matters.** QA's boundary
+was confirmed first: a frame living **1,000ms** already failed before this
+repair. After it, the 1,000ms frame fails by being **read** and the 10ms frame
+fails by being **reported**. If both had failed the same way, the repair would
+have been one net rather than two rules, and there would be no way to tell which
+one was working.
+
+### One sibling, found here rather than by QA
+
+The remembered-frame read existed **only in the route crawl**. The press sweep —
+the sweep that reaches the states a frame is most likely to be created in —
+still saw a snapshot. Nobody reported it; it turned up reading the repair back.
+**A rule applied in one of two places is the mistake this campaign has made more
+often than any other**, so there is now one implementation and both sweeps call
+it.
+
+### A correction to my own numbers
+
+An intermediate reading of "clean at 5,561 strings" was taken against a `dist`
+still holding a mutation's string, because the tree had been restored and not
+rebuilt. The honest count after the repair is **6,185**, and the figure in
+DEF-0138 is that one. It is recorded because reading a gate's output against a
+stale artefact is exactly the class of mistake this campaign exists to catch.
+
+### Gates at `c42a974`
+
+| Gate | Result |
+| --- | --- |
+| `npm run verify` | **PASS** — format, lint, typecheck, **1,861 tests** in 84 files, build, copy scan |
+| Rendered copy scan | **clean — 6,185 shipped strings**, 1 script chunk, 2 stylesheets |
+| Browser, three widths, one worker | **708 passed** in 15.4 minutes, **zero failures** |
+| Privacy scan | **clean — 290 tracked files** |
+| Deployed Android gate | **clean — 233 checks** |
+| Checkpoint equivalence | **exact** |
+| `git diff -- src` | **empty** — the product was not touched, for the eleventh round |
+
+`esbuild` is now a declared devDependency rather than one borrowed transitively,
+for the reason acorn was declared in D-201: the source pass is stripped to plain
+JavaScript with the same transform Vite already builds this product with.
+
+Decisions **D-203**; defects **DEF-0138**. **Routing 84 stays YELLOW.** A builder
+conversation may not approve its own phase (D-077).
+
+---
+
+## Round 14 dispatch — independent QA
+
+**Actor:** Codex / independent QA.
+**Model:** Codex. **Reasoning level:** **High** — never Max.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 13.
+
+```text
+Routing Phase 84, independent QA Round 14.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full, including the builder's Round 13
+repair record at the end. Retest routing 84 as independent QA at High, against
+the repaired checkpoint c42a974.
+
+Repeat CASE A and CASE B from new ephemeral contexts, as in every previous
+round, and never open the QA laboratory to do it.
+
+Commit your round alone and first. Do not edit the builder's records, alter
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a PHASE_85_* file, or start
+routing 90. Do not ask me to paste file contents.
+```
+
+### What Round 14 should attack
+
+**The declared open case is still not a target.** A sentence the app composes by
+**running** — over data, or by a computation over literals — in a state no sweep
+reaches is covered by neither half, and D-203 says so. Demonstrating it confirms
+the documentation. **A finding is showing that something the record claims _is_
+covered is not.**
+
+Four places where this repair claims more than it has proved:
+
+1. **The source pass reads `src/**/*.ts(x)`, and the bundle is not `src`.** An
+   approval's provenance is checked against what files under `src` can compose.
+   A string can reach the shipped chunk from somewhere else — a `.json` import,
+   a generated module, a dependency — and an approved sentence produced there
+   would be removed globally with nothing objecting. The claim is really _within
+   `src`_, and it does not say so.
+2. **Production is "can compose", not "did compose".** A file that merely holds
+   the fragments is treated as a producer even if nothing assembles them, and a
+   file that assembles them through a value this guard cannot see is not.
+   Both directions are approximations, and only one of them is safe.
+3. **Responding to the selection is necessary, not sufficient.** The composed
+   review now proves identity by changing when sections are unticked. A document
+   that is *also* a function of the selection — keyed on it, but not composed
+   from the history — would satisfy the same proof.
+4. **Every ordered group is a claim about the seven constructs listed.** If
+   JavaScript writes an ordered sequence of expressions anywhere else that
+   reaches owner copy, the list is short by one, and the enumeration is the
+   whole guarantee.
+
+**And the standing invariants, again.** Seven product PASSes and every deferral
+must survive. No blocker enforcement, no semantic interpretation, no scoring
+change, no new visual language, no orchestrator change. Phase 84 stays YELLOW
+until QA says otherwise; the builder may not approve its own phase.
+
+<!-- LCO_COMPLETE -->
