@@ -1444,26 +1444,33 @@ async function sweepEveryPress(page: Page): Promise<ReadonlySet<string>> {
 const PRESSES_PER_ROUTE = 40
 
 test.describe('everything a blocker puts on any screen', () => {
-  test('QA-84-039 — the marked control is the composed review, proved by making it change', async ({
+  test('QA-84-039/043 — the marked control is the composed review, section by section', async ({
     page,
   }) => {
     /*
      * The sweep exempts the composed review from the catalogue comparison,
      * because a document legitimately repeats sentences the screens already
-     * say. Round 12 made that exemption depend on the element carrying the
-     * marker itself, and asserted there is exactly one such element.
+     * say. Two rounds have attacked what that exemption is granted to.
      *
-     * **Round 13 kept the count at one and replaced the value.** A
-     * twenty-five-line document that is not an export at all, ending in an
-     * unapproved sentence, inherited the exemption — because counting the
-     * declarations proves cardinality, not identity, and a size floor proves a
-     * document is big, not that it is *this* document.
+     * **Round 12** put a second control beside it carrying the same marker, so
+     * the count of marked controls became part of the check. **Round 13** kept
+     * the count at one and replaced the value with a long document that was not
+     * an export, so a size floor was clearly not identity either. The answer
+     * then was to demonstrate rather than assert: the composed review changes
+     * with the section selection and a static impostor cannot.
      *
-     * Identity cannot be asserted by the page, so it is **demonstrated**: the
-     * composed review is a function of the section selection, and nothing else
-     * on the screen is. Untick every section and the document must change;
-     * tick them back and the original must return. A static impostor cannot do
-     * either, whatever it carries and however long it is.
+     * **Round 14 wrote an impostor that changes with the selection.** Its first
+     * line echoed the chosen ids and the rest was filler. Responding to a
+     * control proves a dependency on that control — nothing more — and the
+     * document it was standing in for is not *a function of the selection*, it
+     * is **the selected sections, composed**.
+     *
+     * So that is what is checked, against the app's own list of sections and
+     * their own titles as the screen shows them. Every ticked section's heading
+     * must be in the document and every unticked one's must not, and unticking
+     * one must remove exactly its own heading and leave the rest standing. An
+     * impostor passes this only by composing the sections, at which point it is
+     * the export.
      */
     await loadInQa(page, 'The first evening')
     await page.goto(`${APP}#/data`)
@@ -1471,11 +1478,6 @@ test.describe('everything a blocker puts on any screen', () => {
 
     const review = page.locator('[data-testid="export-text"]')
     await expect(review).toHaveCount(1)
-    const whole = await review.inputValue()
-    expect(
-      whole.length,
-      'the composed review is empty, so nothing is being proved',
-    ).toBeGreaterThan(0)
 
     const boxes = page.locator('input[type="checkbox"][data-testid^="section-"]')
     const count = await boxes.count()
@@ -1484,27 +1486,51 @@ test.describe('everything a blocker puts on any screen', () => {
       'the export has no sections to select, so identity cannot be shown',
     ).toBeGreaterThan(1)
 
-    const ticked: number[] = []
+    /** Each section's own control, and the title the screen gives it. */
+    const sections: { index: number; heading: string; ticked: boolean }[] = []
     for (let index = 0; index < count; index += 1) {
       const box = boxes.nth(index)
-      if (await box.isChecked()) {
-        ticked.push(index)
-        await box.uncheck()
-      }
+      const title = await box
+        .locator('xpath=ancestor::label[1]')
+        .locator('.data-section__title')
+        .innerText()
+      sections.push({ index, heading: `## ${title.trim()}`, ticked: await box.isChecked() })
     }
-    expect(ticked.length, 'no section was selected to begin with').toBeGreaterThan(0)
 
-    await expect(
-      review,
-      'the marked control did not change when every section was unticked, so it is not the composed review',
-    ).not.toHaveValue(whole)
+    const chosen = sections.filter((section) => section.ticked)
+    expect(chosen.length, 'no section was selected to begin with').toBeGreaterThan(1)
 
-    for (const index of ticked) await boxes.nth(index).check()
+    const whole = await review.inputValue()
+    for (const section of sections) {
+      expect(
+        whole.includes(section.heading),
+        section.ticked
+          ? `the document is missing the chosen section ${section.heading}, so it is not the composed review`
+          : `the document carries ${section.heading}, which was not chosen`,
+      ).toBe(section.ticked)
+    }
 
-    await expect(
-      review,
-      'the marked control did not come back when the sections did, so it is not a function of the selection',
-    ).toHaveValue(whole)
+    // And removing one section removes exactly its own part of the document.
+    const dropped = chosen[0]
+    if (dropped === undefined) throw new Error('unreachable: chosen is not empty')
+    await boxes.nth(dropped.index).uncheck()
+    await expect(review).not.toHaveValue(whole)
+
+    const without = await review.inputValue()
+    expect(
+      without.includes(dropped.heading),
+      `${dropped.heading} was unticked and is still in the document`,
+    ).toBe(false)
+    for (const section of chosen) {
+      if (section.index === dropped.index) continue
+      expect(
+        without.includes(section.heading),
+        `unticking one section also removed ${section.heading}, so the document is not composed of them`,
+      ).toBe(true)
+    }
+
+    await boxes.nth(dropped.index).check()
+    await expect(review, 'the document did not come back when the section did').toHaveValue(whole)
   })
 
   test('QA-84-016/018 — no screen in the app promises an adaptation, before or after a block', async ({

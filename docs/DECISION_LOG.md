@@ -7223,3 +7223,94 @@ which is what it always was. Everything the language groups is checked;
 everything the program computes is not.
 
 ---
+
+## D-204 — Provenance is read from what shipped, and grouping is read off the tree
+
+**Phase:** 84 (QA round 14 repair) · **Status:** Active · Replaces the source
+approximation and the construct list that **D-203** introduced.
+
+D-203 made two claims by approximation, and Round 14 broke both. Each break is
+the same lesson in a different place: **a guard that models the product is
+guessing; a guard that reads the product is not.**
+
+### 1. Provenance: from `src` to the bundle (QA-84-041, QA-84-042)
+
+D-203 checked where an approved sentence may live by reading
+`src/**/*.ts(x)` and asking what those files _can compose_. Round 14 showed
+that this is two approximations stacked:
+
+- **The extension is not the module graph.** An approved sentence imported from
+  a `.js` module beside the repository shipped, was removed globally as
+  approved, and had no origin the check could see. `More` itself held only an
+  identifier.
+- **"Can compose" is not "did".** A dead `void ['Leave it empty and the app',
+'will not invent one.']` kept the approval alive for a sentence the bundler
+  had deleted — an exact search of every built asset found **zero** copies of
+  it. The stale direction, which exists to retire exceptions nothing needs, was
+  the direction that broke.
+
+**So provenance is read from the artefact.** The built chunk carries a
+sourcemap, so every string in it traces to the module that produced it — no
+extension filter, no `src` assumption, and nothing that was compiled away.
+`@jridgewell/trace-mapping` does the tracing, the mapper Vite already builds
+this product with, declared for the reason acorn was declared in D-201; the
+`esbuild` source pass D-203 added is gone, and with it the crash Round 14 found
+in it (QA-84-045 — a valid ambient declaration is not executable TypeScript,
+and a guard that dies on a normal source file cannot claim to cover source).
+
+There are now three ways to fail and they say different things: an unlisted
+module that ships the words is a **transplant**, a listed module that no longer
+ships them is a **stale approval**, and a sentence that is not in the bundle at
+all is **dead**. **And the scan fails if a chunk ships without a sourcemap**,
+because provenance is the whole of this check and a check with nothing to
+compare would otherwise report a clean run. For the same reason, an approved
+sentence that also ships from a position the map cannot place is a failure:
+a handful of strings trace to nothing, which is harmless for copy the rule
+already clears, and useless as evidence about where a second copy of an
+approved sentence came from.
+
+### 2. Grouping: from a list of constructs to the shape of the tree (QA-84-044)
+
+D-202 joined three syntactic shapes and called it _every literal composition_.
+D-203 made it seven and called it _every ordered group the language writes
+down_. Round 14 wrote the words as **computed property names**, which is an
+eighth. **A list that has been short three times is not going to be complete on
+the fourth guess.**
+
+So the grouping is read off the tree. At every node, each run of adjacent
+children that yield literal pieces is joined — whatever that node is. Nothing
+enumerates a construct, so nothing can omit one. Two rules keep the runs
+meaningful: a **non-string literal contributes nothing and breaks nothing**
+(`0` in `{['The app']: 0}` is not a word and is not a reason to stop reading),
+and **anything the guard cannot evaluate breaks the run**, because words either
+side of an unknown value were never provably adjacent on a screen.
+
+**One detail is worth keeping, because the first attempt got it wrong.** The
+repair initially asked whether a property key was `computed` — a question about
+source that the bundle has already answered. `{ ['The app']: 0 }` ships as
+`{ "The app": 0 }`, and the distinction the check relied on was compiled away
+before it ever looked. What survives minification is whether the key is a
+**string**, so that is what is asked. This is the same lesson as the provenance
+half, one layer down: **ask the artefact, not the source you imagine.**
+
+### 3. Identity: from responsiveness to composition (QA-84-043)
+
+D-203 demonstrated that the marked control is the composed review by unticking
+every section and watching it change. Round 14 wrote an impostor whose first
+line echoed the chosen ids, so it changed too. **Responding to a control proves
+a dependency on that control and nothing else.**
+
+The composed review is not _a function of the selection_; it is **the selected
+sections, composed**. So each section's own heading must be in the document when
+its box is ticked and absent when it is not, and unticking one must remove
+exactly its heading and leave the others standing. An impostor passes this only
+by composing the sections, at which point it is the export.
+
+### What is still open, unchanged
+
+A sentence the app composes by **running** — over data, or by a computation the
+guard does not evaluate — in a state no sweep reaches, is covered by neither
+half. D-202 said this of data and D-203 of any computation; nothing here
+narrows it further, and nothing here pretends to.
+
+---

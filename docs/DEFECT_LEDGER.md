@@ -39,6 +39,60 @@ None.
 
 ## Fixed
 
+### DEF-0139 — two approximations D-203 made, and the guard that crashed on ordinary source
+
+- Status: Fixed
+- Severity: Blocker ×3 (an approved sentence could ship from a module the check
+  never read; a selection-responsive impostor could inherit the composed
+  review's exemption; an ordered group of literals the enumeration omitted could
+  put a promise on screen), Major ×2 (a dead expression could keep a stale
+  approval alive; a valid declaration file crashed the scan)
+- Found in: routing 84 / `c42a974`
+- Found by: **independent QA round 14** (QA-84-041 … QA-84-045), aimed at the
+  four weaknesses the Round 14 dispatch named — all four landed, and a fifth
+  turned up in QA's own calibration
+- Class: **a guard that models the product rather than reading it.** Provenance
+  was inferred from a directory and an extension; production was inferred from
+  what source _could_ compose; grouping was inferred from a list of constructs;
+  identity was inferred from responsiveness.
+- Reproduction, all five confirmed here before anything was built, four of them
+  reproducing QA's own count exactly:
+  - **041** — an approved sentence imported from a `.js` module outside `src`
+    → copy scan **clean at 6,191 strings** (QA: 6,191).
+  - **042** — a dead `void ['…', '…']` in the approved home → **clean at 6,185**
+    (QA: 6,185), with **zero** copies of the sentence in any built asset.
+  - **043** — an impostor whose first line echoes the selection → both identity
+    and app-wide guards **6 passed** (QA: 6 passed). The scan read 6,189 against
+    QA's 6,190; the one-string difference is my filler wording, not the finding.
+  - **044** — four computed property names → **clean at 6,193** (QA: 6,193).
+  - **045** — `export const approvedCopy: string` under `src` → the scan died in
+    `esbuild.transformSync` with QA's exact message.
+- Repair — see **D-204**. Provenance is traced from the built chunk's sourcemap;
+  grouping is read off the syntax tree as runs of adjacent literal-yielding
+  children; identity is checked section by section against the app's own
+  headings. The `esbuild` source pass is gone, which closes 045 by construction.
+- Regression: `scripts/rendered-copy-scan.mjs` (sourcemap provenance, the
+  missing-map failure, tree-shaped grouping), run from `npm run verify`;
+  `QA-84-039/043 — the marked control is the composed review, section by
+section` in `tests/browser/phase84.spec.ts`.
+- Proved by reintroduction: all five, each built and run. **041** names
+  `qa-round14-copy.js`; **042** now reads _is not in the bundle at all_, which is
+  the sound version of the stale check; **043** and Round 13's **039** both fail
+  on _the document is missing the chosen section ## Where things stand_; **044**
+  fails as a shipped string and names the module it came from; **045** simply
+  passes, because nothing transforms source any more.
+- **A first attempt at 044's repair did not catch it**, and the reason is
+  recorded because it is the same mistake one layer down: it asked whether the
+  property key was `computed`, which the bundler had already answered by
+  emitting `{ "The app": 0 }`. Reading the artefact rather than the imagined
+  source is what fixed it.
+- Siblings: none. All seventeen approvals resolve through the sourcemap to
+  exactly their listed modules, and the shipped-string count rose from 6,185 to
+  **7,985** as the tree-shaped grouping replaced the construct list — with no
+  new offenders.
+- Note on scope: the current copy was honest throughout, for the twelfth round
+  running, and both fresh-store cases passed again.
+
 ### DEF-0138 — three claims D-202 made that it did not have, and one it overstated
 
 - Status: Fixed
