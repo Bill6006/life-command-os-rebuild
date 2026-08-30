@@ -62,3 +62,5 @@ Decisions **D-203**; defects **DEF-0138**.
 
 **Routing 84 stays YELLOW.** A builder conversation may not approve its own phase
 (D-077). Do not start routing 90.
+
+<!-- LCO_COMPLETE -->

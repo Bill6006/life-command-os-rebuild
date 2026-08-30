@@ -6584,4 +6584,277 @@ must survive. No blocker enforcement, no semantic interpretation, no scoring
 change, no new visual language, no orchestrator change. Phase 84 stays YELLOW
 until QA says otherwise; the builder may not approve its own phase.
 
-<!-- LCO_COMPLETE -->
+## Round 14 — independent QA retest
+
+**Phase:** 84
+**Result:** **FAIL**
+**Product checkpoint tested:** `c42a974`
+**Deployed SHA tested:** `33f30be27f23891eace208cbb65691524d24afc2` —
+bundle-equivalent to `c42a974`; only `docs/NEXT_PROMPT.md`,
+`docs/PHASE_STATUS.md` and this report differ
+**Mobile:** CASE A and CASE B each used a separate new Chromium process and
+ephemeral 430×932 context in `America/New_York`, fixed to Friday 18:58 local.
+The final deployed Android gate used its Galaxy S24-class 360×780 CSS-pixel,
+DPR 3, touch and Android Chrome context.
+**Actor:** Codex, High, same QA conversation as Rounds 1–13
+
+The repaired product remains honest and all seven D-173 items pass. Round 14
+nevertheless found three **Blocker** false greens in claims D-203 still makes:
+an approved sentence can enter the bundle from outside the scanned extensions;
+a selection-responsive impostor still passes as the composed review; and
+computed property-name expressions are an ordered literal group the seven-item
+enumeration omits. It also found two **Major** guard defects: dead fragments can
+keep a stale approval alive, and a valid ambient declaration can crash the
+source pass. Every disposable mutation was restored before the full gates; no
+product, script, test or package code is left changed.
+
+### Cold owner-use
+
+Both cases began with zero rows in every `entities`, `malformed`, `meta` and
+`records` object store in both the owner and laboratory databases. Each used a
+new browser process and context, neither opened `#/qa`, and neither inherited or
+cleared retained state.
+
+- **CASE A — More money: PASS.** Empty-store Now abstained. The second agenda
+  preserved **More money** byte-identically under Career & Learning, stated that
+  the next step, starting point and meaning of progress were unknown, and made
+  no financial inference. Career and Timeline rendered the same words.
+- **CASE B — caregiving: PASS.** Life → Health named **Move more** and **Take a
+  ten-minute walk**. Its confirmation matched Now's suggestion after **Enough**.
+  **Can't right now** → **Can’t leave — someone’s in my care** wrote the durable
+  statement **Take a ten-minute walk means leaving, and I could not — someone
+  was in my care**, with **Not true any more**. Timeline rendered **Not then / Did
+  not fit at the time** and **Limit**. No future-adaptation promise appeared.
+
+### Acceptance result
+
+| D-173 item | Round 14 |
+| --- | --- |
+| 1. Desired outcomes in Career, Health and Money change the recommendation | **PASS** |
+| 2. Session, course and milestone stay distinct; attendance is not capability | **PASS** |
+| 3. Goal, routine, person, place, skill and obligation are authorable from empty | **PASS** |
+| 4. The second agenda is later-useful and asks less as it learns | **PASS** |
+| 5. Can't-right-now is durable/correctable and stays silent when known | **PASS in current product; standing guarantee FAIL — QA-84-041…045** |
+| 6. Corrections preview consequences; private evidence can be stored without inference | **PASS** |
+| 7. No score, percentage, share, rank or grade about the owner or child | **PASS** |
+
+The known deferrals are unchanged: no blocker enforcement; no semantic
+interpretation; no strategy or pattern-discovery engine; no extra domain
+progression models; no owner routines library; no backfill; no twelfth domain
+page; no scoring or visual-language change. `docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md`
+is untouched and no `PHASE_85_*` file exists.
+
+The declared computation case in D-203 was not counted as a defect. These
+findings instead use values D-203 expressly places inside the guarantee: shipped
+approved text, selection-demonstrated identity, and an ordered group of literal
+expressions the language writes down.
+
+### QA-84-041 — shipped provenance stops at the source-file extension
+
+**Severity:** Blocker. **Decisions:** D-187, D-198, D-203.
+**Class:** provenance is inferred from `src/**/*.ts(x)`, not from the modules
+that actually contributed to the shipped chunk.
+
+Import an approved milestone sentence from `qa-round14-copy.js`, with its
+matching declaration outside `src`, into More. Render the imported value under
+**A blocker** behind a text field and a **Show** button disabled until the owner
+types `show`. The JavaScript module is part of the Vite graph and the built
+chunk, but `sourceFiles('src')` never reads it. More itself holds only an
+identifier, so its source produces no string the provenance check can see.
+
+**Observed:** build **PASS**; copy scan **clean — 6,191 shipped strings**;
+focused `QA-84-022 — nor` **3 passed in 59.3s**. A separate fresh mobile-large
+owner probe typed `show` and rendered **This becomes a milestone with its own
+date, and the app will start suggesting work towards it.** under **A blocker**
+in **1.9s**. The sentence shipped, was removed globally as approved, and had no
+approved production origin.
+
+### QA-84-042 — fragments held are not a sentence produced
+
+**Severity:** Major. **Decisions:** D-198, D-203.
+**Class:** “can compose” treats a syntactic possibility as production, making
+the stale-approval direction unsound.
+
+In the one approved home of **Leave it empty and the app will not invent one.**,
+replace the rendered sentence with different honest copy. Leave only this dead
+expression at module scope:
+
+```ts
+void ['Leave it empty and the app', 'will not invent one.']
+```
+
+The source extractor joins the two fragments and calls the file a producer.
+The bundler removes the dead expression, so the approved sentence is absent
+from the owner-facing JavaScript chunk.
+
+**Observed:** build **PASS**; copy scan **clean — 6,185 shipped strings**;
+an exact search of every built JavaScript asset found **zero** copies of the
+approved sentence. Removing only the dead expression, without rebuilding or
+changing the rendered replacement, made the same scan fail:
+
+```text
+src/features/life/DomainPanels.tsx can no longer say it:
+"Leave it empty and the app will not invent one."
+```
+
+This is **Major**, not Blocker: it proves the stale exception can be kept alive
+by text the product does not produce, but the exact mutation does not put a
+false promise in front of the owner.
+
+### QA-84-043 — selection response is not composed-review identity
+
+**Severity:** Blocker. **Decisions:** D-193, D-198, D-203.
+**Class:** changing with a control proves a dependency on that control, not
+identity with the product's composition from history.
+
+Keep the one marked export textarea, but replace its value with a 26-line
+impostor: the first line is `Selected sections: ${selection.join(', ')}`, the
+next 24 are numbered impostor lines, and the last is **This needs special
+care.** The real `composed.text` is rendered nowhere. Unticking the sections
+changes the first line; restoring them returns the original value exactly.
+
+**Observed:** copy scan **clean — 6,190 shipped strings**. The new
+`QA-84-039` identity regression and the full `QA-84-016/018` app-wide sweep both
+passed at all three widths: **6 passed in 23.9s**. A document can respond to the
+selection, satisfy the generated-size floor and still have no relationship to
+the history or the composed review.
+
+### QA-84-044 — computed property names are the eighth ordered group
+
+**Severity:** Blocker. **Decisions:** D-187, D-198, D-203.
+**Class:** the seven enumerated constructs omit the ordered expression group in
+an object literal's computed property names.
+
+On More, write four computed property-name expressions in source order and
+render their keys behind the typed prerequisite:
+
+```ts
+Object.keys({
+  ['The app']: 0,
+  ['will choose']: 0,
+  ['something better']: 0,
+  ['next time.']: 0,
+}).join(' ')
+```
+
+The implementation visits only an object literal's **values**. Its values are
+numbers, so `piecesOf(ObjectExpression)` returns `null`; each computed key is
+then read only as an innocent individual literal. Yet the language writes and
+preserves the four key expressions as one ordered group.
+
+**Observed:** copy scan **clean — 6,193 shipped strings**; focused
+`QA-84-022 — nor` **3 passed in 57.9s**. A separate mobile-large owner probe
+typed `show` and rendered **The app will choose something better next time.**
+in **1.8s**.
+
+### QA-84-045 — a valid declaration file crashes the source pass
+
+**Severity:** Major. **Decisions:** D-198, D-203.
+**Class:** the source enumerator includes `.d.ts`, but the transform treats an
+ambient external-module declaration as executable TypeScript.
+
+The first QA-84-041 calibration placed this valid declaration beside the
+JavaScript module under `src`:
+
+```ts
+export const approvedCopy: string
+```
+
+TypeScript accepted the declaration and the production build completed. The
+copy scan then crashed in `esbuild.transformSync` before it could inspect the
+bundle:
+
+```text
+ERROR: The constant "approvedCopy" must be initialized
+```
+
+Moving the module and declaration outside `src` allowed QA-84-041's intended
+false green to run. This is recorded separately because declaration files are
+standard source-tree inputs, and a guard that crashes on one cannot support its
+claimed source coverage. It is **Major** because the failure is closed rather
+than a false green and puts no dishonest copy in front of the owner.
+
+### Verification on the restored tree
+
+| Gate | Result |
+| --- | --- |
+| Checkpoint equivalence | **PASS** — deployed `33f30be` is bundle-equivalent to repaired checkpoint `c42a974`; only the three routing documents differ |
+| `npm run verify` | **PASS** — format, lint, typecheck, test, build, copy scan |
+| Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files |
+| Rendered copy scan | **clean — 6,185 shipped strings**, 1 script chunk, 2 stylesheets |
+| Browser, three widths, one worker | **708 passed** in 16.8 minutes; zero failures or retries |
+| Android-style deployed gate | **clean — 233 checks** |
+| Privacy scan | **clean — 290 tracked files** |
+| Block sweep / current copy | **PASS on current copy; false-green guarantee proved by QA-84-041…044** |
+| Restored implementation tree | **clean** — `git diff --exit-code -- src scripts tests package.json package-lock.json` |
+
+### Overall verdict and repair requirement
+
+**FAIL. Routing Phase 84 remains YELLOW.** The product itself passes. D-203's
+production provenance is an extension-filtered source approximation rather
+than the built module graph; its reverse check accepts dead fragments; its
+selection experiment demonstrates only responsiveness; and its supposedly
+complete language enumeration omits computed property names. The same source
+pass also rejects a normal declaration-file form before reaching its guard.
+
+The builder must reproduce QA-84-041 through QA-84-045 exactly before repair;
+identify and repair all five whole classes under plan section 42; prove each
+regression by reintroduction; rerun every full gate; deploy a repaired
+checkpoint; preserve all seven product PASSes and every deferral; keep Phase 84
+YELLOW; and dispatch Round 15 to this same QA conversation. Do not start routing
+90.
+
+---
+
+## Round 14 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** **Max** — the audit-repair campaign rule applies across
+the actual bundle module graph, source-to-output provenance, generated-document
+identity, JavaScript expression grammar and declaration transforms.
+**Conversation:** **CURRENT** — the original routing 84 Claude builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 14 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 14 at the end contains three
+new Blockers and two Majors, QA-84-041 through QA-84-045. Execute the Round 14
+repair handoff exactly as written.
+
+Keep Phase 84 YELLOW. Reproduce each exact false-green or guard-failure mutation
+before repair; identify and repair every whole class under plan section 42; add
+regressions and prove them by reintroduction. Provenance must follow every
+module that actually contributes owner copy rather than a filename extension,
+and the stale direction must establish production rather than merely stored
+fragments. Generated-review identity must be tied to the actual composed value,
+not only to selection responsiveness. Either complete the ordered-expression
+claim, including computed property names, or narrow it again to the exact
+mechanism. Handle declaration files without crashing.
+
+Run the aggregate, full three-width browser, deployed Android, privacy,
+block-sweep and copy-guard gates; deploy the repaired checkpoint; preserve all
+seven product PASSes and every deferral; and append a Round 15 retest dispatch
+for the SAME Codex QA conversation at High.
+
+Do not edit QA's Round 14, alter docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a
+PHASE_85_* file or start routing 90. Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** Max.
+**Conversation:** CURRENT — the original routing 84 Claude builder conversation.
+
+```text
+Continue routing Phase 84 after independent QA Round 14 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 14
+repair handoff at its end exactly as written. Do not ask me to paste the file.
+```
