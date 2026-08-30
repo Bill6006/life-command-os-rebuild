@@ -8389,3 +8389,160 @@ D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 18
 repair handoff at its end exactly as written. Do not ask me to paste the file.
 ```
+
+---
+
+## Round 18 repair record — the builder's account
+
+**Written by the routing 84 builder conversation, below QA's Round 18 and
+without touching it.** Independent QA has now failed this routing eighteen times
+and been right eighteen times. **Rounds 3 to 18 have all been clean on the
+product**; every finding since Round 2 has been about the guarantee.
+
+**Deviation from the dispatch, declared.** The dispatch asks for the completion
+marker in `docs/NEXT_PROMPT.md`. The standing instruction from the human owner
+places it at the end of **this** file, and the owner's placement governs. It is
+the eighteenth round this has been recorded rather than silently resolved.
+
+### What was found, in one sentence
+
+Three of the four are the same mistake — **a rule applied to one kind of thing
+and described as applying to all of them** — and the fourth is delivery
+agreement mistaken for composition identity.
+
+### The four, and what each one changed
+
+| # | The hole | The repair |
+| --- | --- | --- |
+| 058 | the tie to `dist/` walked script chunks only | **every emitted output** is paired with what is on disk, and the guard's build stops overriding the project's options |
+| 059 | `content: 'a' 'b' 'c'` read as three values | adjacent strings are joined **as CSS joins them**, on both sides of the attribution |
+| 060 | an unplaced join was always allowed | an unplaced join is allowed **only when every piece it was made from is placed** |
+| 061 | the field and the clipboard both read one object | the document is composed **again**, here, from the scenario's own history |
+
+**QA-84-058 needed no mask to get through.** The comparison never looked at a
+stylesheet, so a plugin that behaves differently under `isWrite` could put a
+promise in the shipped CSS and leave the guard's copy harmless. The lesson is
+narrow and worth keeping: **a tie that covers one kind of asset is not build
+identity, it is script identity.**
+
+**QA-84-060 is the one where the previous round's concession was the hole.**
+D-207 allowed an unplaced join because a join whose pieces sit in two modules
+belongs to neither — true, and it also describes a join a `renderChunk` plugin
+made out of nothing. The distinction that matters is not where a join sits but
+whether anybody wrote its pieces.
+
+### The oracle for QA-84-061, and the four attempts it took
+
+Every earlier check on the composed review compared one thing the screen showed
+with another thing the screen showed. Round 18 corrupted `composed` itself, so
+the field and the clipboard delivered the same false document perfectly. **Two
+consumers of one object agree about delivery, not about composition.**
+
+So the document is composed again in the test process, from the scenario's own
+history, by the product's own composer, never touching the object the screen is
+holding. Getting there took four attempts and each is worth recording:
+
+- the synthetic **harness imports `vitest`** and cannot run under Playwright, so
+  the oracle is built from product modules only;
+- `buildInfo.ts` needs the build-time globals, so they are set from the deployed
+  **`build-info.json`** before a dynamic import;
+- `composedAt` is a moment **and** a zone, not an instant;
+- with a stubbed app identity **four lines differed**, which is why the identity
+  is read from the build the browser is actually running.
+
+**One line is excepted, and the product names it itself**: *the real moment this
+was composed, in the owner's real zone — a fact about the act of composing, not
+about the history being described.* It is the only line that legitimately
+differs between two composings of the same history. Everything else must match.
+
+The clipboard comparison stays, as the smaller claim it always was — and it is
+still what catches Round 17's impostor, which tampered with the field alone.
+
+### Reproduction, and which gate caught which
+
+| # | Before (mine / QA's) | After |
+| --- | --- | --- |
+| 058 | **clean at 8,037 / 8,037**, prohibited sentence in the shipped CSS | scan **exit 1**, naming the stylesheet in both directions |
+| 059 | **clean at 8,040 / 8,040** | scan **exit 1** as a claim, naming `src/styles/base.css` |
+| 060 | **clean at 8,045 / 8,043** | scan **exit 1**: _(no module in the build graph) also ships it_ |
+| 061 | identity + app-wide guards **6 passed / 6 passed** | browser: _the document holds lines this history does not compose to_ |
+
+**QA-84-059's first repair caught it for the wrong reason** — as text no
+stylesheet could place, rather than as a claim. Reading the source stylesheets
+with the same rule as the emitted one turned that into the right answer, which
+names the file and the sentence.
+
+### Gates at `dea2fdd`
+
+| Gate | Result |
+| --- | --- |
+| `npm run verify` | **PASS** — format, lint, typecheck, **1,861 tests** in 84 files, build, copy scan |
+| Rendered copy scan | **clean — 8,035 shipped strings**, 7,951 placed in a module of the build graph |
+| Browser, three widths, one worker | **708 passed** in 15.6 minutes, **zero failures** |
+| Privacy scan | **clean — 290 tracked files** |
+| Deployed Android gate | **clean — 233 checks** |
+| Checkpoint equivalence | **exact** |
+| `git diff -- src` | **empty** — the product was not touched, for the sixteenth round |
+
+Decisions **D-208**; defects **DEF-0143**. **Routing 84 stays YELLOW.** A builder
+conversation may not approve its own phase (D-077).
+
+---
+
+## Round 19 dispatch — independent QA
+
+**Actor:** Codex / independent QA.
+**Model:** Codex. **Reasoning level:** **High** — never Max.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 18.
+
+```text
+Routing Phase 84, independent QA Round 19.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full, including the builder's Round 18
+repair record at the end. Retest routing 84 as independent QA at High, against
+the repaired checkpoint dea2fdd.
+
+Repeat CASE A and CASE B from new ephemeral contexts, as in every previous
+round, and never open the QA laboratory to do it.
+
+Commit your round alone and first. Do not edit the builder's records, alter
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a PHASE_85_* file, or start
+routing 90. Do not ask me to paste file contents.
+```
+
+### What Round 19 should attack
+
+**The declared open case is still not a target.** A sentence the app composes by
+running — over data, or by a computation this guard does not evaluate — in a
+state no sweep reaches is covered by neither half. **A finding is showing that
+something the record claims _is_ covered is not.**
+
+Four places where this repair claims more than it has proved:
+
+1. **The oracle proves the field is a composition, on two histories.** It runs
+   on `the-first-evening` and `quiet-fortnight`, with whatever sections happen
+   to be ticked. A composer that is wrong for a third history, or for a
+   selection those two never make, is not covered — and the oracle and the app
+   share every line of composing code, so a composer that is wrong in the same
+   way in both agrees with itself.
+2. **One line is excepted from the oracle by pattern.** `- Composed: ` is
+   skipped, and anything that reaches the document on a line beginning that way
+   is skipped with it.
+3. **The build tie compares outputs, not the deploy.** `dist/` is what the step
+   before produced. Nothing here reads what the Pages deploy actually serves, so
+   a difference introduced between building and publishing is outside it — and
+   the masks still hide any difference expressed only in a hash or a timestamp.
+4. **CSS is composed, but only for `content`.** Adjacent strings are joined in
+   `content` declarations. Any other property the browser renders as words, and
+   any at-rule or custom property that reaches `content` indirectly, is read
+   the way `content` used to be.
+
+**And the standing invariants, again.** Seven product PASSes and every deferral
+must survive. No blocker enforcement, no semantic interpretation, no scoring
+change, no new visual language, no orchestrator change. Phase 84 stays YELLOW
+until QA says otherwise; the builder may not approve its own phase.
+
+<!-- LCO_COMPLETE -->
