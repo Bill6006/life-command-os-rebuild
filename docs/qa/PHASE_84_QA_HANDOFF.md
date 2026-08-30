@@ -7016,4 +7016,211 @@ must survive. No blocker enforcement, no semantic interpretation, no scoring
 change, no new visual language, no orchestrator change. Phase 84 stays YELLOW
 until QA says otherwise; the builder may not approve its own phase.
 
-<!-- LCO_COMPLETE -->
+---
+
+## Round 15 independent QA — FAIL
+
+**QA actor:** Codex, independent of the routing 84 builder.
+**Checkpoint under test:** repaired product checkpoint `e68900f`; deployed
+documentation head `ba4c741` is bundle-equivalent.
+**Reasoning level:** High.
+**Route status:** **YELLOW**. Do not start routing 90.
+
+The seven product questions pass again. Both owner journeys also pass from new
+ephemeral 430×932 contexts fixed at Friday 18:58 in `America/New_York`, with all
+four stores in both `life-command-os:preview` and
+`life-command-os:preview:laboratory` at zero before either journey. The QA route
+was never opened.
+
+- **CASE A:** empty Now abstained and offered ordinary ways on; Insights read
+  **More money** back as Career & Learning, named the unknown next step,
+  starting point and what would count as getting somewhere, wrote two owner
+  records, and preserved the destination on Career and Timeline.
+- **CASE B:** empty Now led through Life to Health & Physical Capacity; **Move
+  more / Take a ten-minute walk** stated what saving would do, Now proposed the
+  walk after the ordinary guide answers, **Can't right now / someone was in my
+  care** survived a reload on Health, and Timeline said **Not then**, **Did not
+  fit at the time** and **Limit**. Seven owner records were durable; the
+  laboratory remained empty.
+
+The repair nevertheless fails in every one of the four places its own dispatch
+named. These are four false greens, not demonstrations of the already-declared
+runtime-composition remainder.
+
+### QA-84-046 — the sourcemap can confidently approve the wrong module
+
+**Severity:** Blocker. **Decision:** D-204.
+**Class:** provenance trusts a source name without checking that the named
+source contains or produced the mapped words.
+
+I placed the already-approved sentence
+`Leave it empty and the app will not invent one.` visibly in
+`MoreScreen.tsx`. With the build's honest map, the scan correctly exited 1 and
+named `src/features/more/MoreScreen.tsx` as an unapproved transplant. I then
+changed no shipped JavaScript at all: in the chunk map only, I replaced the
+`MoreScreen.tsx` source entry with the existing approved
+`DomainPanels.tsx` source entry. The same scan reported:
+
+```text
+Rendered copy scan clean — 7987 shipped strings (7977 traced to a module)
+```
+
+The map's `sourcesContent` still described More and no content cross-check
+objected. Requiring a map and counting mapped positions proves that a map
+exists and is busy; it does not prove that a particular attribution is true.
+
+### QA-84-047 — four literal sibling elements become one sentence on screen
+
+**Severity:** Blocker. **Decision:** D-204.
+**Class:** syntax-tree adjacency is not rendered-text adjacency.
+
+Behind an ordinary text input on More, reached by typing `show`, I rendered:
+
+```tsx
+<p>
+  <span>The app </span>
+  <span>will choose </span>
+  <span>something better </span>
+  <span>next time.</span>
+</p>
+```
+
+Every word is a static literal. The spans separate the literals in the bundle's
+tree, while the browser puts their text nodes together in one paragraph. The
+copy scan reported clean at **7,999 shipped strings, 7,989 traced**. A separate
+mobile-large owner probe typed `show` and read the exact visible sentence
+**The app will choose something better next time.** The browser sweeps do not
+type arbitrary words, which is their documented boundary; this finding is that
+the tree grouping claimed to close literal composition and did not.
+
+### QA-84-048 — headings over fabricated content pass as the composed review
+
+**Severity:** Blocker. **Decision:** D-204.
+**Class:** section membership is not section content.
+
+I replaced only the marked Data textarea's value. The impostor listed the
+heading of every selected section, omitted every unselected heading, changed
+when a box changed, restored byte-for-byte when it was rechecked, and followed
+the headings with the unapproved blocker-path sentence **This needs special
+care.** plus thirty fabricated review lines. None of the real composed content
+was present.
+
+The copy scan was clean at **7,989 shipped strings, 7,979 traced**. Across all
+three widths, both the identity test and the whole-app before/after guard passed:
+
+```text
+6 passed (22.2s)
+```
+
+The headings show which sections an impostor knows were selected. They do not
+show that the bytes under those headings came from those sections, and the
+marker still removes those unapproved generated lines from the catalogue
+comparison.
+
+### QA-84-049 — the export marker grants its exemption on any route
+
+**Severity:** Blocker. **Decision:** D-204.
+**Class:** uniqueness is checked per page, while identity is proved on one page
+and one history.
+
+I left the real Data export untouched and put a second read-only textarea on
+More with the same `export-text` marker and the unapproved value **This needs
+special care.** There was one marked control on each page, so the per-page
+`<= 1` assertion held. The identity test visited Data only, so it proved the
+real control and never observed the impostor. The route crawl did visit More,
+but classified the impostor's value as generated and excluded it from the
+catalogue comparison.
+
+The copy scan reported clean at **7,988 shipped strings, 7,978 traced**. The
+identity and whole-app guards again passed at all three widths:
+
+```text
+6 passed (16.2s)
+```
+
+This is the dispatch's exact route-scope case: the crawl reached the control,
+but the identity proof that authorizes its exemption happened elsewhere.
+
+### Verification on the restored tree
+
+| Gate | Result |
+| --- | --- |
+| Fresh deployed owner journeys | **PASS** — CASE A and CASE B from separate empty owner contexts; laboratory never opened and remained empty |
+| Checkpoint equivalence | **PASS** — deployed `ba4c741` is bundle-equivalent to repaired checkpoint `e68900f`; only the three routing documents differ |
+| `npm run verify` | **PASS** — format, lint, typecheck, test, build, copy scan |
+| Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files |
+| Rendered copy scan | **clean — 7,985 shipped strings**, 7,975 traced to a module, 1 script chunk, 2 stylesheets |
+| Browser, three widths, one worker | **708 passed** in 16.6 minutes; zero failures or retries |
+| Android-style deployed gate | **clean — 233 checks** |
+| Privacy scan | **clean — 290 tracked files** |
+| Restored implementation tree | **clean** — `git diff --exit-code -- src scripts tests package.json package-lock.json` |
+
+### Overall verdict and repair requirement
+
+**FAIL. Routing Phase 84 remains YELLOW.** The product passes. The guarantee
+does not: mapped provenance can be confidently false; literal copy can be
+adjacent in the rendered reading while separated by element nodes; selected
+headings can sit over invented section bodies; and a marker on another reached
+route inherits an identity exemption that was proved only on Data.
+
+The builder must reproduce QA-84-046 through QA-84-049 exactly before repair;
+repair the four whole classes under plan section 42; add regressions and prove
+each by reintroduction; rerun every full gate; deploy a repaired checkpoint;
+preserve all seven product PASSes and every deferral; keep Phase 84 YELLOW; and
+dispatch Round 16 to this same QA conversation. Do not start routing 90.
+
+---
+
+## Round 15 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** **Max** — the audit-repair campaign rule applies across
+sourcemap trust, rendered text adjacency, generated-document content identity
+and route/history scope.
+**Conversation:** **CURRENT** — the original routing 84 Claude builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 15 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 15 at the end contains four
+new Blockers, QA-84-046 through QA-84-049. Execute the Round 15 repair handoff
+exactly as written.
+
+Keep Phase 84 YELLOW. Reproduce each exact false green before repair; identify
+and repair every whole class under plan section 42; add regressions and prove
+them by reintroduction. A sourcemap attribution must not be accepted as
+provenance without an independent consistency check against the module it
+names. Literal coverage must include text that becomes adjacent through
+rendered element structure, not only adjacent child runs in the JavaScript
+tree. Generated-review identity must establish the selected sections' actual
+content rather than only their headings. Any marker that grants an exemption
+must have its identity and scope proved everywhere the crawl observes it,
+across more than the one Data history.
+
+Run the aggregate, full three-width browser, deployed Android, privacy,
+block-sweep and copy-guard gates; deploy the repaired checkpoint; preserve all
+seven product PASSes and every deferral; and append a Round 16 retest dispatch
+for the SAME Codex QA conversation at High.
+
+Do not edit QA's Round 15, alter docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a
+PHASE_85_* file or start routing 90. Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** Max.
+**Conversation:** CURRENT — the original routing 84 Claude builder conversation.
+
+```text
+Continue routing Phase 84 after independent QA Round 15 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 15
+repair handoff at its end exactly as written. Do not ask me to paste the file.
+```
