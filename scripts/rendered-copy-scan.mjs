@@ -91,14 +91,16 @@ function stringsIn(source, originAt = () => null) {
 
   const record = (value, from) => {
     if (typeof value !== 'string' || value === '') return
-    let origins = found.get(value)
-    if (origins === undefined) {
-      origins = new Set()
-      found.set(value, origins)
+    let known = found.get(value)
+    if (known === undefined) {
+      known = { at: new Set(), disputed: new Set() }
+      found.set(value, known)
     }
-    for (const node of from) {
-      const origin = originAt(node)
-      if (origin !== null) origins.add(origin)
+    for (const piece of from) {
+      const origin = originAt(piece.at, piece.text)
+      if (origin === null) continue
+      if (origin.agrees) known.at.add(origin.file)
+      else known.disputed.add(origin.file)
     }
   }
 
@@ -167,13 +169,25 @@ function stringsIn(source, originAt = () => null) {
           ? node.properties
           : node.type === 'SequenceExpression'
             ? node.expressions
-            : null
+            : node.type === 'CallExpression' || node.type === 'NewExpression'
+              ? node.arguments
+              : null
     if (ordered !== null) {
+      const calling = node.type === 'CallExpression' || node.type === 'NewExpression'
       const parts = []
-      for (const element of ordered) {
+      for (const [index, element] of ordered.entries()) {
         const piece = piecesOf(element)
         if (piece === null) return null
-        parts.push(...piece)
+        /*
+         * A built element's **type** sits in a call's first argument, and it is
+         * what is being made rather than anything anybody reads. Marking it
+         * here rather than matching the word anywhere keeps the drop honest:
+         * copy that legitimately says *"a table"* or *"the code"* is not a
+         * type, so it stays in the sentence.
+         */
+        parts.push(
+          ...piece.map((part) => (calling && index === 0 ? { ...part, type: true } : part)),
+        )
       }
       return parts
     }
@@ -199,11 +213,12 @@ function stringsIn(source, originAt = () => null) {
     return out.sort((first, second) => first.start - second.start)
   }
 
-  const joinRun = (run) => {
+  const joinRun = (whole) => {
+    // An element's type is what is being built, not what is read — QA-84-047.
+    const run = whole.filter((piece) => !(piece.type === true && HTML_ELEMENTS.has(piece.text)))
     if (run.length < 2) return
-    const nodes = run.map((piece) => piece.at)
-    record(run.map((piece) => piece.text).join(' '), nodes)
-    record(run.map((piece) => piece.text).join(''), nodes)
+    record(run.map((piece) => piece.text).join(' '), run)
+    record(run.map((piece) => piece.text).join(''), run)
   }
 
   const walk = (node) => {
@@ -229,10 +244,13 @@ function stringsIn(source, originAt = () => null) {
     }
     joinRun(run)
 
-    if (node.type === 'Literal' && typeof node.value === 'string') record(node.value, [node])
+    if (node.type === 'Literal' && typeof node.value === 'string') {
+      record(node.value, [{ text: node.value, at: node }])
+    }
     if (node.type === 'TemplateLiteral') {
       for (const quasi of node.quasis) {
-        record(quasi.value.cooked ?? quasi.value.raw ?? '', [quasi])
+        const text = quasi.value.cooked ?? quasi.value.raw ?? ''
+        record(text, [{ text, at: quasi }])
       }
     }
 
@@ -258,11 +276,42 @@ function contentIn(css, name) {
     const raw = (match[1] ?? '').trim()
     for (const piece of raw.matchAll(/"([^"]*)"|'([^']*)'/g)) {
       const value = piece[1] ?? piece[2] ?? ''
-      if (value !== '') found.set(value, new Set([name]))
+      if (value !== '') found.set(value, { at: new Set([name]), disputed: new Set() })
     }
   }
   return found
 }
+
+/**
+ * The names of HTML elements, which are never owner copy — QA-84-047.
+ *
+ * A built React element is `jsx(type, props)`, so once a call contributes its
+ * arguments' text the element's **type** joins the sentence: four spans inside
+ * a paragraph read as *"p span The app span will choose …"*. That is not
+ * cosmetic. A nested version — `<span><strong>The app </strong></span>` and so
+ * on — pushed the subject and its verb far enough apart that the classifier no
+ * longer saw them together, and the promise passed. The noise **was** the hole.
+ *
+ * So an element name is dropped from a joined run when it stands in the **type**
+ * position — a call's first argument — and only there, and only from the join:
+ * every one is still recorded as a string in its own right. Matching the word
+ * wherever it appeared would have quietly deleted *"a table"* or *"the code"*
+ * from ordinary copy before the classifier ever saw the sentence. **This is a closed set
+ * because HTML closes it** — the same reason D-200 enumerated the attributes a
+ * browser renders as words rather than guessing at them. A component is a
+ * function, so it reaches the parser as an identifier and never gets here.
+ */
+const HTML_ELEMENTS = new Set(
+  (
+    'a abbr address area article aside audio b base bdi bdo big blockquote body br button ' +
+    'canvas caption cite code col colgroup data datalist dd del details dfn dialog div dl dt ' +
+    'em embed fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6 head header hgroup hr ' +
+    'html i iframe img input ins kbd keygen label legend li link main map mark menu menuitem ' +
+    'meta meter nav noscript object ol optgroup option output p param picture pre progress q ' +
+    'rp rt ruby s samp script section select slot small source span strong style sub summary ' +
+    'sup table tbody td template textarea tfoot th thead time title tr track u ul var video wbr'
+  ).split(' '),
+)
 
 const SEPARATOR = String.fromCharCode(92)
 const WHITESPACE = new RegExp(SEPARATOR + 's+', 'g')
@@ -310,6 +359,59 @@ function repoPath(source) {
  * - and an approval whose sentence is not in the bundle at all is **dead**,
  *   which is the case Round 14 could keep alive with a discarded expression.
  */
+/**
+ * Whether the module the map names really says those words there — QA-84-046.
+ *
+ * Provenance is only as good as the account the build gives of itself, and
+ * Round 15 rewrote that account: with the shipped JavaScript untouched, it
+ * pointed More's copy of an approved sentence at the module that is allowed to
+ * say it, and the scan called a transplant clean. **Requiring a map, and
+ * counting how many positions it places, proves a map exists and is busy — not
+ * that any one attribution is true.**
+ *
+ * So each attribution is corroborated against the source the map itself
+ * carries: the words must be at the position it claims, within a line either
+ * side of it, allowing for a literal that was wrapped when it was written.
+ */
+function saysItThere(lines, line, text) {
+  const wanted = flattened(text).slice(0, 20)
+  if (wanted === '') return true
+  const at = Math.max(0, (line ?? 1) - 2)
+  return flattened(lines.slice(at, at + 4).join(' ')).includes(wanted)
+}
+
+/**
+ * Whether the map's account of a module matches the module — QA-84-046.
+ *
+ * `sourcesContent` is the build's copy of every file it read. When a name is
+ * changed without its content, the map ends up claiming that one module has
+ * two different bodies, and comparing each against the file on disk says so at
+ * once. Sources with no file here — a dependency published without its source,
+ * a virtual module — are skipped rather than guessed at.
+ */
+function mapDisagreesWithDisk(raw, name) {
+  const complaints = []
+  const sources = raw.sources ?? []
+  const contents = raw.sourcesContent ?? []
+  const plain = (text) => String(text).split('\r\n').join('\n')
+
+  for (let index = 0; index < sources.length; index += 1) {
+    const file = repoPath(sources[index])
+    const claimed = contents[index]
+    if (claimed === null || claimed === undefined) {
+      complaints.push(`${name}: the map carries no source for ${file}, so nothing can corroborate`)
+      complaints.push('the strings it is credited with.')
+      continue
+    }
+    if (!existsSync(file)) continue
+    if (plain(claimed) !== plain(readFileSync(file, 'utf8'))) {
+      complaints.push(`${name}: the map's copy of ${file} is not what is on disk, so its`)
+      complaints.push('attributions describe a module this repository does not contain.')
+    }
+  }
+  return complaints
+}
+
 function approvalsAwayFromHome(shipped) {
   const wrong = []
   for (const approved of APPROVED_FUTURE_COPY) {
@@ -317,11 +419,13 @@ function approvalsAwayFromHome(shipped) {
     const producing = new Set()
     let ships = false
     let untraceable = false
-    for (const [text, origins] of shipped) {
+    const disputed = new Set()
+    for (const [text, known] of shipped) {
       if (!flattened(text).includes(pin)) continue
       ships = true
-      if (origins.size === 0) untraceable = true
-      for (const origin of origins) producing.add(origin)
+      if (known.at.size === 0 && known.disputed.size === 0) untraceable = true
+      for (const origin of known.at) producing.add(origin)
+      for (const origin of known.disputed) disputed.add(origin)
     }
 
     if (!ships) {
@@ -339,6 +443,16 @@ function approvalsAwayFromHome(shipped) {
      */
     if (untraceable) {
       wrong.push({ pin, file: '(a module the sourcemap could not place)', why: 'also ships it' })
+    }
+    /*
+     * And an attribution the named module does not corroborate is not an
+     * attribution — QA-84-046. The map is the build's account of itself; a
+     * position it credits to a module that does not have those words there is
+     * the account disagreeing with itself, which is the only kind of forgery
+     * this can see from the outside.
+     */
+    for (const origin of disputed) {
+      wrong.push({ pin, file: origin, why: 'is credited with it but does not say it there' })
     }
     for (const origin of producing) {
       if (!approved.in.includes(origin))
@@ -378,13 +492,14 @@ function main() {
    */
   const shipped = new Map()
   const remember = (from) => {
-    for (const [value, origins] of from) {
+    for (const [value, found] of from) {
       let known = shipped.get(value)
       if (known === undefined) {
-        known = new Set()
+        known = { at: new Set(), disputed: new Set() }
         shipped.set(value, known)
       }
-      for (const origin of origins) known.add(origin)
+      for (const origin of found.at) known.at.add(origin)
+      for (const origin of found.disputed) known.disputed.add(origin)
     }
   }
 
@@ -396,14 +511,29 @@ function main() {
       console.error('anything at all.')
       process.exit(1)
     }
-    const tracer = new TraceMap(JSON.parse(readFileSync(at, 'utf8')))
-    const originAt = (node) => {
+    const raw = JSON.parse(readFileSync(at, 'utf8'))
+    for (const complaint of mapDisagreesWithDisk(raw, name)) {
+      console.error(complaint)
+      process.exit(1)
+    }
+
+    const tracer = new TraceMap(raw)
+    const lines = new Map()
+    raw.sources.forEach((source, index) => {
+      lines.set(source, String(raw.sourcesContent?.[index] ?? '').split(/\r?\n/))
+    })
+
+    const originAt = (node, text) => {
       if (node === null || typeof node !== 'object' || node.loc === undefined) return null
       const found = originalPositionFor(tracer, {
         line: node.loc.start.line,
         column: node.loc.start.column,
       })
-      return found.source === null || found.source === undefined ? null : repoPath(found.source)
+      if (found.source === null || found.source === undefined) return null
+      return {
+        file: repoPath(found.source),
+        agrees: saysItThere(lines.get(found.source) ?? [], found.line, text),
+      }
     }
     remember(stringsIn(readFileSync(join(ASSETS, name), 'utf8'), originAt))
   }
@@ -420,7 +550,7 @@ function main() {
     process.exit(1)
   }
 
-  const traced = [...shipped.values()].filter((origins) => origins.size > 0).length
+  const traced = [...shipped.values()].filter((known) => known.at.size > 0).length
   if (traced < shipped.size / 2) {
     console.error(`Only ${traced} of ${shipped.size} strings could be traced to a module.`)
     console.error('Provenance is the whole approval check, so this is a failure, not a warning.')
@@ -440,10 +570,10 @@ function main() {
   }
 
   const offenders = []
-  for (const [value, origins] of shipped) {
+  for (const [value, known] of shipped) {
     const left = withoutApprovedFutureCopy(withoutApprovedNonPromises(value))
     for (const claim of adaptationClaimsOnAnyScreen(left)) {
-      offenders.push({ claim, value, origins })
+      offenders.push({ claim, value, origins: new Set([...known.at, ...known.disputed]) })
     }
   }
 

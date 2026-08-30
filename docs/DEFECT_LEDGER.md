@@ -39,6 +39,63 @@ None.
 
 ## Fixed
 
+### DEF-0140 — four things D-204 trusted without corroborating
+
+- Status: Fixed
+- Severity: Blocker ×4 — an approved sentence could be laundered through the
+  sourcemap, a promise could be split across sibling elements, an impostor
+  document could wear the right headings over invented text, and a marked
+  control on another route could inherit an exemption proved on Data
+- Found in: routing 84 / `e68900f`
+- Found by: **independent QA round 15** (QA-84-046 … QA-84-049) — the fourth
+  round running in which every weakness the builder's own dispatch named was
+  turned into a working false green, and this time all four landed
+- Class: **believing a single account.** D-204 replaced modelling with reading,
+  which was right; three of these are reading one source and not corroborating
+  it, and the fourth is reading the syntax tree where the DOM is what matters.
+- Reproduction, all four confirmed here before anything was built:
+  - **046** — the approved sentence visible in `MoreScreen.tsx`, correctly
+    caught with the honest map; then, with **no change to any shipped
+    JavaScript**, the map's source entry for More replaced by the approved
+    module's → **clean at 7,988 strings** (QA: 7,987).
+  - **047** — four sibling `<span>`s in one paragraph behind a typed word →
+    **clean at 8,003** (QA: 7,999).
+  - **048** — the chosen sections' headings over thirty invented lines →
+    identity and app-wide guards **6 passed** (QA: 6 passed).
+  - **049** — a second marked control on More, the real export untouched →
+    **6 passed in 16.4s** (QA: 6 passed in 16.2s), scan clean at 7,987
+    (QA: 7,988).
+- Repair — see **D-205**. The map is corroborated against the files on disk and
+  against its own positions; a call contributes its arguments' text and an
+  element's type is dropped from the join; the document must answer to the
+  history as well as to the selection; and the marker's exemption is scoped to
+  the screen the identity proof covers.
+- Regression: `scripts/rendered-copy-scan.mjs` (map-versus-disk, disputed
+  attributions, argument text, `HTML_ELEMENTS`), run from `npm run verify`;
+  `QA-84-039/043/048 — the composed review answers to the sections and to the
+history` and the scoped marker rule in `tests/browser/phase84.spec.ts`.
+- Proved by reintroduction: all four, each built and run. **046** fails with
+  _the map's copy of `src/features/life/DomainPanels.tsx` is not what is on
+  disk_; **047** fails as a shipped string naming the module; **048** fails with
+  _the same sections over a different history produced the same document_;
+  **049** fails with _a control claims to be the composed review on a screen
+  where nothing proves it is_.
+- **A first repair of 047 caught the flat case and not a nested one**, and that
+  is recorded because the reason matters: the joined text carried the element
+  names, and `span`/`strong` between the subject and its verb pushed them out of
+  the classifier's reach. The guard was over-approximating in a way that made it
+  weaker, which is not the safe direction it looks like.
+- **And two false accusations of my own**, both from reading the screen and the
+  address at different moments: the scope rule first failed the honest product
+  mid-navigation, and then failed again on a marked-control count taken before
+  the new screen had arrived. Both are D-200's race, and both are why the check
+  settles first.
+- Siblings: none. All seventeen approvals still resolve to exactly their listed
+  modules under corroboration, and the shipped-string count rose from 7,985 to
+  **8,182** as calls began to contribute their arguments' text.
+- Note on scope: the current copy was honest throughout, for the thirteenth round
+  running, and both fresh-store cases passed again.
+
 ### DEF-0139 — two approximations D-203 made, and the guard that crashed on ordinary source
 
 - Status: Fixed

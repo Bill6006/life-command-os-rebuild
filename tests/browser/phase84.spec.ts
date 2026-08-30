@@ -1232,6 +1232,15 @@ async function unitsFromRememberedFrames(
   return out
 }
 
+/** What the screen currently calls itself, or '' while it has no heading. */
+async function headingOf(page: Page): Promise<string> {
+  try {
+    return (await page.locator('h1').first().innerText({ timeout: 1000 })).trim()
+  } catch {
+    return ''
+  }
+}
+
 async function unitsEverywhere(page: Page): Promise<readonly ReadingUnit[]> {
   const out: ReadingUnit[] = []
 
@@ -1245,11 +1254,54 @@ async function unitsEverywhere(page: Page): Promise<readonly ReadingUnit[]> {
    * is that the app composes exactly one such document. If a second appears,
    * this says so rather than trusting either.
    */
+  /*
+   * Exactly one control may claim to be the composed review — QA-84-036 — and
+   * only where that claim has been proved — QA-84-049.
+   *
+   * Round 12 rendered a second read-only textarea carrying the same
+   * `data-testid`, the same accessible label and an unapproved value, and the
+   * collector believed it. **Carrying the marker is an assertion of provenance,
+   * not proof of one**, and the only thing that makes the assertion checkable
+   * is that the app composes exactly one such document.
+   *
+   * Round 15 then obeyed that rule and broke the next one: it left the real
+   * export alone and put a second marked control on **More**, so every page
+   * still had at most one, the identity test never visited the impostor, and
+   * the crawl that did visit it honoured the exemption it had granted itself.
+   * **An exemption is only worth what proved it**, and what proves this one is
+   * a test of the composed review on the export screen.
+   *
+   * The screen is read as well as the address, and the count is read after both
+   * agree. A press that navigates changes the URL before React has replaced the
+   * document, so a rule keyed on the address alone accuses the honest product
+   * halfway through a hash navigation, and a count taken before the new screen
+   * arrives belongs to the old one. That is D-200's race arriving from two new
+   * directions at once, and settling first is the same answer.
+   */
+  let address = page.url()
+  let screen = await headingOf(page)
+  for (
+    let attempt = 0;
+    attempt < 20 && address.includes('#/data') !== (screen === 'Data');
+    attempt += 1
+  ) {
+    await page.waitForTimeout(50)
+    address = page.url()
+    screen = await headingOf(page)
+  }
+
   const marked = await page.locator('[data-testid="export-text"]').count()
   expect(
     marked,
     'more than one control claims to be the composed review, so provenance cannot be trusted',
   ).toBeLessThanOrEqual(1)
+
+  if (marked > 0) {
+    expect(
+      `${screen} at ${address.slice(address.indexOf('#'))}`,
+      'a control claims to be the composed review on a screen where nothing proves it is',
+    ).toBe('Data at #/data')
+  }
 
   for (const frame of page.frames()) {
     try {
@@ -1444,33 +1496,30 @@ async function sweepEveryPress(page: Page): Promise<ReadonlySet<string>> {
 const PRESSES_PER_ROUTE = 40
 
 test.describe('everything a blocker puts on any screen', () => {
-  test('QA-84-039/043 — the marked control is the composed review, section by section', async ({
+  test('QA-84-039/043/048 — the composed review answers to the sections and to the history', async ({
     page,
   }) => {
     /*
      * The sweep exempts the composed review from the catalogue comparison,
      * because a document legitimately repeats sentences the screens already
-     * say. Two rounds have attacked what that exemption is granted to.
+     * say. Three rounds have attacked what that exemption is granted to, and
+     * each answer was true and not sufficient.
      *
      * **Round 12** put a second control beside it carrying the same marker, so
-     * the count of marked controls became part of the check. **Round 13** kept
-     * the count at one and replaced the value with a long document that was not
-     * an export, so a size floor was clearly not identity either. The answer
-     * then was to demonstrate rather than assert: the composed review changes
-     * with the section selection and a static impostor cannot.
+     * the marker had to be unique. **Round 13** kept the count at one and
+     * replaced the value with a long document, so a size floor was not
+     * identity. **Round 14** made the impostor respond to the section
+     * selection, so responsiveness was not identity either, and the check
+     * became: each chosen section's own heading present, each unchosen one
+     * absent. **Round 15 wrote exactly those headings over thirty invented
+     * lines.** Section membership is not section content.
      *
-     * **Round 14 wrote an impostor that changes with the selection.** Its first
-     * line echoed the chosen ids and the rest was filler. Responding to a
-     * control proves a dependency on that control — nothing more — and the
-     * document it was standing in for is not *a function of the selection*, it
-     * is **the selected sections, composed**.
-     *
-     * So that is what is checked, against the app's own list of sections and
-     * their own titles as the screen shows them. Every ticked section's heading
-     * must be in the document and every unticked one's must not, and unticking
-     * one must remove exactly its own heading and leave the rest standing. An
-     * impostor passes this only by composing the sections, at which point it is
-     * the export.
+     * So the document is required to answer to **both** of the things it is
+     * composed from. Its headings must track the **selection**, which the
+     * checks below do one section at a time. And its body must track the
+     * **history**: the same selection over a different life must produce a
+     * different document. An impostor keyed on the selection alone cannot —
+     * it does not know what history it is standing in front of.
      */
     await loadInQa(page, 'The first evening')
     await page.goto(`${APP}#/data`)
@@ -1510,7 +1559,7 @@ test.describe('everything a blocker puts on any screen', () => {
       ).toBe(section.ticked)
     }
 
-    // And removing one section removes exactly its own part of the document.
+    // Removing one section removes exactly its own part of the document.
     const dropped = chosen[0]
     if (dropped === undefined) throw new Error('unreachable: chosen is not empty')
     await boxes.nth(dropped.index).uncheck()
@@ -1531,6 +1580,29 @@ test.describe('everything a blocker puts on any screen', () => {
 
     await boxes.nth(dropped.index).check()
     await expect(review, 'the document did not come back when the section did').toHaveValue(whole)
+
+    /*
+     * And the same selection over a different life — QA-84-048.
+     *
+     * Nothing about the selection changes here, so anything that answers only
+     * to the checkboxes produces the same bytes twice. The composed review
+     * cannot: its body is the history.
+     */
+    await loadInQa(page, 'Two ordinary weeks')
+    await page.goto(`${APP}#/data`)
+    await expect(page.getByRole('heading', { level: 1, name: 'Data' })).toBeVisible()
+
+    const elsewhere = await review.inputValue()
+    for (const section of chosen) {
+      expect(
+        elsewhere.includes(section.heading),
+        `${section.heading} is missing on the second history, so the selection did not carry`,
+      ).toBe(true)
+    }
+    expect(
+      elsewhere,
+      'the same sections over a different history produced the same document, so its body is not the history',
+    ).not.toBe(whole)
   })
 
   test('QA-84-016/018 — no screen in the app promises an adaptation, before or after a block', async ({

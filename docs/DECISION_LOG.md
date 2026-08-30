@@ -7314,3 +7314,95 @@ half. D-202 said this of data and D-203 of any computation; nothing here
 narrows it further, and nothing here pretends to.
 
 ---
+
+## D-205 — Corroborate the account, read the rendering, and make identity answer to both inputs
+
+**Phase:** 84 (QA round 15 repair) · **Status:** Active · Repairs the four
+places **D-204** trusted something it had not checked.
+
+D-204's rule was _read the product rather than model it_, and it was right. Round
+15 showed that reading is not the same as **corroborating**: three of these
+findings are the guard believing an account without a second source, and the
+fourth is reading the wrong artefact.
+
+### 1. A sourcemap is an account, not evidence (QA-84-046)
+
+Provenance came from the built chunk's map, which was a real improvement and
+still a single source. Round 15 changed **no shipped JavaScript at all**: in the
+map only, it pointed More's copy of an approved sentence at the module that is
+allowed to say it, and a caught transplant went clean. **Requiring a map and
+counting the positions it places proves a map exists and is busy** — not that
+any one attribution is true.
+
+So the account is corroborated against itself and against the tree it describes:
+
+- **the map's copy of a module must be the module.** `sourcesContent` is the
+  build's copy of every file it read; when a name is changed without its body,
+  the map ends up claiming one module has two different bodies, and comparing
+  each against the file on disk says so immediately.
+- **the position must say what it is credited with.** Every attribution is
+  checked against the source the map itself carries: the words must be at the
+  place it names, within a line either side, allowing for a literal that was
+  wrapped when it was written. An attribution the named module does not
+  corroborate is reported as **disputed**, and a disputed origin for an approved
+  sentence fails.
+
+### 2. Tree adjacency is not rendered adjacency (QA-84-047)
+
+D-204 read grouping off the syntax tree, which closed the constructs. Round 15
+wrote one sentence as four sibling `<span>`s inside one paragraph: separate in
+the tree, one line on the screen. **The tree says how the code is written; the
+DOM says what is read.**
+
+A call now contributes its **arguments'** text, so a built element contributes
+the text of its children — which is what puts the four spans back together. And
+**the element's type is dropped from the join**, because it is what is being
+built, not what is read. That second half is not tidying: a nested version,
+`<span><strong>The app </strong></span>` and so on, pushed subject and verb far
+enough apart with `span` and `strong` that the classifier no longer saw them
+together, and the promise passed. **The noise was the hole.** Element names are
+a closed set because HTML closes it — the same reason D-200 enumerated the
+attributes a browser renders as words. **And the drop is scoped to the type
+position**, a call’s first argument, rather than to the word wherever it
+appears: matching everywhere would quietly delete _“a table”_ or _“the code”_
+from ordinary copy before the classifier ever saw the sentence, which is a
+guard weakening itself while looking stricter.
+
+### 3. Membership is not content (QA-84-048)
+
+D-204 proved the marked control is the composed review by requiring each chosen
+section's heading and no others'. Round 15 wrote exactly those headings over
+thirty invented lines. **Headings show which sections an impostor knows were
+chosen; they say nothing about where the bytes underneath came from.**
+
+The document is composed from two things, so it is now required to answer to
+both. Its headings track the **selection**, one section at a time as before. Its
+body must track the **history**: the same selection over a different life must
+produce a different document. An impostor keyed on the checkboxes cannot manage
+that — it does not know which history it is standing in front of. This also
+retires the "one history" limit the Round 15 dispatch named, because the check
+needs two.
+
+### 4. An exemption is worth what proved it (QA-84-049)
+
+The marked control is exempt from the catalogue comparison. That exemption was
+granted wherever the marker appeared, while what justified it — the identity
+test — ran on Data. Round 15 left the real export alone and put a second marked
+control on **More**: one per page, so the uniqueness rule held; never visited by
+the identity test; honoured by the crawl that did visit it.
+
+A marker now only grants its exemption on the screen the identity proof covers.
+**The screen is read as well as the address, and the count is read after the two
+agree** — a press that navigates changes the URL before React has replaced the
+document, so a rule keyed on the address alone accuses the honest product
+mid-navigation, and a count taken before the new screen arrives belongs to the
+old one. Both of those happened here before the settle was added; they are
+D-200's race arriving from two new directions.
+
+### What is still open, unchanged
+
+A sentence the app composes by **running** — over data, or by a computation the
+guard does not evaluate — in a state no sweep reaches is covered by neither
+half. Nothing here narrows that, and nothing here pretends to.
+
+---
