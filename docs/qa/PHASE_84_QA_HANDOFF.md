@@ -8545,4 +8545,253 @@ must survive. No blocker enforcement, no semantic interpretation, no scoring
 change, no new visual language, no orchestrator change. Phase 84 stays YELLOW
 until QA says otherwise; the builder may not approve its own phase.
 
-<!-- LCO_COMPLETE -->
+---
+
+## Round 19 independent QA — FAIL
+
+**Checkpoint under test:** repaired `dea2fdd`; deployed documentation head
+`16100ae`. **Decision:** D-209. **Defect:** DEF-0144.
+
+### Verdict
+
+**FAIL. Routing Phase 84 remains YELLOW.** The product remains clean. The
+standing guarantee does not: each of the four claims named in the Round 19
+dispatch has an exact false green.
+
+### Fresh deployed owner journeys
+
+Both required journeys ran against
+`https://bill6006.github.io/life-command-os-rebuild/preview/` at deployed build
+`16100ae80e213669adaa5e579755bff376f55a71`, built
+`2026-08-30T19:10:19.680Z`. Each used a new ephemeral Chromium process and
+430×932 context in `America/New_York`, fixed to Friday at 18:58 local. Neither
+opened the QA laboratory. Every object store in both the owner and laboratory
+databases began empty, and every laboratory store remained empty.
+
+**CASE A passed.** Empty Now abstained. Insights interpreted and saved **More
+money** under Career & Learning, named the unknown next step, starting point
+and getting-somewhere evidence, exposed the changes panel, and preserved the
+exact aim on Career and Timeline. The owner store ended with one entity and two
+records.
+
+**CASE B passed.** Empty Now led through Life and Health & Recovery to **Move
+more** with **Take ten-minute walk**. After the ordinary guide answers **Enough**
+and **Nothing**, Now suggested the named walk. **Can't right now** and **Can't
+leave — someone's in my care** wrote a standing blocker that survived reload.
+Timeline showed **Not then**, **Did not fit at the time**, and **Limit**. The
+owner store ended with two entities and seven records.
+
+### QA-84-062 — the oracle shares the defect it is meant to detect
+
+**Severity:** Blocker. **Decision:** D-209.
+**Class:** common-mode composition error passes because product and oracle call
+the same composer.
+
+I added one fabricated factual line directly to `composeExport`:
+
+```text
+- The history shows twelve completed launches.
+```
+
+No history supplied that fact. The product document and `composedHere` both
+imported the altered composer, so both contained the same invention and the
+line-by-line comparison found no stray line. The copy scanner was clean:
+
+```text
+Rendered copy scan clean — 8037 shipped strings (7953 placed in a module)
+across 1 script chunk(s) and 2 stylesheet(s).
+```
+
+The composed-review identity test and the whole-app copy guard both passed at
+all three widths:
+
+```text
+6 passed (23.4s)
+```
+
+This does not need a third history or an unvisited selection. It defeats both
+of the oracle's existing histories at once: a second invocation of the same
+faulty function is agreement with itself, not independent evidence that the
+document represents its inputs.
+
+### QA-84-063 — the composing exception exempts an invented fact
+
+**Severity:** Blocker. **Decision:** D-209.
+**Class:** a prefix-based exception removes arbitrary document content, not one
+identified metadata field.
+
+I left `composeExport` honest and altered only the `composed` object held by
+`DataScreen`, inserting this line into the UI document:
+
+```text
+- Composed: The history shows twelve completed launches.
+```
+
+The independently composed oracle did not contain it. The comparison still
+passed because `ABOUT_THE_COMPOSING = /^- Composed: /` discards every line with
+that prefix before it asks whether the oracle contains the line. The textarea
+and clipboard also agreed because both consumed the same altered object.
+
+The copy scanner was clean at **8,038 shipped strings, 7,954 placed**, and the
+same focused guards passed at all three widths:
+
+```text
+6 passed (18.3s)
+```
+
+The legitimate difference is one metadata field at one structural position.
+A regular expression over arbitrary lines grants that exception to any factual
+claim that adopts the prefix.
+
+### QA-84-064 — the live verifier proves a SHA, not deployed bytes
+
+**Severity:** Blocker. **Decision:** D-209.
+**Class:** post-gate publication can change the artifact while the claimed
+deployed-build identity remains green.
+
+I added a deploy-job step after `preview-dist` was downloaded and before
+`publish-pages.sh` ran. Its temporary publisher appended a visible fixed
+`body::before` rule containing **The app will choose something better next
+time.** to the app stylesheet. No source or verified `dist/` byte was changed
+until every preceding gate had finished.
+
+Before that publication step, the full aggregate passed — **1,861 tests** and a
+clean scanner baseline of **8,035 / 7,951**. Running the same publication step
+locally and serving its output produced this browser result:
+
+```text
+before: "The app will choose something better next time."
+display: block
+position: fixed
+```
+
+`build-info.json` was untouched. The repository's live verifier therefore
+accepted the mutated served tree:
+
+```text
+Deployed SHA matches: 16100ae80e213669adaa5e579755bff376f55a71
+```
+
+Only rerunning the copy scanner after the mutation rejected the stylesheet in
+both directions. The deployment workflow does not do that; it verifies only
+the SHA field. The build tie proves the in-process build equals pre-publication
+`dist/`. It does not prove Pages serves those bytes.
+
+### QA-84-065 — a custom property reaches `content` unseen
+
+**Severity:** Blocker. **Decision:** D-209.
+**Class:** the CSS reader composes quoted strings only when they occur directly
+inside a `content` declaration.
+
+I put the prohibited sentence in a custom property and referenced it from the
+visible pseudo-element:
+
+```css
+body::before {
+  --qa-round-19-copy: 'The app will choose something better next time.';
+  content: var(--qa-round-19-copy);
+}
+```
+
+The scan remained exactly at the honest baseline:
+
+```text
+Rendered copy scan clean — 8035 shipped strings (7951 placed in a module)
+across 1 script chunk(s) and 2 stylesheet(s).
+```
+
+The browser's computed `::before` content was exactly **The app will choose
+something better next time.**, displayed as a block on More. `contentIn` saw
+only `var(--qa-round-19-copy)` and read no quoted value; it never inspected the
+custom-property declaration that supplied the rendered words.
+
+This is static authored CSS, not the declared open case of runtime data. The
+browser resolves the property before rendering it, while the guard stops at
+the direct declaration syntax.
+
+### Verification on the restored tree
+
+Every attack, probe and temporary harness was removed before the final gates.
+
+| Gate | Result |
+| --- | --- |
+| Fresh deployed owner journeys | **PASS** — CASE A and CASE B from separate empty owner contexts; laboratory never opened and remained empty |
+| Checkpoint equivalence | **PASS** — deployed `16100ae` is bundle-equivalent to repaired checkpoint `dea2fdd`; only `docs/NEXT_PROMPT.md`, `docs/PHASE_STATUS.md` and this QA handoff differ |
+| `npm run verify` | **PASS** — format, lint, typecheck, test, build, copy scan |
+| Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files |
+| Rendered copy scan | **clean — 8,035 shipped strings**, 7,951 placed in a module of the build graph, 1 script chunk, 2 stylesheets |
+| Browser, three widths, one worker | **708 passed** in 16.2 minutes; zero failures or retries |
+| Android-style deployed gate | **clean — 233 checks**; the host certificate chain required Playwright's temporary HTTPS-error allowance, removed immediately after the run |
+| Privacy scan | **clean — 290 tracked files** |
+| Restored implementation tree | **clean** — `git diff --exit-code -- src scripts tests package.json package-lock.json vite.config.ts tsconfig.app.json` |
+
+### Overall verdict and repair requirement
+
+**FAIL. Routing Phase 84 remains YELLOW.** All seven product PASSes and every
+deferral survive. The guarantee does not. The composition oracle shares its
+subject's defect; the metadata exception is a prefix anyone can adopt; the live
+verifier checks a declared SHA rather than deployed bytes; and indirect CSS
+copy reaches `content` outside the reader.
+
+The builder must reproduce QA-84-062 through QA-84-065 exactly before repair;
+repair all four whole classes; add regressions and prove each by
+reintroduction; rerun every full gate; deploy a repaired checkpoint; preserve
+all seven product PASSes and every deferral; keep Phase 84 YELLOW; and dispatch
+Round 20 to this same QA conversation. Do not start routing 90.
+
+---
+
+## Round 19 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** **Max** — the audit-repair campaign rule applies across
+independent composition identity, structural metadata, deployed-byte identity
+and indirect CSS rendering.
+**Conversation:** **CURRENT** — the original routing 84 Claude builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 19 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 19 at the end contains four
+new Blockers, QA-84-062 through QA-84-065. Execute the Round 19 repair handoff
+exactly as written.
+
+Keep Phase 84 YELLOW. Reproduce each exact false green before repair; identify
+and repair every whole class; add regressions and prove them by reintroduction.
+The generated-review oracle must not use the same composition implementation
+as the subject it validates; prove section bodies from independent inputs and
+semantics. Identify the legitimate composed-at metadata structurally and at
+its one position rather than exempting every line with a prefix. Prove the
+actual deployed bytes equal the verified artifact, not merely that a mutable
+build-info file repeats the expected SHA; publication-time changes must fail.
+Resolve every static CSS path by which authored words reach the rendered value,
+including custom properties, at-rules and relevant rendered properties, rather
+than parsing only direct quoted `content` declarations.
+
+Run the aggregate, full three-width browser, deployed Android, privacy,
+block-sweep and copy-guard gates; deploy the repaired checkpoint; preserve all
+seven product PASSes and every deferral; and append a Round 20 retest dispatch
+for the SAME Codex QA conversation at High.
+
+Do not edit QA's Round 19, alter docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a
+PHASE_85_* file or start routing 90. Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** Max.
+**Conversation:** CURRENT — the original routing 84 Claude builder conversation.
+
+```text
+Continue routing Phase 84 after independent QA Round 19 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 19
+repair handoff at its end exactly as written. Do not ask me to paste the file.
+```
