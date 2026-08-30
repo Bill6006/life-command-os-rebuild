@@ -2,68 +2,101 @@
 
 **Phase:** 84 — **what the owner is trying to become**
 
-**Actor:** Codex / **independent QA**.
-**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 18.
-**Model:** Codex.
-**Reasoning level:** **High** — never Max.
-
-**Routing 84 is YELLOW.** You have failed it eighteen times and been right
-eighteen times. **Rounds 3 to 18 have all been clean on the product**; every
-finding has been about the standing guarantee.
-
-QA-84-058 through QA-84-061 are repaired at **`dea2fdd`**. All four were
-reproduced before the repair, each matching your own count, and all four are
-caught after it.
-
-**The complete Round 19 dispatch, with everything worth attacking and why, is at
-the end of [`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md), below the
-builder's Round 18 repair record. Read that file in full.**
+**Actor:** Claude / **builder**.
+**Conversation:** **CURRENT** — the original routing 84 Claude builder conversation.
+**Model:** Claude Opus-class.
+**Reasoning level:** **Max**.
 
 ---
 
-## What changed, in one paragraph
+## The owner has closed the open-ended QA loop
 
-Three of the four were the same mistake: **a rule applied to one kind of thing
-and described as applying to all of them.** The tie to `dist/` walked script
-chunks only, so a plugin keyed on `isWrite` could put a promise in the shipped
-stylesheet and leave the guard's copy harmless — every emitted output is now
-paired with what is on disk, and the guard's build no longer overrides the
-project's options. `content: 'a' 'b' 'c'` is one value, not three, so adjacent
-strings are joined as CSS joins them and the source stylesheets are read with
-the same rule. And D-207 allowed an unplaced join because one straddling two
-modules belongs to neither — which also described a join a `renderChunk` plugin
-made out of nothing, so an unplaced join is now allowed only when every piece it
-was made from is itself placed. The fourth was different: the field and the
-clipboard both read one object, so corrupting `composed` fooled both. The
-document is now composed **again**, in the test process, from the scenario's own
-history.
+Rounds 15 to 19 produced twenty findings, four per round, with no taper. All
+twenty were reviewed. **None was an owner-visible product defect.** Nineteen
+show that a guard, scanner, oracle, verifier or build tie can be defeated by a
+deliberately constructed forgery. One — **QA-84-064** — concerns release and
+deployed-byte integrity.
 
-**The through-line (D-208): two consumers of one object agree about delivery,
-not about composition.**
+**Decision D-210 (2026-08-30)** separates product acceptance from instrument
+hardening:
 
-## Gates at `dea2fdd`
+- the nineteen instrument findings are **deferred from Phase 84 GREEN**, preserved
+  verbatim in [`qa/INSTRUMENT_HARDENING_BACKLOG.md`](qa/INSTRUMENT_HARDENING_BACKLOG.md)
+  and indexed in the defect ledger as **open, not closed**;
+- **QA-84-064 remains blocking**;
+- **Phase 84 GREEN means bounded product acceptance only.** It does not mean the
+  deferred findings are resolved.
 
-`npm run verify` **PASS** (84 files, **1,861** tests, copy scan clean at
-**8,035** strings, 7,951 placed in a module of the build graph); browser
-**708 / 708** at 360/430/1280 with zero failures; privacy clean at
-290 files; deployed Android gate **clean at 233 checks**; checkpoint
-equivalence exact; CI green. **`git diff -- src` is empty** — the product was not
-touched, for the sixteenth round running.
+Read `DECISION_LOG.md` **D-210** before doing anything else.
 
-**The oracle took four attempts and each is recorded**: the synthetic harness
-imports `vitest` and cannot run under Playwright; `buildInfo.ts` needs the
-build-time globals, set from the deployed `build-info.json`; `composedAt` is a
-moment _and_ a zone; and a stubbed app identity left four lines differing, so
-the identity is read from the build the browser is actually running.
+---
 
-**And QA-84-059's first repair caught it for the wrong reason** — as text no
-stylesheet could place, rather than as a claim. Reading the source stylesheets
-with the same rule turned that into the right answer, which names the file and
-the sentence.
+## Your task: repair QA-84-064, and nothing else
 
-Decisions **D-208**; defects **DEF-0143**.
+**QA-84-064 — the live verifier proves a SHA, not deployed bytes.** Post-gate
+publication can change the artifact while the claimed deployed-build identity
+stays green. QA demonstrated it by adding a deploy-job step after `preview-dist`
+was downloaded and before `publish-pages.sh` ran: its publisher appended a
+visible `body::before` rule to the app stylesheet. No source byte and no verified
+`dist/` byte changed, and the build-identity check still reported agreement.
 
-**Routing 84 stays YELLOW.** A builder conversation may not approve its own phase
-(D-077). Do not start routing 90.
+The full finding is in `qa/PHASE_84_QA_HANDOFF.md`, round 19.
+
+Repair it so that what is *served* is tied to what was *verified* — not to a
+commit identifier that a later step can decorate around. Reproduce the defect
+before you fix it, and prove the reproduction is caught afterwards.
+
+### Explicitly out of scope
+
+- **The nineteen deferred findings.** Do not repair, revisit or pre-empt them.
+- **`qa/INSTRUMENT_HARDENING_BACKLOG.md` may not be edited, removed, renumbered
+  or reordered.** Every `QA-84-0xx` identifier in it must still resolve when you
+  are done. A missing identifier is a preservation failure, not a cleanup.
+- **General guard, scanner, oracle and verifier hardening.** That work now has
+  its own backlog and its own gate. It is not part of this closeout.
+- **Routing 90 must not start.** Phase 84 stays YELLOW until QA says otherwise.
+
+---
+
+## When the repair is done
+
+Write the **bounded retest dispatch** into this file, `docs/NEXT_PROMPT.md`,
+addressed to **Codex / independent QA**, **SAME** conversation (the one that
+wrote rounds 1 to 19), **Codex**, **High** — never Max.
+
+That retest verifies **only**:
+
+1. **QA-84-064 / release-integrity correctness** — including the reproduction you
+   used, and that it is now caught.
+2. **The seven Phase 84 acceptance items.**
+3. **CASE A** fresh-store owner use.
+4. **CASE B** fresh-store owner use.
+5. **The normal required regression gates** — the full test suite, the browser
+   matrix at three widths, the Android checks, the privacy scan, checkpoint
+   equivalence, and a clean worktree.
+
+Say plainly in that dispatch that **general instrument hardening is closed for
+this phase**, and that only two things may block GREEN from here:
+
+- a **genuinely new owner-visible product defect**; or
+- a **release-integrity defect comparable to QA-84-064**.
+
+A further finding that a detector can be fooled is **not** a blocker. It belongs
+in the backlog, appended, with nothing removed.
+
+**If all bounded acceptance items pass, Phase 84 may go GREEN.** You may not
+declare GREEN yourself — a builder conversation does not approve its own phase
+(D-077). QA declares it.
+
+---
+
+## Completion
+
+When finished, make the LAST meaningful line of `docs/NEXT_PROMPT.md` exactly:
 
 <!-- LCO_COMPLETE -->
+
+Do not put this completion marker in a different handoff file. The line above
+quotes it as an instruction and is not the final meaningful line, so this file
+does not yet count as finished — writing the marker at the end is what proves
+you are.
