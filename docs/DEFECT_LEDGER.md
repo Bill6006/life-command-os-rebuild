@@ -1,5 +1,43 @@
 # Defect ledger
 
+## Deferred — Phase 84 instrument hardening
+
+**These are open, not closed.** Nineteen findings from independent QA rounds
+15 to 19 were deferred from Phase 84 GREEN by owner decision **D-210** on
+2026-08-30. Every one demonstrates that a guard, scanner, oracle, verifier or
+build tie can be defeated by a deliberately constructed forgery. None is an
+owner-visible product defect, and none has been fixed.
+
+Full text, verbatim, is preserved in
+[`qa/INSTRUMENT_HARDENING_BACKLOG.md`](qa/INSTRUMENT_HARDENING_BACKLOG.md).
+They may not be edited, removed or renumbered by any QA round.
+
+**QA-84-064 is not in this list.** It concerns release and deployed-byte
+integrity rather than a detector, and remains a Phase 84 blocker.
+
+| ID | Title | Round | State |
+| --- | --- | --- | --- |
+| QA-84-046 | the sourcemap can confidently approve the wrong module | 15 | Deferred, open |
+| QA-84-047 | four literal sibling elements become one sentence on screen | 15 | Deferred, open |
+| QA-84-048 | headings over fabricated content pass as the composed review | 15 | Deferred, open |
+| QA-84-049 | the export marker grants its exemption on any route | 15 | Deferred, open |
+| QA-84-050 | a consistently wrong sourcemap still launders a transplant | 16 | Deferred, open |
+| QA-84-051 | a dropped call argument can hide a rendered promise | 16 | Deferred, open |
+| QA-84-052 | the twenty-character position threshold accepts a prefix decoy | 16 | Deferred, open |
+| QA-84-053 | a history counter makes an invented review pass identity | 16 | Deferred, open |
+| QA-84-054 | the app resolver and the repository walker can disagree | 17 | Deferred, open |
+| QA-84-055 | “can say it” and “it ships” still identify no producer | 17 | Deferred, open |
+| QA-84-056 | splitting the subject prevents a claim-bearing pair | 17 | Deferred, open |
+| QA-84-057 | one honest section can carry nine fabricated ones | 17 | Deferred, open |
+| QA-84-058 | the build tie does not include stylesheets | 18 | Deferred, open |
+| QA-84-059 | adjacent CSS strings compose after the scanner stops | 18 | Deferred, open |
+| QA-84-060 | render-time copy borrows an honest producer | 18 | Deferred, open |
+| QA-84-061 | the field and clipboard agree on the same false document | 18 | Deferred, open |
+| QA-84-062 | the oracle shares the defect it is meant to detect | 19 | Deferred, open |
+| QA-84-063 | the composing exception exempts an invented fact | 19 | Deferred, open |
+| QA-84-065 | a custom property reaches `content` unseen | 19 | Deferred, open |
+
+
 Verified defects and their resolution. Canonical plan section 42 governs the
 process:
 

@@ -1,5 +1,50 @@
 # Decision log
 
+## D-210 — Phase 84 product acceptance is separated from QA-instrument hardening
+
+**Phase:** 84 · **Status:** Decided by the owner, 2026-08-30.
+
+Rounds 15 to 19 produced twenty findings, four per round, with no taper. A
+review of all twenty found:
+
+- **0** owner-visible product-behaviour defects;
+- **19** guard, scanner, oracle, verifier or test-instrument findings;
+- **1** exception, QA-84-064, concerning release and deployed-byte integrity.
+
+Every round's product gates passed throughout: the seven acceptance items,
+CASE A and CASE B fresh-store owner use, the full test suite, the browser
+matrix, the Android checks and the privacy scan. Every FAIL in that window was
+caused by an instrument finding.
+
+Each round attacked the previous round's repair, and hardening a detector
+creates new surface for the next attack. QA-84-062 states the terminal case:
+*the oracle shares the defect it is meant to detect.* There is no finite end
+to that process, and `ROUTING_91_BRIEF.md` §7 had already named the pattern:
+bundling an unproven instrument with the product whose acceptance depends on
+it is routing 82's failure mode, with instrument and product failing together
+and no way to tell which.
+
+### The ruling
+
+1. **Instrument hardening is deferred from Phase 84 GREEN.** The nineteen
+   findings are preserved verbatim in
+   [`qa/INSTRUMENT_HARDENING_BACKLOG.md`](qa/INSTRUMENT_HARDENING_BACKLOG.md)
+   and indexed in the defect ledger. They are open, not closed, and no round
+   may edit, remove or renumber them.
+2. **QA-84-064 remains blocking.** It is the one finding that would still
+   matter if every guard were retired, because it shows the published artifact
+   can change after the gate passes while build identity stays green.
+3. **Phase 84 GREEN means bounded product acceptance only.** It does not mean
+   the deferred instrument findings are resolved, and it may not be read that
+   way. Any later reader is directed to the backlog by this decision.
+4. **The bounded closeout may not reopen general instrument hardening.** Only
+   a genuinely new owner-visible product defect, or a release-integrity defect
+   comparable to QA-84-064, may block GREEN from here.
+
+D-209 was left alone: rounds 19's findings already cite it, and taking it
+would have collided with the repair record that round intends to write.
+
+
 Decisions that shape the rebuild and the reason behind each one. Entries are
 append-only. When a decision is reversed, add a new entry that supersedes the
 old one rather than editing history.
