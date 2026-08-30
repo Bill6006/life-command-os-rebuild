@@ -1,6 +1,23 @@
 import { readFileSync } from 'node:fs'
+import { coreDomains } from '../../src/domain/domains'
+import { composeExport } from '../../src/features/export/compose'
+import type { ExportSectionId } from '../../src/features/export/sections'
+import { assembleTimeline } from '../../src/features/timeline/timelineEntries'
+import { decide } from '../../src/intelligence/engine'
+import { insightsFor } from '../../src/intelligence/insights'
+import { assembleSituation } from '../../src/intelligence/situation'
+import { snapshotFromWire } from '../../src/memory/snapshot'
+import { buildView } from '../../src/memory/view'
+import { scenarioById } from '../../src/synthetic/scenarios'
 import { join } from 'node:path'
-import { expect, test, type Frame, type Locator, type Page } from '@playwright/test'
+import {
+  expect,
+  test,
+  type APIRequestContext,
+  type Frame,
+  type Locator,
+  type Page,
+} from '@playwright/test'
 import {
   adaptationClaims,
   adaptationClaimsOnAnyScreen,
@@ -1495,10 +1512,104 @@ async function sweepEveryPress(page: Page): Promise<ReadonlySet<string>> {
  */
 const PRESSES_PER_ROUTE = 40
 
+/**
+ * The same document, composed here from the same inputs — QA-84-061.
+ *
+ * Every earlier check on the composed review compared one thing the screen
+ * showed with another thing the screen showed: a heading against a checkbox, a
+ * body against Timeline, the field against the clipboard. Round 18 corrupted
+ * `composed` itself, so the field and the clipboard delivered the same false
+ * document perfectly, and every part-wise check that touched the one honest
+ * section passed.
+ *
+ * **Two consumers of one object agree about delivery, not about composition.**
+ * So the document is composed again here, in this process, from the scenario's
+ * own history and the product's own composer — an oracle that never touches
+ * the object the screen is holding. If they differ, the screen is not showing
+ * what this history composes to.
+ *
+ * The app's identity comes from the build the browser is running, read from its
+ * own `build-info.json`, because those values are the ones the document quotes.
+ */
+async function composedHere(
+  request: APIRequestContext,
+  scenarioId: string,
+  sections: readonly string[],
+): Promise<readonly string[]> {
+  const info = (await (await request.get(`http://127.0.0.1:4173${APP}build-info.json`)).json()) as {
+    commitSha: string
+    commitShort: string
+    branch: string
+    buildTime: string
+    target: 'preview' | 'production' | 'development'
+  }
+
+  const globals = globalThis as unknown as Record<string, unknown>
+  globals.__LCOS_COMMIT_SHA__ = info.commitSha
+  globals.__LCOS_COMMIT_SHORT__ = info.commitShort
+  globals.__LCOS_BRANCH__ = info.branch
+  globals.__LCOS_BUILD_TIME__ = info.buildTime
+  globals.__LCOS_TARGET__ = info.target
+  const { REBUILD_PHASE } = await import('../../src/platform/buildInfo')
+
+  const scenario = scenarioById(scenarioId)
+  if (scenario === undefined) throw new Error(`no scenario called ${scenarioId}`)
+  const loaded = snapshotFromWire(scenario.build())
+  const moment = {
+    now: scenario.now,
+    zone: scenario.zone,
+    weekStartsOn: scenario.weekStartsOn ?? (1 as const),
+  }
+  const view = buildView(loaded.snapshot, { now: scenario.now, zone: scenario.zone })
+  const situation = assembleSituation(view, { ...moment, domains: coreDomains })
+
+  return composeExport({
+    sections: sections as readonly ExportSectionId[],
+    situation,
+    decision: decide(view, moment),
+    insights: insightsFor(situation),
+    timeline: assembleTimeline(situation),
+    source: 'laboratory',
+    app: {
+      commitShort: info.commitShort,
+      commitSha: info.commitSha,
+      target: info.target,
+      buildTime: info.buildTime,
+      phaseNumber: REBUILD_PHASE.number,
+      phaseTitle: REBUILD_PHASE.title,
+      phaseSummary: REBUILD_PHASE.summary,
+    },
+    composedAt: { at: scenario.now, zone: scenario.zone },
+  }).text.split('\n')
+}
+
+/**
+ * The one line that legitimately differs between two composings.
+ *
+ * The product says it itself, where it sets the field: *the real moment this
+ * was composed, in the owner's real zone — a fact about the act of composing,
+ * not about the history being described*. Every other line is the history.
+ */
+const ABOUT_THE_COMPOSING = /^- Composed: /
+
+async function chosenSections(page: Page): Promise<string[]> {
+  const boxes = page.locator('input[type="checkbox"][data-testid^="section-"]')
+  const chosen: string[] = []
+  for (let index = 0; index < (await boxes.count()); index += 1) {
+    if (await boxes.nth(index).isChecked()) {
+      chosen.push(
+        String(await boxes.nth(index).getAttribute('data-testid')).replace('section-', ''),
+      )
+    }
+  }
+  return chosen
+}
+
 test.describe('everything a blocker puts on any screen', () => {
-  test('QA-84-039/043/048/053/057 — the composed review is the document the app hands over', async ({
+  test('QA-84-039/043/048/053/057/061 — the composed review is what this history composes to', async ({
     page,
     context,
+    request,
   }) => {
     /*
      * The sweep exempts the composed review from the catalogue comparison,
@@ -1558,6 +1669,21 @@ test.describe('everything a blocker puts on any screen', () => {
       handedOver.length,
       'the app copied nothing, so the comparison proves nothing',
     ).toBeGreaterThan(0)
+
+    /*
+     * And the document is what this history composes to — QA-84-061. Composed
+     * again here, from the scenario itself, by the product's own composer,
+     * without touching the object the screen is holding.
+     */
+    const here = await composedHere(request, 'the-first-evening', await chosenSections(page))
+    const strayed = (await review.inputValue())
+      .split('\n')
+      .filter((line) => line.trim().length > 0 && !ABOUT_THE_COMPOSING.test(line))
+      .filter((line) => !here.includes(line))
+    expect(
+      strayed.slice(0, 6),
+      'the document holds lines this history does not compose to, so its body is not the history',
+    ).toEqual([])
 
     const boxes = page.locator('input[type="checkbox"][data-testid^="section-"]')
     const count = await boxes.count()
@@ -1693,6 +1819,16 @@ test.describe('everything a blocker puts on any screen', () => {
       elsewhere,
       'the same sections over a different history produced the same document, so its body is not the history',
     ).not.toBe(whole)
+
+    const alsoHere = await composedHere(request, 'quiet-fortnight', await chosenSections(page))
+    const strayedThere = elsewhere
+      .split('\n')
+      .filter((line) => line.trim().length > 0 && !ABOUT_THE_COMPOSING.test(line))
+      .filter((line) => !alsoHere.includes(line))
+    expect(
+      strayedThere.slice(0, 6),
+      'the second history composes to something else than the document shows',
+    ).toEqual([])
   })
 
   test('QA-84-016/018 — no screen in the app promises an adaptation, before or after a block', async ({

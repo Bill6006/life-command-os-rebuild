@@ -63,7 +63,7 @@ import {
 } from './adaptation-claims.mjs'
 
 const LABORATORY = 'QaScreen'
-const SHIPPED = 'dist/assets'
+const SHIPPED = 'dist'
 
 /**
  * Every string a module ships, and every sentence its adjacent literals make —
@@ -97,10 +97,19 @@ function stringsIn(source) {
     if (typeof value !== 'string' || value === '') return
     let known = found.get(value)
     if (known === undefined) {
-      known = { at: new Set(), joined: false }
+      known = { at: new Set(), joined: false, pieces: new Set() }
       found.set(value, known)
     }
-    if (joined) known.joined = true
+    if (joined) {
+      known.joined = true
+      /*
+       * What it was joined from — QA-84-060. A join whose pieces are each real
+       * copy in a real module may legitimately straddle two of them; a join
+       * whose pieces nobody can place was made after the modules were, and is
+       * the shape a render-time plugin leaves behind.
+       */
+      for (const piece of from) known.pieces.add(piece.text)
+    }
   }
 
   /**
@@ -332,45 +341,40 @@ function stringsIn(source) {
 }
 
 /**
- * Every string a stylesheet renders — QA-84-033.
+ * Every string a stylesheet renders — QA-84-033, and what it renders them **as**
+ * — QA-84-059.
  *
  * `content` puts words on the screen exactly as a text node does, and Round 12
- * shipped the promise in a `::marker` rule. Stylesheets ship, so stylesheets
- * are read: every `content:` declaration in every CSS chunk. Their origin is
- * the stylesheet itself — CSS is not built from modules the way the script
- * chunk is, and pretending otherwise would be a provenance nobody checked.
+ * shipped a promise in a `::marker` rule. Round 18 then wrote one value as four
+ * adjacent strings —
+ *
+ *     content: 'The app ' 'will choose ' 'something better ' 'next time.';
+ *
+ * — which is not four values. **CSS concatenates adjacent strings**, and the
+ * browser's computed content was the whole sentence, while this read four
+ * innocent fragments. So a declaration's fragments are joined in order, exactly
+ * as the browser joins them, and the composed value is what gets classified.
+ * The fragments are still recorded on their own, because either can be the
+ * thing somebody wrote.
  */
-function contentIn(css, name) {
+function contentIn(css) {
   const found = new Map()
+  const keep = (value) => {
+    if (value !== '') found.set(value, { at: new Set(), joined: false, pieces: new Set() })
+  }
   for (const match of css.matchAll(/content\s*:\s*([^;}]+)/g)) {
     const raw = (match[1] ?? '').trim()
+    const pieces = []
     for (const piece of raw.matchAll(/"([^"]*)"|'([^']*)'/g)) {
       const value = piece[1] ?? piece[2] ?? ''
-      if (value !== '') found.set(value, { at: new Set(), joined: false })
+      pieces.push(value)
+      keep(value)
     }
+    if (pieces.length > 1) keep(pieces.join(''))
   }
   return found
 }
 
-/**
- * The names of HTML elements, which are never owner copy — QA-84-047.
- *
- * A built React element is `jsx(type, props)`, so once a call contributes its
- * arguments' text the element's **type** joins the sentence: four spans inside
- * a paragraph read as *"p span The app span will choose …"*. That is not
- * cosmetic. A nested version — `<span><strong>The app </strong></span>` and so
- * on — pushed the subject and its verb far enough apart that the classifier no
- * longer saw them together, and the promise passed. The noise **was** the hole.
- *
- * So an element name is dropped from a joined run when it stands in the **type**
- * position — a call's first argument — and only there, and only from the join:
- * every one is still recorded as a string in its own right. Matching the word
- * wherever it appeared would have quietly deleted *"a table"* or *"the code"*
- * from ordinary copy before the classifier ever saw the sentence. **This is a closed set
- * because HTML closes it** — the same reason D-200 enumerated the attributes a
- * browser renders as words rather than guessing at them. A component is a
- * function, so it reaches the parser as an identifier and never gets here.
- */
 const HTML_ELEMENTS = new Set(
   (
     'a abbr address area article aside audio b base bdi bdo big blockquote body br button ' +
@@ -481,11 +485,18 @@ function repoPath(source) {
  * `dist/`, which is what `npm run verify` built a moment earlier and what the
  * deploy publishes.
  *
- * The chunks are paired by **content**, not by name. A first version paired
+ * The outputs are paired by **content**, not by name. A first version paired
  * them by stripping the hash off the filename and immediately mis-read
  * `index-C3-1N9fH.js`, because a content hash can contain a dash of its own.
  * Pairing by what the files say needs no such rule, and is the thing being
  * claimed anyway.
+ *
+ * **Every emitted output is compared, not only the script chunks — QA-84-058.**
+ * The first version of this walked chunks alone, and Round 18 wrote a plugin
+ * whose `generateBundle` hook looked at `isWrite`: on the guard's in-process
+ * build the stylesheet was harmless, and on the writing build that produced
+ * `dist/` it said something else entirely. A tie that covers one kind of asset
+ * is not build identity, it is script identity.
  *
  * Two things are masked, and only two: the **content-hash filenames** chunks
  * use to refer to each other, and the **build stamp** the product embeds. Both
@@ -501,19 +512,26 @@ function settled(text) {
     .trimEnd()
 }
 
-function differsFromShipped(chunks) {
-  const onDisk = new Map(
-    readdirSync(SHIPPED)
-      .filter((file) => file.endsWith('.js'))
-      .map((file) => [file, settled(readFileSync(join(SHIPPED, file), 'utf8'))]),
-  )
+function shippedFiles(dir, prefix = '') {
+  const found = []
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const at = join(dir, entry.name)
+    const name = `${prefix}${entry.name}`
+    if (entry.isDirectory()) found.push(...shippedFiles(at, `${name}/`))
+    else found.push([name, settled(readFileSync(at, 'utf8'))])
+  }
+  return found
+}
+
+function differsFromShipped(built) {
+  const onDisk = new Map(shippedFiles(SHIPPED))
 
   const complaints = []
-  for (const chunk of chunks) {
-    const mine = settled(chunk.code)
+  for (const item of built) {
+    const mine = settled(item.type === 'chunk' ? item.code : item.source)
     const match = [...onDisk.entries()].find(([, shipped]) => shipped === mine)
     if (match === undefined) {
-      complaints.push(`${chunk.fileName} is not any of the files that shipped`)
+      complaints.push(`${item.fileName} is not any of the files that shipped`)
       continue
     }
     onDisk.delete(match[0])
@@ -525,10 +543,16 @@ function differsFromShipped(chunks) {
 }
 
 async function shippedByModule() {
-  const bundled = await build({
-    logLevel: 'silent',
-    build: { write: false, sourcemap: false },
-  })
+  /*
+   * The project's own options, with only `write` turned off — QA-84-058.
+   *
+   * Anything overridden here is a way for this build to differ from the one
+   * that shipped, and the comparison below would then be comparing two
+   * different things. `write` is the one exception, because the point is to
+   * read the graph without touching what the deploy publishes; every output is
+   * still compared to what is on disk, sourcemaps included.
+   */
+  const bundled = await build({ logLevel: 'silent', build: { write: false } })
   const outputs = Array.isArray(bundled) ? bundled : [bundled]
 
   const shipped = new Map()
@@ -541,10 +565,11 @@ async function shippedByModule() {
     for (const [value, found] of from) {
       let known = shipped.get(value)
       if (known === undefined) {
-        known = { at: new Set(), joined: false }
+        known = { at: new Set(), joined: false, pieces: new Set() }
         shipped.set(value, known)
       }
       if (found.joined) known.joined = true
+      for (const piece of found.pieces) known.pieces.add(piece)
       if (origin !== null) known.at.add(origin)
       for (const already of found.at) known.at.add(already)
     }
@@ -552,6 +577,7 @@ async function shippedByModule() {
 
   for (const one of outputs) {
     for (const item of one.output) {
+      built.push(item)
       const laboratory = item.fileName.includes(LABORATORY)
       if (item.type === 'chunk') {
         /*
@@ -563,7 +589,6 @@ async function shippedByModule() {
         for (const [id] of Object.entries(item.modules)) {
           if (id.endsWith('.css')) stylesheets.add(repoPath(id))
         }
-        built.push(item)
         if (laboratory) continue
         chunks += 1
         // The finished file, for coverage: nothing in it goes unclassified.
@@ -579,17 +604,30 @@ async function shippedByModule() {
 
       if (!item.fileName.endsWith('.css')) continue
       sheets += 1
+      /*
+       * A source stylesheet is read with the **same rule** as the emitted one —
+       * QA-84-059. Asking whether its text contains the value would miss a
+       * declaration written as adjacent strings, which is the very thing the
+       * browser composes; running `contentIn` over the source instead means
+       * both sides are asked the same question.
+       */
+      const carries = new Map(
+        [...stylesheets]
+          .filter((sheet) => existsSync(sheet))
+          .map((sheet) => [sheet, contentIn(readFileSync(sheet, 'utf8'))]),
+      )
+
       const unplaced = []
-      for (const [value] of contentIn(String(item.source), item.fileName)) {
-        const from = [...stylesheets].filter(
-          (sheet) => existsSync(sheet) && readFileSync(sheet, 'utf8').includes(value),
-        )
+      for (const [value] of contentIn(String(item.source))) {
+        const from = [...carries.entries()]
+          .filter(([, said]) => said.has(value))
+          .map(([sheet]) => sheet)
         if (from.length === 0) unplaced.push(value)
         for (const sheet of from) {
-          remember(new Map([[value, { at: new Set(), joined: false }]]), sheet)
+          remember(new Map([[value, { at: new Set(), joined: false, pieces: new Set() }]]), sheet)
         }
         if (from.length === 0) {
-          remember(new Map([[value, { at: new Set(), joined: false }]]), null)
+          remember(new Map([[value, { at: new Set(), joined: false, pieces: new Set() }]]), null)
         }
       }
       if (unplaced.length > 0) {
@@ -634,14 +672,25 @@ function approvalsAwayFromHome(shipped) {
       if (!flattened(text).includes(pin)) continue
       ships = true
       /*
-       * A **literal** that ships must have come from a module; a **join** is
+       * A **literal** that ships must have come from a module. A **join** is
        * this guard's own construction over the finished chunk, and one whose
-       * pieces sit in two different modules belongs to neither. So only an
-       * unplaced literal is an anomaly — which is exactly the case Round 17
-       * built, a sentence rendered from a stylesheet while its approved module
-       * merely still contained it.
+       * pieces sit in two different modules belongs to neither — so an unplaced
+       * join is allowed **only when every piece it was made from is itself
+       * placed**.
+       *
+       * Round 18 is why that second half exists: a `renderChunk` plugin wrote
+       * the approved sentence into the chunk after the modules were attributed,
+       * as two literals nobody could place, and the join of them borrowed its
+       * approval from the honest occurrence in another module entirely. A join
+       * made of nothing anybody wrote is not a join across modules; it is copy
+       * that arrived after them.
        */
-      if (known.at.size === 0 && !known.joined) unplaced = true
+      if (known.at.size === 0) {
+        const fromNowhere =
+          !known.joined ||
+          [...known.pieces].some((piece) => (shipped.get(piece)?.at.size ?? 0) === 0)
+        if (fromNowhere) unplaced = true
+      }
       for (const origin of known.at) producing.add(origin)
     }
 

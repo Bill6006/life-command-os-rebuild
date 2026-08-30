@@ -7595,3 +7595,76 @@ guard does not evaluate — in a state no sweep reaches is covered by neither
 half. Nothing here narrows that.
 
 ---
+
+## D-208 — Every output, the value the browser composes, the occurrence rather than the words, and an oracle
+
+**Phase:** 84 (QA round 18 repair) · **Status:** Active · Repairs the four
+places **D-207** claimed more than it had.
+
+D-207 asked the build for its own graph, which was right and covered less than
+it said. Round 18 found four gaps, and three of them share a shape: **a rule
+was applied to one kind of thing and described as applying to all of them.**
+
+### 1. Build identity means every output (QA-84-058)
+
+The tie to `dist/` walked the **script chunks**. Round 18 wrote a plugin whose
+`generateBundle` hook looked at `isWrite`: on the guard's in-process build the
+stylesheet was harmless, and on the writing build that produced `dist/` it said
+_"The app will choose something better next time."_ Nothing compared it, so no
+mask was even needed.
+
+Every emitted output is now paired with what is on disk — chunks, stylesheets,
+`index.html`, the build info, the sourcemaps. **And the guard's build no longer
+overrides the project's options**: only `write` is turned off, because anything
+else overridden is a way for the two builds to differ, and the comparison would
+then be comparing two different things.
+
+### 2. CSS composes adjacent strings (QA-84-059)
+
+`content: 'The app ' 'will choose ' 'something better ' 'next time.'` is one
+value, not four. The extractor read each quoted fragment separately, and the
+attribution then asked whether a source stylesheet _contained_ that fragment —
+so neither operation ever saw the sentence the browser puts on the screen.
+
+Adjacent strings are now joined in order, exactly as CSS joins them, and the
+composed value is classified. **The source stylesheets are read with the same
+rule**, rather than by text containment, so both sides of the attribution are
+asked the same question.
+
+### 3. An occurrence, not the words (QA-84-060)
+
+D-207 allowed an unplaced **join**, because a join whose pieces sit in two
+modules belongs to neither. Round 18 used exactly that: a `renderChunk` plugin
+wrote an approved sentence into the chunk _after_ the modules were attributed,
+as two literals nobody could place, and the join of them borrowed its approval
+from the honest occurrence in another module entirely.
+
+An unplaced join is now allowed **only when every piece it was made from is
+itself placed**. A join made of nothing anybody wrote is not a join across
+modules; it is copy that arrived after them.
+
+### 4. Two consumers of one object agree about delivery (QA-84-061)
+
+D-207 compared the field against the clipboard. Round 18 corrupted `composed`
+itself, so both consumers delivered the same false document, and every part-wise
+check that touched the one honest section passed.
+
+The document is now composed **again**, in the test process, from the scenario's
+own history and the product's own composer — an oracle that never touches the
+object the screen is holding. Every line of the field must be a line that
+composition produces. **One line is excepted, and the product names it itself**:
+_the real moment this was composed, in the owner's real zone — a fact about the
+act of composing, not about the history being described_. It is the only line
+that legitimately differs between two composings of the same history.
+
+The clipboard comparison stays. It is a smaller claim — that the field and the
+copy control deliver the same thing — and it is still the one that catches a
+field tampered with on its own.
+
+### What is still open, unchanged
+
+A sentence the app composes by **running** — over data, or by a computation this
+guard does not evaluate — in a state no sweep reaches is covered by neither
+half. Nothing here narrows that.
+
+---

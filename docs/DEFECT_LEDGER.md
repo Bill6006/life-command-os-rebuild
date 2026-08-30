@@ -39,6 +39,55 @@ None.
 
 ## Fixed
 
+### DEF-0143 — a rule applied to one kind of thing and described as applying to all
+
+- Status: Fixed
+- Severity: Blocker ×4 — a production stylesheet could differ from the build the
+  guard read; one CSS value written as adjacent strings was never composed; a
+  render-time occurrence could borrow another module's approval; and two
+  consumers of one corrupted document agreed perfectly
+- Found in: routing 84 / `6062756`
+- Found by: **independent QA round 18** (QA-84-058 … QA-84-061) — the seventh
+  round running in which every weakness the builder's own dispatch named became
+  a working false green, and the sixth in which all of them did
+- Class: **coverage described more widely than it was implemented**, three times;
+  and delivery agreement mistaken for composition identity once.
+- Reproduction, all four confirmed here before anything was built:
+  - **058** — a plugin rewriting the stylesheet only when `isWrite` → copy scan
+    **clean at 8,037 strings, 7,953 placed** (QA: 8,037 / 7,953), with the
+    prohibited sentence in the shipped CSS.
+  - **059** — `content: 'The app ' 'will choose ' …` → **clean at 8,040 / 7,956**
+    (QA: 8,040 / 7,956).
+  - **060** — a `renderChunk` hook replacing a marker with a two-piece join →
+    **clean at 8,045 / 7,958** (QA: 8,043 / 7,956).
+  - **061** — `composed` corrupted after `composeExport`, both consumers reading
+    it → identity and app-wide guards **6 passed** (QA: 6 passed).
+- Repair — see **D-208**. Every emitted output is tied to `dist/` and the guard's
+  build stops overriding the project's options; CSS adjacent strings are joined
+  as the browser joins them, on both sides of the attribution; an unplaced join
+  must be made of placed pieces; and the composed review is checked against a
+  document composed independently in the test process.
+- Regression: `scripts/rendered-copy-scan.mjs` (`shippedFiles`, `contentIn`
+  composition, the piece-placement rule) and `QA-84-039/043/048/053/057/061` in
+  `tests/browser/phase84.spec.ts`.
+- Proved by reintroduction: all four, each built and run. **058** fails naming
+  the stylesheet in both directions; **059** now fails **as a claim** naming
+  `src/styles/base.css`, rather than as unplaceable text, because the source is
+  read with the same rule; **060** fails with _(no module in the build graph)
+  also ships it_; **061** fails with _the document holds lines this history does
+  not compose to_. Round 17's own impostor still fails on the clipboard
+  comparison, so the older attack was not traded away.
+- **The oracle needed four attempts to stand up, and each failure is worth
+  keeping**: the synthetic harness imports `vitest` and cannot run under
+  Playwright, so the oracle is built from product modules only; `buildInfo.ts`
+  needs the build-time globals, so they are set from the deployed
+  `build-info.json` before a dynamic import; `composedAt` is a moment _and_ a
+  zone; and with a stubbed app identity four lines differed, which is why the
+  identity is read from the build the browser is running rather than invented.
+- Siblings: none. The shipped-string count is unchanged at **8,035**.
+- Note on scope: the current copy was honest throughout, for the sixteenth round
+  running, and both fresh-store cases passed again.
+
 ### DEF-0142 — the fifth account of the build, and a proof that did not transfer
 
 - Status: Fixed
