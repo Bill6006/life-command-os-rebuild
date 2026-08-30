@@ -7390,4 +7390,216 @@ must survive. No blocker enforcement, no semantic interpretation, no scoring
 change, no new visual language, no orchestrator change. Phase 84 stays YELLOW
 until QA says otherwise; the builder may not approve its own phase.
 
-<!-- LCO_COMPLETE -->
+---
+
+## Round 16 independent QA — FAIL
+
+**QA actor:** Codex, independent of the routing 84 builder.
+**Checkpoint under test:** repaired product checkpoint `9457b23`; deployed
+documentation head `06082f4` is bundle-equivalent.
+**Reasoning level:** High.
+**Route status:** **YELLOW**. Do not start routing 90.
+
+The seven product questions pass again. Both owner journeys also pass from new
+ephemeral 430×932 contexts fixed at Friday 18:58 in `America/New_York`, with all
+four stores in both `life-command-os:preview` and
+`life-command-os:preview:laboratory` at zero before either journey. The QA route
+was never opened.
+
+- **CASE A:** empty Now abstained and offered ordinary ways on; Insights read
+  **More money** back as Career & Learning, named the unknown next step,
+  starting point and what would count as getting somewhere, wrote two owner
+  records, and preserved the destination on Career and Timeline.
+- **CASE B:** empty Now led through Life to Health & Physical Capacity; **Move
+  more / Take a ten-minute walk** stated what saving would do, Now proposed the
+  walk after the ordinary guide answers, **Can't right now / someone was in my
+  care** survived a reload on Health, and Timeline said **Not then**, **Did not
+  fit at the time** and **Limit**. Seven owner records were durable; the
+  laboratory remained empty.
+
+The repair nevertheless fails in every one of the four places its own dispatch
+named. These are four false greens in guarantees the repair claims, not a
+demonstration of the already-declared fetched or runtime-composed-text
+remainder.
+
+### QA-84-050 — a consistently wrong sourcemap still launders a transplant
+
+**Severity:** Blocker. **Decision:** D-205.
+**Class:** corroboration entirely within one build account is not independent
+provenance.
+
+I placed the already-approved sentence
+`Leave it empty and the app will not invent one.` visibly in
+`MoreScreen.tsx`. With the build's honest map, the scan correctly exited 1 and
+named the unapproved transplant. I then changed no shipped JavaScript at all.
+In the map only, I changed the mapping for both the sentence literal and its
+outer paragraph to the real approved line in `DomainPanels.tsx`.
+
+The named source existed, `sourcesContent` matched that file on disk exactly,
+and the named position said the whole credited sentence. The scan nevertheless
+reported:
+
+```text
+Rendered copy scan clean — 8,184 shipped strings (8,159 traced to a module)
+```
+
+The repair corroborates the map with other statements made by the same build;
+it never establishes which source actually produced those shipped bytes. A
+consistent false attribution therefore satisfies every check.
+
+### QA-84-051 — a dropped call argument can hide a rendered promise
+
+**Severity:** Blocker. **Decision:** D-205.
+**Class:** treating every call argument as rendered text lets non-rendered
+arguments weaken the classifier.
+
+Behind an ordinary text input on More, reached by typing `show`, I called a
+helper that returns its first and remaining arguments but deliberately drops
+the second:
+
+```tsx
+qaRound16Render(
+  'The app ',
+  'This unrelated argument is deliberately dropped and has enough words to separate the subject from its verb in the guard.',
+  ['will choose ', 'something better ', 'next time.'],
+)
+```
+
+The browser displayed the exact sentence **The app will choose something
+better next time.** The guard inserted the non-rendered second argument between
+the visible subject and verb, and the scan reported clean at **8,195 shipped
+strings, 8,170 traced**.
+
+This is not the dispatch's fetched-text remainder: every rendered word is a
+literal call argument. It disproves the narrower claim that extra call-argument
+text is harmless noise. Here that noise moves a static, visible promise beyond
+the classifier's reach.
+
+### QA-84-052 — the twenty-character position threshold accepts a prefix decoy
+
+**Severity:** Blocker. **Decision:** D-205.
+**Class:** a fixed prefix and line window are not proof that a mapped position
+contains the credited sentence.
+
+I rebuilt the same visible More transplant, then changed only its map. This
+time both relevant mappings named a nearby comment in `DomainPanels.tsx`:
+
+```text
+QA_ROUND16_PREFIX_DECOY: Leave it empty and the guard only sees this prefix.
+```
+
+The comment shares the credited sentence's first twenty characters but does
+not contain the sentence. Its source name and `sourcesContent` were again exact
+matches for the file on disk, and the shipped JavaScript was unchanged. The
+scan still reported clean at **8,184 shipped strings, 8,159 traced**.
+
+The test asks whether twenty leading characters occur in a small line window.
+That measurement can say agreement where the complete credited text is absent;
+it is not an enumeration of the attribution it purports to corroborate.
+
+### QA-84-053 — a history counter makes an invented review pass identity
+
+**Severity:** Blocker. **Decision:** D-205.
+**Class:** two unequal outputs do not prove that either output contains the
+selected sections' content.
+
+I replaced only the marked Data textarea's value. The impostor emitted the
+selected section headings, a `History counter` derived from the loaded record
+count, the unapproved sentence **This needs special care.**, and thirty
+fabricated lines. It contained none of the real composed section bodies.
+
+The first and second fixtures have different record counts, so the two invented
+documents differed and the history assertion passed. The copy scan was clean at
+**8,190 shipped strings, 8,165 traced**. Across all three widths, both the
+identity test and the whole-app before/after guard passed:
+
+```text
+6 passed (24.1s)
+```
+
+The headings prove selection membership and the counter proves only that the
+impostor observed some history property. Neither proves that the document body
+is the composed content of the selected sections.
+
+### Verification on the restored tree
+
+| Gate | Result |
+| --- | --- |
+| Fresh deployed owner journeys | **PASS** — CASE A and CASE B from separate empty owner contexts; laboratory never opened and remained empty |
+| Checkpoint equivalence | **PASS** — deployed `06082f4` is bundle-equivalent to repaired checkpoint `9457b23`; only the three routing documents differ |
+| `npm run verify` | **PASS** — format, lint, typecheck, test, build, copy scan |
+| Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files |
+| Rendered copy scan | **clean — 8,182 shipped strings**, 8,157 traced and corroborated, 1 script chunk, 2 stylesheets |
+| Browser, three widths, one worker | **708 passed** in 16.4 minutes; zero failures or retries |
+| Android-style deployed gate | **clean — 233 checks** |
+| Privacy scan | **clean — 290 tracked files** |
+| Restored implementation tree | **clean** — `git diff --exit-code -- src scripts tests package.json package-lock.json` |
+
+### Overall verdict and repair requirement
+
+**FAIL. Routing Phase 84 remains YELLOW.** The product passes. The guarantee
+does not: a consistent false map can pass every corroboration check; a dropped
+call argument can hide a static rendered sentence; a repeated twenty-character
+prefix can stand in for full positional agreement; and an arbitrary history
+counter can make fabricated review bodies differ.
+
+The builder must reproduce QA-84-050 through QA-84-053 exactly before repair;
+repair the four whole classes under plan section 42; add regressions and prove
+each by reintroduction; rerun every full gate; deploy a repaired checkpoint;
+preserve all seven product PASSes and every deferral; keep Phase 84 YELLOW; and
+dispatch Round 17 to this same QA conversation. Do not start routing 90.
+
+---
+
+## Round 16 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** **Max** — the audit-repair campaign rule applies across
+independent provenance, rendered call semantics, exact position corroboration
+and generated-document content identity.
+**Conversation:** **CURRENT** — the original routing 84 Claude builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 16 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 16 at the end contains four
+new Blockers, QA-84-050 through QA-84-053. Execute the Round 16 repair handoff
+exactly as written.
+
+Keep Phase 84 YELLOW. Reproduce each exact false green before repair; identify
+and repair every whole class under plan section 42; add regressions and prove
+them by reintroduction. Provenance must not be established solely by mutually
+consistent statements inside one build account. Call-expression grouping must
+not let arguments that never render weaken classification of adjacent rendered
+literal text. Position corroboration must establish the full credited text,
+not a fixed prefix within a guessed line window. Generated-review identity must
+prove that the selected sections' actual content is present, not merely that an
+output varies with some property of history.
+
+Run the aggregate, full three-width browser, deployed Android, privacy,
+block-sweep and copy-guard gates; deploy the repaired checkpoint; preserve all
+seven product PASSes and every deferral; and append a Round 17 retest dispatch
+for the SAME Codex QA conversation at High.
+
+Do not edit QA's Round 16, alter docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a
+PHASE_85_* file or start routing 90. Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** Max.
+**Conversation:** CURRENT — the original routing 84 Claude builder conversation.
+
+```text
+Continue routing Phase 84 after independent QA Round 16 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 16
+repair handoff at its end exactly as written. Do not ask me to paste the file.
+```
