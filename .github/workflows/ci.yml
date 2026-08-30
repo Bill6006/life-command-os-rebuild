@@ -83,6 +83,19 @@ jobs:
           path: dist
           retention-days: 7
 
+      # And the manifest of those bytes travels on its own — QA-84-064, D-211.
+      #
+      # It is inside `preview-dist` too, because it is published with the site.
+      # This second copy is the one the deploy job checks against, so that a
+      # step which rewrites the tree it is about to publish has not also
+      # rewritten the record of what was verified. Anybody can download this
+      # artifact and run `npm run release:integrity` against the live site.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: preview-manifest
+          path: dist/release-manifest.json
+          retention-days: 7
+
   deploy-preview:
     name: Deploy preview
     needs: verify
@@ -96,10 +109,22 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
       - uses: actions/download-artifact@v8
         with:
           name: preview-dist
           path: dist
+
+      # Downloaded to its own directory, deliberately: this is the record of
+      # what the gate verified, and it must not live in the tree being
+      # published, where a publication step would be free to rewrite it.
+      - uses: actions/download-artifact@v8
+        with:
+          name: preview-manifest
+          path: verified
 
       - name: Publish to gh-pages:/preview
         env:
@@ -112,6 +137,20 @@ jobs:
             "https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json" \
             "${GITHUB_SHA}"
 
+      # And that it will see these bytes — QA-84-064, D-211.
+      #
+      # The check above reads one field out of one file. Round 19 appended a
+      # visible rule to the stylesheet between the download and the publish and
+      # it still passed, because the field it reads is one the mutation had no
+      # reason to touch. This fetches every file the gate verified and compares
+      # what the host serves, byte for byte, against the manifest that travelled
+      # separately.
+      - name: Verify the phone will see these bytes
+        run: |
+          node scripts/release-integrity.mjs \
+            "https://bill6006.github.io/life-command-os-rebuild/preview/" \
+            --manifest verified/release-manifest.json
+
       - name: Summary
         run: |
           {
@@ -121,5 +160,6 @@ jobs:
             echo "| --- | --- |"
             echo "| Checkpoint SHA | \`${GITHUB_SHA}\` |"
             echo "| Deployed Preview SHA | \`${GITHUB_SHA}\` (verified live) |"
+            echo "| Deployed bytes | verified against the gate's manifest |"
             echo "| URL | https://bill6006.github.io/life-command-os-rebuild/preview/ |"
           } >> "$GITHUB_STEP_SUMMARY"

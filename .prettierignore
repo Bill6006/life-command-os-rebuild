@@ -22,3 +22,11 @@ docs/qa/PHASE_*_QA_HANDOFF.md
 # paraphrase of themselves, which is the same objection that already exempts the
 # canonical plan. It is committed byte-for-byte as it was received.
 docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md
+
+# The deferred instrument findings, preserved verbatim by owner decision D-210.
+# The bounded closeout is written in terms that this file may not be edited,
+# removed, renumbered or reordered, and that every QA-84-0xx identifier in it
+# must still resolve. Running the formatter over it would be an edit, for the
+# same reason the QA handoffs above are exempt: it is another conversation’s
+# document, preserved as it was received.
+docs/qa/INSTRUMENT_HARDENING_BACKLOG.md

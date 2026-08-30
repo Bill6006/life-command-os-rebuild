@@ -51,6 +51,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import * as acorn from 'acorn'
 import { build } from 'vite'
+import { MANIFEST } from './release-manifest.mjs'
 import {
   APPROVED_FUTURE_COPY,
   adaptationClaimsOnAnyScreen,
@@ -518,7 +519,13 @@ function shippedFiles(dir, prefix = '') {
     const at = join(dir, entry.name)
     const name = `${prefix}${entry.name}`
     if (entry.isDirectory()) found.push(...shippedFiles(at, `${name}/`))
-    else found.push([name, settled(readFileSync(at, 'utf8'))])
+    /*
+     * The release manifest describes the build; it is not part of it — D-211.
+     * Rollup did not emit it, so pairing outputs with the tree would report it
+     * as a file that shipped and was not built. It carries no copy, and what
+     * checks *it* is `release-integrity.mjs`, against the live site.
+     */
+    else if (name !== MANIFEST) found.push([name, settled(readFileSync(at, 'utf8'))])
   }
   return found
 }

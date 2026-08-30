@@ -18,7 +18,7 @@ caused by an instrument finding.
 
 Each round attacked the previous round's repair, and hardening a detector
 creates new surface for the next attack. QA-84-062 states the terminal case:
-*the oracle shares the defect it is meant to detect.* There is no finite end
+_the oracle shares the defect it is meant to detect._ There is no finite end
 to that process, and `ROUTING_91_BRIEF.md` §7 had already named the pattern:
 bundling an unproven instrument with the product whose acceptance depends on
 it is routing 82's failure mode, with instrument and product failing together
@@ -43,7 +43,6 @@ and no way to tell which.
 
 D-209 was left alone: rounds 19's findings already cite it, and taking it
 would have collided with the repair record that round intends to write.
-
 
 Decisions that shape the rebuild and the reason behind each one. Entries are
 append-only. When a decision is reversed, add a new entry that supersedes the
@@ -7711,5 +7710,64 @@ field tampered with on its own.
 A sentence the app composes by **running** — over data, or by a computation this
 guard does not evaluate — in a state no sweep reaches is covered by neither
 half. Nothing here narrows that.
+
+---
+
+## D-211 — What is served is proved against what was verified, not against a name for it
+
+**Phase:** 84 (bounded closeout under **D-210**) · **Status:** Active · Repairs
+**QA-84-064**, the one Round 15–19 finding the owner kept blocking.
+
+The deploy job downloaded the artifact the gate had verified, published it, and
+then proved the deployment by reading `commitSha` out of the served
+`build-info.json`. Round 19 put a step between the download and the publish that
+appended a visible rule to the app stylesheet. No source byte and no verified
+`dist/` byte had changed when the gates ran, `build-info.json` was untouched,
+and the verifier reported **"Deployed SHA matches"** over a site that was now
+saying something the engine cannot do.
+
+**A commit identifier names what was built. It says nothing about what is
+served.** Anything after the gate can decorate around it, because the field it
+checks is one the decoration has no reason to touch. That is not a guard that
+was outwitted; it is a guard that was never looking at the artifact.
+
+### What replaces it
+
+`npm run build` now writes `dist/release-manifest.json`: a SHA-256 for every
+file in the built tree, and a digest over that list. It is written by the build,
+so it always travels with the bytes it describes, and it contains no clock —
+two runs over identical bytes produce identical manifests, or the comparison it
+exists for would be comparing runs rather than releases.
+
+`scripts/release-integrity.mjs <base-url> --manifest <path>` then fetches every
+file the manifest names **from the live site** and hashes what the host actually
+returns. Every digest must be the one recorded when the gates passed. It also
+fetches the site's own copy of the manifest and requires it to be the verified
+one, so a publication that rewrote the tree _and_ its record is named too.
+
+**And the manifest the deploy job checks against does not come from the tree it
+is publishing.** The verify job uploads it a second time as its own artifact,
+and the deploy job downloads that into a separate directory. A step that
+rewrites what it is about to publish has not thereby rewritten the record of
+what was verified.
+
+### What this does not establish, said plainly
+
+**A hostile step inside the deploy job can subvert any check in that job** — it
+could rewrite this script as easily as the stylesheet. No arrangement of steps
+fixes that, and pretending otherwise would be the same mistake in a new place.
+What closes the class QA demonstrated is that the check now reads the artifact
+rather than a name for it, and that **it can be run from outside CI**: the
+manifest is a published artifact, so QA or the owner can verify any deployment
+at any time, from a machine the pipeline does not control. A check that only
+ever runs beside the thing it checks is the shape of the problem, not the fix.
+
+The SHA check stays. It answers a different and still-useful question — whether
+the phone is looking at this commit at all — and it was never wrong about that.
+
+### Scope
+
+This is the bounded closeout D-210 describes. The nineteen deferred instrument
+findings are untouched, and `qa/INSTRUMENT_HARDENING_BACKLOG.md` is unchanged.
 
 ---

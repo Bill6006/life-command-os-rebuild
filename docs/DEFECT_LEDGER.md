@@ -15,28 +15,27 @@ They may not be edited, removed or renumbered by any QA round.
 **QA-84-064 is not in this list.** It concerns release and deployed-byte
 integrity rather than a detector, and remains a Phase 84 blocker.
 
-| ID | Title | Round | State |
-| --- | --- | --- | --- |
-| QA-84-046 | the sourcemap can confidently approve the wrong module | 15 | Deferred, open |
-| QA-84-047 | four literal sibling elements become one sentence on screen | 15 | Deferred, open |
-| QA-84-048 | headings over fabricated content pass as the composed review | 15 | Deferred, open |
-| QA-84-049 | the export marker grants its exemption on any route | 15 | Deferred, open |
-| QA-84-050 | a consistently wrong sourcemap still launders a transplant | 16 | Deferred, open |
-| QA-84-051 | a dropped call argument can hide a rendered promise | 16 | Deferred, open |
-| QA-84-052 | the twenty-character position threshold accepts a prefix decoy | 16 | Deferred, open |
-| QA-84-053 | a history counter makes an invented review pass identity | 16 | Deferred, open |
-| QA-84-054 | the app resolver and the repository walker can disagree | 17 | Deferred, open |
-| QA-84-055 | “can say it” and “it ships” still identify no producer | 17 | Deferred, open |
-| QA-84-056 | splitting the subject prevents a claim-bearing pair | 17 | Deferred, open |
-| QA-84-057 | one honest section can carry nine fabricated ones | 17 | Deferred, open |
-| QA-84-058 | the build tie does not include stylesheets | 18 | Deferred, open |
-| QA-84-059 | adjacent CSS strings compose after the scanner stops | 18 | Deferred, open |
-| QA-84-060 | render-time copy borrows an honest producer | 18 | Deferred, open |
-| QA-84-061 | the field and clipboard agree on the same false document | 18 | Deferred, open |
-| QA-84-062 | the oracle shares the defect it is meant to detect | 19 | Deferred, open |
-| QA-84-063 | the composing exception exempts an invented fact | 19 | Deferred, open |
-| QA-84-065 | a custom property reaches `content` unseen | 19 | Deferred, open |
-
+| ID        | Title                                                          | Round | State          |
+| --------- | -------------------------------------------------------------- | ----- | -------------- |
+| QA-84-046 | the sourcemap can confidently approve the wrong module         | 15    | Deferred, open |
+| QA-84-047 | four literal sibling elements become one sentence on screen    | 15    | Deferred, open |
+| QA-84-048 | headings over fabricated content pass as the composed review   | 15    | Deferred, open |
+| QA-84-049 | the export marker grants its exemption on any route            | 15    | Deferred, open |
+| QA-84-050 | a consistently wrong sourcemap still launders a transplant     | 16    | Deferred, open |
+| QA-84-051 | a dropped call argument can hide a rendered promise            | 16    | Deferred, open |
+| QA-84-052 | the twenty-character position threshold accepts a prefix decoy | 16    | Deferred, open |
+| QA-84-053 | a history counter makes an invented review pass identity       | 16    | Deferred, open |
+| QA-84-054 | the app resolver and the repository walker can disagree        | 17    | Deferred, open |
+| QA-84-055 | “can say it” and “it ships” still identify no producer         | 17    | Deferred, open |
+| QA-84-056 | splitting the subject prevents a claim-bearing pair            | 17    | Deferred, open |
+| QA-84-057 | one honest section can carry nine fabricated ones              | 17    | Deferred, open |
+| QA-84-058 | the build tie does not include stylesheets                     | 18    | Deferred, open |
+| QA-84-059 | adjacent CSS strings compose after the scanner stops           | 18    | Deferred, open |
+| QA-84-060 | render-time copy borrows an honest producer                    | 18    | Deferred, open |
+| QA-84-061 | the field and clipboard agree on the same false document       | 18    | Deferred, open |
+| QA-84-062 | the oracle shares the defect it is meant to detect             | 19    | Deferred, open |
+| QA-84-063 | the composing exception exempts an invented fact               | 19    | Deferred, open |
+| QA-84-065 | a custom property reaches `content` unseen                     | 19    | Deferred, open |
 
 Verified defects and their resolution. Canonical plan section 42 governs the
 process:
@@ -76,6 +75,48 @@ until its siblings in the same failure class have been checked.
 None.
 
 ## Fixed
+
+### DEF-0144 — the live verifier proved a SHA, not the bytes being served
+
+- Status: Fixed
+- Severity: Blocker — the published site could differ from the artifact every
+  gate had passed, while the deployment reported itself verified
+- Found in: routing 84 / `16100ae`
+- Found by: **independent QA round 19** (QA-84-064) — the one finding of rounds
+  15 to 19 that owner decision **D-210** kept blocking, because it is the one
+  that would still matter if every guard were retired
+- Class: **a name for the artifact stood in for the artifact.** The deployment
+  check read `commitSha` from the served `build-info.json`; a step between the
+  download and the publish can change anything else without touching it.
+- Reproduction, confirmed here before anything was built: built the tree, took
+  the manifest of the verified bytes, then ran QA's publication step — a
+  `body::before` rule carrying _"The app will choose something better next
+  time."_ appended to the app stylesheet — and served the result.
+  `verify-deployed-sha.sh` reported **"Deployed SHA matches"** over it.
+- Repair — see **D-211**. The build writes a digest of every file it produced;
+  a new `release-integrity.mjs` fetches each of those files from the live site
+  and compares what the host serves against those digests; and the manifest the
+  deploy job checks against arrives as its own artifact rather than out of the
+  tree being published.
+- Regression: `scripts/release-manifest.mjs` and `scripts/release-integrity.mjs`,
+  run from the deploy job after publication and available as
+  `npm run release:integrity` for anybody outside CI.
+- Proved by reintroduction: the honest tree passes — _8 files served byte for
+  byte as verified_ — and the mutated tree fails naming the file:
+  _assets/index-DRiFcgIT.css — served 34019cf7adef, verified 6590adb02380_,
+  while `verify-deployed-sha.sh` still reports a match over the same tree, which
+  is the defect exactly. A second variant, where publication regenerates the
+  manifest over its own mutation, is also caught: _release-manifest.json — the
+  site serves a different manifest from the verified one_.
+- **Not closed, and named rather than implied**: a hostile step inside the
+  deploy job can subvert any check in that job. What the repair changes is that
+  the check now reads the artifact rather than a name for it, and that it can be
+  run from outside CI against the published manifest.
+- Siblings: none. The copy scan ignores the manifest, because Rollup did not
+  emit it and it carries no copy.
+- Note on scope: this is the bounded closeout under **D-210**. The nineteen
+  deferred instrument findings are untouched and
+  `qa/INSTRUMENT_HARDENING_BACKLOG.md` is unchanged.
 
 ### DEF-0143 — a rule applied to one kind of thing and described as applying to all
 

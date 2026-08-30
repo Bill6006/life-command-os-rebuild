@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/release-manifest.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -18,7 +18,8 @@
     "test:watch": "vitest",
     "test:browser": "npm run build && playwright test",
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build && npm run copy:scan",
-    "copy:scan": "node scripts/rendered-copy-scan.mjs"
+    "copy:scan": "node scripts/rendered-copy-scan.mjs",
+    "release:integrity": "node scripts/release-integrity.mjs"
   },
   "dependencies": {
     "react": "^19.1.1",
