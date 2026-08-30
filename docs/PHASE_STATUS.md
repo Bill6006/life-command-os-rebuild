@@ -100,8 +100,8 @@ re-scope), and no canonical phase is renumbered.
 | Routing | Product / canonical name                                 | State, or what it waits on        |
 | ------- | -------------------------------------------------------- | --------------------------------- |
 | **83**  | The instrument, and the things that are untrue           | **GREEN — closed, round 2**       |
-| **84**  | What the owner is trying to become                       | **YELLOW — with independent QA**  |
-| **90**  | **Canonical Phase 9** — visual coherence, motion, mobile | 84                                |
+| **84**  | What the owner is trying to become                       | **GREEN — bounded retest passed** |
+| **90**  | **Canonical Phase 9** — visual coherence, motion, mobile | **Not started — 84 is GREEN**     |
 | **91**  | Later intelligence — Reach, then Validity                | 90, and Q6's adjudication (D-172) |
 | **92**  | **Canonical Phase 10** — performance, PWA, reliability   | 91                                |
 | **93**  | **Canonical Phase 11** — adversarial hardening           | 92                                |
@@ -122,7 +122,16 @@ superseded rather than reused.
 
 # Routing Phase 84 — What the owner is trying to become
 
-**Status: YELLOW — REPAIRED AFTER QA ROUND 7 FAIL, AWAITING ROUND 8 RETEST.**
+**Status: GREEN — INDEPENDENT BOUNDED RETEST PASSED, 2026-08-30.**
+
+Codex independent QA approved the bounded closeout authorized by **D-210**.
+QA-84-064 was reproduced exactly: a visible stylesheet mutation still passed
+the legacy SHA verifier, while `release-integrity.mjs` failed and named the
+mutated stylesheet. The honest local tree and the deployed `986c086` tree both
+passed byte-for-byte against their independently retained manifests. The seven
+Phase 84 acceptance items, fresh-store CASE A and CASE B, and every normal gate
+passed. No new owner-visible product defect or comparable release-integrity
+defect was found. Routing 90 has not started.
 
 Independent QA has failed this phase seven times and been right seven times, and
 **the last five failures were all about the guard rather than the product.**
@@ -276,9 +285,10 @@ the routing contract and followed through links to a fixed point; the sentence
 is what the browser lays out as one run of text; and the export guarantee runs
 over every id the product offers (D-199).
 
-It stays YELLOW. A builder conversation may not approve its own phase (D-077),
-and this record says what was built and repaired and where to look at it; it does
-not say the phase passed.
+It is GREEN because the independent QA conversation, not the builder, completed
+the bounded retest and approved it (D-077, D-210). The deferred instrument
+findings remain open in `qa/INSTRUMENT_HARDENING_BACKLOG.md`; GREEN does not
+silently close or broaden them.
 
 Canonical product name: _the destination and discovery structure — canonical
 Phase 9's product contract_. **Routing integer 84** (plan section 43A, D-159) —
@@ -335,14 +345,12 @@ through the same controls, now gets past all eight steps.
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                     |
 | Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                                                                              |
 | Owner phone check       | owed before release; not a blocker QA can clear                                                                                                                 |
-| Independent QA          | **Rounds 1 to 19 all FAIL**; nineteen findings deferred by **D-210**, QA-84-064 repaired. A **bounded retest** is dispatched at the end of `NEXT_PROMPT.md`     |
+| Independent QA          | **PASS — bounded retest at `986c086`**; nineteen instrument findings remain deferred by **D-210**, QA-84-064 verified repaired                                  |
 
-**The documentation head is a later commit than the product checkpoint**, as it
-has been every round. At round 8 it is `73de27e`, and it carries exactly three
-files — this record, the QA report with the repair and the Round 9 dispatch, and
-`NEXT_PROMPT.md`. None of it is bundle-relevant, and `checkpoint-equivalence.mjs`
-is the way to confirm that rather than take it on trust (D-097, D-180): run
-against the deployed Preview it reports those three files and the same bytes.
+**The documentation head is later than the product checkpoint**, as it has been
+every round. The bounded retest ran at deployed documentation head `986c086`;
+`git diff --name-status d618588..986c086` names only `docs/NEXT_PROMPT.md` and
+`docs/PHASE_STATUS.md`. No bundle-relevant file differs (D-097, D-180).
 
 ## Exact verification results
 
@@ -354,9 +362,9 @@ At the repaired checkpoint, not at the one QA failed.
 | Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files (unchanged at round 11; 1,812 at round 1)         |
 | Browser, three widths, one worker         | **708 passed** at three widths, one worker, **zero failures**                  |
 | Rendered copy scan                        | **clean — 8,035 shipped strings**, 7,951 placed in a module of the build graph |
-| Android-style gate, deployed              | **clean — 233 checks** against deployed `d618588`                              |
-| Release integrity, deployed               | **clean — 8 files served byte for byte as verified** (D-211)                   |
-| Privacy scan                              | **clean** — 290 tracked files                                                  |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `986c086`                              |
+| Release integrity, deployed               | **clean — 8 files served byte for byte as verified** from CI artifact (D-211)  |
+| Privacy scan                              | **clean** — 293 tracked files                                                  |
 | Block sweep                               | **PASS** — unchanged                                                           |
 | Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya              |
 | Commits not on any remote                 | **none** at the handed-off head (D-180)                                        |
@@ -365,8 +373,8 @@ At the repaired checkpoint, not at the one QA failed.
 `net::ERR_ABORTED` navigations still describes a real transport class — the one
 `playwright.config.ts` documents and mitigates by binding `127.0.0.1` — and it
 did not recur this round.
-| Checkpoint equivalence | **PASS** — the deployed Preview serves `3930260` itself, no files between |
-| CI | Verify **success**, Deploy preview **success** |
+| Checkpoint equivalence | **PASS** — `d618588..986c086` changes documentation only; deployed build names `986c086` |
+| CI | `986c086` CI **success**, including deployed-byte verification |
 
 ## Independent QA — round 1, and the repair
 

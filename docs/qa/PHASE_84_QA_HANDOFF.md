@@ -8795,3 +8795,96 @@ D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 19
 repair handoff at its end exactly as written. Do not ask me to paste the file.
 ```
+
+---
+
+## D-210 bounded independent retest — PASS / Phase 84 GREEN
+
+**Checkpoint under test:** product checkpoint `d618588`; deployed documentation
+head `986c0866907be59fb0881f60dea4a12e44be92b5`, bundle-equivalent by a diff that
+names only `docs/NEXT_PROMPT.md` and `docs/PHASE_STATUS.md`.
+
+**Verdict: PASS. Routing Phase 84 is GREEN.** This is the bounded retest owner
+decision D-210 authorized, not Round 20. General instrument hardening remained
+closed for this phase. No new owner-visible product defect and no
+release-integrity defect comparable to QA-84-064 was found. The nineteen
+instrument findings deferred to `INSTRUMENT_HARDENING_BACKLOG.md` remain open
+and the backlog is byte-identical to its `4e4cedd` blob.
+
+### QA-84-064 — exact repair reproduction
+
+I built the honest tree and retained its manifest separately. It passed at 8
+files served byte for byte, and the legacy verifier reported the deployed SHA
+matched. I then appended a visible fixed `body::before` rule to the built app
+stylesheet. A browser rendered exactly:
+
+```text
+The app will choose something better next time.
+display: block
+position: fixed
+z-index: 2147483647
+```
+
+The old verifier still returned success over that served tree. The repaired
+verifier returned failure and named the changed file:
+
+```text
+assets/index-DRiFcgIT.css — served d2c234f31be1, verified 6590adb02380
+```
+
+After a clean rebuild, the honest tree passed again. I also downloaded
+`preview-manifest` independently from successful CI run `33337989070` and
+checked the deployed Preview against it: **8 files served byte for byte as
+verified (`986c086`)**.
+
+### Seven acceptance items
+
+| Item | Result |
+| --- | --- |
+| 1. A desired outcome changes the next recommendation | **PASS** — destination/discovery sweep and fresh owner journeys |
+| 2. Session, course and milestone stay distinct | **PASS** — attendance never becomes capability or a milestone |
+| 3. Every fixture object is reachable in ordinary use | **PASS** — ordinary-use journey completed all eight steps |
+| 4. The second agenda asks what does not change today and volume falls | **PASS** — bounded agenda and library-wide volume sweep |
+| 5. Can't right now is durable and correctable, and asks nothing when known | **PASS** — durable blocker and silence branches |
+| 6. Corrections state consequences; private detail is stored but not reasoned from | **PASS** — correction and private sweeps |
+| 7. Standing guards bite | **PASS** — no score or unapproved adaptation claim reached an owner surface |
+
+The focused synthetic evidence passed **90/90** across
+`destination-and-discovery.test.ts` and `ordinary-use-journey.test.ts` before
+the full aggregate repeated it.
+
+### Fresh deployed owner journeys
+
+Both cases used separate ephemeral Chromium processes and 430×932 contexts in
+`America/New_York`, fixed to Friday at 18:58 local. Neither opened the QA
+laboratory; every laboratory store remained empty.
+
+**CASE A passed.** Empty Now abstained and offered ordinary ways on. Insights
+interpreted **More money** under Career & Learning, named what it would not
+assume, saved it, exposed the answer's consequence, and preserved the exact aim
+on Career and Timeline. The owner database ended with **1 entity / 2 records**.
+
+**CASE B passed.** Empty Now led through Life to Health & Recovery. **Move
+more** with **Take ten-minute walk** changed Now after the ordinary answers
+**Enough** and **Nothing**. **Can't right now** plus **Can't leave — someone's
+in my care** wrote a standing blocker that survived reload. Timeline showed
+**Not then**, **Did not fit at the time**, and **Limit**. The owner database
+ended with **2 entities / 7 records**.
+
+### Required gates
+
+| Gate | Result |
+| --- | --- |
+| `npm run verify` | **PASS** — format, lint, typecheck, test, build and copy scan |
+| Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files |
+| Browser, 360 / 430 / 1280, one worker | **708 passed** in 17.6 minutes; zero failures or retries |
+| Android-style deployed gate | **clean — 233 checks** |
+| Privacy scan | **clean — 293 tracked files** |
+| Rendered copy scan | **clean — 8,035 shipped strings**, 7,951 placed in the build graph |
+| Release integrity | **clean — 8 files**, locally and against the deployed CI artifact |
+| Checkpoint equivalence | **PASS** — `d618588..986c086` changes documentation only |
+| Deferred backlog preservation | **PASS** — blob hash `58d5af071355d252c4a254fc685fcc9e8e88f417` on both sides |
+
+Every temporary mutation, harness, manifest download and local TLS allowance was
+removed. Phase 84 is GREEN by independent QA under D-077 and D-210. Routing 90
+was not started.

@@ -103,4 +103,30 @@ empty** — the product was not touched.
 
 Decisions **D-211**; defects **DEF-0144**.
 
+---
+
+## Independent bounded retest result — PASS
+
+**Phase 84 is GREEN.** Codex independent QA completed exactly the bounded
+retest above at deployed documentation head `986c086` and found no new
+owner-visible product defect or release-integrity defect comparable to
+QA-84-064.
+
+- QA-84-064 reproduced exactly: the visible CSS mutation remained green under
+  the legacy SHA check and failed the release-integrity check with the mutated
+  stylesheet named. The honest tree passed, and the deployed tree passed all 8
+  files against the manifest downloaded separately from the successful CI run.
+- All seven Phase 84 acceptance items passed.
+- Fresh-store CASE A passed with 1 entity / 2 records; fresh-store CASE B passed
+  with 2 entities / 7 records. Both laboratory databases remained empty.
+- `npm run verify` passed with 1,861 tests in 84 files; browser 708/708 at
+  360/430/1280; Android 233 checks; privacy 293 tracked files; rendered-copy
+  scan 8,035 / 7,951; checkpoint equivalence and the clean-tree audit passed.
+- `qa/INSTRUMENT_HARDENING_BACKLOG.md` remains byte-identical to `4e4cedd`.
+  Its deferred findings remain open under D-210 and were not treated as Phase
+  84 blockers.
+
+Routing 90 has not started. There is no further Phase 84 repair or QA round to
+dispatch from this handoff.
+
 <!-- LCO_COMPLETE -->
