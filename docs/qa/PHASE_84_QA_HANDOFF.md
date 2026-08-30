@@ -8148,4 +8148,244 @@ must survive. No blocker enforcement, no semantic interpretation, no scoring
 change, no new visual language, no orchestrator change. Phase 84 stays YELLOW
 until QA says otherwise; the builder may not approve its own phase.
 
-<!-- LCO_COMPLETE -->
+---
+
+## Round 18 independent QA — FAIL
+
+**Checkpoint under test:** repaired `6062756`; deployed documentation head
+`4e38b5b`. **Decision:** D-208. **Defect:** DEF-0143.
+
+### Verdict
+
+**FAIL. Routing Phase 84 remains YELLOW.** The product is still clean. The
+standing guarantee is not: every one of the four claims singled out by the
+Round 18 dispatch has an exact false green.
+
+### Fresh deployed owner journeys
+
+Both mandatory journeys ran against
+`https://bill6006.github.io/life-command-os-rebuild/preview/` at deployed build
+`4e38b5bea90abfc45dc1366cb249b61acd9e62d8`, built
+`2026-08-30T17:21:02.301Z`. Each used a new ephemeral Chromium context at
+430×932 in `America/New_York`, fixed to Friday at 18:58 local. Neither context
+opened the QA laboratory, and every laboratory object store remained empty.
+
+**CASE A passed.** Empty Now abstained. Insights opened More money and Career;
+the app named the next step, starting point and getting-somewhere reading as
+unknown, accepted the owner's destination, exposed the changes panel, and
+preserved the exact destination on Career and Timeline. The owner store ended
+with one entity and two records.
+
+**CASE B passed.** Empty Now led through Life to Health & Recovery, accepted
+**Move more** with **Take ten-minute walk**, suggested the named walk, recorded
+**Can't right now** and **I can't leave, someone's in my care**, kept that
+standing blocker through reload, and showed **Not then**, **Did not fit at
+time**, and **Limit** on Timeline. The owner store ended with two entities and
+eight records. One initial automation probe met Now's legitimate rerender while
+clicking; the rerun used the established detached-control retry and completed
+without changing the product verdict.
+
+### QA-84-058 — the build tie does not include stylesheets
+
+**Severity:** Blocker. **Decision:** D-208.
+**Class:** a guard build can disagree with the shipped CSS while the claimed
+build-identity check reports agreement.
+
+I added a Vite plugin whose `generateBundle` hook inspected `isWrite`. More's
+source stylesheet contained the harmless visible sentence **The quiet build
+marker.** On the guard's in-process `write: false` build, it stayed harmless.
+On the ordinary writing build that produced `dist/`, the plugin changed only
+the emitted stylesheet to **The app will choose something better next time.**
+
+The copy scan reported clean:
+
+```text
+Rendered copy scan clean — 8037 shipped strings (7953 placed in a module)
+across 1 script chunk(s) and 2 stylesheet(s).
+```
+
+A local preview of that ordinary build returned the exact prohibited sentence
+from the visible pseudo-element's computed `::before` content. The comparison
+against `dist/` iterates JavaScript chunks only. It therefore did not compare
+the stylesheet at all: no filename or timestamp mask was even needed.
+
+The record says each chunk is tied byte-for-byte to `dist/` and that
+stylesheets participate in provenance. The actual tie covers only script
+assets, leaving a production stylesheet free to differ from the build the
+guard examined.
+
+### QA-84-059 — adjacent CSS strings compose after the scanner stops
+
+**Severity:** Blocker. **Decision:** D-208.
+**Class:** CSS provenance and claim detection inspect quoted pieces rather than
+the value the browser composes.
+
+I put this static rule on a visible More pseudo-element:
+
+```css
+content: 'The app ' 'will choose ' 'something better ' 'next time.';
+```
+
+The browser's computed `content` was exactly **The app will choose something
+better next time.** The scan was nevertheless clean:
+
+```text
+Rendered copy scan clean — 8040 shipped strings (7956 placed in a module)
+across 1 script chunk(s) and 2 stylesheet(s).
+```
+
+This is not the declared open case of a sentence composed from runtime data.
+It is one static CSS value whose standard adjacent-string composition the
+guard does not perform. `contentIn` extracts each quoted fragment separately,
+and stylesheet attribution then asks whether source text contains that
+fragment. Neither operation establishes the composed value the browser ships.
+
+### QA-84-060 — render-time copy borrows an honest producer
+
+**Severity:** Blocker. **Decision:** D-208.
+**Class:** render-time generated copy has no occurrence provenance and can
+inherit approval from an unrelated honest occurrence.
+
+I placed only the inert marker `QA_ROUND18_RENDER_COPY` in More, then used a
+Vite `renderChunk` hook to replace it after module attribution with:
+
+```js
+['Leave it empty and the app ', 'will not invent one.'].join('')
+```
+
+Typing `show` displayed exactly the approved sentence **Leave it empty and the
+app will not invent one.** The scan reported clean:
+
+```text
+Rendered copy scan clean — 8043 shipped strings (7956 placed in a module)
+across 1 script chunk(s) and 2 stylesheet(s).
+```
+
+Rollup's `item.modules[id].code` still contained only the marker, because the
+plugin created the sentence in `renderChunk`. The whole chunk contained the
+approved joined value, but an unplaced joined value is allowed. The existing
+honest occurrence in `DomainPanels.tsx` supplied the approved producer for the
+sentence as a whole, even though it did not produce this occurrence.
+
+An initial three-piece form was correctly rejected because one unapproved
+sub-pair happened to read **the app will not invent one.** The two-piece form
+removes that incidental signal without changing the class: the scanner sees
+shipped approved text and an honest producer somewhere, but cannot connect the
+render-time occurrence to its producer.
+
+### QA-84-061 — the field and clipboard agree on the same false document
+
+**Severity:** Blocker. **Decision:** D-208.
+**Class:** agreement between two consumers of `composed.text` does not prove
+that the composed document represents its inputs.
+
+I corrupted the `composed` object immediately after the honest
+`composeExport` call. The impostor preserved the exact honest **Recent record**
+section. Every other selected section kept its expected heading but replaced
+its body with **This needs special care.** followed by thirty fabricated review
+lines. Both the textarea and copy control then consumed the same corrupted
+`composed.text`.
+
+The existing identity test and whole-app before/after guard passed at all three
+widths:
+
+```text
+6 passed (21.5s)
+```
+
+The copy scan was also clean at **8,048 shipped strings, 7,964 placed**. The
+clipboard equalled the field exactly; selection headings appeared and
+disappeared; the preserved Recent record contribution matched Timeline; and
+the honest record block made the two fixture histories differ. Nine fabricated
+section bodies therefore passed every claimed identity check.
+
+The repair moved the comparison point without adding an independent account of
+the document. A field and a clipboard fed by one object prove delivery
+agreement, not composition identity.
+
+### Verification on the restored tree
+
+Every adversarial and probe edit was removed before the final gates.
+
+| Gate | Result |
+| --- | --- |
+| Fresh deployed owner journeys | **PASS** — CASE A and CASE B from separate empty owner contexts; laboratory never opened and remained empty |
+| Checkpoint equivalence | **PASS** — deployed `4e38b5b` is bundle-equivalent to repaired checkpoint `6062756`; only `docs/NEXT_PROMPT.md`, `docs/PHASE_STATUS.md` and this QA handoff differ |
+| `npm run verify` | **PASS** — format, lint, typecheck, test, build, copy scan |
+| Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files |
+| Rendered copy scan | **clean — 8,035 shipped strings**, 7,951 placed in a module of the build graph, 1 script chunk, 2 stylesheets |
+| Browser, three widths, one worker | **708 passed** in 16.5 minutes; zero failures or retries |
+| Android-style deployed gate | **clean — 233 checks**; the host certificate chain required Playwright's temporary HTTPS-error allowance, removed immediately after the run |
+| Privacy scan | **clean — 290 tracked files** |
+| Restored implementation tree | **clean** — `git diff --exit-code -- src scripts tests package.json package-lock.json vite.config.ts tsconfig.app.json` |
+
+### Overall verdict and repair requirement
+
+**FAIL. Routing Phase 84 remains YELLOW.** All seven product PASSes and every
+deferral survive. The guarantee does not. The shipped-build tie omits CSS;
+adjacent CSS strings are never composed; a render-time occurrence can borrow
+another module's honest approval; and two consumers of one corrupted document
+agree perfectly.
+
+The builder must reproduce QA-84-058 through QA-84-061 exactly before repair;
+repair all four whole classes; add regressions and prove each by
+reintroduction; rerun every full gate; deploy a repaired checkpoint; preserve
+all seven product PASSes and every deferral; keep Phase 84 YELLOW; and dispatch
+Round 19 to this same QA conversation. Do not start routing 90.
+
+---
+
+## Round 18 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** **Max** — the audit-repair campaign rule applies across
+output-asset identity, CSS composition, render-time occurrence provenance and
+generated-document composition identity.
+**Conversation:** **CURRENT** — the original routing 84 Claude builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 18 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 18 at the end contains four
+new Blockers, QA-84-058 through QA-84-061. Execute the Round 18 repair handoff
+exactly as written.
+
+Keep Phase 84 YELLOW. Reproduce each exact false green before repair; identify
+and repair every whole class; add regressions and prove them by reintroduction.
+Tie every relevant output asset, including CSS, to the actual shipped/deployed
+build; a JavaScript-only comparison is not build identity, and masking must not
+hide semantic output differences. Parse and compose CSS `content` as the
+browser does rather than treating quoted fragments and source containment as
+the rendered value. Occurrence provenance must include render-time and
+cross-module generated output, and an unplaced join may not borrow approval
+from an unrelated honest producer. Prove every generated-review section body
+from its composition inputs or an independent oracle; comparing two consumers
+of the same `composed` object is not identity.
+
+Run the aggregate, full three-width browser, deployed Android, privacy,
+block-sweep and copy-guard gates; deploy the repaired checkpoint; preserve all
+seven product PASSes and every deferral; and append a Round 19 retest dispatch
+for the SAME Codex QA conversation at High.
+
+Do not edit QA's Round 18, alter docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a
+PHASE_85_* file or start routing 90. Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** Max.
+**Conversation:** CURRENT — the original routing 84 Claude builder conversation.
+
+```text
+Continue routing Phase 84 after independent QA Round 18 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 18
+repair handoff at its end exactly as written. Do not ask me to paste the file.
+```
