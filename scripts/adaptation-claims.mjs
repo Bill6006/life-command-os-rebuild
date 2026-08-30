@@ -290,6 +290,34 @@ const FUTURE_MODALS = [
   'going to',
 ]
 
+/**
+ * Whether a fragment could begin, or finish, a claim about the future — D-206.
+ *
+ * These are for `rendered-copy-scan.mjs`, which builds compositions out of
+ * literals and has to decide which of them are worth putting side by side. The
+ * whole-composition join assumes every piece renders; Round 16 called a helper
+ * that dropped one of its arguments, and the dropped text pushed the subject
+ * and its verb outside the window `adaptationClaimsOnAnyScreen` needs.
+ *
+ * **The answer is not a wider window.** Unbounded, that rule convicts the
+ * private-permission note, which joins an honest sentence about now to an
+ * honest sentence about a setting. What is true is that any two pieces might
+ * end up beside each other, and these two predicates say which pairs could
+ * possibly matter — so the scan can test all of them without testing all pairs.
+ */
+export function couldOpenAClaim(text) {
+  const lower = String(text ?? '').toLowerCase()
+  return NAMED_SUBJECTS.some((subject) => new RegExp(`\\b${escaped(subject)}\\b`).test(lower))
+}
+
+export function couldCloseAClaim(text) {
+  const lower = String(text ?? '').toLowerCase()
+  return (
+    FUTURE_MODALS.some((modal) => new RegExp(`\\b${escaped(modal)}\\b`).test(lower)) ||
+    LATER.some((later) => new RegExp(`\\b${escaped(later)}\\b`).test(lower))
+  )
+}
+
 export function adaptationClaimsOnAnyScreen(text) {
   if (typeof text !== 'string' || text.trim() === '') return []
   const lower = text.toLowerCase()

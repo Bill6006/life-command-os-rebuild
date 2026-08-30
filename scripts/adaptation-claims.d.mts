@@ -16,6 +16,10 @@ export function adaptationClaims(text: string): readonly string[]
  * **futurity**, never ability. Narrower than {@link adaptationClaims}, which
  * stays broad on the blocker path where the copy is short and controlled.
  */
+export function couldOpenAClaim(text: string): boolean
+
+export function couldCloseAClaim(text: string): boolean
+
 export function adaptationClaimsOnAnyScreen(text: string): readonly string[]
 
 /** The strings among `strings` that make such a claim, with the fragments found. */

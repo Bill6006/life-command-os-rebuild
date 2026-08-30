@@ -7406,3 +7406,96 @@ guard does not evaluate — in a state no sweep reaches is covered by neither
 half. Nothing here narrows that, and nothing here pretends to.
 
 ---
+
+## D-206 — Ask the repository, test the pairs that could matter, and make a section prove its own body
+
+**Phase:** 84 (QA round 16 repair) · **Status:** Active · Replaces the
+self-corroborating provenance of **D-205** and the two claims it rested on.
+
+D-205 answered _is this account true_ with more statements from the same
+account. Round 16 wrote an account that agrees with itself and is false.
+
+### 1. Provenance leaves the build's account (QA-84-050, QA-84-052)
+
+The sourcemap was checked against the files on disk and against its own
+positions, and both checks are made of the map's own words. Round 16 changed
+**no shipped JavaScript at all** and rewrote the mappings for a transplanted
+sentence so they named the module that is allowed to say it: the name existed,
+`sourcesContent` matched the file exactly, and the named position really did
+contain the sentence. Every check passed. A second version pointed at a comment
+sharing the credited sentence's first twenty characters, which was enough
+because the check measured twenty characters in a guessed line window — **a
+threshold inside a guard, which D-197 has always called a guess about the thing
+the guard exists to establish**.
+
+So _which module produces these words_ is answered from the **repository**,
+which is not a statement the build gets to make. The app is walked from
+`src/main.tsx` through its **relative** imports, each module is stripped to
+JavaScript by esbuild and read with the bundle's own extractor, and a module
+produces an approved sentence when anything it can compose carries those words.
+Two things keep that honest rather than merely different:
+
+- **the bundle still says what ships.** Source alone cannot tell a live sentence
+  from one the bundler deleted, which is what QA-84-042 exploited, so the
+  approval check keeps asking the artefact that question.
+- **an import that cannot be followed fails the scan**, and a repo-local module
+  the _map_ names that the walk never reached fails it too. A resolver that
+  quietly skipped what it did not understand would shrink the set it claims to
+  have read, and a guard that passes by having nothing to say is D-186's
+  mistake. The map is now the build's inventory and a tripwire — never the
+  authority.
+
+The twenty-character window is gone. What remains of the map check asks for the
+**whole** credited text in the module the map names, with no window and no
+prefix, and reports a disagreement rather than deciding provenance with it.
+
+### 2. A composition is a hypothesis about pairs, not a paragraph (QA-84-051)
+
+D-204 joined a call's arguments so that an element contributes its children's
+text. Round 16 called a helper that returns its first and third arguments and
+**drops the second**, with the dropped one long enough to push the subject and
+its verb apart. Every word the owner read was a literal argument; this guard put
+a hundred and twenty characters of scaffolding between them, and the classifier,
+which asks for the modal _near_ the subject, saw nothing.
+
+**Widening that window is the wrong answer.** Unbounded, the rule convicts the
+private-permission note, which joins an honest sentence about now to an honest
+sentence about a setting — the exact reason the bound exists. What is actually
+true is that **any two pieces of a run might end up beside each other**, because
+what happens to the pieces between them is a computation this does not evaluate.
+
+Testing every ordered pair says that, and costs the square of the run: on this
+bundle it does not finish. So only the pairs that could carry a claim are
+built — a piece naming a subject with a later piece carrying a modal or a
+deixis. **That is not a sample.** It is every pair the rule could fire on, and
+the rest are silence either way.
+
+### 3. Varying is not being (QA-84-053)
+
+D-205 made the composed review prove itself by its headings and by differing
+across two histories. Round 16 kept the headings, invented the bodies, and added
+a counter taken from the record count — so the documents differed, and the check
+was satisfied by a document with no relationship to the record. **A document
+that changes when the boxes change has shown only that it watched the boxes.**
+
+_The first repair attempt here was defeated by the same trick and is recorded
+rather than quietly replaced_: comparing two single-section documents with their
+headings removed, on the theory that a body must depend on which section it is.
+The impostor's counter varies with the selection too, so the bodies differed and
+it passed.
+
+What works is grounding, not variation. One section is made to prove its own
+contribution: the lines ticking **Recent record** adds to the document, and
+unticking takes away, must include something the app itself renders on
+**Timeline** for this history. Those words exist because of what is in the
+record, and an impostor cannot invent them without composing the record. It is
+checked in both directions, so the content is tied to that section rather than
+merely present somewhere.
+
+### What is still open, unchanged
+
+A sentence the app composes by **running** — over data, or by a computation this
+guard does not evaluate — in a state no sweep reaches is covered by neither
+half. Nothing here narrows that.
+
+---

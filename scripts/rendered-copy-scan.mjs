@@ -47,13 +47,16 @@
  * the route crawl: `QA_AVAILABLE` is `!isProduction`, so it is not code the
  * product ships to the owner. The check below fails if that stops being true.
  */
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import * as acorn from 'acorn'
+import * as esbuild from 'esbuild'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import {
   APPROVED_FUTURE_COPY,
   adaptationClaimsOnAnyScreen,
+  couldCloseAClaim,
+  couldOpenAClaim,
   withoutApprovedNonPromises,
   withoutApprovedFutureCopy,
 } from './adaptation-claims.mjs'
@@ -89,13 +92,14 @@ function stringsIn(source, originAt = () => null) {
   const seen = new Set()
   const structural = new Set(['type', 'start', 'end', 'loc', 'range'])
 
-  const record = (value, from) => {
+  const record = (value, from, joined = false) => {
     if (typeof value !== 'string' || value === '') return
     let known = found.get(value)
     if (known === undefined) {
-      known = { at: new Set(), disputed: new Set() }
+      known = { at: new Set(), disputed: new Set(), joined: false }
       found.set(value, known)
     }
+    if (joined) known.joined = true
     for (const piece of from) {
       const origin = originAt(piece.at, piece.text)
       if (origin === null) continue
@@ -217,8 +221,49 @@ function stringsIn(source, originAt = () => null) {
     // An element's type is what is being built, not what is read — QA-84-047.
     const run = whole.filter((piece) => !(piece.type === true && HTML_ELEMENTS.has(piece.text)))
     if (run.length < 2) return
-    record(run.map((piece) => piece.text).join(' '), run)
-    record(run.map((piece) => piece.text).join(''), run)
+    record(run.map((piece) => piece.text).join(' '), run, true)
+    record(run.map((piece) => piece.text).join(''), run, true)
+
+    /*
+     * And the pairs that could actually form one — QA-84-051.
+     *
+     * The whole-run join assumes every piece renders. Round 16 called a helper
+     * that returns its first and third arguments and drops the second, with the
+     * dropped one long enough to push the subject and its verb apart: every
+     * word the owner read was a literal argument, and this guard put a hundred
+     * and twenty characters of scaffolding between them.
+     *
+     * **Widening the classifier's window is the wrong answer** — unbounded, it
+     * convicts the private-permission note, which joins an honest sentence
+     * about now to an honest sentence about a setting. What is true is that any
+     * two pieces might end up beside each other, because what happens to the
+     * pieces between them is a computation this does not evaluate.
+     *
+     * Testing every ordered pair says that and costs the square of the run,
+     * which on this bundle does not finish. So only the pairs that could carry
+     * a claim are built: a piece that names a subject, with a later piece that
+     * carries a modal or a deixis. That is not a sample of the pairs — it is
+     * all of the pairs the rule could ever fire on, and the rest are silence
+     * either way.
+     */
+    const opens = []
+    for (let index = 0; index < run.length; index += 1) {
+      const piece = run[index]
+      if (piece !== undefined && couldOpenAClaim(piece.text)) opens.push(index)
+    }
+    if (opens.length > 0) {
+      for (let index = 1; index < run.length; index += 1) {
+        const later = run[index]
+        if (later === undefined || !couldCloseAClaim(later.text)) continue
+        for (const first of opens) {
+          if (first >= index - 1) continue
+          const earlier = run[first]
+          if (earlier === undefined) continue
+          record(`${earlier.text} ${later.text}`, [earlier, later], true)
+          record(`${earlier.text}${later.text}`, [earlier, later], true)
+        }
+      }
+    }
   }
 
   const walk = (node) => {
@@ -232,6 +277,18 @@ function stringsIn(source, originAt = () => null) {
     const whole = piecesOf(node)
     if (whole !== null) joinRun(whole)
 
+    /*
+     * The same type position, seen from the other direction. `piecesOf` marks a
+     * call's first argument; this loop walks a node's children, where that
+     * argument arrives as an ordinary child and would keep its element name.
+     * Round 16 showed why that matters: the leftover name was the only thing
+     * catching a laundered transplant, which is protection by noise, and Round
+     * 15 established that noise is not protection.
+     */
+    const typePosition =
+      node.type === 'CallExpression' || node.type === 'NewExpression'
+        ? node.arguments?.[0]
+        : undefined
     let run = []
     for (const child of childrenOf(node)) {
       const pieces = piecesOf(child)
@@ -240,7 +297,9 @@ function stringsIn(source, originAt = () => null) {
         run = []
         continue
       }
-      run.push(...pieces)
+      run.push(
+        ...(child === typePosition ? pieces.map((part) => ({ ...part, type: true })) : pieces),
+      )
     }
     joinRun(run)
 
@@ -276,7 +335,8 @@ function contentIn(css, name) {
     const raw = (match[1] ?? '').trim()
     for (const piece of raw.matchAll(/"([^"]*)"|'([^']*)'/g)) {
       const value = piece[1] ?? piece[2] ?? ''
-      if (value !== '') found.set(value, { at: new Set([name]), disputed: new Set() })
+      if (value !== '')
+        found.set(value, { at: new Set([name]), disputed: new Set(), joined: false })
     }
   }
   return found
@@ -360,24 +420,23 @@ function repoPath(source) {
  *   which is the case Round 14 could keep alive with a discarded expression.
  */
 /**
- * Whether the module the map names really says those words there — QA-84-046.
+ * Whether the module the map names really says those words — QA-84-052.
  *
- * Provenance is only as good as the account the build gives of itself, and
- * Round 15 rewrote that account: with the shipped JavaScript untouched, it
- * pointed More's copy of an approved sentence at the module that is allowed to
- * say it, and the scan called a transplant clean. **Requiring a map, and
- * counting how many positions it places, proves a map exists and is busy — not
- * that any one attribution is true.**
+ * The first version of this asked whether the **first twenty characters** of a
+ * string turned up within a line either side of the mapped position. Round 16
+ * answered it with a comment sharing exactly those twenty characters and
+ * nothing else, which is what a measurement inside a guard buys you (D-197):
+ * the number was a guess about how source is wrapped, and it was answerable
+ * without the sentence being there at all.
  *
- * So each attribution is corroborated against the source the map itself
- * carries: the words must be at the position it claims, within a line either
- * side of it, allowing for a literal that was wrapped when it was written.
+ * So the whole credited text must be in the module the map names, with no
+ * window and no prefix. This is a **tripwire, not the provenance** — what a
+ * module produces is settled from the repository by `reachableModules`, and
+ * this only reports a build whose own account disagrees with itself.
  */
-function saysItThere(lines, line, text) {
-  const wanted = flattened(text).slice(0, 20)
-  if (wanted === '') return true
-  const at = Math.max(0, (line ?? 1) - 2)
-  return flattened(lines.slice(at, at + 4).join(' ')).includes(wanted)
+function saysIt(content, text) {
+  const wanted = flattened(text)
+  return wanted === '' || flattened(content).includes(wanted)
 }
 
 /**
@@ -412,19 +471,117 @@ function mapDisagreesWithDisk(raw, name) {
   return complaints
 }
 
-function approvalsAwayFromHome(shipped) {
+/**
+ * What each module the app actually imports can put together — QA-84-050,
+ * QA-84-052, D-206.
+ *
+ * Provenance moved to the built chunk's sourcemap in D-204 and was corroborated
+ * against that same build in D-205. Round 16 showed the limit of both: a map
+ * that is **consistently** wrong — the name, the content and the position all
+ * agreeing on a module that really does contain the sentence — satisfies every
+ * check made inside the account, because every one of those checks is another
+ * statement by the same build.
+ *
+ * So the question *which module produces these words* is answered from the
+ * repository instead, which is not a statement the build gets to make. The app
+ * is walked from its entry through its **relative** imports, each module is
+ * stripped to JavaScript and read with the bundle's own extractor, and a module
+ * produces an approved sentence when anything it can compose carries those
+ * words.
+ *
+ * Two things keep this honest rather than merely different:
+ *
+ * - **the bundle still says what ships.** Source alone cannot tell a live
+ *   sentence from one the bundler deleted, which is what QA-84-042 exploited;
+ *   the approval check keeps asking the artefact that question.
+ * - **an import that cannot be resolved fails the scan.** A resolver that
+ *   quietly skips what it does not understand would shrink the set it claims to
+ *   have walked, and a guard that passes by having nothing to say is D-186's
+ *   mistake.
+ */
+function reachableModules(entry) {
+  const found = new Map()
+  const queue = [entry.split(SEPARATOR).join('/')]
+  const seen = new Set()
+  const unresolved = []
+
+  const resolve = (from, specifier) => {
+    const base = join(dirname(from), specifier).split(SEPARATOR).join('/')
+    const candidates = [
+      base,
+      `${base}.ts`,
+      `${base}.tsx`,
+      `${base}.js`,
+      `${base}.jsx`,
+      `${base}/index.ts`,
+      `${base}/index.tsx`,
+      `${base}/index.js`,
+    ]
+    // A specifier written with an extension the compiler rewrites: '../x.js'
+    // is how TypeScript refers to '../x.ts'.
+    if (/[.]js$/.test(base)) {
+      candidates.push(base.replace(/[.]js$/, '.ts'), base.replace(/[.]js$/, '.tsx'))
+    }
+    for (const candidate of candidates) {
+      if (existsSync(candidate) && statSync(candidate).isFile()) return candidate
+    }
+    return null
+  }
+
+  /*
+   * A stylesheet or a JSON file is a module to the bundler and not code to
+   * read here — the stylesheets are read separately, from the built CSS. They
+   * are resolved so an unresolvable import is still a failure, and then set
+   * aside rather than handed to a TypeScript transform that would choke on
+   * them, which is the shape of the crash Round 14 found (QA-84-045).
+   */
+  const isCode = (file) => /[.](?:m|c)?[jt]sx?$/.test(file)
+
+  while (queue.length > 0) {
+    const file = queue.pop()
+    if (file === undefined || seen.has(file)) continue
+    seen.add(file)
+
+    const source = readFileSync(file, 'utf8')
+    const { code } = esbuild.transformSync(source, {
+      loader: file.endsWith('.tsx') ? 'tsx' : file.endsWith('.jsx') ? 'jsx' : 'ts',
+      format: 'esm',
+      target: 'esnext',
+    })
+
+    found.set(file, [...stringsIn(code).keys()].map(flattened))
+
+    const tree = acorn.parse(code, { ecmaVersion: 'latest', sourceType: 'module' })
+    for (const statement of tree.body) {
+      const specifier =
+        (statement.type === 'ImportDeclaration' ||
+          statement.type === 'ExportNamedDeclaration' ||
+          statement.type === 'ExportAllDeclaration') &&
+        statement.source !== null &&
+        statement.source !== undefined
+          ? String(statement.source.value)
+          : null
+      if (specifier === null) continue
+      if (!specifier.startsWith('.')) continue
+      const at = resolve(file, specifier)
+      if (at === null) unresolved.push(`${file} imports ${specifier}, which could not be found`)
+      else if (isCode(at)) queue.push(at)
+    }
+  }
+
+  return { found, unresolved }
+}
+
+function approvalsAwayFromHome(shipped, composable) {
   const wrong = []
   for (const approved of APPROVED_FUTURE_COPY) {
     const pin = flattened(approved.pin ?? approved.text)
-    const producing = new Set()
+
     let ships = false
-    let untraceable = false
     const disputed = new Set()
     for (const [text, known] of shipped) {
       if (!flattened(text).includes(pin)) continue
       ships = true
-      if (known.at.size === 0 && known.disputed.size === 0) untraceable = true
-      for (const origin of known.at) producing.add(origin)
       for (const origin of known.disputed) disputed.add(origin)
     }
 
@@ -432,34 +589,28 @@ function approvalsAwayFromHome(shipped) {
       wrong.push({ pin, file: approved.in.join(', '), why: 'is not in the bundle at all' })
       continue
     }
+
     /*
-     * An origin nobody could read is not an origin that agrees.
-     *
-     * A handful of shipped strings trace to nothing, which is fine for copy the
-     * rule already clears. It is not fine for an **approved** sentence: if the
-     * words can arrive from a position the map cannot place, the approved home
-     * still ships them and this would pass while knowing nothing about where
-     * the second copy came from.
+     * Who can produce it is answered from the repository, not from the build.
+     * A module the app imports and which can compose these words is a producer,
+     * whatever the map says about where the bytes came from.
      */
-    if (untraceable) {
-      wrong.push({ pin, file: '(a module the sourcemap could not place)', why: 'also ships it' })
-    }
-    /*
-     * And an attribution the named module does not corroborate is not an
-     * attribution — QA-84-046. The map is the build's account of itself; a
-     * position it credits to a module that does not have those words there is
-     * the account disagreeing with itself, which is the only kind of forgery
-     * this can see from the outside.
-     */
-    for (const origin of disputed) {
-      wrong.push({ pin, file: origin, why: 'is credited with it but does not say it there' })
-    }
-    for (const origin of producing) {
-      if (!approved.in.includes(origin))
-        wrong.push({ pin, file: origin, why: 'did not have approval to say it' })
+    const producing = [...composable.entries()]
+      .filter(([, strings]) => strings.some((value) => value.includes(pin)))
+      .map(([file]) => file)
+
+    for (const file of producing) {
+      if (!approved.in.includes(file)) {
+        wrong.push({ pin, file, why: 'is imported by the app and can say it, without approval' })
+      }
     }
     for (const file of approved.in) {
-      if (!producing.has(file)) wrong.push({ pin, file, why: 'no longer ships it' })
+      if (!producing.includes(file)) wrong.push({ pin, file, why: 'can no longer say it' })
+    }
+
+    // And the build's own account must not disagree with itself about it.
+    for (const origin of disputed) {
+      wrong.push({ pin, file: origin, why: 'is credited with it but does not contain it' })
     }
   }
   return wrong
@@ -491,13 +642,15 @@ function main() {
    * pass by having nothing to say).
    */
   const shipped = new Map()
+  const mapped = new Set()
   const remember = (from) => {
     for (const [value, found] of from) {
       let known = shipped.get(value)
       if (known === undefined) {
-        known = { at: new Set(), disputed: new Set() }
+        known = { at: new Set(), disputed: new Set(), joined: false }
         shipped.set(value, known)
       }
+      if (found.joined) known.joined = true
       for (const origin of found.at) known.at.add(origin)
       for (const origin of found.disputed) known.disputed.add(origin)
     }
@@ -512,15 +665,19 @@ function main() {
       process.exit(1)
     }
     const raw = JSON.parse(readFileSync(at, 'utf8'))
+    for (const source of raw.sources ?? []) {
+      const file = repoPath(source)
+      if (!file.startsWith('node_modules/')) mapped.add(file)
+    }
     for (const complaint of mapDisagreesWithDisk(raw, name)) {
       console.error(complaint)
       process.exit(1)
     }
 
     const tracer = new TraceMap(raw)
-    const lines = new Map()
+    const bodies = new Map()
     raw.sources.forEach((source, index) => {
-      lines.set(source, String(raw.sourcesContent?.[index] ?? '').split(/\r?\n/))
+      bodies.set(source, String(raw.sourcesContent?.[index] ?? ''))
     })
 
     const originAt = (node, text) => {
@@ -532,7 +689,7 @@ function main() {
       if (found.source === null || found.source === undefined) return null
       return {
         file: repoPath(found.source),
-        agrees: saysItThere(lines.get(found.source) ?? [], found.line, text),
+        agrees: saysIt(bodies.get(found.source) ?? '', text),
       }
     }
     remember(stringsIn(readFileSync(join(ASSETS, name), 'utf8'), originAt))
@@ -557,7 +714,29 @@ function main() {
     process.exit(1)
   }
 
-  const wrong = approvalsAwayFromHome(shipped)
+  const { found: composable, unresolved } = reachableModules(join('src', 'main.tsx'))
+  if (unresolved.length > 0) {
+    console.error('The app has imports this scan could not follow, so the set of modules it')
+    console.error('claims to have read is smaller than the app:')
+    for (const complaint of unresolved) console.error(`  - ${complaint}`)
+    process.exit(1)
+  }
+
+  /*
+   * And the map may not name a module of this repository that the walk never
+   * reached. The map is not trusted for provenance any more, but it is still
+   * the build's inventory, and a repo-local module in it that the walk missed
+   * means the walk is the thing that is wrong.
+   */
+  const missed = [...mapped].filter((file) => !composable.has(file) && existsSync(file))
+  if (missed.length > 0) {
+    console.error('The build compiled modules of this repository that the import walk never')
+    console.error('reached, so provenance would be answered from an incomplete set:')
+    for (const file of missed.slice(0, 20)) console.error(`  - ${file}`)
+    process.exit(1)
+  }
+
+  const wrong = approvalsAwayFromHome(shipped, composable)
   if (wrong.length > 0) {
     console.error(
       `${wrong.length} approved sentence(s) are not where they were approved.\n` +

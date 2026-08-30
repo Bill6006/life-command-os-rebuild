@@ -39,6 +39,63 @@ None.
 
 ## Fixed
 
+### DEF-0141 — an account that agrees with itself, and two claims that mistook variation for substance
+
+- Status: Fixed
+- Severity: Blocker ×4 — a transplanted approved sentence could be laundered
+  through a self-consistent sourcemap, twice over; a helper dropping one
+  argument could hide a static rendered promise; and an invented review body
+  could pass identity by carrying a counter
+- Found in: routing 84 / `9457b23`
+- Found by: **independent QA round 16** (QA-84-050 … QA-84-053) — the fifth
+  round running in which every weakness the builder's own dispatch named became
+  a working false green, and the fourth in which all of them did
+- Class: **corroboration inside one account, and variation mistaken for
+  substance.** Provenance was checked with more statements by the build that
+  made it; a composition was assumed to render whole; and a document that
+  changed with its inputs was taken to be composed from them.
+- Reproduction, all four confirmed here before anything was built:
+  - **050** — the approved sentence visible in an imported module, then the map
+    rewritten so both its mappings named the approved module's real line →
+    **clean at 7,946 strings**. _Reproducing this took two attempts and the
+    second is the honest one: with the sentence inside a titled panel, a join
+    carrying a sibling literal still exposed the true module, and the first
+    version of the flag that drops element names left the tag in that join. Both
+    are protection by accident. The tag flag was made consistent first — a fix
+    in its own right — and only then did the false green appear._
+  - **051** — `qaRound16Render('The app ', <120 characters that never render>,
+['will choose ', …])` → **clean at 7,961**.
+  - **052** — the same transplant with both mappings naming a comment that
+    shares the credited sentence's first twenty characters → **clean**.
+  - **053** — the chosen headings, a `History counter` from the record count,
+    and thirty invented lines → identity and app-wide guards **6 passed in
+    24.6s** (QA: 6 passed in 24.1s).
+- Repair — see **D-206**. Provenance is answered from the repository by walking
+  the app's relative imports; the map keeps only a tripwire role and its
+  twenty-character window is gone; every pair of pieces that could carry a claim
+  is tested; and the record section must contribute something Timeline shows.
+- Regression: `scripts/rendered-copy-scan.mjs` (`reachableModules`, the
+  unresolved-import and unreached-module failures, claim-bearing pairs),
+  `couldOpenAClaim`/`couldCloseAClaim` in `scripts/adaptation-claims.mjs`, and
+  `QA-84-039/043/048/053` in `tests/browser/phase84.spec.ts`.
+- Proved by reintroduction: all four, each built and run. **050** and **052**
+  now fail with _is imported by the app and can say it, without approval_,
+  naming the module, whatever the map says; **051** fails on the pair
+  _"The app will choose"_; **053** fails with _nothing the record section adds
+  is anything the app shows on Timeline_. Round 15's own impostor fails on the
+  same assertion, so the older attack was not traded away for the newer one.
+- **Two repairs of mine failed before they worked, both recorded**: an unbounded
+  classifier for compositions convicted thirty-five honest strings, and testing
+  every ordered pair did not finish; and the first content check for 053 —
+  comparing two single-section documents — was defeated by the same counter,
+  because the record count varies with the selection as well as the history.
+- Siblings: none. All seventeen approvals resolve to exactly their listed
+  modules from the repository, and the shipped-string count moved from 8,182 to
+  **7,962**: the type-position flag now also applies where a run is built from a
+  node's children, which removes more joins than the pairs add.
+- Note on scope: the current copy was honest throughout, for the fourteenth
+  round running, and both fresh-store cases passed again.
+
 ### DEF-0140 — four things D-204 trusted without corroborating
 
 - Status: Fixed

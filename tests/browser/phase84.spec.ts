@@ -1496,7 +1496,7 @@ async function sweepEveryPress(page: Page): Promise<ReadonlySet<string>> {
 const PRESSES_PER_ROUTE = 40
 
 test.describe('everything a blocker puts on any screen', () => {
-  test('QA-84-039/043/048 — the composed review answers to the sections and to the history', async ({
+  test('QA-84-039/043/048/053 — the composed review answers to each section and to the history', async ({
     page,
   }) => {
     /*
@@ -1580,6 +1580,65 @@ test.describe('everything a blocker puts on any screen', () => {
 
     await boxes.nth(dropped.index).check()
     await expect(review, 'the document did not come back when the section did').toHaveValue(whole)
+
+    /*
+     * And what a section contributes must be the app's own record — QA-84-053.
+     *
+     * The checks above prove the headings track the selection. Round 15
+     * answered that with the right headings over thirty invented lines, and
+     * Round 16 answered it again by adding a counter, so that two histories —
+     * and, it turns out, two different selections — produced different bytes.
+     * **Varying is not being.** A document that changes when the boxes change
+     * has shown only that it watched the boxes.
+     *
+     * So one section is made to prove its own contribution. The lines it adds
+     * to the document, and takes away again, must include something the app
+     * itself renders on **Timeline** for this history — words that exist
+     * because of what is in the record, and that no impostor can invent without
+     * composing the record. It is checked both ways round, so the content is
+     * tied to that section rather than merely present somewhere.
+     */
+    await page.goto(`${APP}#/timeline`)
+    await expect(page.getByRole('heading', { level: 1, name: 'Timeline' })).toBeVisible()
+    const onTimeline = (await page.locator('main').innerText())
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 24)
+    expect(
+      onTimeline.length,
+      'Timeline shows nothing for this history, so there is no record to ground the export in',
+    ).toBeGreaterThan(0)
+
+    await page.goto(`${APP}#/data`)
+    await expect(page.getByRole('heading', { level: 1, name: 'Data' })).toBeVisible()
+
+    const records = sections.find((section) => section.heading === '## Recent record')
+    if (records === undefined) throw new Error('the export no longer has a Recent record section')
+
+    await boxes.nth(records.index).check()
+    const withRecords = (await review.inputValue()).split('\n')
+    await boxes.nth(records.index).uncheck()
+    const withoutRecords = new Set((await review.inputValue()).split('\n'))
+
+    const contributed = withRecords.filter((line) => !withoutRecords.has(line))
+    expect(
+      contributed.length,
+      'ticking the record section added nothing to the document',
+    ).toBeGreaterThan(0)
+
+    const grounded = contributed.filter((line) => onTimeline.some((shown) => line.includes(shown)))
+    expect(
+      grounded,
+      'nothing the record section adds is anything the app shows on Timeline, so its body is not the record',
+    ).not.toEqual([])
+
+    // Back to where the section checks left it.
+    for (const section of sections) {
+      const box = boxes.nth(section.index)
+      if (section.ticked) await box.check()
+      else await box.uncheck()
+    }
+    await expect(review).toHaveValue(whole)
 
     /*
      * And the same selection over a different life — QA-84-048.
