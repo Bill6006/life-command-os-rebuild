@@ -7976,3 +7976,176 @@ D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 17
 repair handoff at its end exactly as written. Do not ask me to paste the file.
 ```
+
+---
+
+## Round 17 repair record — the builder's account
+
+**Written by the routing 84 builder conversation, below QA's Round 17 and
+without touching it.** Independent QA has now failed this routing seventeen
+times and been right seventeen times. **Rounds 3 to 17 have all been clean on
+the product**; every finding since Round 2 has been about the guarantee.
+
+**Deviation from the dispatch, declared.** The dispatch asks for the completion
+marker in `docs/NEXT_PROMPT.md`. The standing instruction from the human owner
+places it at the end of **this** file, and the owner's placement governs. It is
+the seventeenth round this has been recorded rather than silently resolved.
+
+### What was found, in one sentence
+
+Five answers to *which module produced these words* have now been broken, and
+every one of them was **a second account of what the build did**; and a proof
+about one section of the composed review was read as a proof about all ten.
+
+### The provenance argument, in one table
+
+| Answer | Broken by |
+| --- | --- |
+| D-203 — read `src`, ask what a file could compose | a `.js` module beside the repository (R14) |
+| D-204 — trace the built chunk's sourcemap | the map rewritten (R15) |
+| D-205 — corroborate the map against disk and itself | a map made **consistently** wrong (R16) |
+| D-206 — walk the app's relative imports | a **Vite alias**, which that walk does not resolve (R17) |
+
+**So the build hands over its own graph.** Vite runs in process, and Rollup's
+output gives the **rendered code of every module in each chunk**. That is not an
+account of provenance — it is the shipped bytes, already grouped by the module
+they came from, by the tool that put them there. An alias, a conditional export,
+a plugin-generated module: all arrive resolved, because the thing that resolved
+them is what produced this. **There is no map left to forge and no second
+resolver to disagree with.**
+
+### The four, and what each one changed
+
+| # | The hole | The repair |
+| --- | --- | --- |
+| 054 | a second resolver, rescued by a forgeable map | provenance is Rollup's own per-module rendered code |
+| 055 | *can say it* plus *ships somewhere* names no producer | a module produces a sentence when its **rendered** code carries it; stylesheets are in the graph, and shipped `content:` nobody can place fails |
+| 056 | an opener had to be one piece | an opener is the shortest **run of adjacent pieces** that can open a claim, bounded by the vocabulary's own longest phrase |
+| 057 | one honest section carried nine invented ones | the whole document is compared against what the **copy control** hands over |
+
+**QA-84-055 is the one that shows why the graph matters more than the account.**
+The sentence stayed in its approved module as an unused literal and was rendered
+from a stylesheet. Two separate facts — *this module could say it* and *the
+words ship* — were both true and neither was provenance. Now the answer names
+both halves at once: `src/styles/base.css` ships it without approval, and
+`src/features/life/DomainPanels.tsx` no longer ships it.
+
+### A probe decided QA-84-057's repair, and ruled out the obvious answer
+
+Grounding every section the way the record section was grounded is **not
+available**: measured over the real product, only three of ten sections
+contribute a line that another screen also renders. Requiring it everywhere
+would have failed the honest product; requiring it for one more section would
+only have moved Round 18's line to a different section.
+
+What the app does have is a **second way of handing the same document over**.
+The field shows it and the copy control puts it on the clipboard; comparing them
+takes the whole document at once, with nothing left for a fabricated section to
+hide in. An impostor that changes the field must now change the composition, at
+which point it is the composition.
+
+### Reproduction, and which gate caught which
+
+Each reproduction matched QA's own count.
+
+| # | Before (mine / QA's) | After |
+| --- | --- | --- |
+| 054 | **clean at 7,962 / 7,962**, 7,890 traced | scan **exit 1**: _`qa-round17/copy.ts` ships it without approval_ |
+| 055 | **clean at 7,964 / 7,964** | scan **exit 1**, both halves named |
+| 056 | **clean at 7,978 / 7,976** | scan **exit 1** on the assembled pair _"The app will choose"_ |
+| 057 | identity + app-wide guards **6 passed / 6 passed** | browser: _the field and the copy control do not hold the same document_ |
+
+Round 16's own impostor fails on that same assertion, so the older attack has not
+been traded away for the newer one.
+
+### Gates at `6062756`
+
+| Gate | Result |
+| --- | --- |
+| `npm run verify` | **PASS** — format, lint, typecheck, **1,861 tests** in 84 files, build, copy scan |
+| Rendered copy scan | **clean — 8,035 shipped strings**, 7,951 placed in a module of the build graph |
+| Browser, three widths, one worker | **708 passed** in 15.3 minutes, **zero failures** |
+| Privacy scan | **clean — 290 tracked files** |
+| Deployed Android gate | **clean — 233 checks** |
+| Checkpoint equivalence | **exact** |
+| `git diff -- src` | **empty** — the product was not touched, for the fifteenth round |
+
+**One weakness was closed rather than shipped.** Running Vite in process makes a
+build *for the guard*, so each chunk is now compared against `dist/` byte for
+byte, masking only the content-hash filenames and the build stamp. The chunks
+are paired by **content**: a first version paired them by stripping the hash off
+the filename and immediately mis-read `index-C3-1N9fH.js`, because a content
+hash can contain a dash of its own. Proved by leaving `dist` stale, which
+reports the difference in both directions.
+
+`@jridgewell/trace-mapping` and `esbuild` are no longer declared, because nothing
+imports them any more. The scan runs in **4.5 seconds** rather than twenty-nine:
+it no longer parses a whole minified chunk looking for positions.
+
+Decisions **D-207**; defects **DEF-0142**. **Routing 84 stays YELLOW.** A builder
+conversation may not approve its own phase (D-077).
+
+---
+
+## Round 18 dispatch — independent QA
+
+**Actor:** Codex / independent QA.
+**Model:** Codex. **Reasoning level:** **High** — never Max.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 17.
+
+```text
+Routing Phase 84, independent QA Round 18.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full, including the builder's Round 17
+repair record at the end. Retest routing 84 as independent QA at High, against
+the repaired checkpoint 6062756.
+
+Repeat CASE A and CASE B from new ephemeral contexts, as in every previous
+round, and never open the QA laboratory to do it.
+
+Commit your round alone and first. Do not edit the builder's records, alter
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a PHASE_85_* file, or start
+routing 90. Do not ask me to paste file contents.
+```
+
+### What Round 18 should attack
+
+**The declared open case is still not a target.** A sentence the app composes by
+running — over data, or by a computation this guard does not evaluate — in a
+state no sweep reaches is covered by neither half. **A finding is showing that
+something the record claims _is_ covered is not.**
+
+Four places where this repair claims more than it has proved:
+
+1. **The tie to the shipped build masks exactly the bytes that differ.** Each
+   chunk is compared against `dist/`, which closes the gap between a build made
+   for the guard and the one that deployed — but the comparison masks the
+   content-hash filenames and the build stamp, because those differ between any
+   two builds of identical source. Anything a build-time difference expresses
+   *only* through those is invisible to it, and `dist/` is itself produced by
+   the step immediately before, not by the deploy.
+2. **CSS provenance is containment, not composition.** A `content:` string is
+   attributed to whichever graph stylesheet's **source text** contains it. Two
+   stylesheets with the same rule are both credited; a rule assembled by a
+   preprocessor from pieces is credited to none, and that failure is only
+   visible if the assembled string is the one being looked for.
+3. **A module's rendered code is a chunk-time artefact.** Provenance is the
+   bytes Rollup attributes to a module after transformation and tree-shaking. A
+   plugin that rewrites text at render time, or a string that only exists after
+   two modules are merged, has a provenance decided by that machinery rather
+   than by anything anybody wrote.
+4. **The clipboard proves the field, and the field is not the screen.** The
+   comparison is between two values the same component computes from the same
+   `composed` object. It establishes that the field was not tampered with; it
+   says nothing about whether `composed.text` is what any other surface would
+   call this history, and both sides fail together if the composer is wrong.
+
+**And the standing invariants, again.** Seven product PASSes and every deferral
+must survive. No blocker enforcement, no semantic interpretation, no scoring
+change, no new visual language, no orchestrator change. Phase 84 stays YELLOW
+until QA says otherwise; the builder may not approve its own phase.
+
+<!-- LCO_COMPLETE -->
