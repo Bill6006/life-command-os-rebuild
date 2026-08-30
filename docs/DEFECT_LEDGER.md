@@ -39,6 +39,59 @@ None.
 
 ## Fixed
 
+### DEF-0138 — three claims D-202 made that it did not have, and one it overstated
+
+- Status: Fixed
+- Severity: Blocker ×3 (a promise the engine cannot keep could reach the owner
+  assembled from innocent fragments, built by an ordinary helper, or beside a
+  document impersonating the composed review, with every gate green), Major ×1
+  (a frame the session observed was skipped once it detached)
+- Found in: routing 84 / `5b9fe99`
+- Found by: **independent QA round 13** (QA-84-037 … QA-84-040), aimed at the
+  four weaknesses the Round 13 dispatch named — all four landed
+- Class: **a property checked against how copy is written, then used as a
+  property of what copy becomes.** Approval was pinned to literals and applied
+  to joins; "every literal composition" meant three syntax shapes; one marker
+  meant one claim, not one identity.
+- Reproduction, all four confirmed here before anything was built, each
+  reproducing QA's own count exactly:
+  - **037** — two innocent fragments joined under **A blocker** → copy scan
+    **clean at 5,417 strings** (QA: 5,417).
+  - **038** — `stitch('The app', 'will choose', …)` → **clean at 5,418** (QA:
+    5,418).
+  - **039** — one marker, a twenty-five-line impostor document → focused
+    `QA-84-016/018` **3 passed in 14.7s** (QA: 14.8s).
+  - **040** — a base64 `srcDoc` frame removed after 10ms → **1 passed in 7.2s**
+    (QA: 7.3s). QA's boundary was confirmed too: at 1,000ms the gate already
+    failed.
+- Repair — see **D-203**. The bundle's extractor now also reads source, so an
+  approval is about what a file can _produce_; argument lists join like array
+  literals; the composed review proves its identity by responding to the
+  selection; frames are read on attach and an unread frame is reported.
+- Regression: `scripts/rendered-copy-scan.mjs` (argument joining, approval
+  provenance over source), run from `npm run verify`; `QA-84-039 — the marked
+control is the composed review, proved by making it change` and the
+  read-on-attach frame collector in `tests/browser/phase84.spec.ts`.
+- Proved by reintroduction: all four of QA's exact mutations, each built and run.
+  **037** fails the approval check naming `src/features/more/MoreScreen.tsx`;
+  **038** fails as a shipped string; **039** fails at all three widths on _the
+  marked control did not change when every section was unticked_; **040** fails
+  on _a frame appeared and could not be read_. The 1,000ms frame still fails by
+  being **read**, so the two paths are distinguishable rather than one net.
+- Siblings: **one, found here rather than by QA.** The remembered-frame read
+  existed only in the route crawl, so the **press sweep** — the sweep that
+  reaches the states a frame is most likely to be created in — still saw only a
+  snapshot. That is the mistake this campaign has made more often than any
+  other: a rule applied in one of two places. There is now one implementation
+  and both sweeps call it.
+- Also siblings: the seventeen approvals all still resolve to exactly their
+  listed files under the stricter production rule, and the shipped-string count
+  rose from 5,410 to **6,185** as argument lists, object literals, sequence
+  expressions and multi-declarator statements began to join.
+- Note on scope: the current copy was honest throughout, for the eleventh round
+  running, and both fresh-store cases passed again. What was defective was the
+  guarantee's description of itself.
+
 ### DEF-0137 — the gap between the two halves of D-201
 
 - Status: Fixed, with one part **open and named**

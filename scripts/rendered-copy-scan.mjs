@@ -50,6 +50,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import * as acorn from 'acorn'
+import * as esbuild from 'esbuild'
 import {
   APPROVED_FUTURE_COPY,
   adaptationClaimsOnAnyScreen,
@@ -91,7 +92,34 @@ function stringsIn(source) {
     if (typeof value === 'string' && value !== '') found.add(value)
   }
 
-  /** The literal pieces of an expression, in source order, or null if it is not one. */
+  /**
+   * The literal pieces of an expression, in source order — or null.
+   *
+   * **The list below is the language's, not a guess — D-203.** Round 12 joined
+   * three shapes and called it *every literal composition*; Round 13 handed
+   * four literals to a helper and walked through the gap. Following the helper
+   * is not the answer, because a helper can reorder or rewrite its arguments
+   * and an evaluator that chases user functions is the interpreter-inside-a-
+   * guard D-197 forbids.
+   *
+   * What is enumerable is the set of constructs in which JavaScript writes an
+   * **ordered sequence of expressions**, and it is short:
+   *
+   * - `'a' + 'b'` — a `+` chain
+   * - `` `a${x}b` `` — a template's quasis
+   * - `['a', 'b']` — an array literal
+   * - `{ a: 'x', b: 'y' }` — an object literal's values
+   * - `('a', 'b')` — a sequence expression
+   * - `f('a', 'b')` and `new C('a', 'b')` — an argument list (in `walk`)
+   * - `const a = 'x', b = 'y'` — one declaration statement (in `walk`)
+   *
+   * JSX needs no entry: both inputs reach this as function calls, because the
+   * bundle is built and the source is transformed before it is parsed.
+   *
+   * Every element must itself yield pieces, so one non-literal makes the whole
+   * group silent rather than producing a partial sentence that was never on
+   * anybody's screen.
+   */
   const piecesOf = (node) => {
     if (node === null || typeof node !== 'object') return null
     if (node.type === 'Literal' && typeof node.value === 'string') return [node.value]
@@ -102,6 +130,25 @@ function stringsIn(source) {
       const left = piecesOf(node.left)
       const right = piecesOf(node.right)
       return left === null || right === null ? null : [...left, ...right]
+    }
+    if (node.type === 'SequenceExpression') {
+      const parts = []
+      for (const element of node.expressions) {
+        const piece = piecesOf(element)
+        if (piece === null) return null
+        parts.push(...piece)
+      }
+      return parts
+    }
+    if (node.type === 'ObjectExpression') {
+      const parts = []
+      for (const property of node.properties) {
+        if (property.type !== 'Property') return null
+        const piece = piecesOf(property.value)
+        if (piece === null) return null
+        parts.push(...piece)
+      }
+      return parts
     }
     if (node.type === 'ArrayExpression') {
       const parts = []
@@ -127,6 +174,52 @@ function stringsIn(source) {
     if (pieces !== null && pieces.length > 1) {
       add(pieces.join(' '))
       add(pieces.join(''))
+    }
+
+    /*
+     * An argument list is an ordered group of literals too — QA-84-038.
+     *
+     * Round 13 handed four literals to a local helper that reduced them with
+     * spaces. Every argument was a literal and the result was a sentence, but
+     * nothing here followed the call. **Following the call is not the fix** —
+     * a helper can do anything, and an evaluator that chases user functions is
+     * the interpreter-inside-a-guard D-197 forbids. What is enumerable is the
+     * set of constructs in which the language writes an ordered sequence of
+     * expressions, and an argument list is one of them, exactly as an array
+     * literal is. Every argument must yield pieces, so `f(x, 'a')` stays quiet.
+     */
+    if (node.type === 'VariableDeclaration' && node.declarations.length > 1) {
+      const parts = []
+      let literal = true
+      for (const declarator of node.declarations) {
+        const piece = declarator.init === null ? null : piecesOf(declarator.init)
+        if (piece === null) {
+          literal = false
+          break
+        }
+        parts.push(...piece)
+      }
+      if (literal && parts.length > 1) {
+        add(parts.join(' '))
+        add(parts.join(''))
+      }
+    }
+
+    if (node.type === 'CallExpression' || node.type === 'NewExpression') {
+      const parts = []
+      let literal = true
+      for (const argument of node.arguments ?? []) {
+        const piece = piecesOf(argument)
+        if (piece === null) {
+          literal = false
+          break
+        }
+        parts.push(...piece)
+      }
+      if (literal && parts.length > 1) {
+        add(parts.join(' '))
+        add(parts.join(''))
+      }
     }
     if (node.type === 'Literal' && typeof node.value === 'string') add(node.value)
     if (node.type === 'TemplateLiteral') {
@@ -169,23 +262,33 @@ const SEPARATOR = String.fromCharCode(92)
 const WHITESPACE = new RegExp(SEPARATOR + 's+', 'g')
 
 /**
- * Where each approved sentence is allowed to live — QA-84-034.
+ * Where each approved sentence is allowed to live — QA-84-034, and **how it is
+ * allowed to get there** — QA-84-037.
  *
  * An approval is an exception to a rule, and Round 12 showed that an exception
  * written as *these words are fine* travels: the sentence about a restore was
  * moved verbatim onto an ordinary screen it had nothing to do with, and the
  * scan let it through, because the scan only ever knew the words. **An approval
- * is only honest where it was reasoned about.** So each entry names the source
- * files it may appear in, and this checks that claim in both directions:
+ * is only honest where it was reasoned about.**
  *
- * - the same words in a file that is not listed is a **transplant**, and fails;
- * - a listed file that no longer contains them is a **stale approval**, and
- *   fails too — an exception nothing needs is a hole waiting for the sentence
- *   to come back somewhere else.
+ * Round 13 then showed that pinning the *literal* is not enough either. More
+ * built an approved sentence out of two fragments that are each innocent —
+ * neither is the approved text, so the literal pin saw nothing — and the joiner
+ * dutifully assembled the approved words in a place where `this` names a
+ * blocker and the promise is false. **Approval was checked against how a
+ * sentence is written; removal happened to what a sentence becomes.**
  *
- * It reads source rather than the bundle deliberately. The built chunk has no
- * files in it, and *which module a string came from* is exactly what is being
- * checked.
+ * So the same extractor that reads the bundle now reads the source, and a file
+ * *produces* an approved sentence when any string it can compose carries those
+ * words — written whole or assembled. Both directions still fail:
+ *
+ * - a file that can produce the sentence and is not listed is a **transplant**;
+ * - a listed file that can no longer produce it is a **stale approval**, and an
+ *   exception nothing needs is a hole waiting for the sentence to come back.
+ *
+ * One extractor, two inputs, deliberately. A second implementation for source
+ * would drift from the one that reads the bundle, and the whole claim is that
+ * the two agree about what a composition is.
  */
 function sourceFiles(dir) {
   const found = []
@@ -203,19 +306,43 @@ function flattened(text) {
     .trim()
 }
 
+/**
+ * What each source file can put together, read with the bundle's own rules.
+ *
+ * `acorn` does not parse TypeScript or JSX, so each file is stripped to plain
+ * JavaScript by **esbuild** — the transform Vite already builds this product
+ * with, now declared rather than borrowed transitively, for the reason acorn
+ * was declared in D-201.
+ */
+function composableBySourceFile() {
+  const byFile = new Map()
+  for (const file of sourceFiles('src')) {
+    const source = readFileSync(file, 'utf8')
+    const { code } = esbuild.transformSync(source, {
+      loader: file.endsWith('.tsx') ? 'tsx' : 'ts',
+      format: 'esm',
+      target: 'esnext',
+    })
+    byFile.set(file, [...stringsIn(code)].map(flattened))
+  }
+  return byFile
+}
+
 function approvalsAwayFromHome() {
   const wrong = []
-  const files = sourceFiles('src')
-  const text = new Map(files.map((file) => [file, flattened(readFileSync(file, 'utf8'))]))
+  const composable = composableBySourceFile()
 
   for (const approved of APPROVED_FUTURE_COPY) {
     const pin = flattened(approved.pin ?? approved.text)
-    const holding = files.filter((file) => text.get(file).includes(pin))
-    for (const file of holding) {
+    const producing = [...composable.entries()]
+      .filter(([, strings]) => strings.some((value) => value.includes(pin)))
+      .map(([file]) => file)
+
+    for (const file of producing) {
       if (!approved.in.includes(file)) wrong.push({ pin, file, why: 'is not approved to say it' })
     }
     for (const file of approved.in) {
-      if (!holding.includes(file)) wrong.push({ pin, file, why: 'no longer says it' })
+      if (!producing.includes(file)) wrong.push({ pin, file, why: 'can no longer say it' })
     }
   }
   return wrong

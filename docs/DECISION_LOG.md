@@ -7126,3 +7126,100 @@ is checked; a runtime composition in an unreached state is not.** D-201's
 statement smaller and true is the point of the round.
 
 ---
+
+## D-203 — An approval is about production, and identity is demonstrated rather than declared
+
+**Phase:** 84 (QA round 13 repair) · **Status:** Active · Narrows **D-202**,
+which was right about the shape of the guarantee and wrong about three things it
+claimed were inside it.
+
+D-202 said: every string the app ships, and **every literal composition of
+them**, is checked. Round 13 took that sentence apart three ways, and each way
+was the same mistake in a different place — **a property was checked against how
+copy is written, and then used as if it were a property of what copy becomes.**
+
+**1. An approval is a claim about production, not about spelling (QA-84-037).**
+D-202 pinned each approved sentence to the source files it may live in, and
+checked that by looking for the literal. More then built an approved sentence
+out of two fragments — `'…and the app'` and `'will start suggesting work towards
+it.'` — neither of which is the approved text. The pin saw nothing to object to;
+the joiner assembled the approved words; the global removal erased them. Under
+**A blocker**, `this` names the blocker and the promise is false.
+
+So the same extractor that reads the bundle now reads the **source**, and a file
+_produces_ an approved sentence when anything it can compose carries those
+words, written whole or assembled. Both directions still fail: an unlisted file
+that can produce it is a transplant, and a listed file that can no longer
+produce it is a stale approval. **One extractor, two inputs** — a second
+implementation for source would drift from the one that reads the bundle, and
+the entire claim is that the two agree about what a composition is. `acorn` does
+not parse TypeScript or JSX, so each file is stripped to JavaScript by
+**esbuild**, the transform Vite already builds this product with, now declared
+rather than borrowed for the reason acorn was declared in D-201.
+
+**2. "Every literal composition" was three shapes (QA-84-038).** A four-argument
+call to a local helper that reduces its arguments with spaces produced a
+promise, and the evaluator followed none of it. **Following the call is not the
+repair.** A helper can reverse, filter or rewrite its arguments, and an
+evaluator that chases user functions is the interpreter-inside-a-guard D-197
+forbids. What _is_ enumerable is the set of constructs in which the language
+writes an **ordered sequence of expressions**, and an argument list is one of
+them exactly as an array literal is. Argument lists are now joined, on the same
+terms: every argument must be literal, so `f(x, 'a')` stays quiet. **So is every
+other such construct**, enumerated beside the code rather than described here:
+a `+` chain, a template’s quasis, an array literal, an object literal’s values,
+a sequence expression, an argument list and a multi-declarator statement. JSX
+needs no entry — both the bundle and the transformed source reach the parser as
+function calls.
+
+**And the claim shrinks to match.** It is no longer "every literal
+composition" — it is **"every ordered group of literals the language writes
+down"**. A computation that reorders or transforms them is outside it, and that
+is the same frontier D-202 already declared for data: a value the guard would
+have to run the program to know. The frontier has not moved; **the description
+of it was wrong, and is now right.**
+
+**3. Uniqueness is cardinality, not identity (QA-84-039).** D-202 asserted there
+is exactly one control carrying the composed review's marker, which is true and
+proves only that one thing claims to be it. Round 13 kept the count at one and
+replaced the value with a twenty-five-line document that is not an export,
+ending in an unapproved sentence — and it inherited the exemption, because the
+supporting check was a size floor, which proves a document is big.
+
+**Identity cannot be asserted by the page, so it is demonstrated.** The composed
+review is a function of the section selection and nothing else on the screen is:
+untick every section and it must change; tick them back and the original must
+return. A static impostor can do neither, whatever it carries and however long
+it is.
+
+### And the frame claim, corrected rather than defended (QA-84-040)
+
+D-202 said every frame that ever attached is read. It was not: the final pass
+skipped any frame that had since detached, so the claim was really _every frame
+that survived until the end_. A frame that lived ten milliseconds was
+remembered and then stepped over.
+
+The read now **starts when the frame attaches** and the promise is kept. A frame
+that still could not be read is **reported as a hole** rather than skipped —
+Round 11's rule for a frame that cannot be entered, applied to a frame that is
+no longer there. The product attaches no frames at all, so anything unreadable
+is something new that nobody has looked at. Both paths were proved separately: a
+frame living one second is caught by **reading** it, and one living ten
+milliseconds by **reporting** it.
+
+**And it is applied in both sweeps, which it was not.** The remembered-frame
+read lived in the route crawl alone, so the press sweep — the one that reaches
+the states a frame is most likely to be created in — still saw a snapshot.
+Nobody reported that; it was found reading this repair back. **A rule applied
+in one of two places is the mistake this campaign has made more often than any
+other**, so there is one implementation and both sweeps call it.
+
+### What is still open, unchanged in substance
+
+A sentence the app composes by **running** — from data, or by a computation over
+literals the guard does not evaluate — in a state no sweep reaches, is covered
+by neither half. D-202 said this of data; D-203 says it of any computation,
+which is what it always was. Everything the language groups is checked;
+everything the program computes is not.
+
+---

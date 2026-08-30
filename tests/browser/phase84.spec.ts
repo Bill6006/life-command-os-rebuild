@@ -1141,22 +1141,50 @@ function declaredRoutes(): readonly string[] {
 }
 
 /**
- * Frames that arrive after the collector looked — QA-84-035.
+ * Frames that arrive after the collector looked — QA-84-035, and frames that
+ * leave before it looks — QA-84-040.
  *
  * `page.frames()` is a snapshot. Round 12 attached an iframe ten seconds after
  * mount, so every sweep read More and left before it existed. **Enumerating the
  * frame tree at read time is not a rule about frames**, so the page is
- * subscribed to instead: every frame the session ever attaches is remembered,
- * and the sweep reads them all at the end whether or not they were present when
- * their route was visited.
+ * subscribed to instead.
  *
- * This narrows the hole rather than closing it — a frame attached after the
- * whole suite has finished is still outside — and D-202 says so. What closes
- * the content is the static scan, which does not care when a frame appears.
+ * Round 13 then went the other way: a frame that attached and was removed ten
+ * milliseconds later. It *was* remembered — and the final pass skipped it,
+ * because it was detached by then. **Remembering an object is not reading it**,
+ * and `continue` on a detached frame turned the claim *every frame that ever
+ * attached is read* into *every frame that survived until the end*.
+ *
+ * So the read starts when the frame attaches, not at the end, and the promise
+ * it returns is kept. A frame that could not be read is then **reported as a
+ * hole** rather than skipped — the same rule Round 11 set for a frame that
+ * cannot be entered. That is deliberately strict: the product attaches no
+ * frames at all, so anything unreadable here is something new that nobody has
+ * looked at.
+ *
+ * It still does not close the timing question — a frame attached after the
+ * suite has finished is outside any of this, and D-203 says so. What closes the
+ * content is the static scan, which does not care when a frame appears.
  */
-function rememberFrames(page: Page): Set<Frame> {
-  const attached = new Set<Frame>()
-  page.on('frameattached', (frame) => attached.add(frame))
+interface RememberedFrame {
+  readonly frame: Frame
+  readonly reading: Promise<readonly ReadingUnit[] | null>
+}
+
+function rememberFrames(page: Page): RememberedFrame[] {
+  const attached: RememberedFrame[] = []
+  page.on('frameattached', (frame) => {
+    const reading = frame
+      .locator('body')
+      .evaluate(readingUnits)
+      .then((units) => units as readonly ReadingUnit[])
+      .catch((error: unknown) => {
+        const why = error instanceof Error ? error.message : String(error)
+        if (!/cross-origin|detached|Target closed|Execution context/i.test(why)) throw error
+        return null
+      })
+    attached.push({ frame, reading })
+  })
   return attached
 }
 
@@ -1174,6 +1202,36 @@ function rememberFrames(page: Page): Set<Frame> {
  * none, and the count below fails if one ever appears without this being
  * revisited.
  */
+/**
+ * What the remembered frames turned out to say, and what went unread.
+ *
+ * Shared by both sweeps deliberately. Round 12 put the remembered-frame read in
+ * the route crawl alone, so the press sweep — the one that reaches the states a
+ * frame is most likely to be created in — still only ever saw a snapshot. **A
+ * rule applied in one of two places is the mistake this campaign has made more
+ * often than any other**, so there is one implementation and both callers use
+ * it.
+ */
+async function unitsFromRememberedFrames(
+  attached: readonly RememberedFrame[],
+): Promise<readonly ReadingUnit[]> {
+  const out: ReadingUnit[] = []
+  const unread: string[] = []
+  for (const { frame, reading } of attached) {
+    const units = await reading
+    if (units === null) {
+      unread.push(frame.url() || '(no url)')
+      continue
+    }
+    out.push(...units)
+  }
+  expect(
+    unread,
+    'a frame appeared and could not be read, so nobody can say what it put on the screen',
+  ).toEqual([])
+  return out
+}
+
 async function unitsEverywhere(page: Page): Promise<readonly ReadingUnit[]> {
   const out: ReadingUnit[] = []
 
@@ -1277,21 +1335,13 @@ async function sweepEveryRoute(page: Page): Promise<{
   }
 
   /*
-   * And every frame the session ever attached, read now — QA-84-035. A frame
-   * that appeared after its own route was left is still one the owner can see,
-   * so it is read here rather than missed by a snapshot taken too early.
+   * And every frame the session ever attached — QA-84-035, QA-84-040. The read
+   * began the moment each one appeared, so a frame that has since gone is still
+   * accounted for; what is collected here is the answer, not a second look.
    */
-  for (const frame of attached) {
-    if (frame.isDetached()) continue
-    try {
-      for (const unit of await frame.locator('body').evaluate(readingUnits)) {
-        everything.add(unit.text)
-        if (!unit.generated) prosed.add(unit.text)
-      }
-    } catch (error) {
-      const why = error instanceof Error ? error.message : String(error)
-      if (!/cross-origin|detached|Target closed|Execution context/i.test(why)) throw error
-    }
+  for (const unit of await unitsFromRememberedFrames(attached)) {
+    everything.add(unit.text)
+    if (!unit.generated) prosed.add(unit.text)
   }
 
   expect(visited.size, 'the crawl found almost no screens').toBeGreaterThan(10)
@@ -1352,6 +1402,7 @@ async function sweepEveryRoute(page: Page): Promise<{
  */
 async function sweepEveryPress(page: Page): Promise<ReadonlySet<string>> {
   const seen = new Set<string>()
+  const attached = rememberFrames(page)
   page.on('dialog', (dialog) => void dialog.dismiss().catch(() => {}))
 
   for (const route of declaredRoutes()) {
@@ -1378,6 +1429,8 @@ async function sweepEveryPress(page: Page): Promise<ReadonlySet<string>> {
       }
     }
   }
+
+  for (const unit of await unitsFromRememberedFrames(attached)) seen.add(unit.text)
   return seen
 }
 
@@ -1391,6 +1444,69 @@ async function sweepEveryPress(page: Page): Promise<ReadonlySet<string>> {
 const PRESSES_PER_ROUTE = 40
 
 test.describe('everything a blocker puts on any screen', () => {
+  test('QA-84-039 — the marked control is the composed review, proved by making it change', async ({
+    page,
+  }) => {
+    /*
+     * The sweep exempts the composed review from the catalogue comparison,
+     * because a document legitimately repeats sentences the screens already
+     * say. Round 12 made that exemption depend on the element carrying the
+     * marker itself, and asserted there is exactly one such element.
+     *
+     * **Round 13 kept the count at one and replaced the value.** A
+     * twenty-five-line document that is not an export at all, ending in an
+     * unapproved sentence, inherited the exemption — because counting the
+     * declarations proves cardinality, not identity, and a size floor proves a
+     * document is big, not that it is *this* document.
+     *
+     * Identity cannot be asserted by the page, so it is **demonstrated**: the
+     * composed review is a function of the section selection, and nothing else
+     * on the screen is. Untick every section and the document must change;
+     * tick them back and the original must return. A static impostor cannot do
+     * either, whatever it carries and however long it is.
+     */
+    await loadInQa(page, 'The first evening')
+    await page.goto(`${APP}#/data`)
+    await expect(page.getByRole('heading', { level: 1, name: 'Data' })).toBeVisible()
+
+    const review = page.locator('[data-testid="export-text"]')
+    await expect(review).toHaveCount(1)
+    const whole = await review.inputValue()
+    expect(
+      whole.length,
+      'the composed review is empty, so nothing is being proved',
+    ).toBeGreaterThan(0)
+
+    const boxes = page.locator('input[type="checkbox"][data-testid^="section-"]')
+    const count = await boxes.count()
+    expect(
+      count,
+      'the export has no sections to select, so identity cannot be shown',
+    ).toBeGreaterThan(1)
+
+    const ticked: number[] = []
+    for (let index = 0; index < count; index += 1) {
+      const box = boxes.nth(index)
+      if (await box.isChecked()) {
+        ticked.push(index)
+        await box.uncheck()
+      }
+    }
+    expect(ticked.length, 'no section was selected to begin with').toBeGreaterThan(0)
+
+    await expect(
+      review,
+      'the marked control did not change when every section was unticked, so it is not the composed review',
+    ).not.toHaveValue(whole)
+
+    for (const index of ticked) await boxes.nth(index).check()
+
+    await expect(
+      review,
+      'the marked control did not come back when the sections did, so it is not a function of the selection',
+    ).toHaveValue(whole)
+  })
+
   test('QA-84-016/018 — no screen in the app promises an adaptation, before or after a block', async ({
     page,
   }) => {
