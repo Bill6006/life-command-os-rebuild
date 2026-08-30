@@ -42,7 +42,7 @@ visible `body::before` rule to the app stylesheet. No source byte and no verifie
 
 The full finding is in `qa/PHASE_84_QA_HANDOFF.md`, round 19.
 
-Repair it so that what is *served* is tied to what was *verified* — not to a
+Repair it so that what is _served_ is tied to what was _verified_ — not to a
 commit identifier that a later step can decorate around. Reproduce the defect
 before you fix it, and prove the reproduction is caught afterwards.
 
