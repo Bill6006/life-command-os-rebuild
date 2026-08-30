@@ -3,60 +3,65 @@
 **Phase:** 84 — **what the owner is trying to become**
 
 **Actor:** Codex / **independent QA**.
-**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 15.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 16.
 **Model:** Codex.
 **Reasoning level:** **High** — never Max.
 
-**Routing 84 is YELLOW.** You have failed it fifteen times and been right
-fifteen times. **Rounds 3 to 15 have all been clean on the product**; every
+**Routing 84 is YELLOW.** You have failed it sixteen times and been right
+sixteen times. **Rounds 3 to 16 have all been clean on the product**; every
 finding has been about the standing guarantee.
 
-QA-84-046 through QA-84-049 are repaired at **`9457b23`**. All four were
+QA-84-050 through QA-84-053 are repaired at **`462dfe2`**. All four were
 reproduced before the repair and are caught after it.
 
-**The complete Round 16 dispatch, with everything worth attacking and why, is at
+**The complete Round 17 dispatch, with everything worth attacking and why, is at
 the end of [`qa/PHASE_84_QA_HANDOFF.md`](qa/PHASE_84_QA_HANDOFF.md), below the
-builder's Round 15 repair record. Read that file in full.**
+builder's Round 16 repair record. Read that file in full.**
 
 ---
 
 ## What changed, in one paragraph
 
-D-204's rule — read the product rather than model it — was right, and Round 15
-showed that **reading is not corroborating**. The sourcemap was one account and
-was believed, so rewriting it (with no change to any shipped JavaScript) laundered
-a transplant; now the map's copy of a module must **be** the module on disk, and
-each position must **say** what it is credited with. Grouping was read off the
-syntax tree, but a sentence written as four sibling `<span>`s is separate in the
-tree and one line on the screen; now a call contributes its **arguments'** text,
-and an element's **type** is dropped from the join. The composed review proved
-identity by its headings, so headings arrived over thirty invented lines; now the
-document must answer to the **history** as well as the selection. And the
-marker's exemption was granted wherever it appeared while what justified it ran
-only on Data; now it is scoped to the screen the identity proof covers.
+D-205 answered _is this account true_ with more statements from the same
+account. Round 16 changed **no shipped JavaScript** and rewrote a sourcemap so
+that the name, the content and the position all agreed on the wrong module — and
+every corroboration passed. So _which module produces these words_ is now
+answered from the **repository**, by walking the app's relative imports from
+`src/main.tsx`; the map keeps only an inventory and tripwire role, and its
+twenty-character position window — a measurement inside a guard — is gone. A
+helper that dropped one of its arguments put a hundred and twenty characters of
+scaffolding between a subject and its verb, so **every pair of pieces that could
+carry a claim** is now tested, because what happens to the pieces in between is
+a computation this does not evaluate. And a document that carried the right
+headings over invented bodies varied convincingly once it added a counter, so
+one section must now prove its own body: ticking **Recent record** has to add
+something the app itself shows on **Timeline**.
 
-## Gates at `9457b23`
+**The through-line (D-206): an account that agrees with itself is not evidence,
+and a document that varies with its inputs is not composed from them.**
+
+## Gates at `462dfe2`
 
 `npm run verify` **PASS** (84 files, **1,861** tests, copy scan clean at
-**8,182** strings, **8,157** traced and corroborated); browser **708 /
-708** at 360/430/1280 with zero failures; privacy clean at 290 files;
-deployed Android gate **clean at 233 checks**; checkpoint equivalence
-exact; CI green. **`git diff -- src` is empty** — the product was not touched,
-for the thirteenth round running.
+**7,962** strings, 7,890 traced); browser **708 / 708** at
+360/430/1280 with zero failures; privacy clean at 290 files; deployed Android
+gate **clean at 233 checks**; checkpoint equivalence exact; CI green.
+**`git diff -- src` is empty** — the product was not touched, for the fourteenth
+round running.
 
-**A first repair of QA-84-047 caught the flat case and not a nested one**, and
-that is recorded rather than folded away: the joined text carried the element
-names, and `span`/`strong` between the subject and its verb pushed them out of
-the classifier's reach. Over-approximating had made the guard _weaker_.
+**Reproducing QA-84-050 honestly took two attempts**, and the reason is in the
+record: my first version was caught even with the map rewritten, because a join
+still carried the element name and with it the true module. A reproduction that
+only works because of a bug elsewhere is not a reproduction, so that bug was
+fixed first.
 
-**And the scope rule for QA-84-049 falsely accused the honest product twice**
-before it was right — once keyed on the address alone, once on a marked-control
-count taken before the new screen had arrived. Both are D-200's race, and both
-are why the check now settles first.
+**And two of my repairs failed before they worked** — an unbounded classifier
+for compositions convicted thirty-five honest strings, and testing every ordered
+pair did not finish; then the first content check for QA-84-053 was defeated by
+the same counter, because the record count varies with the selection as well as
+the history.
 
-Decisions **D-205**; defects **DEF-0140**.
+Decisions **D-206**; defects **DEF-0141**.
 
 **Routing 84 stays YELLOW.** A builder conversation may not approve its own phase
 (D-077). Do not start routing 90.
-
-<!-- LCO_COMPLETE -->

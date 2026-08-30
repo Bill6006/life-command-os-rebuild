@@ -7603,3 +7603,166 @@ D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 16
 repair handoff at its end exactly as written. Do not ask me to paste the file.
 ```
+
+---
+
+## Round 16 repair record — the builder's account
+
+**Written by the routing 84 builder conversation, below QA's Round 16 and
+without touching it.** Independent QA has now failed this routing sixteen times
+and been right sixteen times. **Rounds 3 to 16 have all been clean on the
+product**; every finding since Round 2 has been about the guarantee.
+
+**Deviation from the dispatch, declared.** The dispatch asks for the completion
+marker in `docs/NEXT_PROMPT.md`. The standing instruction from the human owner
+places it at the end of **this** file, and the owner's placement governs. It is
+the sixteenth round this has been recorded rather than silently resolved.
+
+### What was found, in one sentence
+
+D-205 answered *is this account true* with more statements from the same
+account, and took a document that **changes** with its inputs to be a document
+**composed** from them.
+
+### The four, and what each one changed
+
+| # | The hole | The repair |
+| --- | --- | --- |
+| 050 | the map was corroborated with the map | *which module produces these words* is answered from the **repository**, by walking the app's relative imports; the map is an inventory and a tripwire, never the authority |
+| 052 | twenty characters in a guessed line window | that measurement is gone; what remains asks for the **whole** credited text and only reports disagreement |
+| 051 | a helper dropped an argument, and the join put its text between subject and verb | **every pair of pieces that could carry a claim** is tested, because what happens to the pieces in between is a computation this does not evaluate |
+| 053 | headings plus a counter made an invented body vary | ticking **Recent record** must add something the app itself shows on **Timeline**, and unticking must take it away |
+
+**QA-84-050 is the one that changes the shape of the answer.** Provenance moved
+to the sourcemap in D-204 and was corroborated against that same build in
+D-205 — the map's copy of a module against the file on disk, and each position
+against the map's own source. Round 16 changed **no shipped JavaScript** and
+made all of those statements agree on the wrong module. Every check inside an
+account can be satisfied by an account that is consistently wrong, so the
+question is now put to the repository, which the build does not get to answer.
+
+**QA-84-051 is the one where the obvious repair was wrong.** Widening the
+classifier's window looks like the fix and is not: unbounded, it convicts the
+private-permission note, which joins an honest sentence about now to an honest
+sentence about a setting — thirty-five honest strings failed when I tried it.
+What is true is narrower and stranger: any two pieces might end up beside each
+other. Testing every ordered pair says exactly that and does not finish on this
+bundle, so only the pairs that could carry a claim are built — a piece naming a
+subject with a later piece carrying a modal. **That is not a sample; it is every
+pair the rule could fire on.**
+
+### Reproduction, and which gate caught which
+
+| # | Before | After |
+| --- | --- | --- |
+| 050 | **clean at 7,946 strings** with the map rewritten | scan **exit 1**: _`…/QaRound16.tsx` is imported by the app and can say it, without approval_ |
+| 051 | **clean at 7,961** | scan **exit 1** on the pair _"The app will choose"_, naming the module |
+| 052 | **clean**, the decoy comment sharing twenty characters | scan **exit 1**, same as 050 — the map is not what decides |
+| 053 | identity + app-wide guards **6 passed in 24.6s** (QA: 24.1s) | browser: _nothing the record section adds is anything the app shows on Timeline, so its body is not the record_ |
+
+Round 15's own impostor fails on that same assertion, so the older attack has
+not been traded away for the newer one.
+
+### Reproducing 050 honestly took two attempts
+
+The first version put the sentence in a titled panel, and the scan caught it
+even with the map rewritten — because a join carrying the panel's title still
+named the real module, and because the flag that drops element names from joins
+was **not applied** where a run is built from a node's children, so the tag
+`"p"` was still in the join and still carried the true origin. Both are
+protection by accident, and Round 15 established that protection by noise is not
+protection. The flag was made consistent first — a fix in its own right — and
+only then did QA's false green appear here. **A reproduction that only works
+because of a bug elsewhere is not a reproduction.**
+
+### Two repairs of mine failed before they worked
+
+- **An unbounded classifier for compositions** convicted thirty-five honest
+  strings; **testing every ordered pair** did not finish. The rule that works is
+  neither.
+- **The first content check for 053** compared two single-section documents with
+  their headings removed, on the theory that a body must depend on which section
+  it is. The impostor's counter varies with the **selection** as well as the
+  history, so the bodies differed and it passed. Grounding in what the app
+  renders is what works; variation of any kind is not evidence.
+
+### Gates at `462dfe2`
+
+| Gate | Result |
+| --- | --- |
+| `npm run verify` | **PASS** — format, lint, typecheck, **1,861 tests** in 84 files, build, copy scan |
+| Rendered copy scan | **clean — 7,962 shipped strings**, 7,890 traced, provenance from the repository |
+| Browser, three widths, one worker | **708 passed** in 15.4 minutes, **zero failures** |
+| Privacy scan | **clean — 290 tracked files** |
+| Deployed Android gate | **clean — 233 checks** |
+| Checkpoint equivalence | **exact** |
+| `git diff -- src` | **empty** — the product was not touched, for the fourteenth round |
+
+`esbuild` is declared again, because the source walk transforms TypeScript with
+the transform Vite already builds this product with.
+
+Decisions **D-206**; defects **DEF-0141**. **Routing 84 stays YELLOW.** A builder
+conversation may not approve its own phase (D-077).
+
+---
+
+## Round 17 dispatch — independent QA
+
+**Actor:** Codex / independent QA.
+**Model:** Codex. **Reasoning level:** **High** — never Max.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 16.
+
+```text
+Routing Phase 84, independent QA Round 17.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full, including the builder's Round 16
+repair record at the end. Retest routing 84 as independent QA at High, against
+the repaired checkpoint 462dfe2.
+
+Repeat CASE A and CASE B from new ephemeral contexts, as in every previous
+round, and never open the QA laboratory to do it.
+
+Commit your round alone and first. Do not edit the builder's records, alter
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a PHASE_85_* file, or start
+routing 90. Do not ask me to paste file contents.
+```
+
+### What Round 17 should attack
+
+**The declared open case is still not a target.** A sentence the app composes by
+running — over data, or by a computation this guard does not evaluate — in a
+state no sweep reaches is covered by neither half. **A finding is showing that
+something the record claims _is_ covered is not.**
+
+Four places where this repair claims more than it has proved:
+
+1. **The import walk is a second resolver, not the bundler's.** It follows
+   relative specifiers and resolves them by trying extensions in a fixed order.
+   Anything the real build resolves differently — a `package.json` `imports`
+   entry, a Vite alias, a conditional export, a directory whose `index` the
+   walk picks differently — reaches the owner from a module this scan never
+   read, and the cross-check that catches it is the **map**, which Round 16 has
+   just shown can be made to say anything.
+2. **"Can compose" is back, with a bigger set.** Provenance is again what a
+   module *could* produce, not what it did; a fragment sitting unused in an
+   approved module still counts as production, and the only thing separating a
+   live sentence from a dead one is that the bundle ships it **somewhere**.
+3. **The claim-bearing pair is a claim about the classifier.** Pairs are built
+   only where one piece can open a claim and a later piece can close it, judged
+   by the same word lists the classifier uses. Anything those lists do not name
+   — a subject, a modal or a deixis the classifier reads only in combination —
+   is a pair that never gets built.
+4. **One section proves the body, and it is always the same section.** The
+   grounding check ties **Recent record** to Timeline. Every other section's
+   body is still established by nothing but its heading, and a document could
+   compose that one section honestly and invent the rest.
+
+**And the standing invariants, again.** Seven product PASSes and every deferral
+must survive. No blocker enforcement, no semantic interpretation, no scoring
+change, no new visual language, no orchestrator change. Phase 84 stays YELLOW
+until QA says otherwise; the builder may not approve its own phase.
+
+<!-- LCO_COMPLETE -->

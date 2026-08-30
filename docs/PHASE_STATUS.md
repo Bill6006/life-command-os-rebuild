@@ -174,6 +174,17 @@ the built app can render**, parsed with a real parser; the browser sweeps stay,
 because static covers every state and dynamic covers composition, and D-201 says
 which is which (D-201).
 
+**And round 16 is where corroboration leaves the account being corroborated.**
+D-205 checked the sourcemap against the files on disk and against its own
+positions — both statements by the build that made it. Round 16 changed no
+shipped JavaScript and rewrote the map so the name, the content and the position
+all agreed on the wrong module. Provenance is now answered from the
+**repository**, by walking the app's relative imports; the map is an inventory
+and a tripwire. Round 16 also dropped one argument of a helper to push a subject
+away from its verb, so every pair of pieces that could carry a claim is tested;
+and it made an invented review body vary by adding a counter, so one section
+must now prove its body against what Timeline shows (D-206).
+
 **And round 15 is where reading turns into corroborating.** D-204 read the
 product instead of modelling it, which was right; Round 15 rewrote the
 **sourcemap** — with no change to any shipped JavaScript — and a caught
@@ -267,7 +278,8 @@ through the same controls, now gets past all eight steps.
 
 | Fact                    | Value                                                                                                                                                           |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Product checkpoint      | `9457b23` — the Round 15 repair, and the commit the aggregate gate was run on. **It changes no bundle byte**: the repair is entirely in `scripts/` and `tests/` |
+| Product checkpoint      | `462dfe2` — the Round 16 repair, and the commit the aggregate gate was run on. **It changes no bundle byte**: the repair is entirely in `scripts/` and `tests/` |
+| Round 16 checkpoint     | `9457b23` — the Round 15 repair, which Round 16 tested                                                                                                          |
 | Round 15 checkpoint     | `e68900f` — the Round 14 repair, which Round 15 tested                                                                                                          |
 | Round 14 checkpoint     | `c42a974` — the Round 13 repair, which Round 14 tested                                                                                                          |
 | Round 13 checkpoint     | `5b9fe99` — the Round 12 repair, which Round 13 tested                                                                                                          |
@@ -286,7 +298,7 @@ through the same controls, now gets past all eight steps.
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                     |
 | Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                                                                              |
 | Owner phone check       | owed before release; not a blocker QA can clear                                                                                                                 |
-| Independent QA          | **Rounds 1 to 15 all FAIL**, all repaired; Round 16 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md`                                                        |
+| Independent QA          | **Rounds 1 to 16 all FAIL**, all repaired; Round 17 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md`                                                        |
 
 **The documentation head is a later commit than the product checkpoint**, as it
 has been every round. At round 8 it is `73de27e`, and it carries exactly three
@@ -299,17 +311,17 @@ against the deployed Preview it reports those three files and the same bytes.
 
 At the repaired checkpoint, not at the one QA failed.
 
-| Gate                                      | Result                                                                 |
-| ----------------------------------------- | ---------------------------------------------------------------------- |
-| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)              |
-| Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files (unchanged at round 11; 1,812 at round 1) |
-| Browser, three widths, one worker         | **708 passed** at three widths, one worker, **zero failures**          |
-| Rendered copy scan                        | **clean — 8,182 shipped strings**, 8,157 traced and corroborated       |
-| Android-style gate, deployed              | **clean — 233 checks** against deployed `9457b23`                      |
-| Privacy scan                              | **clean** — 290 tracked files                                          |
-| Block sweep                               | **PASS** — unchanged                                                   |
-| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya      |
-| Commits not on any remote                 | **none** at the handed-off head (D-180)                                |
+| Gate                                      | Result                                                                     |
+| ----------------------------------------- | -------------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)                  |
+| Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files (unchanged at round 11; 1,812 at round 1)     |
+| Browser, three widths, one worker         | **708 passed** at three widths, one worker, **zero failures**              |
+| Rendered copy scan                        | **clean — 7,962 shipped strings**, provenance answered from the repository |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `462dfe2`                          |
+| Privacy scan                              | **clean** — 290 tracked files                                              |
+| Block sweep                               | **PASS** — unchanged                                                       |
+| Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya          |
+| Commits not on any remote                 | **none** at the handed-off head (D-180)                                    |
 
 **The browser number is one clean full run.** Round 12's note about two
 `net::ERR_ABORTED` navigations still describes a real transport class — the one
