@@ -6858,3 +6858,162 @@ D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 14
 repair handoff at its end exactly as written. Do not ask me to paste the file.
 ```
+
+---
+
+## Round 14 repair record — the builder's account
+
+**Written by the routing 84 builder conversation, below QA's Round 14 and
+without touching it.** Independent QA has now failed this routing fourteen times
+and been right fourteen times. **Rounds 3 to 14 have all been clean on the
+product**; every finding since Round 2 has been about the guarantee.
+
+**Deviation from the dispatch, declared.** The dispatch asks for the completion
+marker in `docs/NEXT_PROMPT.md`. The standing instruction from the human owner
+places it at the end of **this** file, and the owner's placement governs. It is
+the fourteenth round this has been recorded rather than silently resolved.
+
+**Round 14 hit all four of the places the Round 13 dispatch named**, and found a
+fifth in its own calibration. That is now twice running, so it is worth stating
+as a working practice rather than a coincidence: **writing down what a repair
+does not prove is what aims the next round.**
+
+### What was found, in one sentence
+
+D-203 made three claims by **modelling** the product — provenance from a
+directory and an extension, production from what source *could* compose,
+grouping from a list of constructs — and one by **inference**: that a document
+responding to a control must be the document composed from that control.
+
+### The five, and what each one changed
+
+| # | The hole | The repair |
+| --- | --- | --- |
+| 041 | provenance read `src/**` and matched on the extension | provenance is traced from the built chunk's **sourcemap** — no directory, no extension, and nothing that was compiled away |
+| 042 | "can compose" kept a stale approval alive for a sentence the bundler deleted | the same trace answers it: a sentence not in the bundle at all is **dead**, and says so in its own words |
+| 043 | a document that responds to the selection is not the composed review | each section's **own heading** must be present exactly when its box is ticked, and unticking one must remove exactly that heading |
+| 044 | the seven-construct list omitted computed property names | grouping is read **off the tree**: at every node, each run of adjacent literal-yielding children is joined, so nothing enumerates a construct and nothing can omit one |
+| 045 | a valid ambient declaration crashed the source pass | there is no source pass — closed by construction |
+
+**The through-line is one sentence: a guard that models the product is guessing;
+a guard that reads the product is not.** Every one of these was a place where
+this scan described the product to itself instead of reading what shipped.
+
+**QA-84-044 is where that lesson repeats one layer down, and it is recorded
+because my first repair did not work.** The first attempt asked whether a
+property key was `computed` — a question about *source* that the bundler has
+already answered. `{ ['The app']: 0 }` ships as `{ "The app": 0 }`, and the
+distinction the check relied on had been compiled away before it ever looked.
+What survives minification is whether the key is a **string**, so that is what
+is asked now. The reproduction stayed green through the first repair and said
+so, which is the only reason it was caught.
+
+### Reproduction, and which gate caught which
+
+Four of the five reproduced **QA's own number exactly**.
+
+| # | Before (mine / QA's) | After |
+| --- | --- | --- |
+| 041 | clean at **6,191 / 6,191** | scan **exit 1**: _`qa-round14-copy.js` did not have approval to say it_ |
+| 042 | clean at **6,185 / 6,185**, zero copies in any built asset | scan **exit 1**: _is not in the bundle at all_ |
+| 043 | identity + app-wide guards **6 passed / 6 passed** | browser fails: _the document is missing the chosen section `## Where things stand`_ |
+| 044 | clean at **6,193 / 6,193** | scan **exit 1**, naming `src/features/more/MoreScreen.tsx` as the module it came from |
+| 045 | the scan died with QA's exact `esbuild` message | the scan runs; nothing transforms source any more |
+
+Round 13's **QA-84-039** impostor was re-run against the new identity check and
+fails on the same assertion, so the older attack has not been traded away for
+the newer one.
+
+**One difference from QA's numbers, stated rather than smoothed:** my 043
+reproduction read **6,189** where QA read 6,190. The one-string gap is the
+wording of my filler lines, not the finding — the guards behaved identically.
+
+### One more hole, closed while writing this up
+
+Provenance now depends on the sourcemap, and a handful of shipped strings trace
+to nothing. That is harmless for copy the rule already clears, and **useless as
+evidence** about an approved sentence: if the words could arrive from a position
+the map cannot place, the approved home would still ship them and the check
+would pass knowing nothing about the second copy. An approved sentence that also
+ships from an untraceable position is now a failure. Likewise **a chunk without
+a sourcemap fails the scan outright**, because a provenance check with nothing to
+compare would otherwise report a clean run.
+
+### Gates at `e68900f`
+
+| Gate | Result |
+| --- | --- |
+| `npm run verify` | **PASS** — format, lint, typecheck, **1,861 tests** in 84 files, build, copy scan |
+| Rendered copy scan | **clean — 7,985 shipped strings**, 7,975 traced to a module, 1 script chunk, 2 stylesheets |
+| Browser, three widths, one worker | **708 passed** in 15.3 minutes, **zero failures** |
+| Privacy scan | **clean — 290 tracked files** |
+| Deployed Android gate | **clean — 233 checks** |
+| Checkpoint equivalence | **exact** |
+| `git diff -- src` | **empty** — the product was not touched, for the twelfth round |
+
+`@jridgewell/trace-mapping` is now a declared devDependency and the `esbuild`
+declaration D-203 added is gone, because nothing imports it any more.
+
+Decisions **D-204**; defects **DEF-0139**. **Routing 84 stays YELLOW.** A builder
+conversation may not approve its own phase (D-077).
+
+---
+
+## Round 15 dispatch — independent QA
+
+**Actor:** Codex / independent QA.
+**Model:** Codex. **Reasoning level:** **High** — never Max.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 14.
+
+```text
+Routing Phase 84, independent QA Round 15.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full, including the builder's Round 14
+repair record at the end. Retest routing 84 as independent QA at High, against
+the repaired checkpoint e68900f.
+
+Repeat CASE A and CASE B from new ephemeral contexts, as in every previous
+round, and never open the QA laboratory to do it.
+
+Commit your round alone and first. Do not edit the builder's records, alter
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a PHASE_85_* file, or start
+routing 90. Do not ask me to paste file contents.
+```
+
+### What Round 15 should attack
+
+**The declared open case is still not a target.** A sentence the app composes by
+running — over data, or by a computation this guard does not evaluate — in a
+state no sweep reaches is covered by neither half. Demonstrating it confirms the
+documentation. **A finding is showing that something the record claims _is_
+covered is not.**
+
+Four places where this repair claims more than it has proved:
+
+1. **The sourcemap is the build's account of itself.** Provenance is now only as
+   honest as `dist/assets/*.js.map`. A module whose mapping is coarse, shifted,
+   or attributed to a wrapper would hand this guard a confident wrong answer,
+   and nothing here cross-checks a traced origin against the module's own
+   contents.
+2. **"Adjacent in the tree" is not "adjacent on the screen".** Runs join
+   children that sit next to each other in the syntax tree. That is an
+   over-approximation in one direction — harmless — and says nothing about
+   literals the tree separates but the screen puts together.
+3. **Identity is proved down to section structure, not to content.** The
+   document must carry each chosen section's heading and no others'. A composer
+   that emits the right headings over fabricated content satisfies every
+   assertion in that test.
+4. **The identity proof runs on one screen and one history.** `The first
+   evening` on `#/data`. Nothing checks that the composed review is the only
+   place a marked control can appear, on every route the crawl reaches, on more
+   than one history.
+
+**And the standing invariants, again.** Seven product PASSes and every deferral
+must survive. No blocker enforcement, no semantic interpretation, no scoring
+change, no new visual language, no orchestrator change. Phase 84 stays YELLOW
+until QA says otherwise; the builder may not approve its own phase.
+
+<!-- LCO_COMPLETE -->

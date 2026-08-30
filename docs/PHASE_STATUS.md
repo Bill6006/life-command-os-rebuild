@@ -174,6 +174,15 @@ the built app can render**, parsed with a real parser; the browser sweeps stay,
 because static covers every state and dynamic covers composition, and D-201 says
 which is which (D-201).
 
+**And round 14 is where the guard stops modelling the product and starts
+reading it.** D-203 inferred provenance from a directory and a file extension,
+production from what source _could_ compose, and grouping from a list of seven
+constructs — and Round 14 broke all three, plus the inference that a document
+responding to the section selection must be the one composed from it.
+Provenance is now traced from the built chunk's sourcemap, grouping is read off
+the syntax tree, and identity is checked section by section against the app's
+own headings (D-204).
+
 **And round 13 is where the guarantee's description of itself stops being
 generous.** D-202 claimed an approval about production, a joiner over every
 literal composition, and an identified composed review — and had none of the
@@ -246,7 +255,8 @@ through the same controls, now gets past all eight steps.
 
 | Fact                    | Value                                                                                                                                                           |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Product checkpoint      | `c42a974` — the Round 13 repair, and the commit the aggregate gate was run on. **It changes no bundle byte**: the repair is entirely in `scripts/` and `tests/` |
+| Product checkpoint      | `e68900f` — the Round 14 repair, and the commit the aggregate gate was run on. **It changes no bundle byte**: the repair is entirely in `scripts/` and `tests/` |
+| Round 14 checkpoint     | `c42a974` — the Round 13 repair, which Round 14 tested                                                                                                          |
 | Round 13 checkpoint     | `5b9fe99` — the Round 12 repair, which Round 13 tested                                                                                                          |
 | Round 12 checkpoint     | `3930260` — the Round 11 repair, which Round 12 tested                                                                                                          |
 | Round 11 checkpoint     | `dc121e3` — the Round 10 repair, which Round 11 tested                                                                                                          |
@@ -263,7 +273,7 @@ through the same controls, now gets past all eight steps.
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                                                                                                     |
 | Owner-visible behaviour | **changed** — Now, Insights, and every domain page                                                                                                              |
 | Owner phone check       | owed before release; not a blocker QA can clear                                                                                                                 |
-| Independent QA          | **Rounds 1 to 13 all FAIL**, all repaired; Round 14 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md`                                                        |
+| Independent QA          | **Rounds 1 to 14 all FAIL**, all repaired; Round 15 dispatched at the end of `qa/PHASE_84_QA_HANDOFF.md`                                                        |
 
 **The documentation head is a later commit than the product checkpoint**, as it
 has been every round. At round 8 it is `73de27e`, and it carries exactly three
@@ -281,8 +291,8 @@ At the repaired checkpoint, not at the one QA failed.
 | `npm run verify`, clean checkout          | **PASS** — the aggregate command, format included (D-180)              |
 | Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files (unchanged at round 11; 1,812 at round 1) |
 | Browser, three widths, one worker         | **708 passed** at three widths, one worker, **zero failures**          |
-| Rendered copy scan                        | **clean — 6,185 shipped strings**, 1 script chunk and 2 stylesheets    |
-| Android-style gate, deployed              | **clean — 233 checks** against deployed `c42a974`                      |
+| Rendered copy scan                        | **clean — 7,985 shipped strings**, 7,975 traced to a module            |
+| Android-style gate, deployed              | **clean — 233 checks** against deployed `e68900f`                      |
 | Privacy scan                              | **clean** — 290 tracked files                                          |
 | Block sweep                               | **PASS** — unchanged                                                   |
 | Copy guards                               | **PASS** — no percentage, rank, grade or score about him or Adaya      |
