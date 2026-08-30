@@ -6001,3 +6001,187 @@ D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 12
 repair handoff at its end exactly as written. Do not ask me to paste the file.
 ```
+
+---
+
+## Round 12 repair record — the builder's account
+
+**Written by the routing 84 builder conversation, below QA's Round 12 and
+without touching it.** Independent QA has now failed this routing twelve times
+and been right twelve times. **Rounds 3 to 12 have all been clean on the
+product.** Every finding since Round 2 has been about the guarantee, and Round
+12's is the one that makes the guarantee smaller instead of larger.
+
+**Deviation from the dispatch, declared.** The dispatch asks for the completion
+marker in `docs/NEXT_PROMPT.md`. The standing instruction from the human owner
+places it at the end of **this** file, and the owner's placement governs. It is
+the twelfth round this has been recorded rather than silently resolved.
+
+### What was found, in one paragraph
+
+D-201 split the copy guarantee in two and named both halves: _static covers
+every state; dynamic covers composition._ **Round 12 found that the two halves
+do not meet.** A sentence composed at runtime, in a state no sweep reaches,
+belongs to neither, and QA-84-032 walked straight through the seam with four
+adjacent string literals behind a typed word. Four of the five findings are that
+gap in a form a machine can close. **The fifth is the general case, and it is
+not closed** — it is now written down as open, in D-202, instead of being
+covered by a phrase.
+
+### The five, and what each one changed
+
+| # | The hole | The repair |
+| --- | --- | --- |
+| 032 | four literals are four innocent strings | `+` chains, template quasis and array elements are joined and classified, in both the spaced and bare forms |
+| 033 | a stylesheet renders words no JS string holds | every shipped stylesheet's `content` is parsed; `::marker` joins the browser collector's pseudo-elements |
+| 034 | an approval was a claim about words, anywhere | each of the seventeen approvals names its source files, checked **both ways** |
+| 035 | the frame tree is a snapshot | `frameattached` is subscribed for the whole session; every frame that ever attached is read |
+| 036 | carrying the marker is not being the thing | exactly one composed review is asserted before anything is read |
+
+**QA-84-034 is the one worth reading twice.** An exception list that matches text
+anywhere lets an honest sentence be transplanted into a place where the same
+words are false — which is what QA did, moving the milestone sentence under **A
+blocker**, where `this` names the blocker. An approval is only honest where it
+was reasoned about, so it now pins to the files it was reasoned about in. **The
+check runs in both directions**: the same words in an unlisted file is a
+transplant and fails, and a listed file that no longer holds them is a stale
+approval and fails too, because an exception nothing needs is a hole waiting for
+the sentence to come back somewhere else. Two of the seventeen are joined forms
+that appear in no file literally, so they carry a `pin` — the piece that does.
+
+### Reproduction, and which gate caught which
+
+All five were reproduced first and each is caught after the repair. **Saying
+which gate caught what is the point of this section**, because "it fails now" is
+not the same claim as "the thing built to catch it caught it".
+
+| # | Before | After |
+| --- | --- | --- |
+| 032 | copy scan **clean** | copy scan **exit 1**, naming the sentence |
+| 033 | copy scan **clean** | copy scan **exit 1**, from the stylesheet |
+| 034 | copy scan **clean** | copy scan **exit 1**: _`src/features/more/MoreScreen.tsx` is not approved to say it_ |
+| 035 | **1 passed** | copy scan **exit 1** — _not_ the frame read; see below |
+| 036 | **1 passed** | browser **1 failed**: _more than one control claims to be the composed review_ |
+
+**QA-84-035 did not go the way the repair intended, and that is recorded rather
+than presented as a success.** QA's frame arrives ten seconds after mount; the
+route crawl finishes in **three**, so the frame never attaches during the run
+and the late-frame read never sees it. What caught QA's exact mutation was the
+static scan, which does not care when a frame appears. The late-frame read was
+then proved separately against a frame arriving **one second** in, which it
+catches by name. So the repair is real and its reach is smaller than the
+finding: **it narrows the hole, and D-202 says so.**
+
+**The approval pin was proved in both directions, and on a pinned join.**
+Pointing one joined form's `in` at the wrong file failed with both messages at
+once — _`src/intelligence/corrections.ts` is not approved to say it_ and
+_`src/features/data/DataScreen.tsx` no longer says it_ — so neither direction is
+an unexercised branch.
+
+### Two false greens of my own, recorded
+
+- The CSS repair was first written against `src/index.css` — **a file in no
+  import graph.** The scan was green because the promise never shipped, which is
+  the same false green this campaign keeps finding, this time in my own work. It
+  was redone against `src/styles/base.css` and confirmed present in the built
+  stylesheet.
+- A reintroduction reported success while **its mutation never ran**: an earlier
+  `git checkout` in the same `&&` chain failed on a pathspec and took the chain
+  down with it, so the "applied" line never printed and nothing noticed. Both
+  now carry an explicit before/after check rather than a trailing exit code.
+
+### What is now claimed, at its true size
+
+**Every string the app ships, and every literal composition of them, is checked;
+every state the sweeps reach is checked; a runtime composition in a state no
+sweep reaches is not.** D-201's "whole-app" phrasing overstated this and is
+superseded by **D-202**. The scan's own header comment was rewritten with it,
+because a stale comment in a guard is a false claim in the place people trust
+most.
+
+### Gates at `5b9fe99`
+
+| Gate | Result |
+| --- | --- |
+| `npm run verify` | **PASS** — format, lint, typecheck, **1,861 tests** in 84 files, build, copy scan |
+| Rendered copy scan | **clean — 5,410 shipped strings**, 1 script chunk, 2 stylesheets |
+| Browser, three widths, one worker | **705 passed** in 15.3 minutes, **zero failures** — see the note below |
+| Privacy scan | **clean — 290 tracked files** |
+| Deployed Android gate | **clean — 233 checks** |
+| Checkpoint equivalence | **exact** |
+| `git diff -- src` | **empty** — the product was not touched, for the tenth round |
+
+**On the browser gate, said plainly rather than rounded up.** The full suite was
+run twice. The second run is the one reported: **705 / 705, zero failures.** The
+first run had **one** failure, and a focused re-run of `phase84.spec.ts`
+afterwards had one more — both `page.goto: net::ERR_ABORTED` on the **first**
+navigation of a test, before any assertion ran, in two different spec files.
+That is the transport class `playwright.config.ts` already documents and already
+mitigates by binding `127.0.0.1` rather than the dual-stack `localhost`; the
+mitigation was in force for all three runs. Neither reproduced: the two files
+passed **14 / 14** and **114 / 114** alone. **No retry was added.** A retry
+would hide a genuine navigation regression, and this campaign's own rule is that
+a gate a rerun fixes is a gate that was measuring the wrong thing — that rule is
+about racing *assertions*, and this aborts before anything is measured, which is
+why it is recorded here instead of tuned away.
+
+Decisions **D-202**; defects **DEF-0137**. **Routing 84 stays YELLOW.** A builder
+conversation may not approve its own phase (D-077).
+
+---
+
+## Round 13 dispatch — independent QA
+
+**Actor:** Codex / independent QA.
+**Model:** Codex. **Reasoning level:** **High** — never Max.
+**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 12.
+
+```text
+Routing Phase 84, independent QA Round 13.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full, including the builder's Round 12
+repair record at the end. Retest routing 84 as independent QA at High, against
+the repaired checkpoint 5b9fe99.
+
+Repeat CASE A and CASE B from new ephemeral contexts, as in every previous
+round, and never open the QA laboratory to do it.
+
+Commit your round alone and first. Do not edit the builder's records, alter
+docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a PHASE_85_* file, or start
+routing 90. Do not ask me to paste file contents.
+```
+
+### What Round 13 should attack, and what it should not
+
+**The declared open case is not a target, it is the subject.** D-202 states that
+a sentence composed at runtime **from data**, in a state no sweep reaches, is
+covered by neither half. Demonstrating that is confirming the documentation, not
+finding a defect. **What would be a finding is showing the statement is still
+too generous** — that something the record claims _is_ covered is not.
+
+Four specific places that claim more than they have proved:
+
+1. **The approval pin reads source, not the bundle.** It asserts where a
+   sentence lives in `src`. Nothing checks that the string in the built chunk
+   came from that file, and nothing stops the same sentence being produced by a
+   file that never contains it literally.
+2. **The joined forms are two guesses.** Composition classifies
+   `pieces.join(' ')` and `pieces.join('')`. A chain assembled any other way —
+   through a helper, a `reduce`, a nested call, a `replace` — joins to neither.
+3. **One composed review is asserted, not identified.** The count is one; which
+   one is still whatever carries the marker. A single control carrying the
+   marker that is **not** the export would pass this.
+4. **`frameattached` covers the session, not the product.** Everything the late
+   read reaches must attach while a test is running, and the crawl is three
+   seconds long. That window is the whole guarantee the dynamic half offers
+   about timing.
+
+**And the standing invariants, again.** Seven product PASSes and every deferral
+must survive. No blocker enforcement, no semantic interpretation, no scoring
+change, no new visual language, no orchestrator change. Phase 84 stays YELLOW
+until QA says otherwise; the builder may not approve its own phase.
+
+<!-- LCO_COMPLETE -->
