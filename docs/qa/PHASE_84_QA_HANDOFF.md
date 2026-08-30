@@ -7765,4 +7765,214 @@ must survive. No blocker enforcement, no semantic interpretation, no scoring
 change, no new visual language, no orchestrator change. Phase 84 stays YELLOW
 until QA says otherwise; the builder may not approve its own phase.
 
-<!-- LCO_COMPLETE -->
+---
+
+## Round 17 independent QA — FAIL
+
+**QA actor:** Codex, independent of the routing 84 builder.
+**Checkpoint under test:** repaired product checkpoint `462dfe2`; deployed
+documentation head `9adaede` is bundle-equivalent.
+**Reasoning level:** High.
+**Route status:** **YELLOW**. Do not start routing 90.
+
+The seven product questions pass again. Both owner journeys also pass from new
+ephemeral 430×932 contexts fixed at Friday 18:58 in `America/New_York`, with all
+four object stores in both `life-command-os:preview` and
+`life-command-os:preview:laboratory` at zero before either journey. The QA route
+was never opened.
+
+- **CASE A:** empty Now abstained and offered ordinary ways on; Insights read
+  **More money** back as Career & Learning, named the unknown next step,
+  starting point and what would count as getting somewhere, wrote two owner
+  records, and preserved the destination on Career and Timeline.
+- **CASE B:** empty Now led through Life to Health & Physical Capacity; **Move
+  more / Take a ten-minute walk** stated what saving would do, Now proposed the
+  walk after the ordinary guide answers, **Can't right now / someone was in my
+  care** survived a reload on Health, and Timeline said **Not then**, **Did not
+  fit at the time** and **Limit**. Seven owner records were durable; the
+  laboratory remained empty.
+
+The repair nevertheless fails in every one of the four places its own dispatch
+named. Each is a false green in a guarantee the repair claims to provide.
+
+### QA-84-054 — the app resolver and the repository walker can disagree
+
+**Severity:** Blocker. **Decision:** D-206.
+**Class:** a second resolver plus a forgeable inventory does not enumerate the
+modules the real build used.
+
+I added a TypeScript/Vite alias named `@qa-round17`, imported it from More, and
+put the approved sentence `Leave it empty and the app will not invent one.` in
+the aliased module. The real build followed the alias and visibly shipped the
+sentence. The repository walk ignored the non-relative import. With the honest
+map, its inventory tripwire correctly exited 1 and named the missed module.
+
+I then changed no shipped JavaScript at all. In the map only, I changed the
+aliased module's source identity and `sourcesContent` to repeat the real
+approved `DomainPanels.tsx` source. The scan reported:
+
+```text
+Rendered copy scan clean — 7,962 shipped strings (7,890 traced to a module)
+```
+
+The import walk is not the resolver that built the app, and its only check
+against the build graph is the account Round 16 already proved forgeable. Two
+incomplete accounts do not become independent provenance by disagreeing first.
+
+### QA-84-055 — “can say it” and “it ships” still identify no producer
+
+**Severity:** Blocker. **Decision:** D-206.
+**Class:** separate evidence that a module can compose words and that the words
+ship does not establish which shipped occurrence came from that module.
+
+I removed the approved sentence from its honest visible paragraph in
+`DomainPanels.tsx`, retained it there only as an unused exported literal, and
+rendered the exact sentence visibly on More with CSS `content:`. A mobile-large
+browser probe read the pseudo-element's computed content exactly. The scan,
+which does read shipped CSS, nevertheless reported clean at **7,964 shipped
+strings, 7,892 traced**.
+
+The repository walk found a possible producer in the approved module. The
+bundle separately proved that the words ship. Nothing joined those two facts,
+and the CSS occurrence's real origin was discarded when approval provenance
+was decided. This is static copy in a shipped stylesheet, not the declared
+runtime-composition remainder.
+
+### QA-84-056 — splitting the subject prevents a claim-bearing pair
+
+**Severity:** Blocker. **Decision:** D-206.
+**Class:** a pair selected by the classifier's single-piece vocabulary is not
+every pair whose composition the classifier can recognise.
+
+Behind an ordinary text input on More, reached by typing `show`, I called a
+helper that returned its first, second and remaining arguments while dropping
+the long third argument:
+
+```tsx
+qaRound17Render(
+  'The ',
+  'app ',
+  'This unrelated argument is dropped and is deliberately long enough to separate a subject assembled from two pieces from the modal that follows it in the guard.',
+  ['will choose ', 'something better ', 'next time.'],
+)
+```
+
+The browser displayed the exact sentence **The app will choose something
+better next time.** The whole-run join retained the dropped noise, while
+neither `The ` nor `app ` individually matched `couldOpenAClaim`, so no pair
+was built. The scan reported clean at **7,976 shipped strings, 7,904 traced**.
+
+Every visible word is a static literal argument. The classifier recognises
+`the app` after composition, but the predicate that decides whether to compose
+requires those two words to exist in one piece first. The claimed pair set is
+therefore not exhaustive over the rule it is meant to feed.
+
+### QA-84-057 — one honest section can carry nine fabricated ones
+
+**Severity:** Blocker. **Decision:** D-206.
+**Class:** grounding one fixed section does not establish the bodies of the
+other selected sections.
+
+I replaced only the marked Data textarea's value. The impostor extracted and
+preserved the real **Recent record** section from `composed.text`, so everything
+that section added was honestly grounded in Timeline. For every other selected
+section it emitted only the correct heading, the unapproved sentence **This
+needs special care.**, and thirty fabricated review lines.
+
+Selections still added and removed their own headings, the honest record block
+passed the Timeline contribution check in both directions, and the record made
+the two histories differ. The copy scan was clean at **7,975 shipped strings,
+7,903 traced**. Across all three widths, both the identity test and the
+whole-app before/after guard passed:
+
+```text
+6 passed (43.6s)
+```
+
+The test proves one section's body and assumes that proof transfers to every
+other section. It does not: the other selected bodies remain established only
+by their headings.
+
+### Verification on the restored tree
+
+| Gate | Result |
+| --- | --- |
+| Fresh deployed owner journeys | **PASS** — CASE A and CASE B from separate empty owner contexts; laboratory never opened and remained empty |
+| Checkpoint equivalence | **PASS** — deployed `9adaede` is bundle-equivalent to repaired checkpoint `462dfe2`; only the three routing documents differ |
+| `npm run verify` | **PASS** — format, lint, typecheck, test, build, copy scan |
+| Unit / contract / synthetic / adversarial | **1,861 passed** in 84 files |
+| Rendered copy scan | **clean — 7,962 shipped strings**, 7,890 traced to a module, 1 script chunk, 2 stylesheets |
+| Browser, three widths, one worker | **708 passed** in 16.6 minutes; zero failures or retries |
+| Android-style deployed gate | **clean — 233 checks**; the host certificate chain required Playwright's temporary HTTPS-error allowance, removed immediately after the run |
+| Privacy scan | **clean — 290 tracked files** |
+| Restored implementation tree | **clean** — `git diff --exit-code -- src scripts tests package.json package-lock.json vite.config.ts tsconfig.app.json` |
+
+### Overall verdict and repair requirement
+
+**FAIL. Routing Phase 84 remains YELLOW.** The product passes. The guarantee
+does not: the source walk can disagree with the real resolver and be rescued by
+a forged map; possible production and shipped existence are not occurrence
+provenance; a multi-piece subject evades the claimed exhaustive pair set; and
+one honestly grounded section grants identity to fabricated siblings.
+
+The builder must reproduce QA-84-054 through QA-84-057 exactly before repair;
+repair the four whole classes under plan section 42; add regressions and prove
+each by reintroduction; rerun every full gate; deploy a repaired checkpoint;
+preserve all seven product PASSes and every deferral; keep Phase 84 YELLOW; and
+dispatch Round 18 to this same QA conversation. Do not start routing 90.
+
+---
+
+## Round 17 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** **Max** — the audit-repair campaign rule applies across
+resolver identity, occurrence provenance, multi-piece claim composition and
+generated-document section identity.
+**Conversation:** **CURRENT** — the original routing 84 Claude builder conversation.
+
+```text
+Routing Phase 84 repair after independent QA Round 17 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full. Round 17 at the end contains four
+new Blockers, QA-84-054 through QA-84-057. Execute the Round 17 repair handoff
+exactly as written.
+
+Keep Phase 84 YELLOW. Reproduce each exact false green before repair; identify
+and repair every whole class under plan section 42; add regressions and prove
+them by reintroduction. Provenance must enumerate the graph resolved by the
+real build without depending on a forgeable map to expose resolver differences.
+It must tie each shipped approved occurrence to an approved producer rather
+than combine “can say it” with “ships somewhere”; include CSS and every other
+shipped copy source in that identity. Literal-pair coverage must handle an
+opener or closer assembled from multiple pieces instead of requiring each
+piece to satisfy the classifier first. Generated-review identity must ground
+the actual contribution of every selected section, not one fixed exemplar.
+
+Run the aggregate, full three-width browser, deployed Android, privacy,
+block-sweep and copy-guard gates; deploy the repaired checkpoint; preserve all
+seven product PASSes and every deferral; and append a Round 18 retest dispatch
+for the SAME Codex QA conversation at High.
+
+Do not edit QA's Round 17, alter docs/qa/WHOLE_APP_OWNER_USE_REVIEW.md, create a
+PHASE_85_* file or start routing 90. Do not ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** Max.
+**Conversation:** CURRENT — the original routing 84 Claude builder conversation.
+
+```text
+Continue routing Phase 84 after independent QA Round 17 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_84_QA_HANDOFF.md in full and execute the complete Round 17
+repair handoff at its end exactly as written. Do not ask me to paste the file.
+```
