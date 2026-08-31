@@ -16,7 +16,7 @@ the routing candidate — the opposite of the intent.
 **Input:** [`CAPABILITY_MATRIX.md`](CAPABILITY_MATRIX.md), three structural layers
 and 22 capabilities. **Authority: not the matrix.** Every status, dependency,
 size, evidence claim and phase assignment below was re-checked against source in
-the tree at **`9fc79a4`**. Seventeen corrections were found and are in section 3.
+the tree at **`9fc79a4`**. Twenty-two corrections were found and are in section 3; four of them retract claims this document itself made, and the owner found all four.
 The corrected version is what is adjudicated.
 
 **Predecessor:** [`PRODUCT_ADJUDICATION.md`](PRODUCT_ADJUDICATION.md), approved
@@ -81,10 +81,10 @@ what produces section 4's verdict.
 
 ---
 
-## 3 · Matrix verification — seventeen corrections
+## 3 · Matrix verification — twenty-two corrections
 
 The matrix asked to be verified rather than inherited. It was. Its central claims
-hold; these seventeen do not, and the corrected versions are what section 7
+hold; these twenty-two do not, and the corrected versions are what section 7
 adjudicates.
 
 ### Corrections that change an adjudication
@@ -239,6 +239,60 @@ indexes that array, and the ladder is what section 13A's advancement work reads.
 `tests/unit/architecture-guards.test.ts`. Harmless, and worth correcting when that
 file is next touched. Noted because section 6.1's time-advance instrument rests on
 that guard being real — **it is; only its name is wrong.**
+
+### Five corrections from the owner-decision sequence, four of them retractions of claims made in this document
+
+**3.18 — the stale D-172 target inside this document.** One line said the work
+D-172 is about moves to **96** while the hold instruction two paragraphs later
+said **97**, and the proposed roadmap places longitudinal inference at 97.
+**Corrected to 97**, so the later mechanical retarget has one unambiguous target.
+The live hold is **not** retargeted by this document.
+
+**3.19 — RETRACTED: the settled-sufficiency claim. Mine, and it was false.** This
+document's analysis claimed a `development-skill` could reach `settled` over
+occasions where the owner answered `needed-me`, and proposed amending D-112 and
+D-135 to close it. **The owner refuted it from source.** The capture answers
+write result and help together (`outcomes.ts:469-476`): _On her own_ →
+`scale(2,2)` → `RESULT_VALUE[2]` = 1.0 → `on-her-own`; _With a small prompt_ →
+0.5; _Needed me_ → 0.0. With `GROWTH_CLEARLY = 0.9`, **`cleared` is equivalent to
+`help === 'on-her-own'`**, and `trailingRun` breaks on the first non-cleared
+occasion. **The existing run already requires three consecutive independent
+occasions, and D-135 adds the two-setting bar.** There was no defect. Form (a),
+its guarded routing 94 package, the D-112/D-135 amendment and a separate
+independence-sufficiency owner decision were all **deleted**.
+
+**3.20 — RETRACTED: "settled skills are excluded from candidacy entirely." Mine,
+and overstated.** `candidates.ts:496` reads
+`if (standing.stage === 'settled' && !maintenanceProbeDue(...)) continue` —
+settled skills are **re-admitted** whenever a maintenance probe is due. The
+owner caught it.
+
+**3.21 — RETRACTED: "permanently due and permanently invisible." Mine, and
+false.** The claim was that a due maintenance probe could never fire. **The owner
+found the third term in `recentDuplication` that refutes it.** Two recovery paths
+exist: the **ignore path**, where each active skill accrues −0.35 per distinct
+`now` while an unshown probe holds the +0.2 _"not offered lately"_ branch — a
+0.55 gap at weight 0.8 = **+0.44** against the probe's 0.20 urgency deficit; and
+the **response path**, where competing skills accumulate `sameThing` (−0.5) while
+the probe carries only `sameShape` (−0.2) — **+0.24**, also clearing the deficit.
+The routing 93 scoring package, probe-specific urgency escalation, a global
+`stale-evidence` change and a separate written scoring decision were all
+**deleted**; a regression test remains.
+
+**3.22 — the aggregate thread-fit bound was asserted before it was proved, and
+the owner said so.** This document called a live `growth-ladder` thread _"a real
+starvation case, not a slow one"_ without establishing whether repeated finite
+threads could accumulate. **The owner proposed the bound and demanded proof
+rather than accepting it.** The trace established it: `steps: 3`, `lastsDays: 42`
+(`threads.ts:139-140`), expiry _"set once, here, and never extended"_ (`:401-402`);
+`activeThreads` pushes **every** thread record including finished and expired, so
+`threadOfferFor`'s `answered` check blocks a re-offer on the same subject
+permanently; `startThreadRecord` has one product call site, gated on
+`threadOfferFor`; and `entityId(kind, label)` is deterministic, so re-authoring
+the same normalized label cannot evade the block. **Bound: at most one
+growth-ladder thread per `development-skill` for that skill's lifetime, and at
+most 42 days of thread-fit per skill.** "Indefinite starvation" was wrong;
+**bounded delay** is correct.
 
 ### One matrix claim worth restating precisely
 
@@ -747,6 +801,18 @@ own precondition for AUD-0040 is met.
 - Owner-use findings: **F12**, **F19** (reach half), **F27**, **F30** (consent
   granularity), **F32** (retraction and backfill), **F36** (observation breadth).
 
+**Settled by the owner-decision sequence (§13B, §13C, §13F):** S2 **Tier 1 + Tier
+2** confirmed and **Tier 3 deferred to routing 97**; each new askable concept
+ships **only with its consumer** (D-166's six dimensions split per consumer —
+loneliness via AUD-0013, overwhelm via the capacity limiter, motivation and stress
+conditional, **mood not askable here**, **confidence deferred to 94**);
+`work.strain` wired to the existing `Capacity` consumer; the **starvation QA gate**
+with its closed exemption registry; the **guide performance work** — pre-filter and
+incremental probe, shipped here rather than deferred to 101; **research priors,
+option B only**, inside the existing discovery agenda; and
+**`life-context-change`** as a vocabulary item to be brought back as its own
+decision once the concept exists.
+
 **One coupling the builder must decide deliberately rather than discover.**
 `trajectoryCards` gates on `definition.tracked` (`insights.ts:1815`), not on
 `standing` — the D-089 repair moved it there on purpose. So **giving any of D-166's
@@ -806,6 +872,13 @@ aggregation), **F09** (a carried intention's fate), **F14** (maintenance versus
 advancement), **F18** (pattern to changed approach), **F31** (reorientation),
 **F34** bounded (the review loop on Insights and domain pages — D-169), **F42**,
 **F44** bounded (the measurable half only).
+
+**Added by the owner-decision sequence:** the **maintenance-probe regression,
+five arms** (§13E.1) — ignore path, response path, loop close, null arm, and the
+thread-fit bound arm. **Regression coverage only: no scoring package, no new
+dimension, no urgency change, no separate scoring decision.** And **AUD-0030(a)**
+is confirmed wanted (§13F) — the import screen states plainly which families came
+across as history and which did not.
 
 **F14 is no longer in this phase.** It moved to routing 95 when owner decisions #6
 and #7 were settled: F14 (maintenance crowding out advancement) and C13's minimum
@@ -874,6 +947,19 @@ ordering** must be answered before it is specified in detail.
   evidence rather than as appetite (F25).
 - **C16's Fatherhood destination**, with every existing protection intact, and its
   scope depending entirely on owner decisions 1 and 4.
+
+**Added by the owner-decision sequence (§13D, §13E, §13G) — all nine land on the
+Fatherhood slice, and §11B sizes the consequence:** the `development-skill`
+ordinary-use authoring route with its behavioural acceptance test; the
+`about-person` relationship-correctness repair; the near-duplicate guard through
+`AuthoringProposal.problems`; **C's scaffolding guidance**; the **help-ladder
+reader — form (b), the "closer" register**; the **two-class growth-opportunity
+cap** with its after-evaluation placement and trace-integrity requirement;
+**Adaya's birthdate** as one durable question; and the **generation-time normative
+suppression filter**, which may never render a norm statement anywhere and must be
+a `continue` rather than a dimension or a rejection.
+
+**This phase runs as three internal cycles under one routing integer — see §11B.**
 
 **Ordinary-owner QA contract.** Fresh store. Name an aim in a domain that has never
 had one, in **three** different domains including one with no prior generator, and
@@ -1097,7 +1183,7 @@ apply to them as well and because 102 acquires one input.
 `CAMPAIGN_HOLDS.md` declares `blocks_phase=91`, and correction 3.14 shows the match
 is exact-integer. Under this roadmap, **routing 91 becomes semantic capture, which
 `ROUTING_91_BRIEF.md` explicitly says D-172 may not close and may not absorb**, and
-the work D-172 is actually about moves to **96**.
+the work D-172 is actually about moves to **97**.
 
 If the roadmap is approved and nothing else is done, **the hold would sit on a phase
 it was never about and release the phase it was.**
@@ -1123,34 +1209,34 @@ The owner must therefore, at approval time and not before:
 Every structural layer and every capability row, with the corrected status.
 **BUILD · PRESERVE · BOUND · DEFER · REJECT · SEPARATE PRODUCT · OWNER DECISION.**
 
-| #       | Capability                               | Disposition                                                     | Phase                          | Reasoning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ------- | ---------------------------------------- | --------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **S1a** | Outcome-judgement horizon                | **BUILD, BOUNDED**                                              | 92                             | Real, unowned, small: one union, eight consumers. Bounded at `weekly`; `monthly`/`seasonal` refused as judgement horizons because a lifecycle keyed to a day cannot settle them and no evidence supply would score them. Generalise `CourseReflection` rather than invent a mechanism (3.2).                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| **S1b** | Week / month / season reading            | **PRESERVE**                                                    | 93                             | Correction 3.1: already AUD-0029 + AUD-0007 + AUD-0009 in Validity. It does not need inventing, it needs building where it sits.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| **S2**  | Wider vocabulary                         | **BUILD in tiers, BOUNDED**                                     | 92                             | Tier 1 costs no new tap and unblocks C21 and C5. Tier 2 is three concepts with demonstrable decision value. Tier 3 (caffeine, alcohol, hydration) deferred until C3's correction discipline exists. Tier 4 refused. **The acceptable daily burden is owner decision 3.**                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| **S3**  | Forecasting                              | **REJECT this generation; BOUND a successor**                   | 96                             | Section 59 makes it a reversal, not a hurdle (3.4). A forecast that cannot be scored is a confident sentence. The **named expectation** delivers the falsifiable half and is approved.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| **C1**  | Semantic capture and clarification       | **BUILD**                                                       | **91**                         | The brief's rule honoured literally: it is the whole of 91, with its own gate. It is what the owner is feeling now, and correction 3.6 is its hardest and most valuable item.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| **C2**  | Open-space longitudinal inference        | **BUILD, LAST, with a kill criterion**                          | 97                             | The owner's top-ranked wish and the thing rules are structurally worst at. But it must search a space with something in it. Deterministic-bounded first, model-assist as a named fallback, null arm as the gate.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| **C3**  | Combinations, sequences, lags            | **BUILD with a correction discipline**                          | 97                             | Four factors across five horizons is 20+ tests; some will look significant by chance. The multiple-comparisons discipline is not optional and is the phase's real content.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| **C4**  | All-domain understanding                 | **BUILD, split by size**                                        | 94                             | Correction 3.5: cheap for four domains that have a generator, new architecture for five that do not. Sizing it as one job is how it becomes a mega-phase.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| **C5**  | Emotional / state modelling              | **PRESERVE — approved, unbuilt**                                | 92                             | D-166. Six dimensions, distinct, independently unknown, never composited. A single `emotional.score` is the wellness score by the back door and is forbidden. Correction 3.15's stale comment goes with it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| **C6**  | Learning progress, retention, transfer   | **PARTIAL — PRESERVE; spaced retrieval SEPARATE PRODUCT**       | 93 (aggregation)               | Correction 3.3: the rungs are shipped and asked at 3 and 10 days. **Whether the app tests him is owner-facing but not owner-values** — it is a product-scope call and I make it: **no.** Spaced retrieval is an entire product; the app records external proof and says which it knows.                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| **C7**  | Nutrition, food, caffeine, hydration     | **SEPARATE PRODUCT (food) / DEFER (the rest)**                  | —                              | Section 12. The highest-frequency, highest-friction capture in the whole matrix, aimed at the strongest folk-causal prior, over an engine with no multiple-comparisons discipline.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **C8**  | Sleep and recovery, long horizons        | **BUILD**                                                       | 93                             | AUD-0009 already. The safest horizon-dependent capability and **S1a's acceptance case**, exactly as the matrix recommends.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| **C9**  | Same-day → monthly effects               | **= S1a + S1b**                                                 | 92, 93                         | Not a separate capability. Split per 5.1.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| **C10** | Forecasts / predictions                  | **BOUND to the named expectation**                              | 96                             | Everything section 22 requires, plus the thing a forecast could not have: it is always scored, because the occurrence it is about actually happens.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| **C11** | Steering on a forecast                   | **REJECT**                                                      | —                              | Unfalsifiable by construction: steering away from a predicted bad day makes the prediction unobservable. Not an evidence problem; more data would not fix it. A system built to revise its model of him must not contain a component immune to revision.                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| **C12** | Explaining the intervention              | **REJECT with C11**                                             | —                              | Falls with C11, and Q9's single additional clause is better spent on the maintenance-versus-advancement distinction that plan section 54 already reserves it for.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| **C13** | Sustainable **and increasing**           | **BUILD — OWNER-RESOLVED (#7), bounded**                        | **95, package 1**              | **Settled yes, section 13A.** The product explicitly helps the owner keep becoming more capable, qualitatively: **rung advancement** and **new ground versus repeatedly reaching the same ground**. Refused within it, on technical grounds independent of D-162: any rendered capability score, percentage, rate, rank, grade or acceleration figure. **Correction to this document’s first draft:** D-162 forbids the rendered _figure_, not the capability — `trajectoryCards` already computes a normalised rate of change and deliberately renders none (`insights.ts:1899-1902`). Deferred: inferred milestone difficulty, and breadth/transfer until its upstream evidence and domain dependencies exist. |
-| **C14** | Confidence calibration                   | **BUILD bands; DEFER calibration**                              | 93, 96                         | Bands are evidence sufficiency and are honest today. True calibration needs scored predictions; the named expectation supplies the only honest version. Owner-visible for his own data (95); internal for the child, **D-112 / AUD-0049 not D-193** (3.7).                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| **C15** | Research-grounded priors                 | **OWNER DECISION 2 — recommendation: bound to question-aiming** | 92 (if yes)                    | See 13.2. My recommendation is much narrower than the matrix's framing and delivers most of the value at a fraction of the risk.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| **C16** | Fatherhood capability support            | **OWNER DECISION 4 for "what to teach her"; destination BUILD** | 94                             | The destination object is a product call and I make it: yes, once the shape is proved. What may be **suggested** about a child's learning is not mine.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| **C17** | Social / charisma / romantic progression | **BUILD**                                                       | 94                             | D-168 is approved and unbuilt — a live C22 item. AUD-0047's rule binds absolutely: suppress, never rank. No person is scored.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| **C18** | Peak-performance state / score           | **DEFER — hurdle unmet, not prohibited**                        | —                              | Section 22 leaves the door open and the door stays open. A composite over six tracked concepts across eleven domains would name nothing. Revisit after 93.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| **C19** | Child progress semantics                 | **OWNER DECISION 1 — recommendation: do not reverse**           | —                              | See 13.1. Counts of occasions, settled/not-settled, context transfer and what she is working on are **already permitted and already built**. Only the rate is prohibited.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| **C20** | Recommendation diversity                 | **PRESERVE — approved, unbuilt**                                | 92                             | AUD-0045 + D-113, high priority, with per-object size and demand as its stated precondition. `A_WALK` is still the only movement subject (`candidates.ts:627`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| **C21** | Blocker enforcement / adaptation         | **BUILD, split**                                                | 92 (concept), 93 (enforcement) | Correction 3.15's nuance: it already suppresses the question and never changes the move. Needs a registered concept (92) before the rule can be reversed (93). The owner's own CASE B.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| **C22** | Existing Reach / Validity at risk        | **PRESERVE — all 20**                                           | 92, 93                         | Section 9 is the map. Nothing disappears.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| #       | Capability                               | Disposition                                               | Phase                          | Reasoning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------- | ---------------------------------------- | --------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **S1a** | Outcome-judgement horizon                | **BUILD, BOUNDED**                                        | 92                             | Real, unowned, small: one union, eight consumers. Bounded at `weekly`; `monthly`/`seasonal` refused as judgement horizons because a lifecycle keyed to a day cannot settle them and no evidence supply would score them. Generalise `CourseReflection` rather than invent a mechanism (3.2).                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **S1b** | Week / month / season reading            | **PRESERVE**                                              | 93                             | Correction 3.1: already AUD-0029 + AUD-0007 + AUD-0009 in Validity. It does not need inventing, it needs building where it sits.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **S2**  | Wider vocabulary                         | **BUILD, OWNER-RESOLVED (#3), bounded**                   | 92                             | **Settled §13B: Tier 1 + Tier 2 approved, Tier 3 deferred to 97.** `QUESTIONS_PER_DAY = 3` locked; each askable concept ships only with a consumer; D-166’s six split per consumer, mood not askable in 92 and confidence to 94.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **S3**  | Forecasting                              | **REJECT this generation; BOUND a successor**             | 96                             | Section 59 makes it a reversal, not a hurdle (3.4). A forecast that cannot be scored is a confident sentence. The **named expectation** delivers the falsifiable half and is approved.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **C1**  | Semantic capture and clarification       | **BUILD**                                                 | **91**                         | The brief's rule honoured literally: it is the whole of 91, with its own gate. It is what the owner is feeling now, and correction 3.6 is its hardest and most valuable item.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **C2**  | Open-space longitudinal inference        | **BUILD, LAST, with a kill criterion**                    | 97                             | The owner's top-ranked wish and the thing rules are structurally worst at. But it must search a space with something in it. Deterministic-bounded first, model-assist as a named fallback, null arm as the gate.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **C3**  | Combinations, sequences, lags            | **BUILD with a correction discipline**                    | 97                             | Four factors across five horizons is 20+ tests; some will look significant by chance. The multiple-comparisons discipline is not optional and is the phase's real content.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **C4**  | All-domain understanding                 | **BUILD, split by size**                                  | 94                             | Correction 3.5: cheap for four domains that have a generator, new architecture for five that do not. Sizing it as one job is how it becomes a mega-phase.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **C5**  | Emotional / state modelling              | **PRESERVE — approved, unbuilt**                          | 92                             | D-166. Six dimensions, distinct, independently unknown, never composited. A single `emotional.score` is the wellness score by the back door and is forbidden. Correction 3.15's stale comment goes with it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **C6**  | Learning progress, retention, transfer   | **PARTIAL — PRESERVE; spaced retrieval SEPARATE PRODUCT** | 93                             | Correction 3.3: the rungs ship and are asked at 3 and 10 days. **Settled §13G.1.3: the app does not test her, and system-directed teaching is declined.** What is absent is aggregation, not the evidence kind.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **C7**  | Nutrition, food, caffeine, hydration     | **SEPARATE PRODUCT (food) / DEFER (the rest)**            | —                              | Section 12. The highest-frequency, highest-friction capture in the whole matrix, aimed at the strongest folk-causal prior, over an engine with no multiple-comparisons discipline.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **C8**  | Sleep and recovery, long horizons        | **BUILD**                                                 | 93                             | AUD-0009 already. The safest horizon-dependent capability and **S1a's acceptance case**, exactly as the matrix recommends.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **C9**  | Same-day → monthly effects               | **= S1a + S1b**                                           | 92, 93                         | Not a separate capability. Split per 5.1.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **C10** | Forecasts / predictions                  | **BOUND to the named expectation**                        | 96                             | Everything section 22 requires, plus the thing a forecast could not have: it is always scored, because the occurrence it is about actually happens.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **C11** | Steering on a forecast                   | **REJECT**                                                | —                              | Unfalsifiable by construction: steering away from a predicted bad day makes the prediction unobservable. Not an evidence problem; more data would not fix it. A system built to revise its model of him must not contain a component immune to revision.                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **C12** | Explaining the intervention              | **REJECT with C11**                                       | —                              | Falls with C11, and Q9's single additional clause is better spent on the maintenance-versus-advancement distinction that plan section 54 already reserves it for.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **C13** | Sustainable **and increasing**           | **BUILD — OWNER-RESOLVED (#7), bounded**                  | **95, package 1**              | **Settled yes, section 13A.** The product explicitly helps the owner keep becoming more capable, qualitatively: **rung advancement** and **new ground versus repeatedly reaching the same ground**. Refused within it, on technical grounds independent of D-162: any rendered capability score, percentage, rate, rank, grade or acceleration figure. **Correction to this document’s first draft:** D-162 forbids the rendered _figure_, not the capability — `trajectoryCards` already computes a normalised rate of change and deliberately renders none (`insights.ts:1899-1902`). Deferred: inferred milestone difficulty, and breadth/transfer until its upstream evidence and domain dependencies exist. |
+| **C14** | Confidence calibration                   | **BUILD bands; DEFER calibration**                        | 93, 96                         | Bands are evidence sufficiency and are honest today. True calibration needs scored predictions; the named expectation supplies the only honest version. Owner-visible for his own data (95); internal for the child, **D-112 / AUD-0049 not D-193** (3.7).                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **C15** | Research-grounded priors                 | **BUILD — OWNER-RESOLVED (#2), Option B**                 | 92                             | **Settled §13C: Option B only.** Priors may aim what is asked and never become findings, rank, or determine recommendations. Self-extinguishing: the owner’s answer replaces the prior. **C declined because sparse evidence makes its decay guard unreachable; D declined.**                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **C16** | Fatherhood capability support            | **BUILD — OWNER-RESOLVED (#4), bounded**                  | 94                             | **Settled §13E: B-owner-directed + C.** The owner names the growth area; the app helps pitch assistance using the help ladder it already records. Two-class growth-opportunity cap protects `time-with`. **B-system-directed and E declined at Q1 (§13G).**                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **C17** | Social / charisma / romantic progression | **BUILD**                                                 | 94                             | D-168 is approved and unbuilt — a live C22 item. AUD-0047's rule binds absolutely: suppress, never rank. No person is scored.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **C18** | Peak-performance state / score           | **DEFER — hurdle unmet, not prohibited**                  | —                              | Section 22 leaves the door open and the door stays open. A composite over six tracked concepts across eleven domains would name nothing. Revisit after 93.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **C19** | Child progress semantics                 | **PRESERVE — OWNER-RESOLVED (#1), Choice A**              | —                              | **Settled §13D: not reversed.** No rate, share, percentage, grade, rank or numeric summary about Adaya. D-070, D-112, D-117, D-135, D-136 stand. **The #6/#7 subject rule does not protect this boundary — C19 remains independently load-bearing.** The real gap is the discarded help ladder (form b, routing 94).                                                                                                                                                                                                                                                                                                                                                                                             |
+| **C20** | Recommendation diversity                 | **PRESERVE — approved, unbuilt**                          | 92                             | AUD-0045 + D-113, high priority, with per-object size and demand as its stated precondition. `A_WALK` is still the only movement subject (`candidates.ts:627`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **C21** | Blocker enforcement / adaptation         | **BUILD, split**                                          | 92 (concept), 93 (enforcement) | Correction 3.15's nuance: it already suppresses the question and never changes the move. Needs a registered concept (92) before the rule can be reversed (93). The owner's own CASE B.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **C22** | Existing Reach / Validity at risk        | **PRESERVE — all 20**                                     | 92, 93                         | Section 9 is the map. Nothing disappears.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ---
 
@@ -1413,14 +1499,15 @@ counts.**
 - **Routing 94 slices by domain**, not by capability. Each domain is independently
   buildable and independently falsifiable. A cap of **four domains per QA cycle** is
   the right shape; twelve at once is the mega-phase the campaign has already refused
-  twice.
+  twice. **Sized with arithmetic in §11B, because the owner-decision sequence put
+  nine of its twenty additions into this phase.**
 - **Routing 95 carries its own split rule**: if it exceeds **four packages**, it
   splits at the seam between _describing advancement_ (record-factual, cheap) and
   _stating and reconciling expectations_ — which is exactly the seam that produced 96. Applying it once more is the mitigation if 95 grows again.
 - **Routing 97's kill criterion is declared in its handoff before the builder
   starts.** A phase that can conclude "no" is a phase that can end.
 
-**Where the roadmap risks not finishing, said plainly.** Ten phases remain — one more than before, because the settled #6/#7 split the former 95 in two. At the
+**Where the roadmap risks not finishing, said plainly.** **Eleven routed phases remain** — 90, 91, 92, 93, 94, 95, 96, 97, 101, 102 and 103. (83 and 84 are GREEN and are not counted; 98–100 are reserved headroom and carry no work.) An earlier count of ten in this document was wrong and is corrected here. At the
 observed range of 2 to 19 rounds, that is a long road, and the predecessor's section
 12 item 9 governs. Two specific risks:
 
@@ -1451,6 +1538,83 @@ expectation and reconciliation (96) and open-space discovery (97). **It is a tru
 is not yet the personal intelligence system the owner described**, and the
 difference is precisely 94, 95, 96 and 97 — which is why they are last, and in
 that order.
+
+---
+
+## 11B · Routing 94, sized in the roadmap's own unit
+
+Routing 94 absorbed **nine of the twenty additions** from the owner-decision
+sequence. The roadmap's unit of work for this phase is the **domain slice**, capped
+at **four domains per QA cycle**.
+
+### The domain arithmetic
+
+Career, Health and Money are the three proving domains and are already done
+(D-173). **Nine domains remain:**
+
+| Class                      | Domains                                         | Count | Cost                                                                                 |
+| -------------------------- | ----------------------------------------------- | ----- | ------------------------------------------------------------------------------------ |
+| Have a candidate generator | Sleep, Fatherhood, Social, Home                 | 4     | Content and evidence semantics; a `PROVING_DOMAINS` row and a `MILESTONE_ENTITY` row |
+| **No generator at all**    | Emotional, Faith, Private, Long-Range Direction | 4     | **New architecture** — a destination cannot reach Now without one (correction 3.5)   |
+| Does not exist yet         | **Romantic** (D-168)                            | 1     | A twelfth domain page **and** a generator                                            |
+
+**Nine domains ÷ four per cycle = three cycles.** The domain work alone is
+**within** the slice rule.
+
+### The non-domain arithmetic, and this is where it breaks
+
+Routing 94 now also carries **eight non-domain deliverables**, and **every one of
+them is Fatherhood-specific**:
+
+`development-skill` authoring route · `about-person` relationship correctness ·
+near-duplicate guard · C scaffolding guidance · help-ladder reader (form b) ·
+two-class growth-opportunity cap · trace-integrity changes from the cap · Adaya
+birthdate capture · generation-time normative suppression filter.
+
+**That is nine deliverables landing on one slice.** By deliverable count the
+Fatherhood slice is roughly **nine times the weight** of the Home slice, and the
+four-domains-per-cycle rule — which counts domains, not deliverables — **does not
+see it.**
+
+> **So the current routing 94 scope does exceed the slice rule in substance while
+> satisfying it in form. The rule counts the wrong unit for this phase.**
+
+### The proposed split — three cycles, Fatherhood alone in the first
+
+| Cycle    | Contents                                                                      | Rationale                                                                                                                                                         |
+| -------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **94.1** | **Fatherhood alone** — its destination, plus all nine Fatherhood deliverables | The heaviest slice by an order of magnitude, and the one carrying every owner-decision addition. It also proves the authoring route the other domains do not need |
+| **94.2** | Sleep, Social, Home, **Romantic**                                             | The generator-bearing domains plus the new one. Four, within the rule                                                                                             |
+| **94.3** | Emotional, Faith, Private, Direction                                          | The four needing generators. Four, within the rule                                                                                                                |
+
+**One domain in cycle 1, four in each of cycles 2 and 3 — nine domains, three
+cycles, and no cycle over the cap.**
+
+### Does the split change routing numbers?
+
+**No. It is internal multi-cycle execution inside routing 94.**
+
+Two reasons, and the first is binding. **Routing integers must increase
+monotonically in execution order** (correction 3.13), and 95, 96 and 97 are
+taken — so a `94a / 94b / 94c` split would need integers above 94 and below 95,
+which do not exist. And **D-159 already settles the convention**: _"A QA round
+does not get a new routing integer"_ — rounds 1…n of one phase all carry that
+phase's integer, as they did through routing 82's twelve and routing 84's
+nineteen.
+
+**So 94 runs as one routing phase over three internal cycles**, with the slice
+boundaries written into its handoff before the builder starts — which §11's second
+predictor says is the strongest available lever on round count.
+
+### The residual risk
+
+**94.1 is the cycle to watch.** It is nine deliverables of new owner-facing
+Fatherhood meaning, including two — the "closer" register and scaffolding guidance
+— that speak about a child, under C19, D-136 and the pull-only delivery rule.
+**That is 84-shaped work inside a phase otherwise estimated at 83-shaped per
+domain.** If routing 94 runs long, 94.1 is where it will happen, and the mitigation
+is to gate 94.1 on its own acceptance list rather than letting it share one with
+94.2 and 94.3.
 
 ---
 
@@ -1531,6 +1695,86 @@ shorter and the product something else.
 
 ---
 
+## 12A · What the owner-decision sequence removed, and what it added
+
+**Counting unit, used identically on both sides: one distinct roadmap deliverable
+or decision** — a thing that would have had to be built, decided or amended.
+Sub-tasks inside one deliverable are not counted separately, which is why
+AUD-0030(b) is one row rather than four.
+
+### Removed outright — fifteen
+
+| #   | Removed                                                                                                                  | Why                                                      |
+| --- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| 1   | Form (a), the settled-sufficiency repair                                                                                 | Correction 3.19 — the claim was false                    |
+| 2   | Its guarded routing 94 package                                                                                           | same                                                     |
+| 3   | The D-112 / D-135 amendment                                                                                              | same                                                     |
+| 4   | A separate independence-sufficiency owner decision                                                                       | same                                                     |
+| 5   | The routing 93 probe **scoring package**                                                                                 | Correction 3.21 — duplication decay already recovers it  |
+| 6   | Probe-specific urgency escalation                                                                                        | same                                                     |
+| 7   | A global `stale-evidence` urgency change                                                                                 | same                                                     |
+| 8   | A separate written scoring decision for the probe                                                                        | same                                                     |
+| 9   | **AUD-0030(b)** — new record kind, episode-projection extension, `MAPPING_RULES_VERSION` bump, extended quarantine tests | §13F — the context gate makes its benefit false as built |
+| 10  | Q1.3's generative content artifact                                                                                       | §13G — 1.3 no                                            |
+| 11  | Q1.4's sequencing model                                                                                                  | §13G — 1.4 no                                            |
+| 12  | Q1.5's checklist registry                                                                                                | §13G — 1.5 no                                            |
+| 13  | #1 option C — five-decision amendment, guard rewrite across five test files, QA-suite inversion                          | §13D — Choice A                                          |
+| 14  | #2 option C — a third provenance class in every evidence surface, a decay rule, a dependency on routing 96               | §13C — Option B                                          |
+| 15  | 1.2's **rendered norm surface** — no norm sentence on Now, page, pull, trace or export                                   | §13G — suppression-only                                  |
+
+**Five further items were moved or deferred rather than deleted:** Tier 3 →
+routing 97; F14 → 93 to 95; `mood` dropped as a routing 92 askable concept and
+`confidence` → 94; longitudinal inference 96 → 97; `life-context-change` → 92.
+
+### Added — twenty
+
+Counted on the same unit: a deliverable that exists in the roadmap **after** this
+sequence and did **not** exist before it. Confirmations of already-proposed items
+— S2 Tier 1/2, D-166's dimensions, C15's option B as a roadmap row — are **not**
+counted as additions.
+
+| #   | Added                                                    | Origin        | Owner    |
+| --- | -------------------------------------------------------- | ------------- | -------- |
+| 1   | Subject-eligibility rule + exhaustive `EntityKind` table | #6 / #7       | 95       |
+| 2   | Domain delivery-tier table (push / pull / never)         | #6            | 95       |
+| 3   | Frequency and aggregate bounds                           | #6            | 95       |
+| 4   | Known-incomplete correction gesture                      | #6            | 95       |
+| 5   | C13 minimum package — rung advancement + new ground      | #7            | 95 pkg 1 |
+| 6   | Per-entity progress selector                             | #7            | 95       |
+| 7   | Routing 96 as a distinct phase                           | #7 split      | 96       |
+| 8   | Starvation QA gate + closed exemption registry           | #3            | 92       |
+| 9   | Guide performance work — pre-filter + incremental probe  | #3            | 92       |
+| 10  | `life-context-change` vocabulary item                    | Q4            | 92       |
+| 11  | Help-ladder reader / the "closer" register — form (b)    | #1            | 94       |
+| 12  | `development-skill` ordinary-use authoring route         | #4            | 94       |
+| 13  | `about-person` relationship-correctness repair           | #4            | 94       |
+| 14  | Near-duplicate `development-skill` guard                 | #4            | 94       |
+| 15  | C scaffolding guidance                                   | #4            | 94       |
+| 16  | Two-class growth-opportunity cap                         | #4            | 94       |
+| 17  | Trace-integrity changes from the cap                     | #4            | 94       |
+| 18  | Adaya birthdate capture                                  | Q1.1          | 94       |
+| 19  | Generation-time normative suppression filter             | Q1.2          | 94       |
+| 20  | Maintenance-probe regression, five arms                  | probe finding | 93       |
+
+### The comparison, exactly
+
+**Fifteen removed, twenty added, on the same unit — net +5 roadmap items**, plus
+one new phase (96) and longitudinal inference renumbered to 97.
+
+**Nine of the twenty additions land in routing 94**, which is why §11 sizes that
+phase with arithmetic rather than a warning.
+
+### The principle these removals establish
+
+> **Items were removed because source traces showed their justification did not
+> hold. Roadmap work is not preserved out of caution after its supporting
+> evidence collapses. A finding survives on its evidence or it goes.**
+
+**Four of the fifteen removals followed retractions of claims this document made**
+(corrections 3.19–3.22), and the owner found every one of them.
+
+---
+
 ## 13 · Blocking owner decisions
 
 Seven. The four named in the brief, two that met the bar, and one — C13 — promoted
@@ -1538,19 +1782,21 @@ after the owner challenged this document's original refusal of it. Each states t
 real decision, why it cannot legitimately be made without the owner, what each
 option actually costs, and a recommendation.
 
-**Two are now RESOLVED by the owner and are recorded in section 13A: #6 and #7.**
-The remaining five — **#1 through #5 — are unresolved and nothing here decides
-them.**
+**Eight are now RESOLVED by the owner and recorded in sections 13A–13G. Only #5
+remains unresolved**, and its reason is at §13H.1: no connected-data source
+exists. The consolidated register is §13H.
 
-| #   | Decision                             | Status                     |
-| --- | ------------------------------------ | -------------------------- |
-| 1   | C19 — child progress measurement     | **UNRESOLVED**             |
-| 2   | C15 — research-grounded priors       | **UNRESOLVED**             |
-| 3   | S2 — acceptable daily input burden   | **UNRESOLVED**             |
-| 4   | C16 — "what to teach her"            | **UNRESOLVED**             |
-| 5   | Connected data sources               | **UNRESOLVED**             |
-| 6   | Record-state / plateau surfacing     | **RESOLVED — section 13A** |
-| 7   | C13 — sustainable **and increasing** | **RESOLVED — section 13A** |
+| #   | Decision                             | Status                                        |
+| --- | ------------------------------------ | --------------------------------------------- |
+| 1   | C19 — child progress measurement     | **RESOLVED — §13D** (Choice A)                |
+| 2   | C15 — research-grounded priors       | **RESOLVED — §13C** (Option B)                |
+| 3   | S2 — acceptable daily input burden   | **RESOLVED — §13B** (Tier 1 + Tier 2)         |
+| 4   | C16 — "what to teach her"            | **RESOLVED — §13E** (B-owner + C)             |
+| 5   | Connected data sources               | **UNRESOLVED — §13H.1** (no source)           |
+| 6   | Record-state / plateau surfacing     | **RESOLVED — section 13A**                    |
+| 7   | C13 — sustainable **and increasing** | **RESOLVED — section 13A**                    |
+| Q4  | Legacy evidence admissibility        | **RESOLVED — §13F** (rung A declined)         |
+| Q1  | Age and normative reference          | **RESOLVED — §13G** (1.1/1.2 yes, 1.3–1.5 no) |
 
 ### 13.1 · Decision 1 — C19, child progress measurement
 
@@ -2036,6 +2282,877 @@ owner so it is not rediscovered in QA or mid-implementation.**
 
 ---
 
+## 13B · Owner decision #3 — acceptable daily input and authoring burden — **RESOLVED**
+
+**Approved: Tier 1 + Tier 2, conditional on consumers. Tier 3 deferred.**
+
+### The lock
+
+- **`QUESTIONS_PER_DAY = 3` remains a hard ceiling** and is not raised.
+- **Daily push burden must not increase.**
+- **Unknown remains unknown.**
+- **No question becomes eligible merely because it is stale.**
+- **Information-value gating remains intact.**
+- **Wider evidence coverage is acceptable even when individual concepts are
+  refreshed less often** — the owner accepted lower freshness for wider reach,
+  which is the real trade this decision makes.
+
+### Unconditionally approved and buildable — routing 92
+
+The supervision / must-stay blocker concept; `requiresLeaving`; a bounded blocker
+`until`; **`health.trained-today`, derived whenever existing movement evidence can
+settle it** rather than asked; **`context.people-present`, reached from the
+relationship graph AUD-0047 says already exists** rather than from new owner
+input. None depends on the guide selector.
+
+### The condition on new askable concepts
+
+> **A concept may ship as askable only when an actual consumer exists that makes
+> at least one possible answer capable of materially changing a decision. Do not
+> ship declared-but-unreachable concepts.**
+
+This is the `emotionalState` failure written as a rule: `materialToDecision:
+true`, `askWhenStale: true`, and **no reachable owner-facing question since Phase
+1** — because it is absent from the `QUESTIONS` catalogue and read by nothing.
+
+### D-166 clarification — a routing/consumer split, not a reversal
+
+**D-166's six emotional dimensions remain APPROVED.** What is clarified is that
+**D-166 does not require all six to become askable in routing 92.** Their
+implementation follows their honest consumers:
+
+| Dimension                               | Disposition                                                                                                                                          |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **loneliness / social-connection need** | Routing 92 candidate via **AUD-0013's missing social-demand path** — the social generator today fires only once the owner has said he feels sociable |
+| **overwhelm**                           | Routing 92 candidate via the **capacity limiter**, which renders as _"What is in the way"_                                                           |
+| **motivation**                          | Routing 92 **only if** an honest capacity/friction consumer is demonstrated                                                                          |
+| **stress**                              | Routing 92 **only if** an honest friction/opportunity-cost consumer is demonstrated                                                                  |
+| **mood**                                | **Not askable in routing 92** without a real consumer                                                                                                |
+| **confidence**                          | **Deferred to routing 94 / F25**, where the progression consumer belongs                                                                             |
+
+**When D-166 is later persisted or canonicalized, record explicitly that the six
+approved dimensions may land in different routing packages, and that approval of
+the vocabulary is not approval to create unreachable questions.**
+
+### `work.strain`
+
+May ship with the **existing `Capacity` / `strain` consumer wired to it**. It
+requires no selector redesign: `situation.capacity.strain` already exists and is
+read by `applyConstraints` and the capacity limiter.
+
+### Selector — unchanged, and the proposed tiebreak already exists
+
+**Keep existing selector semantics.** The `overdue` term in `mostValuable`
+(`guide.ts:186-197`) is already the bounded least-recently-used tiebreak, sitting
+**below** the two information-value measures and **above** catalogue order, with
+its own comment: _"Coverage never makes a question askable."_
+
+**Do not add** staleness quotas, forced rotation, coverage rules that create
+eligibility, or questions asked merely because they have not been asked recently.
+
+### Standing starvation QA gate — with a closed exemption discipline
+
+> **A concept declaring `materialToDecision: true` that wins zero question slots
+> across the complete scenario library is a defect.**
+
+**But STARVED and LEGITIMATELY RARE must be distinguished.** A concept too narrow
+to win in the ordinary library may be exempt **only** through a named, exhaustive
+exemption registry carrying: the concept identifier; a written reason; the
+specific circumstance in which it becomes decision-relevant; and **a dedicated
+test proving that circumstance can actually make it win.**
+
+**An exemption is not a generic escape hatch, and a concept with no consumer may
+never use the rare-concept exemption.**
+
+### Performance requirement — shipped with the expansion, not deferred to 101
+
+**Verified cost:** today ≈ **21** full `buildView + decide` evaluations per guide
+render (option counts 4+4+4+2+3+3 = 20 probes, plus `lastAnswerMovedIt`'s
+replay). Under a naive Tier 1 + Tier 2 expansion, ≈ **50**.
+
+**And the worst case is the common case for the new concepts**: `shouldAsk`
+returns true when knowledge is `unknown`, and emotional concepts are unknown
+almost always by design, so they would be probed on essentially every render.
+
+**Ship bounded performance work with the question expansion:** pre-filter probe
+candidates to concepts with an active consumer in the current situation; use
+incremental probe projection rather than rebuilding the whole long-history view
+per option where feasible; keep new answer sets to the smallest semantically
+honest size; verify on the physical-phone gate. **These optimizations must not
+alter selection semantics.**
+
+**Do not defer this to routing 101** — the phase that would otherwise catch it
+runs three phases later.
+
+### Tier 3 — deferred
+
+**No ordinary-use event logging for caffeine, alcohol or hydration.** Tier 3 stays
+behind **routing 97** and its stronger inference and correction discipline.
+
+### The burden feedback mechanism
+
+The known-incomplete correction (§13A.6) remains the instrument. **Repeated
+corrections may move the system toward asking and speaking less. They may never
+become a judgement about the owner's character or reliability.**
+
+### Classification
+
+**B — CONDITIONAL, CONSUMER**, executed **E-shaped**: the unconditional items ship;
+each askable concept ships only with its consumer, or does not ship.
+
+---
+
+## 13C · Owner decision #2 — research-grounded priors — **RESOLVED**
+
+**Approved: OPTION B. Options C and D declined.**
+
+### What is permitted
+
+Research-grounded priors may influence **what Life Command OS decides is worth
+ASKING or INVESTIGATING** about the owner. The approved uses are: identify
+potentially useful questions; spend the bounded discovery agenda more
+intelligently; identify evidence that may be worth seeking; and help the system
+know where caution or missing evidence matters.
+
+### What is forbidden
+
+A prior may **not** become a finding about the owner; may **not** determine
+recommendations; may **not** influence recommendation ranking merely because
+evidence about him is sparse; and may **not** persist as a substitute for
+personal evidence.
+
+### When a prior causes a question
+
+The question must still satisfy every discovery rule; **the owner's answer becomes
+the personal evidence**; the prior does not become a belief about him; **skipping
+the question produces no inferred fact**; and provenance must support answering
+_"why did you ask me this?"_
+
+### The permission is intentionally self-extinguishing
+
+**Research may help decide what is worth learning about the owner. Once he
+answers, his evidence replaces the prior's role.**
+
+### Why C is declined, recorded because the reasoning inverts the obvious one
+
+**Option C is not merely riskier than B — it gets _less_ safe as evidence gets
+sparser.** C's guard is that the prior weakens as personal evidence accumulates.
+With **no connected-data source** (#5 unresolved) and a hard three-question daily
+ceiling (#3), evidence accumulates slowly and permanently — so **a mechanism
+designed to be temporary becomes the standing behaviour, and a rule whose safety
+depends on a condition that will not arrive is not safe.**
+
+**Record that sparse personal evidence strengthened B while making C less safe.**
+
+**Option D** — population evidence directly determining recommendations with no
+personal evidence — is **not approved**.
+
+### Roadmap
+
+**Routing 92**, inside D-163's existing discovery agenda. No new provenance class
+rendered in every evidence surface, no decay rule, and **no dependency on routing
+96's confidence work** — all of which C would have required and which are
+therefore deleted from 92's scope.
+
+---
+
+## 13D · Owner decision #1 — child progress measurement — **RESOLVED**
+
+**Approved: CHOICE A. The existing protected qualitative, per-entity growth model
+is kept.**
+
+### The lock
+
+**Not authorized:** rates, shares, percentages, grades, rankings or numeric
+progress summaries about Adaya. **D-070, D-112, D-117, D-135 and D-136 remain in
+force. C19 remains load-bearing.**
+
+> **The #6/#7 subject-class rule does NOT itself protect against numeric child
+> measurement**, because `development-skill` is already a legal statement subject.
+> **The child-specific prohibition must remain independently enforced.** Two
+> constraints, both required: the subject rule governs _which entity may be a
+> subject_; C19 governs _what may be said about it_.
+
+### The owner's reason, recorded because it is the argument
+
+**The question he wants answered is _"how close is she to doing this solely on her
+own?"_ and a percentage cannot answer it.**
+
+**The trajectory problem.** All three of these produce 50%, and they are
+materially different:
+
+```
+✗ ✗ ✗ ✓ ✓ ✓        ✓ ✓ ✓ ✗ ✗ ✗        ✓ ✗ ✓ ✗ ✓ ✗
+```
+
+**The task-difficulty problem.** If she becomes independent at an easier version
+of a skill and is then moved to a harder version, a success percentage may
+**fall while she is actually advancing**. That must never be presented as
+regression merely because the task became harder.
+
+**The denominator problem.** Life Command OS sees only a fraction of the
+occasions that actually happen. So _"3 of 6 recorded occasions"_ must never
+silently become _"she succeeds 50% of the time."_ **The denominator is the app's
+observed record, not her life** — and more recorded data does not fix it unless
+the system observes a sufficiently complete denominator, which this product
+should not assume.
+
+### What remains available, and it is substantial
+
+Occasion history; occasions that went the other way; the help ladder
+`needed-me → a-small-prompt → on-her-own`; current run; setting; widening
+settings; cross-setting generalization; owner-confirmed reversible settled
+status; `widen-the-setting`; qualitative per-entity advancement under #7; and
+internal confidence that never renders.
+
+### Longitudinal understanding is wanted and is legal
+
+A year-scale **qualitative** Fatherhood progression view — March: _"1 in a row,
+one setting."_ October: _"4 in a row, three settings."_ — showing longer runs,
+less scaffolding, wider settings, sustained settled status, and new ground versus
+repeatedly reaching the same ground, **is a valid future domain capability and
+does not require reopening #1.**
+
+### Option B disposition
+
+**PER-ENTITY B is already authorized under owner decision #7.** **CROSS-ENTITY B
+is not legal** under the locked #6/#7 subject rule, because every candidate
+subject is prohibited: `life-domain` explicitly, a synthetic "my provision"
+entity is not in the permitted set, and a destination is context and never an
+assertion subject.
+
+**Do not invent a Fatherhood aggregate entity, a synthetic provision entity, or a
+`life-domain` assertion subject to recreate it.**
+
+### The preferred legal composition pattern
+
+> _"Towards being closer to Adaya — the Saturday-morning routine has occasions
+> across three settings now."_
+
+The **destination is context**; the **routine or `development-skill` is the
+assertion subject**. This connects the Fatherhood aim to evidence about a real
+permitted entity without a domain-level aggregate.
+
+**Fatherhood remains pull-only / owner-initiated.** This may appear when the owner
+navigates to the relevant Fatherhood or destination surface. **It may not be
+volunteered proactively on Now.**
+
+### D-135 preservation
+
+**#7's deferral of broader breadth-and-transfer work must NOT be read as
+retracting D-135.** D-135's setting-spread and generalization capability has its
+own shipped evidence supply — `OccasionSetting`, `settingsIn()`, the two-setting
+bar, `widen-the-setting` — and **remains existing protected capability.**
+
+### The real gap, and its owner
+
+**The help ladder is captured and discarded.** Verified: `growth.ts` contains
+**zero** references to `help`, `helpLevelOf` or `HelpLevel`; `cleared` is a binary
+(`reached >= GROWTH_CLEARLY`); `settingsIn()` consumes the **optional** `setting`
+while the **required** `help` is read by nothing; and `helpLevelOf()`
+(`outcomes.ts:884`) has **no consumer anywhere in the repository** — it is dead
+code.
+
+**The consequence the owner named:** `needed-me → needed-me → a-small-prompt →
+a-small-prompt` contains real movement, produces `trailingRun` 0, no suggestion,
+and **no sentence anywhere in the app**. `occasionsSummary` exists only on a
+suggestion, and a suggestion requires `runLength >= 3`.
+
+> **The app can say "arrived." It cannot say "closer." That register does not
+> exist.**
+
+**Form (b) — the descriptive ladder reader — is therefore not additive polish. It
+is the only thing that would surface approach-to-independence at all.** It needs
+**no rate**: ordinal rungs, counts and sequence only. **No new Fatherhood view is
+required** — development-skills are already listed on the Fatherhood page with
+D-136's stage control, which is also the surface the pull-only rule requires.
+
+**Owner: routing 94.** Recorded as a capability gap with an owner. **Not
+scheduled.** **Form (a) is deleted** — see correction 3.19.
+
+### Reversibility, recorded as the owner framed it
+
+**C19 is contained to reverse later** if real owner experience shows the
+qualitative model insufficient. **He is not choosing that reversal now**, and if
+he later reopens it, it should be because the shipped qualitative experience
+failed to answer his real question — **not because a percentage looked more
+rigorous.**
+
+### Q1 stays separate
+
+**#1 does not decide** whether the app knows Adaya's age, normative developmental
+references, what is typical at her age, peer comparison, expected developmental
+rates, or whether age becomes model input. Those were Q1 / AUD-0018 — resolved
+separately at §13G.
+
+---
+
+## 13E · Owner decision #4 — teaching support — **RESOLVED**
+
+**Approved: B-owner-directed + C, with the bounded two-class
+growth-opportunity cap.**
+
+### The lock
+
+The owner may name a growth area he wants to work on with Adaya. Life Command OS
+may help him plan **how** to support it, using evidence it already records.
+**He chooses WHAT. The app may help decide HOW to pitch his assistance next
+time.**
+
+> **Teaching support remains an OPTIONAL branch of Fatherhood, never the
+> definition of good Fatherhood.**
+
+### Owner-directed authoring — routing 94
+
+**`development-skill` is not authorable through ordinary owner use today.**
+`AUTHORABLE_KINDS` is `goal, routine, person, place, skill, obligation`, and
+`ENTITY_FOR` maps `skill → 'skill'`. Every `development-skill` arrives through a
+fixture. **This is F04's pattern one entity kind further on**, uncaught because
+D-173 kept Fatherhood outside routing 84's proving scope.
+
+**Approve the ordinary-use authoring route. Do not require fixtures. Reuse the
+existing create-and-confirm authoring contract. Do not introduce a new record
+family, provenance model or schema merely to support this.**
+
+**This permission is OWNER-DIRECTED only.** The app may not independently decide
+what a child like Adaya should learn — that remained Q1 / AUD-0018 and was
+declined there (§13G).
+
+### Authoring relationship correctness — a behavioural acceptance test
+
+**Authoring is not complete merely because a `development-skill` entity can be
+created.** The generic authoring path appears to write `part-of` for kinds other
+than `skill` or `routine`, while Fatherhood growth candidacy walks the
+**`about-person`** link — `fatherhoodCandidates` skips any skill whose
+`entities.linked(skill.id, 'about-person')` is not the child.
+
+A `development-skill` authored through **ordinary owner use** must:
+
+1. be created successfully;
+2. be associated with Adaya using **the relationship shape the Fatherhood
+   reasoning actually consumes**;
+3. survive projection and reload;
+4. appear in the Fatherhood domain skill structure;
+5. **produce an eligible `growth-opportunity` candidate on the next qualifying
+   render** when the remaining candidacy conditions are met.
+
+**Existing in the entity store is not sufficient. Do not create an authoring
+route that writes a syntactically valid but reasoning-invisible
+`development-skill`.** If the existing generic authoring path cannot express the
+required relationship, that repair is **part of this authoring prerequisite** and
+belongs to the routing 94 package.
+
+### Near-duplicate skills must be surfaced, not silently created
+
+`entityId(kind, name)` is deterministic and label-derived, so **"Getting dressed"
+and "Getting dressed on her own" produce different entities and separate evidence
+pools** — splitting occasions across two skills so that neither reaches the
+sequence the growth model requires.
+
+**Before creating a `development-skill` whose proposed label is close to an
+existing one for the same child**: surface the potential duplicate in the
+authoring proposal; show the existing skill as an option; let the owner choose.
+**Use the existing `AuthoringProposal.problems` channel** rather than a new
+authoring architecture.
+
+**Do not auto-merge. Do not silently redirect the owner's wording. Propose and
+let him choose**, and **preserve his choice** if he explicitly creates the
+distinct skill anyway.
+
+**Acceptance test:** with "Getting dressed" already existing for Adaya, authoring
+"Getting dressed on her own" must surface the existing skill as a possible match
+and must **not** silently create a second entity before he chooses.
+
+**This protection prevents accidental evidence fragmentation. It does not decide
+that two skills are semantically identical.**
+
+### C — scaffolding and approach-to-independence
+
+**Approved.** Life Command OS may consume the ordinal help ladder
+`needed-me → a-small-prompt → on-her-own` to show approach-to-independence and
+help the owner decide how much assistance to give next time.
+
+**C includes the descriptive ladder-reading capability, and therefore includes the
+currently missing "closer" register.** Legal evidence language may say _"the last
+two went with a small prompt, where the three before that needed you"_ — or
+equivalent showing less help over time, current ordinal rung, recent sequence,
+counts of observed occasions, setting spread, and whether independent performance
+has begun holding across settings.
+
+**Forbidden:** percentages, rates, shares, grades, ranks, numeric progress scores,
+and rendered zero-count constructions. **Preserve sequence and ordinal shape
+rather than compressing the trajectory.**
+
+**The Fatherhood domain page is the correct home. No new Fatherhood view is
+required.**
+
+### Guidance safety
+
+Guidance preserves **D-136's protected shape**: proposed not asserted;
+owner-confirmed where a stored judgement is involved; reversible; never silently
+converted into a developmental fact. **The assertion subject remains the permitted
+`development-skill`.** No age norm, peer comparison or normative developmental
+model is authorized by #4.
+
+### Fatherhood delivery — both surfaces coexist
+
+**Pull-only applies to the NEW descriptive "closer" register and the NEW
+scaffolding guidance.** They belong on the Fatherhood or destination surface and
+**may not be volunteered proactively on Now merely because evidence exists.**
+
+**The EXISTING growth suggestion is unchanged and stays where it is.** The
+settled / `widen-the-setting` suggestion renders on Now, and that is where the
+owner confirms or rejects a stored judgement about her. **It is a proposal
+attached to a move he has just acted on, which is a different speech act from
+volunteering a progress report.**
+
+**Do not move it to the Fatherhood page for consistency. Do not gate it behind
+opening the domain page.** Removing or relocating it would break the loop by which
+settled judgements are proposed, confirmed, rejected and later revisited.
+
+**Both surfaces coexist:** confirmation on Now when he has just acted; fuller
+approach-to-independence information on the Fatherhood page when he goes looking.
+
+### Ordinary time remains first-class
+
+**Do not** merge `time-with` into `growth-opportunity`; score ordinary time for
+developmental productivity; make play require a lesson; make affection, presence
+or shared experience look incomplete because no skill was practised; or
+characterize ordinary time as a missed developmental opportunity.
+
+### The two-class growth-opportunity cap
+
+**Approved as a candidate-VOLUME protection.**
+
+**The problem it solves, verified:** `generateCandidates` deduplicates by
+`verb/object.id`, so different skills are different objects and are **not**
+deduplicated. Three non-settled skills produce **three** growth candidates
+against **one** `time-with`. The threat to ordinary time is candidate volume, not
+copy — and it is already mildly true today.
+
+**The rule.** Partition `growth-opportunity` candidates by `standing.stage`:
+
+- **Practice class** — non-settled skills. Retain at most **one**.
+- **Maintenance class** — settled skills where `maintenanceProbeDue()` is true.
+  Retain at most **one**.
+
+**At most two growth-opportunity candidates proceed into final arbitration, and
+that bound is constant regardless of how many skills the owner authors.** Naming
+ten growth areas must not create ten competitors against `time-with`.
+
+**Why two classes rather than one slot.** `candidates.ts:496` re-admits settled
+skills when a probe is due, and a single slot would let an active skill suppress
+the probe — the only app-initiated safeguard against `settled` becoming
+permanent, which D-136 and AUD-0015(a) both forbid.
+
+### Selection inside each class
+
+**Do not invent a ranking of Adaya's skills. Reuse existing move evaluation.**
+Within each class, use the existing move score and then the deterministic id
+tiebreak.
+
+**And for growth-opportunity candidates `compare` collapses past its middle
+terms:** they share the verb, so friction ties; they share the Fatherhood domain,
+so the limiter term ties. **The discriminator is score alone, then the explicitly
+meaningless id tiebreak.** The selection answers _"which move is most useful
+tonight?"_ and cannot answer _"which skill is Adaya best or worst at?"_
+
+**Do not render or persist an ordering of her development-skills.**
+
+### Cap placement
+
+**AFTER candidate evaluation, BEFORE final arbitration.**
+
+**Not before evaluation**, because the move scores required to choose the best
+candidate do not yet exist — and a pre-evaluation cap would need some other rule
+to pick, which is the judgement-about-her risk. **Not after arbitration**, because
+that is too late to prevent volume from crowding out `time-with`.
+
+### Trace integrity
+
+**Do not silently shrink candidate accounting.** Set-aside growth opportunities
+must remain truthfully represented in `ranked.length` notes, runner-up reporting,
+chosen-from-N notes and no-action trace language. Equivalent truthful language:
+_"chosen at 0.62 from 5 that fitted, with 3 further growth opportunities set
+aside."_ **The requirement is truthful accounting, not that exact sentence.**
+
+### What remains outside #4
+
+**A** — ordinary `time-with` already ships and remains protected; named
+non-developmental activities are Reach/content work (AUD-0045-shaped), not a new
+owner permission. **B-system-directed** — Q1 / AUD-0018, declined at §13G.
+**D** — bounded qualitative assessment already ships; numeric assessment
+prohibited by #1. **E** — Q1 / AUD-0018, declined at §13G.
+
+---
+
+## 13E.1 · The maintenance-probe result — classification B
+
+**Carried forward exactly as verified. This is NOT a scoring defect requiring a
+scoring change.**
+
+A due probe begins with a **0.20 weighted urgency disadvantage** against an active
+`opportunity-window` candidate (0.3 vs 0.5, weight 1). **The existing duplication
+mechanisms recover it.**
+
+**Ignore path.** `shownToday` counts a move once per **distinct `now`** — not per
+repaint. With three active skills, the due probe can become the top growth
+candidate by the **fourth distinct visit**, once each active candidate has
+surfaced: 0.55 gap × weight 0.8 = **+0.44** against a 0.20 deficit.
+
+**Response path.** Once competing skills accumulate `sameThing` (−0.5) while the
+probe carries only `sameShape` (−0.2): 0.3 × 0.8 = **+0.24**, also clearing it.
+
+**Growth-ladder thread bound.** `thread-fit` (value 1, weight 1) can delay
+recovery while a competing skill has a **live** thread. The delay is **bounded**:
+`steps: 3`, `lastsDays: 42`, expiry set once and never extended; `activeThreads`
+includes finished, stopped, abandoned and expired threads, so `threadOfferFor`'s
+`answered` check **permanently blocks a re-offer on the same subject**;
+`startThreadRecord` has one product call site gated on that offer; and
+`entityId(kind, label)` is deterministic, so re-authoring the same normalized
+label cannot evade the block.
+
+> **At most one growth-ladder thread per `development-skill` for that skill's
+> lifetime, and at most 42 days of thread-fit per skill. A genuinely different
+> skill may have its own one-time thread.**
+
+**This is bounded delay, not indefinite starvation.**
+
+**Owner correction remains independently available.** The Fatherhood page already
+exposes the stage control. **A delayed app reminder is not an inability to correct
+the belief** — distinguish app-initiated resurfacing through arbitration from
+owner-initiated inspection and reversal.
+
+### Classification and what is deleted
+
+**B — CALIBRATION / REGRESSION QA.** **Do not create** a routing 93 scoring
+package, a new scoring dimension, probe-specific urgency escalation, a global
+`stale-evidence` urgency change, or a separate written scoring decision.
+**Routing 93 carries the regression coverage only.**
+
+### The probe regression — five arms
+
+**Arm A, ignore path.** One due settled probe plus three active practising
+skills; **advance `now` between distinct visits** so `noteShown` actually counts;
+ignore each shown move; assert the probe becomes **CHOSEN AND SHOWN** within the
+verified distinct-visit bound. **Not merely that it entered arbitration.**
+
+**Arm B, response path.** Same history; respond across child-present evenings so
+`recentMoves` accumulates; assert the probe recovers and is **chosen and shown**
+under the documented conditions.
+
+**Loop close.** Acting on the shown probe produces an episode; `wasAttempted`
+becomes true; `probes` increments; the maintenance interval advances.
+
+**Null arm.** With no probe due, no probe may be shown merely to satisfy the test.
+
+**Thread-fit bound arm.** With a competing skill holding a live growth-ladder
+thread, assert **the documented bound, not "whatever happens"**: live thread-fit
+can delay the probe; the thread ends at three steps or 42 days; expiry is not
+extended; the same skill cannot receive another thread after the historical one
+answered that subject; and once the live thread ends its thread-fit stops
+pulling. **If any of those mechanics change, the test goes red.**
+
+**The two-class cap remains only a candidate-volume protection. It does not fix
+or cause maintenance scheduling behaviour, and maintenance behaviour does not
+reopen #4.**
+
+---
+
+## 13F · Q4 — legacy evidence admissibility — **RESOLVED**
+
+**Rung A declined. AUD-0030(b) is not built. The quarantine holds.**
+
+Objective legacy episodes stay archived as `imported-legacy-record` and **do not
+become admissible evidence.**
+
+### The reason — not caution, a failed justification
+
+AUD-0030(b) is justified as _"the difference between a brain that starts cold and
+one that starts with years."_ **That is false as built.**
+
+`comparable` (`learning.ts:493-501`) is a thin wrapper over `comparableEpisodes`
+for **all five verb-keyed dimensions** — its own comment: _"The same selection,
+under the name the rest of this file already used."_ And `comparableEpisodes`
+imposes two gates:
+
+- **`:471`** — `if (theirs === undefined) continue`, with the comment _"An episode
+  with no context recorded cannot claim to resemble tonight. It is still history;
+  it is not evidence about a situation."_
+- **`:473-474`** — `similarity(theirs, context)` must clear `RECOGNISABLE`.
+
+**Legacy episodes cannot carry that context.** The family that held it —
+`context-snapshot` — is archived under an **independent** decision: _"Every part
+of it is either the old engine's taxonomy — capacity bands, protected contexts —
+or a reading this app's own registry declines to track over time."_ Reconstructing
+it means importing the old engine's taxonomy, which is what **D-101** exists to
+prevent.
+
+**So the brain starts cold either way.** (b) would buy a new record kind, an
+episode-projection extension, a `MAPPING_RULES_VERSION` bump and extended
+quarantine tests — in exchange for episodes skipped at `:471` or `:474`. **The
+narrow verb-keyed position does not rescue it, because it passes through the same
+gate.**
+
+### What the decline also settles
+
+**Association: not admitted.** Section 59's own note — _"importing these would
+make the old catalogue **the object** of every relationship this app learns"_ —
+describes `observed-change`'s key exactly (D-091 invariant 1: a relationship is
+scoped to verb **and** object). **No sealed wrapper changes a key.**
+
+**Reliability: `legacy-import` 0.5 stays a _second_ fence** and is not asked to be
+the only one. Its own comment: _"section 30 keeps imported history from silently
+driving decisions, and this is the second fence rather than the first."_
+
+### The other three rungs
+
+- **B — owner-reported states: already shipped, nothing to decide.** `observation`
+  and `observation-correction` map and remain canonical.
+- **C — owner attributions: remain the owner's.** They may never become observed
+  causal relationships, and this is **already structural** — an imported judgement
+  cannot manufacture the comparison group `association.ts` requires.
+- **D — old-system conclusions: never canonical.** Confirmed as archived.
+
+### Explicitly outside this decision — written, not inferred
+
+> **`milestone-observation` is OUTSIDE Q4's scope and goes to Q1 / AUD-0018. No
+> part of this answer admits it. Adaya's recorded developmental history is not
+> made admissible by anything here, and importing checklist-based developmental
+> claims about her is against owner decision #1's lock.**
+
+It was subsequently **declined at Q1.5** (§13G).
+
+### `life-context-change` — routed, not decided
+
+**Not decided as an admissibility question, because it is not one.** It needs an
+S2 concept that does not exist — a `ContextRecord` carries `concept` + `value`
+and the registry has no entry for _"something changed in my life."_ **That makes
+it routing 92 vocabulary work.**
+
+**Route it to routing 92. When the concept exists, bring it back as a vocabulary
+decision**, with its `lifeSeasonCards` consequence and its **retroactive
+season-marking effect** stated — a durable `context` record is one of the
+declared-constraint classes that suppresses a record-state statement under #6, so
+admitting historical context changes would retroactively mark past spans as
+declared seasons.
+
+**The owner is inclined toward yes** — a house move is a fact about his life
+whichever engine recorded it — **but is not deciding it before the thing it needs
+exists.**
+
+### What still ships
+
+**AUD-0030(a) is unaffected and wanted:** the import screen tells the owner plainly
+which families came across as history and which did not. **A "no" here is not
+silence.** It remains routing 93 work.
+
+---
+
+## 13G · Q1 / AUD-0018 — age and normative reference — **RESOLVED**
+
+**Five sub-decisions. 1.1 yes; 1.2 yes, suppression-only; 1.3, 1.4 and 1.5 no.
+AUD-0018 is unblocked.**
+
+**Owner decision #1 and C19 are untouched by all of it.** No rates, shares,
+percentages, grades, rankings or numeric progress summaries about Adaya.
+
+### The reframing this rests on
+
+**No birthdate, no age and no developmental reference exists anywhere in the
+codebase.** AUD-0018's problem is **not** that the app cannot rank her:
+
+> _"Every judgement the growth model makes is age-relative and it has no age…
+> It is also an anti-shame problem **in the direction section 4.4 does not name:
+> the risk is not shaming the owner, it is quietly framing normal** [as a gap]."_
+
+`growth.ts` was built as _"a counter over occasions rather than as a judgement
+about a child of a particular age."_ **The current state is not neutral** — every
+unsettled skill reads as a growth area with no way to know it is ordinary.
+
+### 1.1 — Adaya's date of birth: **YES**
+
+Optional, asked once, durable, never re-asked — **exactly like custody**. A person
+entity field. **It is a fact the owner supplies, not a claim about her.**
+
+**It changes no judgement by itself.** It exists to gate 1.2 and nothing else.
+
+### 1.2 — a bounded normative reference: **YES, SUPPRESSION-ONLY**
+
+A bounded, cited normative reference used **ONLY as a one-way protective filter**.
+
+> **The app may NEVER render a norm statement. Not on Now, not on the Fatherhood
+> page, not on pull, not in the trace, not in the export.**
+
+#### Why symmetric speech was declined
+
+**A symmetric norm is a percentile with extra steps.** A table that can say _"most
+four-year-olds are still working on this"_ is the same mechanism that says _"most
+four-year-olds have this by now,"_ and the second tells the owner where she sits
+by implication.
+
+#### Why asymmetric pull-only speech was also declined
+
+The adjudicator proposed a third form — positive support produces a reassuring
+sentence, everything else returns one indistinguishable _"not something the source
+covers."_ **The owner declined it, and the reason is the same one that killed
+symmetric speech:**
+
+> Its protection depends on being unable to tell whether the source covers a
+> skill. For most owner-authored skills that holds. **For obviously standard ones
+> — toileting, dressing, counting — it does not.** Ask about one of those, get
+> _"this isn't something the source covers,"_ and it will not be believed; it will
+> be read as covered and withheld. **The asymmetry is the tell:** positive support
+> produces speech, so absence of speech on a skill known to be standard means the
+> negative case. And the transparent variant is worse — _"covered, but I don't
+> report position"_ plus no affirmation is _"not typical"_ in two steps.
+
+**And the reassurance is not forgone.** C already delivers a better version from a
+better source: _"three weeks, from needing you to a small prompt, and it held at
+Grandma's."_ **That is about her, it is true, and it needs no table.** The norm's
+reassurance is a weaker generic duplicate.
+
+#### The rule — into the decision log before any code
+
+> **POSITIVE normative support may make the app say LESS.**
+> **Lack of positive normative support may NEVER make the app say MORE.**
+
+**Non-suppression carries no meaning.** It covers at least: the source does not
+cover this skill; the source is ambiguous; evidence is insufficient; the skill is
+owner-defined with no normative analogue; the source cannot justify protective
+suppression. **These are indistinguishable and must remain so.**
+
+Failure to suppress must **not** increase urgency, score or priority; create a
+"behind" state or a concern flag; become evidence against her; or imply the source
+says she should already have the skill.
+
+#### Placement — generation, verified
+
+The norm may **only** cause `fatherhoodCandidates` to skip a skill in its existing
+loop, in the same shape as the two skips already there.
+
+**NOT a dimension.** A `norm-fit` dimension would carry a value and a weight, so
+**non-suppression would participate in scoring — the leak built in.**
+
+**NOT a rejection.** `features/export/compose.ts:942-947` iterates
+`trace.rejected` into the **AI review export, which is a production feature**, so
+a rejection reason would reach the owner. **A generation-time skip is never
+proposed and never rejected, so there is nothing to disclose** — and that is
+consistent with §35, because it is _"a candidate that was never thought of"_
+rather than _"a rejection nobody can see."_
+
+**Structural assertion**, in the shape the architecture guard already uses: the
+norm module is imported by `candidates.ts` and by **nothing** in the evaluation or
+arbitration path, and **`Candidate` gains no field.**
+
+#### Cap interaction
+
+**None, by construction.** A suppressed skill is absent before the two-class cap
+exists and **cannot consume the practice slot.**
+
+#### The residual — recorded rather than denied
+
+**The SET of suppressed versus unsuppressed skills is inferable.** Heavily diluted
+by the base rate of not-covered owner-defined skills — CDC's checklists _"do not
+cover 'ordering her own food' or any other owner-defined skill"_ — and stronger
+the more standard the owner's skills happen to be. **Not zero.**
+
+**The owner accepts it as smaller than the harm running today**, which is that
+every unsettled skill reads as a growth area with no way to know it is ordinary.
+
+`skillsFor` (`domainPages.ts:534-547`) lists every `development-skill` by domain
+**regardless of candidacy**, so the page does not hide a suppressed skill. That
+**helps** — suppression removes a nudge, not the thing, and the skill stays
+workable deliberately — and **hurts**, because the full list beside a partial
+suggestion stream is the substrate for the inference. On balance it helps.
+
+### 1.3 — system-directed teaching suggestions: **NO**
+
+**#4's owner-directed half already gives the capability with a source: the owner.**
+The generative half needs a content artifact nobody has scoped, and **a checklist
+that cannot cover "ordering her own food" cannot generate a curriculum for it.**
+1.2's table is **interpretive**; 1.3 needs a **generative** source. Different
+artifacts — **a yes to 1.2 would not have delivered 1.3.**
+
+### 1.4 — inferring what she should learn next: **NO**
+
+No source, no scope, **largest collision with #4's protected item.** A system with
+a standing view about what she should be learning has an implicit view about the
+time that taught nothing.
+
+### 1.5 — `milestone-observation`: **NO**
+
+**Stays archived. Over-determined:** it needs a checklist registry carrying **list
+identity and revision** — _"an answer against a developmental checklist is
+meaningless without which list and which revision"_ — and 1.2's table would match
+only by coincidence. **And the Q4 trace applies**: the rows are
+`imported-legacy-record` and die at the `collectEpisodes` gate
+(`lifecycle.ts:172-173`) unless something is built specifically to read them.
+
+### Roadmap
+
+**1.1 and 1.2 land in routing 94** — a person-entity birthdate field with one
+durable question, and a generation-time suppression filter with its structural
+assertion. **AUD-0018 is unblocked.** 1.3, 1.4 and 1.5 add nothing.
+
+---
+
+## 13H · The owner-decision register
+
+**Eight resolved, one unresolved.** All persisted in this document as an inert
+artifact. **Nothing here is canonical.**
+
+| #      | Decision                                  | Ruling                                                                                                                                              | Section |
+| ------ | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| **1**  | Child progress measurement                | **Choice A** — the protected qualitative per-entity model is kept; no rates, shares, percentages, grades, rankings or numeric summaries about Adaya | §13D    |
+| **2**  | Research-grounded priors                  | **Option B** — priors may aim what is asked, never become findings, rank, or determine recommendations. C and D declined                            | §13C    |
+| **3**  | Daily input / authoring burden            | **Tier 1 + Tier 2**, conditional on consumers; Tier 3 deferred to routing 97; `QUESTIONS_PER_DAY = 3` locked                                        | §13B    |
+| **4**  | Teaching support                          | **B-owner-directed + C**, with the two-class growth-opportunity cap                                                                                 | §13E    |
+| **5**  | **Connected data sources**                | **UNRESOLVED — §13H.1** (no source)                                                                                                                 | §13H.1  |
+| **6**  | Record-state / plateau surfacing          | Resolved — structural safety, subject eligibility, delivery tiers, frequency bounds, known-incomplete correction                                    | §13A    |
+| **7**  | Sustainable **and increasing** capability | **YES** — qualitative advancement; no rendered acceleration figure                                                                                  | §13A    |
+| **Q4** | Legacy evidence admissibility             | **Rung A declined**; B shipped, C structural, D archived                                                                                            | §13F    |
+| **Q1** | Age and normative reference               | **1.1 yes; 1.2 yes suppression-only; 1.3, 1.4, 1.5 no**                                                                                             | §13G    |
+
+### 13H.1 · #5 remains explicitly unresolved
+
+**Reason recorded:** the owner **does not currently track sleep with a device**,
+so the preferred B1 fetch-on-open pilot for `sleepHours` — the concept whose
+registry entry declares `device: 1, owner: 0.85` — **has no source to connect
+to.**
+
+**What this decision does not imply.** No stored third-party credential has been
+approved. **No D-171 amendment is implied; D-171 stands entire.** No substitute
+pilot was manufactured to keep #5 ahead of #3.
+
+**Preserved for later:** `cashBuffer` declares `device: 0.95, derived: 0.9, owner:
+0.6` — _"the only concept in the registry where the owner sits below three other
+sources"_ — so **the registry's second-strongest case for connected evidence is
+financial, and true financial connectivity requires a confidential server client,
+which conflicts with local-first / no-server.** That tension is unresolved and is
+the most likely future reason to reopen the architecture question.
+
+### 13H.2 · Four items Q1 absorbed and closed
+
+Owner decision #1's option D (norms, peer comparison, expected developmental
+rates); **B-system-directed** from #4; **option E** from #4; and
+**`milestone-observation`** from Q4. **All four were routed to Q1 and all four
+were declined there** (§13G, 1.2's suppression-only form and 1.3/1.4/1.5).
+
+### 13H.3 · Findings recorded with owners — none scheduled
+
+| Finding                                                                                                                                                   | Owner      |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| The help ladder is captured and discarded; `growth.ts` reads no `help`; the "closer" register does not exist (form **b**)                                 | routing 94 |
+| `helpLevelOf()` (`outcomes.ts:884`) has no consumer anywhere — dead code                                                                                  | routing 94 |
+| The maintenance probe must **win** arbitration to fire; recovery is bounded, thread-fit delay ≤ 42 days per skill — **classification B, regression only** | routing 93 |
+| Generic authoring may write `part-of` where Fatherhood candidacy walks `about-person`                                                                     | routing 94 |
+| `entityId(kind, label)` is label-derived, so near-duplicate skill labels fragment evidence pools                                                          | routing 94 |
+| `life-context-change` needs an S2 concept before it can be decided                                                                                        | routing 92 |
+| `concepts.ts:530-537` still describes D-166's question as open                                                                                            | routing 92 |
+
+---
+
 ## 14 · Proposed next step, after owner approval
 
 **Nothing below is performed by this round.** Listed so the owner can see exactly
@@ -2043,13 +3160,26 @@ what approving this would set in motion.
 
 **Stage 0 — documents, before any code, in this order.**
 
-0. **The settled owner decisions #6 and #7** (section 13A) become decision-log
-   entries of their own, alongside the section 8 list — at minimum: _a record-state
+0. **The settled owner decisions — #1, #2, #3, #4, #6, #7, Q4 and Q1** (sections
+   13A–13H) become decision-log entries of their own, alongside the section 8 list — at minimum: _a record-state
    statement names a typed subject that carries evidence, never a free aim_; _the
    app describes its record and its record is not authority over the owner_; _the
    record is incomplete here is a correction gesture, and a correction may cause
    the app to say less and never to conclude more_; and _advancement is described,
-   never rated_. **None of that is written by this round.**
+   never rated_. Plus, from the later decisions: _a concept ships as askable only
+   with a consumer_; _a research prior may aim a question and never become a
+   finding_; _the app may say what is typical is refused — a normative reference
+   may only suppress_; _positive normative support may make the app say less,
+   and lack of it may never make the app say more_; _an archived legacy record
+   stays archived_; and **D-166's clarification that the six approved dimensions
+   may land in different routing packages, and that approving the vocabulary is
+   not approving unreachable questions.** **None of that is written by this
+   round.**
+
+0a. **`CAMPAIGN_HOLDS.md` — the D-172 retarget from 91 to 97**, per §6.11. **The
+owner's act, and this document does not perform it.** Section 3.18 records that
+the target inside this artifact is now unambiguously 97.
+
 1. **`DECISION_LOG.md`** — the new entries in section 8, beginning at **D-212**
    (check the tail before allocating; routing 84 took through D-211). Plus the
    amendments to D-159, D-161, D-162, D-163, D-164 and D-187, each as a new entry
@@ -2115,10 +3245,15 @@ Recorded so the boundary is checkable rather than asserted.
 - **The orchestrator repository was read and not written.** Four modules were read to
   verify corrections 3.10, 3.12, 3.13 and 3.14.
 - **No product code changed.** `git diff -- src` is empty for this round.
-- **Owner decisions #6 and #7 were settled by the owner and persisted** into section
-  13A. **That is persistence, not canonicalization**: no decision-log entry, no plan
-  amendment, no hold change and no handoff was created by recording them.
-  **Decisions #1 through #5 remain unresolved.**
+- **Eight owner decisions were settled and persisted** into sections 13A–13H:
+  #1, #2, #3, #4, #6, #7, Q4 and Q1. **That is persistence, not canonicalization**:
+  no decision-log entry, no plan amendment, no hold change and no handoff was
+  created by recording them. **#5 remains explicitly unresolved** because no
+  connected-data source exists (§13H.1).
+- **§13A and the already-persisted #6 and #7 were not substantively changed** by
+  the later pass — only cross-references were added.
+- **The live D-172 hold was not retargeted.** Only the stale internal reference
+  inside this document was corrected from 96 to 97 (correction 3.18).
 - **Routing 90 was not released**, no phase was marked approved, and nothing here is
   roadmap state.
 
