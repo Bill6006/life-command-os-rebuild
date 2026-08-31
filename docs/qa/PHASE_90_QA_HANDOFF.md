@@ -309,3 +309,350 @@ accommodation list asserted as reserved shapes rather than as built features.**
 
 _This section and everything below it belongs to Codex. The builder does not
 edit it._
+
+---
+
+## Round 1 independent QA — FAIL
+
+**Phase:** routing Phase 90, the Phase 9 visual-coherence gate.
+**Product checkpoint tested:** `c6e0b3a1d50f84e0da6e6c5a2eb5bd11d359ca24`.
+**Deployed documentation head tested:**
+`ab85c7706cb7080031138e99b936f8e40d11651b`, bundle-equivalent to the product
+checkpoint. The only changed paths are `docs/NEXT_PROMPT.md`,
+`docs/PHASE_STATUS.md` and this handoff.
+**Live CI run:** `33430068556`, successful; its downloaded preview manifest
+matched all eight live files byte for byte.
+**Android configuration:** deployed Preview, 360 × 780 CSS pixels, DPR 3,
+touch/mobile enabled, Android 14 / Galaxy S24-style `SM-S921B` user agent.
+
+**Overall verdict: FAIL. Routing Phase 90 remains YELLOW.** The visual system,
+clock matrix, structural accommodations, release artifact and ordinary gate
+suite are substantially sound. The sealed owner journey nevertheless fails
+the phase's explicit two-domain Life contract, one of the named object-kind
+proofs is a false green over the wrong rendered markers, and the first legal
+grouping boundary renders owner-facing evidence that contradicts its own
+count. The required physical-owner phone approval also remains outstanding.
+
+### Governing criteria
+
+I applied the handoff's ordinary-owner and synthetic contracts; canonical-plan
+§§54, 24, 25, 37 and 22; D-230 through D-237; D-162, D-129, D-018, D-052,
+D-075, D-087, D-167, D-176, D-181 and D-193; G-009; adjudication §§6.1 and
+6.2; all ten owner-use questions in owner review §11.8; the complete visual
+design record; routing-90 status and dispatch; DEF-0150, DEF-0152 and DEF-0153;
+and the current D-218/D-222 accommodation dispatch.
+
+The current dispatch governs the apparent old §6.2 row-label discrepancy:
+D-218's fifth correction is structural accommodation B6, while D-222
+provenance is refinement B7. That is not a defect.
+
+### Sealed cold ordinary-owner journey
+
+The journey began in an empty owner context on the deployed Preview at 360 ×
+800. I did not open `#/qa`, seed a fixture or inspect implementation before the
+journey.
+
+1. On Now, I answered the discovery question with **Enough**.
+2. In Health, I authored destination **Move comfortably through a full day**
+   and milestone **Walk three times this week**.
+3. Now offered **Get some movement in: Walk three times this week**, with the
+   reason **Serves the goal you set**.
+4. I started it, navigated away, returned and found it still **Under way**.
+5. I completed it. Timeline recorded the completion, and I answered the
+   outcome question **Enough**.
+6. Health still correctly showed the milestone as **Still ahead**: completing
+   one move was not presented as completing the milestone.
+7. In Career, I authored destination **Move into a networking role** and
+   milestone **Finish the CCNA study plan**.
+8. I opened Life. It still showed only recency/coverage groups — **Recent** and
+   **Nothing here yet** — and neither authored direction appeared.
+
+The start/interruption/return/completion path and the distinction between a
+finished move and an unreached milestone pass. The required second-domain
+conclusion fails. Advancing a day without making the just-completed move read
+as already done is covered by the passing D-160 regression, but the owner
+phone execution of that step remains outstanding with the rest of the
+physical-phone gate.
+
+### QA-90-001 — Life still reads as recency after two authored directions
+
+**Severity:** Blocker. **Class:** behavioral / phase acceptance.
+**Governing contract:** the ordinary-owner contract in this handoff and the
+direction-over-recent-life intent in canonical plan §54.
+
+**Exact reproduction**
+
+1. Begin from a fresh deployed owner store without laboratory data.
+2. Author a destination and milestone in Health.
+3. Start and complete the goal-serving Now move; answer its outcome question.
+4. Author a second destination and milestone in Career.
+5. Open Life.
+
+**Actual:** Life groups domains solely as **Recent** and **Nothing here yet**.
+Neither **Move comfortably through a full day** nor **Move into a networking
+role** is rendered, so the screen still reads as coverage/recency.
+
+**Expected:** after two domains have owner-authored direction, Life must make
+that direction legible rather than continuing to read only as recency.
+
+**Implementation evidence:** `src/features/life/LifeScreen.tsx:102-110` builds
+every Life group from `DomainCoverage` via `standingFor`; the screen memo at
+`LifeScreen.tsx:168-169` supplies only `coverage.domains`. No destination or
+milestone state participates. `tests/browser/shell.spec.ts` proves the current
+coverage/recency grouping, but contains no two-domain direction journey. A
+repository search for the governing two-domain phrase finds only this handoff,
+not an executable regression.
+
+This is not a styling preference. It is the final assertion of the phase's
+named ordinary-owner contract and fails on the deployed checkpoint.
+
+### QA-90-002 — the three-object-kind proof passes without those three kinds
+
+**Severity:** Blocker. **Class:** semantic visual contract plus false-green
+instrument.
+**Governing decisions:** D-231 and the explicit acceptance requirement that a
+session, a course and a milestone are not represented by the same glyph.
+
+**Exact reproduction**
+
+1. Open the deployed controlled long-history scenario **Nine months of
+   evenings**.
+2. Open Career and inspect the rendered object-kind labels around its progress
+   ladder.
+3. Run the browser test named **a session, a course and a milestone are three
+   different things** unchanged.
+
+**Actual:** the controlled page exposes two `.kind` labels, both **Evidence**.
+`src/features/life/DomainPanels.tsx:495` assigns `kind="evidence"` to every
+progress rung, including the row whose visible measure is **Sessions done**.
+Although `src/components/ui.tsx` declares a `session` kind, no production use of
+`<ObjectKind kind="session">` exists.
+
+The test at `tests/browser/phase90.spec.ts:172-199` passes because it only
+requires `kinds.length > 0` and then proves that every marker has the same
+color, size and weight. It never requires **Session**, **Course** or
+**Milestone**, never proves three distinct marker texts/shapes, and therefore
+passes over `[Evidence, Evidence]` — the opposite of its title.
+
+**Expected:** the fixture and assertion must actually reach all three named
+object kinds and prove their distinct semantic markers while keeping the
+settled restrained styling. The production surfaces must use the matching
+semantic marker for each named object rather than labeling sessions as generic
+evidence.
+
+This blocks the visual-coherence gate because a specifically named coherence
+claim has no honest proof and the deployed controlled screen demonstrates the
+collapsed semantics.
+
+### QA-90-003 — the first stale-belief grouping boundary says three are four
+
+**Severity:** Blocker. **Class:** owner-facing semantic copy plus boundary
+false green.
+**Governing decisions:** D-232, D-235 and the full rendered-branch requirement.
+
+`src/intelligence/insights.ts:1354` sets
+`STALE_BELIEFS_BEFORE_GROUPING = 3`, and line 1386 groups at that threshold.
+The grouped evidence explanation at line 1436 is nevertheless hard-coded as:
+**four cards saying the same thing about four different subjects**.
+
+**Exact bounded reproduction**
+
+1. Load the controlled long-run history.
+2. Remove only records whose domain list contains `social`, leaving exactly
+   three independently stale belief subjects.
+3. Advance the trusted clock by 200 days and compute the grouped insights.
+4. Inspect the first `belief_check` group and its evidence reasoning.
+
+**Actual:** the group headline begins **3 things the app is still going on**,
+its comparable-evidence count is `3`, but its owner-facing explanation says
+**four cards** and **four different subjects**.
+
+**Expected:** every legal branch must state the count it actually groups, or
+use truthful count-neutral language.
+
+I created this probe only after the sealed journey, ran it against production
+modules, and removed it before the final tree checks. The existing synthetic
+audit reaches a four-item long-run case and checks grouping/headline/detail,
+but never asserts the evidence explanation or the exact threshold of three;
+it therefore gives false confidence at the first legal branch.
+
+### Visual, responsive and mobile findings
+
+No independent overflow, clipping, tap-target, typography or dark-theme defect
+reproduced at 360, 430 or 1280. The sealed 360 × 800 screenshots and DOM
+inspection showed a coherent live Now, domain and Life shell. The Android-style
+deployed run completed **233 checks** cleanly. F40 is genuinely narrowed to the
+two named authored textareas, and the touch-target guard genuinely narrows to
+the authored `min-height: 44px` declaration rather than accepting arbitrary
+numeric coincidences.
+
+Those PASSes do not cure QA-90-001 through QA-90-003. A simulated viewport and
+Galaxy-style browser context also do not substitute for the handoff's required
+physical-owner phone use. That gate was not performed in this independent
+environment and remains **OUTSTANDING**; Phase 90 cannot become GREEN without
+the owner's separate approval even after the blockers are repaired.
+
+### Phase-90 acceptance criteria
+
+| Acceptance criterion | Result | Evidence |
+| --- | --- | --- |
+| 1. Physical-owner phone gate | **OUTSTANDING / blocking** | Independent deployed 360 and Android-style runs passed technically; no physical owner approval was supplied. |
+| 2. Accommodation table is structural only | **PASS** | A1-A9 and B1-B7 are asserted as reserved shapes; no deferred accommodation is presented as built. |
+| 3. Ten owner-review acceptance questions are run honestly | **PASS as review; several product answers remain partial/no** | Results are recorded below without converting synthetic evidence into ordinary-owner proof. |
+| 4. Trusted clock before navigation, both pairs at three widths | **PASS** | `phase90-clock.spec.ts` creates a fresh context, installs `page.clock` before `goto`, and passes block/day plus week/day at 360, 430 and 1280. |
+| 5. Narrowed guard + named visual/semantic checks | **FAIL** | F40, touch targets, score-language exclusion, permission provenance and grouped-card structure pass. The named session/course/milestone proof is false green, and the 3-item grouped branch contradicts itself. |
+| 6. Normal gates + responsive browser + Android-style gate | **PASS mechanically; phase FAIL behaviorally** | All automated gates are green, demonstrating why the three acceptance defects require stronger regressions rather than being waived. |
+
+### Whole-app owner-review §11.8
+
+| # | Acceptance question | Honest Round 1 answer |
+| --- | --- | --- |
+| 1 | Can it learn a desired outcome not pre-modeled? | **Yes, demonstrated.** The cold owner authored previously unknown Health and Career outcomes. |
+| 2 | Can it help make a vague goal concrete without commandeering it? | **Partial / no.** The owner can author a milestone, but this journey did not show the app helping concretize vagueness beyond presenting fields. |
+| 3 | Can it distinguish completion from progress? | **Yes, demonstrated.** The move completed while the milestone remained **Still ahead**. |
+| 4 | Can a recurring blocker change approach while preserving the goal? | **No demonstration.** Existing safety wording correctly avoids promising adaptation, but the required adaptive behavior was not shown. |
+| 5 | Does the guide avoid pretending it knows the answer, and does volume fall as certainty rises? | **Partial.** The cold language did not claim certainty; the declining-volume claim is synthetic/contract evidence, not months of this owner's use. |
+| 6 | Can one meaningful cross-domain relationship be found? | **Synthetic only.** Controlled history can surface a relationship; the ordinary cold journey did not. |
+| 7 | Can patterns influence decisions and later be reevaluated? | **Partial / synthetic.** A goal-serving move used known direction, but later reevaluation was not demonstrated in ordinary use. |
+| 8 | Can an interrupted or changed life be revised humanely? | **Partial.** An interrupted active move resumed correctly; a broader life-change revision was not demonstrated. |
+| 9 | Are corrections easy, and is private data permissioned? | **Yes at the shipped contract level.** Owner-authored direction remains editable and provenance/permission defaults are guarded. |
+| 10 | Can the owner see what they are becoming over months without a score? | **No.** The deferred advancement-register / months view is not shipped, and no score is substituted for it. |
+
+### Full verification on the restored tree
+
+Every temporary probe was removed before these final checks.
+
+| Gate | Result |
+| --- | --- |
+| Fresh deployed ordinary-owner journey | **FAIL** at the required two-domain Life conclusion; preceding author/start/resume/complete/outcome/milestone distinctions passed |
+| Checkpoint equivalence | **PASS** — live `ab85c77` is bundle-equivalent to product checkpoint `c6e0b3a`; only three routing docs differ |
+| Live artifact integrity | **PASS** against CI run `33430068556` — eight files byte-for-byte; the older product-checkpoint manifest correctly does not describe the later docs deploy |
+| `npm run verify` | **PASS** — format, lint, typecheck, test, build, release manifest and rendered-copy scan |
+| Unit / contract / synthetic / adversarial | **1,895 passed** in 87 files |
+| Rendered-copy scan | **clean — 8,147 shipped strings**, 8,061 placed in a build-graph module, 1 script chunk, 2 stylesheets |
+| Browser, three widths, one worker | **762 passed** in 23.6 minutes — 254 each at 360, 430 and 1280; zero failures |
+| Deployed Android-style gate | **clean — 233 checks** |
+| Privacy scan | **clean — 304 tracked files** |
+| CI for deployed head | **PASS** — run `33430068556` |
+| QA probe cleanup | **PASS** — no temporary source, test or artifact remains |
+
+### Automated tests that gave false confidence
+
+- `tests/browser/shell.spec.ts` explicitly proves coverage/recency groups, but
+  never creates two owner-authored directions and never asks whether Life
+  reflects them. It stays green while QA-90-001 reproduces.
+- `tests/browser/phase90.spec.ts:172-199` is titled for session/course/milestone
+  distinction, but accepts any non-empty homogeneous marker list. It stays
+  green over `[Evidence, Evidence]`.
+- `tests/synthetic/phase90-audit-findings.test.ts` validates a four-item grouped
+  case and the threshold constant, but does not render a three-item group or
+  assert its evidence reasoning. It stays green while the legal three-item
+  branch says four.
+
+These are test adequacy findings tied to reproduced product/semantic failures,
+not a request to chase coverage percentage.
+
+### Explicit deferrals preserved
+
+The nineteen D-210 Phase 84 instrument-hardening findings remain untouched,
+open and identically numbered. `docs/qa/INSTRUMENT_HARDENING_BACKLOG.md` remains
+blob `58d5af071355d252c4a254fc685fcc9e8e88f417`. None of QA-90-001 through
+QA-90-003 is a renamed deferred item. Phase 10/11 work, the advancement
+register, richer explainability, adaptation promises, longitudinal
+personalization and every other named future item remain deferred exactly as
+the handoff requires.
+
+### Overall verdict and repair requirement
+
+**FAIL. Routing Phase 90 remains YELLOW.** Do not promote to GREEN and do not
+start the next phase. The builder must reproduce all three failures exactly
+before repair; identify each whole failure class; make Life communicate
+owner-authored direction after the second domain without regressing honest
+coverage; make the three object kinds semantically real and prove the named
+three rather than any markers; make every legal grouped-belief count truthful;
+and add regressions that fail when each defect is deliberately reintroduced.
+
+Then rerun the aggregate gate, complete three-width browser matrix, clock pairs,
+copy/semantic guards, deployed Android-style gate, privacy scan, live artifact
+integrity and CI; deploy a repaired checkpoint; preserve every passing behavior
+and every deferral; and dispatch Round 2 to this same Codex QA conversation at
+High. Physical-owner phone approval remains a separate necessary gate and must
+not be fabricated by automation.
+
+---
+
+## Round 1 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** **Max** — this is an audit-repair campaign across an
+ordinary-owner behavior contract, semantic object identity and a rendered
+branch boundary.
+**Conversation:** **CURRENT** — the original routing 90 Claude builder
+conversation.
+
+```text
+Routing Phase 90 repair after independent QA Round 1 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_90_QA_HANDOFF.md in full. Round 1 at the end contains three
+new Blockers, QA-90-001 through QA-90-003. Execute the Round 1 repair handoff
+exactly as written.
+
+Keep Phase 90 YELLOW. Before changing implementation, reproduce each exact
+failure and explain its whole class:
+
+1. From a fresh ordinary-owner store, create direction and milestones in two
+   domains. Life still renders only coverage/recency groups and neither
+   direction. Repair Life so the settled two-domain contract reads as
+   owner-authored direction without inventing claims or regressing honest
+   coverage and empty states.
+2. The deployed controlled Career surface renders `[Evidence, Evidence]`, and
+   the test called "a session, a course and a milestone are three different
+   things" passes because it asserts only a non-empty homogeneous marker list.
+   Make session, course and milestone semantically distinct production object
+   kinds and make the regression actually reach and assert all three named
+   kinds while preserving the restrained shared visual system.
+3. `STALE_BELIEFS_BEFORE_GROUPING` is 3, but the legal three-item group explains
+   itself as "four cards" about "four different subjects". Repair the entire
+   grouped-count class so every rendered cardinality is truthful, including the
+   exact threshold boundary, and assert owner-facing evidence reasoning.
+
+For each blocker, add an honest regression and prove it by deliberately
+reintroducing the defect. Do not merely change the test title, fixture or
+threshold to make the existing assertion pass. Preserve the clock-before-
+navigation proof, narrowed F40/touch-target guards, accommodation-as-structure
+table, all passing owner-flow distinctions, all privacy/provenance behavior,
+all nineteen D-210 deferrals and every other explicit deferral.
+
+Run `npm run verify`, the full three-width one-worker browser matrix, both
+trusted-clock pairs at all three widths, the full rendered-branch/copy guards,
+privacy scan, deployed Android-style gate, CI and live byte-for-byte artifact
+integrity. Deploy the repaired checkpoint, append the repair and verification
+evidence here, keep Phase 90 YELLOW, and dispatch Round 2 to the SAME Codex QA
+conversation at High. The physical-owner phone gate remains outstanding and
+must not be represented as automated approval.
+
+Do not edit QA's Round 1, alter
+docs/qa/INSTRUMENT_HARDENING_BACKLOG.md, put a completion marker in another
+handoff, start the next phase or ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** Max.
+**Conversation:** CURRENT — the original routing 90 Claude builder conversation.
+
+```text
+Continue routing Phase 90 after independent QA Round 1 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_90_QA_HANDOFF.md in full and execute the complete Round 1
+repair handoff at its end exactly as written. Do not ask me to paste the file.
+```
+
+<!-- LCO_COMPLETE -->
