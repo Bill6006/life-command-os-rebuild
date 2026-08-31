@@ -26,6 +26,7 @@ import {
   type DestinationReading,
 } from '../../intelligence/destinations'
 import { isCorrectableEvent } from '../../intelligence/corrections'
+import { insightsFor, type GatheringLine } from '../../intelligence/insights'
 import { readProgress, type ProgressReading } from '../../intelligence/progress'
 import type { ConceptId } from '../../domain/windows'
 import {
@@ -529,6 +530,23 @@ export interface DomainPageData {
   readonly recentChanges: readonly RecentChange[]
   /** Entries here that can be withdrawn or re-dated — F32, package 6. */
   readonly correctable: readonly CorrectableEvent[]
+  /**
+   * What the app is in the middle of working out about this area — AUD-0043.
+   *
+   * Canonical section 7 lists eight questions a domain page should answer and
+   * this was the only one no page answered anywhere. It is also the one the
+   * pages are best placed to answer: a father opening Fatherhood sees what the
+   * app *believes* about his daughter and not what it is three occasions into
+   * deciding about her — which is the thing he would most want to correct while
+   * it is still forming, and which he can currently only find on Insights among
+   * everything else.
+   *
+   * **Read, never recomputed.** These are `insightsFor`'s own gathering lines,
+   * filtered by the domain each already carries. The coverage precedent forbids
+   * a second reading for a good reason: two computations over one history
+   * eventually disagree and the owner cannot tell which screen is lying.
+   */
+  readonly gathering: readonly GatheringLine[]
 }
 
 function skillsFor(situation: Situation, domains: readonly LifeDomainId[]): readonly DomainSkill[] {
@@ -661,5 +679,28 @@ export function assembleDomainPageData(situation: Situation, page: LifePage): Do
     blockers: blockersFor(situation, page.domains),
     recentChanges: recentChanges(situation, page.domains),
     correctable: correctableFor(situation, page.domains),
+    gathering: gatheringFor(situation, page.domains),
   }
+}
+
+/**
+ * The gathering lines that belong to this page.
+ *
+ * A filter over `insightsFor(situation).gathering` and nothing else. It is
+ * deliberately not a rebuild from `situation.learning`: `domainPages.ts` is a
+ * thin feature-local grouping that decides nothing (`ARCHITECTURE_BOUNDARIES.md`
+ * is explicit), and the moment this file learned to work out for itself what is
+ * in progress it would be a second intelligence with its own opinion.
+ *
+ * A line with no area is dropped rather than shown on every page. It has no
+ * page to belong to, and putting it on all of them would be worse than leaving
+ * it where it already reads correctly.
+ */
+function gatheringFor(
+  situation: Situation,
+  domains: readonly LifeDomainId[],
+): readonly GatheringLine[] {
+  return insightsFor(situation).gathering.filter(
+    (line) => line.domain !== undefined && domains.includes(line.domain),
+  )
 }

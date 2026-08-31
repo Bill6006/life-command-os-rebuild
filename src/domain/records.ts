@@ -1,5 +1,6 @@
 import type { LifeDomainId } from './domains'
 import type { EntityRef } from './entities'
+import { describeDuration } from './horizon'
 import type { RecordId } from './ids'
 import type { PrivacyClass } from './privacy'
 import type { ActionVerb, RecommendationSemantics } from './recommendation'
@@ -961,8 +962,20 @@ export function describeFactValue(
       return value.value ? 'yes' : 'no'
     case 'scale':
       return `${value.value} of ${value.of}`
+    /*
+     * The same words the premise uses — AUD-0038(b).
+     *
+     * This said "60 min" while the line at the top of Now said the same
+     * quantity as a phrase, on the same evening, about the same fact. The
+     * audit's finding is one formatter; this is the third of the three surfaces
+     * that needed it, and the one that fixed where the formatter had to live.
+     *
+     * **Display only, and `factValuesEqual` no longer reads it.** Two durations
+     * a minute apart now render the same phrase, and comparing facts by their
+     * rendered words would have made that a claim that nothing had changed.
+     */
     case 'duration':
-      return `${value.minutes} min`
+      return describeDuration(value.minutes)
     case 'entity': {
       if (labelFor === undefined) return value.value.id
       return labelFor(value.value) ?? `${value.value.id} (missing)`
@@ -975,5 +988,18 @@ export function factValuesEqual(a: FactValue, b: FactValue): boolean {
   if (a.type === 'entity' && b.type === 'entity') {
     return a.value.id === b.value.id && a.value.kind === b.value.kind
   }
+  /*
+   * Durations compare by the number, not by the sentence — routing 90.
+   *
+   * Equality used to be "these render the same", which was true while a
+   * duration rendered its own minute count. It stopped being true the moment
+   * ninety-one minutes and ninety-four minutes both became "an hour and a
+   * half": two genuinely different readings would have compared equal, and a
+   * change the owner made would have been recorded as no change at all.
+   *
+   * A *display* change must never move what the app believes. This is the line
+   * that keeps that true.
+   */
+  if (a.type === 'duration' && b.type === 'duration') return a.minutes === b.minutes
   return describeFactValue(a) === describeFactValue(b)
 }

@@ -28,7 +28,7 @@ import type { DimensionName, Evaluation } from './evaluate'
 import { beliefKey } from './learning'
 import { describeHours, endsAtClock, SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
 import { entityValue } from './values'
-import { blockNoun, horizonWord } from './vocabulary'
+import { blockNoun, describeDuration, horizonWord } from './vocabulary'
 
 /**
  * The explanation generator (canonical plan section 17.1 step 9, and 61).
@@ -125,7 +125,7 @@ export function describePremise(situation: Situation): string {
   }
 
   const usable = situation.usableMinutes
-  if (isUsable(usable)) clauses.push(`about ${Math.round(usable.value)} minutes free`)
+  if (isUsable(usable)) clauses.push(`about ${describeDuration(usable.value)} free`)
 
   /*
    * Whether she is here — QA-82-001, and the line the finding was written

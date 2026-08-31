@@ -39,7 +39,14 @@ import { instant } from '../domain/time'
  * same arrangement `memoryContext.ts` uses for `HistorySource`, and for the
  * same reason: two copies stay identical right up until they do not.
  */
-export { blockNoun, hereNowWord, horizonWord, restOfWord, withinPhrase } from '../domain/horizon'
+export {
+  blockNoun,
+  describeDuration,
+  hereNowWord,
+  horizonWord,
+  restOfWord,
+  withinPhrase,
+} from '../domain/horizon'
 
 const ALWAYS = instant(0)
 

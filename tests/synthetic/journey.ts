@@ -314,6 +314,35 @@ export const OWNER_ROUTES: readonly OwnerRoute[] = [
     needs: {},
     writes: ['coverage-update'],
   },
+  /*
+   * The same two controls, on the screen that raises the flag — AUD-0038(a).
+   *
+   * Two entries rather than one with two surfaces, because this table asks per
+   * screen and the whole finding was that the response lived on a different
+   * screen from the flag. A table that recorded "reachable somewhere" would
+   * have called the broken loop reachable, which it was — two taps away, on the
+   * page section 8 exists so the owner does not have to patrol.
+   *
+   * They need a stale area to be drawn at all: the panel renders only for a
+   * `coverage` limiter, so `needs` names the observation that makes an area go
+   * quiet rather than leaving the precondition unstated.
+   */
+  {
+    id: 'now-domain-status',
+    surface: 'now',
+    gesture: 'Something’s changed, under “Out of date” on Now',
+    builder: 'corrections.domainStatusCorrectionRecord',
+    needs: { records: ['observation'] },
+    writes: ['domain-update'],
+  },
+  {
+    id: 'now-coverage-review',
+    surface: 'now',
+    gesture: 'I’ve been keeping on top of this, under “Out of date” on Now',
+    builder: 'corrections.coverageInterpretationRecord',
+    needs: { records: ['observation'] },
+    writes: ['coverage-update'],
+  },
   {
     id: 'goal-correction',
     surface: 'domain-page',

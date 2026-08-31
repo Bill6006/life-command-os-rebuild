@@ -1288,11 +1288,26 @@ function contradictionCard(
   }
 }
 
+/**
+ * One belief that has gone old, and everything a group of them would need.
+ *
+ * The card is what it always was. What is new is that the parts it was built
+ * from come back with it, so `staleBeliefCards` below can name the oldest and
+ * list the rest without recomputing any of it — AUD-0044's risk note is that
+ * grouping hides which belief is oldest unless the card names it.
+ */
+interface StaleBelief {
+  readonly card: Built
+  readonly subject: string
+  readonly days: number
+  readonly domain: LifeDomainId | undefined
+}
+
 function staleBeliefCard(
   verb: ActionVerb,
   episodes: readonly Episode[],
   situation: Situation,
-): Built | undefined {
+): StaleBelief | undefined {
   const subject = patternName(verb, episodes, situation)
   const answered = episodes.filter((episode) => episode.outcomes.length > 0)
   if (answered.length < 2) return undefined
@@ -1304,7 +1319,7 @@ function staleBeliefCard(
   const days = Math.max(0, localDaysBetween(newest.dayId, today))
   if (days < STALE_BELIEF_DAYS) return undefined
 
-  return {
+  const card: Built = {
     rank: 65,
     insight: {
       id: `stale:${verb}`,
@@ -1325,6 +1340,112 @@ function staleBeliefCard(
       belief: beliefKey('effect', verb),
     },
   }
+
+  return { card, subject, days, domain: domainOf(episodes) }
+}
+
+/**
+ * How many stale beliefs it takes before they become one card — AUD-0044.
+ *
+ * Three, not two. *"Do not group at two — a pair reads fine as a pair"*, and
+ * the loss when a pair is grouped is real: two named beliefs each keep the
+ * `belief` key the owner overrules them with, and the group cannot.
+ */
+export const STALE_BELIEFS_BEFORE_GROUPING = 3
+
+/**
+ * The stale-belief cards, grouped once there are enough of them — AUD-0044.
+ *
+ * ## The finding
+ *
+ * `staleBeliefCard` stands beside whichever card won rather than competing,
+ * which is right — the age of the evidence is a different question from what it
+ * says — and **nothing capped how many may stand beside**. After an ordinary
+ * busy quarter, Insights rendered four consecutive *"GOING ON OLD EVIDENCE"*
+ * cards: one template, four nouns.
+ *
+ * That is DEF-0026's class on a new surface. D-075 took exactly this off the
+ * Life overview — *"two and a half phone screens, seven of the eleven lines
+ * identical; every sentence was true; the screen was homework"* — and the
+ * lesson was recorded as a decision about Life rather than as a rule about
+ * owner surfaces, so it did not travel. What makes it pointed is that **the
+ * top of this same screen already groups correctly**: the coverage card names
+ * the areas, names the longest-silent one and points at the full list.
+ *
+ * ## So this is the coverage card's construction, one card kind away
+ *
+ * No new computation and no new data. The group names every belief it covers,
+ * because a group that hid which one was oldest would trade one defect for
+ * another, and it carries no `belief` key: a single key over four beliefs would
+ * let a correction land on a belief the owner was not looking at.
+ *
+ * Deliberately before Phase 9 lays out the card stack, because the alternative
+ * is styling the wall rather than removing it.
+ */
+function staleBeliefCards(stale: readonly StaleBelief[]): readonly Built[] {
+  if (stale.length < STALE_BELIEFS_BEFORE_GROUPING) return stale.map((entry) => entry.card)
+
+  const oldest = stale.reduce((most, entry) => (entry.days > most.days ? entry : most))
+  const youngest = stale.reduce((least, entry) => (entry.days < least.days ? entry : least))
+  const domains = new Set(stale.map((entry) => entry.domain))
+  const shared = domains.size === 1 ? [...domains][0] : undefined
+
+  return [
+    {
+      rank: 65,
+      insight: {
+        id: 'stale:several',
+        kind: 'stale-assumption',
+        eyebrow: EYEBROW['stale-assumption'],
+        domain: shared,
+        headline: `${stale.length} things the app is still going on are ${describeDays(
+          youngest.days,
+        )} old or more — ${listNames(stale.map((entry) => lowerFirst(entry.subject)))}.`,
+        detail: `${capitalise(lowerFirst(oldest.subject))} is the oldest, at ${describeDays(
+          oldest.days,
+        )}. Each is still being used when it comes up.`,
+        confidence: undefined,
+        /*
+         * No belief key, for the same reason the coverage card has none.
+         *
+         * The individual card carries `beliefKey('effect', verb)` so the owner
+         * can overrule the thing it is about. One key over four beliefs would
+         * apply a correction to whichever verb happened to be first, which is
+         * worse than offering no correction here — and the correction is not
+         * lost: it lives beside the claim itself, on the card that actually
+         * states what the app thinks (D-087's rule about where corrections go).
+         */
+        belief: undefined,
+        sources: [],
+        evidence: {
+          comparable: stale.length,
+          window: undefined,
+          counted: undefined,
+          rates: [],
+          counterexamples: [],
+          included: stale.flatMap((entry) => entry.card.insight.evidence.included),
+          includedTitle: 'What has gone old',
+          excluded: [],
+          excludedTitle: undefined,
+          strongerIn: undefined,
+          weakerIn: undefined,
+          trend: undefined,
+          mix: undefined,
+          reasoning: [
+            'Old evidence is not thrown away — it counts for less as it ages, and never for nothing.',
+            'These are grouped because four cards saying the same thing about four different subjects is a wall, not a finding.',
+          ],
+        },
+      },
+    },
+  ]
+}
+
+/** "a, b and c" — the joiner the coverage card uses, so the two agree. */
+function listNames(names: readonly string[]): string {
+  if (names.length <= 1) return names[0] ?? ''
+  if (names.length === 2) return `${names[0]} and ${names[1]}`
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
 }
 
 // ---------------------------------------------------------------------------
@@ -2111,6 +2232,20 @@ export interface GatheringLine {
   readonly occasions: number
   /** What it would take. Concrete, so the number is not a mystery. */
   readonly needs: string
+  /**
+   * Which area it belongs to, where that is knowable — AUD-0043.
+   *
+   * Carried on the line rather than recomputed by whoever wants to filter it.
+   * A domain page asking *"what is the app working out here?"* has to read the
+   * same list Insights reads, or the two screens eventually disagree about what
+   * is in progress and the owner cannot tell which is lying — the coverage
+   * precedent, and the reason `domainPages.ts` is forbidden to decide anything.
+   *
+   * `undefined` where the episodes behind the line have no majority area, which
+   * `domainOf` already returns for a mixed run. A line with no area is still a
+   * true gathering line; it simply has no page to be shown on.
+   */
+  readonly domain?: LifeDomainId
 }
 
 /**
@@ -2165,14 +2300,18 @@ export function insightsFor(situation: Situation): InsightsReport {
       (named === undefined ? 'the app has no name for what this is about' : undefined)
     if (needs === undefined) continue
 
+    const associationDomain = situation.entities.resolve(found.object)?.domain
     gathering.push({
       subject: `${capitalise(lowerFirst(found.label))} after ${lowerFirst(
         patternNameFor(found.verb, named),
       )}`,
       occasions: found.overall.present.length + found.overall.absent.length,
       needs,
+      ...(associationDomain === undefined ? {} : { domain: associationDomain }),
     })
   }
+
+  const stale: StaleBelief[] = []
 
   for (const [verb, episodes] of episodesByVerb(situation)) {
     /*
@@ -2243,15 +2382,17 @@ export function insightsFor(situation: Situation): InsightsReport {
     /*
      * The age of the evidence is a different question from what it says, so
      * this one stands beside whichever card won rather than competing with it.
+     *
+     * Collected rather than pushed — AUD-0044. Whether it renders as its own
+     * card or as one line of a group is a question about the whole screen, and
+     * a card built one verb at a time has no view of the others. That is the
+     * finding's own likely root cause.
      */
-    const cards = [kept, staleBeliefCard(verb, episodes, situation)].filter(
-      (card): card is Built => card !== undefined,
-    )
+    const staleHere = staleBeliefCard(verb, episodes, situation)
+    if (staleHere !== undefined) stale.push(staleHere)
 
-    if (cards.length > 0) {
-      built.push(...cards)
-      continue
-    }
+    if (kept !== undefined) built.push(kept)
+    if (kept !== undefined || staleHere !== undefined) continue
 
     // Nothing said, and nothing to say — but only report that where the app is
     // not already reporting something observed about the same move.
@@ -2263,6 +2404,7 @@ export function insightsFor(situation: Situation): InsightsReport {
       0,
     )
     const short = MIN_FOR_A_RATE - best
+    const episodeDomain = domainOf(episodes)
     gathering.push({
       subject,
       occasions: episodes.length,
@@ -2272,9 +2414,11 @@ export function insightsFor(situation: Situation): InsightsReport {
           : short === 1
             ? 'one more occasion like these'
             : `${short} more occasions like these`,
+      ...(episodeDomain === undefined ? {} : { domain: episodeDomain }),
     })
   }
 
+  built.push(...staleBeliefCards(stale))
   built.push(...coverageCards(situation))
   built.push(...trajectoryCards(situation))
   built.push(...goalTrajectoryCards(situation))

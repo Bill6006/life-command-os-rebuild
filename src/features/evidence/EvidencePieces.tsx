@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react'
 import type { RecordId } from '../../domain/ids'
-import type { EvidenceLine, MeasuredRate, PatternConfidence } from '../../intelligence/insights'
+import type {
+  EvidenceLine,
+  GatheringLine,
+  MeasuredRate,
+  PatternConfidence,
+} from '../../intelligence/insights'
 import type { RecordOrigin } from '../history/origin'
 import './evidence.css'
 
@@ -137,5 +142,32 @@ export function EvidenceNote({
       <p className="ev-block__title">{title}</p>
       <div className="ev-block__body">{children}</div>
     </div>
+  )
+}
+
+/**
+ * What the app has not settled yet — AUD-0043.
+ *
+ * Insights has rendered this since Phase 6 and rendered it well; a domain page
+ * now asks the same question about one area, and the audit's requirement is
+ * that the two come from one read so they cannot diverge. One component and one
+ * class is the version of that a reader can check by looking.
+ *
+ * Deliberately one quiet list rather than a card each. Nine cards saying nothing
+ * is a wall, and this is the part of a screen that should be dull: it makes no
+ * claim, so nothing here should look like one.
+ */
+export function GatheringList({ lines }: { lines: readonly GatheringLine[] }) {
+  return (
+    <ul className="gathering" data-testid="gathering">
+      {lines.map((line) => (
+        <li key={line.subject} className="gathering__row">
+          <span className="gathering__subject">{line.subject}</span>
+          <span className="gathering__needs">
+            {line.occasions} so far — {line.needs}
+          </span>
+        </li>
+      ))}
+    </ul>
   )
 }

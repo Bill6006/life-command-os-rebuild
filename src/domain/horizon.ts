@@ -133,3 +133,68 @@ export function restOfWord(block: DayBlock | undefined): string {
 export function withinPhrase(block: DayBlock | undefined): string {
   return block === 'evening' || block === 'late-night' ? 'tonight' : `in ${blockNoun(block)}`
 }
+
+/**
+ * A stretch of time, in the unit a person would use for it — AUD-0038(b).
+ *
+ * ## The finding
+ *
+ * The premise on Now read *"Saturday late afternoon, 8 hours of sleep, about
+ * 120 minutes free, Adaya is here."* A hundred and twenty minutes is a
+ * machine's unit; a person says "a couple of hours". The app already knew this
+ * in one place — `arbitrate.ts` had a private `freeTime` that switched to hours
+ * above ninety minutes — and the premise, written in a different file at a
+ * different time, did not. Two renderings of one quantity, disagreeing on the
+ * same evening.
+ *
+ * ## So there is one of it, and it is here
+ *
+ * D-178's rule is one name for a thing, in the layer every surface can reach,
+ * and the audit's implementation scope named `vocabulary.ts`, which re-exports
+ * it. The definition is **here** for the reason at the top of this file: the
+ * domain layer may not import the intelligence layer, and `describeFactValue`
+ * in `domain/records.ts` carried a third rendering of its own — a fact panel
+ * reading *"Usable time now — 60 min"* while the premise said the same
+ * quantity in words. Two doors, one definition; a formatter that lived in
+ * `intelligence/` would have left that third one exactly where it was.
+ *
+ * ## What it is not
+ *
+ * It is not a rounding of the owner's own stated figure into vagueness. Below
+ * ninety minutes the count survives, because "forty minutes" is how the owner
+ * would say forty minutes and blurring it would lose information he supplied.
+ * The change is above ninety, where the count is the thing that stopped
+ * sounding like a person, and it is a *display* function: nothing in
+ * `DecisionContext` moves, no move becomes eligible or ineligible, and the
+ * arithmetic underneath is untouched. Section 22's no-score rule is unaffected
+ * — a duration names what it measures and the owner supplied it (D-084).
+ */
+const HOUR_WORDS: Record<number, string> = {
+  1: 'one',
+  2: 'two',
+  3: 'three',
+  4: 'four',
+  5: 'five',
+  6: 'six',
+  7: 'seven',
+  8: 'eight',
+  9: 'nine',
+}
+
+export function describeDuration(minutes: number): string {
+  const whole = Math.round(minutes)
+  if (whole < 90) return `${whole} minutes`
+
+  // Half-hours, because that is the resolution a person speaks in above an hour.
+  const hours = Math.round(whole / 30) / 2
+  const full = Math.floor(hours)
+  const half = hours - full >= 0.5
+
+  if (full === 1 && half) return 'an hour and a half'
+  // "A couple of hours" is what two hours is called, and the audit says so.
+  if (full === 2 && !half) return 'a couple of hours'
+
+  const word = HOUR_WORDS[full] ?? String(full)
+  if (!half) return `${word} hours`
+  return `${word} and a half hours`
+}

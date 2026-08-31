@@ -1,6 +1,6 @@
 import type { DayBlock } from '../domain/time'
 import { profileFor } from './moves'
-import { blockNoun } from './vocabulary'
+import { blockNoun, describeDuration } from './vocabulary'
 
 /** Sentence case for a phrase that is normally read mid-sentence. */
 function capitaliseFirst(phrase: string): string {
@@ -10,15 +10,15 @@ function capitaliseFirst(phrase: string): string {
 /**
  * A stretch of free time, in the unit a person would use for it.
  *
- * "about 300 minutes free" is a true sentence nobody says. The app already
- * switches to hours once a figure is large enough to be read that way, and
- * five hours is well past that.
+ * "about 300 minutes free" is a true sentence nobody says. This used to switch
+ * to hours here, privately, while the premise on Now went on saying "about 120
+ * minutes free" — two renderings of one quantity, in two files, disagreeing on
+ * the same evening. AUD-0038(b) is that finding; `describeDuration` is the one
+ * formatter both now go through (D-178).
  */
-function freeTime(minutes: number): string {
-  return minutes >= 90 ? describeHours(minutes / 60) : `${Math.round(minutes)} minutes`
-}
+const freeTime = describeDuration
 import type { Evaluation } from './evaluate'
-import { describeHours, type Situation } from './situation'
+import type { Situation } from './situation'
 
 /**
  * Global arbitration (canonical plan section 17.1 step 8, and 17.2).

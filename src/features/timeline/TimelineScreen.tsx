@@ -53,7 +53,7 @@ export function TimelineScreen() {
   if (!memory.ready || data === undefined) {
     return (
       <Screen title="Timeline">
-        <Panel>
+        <Panel tone="quiet">
           <p className="note">Opening your history…</p>
         </Panel>
       </Screen>

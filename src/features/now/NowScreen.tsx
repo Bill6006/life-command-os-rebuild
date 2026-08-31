@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Panel, PrimarySurface, Row, Rows, Screen } from '../../components/ui'
 import { newRecordId, type RecordId } from '../../domain/ids'
+import type { LifeDomainId } from '../../domain/domains'
 import type { CanonicalRecord } from '../../domain/records'
 import type { MemoryView } from '../../memory/view'
 import { renderRecommendation, type RecommendationSemantics } from '../../domain/recommendation'
@@ -9,7 +10,9 @@ import { localDateTimeAt, systemClock, type DayBlock } from '../../domain/time'
 import { entityRef } from '../../domain/entities'
 import {
   beliefCorrectionRecord,
+  coverageInterpretationRecord,
   describeBelief,
+  domainStatusCorrectionRecord,
   forbidRecord,
 } from '../../intelligence/corrections'
 import {
@@ -50,7 +53,7 @@ import {
   type QuestionOption,
   type QuestionSpec,
 } from '../../intelligence/questions'
-import type { Situation } from '../../intelligence/situation'
+import { LIMITER_LABEL, type Situation } from '../../intelligence/situation'
 import { startThreadRecord, threadOfferFor, type ThreadOffer } from '../../intelligence/threads'
 import { hereNowWord, horizonWord } from '../../intelligence/vocabulary'
 import { isPreview, isProduction } from '../../platform/buildInfo'
@@ -62,7 +65,7 @@ import {
   EvidenceRate,
 } from '../evidence/EvidencePieces'
 import { originResolver, type RecordOrigin } from '../history/origin'
-import { BlockerQuestion } from '../life/DomainPanels'
+import { BlockerQuestion, StandingControls } from '../life/DomainPanels'
 import { useMemory } from '../memory/memoryContext'
 import './NowScreen.css'
 
@@ -358,6 +361,16 @@ export function NowScreen() {
    */
   const [blocked, setBlocked] = useState<RecommendationSemantics | undefined>(undefined)
 
+  /**
+   * The coverage response, open or closed — AUD-0038(a).
+   *
+   * Closed by default and closed again the moment it is used, because Now is
+   * action-first: an area the app has not heard about is worth one line and two
+   * links, not a form waiting on the screen he opens every evening.
+   */
+  const [coverageOpen, setCoverageOpen] = useState(false)
+  const [coverageDraft, setCoverageDraft] = useState('')
+
   /*
    * A synchronous latch, deliberately a ref rather than state.
    *
@@ -427,7 +440,7 @@ export function NowScreen() {
   if (!memory.ready) {
     return (
       <Screen title="Now">
-        <Panel>
+        <Panel tone="quiet">
           <p className="note">Opening your history…</p>
         </Panel>
       </Screen>
@@ -449,6 +462,41 @@ export function NowScreen() {
         recordedAt: systemClock().now(),
       }),
     ])
+  }
+
+  /*
+   * Closing the coverage loop where it was opened — AUD-0038(a).
+   *
+   * The same two records the Life domain page writes, from the same two
+   * functions. Nothing is interpreted here and nothing new is written: "I've
+   * been keeping on top of this" is an interpretation of the owner's own
+   * attention, and "something's changed" is his own sentence joining the
+   * area's history.
+   */
+  const markCoverageReviewed = (domain: LifeDomainId) => {
+    append(() => [
+      coverageInterpretationRecord(domain, 'moderate', {
+        now: memory.now,
+        zone: memory.zone,
+        recordedAt: systemClock().now(),
+      }),
+    ])
+    setCoverageOpen(false)
+    setCoverageDraft('')
+  }
+
+  const correctCoverageStatus = (domain: LifeDomainId, summary: string) => {
+    const trimmed = summary.trim()
+    if (trimmed === '') return
+    append(() => [
+      domainStatusCorrectionRecord(domain, trimmed, {
+        now: memory.now,
+        zone: memory.zone,
+        recordedAt: systemClock().now(),
+      }),
+    ])
+    setCoverageOpen(false)
+    setCoverageDraft('')
   }
 
   const act = (semantics: RecommendationSemantics, situation: Situation) => {
@@ -803,6 +851,49 @@ export function NowScreen() {
             }
           />
         </>
+      )}
+
+      {/*
+        The response to the flag, on the screen that raised it — AUD-0038(a).
+
+        Directly under the decision, because that is where the "Out of date"
+        line is: as the primary surface's eyebrow when there is nothing to
+        suggest, and as a row of the reasoning when there is. Section 8's whole
+        point is that the owner should not have to patrol domain pages, and
+        raising a gap here while keeping the response two taps away on Life was
+        the loop left open.
+
+        It draws only for a `coverage` limiter. The other three kinds are
+        obstacles in the evening — a body short of rest, a night nearly over —
+        and neither of these controls answers one of those. D-063: coverage is
+        the app's own blind spot, not a fact about him, and it is the one
+        limiter he can close by telling it something.
+      */}
+      {decision.situation.limiter?.kind !== 'coverage' ? null : (
+        <div className="arrives">
+          <Panel title={LIMITER_LABEL.coverage}>
+            <p className="domain-coverage__summary" data-testid="now-coverage-summary">
+              {decision.situation.limiter.summary}
+            </p>
+            <StandingControls
+              label={decision.situation.domains.labelFor(decision.situation.limiter.domain)}
+              inputId={`now-status-${decision.situation.limiter.domain}`}
+              disabled={busy}
+              open={coverageOpen}
+              draft={coverageDraft}
+              onOpen={() => setCoverageOpen(true)}
+              onClose={() => {
+                setCoverageOpen(false)
+                setCoverageDraft('')
+              }}
+              onDraftChange={setCoverageDraft}
+              onReviewed={() => markCoverageReviewed(decision.situation.limiter!.domain)}
+              onSubmit={(summary) =>
+                correctCoverageStatus(decision.situation.limiter!.domain, summary)
+              }
+            />
+          </Panel>
+        </div>
       )}
 
       {/*

@@ -242,7 +242,16 @@ export function LifeScreen() {
 
           {situation === undefined ? null : <DayShape situation={situation} />}
 
-          <Panel title="Why this is here">
+          {/*
+            The app explaining its own arrangement — quiet, and last.
+
+            D-075 took this screen from two and a half phone screens back to
+            about one and a half by refusing to make it homework. This paragraph
+            is the one thing on it that is about the app rather than about him,
+            so it takes the recessed tier rather than competing with the areas
+            above it.
+          */}
+          <Panel title="Why this is here" tone="quiet">
             {/*
               Trimmed in Phase 82, and not to make room.
 

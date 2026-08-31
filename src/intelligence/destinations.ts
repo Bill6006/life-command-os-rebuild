@@ -146,20 +146,63 @@ export interface DestinationReading {
    * surface whose whole job is to say what it understands.
    */
   readonly missing: readonly string[]
+  /**
+   * Which of the four parts the owner has actually said — routing 90, G-009.
+   *
+   * The surface needs this to typeset an absent part **as unstated**, in place,
+   * rather than by leaving a row out and mentioning it in a footnote. A row
+   * that is simply missing reads as a shorter destination; a row that says *not
+   * said yet* reads as a question nobody has answered, which is what it is.
+   *
+   * It is a set of booleans and never a count. `stated` has no length, no
+   * total and no order — there is deliberately nothing here a surface could
+   * turn into "two of four", which is a completion figure and is what section
+   * 22 and D-162 forbid about the owner. The four names are fixed, so a fifth
+   * part would be a compile error rather than a silently uncounted one.
+   */
+  readonly stated: DestinationPartsStated
+}
+
+export interface DestinationPartsStated {
+  readonly baseline: boolean
+  readonly next: boolean
+  readonly evidence: boolean
+  readonly unknowns: boolean
 }
 
 const NOT_SAID_BASELINE = 'You have not said where you are starting from.'
 const NOTHING_NEXT = 'Nothing is named as the next step yet.'
+const NOT_SAID_EVIDENCE = 'You have not said what would count as getting somewhere.'
+const NOT_SAID_UNKNOWNS = 'You have not said what you are unsure about.'
+
+/**
+ * What has been said and what has not, from one place.
+ *
+ * `missingParts` and `stated` are two readings of the same four conditions, and
+ * two copies of them would eventually disagree — a page saying a part was
+ * unstated above a sentence saying the app knew it. So the conditions are here
+ * and both are derived from them.
+ */
+function statedParts(destination: ActiveDestination): DestinationPartsStated {
+  return {
+    baseline: destination.baseline !== undefined,
+    next: destination.next !== undefined,
+    evidence: destination.evidence.length > 0,
+    unknowns: destination.unknowns.length > 0,
+  }
+}
 
 export function describeDestination(destination: ActiveDestination): DestinationReading {
   const next = destination.next
+  const stated = statedParts(destination)
   return {
     aim: destination.aim,
     baseline: destination.baseline ?? NOT_SAID_BASELINE,
     next: next === undefined ? NOTHING_NEXT : next.goal.statement,
-    evidence: destination.evidence,
-    unknowns: destination.unknowns,
+    evidence: stated.evidence ? destination.evidence : [NOT_SAID_EVIDENCE],
+    unknowns: stated.unknowns ? destination.unknowns : [NOT_SAID_UNKNOWNS],
     missing: missingParts(destination),
+    stated,
   }
 }
 
@@ -173,11 +216,12 @@ export function describeDestination(destination: ActiveDestination): Destination
  * destination with one part filled in is not 25% of a destination.
  */
 export function missingParts(destination: ActiveDestination): readonly string[] {
+  const stated = statedParts(destination)
   const out: string[] = []
-  if (destination.baseline === undefined) out.push('where you are starting from')
-  if (destination.next === undefined) out.push('what the next step is')
-  if (destination.evidence.length === 0) out.push('what would count as getting somewhere')
-  if (destination.unknowns.length === 0) out.push('what you are unsure about')
+  if (!stated.baseline) out.push('where you are starting from')
+  if (!stated.next) out.push('what the next step is')
+  if (!stated.evidence) out.push('what would count as getting somewhere')
+  if (!stated.unknowns) out.push('what you are unsure about')
   return out
 }
 

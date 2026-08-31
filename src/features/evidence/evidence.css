@@ -159,3 +159,42 @@
   opacity: 0.55;
   cursor: default;
 }
+
+/*
+ * What the app has not settled yet — AUD-0043.
+ *
+ * It moved here from `InsightsScreen.css` and lost its `in-` prefix when a
+ * domain page started asking the same question about one area. A class named
+ * for the screen it happened to appear on first is how one appearance becomes
+ * four that drift, which the origin badge in `base.css` is already the written
+ * record of.
+ *
+ * Quieter than a reading and quieter still than a claim: the subject is body
+ * text, and what it would take is a note. Nothing here is given a colour, a
+ * count badge or a rule, because none of it is a finding.
+ */
+.gathering {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.gathering__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.gathering__subject {
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+
+.gathering__needs {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}

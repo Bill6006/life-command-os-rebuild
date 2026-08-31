@@ -252,6 +252,28 @@
   border-top: 1px solid var(--line-soft);
 }
 
+/*
+ * The control at the end of a row does not wrap — routing 90, phone density.
+ *
+ * `base.css` gives every `button` a `min-width` of one touch target, which is
+ * a floor and not a reservation: inside a flex row the text still takes the
+ * space first, and at 360 pixels the correction control shrank to forty-eight
+ * and rendered as "Not" over "right?" — two lines of a two-word link, beside
+ * every entry in the list. It reads as a broken layout because it is one.
+ *
+ * The label stays on its line and the sentence beside it wraps instead, which
+ * is the right way round: the sentence is the part that has something to say.
+ */
+.domain-recent__row > .domain-linkish {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.domain-recent__row > .domain-recent__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .domain-recent__row:first-child {
   border-top: none;
   padding-top: 0;
@@ -284,7 +306,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-2);
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--line-soft);
   padding-top: var(--space-2);
   margin-top: var(--space-2);
 }
@@ -354,38 +376,236 @@
 }
 
 /*
- * One rung of the progress ladder — F05, package 2.
+ * One owner permission — D-167, package 6.
  *
- * Three lines: what it is, what the record actually shows, and what that is
- * **not** evidence of. The third line is the same weight as a note rather than
- * fine print, because it is the half the review is about.
+ * Its own classes rather than the veto row's and the progress rung's, which it
+ * borrowed until routing 90. It is a standing decision the owner can take back,
+ * which is not a thing he ruled out and not a thing the record shows.
+ *
+ * The current state is the loudest line after the label, because the question
+ * this panel answers is *"is it on?"* — and it says which way it is set in
+ * words rather than by the position of a switch, so a screenshot of it is
+ * unambiguous.
  */
-.domain-progress {
+.permission {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.permission__label {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+
+.permission__state {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+
+/*
+ * Whether a milestone has been reached — F01, gate item 2.
+ *
+ * The *kind* is now the shared `.kind` marker above this line (D-231), so this
+ * carries only the state, and it carries it as a sentence rather than as a
+ * second small-caps label. Two tracked uppercase lines stacked on one object
+ * read as a category and a subcategory; what is actually here is a name and a
+ * fact about it.
+ */
+.domain-goal__kind {
+  margin: 0 0 var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* ===========================================================================
+ * Routing 90 — typesetting what routing 84 shipped
+ *
+ * Routing 84 built a destination, a milestone, seven rungs of progress
+ * evidence, an authoring control, two correction gestures and one permission,
+ * and gave every one of them the same body text at the same weight. That was
+ * deliberate — it was not allowed to spend this phase's budget — and the
+ * consequence on a phone was that a page of true sentences told the owner
+ * nothing about what he was looking at.
+ *
+ * Everything below is hierarchy and rhythm. **Nothing below is an amount.**
+ * There is no bar, no ring, no track, no numbered ladder, no colour that climbs
+ * and no state that reads as better than another state, because the one thing a
+ * visual phase can do to this product that cannot be undone is to make a
+ * progress object look like a score (D-162, section 22).
+ * ======================================================================== */
+
+/* ---- A destination -------------------------------------------------------
+ *
+ * The aim is the loudest line on the page after the page title, because it is
+ * the only sentence here the app could not have worked out for itself. The four
+ * parts under it are a two-column list on anything wide enough for one and
+ * stack on a narrow phone, so a long label never squeezes the value into a
+ * one-word column.
+ */
+.destination + .destination {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line-soft);
+}
+
+.destination__aim {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+
+.destination__parts {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+}
+
+.destination__part {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-1);
   padding: var(--space-3) 0;
   border-top: 1px solid var(--line-soft);
 }
 
-.domain-progress:first-child {
+.destination__part:first-child {
   border-top: none;
+  padding-top: 0;
 }
 
-.domain-progress__label {
+.destination__label {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.destination__value {
   margin: 0;
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-}
-
-.domain-progress__says {
-  margin: var(--space-1) 0;
-  color: var(--text-primary);
   font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  text-wrap: pretty;
 }
 
-/* A milestone says so — F01, gate item 2. */
-.domain-goal__kind {
-  margin: 0 0 var(--space-1);
+/*
+ * Not said yet — G-009, and the rule this whole file is most at risk of
+ * breaking.
+ *
+ * The value goes one step quieter and gains nothing else. No strike-through, no
+ * italic apology, no dashed placeholder box, no icon, and above all no
+ * counter: an unstated part is a question nobody has answered, and a design
+ * that made four of them look like four empty slots would have invented the
+ * completion figure this product refuses to render.
+ */
+.destination__part[data-stated='no'] .destination__value {
   color: var(--text-secondary);
+}
+
+.destination__list {
+  margin: 0;
+  padding-left: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+@media (min-width: 26rem) {
+  .destination__part {
+    grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
+    gap: var(--space-1) var(--space-4);
+    align-items: baseline;
+  }
+}
+
+/* ---- A milestone ---------------------------------------------------------
+ *
+ * A goal that names its destination (D-181), and it has to read as a different
+ * thing from a goal and from a completed session. What makes it different here
+ * is that it sits *inside* the destination it belongs to, indented behind a
+ * rule that visibly runs back to it, and says who decided it was reached.
+ */
+.milestones {
+  margin: var(--space-4) 0 0;
+  padding: 0 0 0 var(--space-4);
+  list-style: none;
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.milestone__name {
+  display: block;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+
+/*
+ * Reached is settled, not won.
+ *
+ * It is the one state in this product that only the owner can cause (D-181),
+ * so it is allowed to look different — but "different" is a quieter, finished
+ * line rather than a green tick. A congratulation here would be the app forming
+ * an opinion about the size of his achievement, which it has no evidence for
+ * and D-223 refuses on principle.
+ */
+.milestone__state {
+  display: block;
+  margin-top: var(--space-1);
   font-size: var(--text-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.milestone[data-reached='yes'] .milestone__name {
+  color: var(--text-secondary);
+}
+
+/* ---- One rung of progress evidence --------------------------------------
+ *
+ * Three sentences that are one statement, so they are bound by a rule on the
+ * leading edge rather than separated by a divider. The third line — what this
+ * is *not* evidence of — is the same size as the second and one step quieter.
+ * It was set as a `note`, at note size, under a fact: the shape of fine print,
+ * which is the shape a reader has learned to skip.
+ */
+.rung {
+  padding: var(--space-1) 0 var(--space-1) var(--space-4);
+  border-left: 1px solid var(--line-soft);
+}
+
+.rung + .rung,
+.rung + .domain-correction {
+  margin-top: var(--space-4);
+}
+
+.rung__label {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.rung__says {
+  margin: var(--space-1) 0;
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+
+.rung__not {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--text-muted);
+  text-wrap: pretty;
 }

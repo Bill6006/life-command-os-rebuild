@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Panel } from '../../components/ui'
+import { useState, type ReactNode } from 'react'
+import { ObjectKind, Panel } from '../../components/ui'
 import type { LifeDomainId } from '../../domain/domains'
 import type { EntityRef } from '../../domain/entities'
 import { permissionDefinition } from '../../domain/privacy'
@@ -68,6 +68,40 @@ import type {
  * be the app inviting him to fill in something it is not ready to hold, and
  * every domain page in this product is a report before it is a form.
  */
+/**
+ * One named part of a destination, said or not said — G-009.
+ *
+ * The whole reason this is a component: *"stated"* has to change how the row
+ * **reads**, not merely whether it is there. Two rows of identical grey, one
+ * carrying the owner's own sentence and one carrying the app's admission that
+ * it has none, is a page that tells him nothing he could not have worked out.
+ *
+ * What changes is the value's weight, and nothing else. An unstated part is not
+ * struck through, greyed to unreadable, coloured, badged or counted — it is
+ * quieter, which is what "the owner has not said this" should look like beside
+ * something he did say.
+ */
+function DestinationPart({
+  label,
+  stated,
+  testId,
+  children,
+}: {
+  label: string
+  stated: boolean
+  testId: string
+  children: ReactNode
+}) {
+  return (
+    <div className="destination__part" data-stated={stated ? 'yes' : 'no'}>
+      <dt className="destination__label">{label}</dt>
+      <dd className="destination__value" data-testid={testId}>
+        {children}
+      </dd>
+    </div>
+  )
+}
+
 export function DestinationPanel({
   data,
   area,
@@ -113,46 +147,76 @@ export function DestinationPanel({
       ) : null}
 
       {data.destinations.map((entry) => (
-        <div key={entry.destination.source} className="domain-goal" data-testid="destination">
-          <p className="domain-goal__statement" data-testid="destination-aim">
+        <div key={entry.destination.source} className="destination" data-testid="destination">
+          <ObjectKind kind="destination" />
+          <p className="destination__aim" data-testid="destination-aim">
             {entry.reading.aim}
           </p>
-          <dl className="domain-destination">
-            <dt>Where you are</dt>
-            <dd data-testid="destination-baseline">{entry.reading.baseline}</dd>
-            <dt>Next</dt>
-            <dd data-testid="destination-next">{entry.reading.next}</dd>
-            {entry.reading.evidence.length === 0 ? null : (
-              <>
-                <dt>What would count</dt>
-                <dd>
-                  <ul className="domain-destination__list">
-                    {entry.reading.evidence.map((line) => (
-                      <li key={line}>{line}</li>
-                    ))}
-                  </ul>
-                </dd>
-              </>
-            )}
-            {entry.reading.unknowns.length === 0 ? null : (
-              <>
-                <dt>Not sure about</dt>
-                <dd>
-                  <ul className="domain-destination__list">
-                    {entry.reading.unknowns.map((line) => (
-                      <li key={line}>{line}</li>
-                    ))}
-                  </ul>
-                </dd>
-              </>
-            )}
+
+          {/*
+            Four parts, always four rows — routing 90, package 90.2, G-009.
+
+            An unstated part used to be left out of the list and named in a
+            footnote underneath. Everything about that was true and it read as a
+            *shorter destination*: the owner saw two rows, no gap, and a
+            sentence at the bottom he had to join up himself. Here the row is
+            drawn either way and an unstated one says so where the answer would
+            have been.
+
+            **It is a row, not a slot.** There is no count, no "2 of 4", no bar
+            and no order — `stated` is four booleans with no length precisely so
+            that nothing on this surface can add them up. A destination with one
+            part filled in is not a quarter of a destination (D-162, section 22).
+          */}
+          <dl className="destination__parts">
+            <DestinationPart
+              label="Where you are"
+              stated={entry.reading.stated.baseline}
+              testId="destination-baseline"
+            >
+              {entry.reading.baseline}
+            </DestinationPart>
+            <DestinationPart
+              label="Next"
+              stated={entry.reading.stated.next}
+              testId="destination-next"
+            >
+              {entry.reading.next}
+            </DestinationPart>
+            <DestinationPart
+              label="What would count"
+              stated={entry.reading.stated.evidence}
+              testId="destination-evidence"
+            >
+              <ul className="destination__list">
+                {entry.reading.evidence.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </DestinationPart>
+            <DestinationPart
+              label="Not sure about"
+              stated={entry.reading.stated.unknowns}
+              testId="destination-unknowns"
+            >
+              <ul className="destination__list">
+                {entry.reading.unknowns.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </DestinationPart>
           </dl>
 
           {entry.destination.milestones.length === 0 ? null : (
-            <ul className="domain-goal__parts" data-testid="destination-milestones">
+            <ul className="milestones" data-testid="destination-milestones">
               {entry.destination.milestones.map((milestone) => (
-                <li key={milestone.goal.source} className="domain-goal__part">
-                  <span className="domain-goal__part-name">{milestone.goal.statement}</span>
+                <li
+                  key={milestone.goal.source}
+                  className="milestone"
+                  data-reached={milestone.reached ? 'yes' : 'no'}
+                >
+                  <ObjectKind kind="milestone" />
+                  <span className="milestone__name">{milestone.goal.statement}</span>
                   {/*
                     Three words, and they are three different facts — gate item 2.
 
@@ -160,15 +224,33 @@ export function DestinationPanel({
                     It is not a session having happened and it is not a course
                     having finished; both of those are counted separately, under
                     their own names, in the panel below.
+
+                    `data-reached` styles the state and carries no colour that
+                    ranks it: reached is *settled*, not *better*, so it reads as
+                    a completed sentence rather than as a win.
                   */}
-                  <span className="domain-goal__part-state">
-                    {milestone.reached ? 'reached' : 'still ahead'}
+                  <span className="milestone__state">
+                    {milestone.reached ? 'reached — you said so' : 'still ahead'}
                   </span>
                 </li>
               ))}
             </ul>
           )}
 
+          {/*
+            What the **app** does not know, said once — routing 84, kept.
+
+            The four rows above say what the *owner* has not filled in, in the
+            place each answer would go. This is a different sentence with a
+            different subject: the app's own admission about the limits of what
+            it holds, which is what a surface whose job is to say what it
+            understands owes the person reading it.
+
+            Routing 90 re-typeset this object and briefly dropped this line as
+            redundant. It is not redundant and, more to the point, removing it
+            would have been a **product** change made by a visual phase — the
+            one thing this phase was told not to do.
+          */}
           {entry.reading.missing.length === 0 ? null : (
             <p className="note" data-testid="destination-missing">
               The app does not know {entry.reading.missing.join(', ')}.
@@ -385,21 +467,53 @@ export function ProgressPanel({
 
   return (
     <Panel title="What has actually happened">
+      {/*
+        Seven rungs, and the third line is the one the review is about — F05.
+
+        ## What the typesetting has to do here
+
+        Each rung is three sentences: what it is, what the record shows, and
+        what that is **not** evidence of. Set as three grey paragraphs of
+        descending size they read as a heading, a fact and a disclaimer, and a
+        disclaimer is the line a reader skips. It is the opposite: it is the
+        half that keeps a completed session from being read as a capability.
+
+        So the rung is bound together by a rule on its leading edge and the
+        third line is set at the same size as the second, one step quieter. It
+        is a **second half of the statement**, not fine print underneath one.
+
+        ## And no rung outranks another
+
+        `PROGRESS_EVIDENCE` is an ordinal array and `rankOf` indexes it, which
+        is exactly why nothing here may draw that order: a ladder rendered as a
+        ladder is a scale, and a scale about the owner is what section 22
+        forbids. There is no numbering, no track, no filled and unfilled states
+        and no colour that climbs. Seven rungs look like seven statements.
+      */}
       {progress.rungs.map((rung) => (
-        <div key={rung.kind} className="domain-progress" data-testid={`progress-${rung.kind}`}>
-          <p className="domain-progress__label">{rung.label}</p>
-          <p className="domain-progress__says">{rung.says}</p>
-          <p className="note">{rung.doesNotSay}</p>
+        <div key={rung.kind} className="rung" data-testid={`progress-${rung.kind}`}>
+          <ObjectKind kind="evidence" />
+          <p className="rung__label">{rung.label}</p>
+          <p className="rung__says">{rung.says}</p>
+          <p className="rung__not">{rung.doesNotSay}</p>
         </div>
       ))}
 
+      {/*
+        A course is its own kind of thing — section 54, gate item 2.
+
+        "A completed session, a completed course and a milestone are three
+        different things on the page." All three are on this page and all three
+        used to be set identically; the marker is what makes them three.
+      */}
       {progress.courses.length === 0 ? null : (
-        <div className="domain-progress" data-testid="progress-courses">
-          <p className="domain-progress__label">Courses finished</p>
-          <p className="domain-progress__says">
+        <div className="rung" data-testid="progress-courses">
+          <ObjectKind kind="course" />
+          <p className="rung__label">Courses finished</p>
+          <p className="rung__says">
             {progress.courses.map((course) => course.about ?? 'a course').join(', ')}
           </p>
-          <p className="note">
+          <p className="rung__not">
             A course finishing is not a session finishing, and neither is getting there.
           </p>
         </div>
@@ -821,7 +935,7 @@ export function CorrectionsPanel({
   if (events.length === 0) return null
 
   return (
-    <Panel title="Something here wrong?">
+    <Panel title="Something here wrong?" tone="quiet">
       <p className="note">
         Nothing is deleted. An entry you withdraw stays in your history, marked as withdrawn.
       </p>
@@ -951,11 +1065,26 @@ export function PermissionPanel({
 }) {
   const definition = permissionDefinition('private-influence')
   return (
+    /*
+     * Its own classes, and the reason is coherence rather than tidiness.
+     *
+     * This borrowed `.domain-veto` from the standing-blockers panel and
+     * `.domain-progress__says` from a rung of the progress ladder. A permission
+     * is neither: a veto is something the owner ruled out, a rung is what the
+     * record shows, and this is a standing decision he can take back. Three
+     * meanings sharing two class names is how one of them eventually gets
+     * restyled by a change aimed at another — the drift `.origin-badge` in
+     * `base.css` is already the written record of.
+     *
+     * The copy is untouched and still comes from `domain/privacy.ts`, beside
+     * the policy that enforces it (D-175).
+     */
     <Panel title="What the app may reason from">
-      <div className="domain-veto" data-testid="permission">
-        <p className="domain-veto__statement">{definition.label}</p>
+      <div className="permission" data-testid="permission">
+        <ObjectKind kind="permission" />
+        <p className="permission__label">{definition.label}</p>
         <p className="note">{definition.note}</p>
-        <p className="domain-progress__says" data-testid="permission-state">
+        <p className="permission__state" data-testid="permission-state">
           {granted ? definition.granted : definition.withheld}
         </p>
         <button
@@ -1033,6 +1162,139 @@ export function BlockerQuestion({
           onClick={onLeave}
         >
           Just leave it
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// The two standing controls, in one place — AUD-0038(a)
+// ---------------------------------------------------------------------------
+
+/**
+ * *"I've been keeping on top of this"* and *"Something's changed"*.
+ *
+ * ## The finding, which is about a loop rather than a control
+ *
+ * The coverage limiter on Now said *"Out of date — nothing has come in about
+ * career & learning for four months"* and had nothing attached to it. The Life
+ * domain page for the same area offered both of these. So the app raised the
+ * flag on the screen the owner actually reads and put the response two taps
+ * away, on a page section 8 exists to stop him having to patrol.
+ *
+ * ## Why one component rather than the same markup twice
+ *
+ * The audit's own test requirement is that Now's controls *"write the same
+ * records as the Life page"*, and the cheapest way for that to stop being true
+ * is two copies drifting — which is exactly how the premise and `freeTime` came
+ * to disagree about a hundred and twenty minutes (AUD-0038(b), a finding in the
+ * same entry). D-178: one name for a thing, in the layer every surface can
+ * reach. The records are written by the caller, from `coverageInterpretationRecord`
+ * and `domainStatusCorrectionRecord`, so there is one definition of what each
+ * button means as well as one of how it looks.
+ *
+ * ## What it does not become
+ *
+ * Not a task, and not a nag. It draws only where the app is genuinely out of
+ * date about an area, it is two links and one field, and saying *"I've been
+ * keeping on top of this"* closes it without asking for anything else. D-075's
+ * lesson — a screen that lists every true thing is homework — applies to Now
+ * more sharply than to Life, because Now is read with one thumb.
+ */
+export function StandingControls({
+  label,
+  inputId,
+  disabled,
+  open,
+  draft,
+  onOpen,
+  onClose,
+  onDraftChange,
+  onReviewed,
+  onSubmit,
+}: {
+  label: string
+  inputId: string
+  disabled: boolean
+  open: boolean
+  draft: string
+  onOpen: () => void
+  onClose: () => void
+  onDraftChange: (value: string) => void
+  onReviewed: () => void
+  onSubmit: (summary: string) => void
+}) {
+  if (!open) {
+    return (
+      <div className="domain-correction__actions" data-testid="standing-controls">
+        <button
+          type="button"
+          className="domain-linkish"
+          disabled={disabled}
+          data-testid="standing-reviewed"
+          onClick={onReviewed}
+        >
+          I've been keeping on top of this
+        </button>
+        <button
+          type="button"
+          className="domain-linkish"
+          disabled={disabled}
+          data-testid="standing-changed"
+          onClick={onOpen}
+        >
+          Something's changed
+        </button>
+      </div>
+    )
+  }
+
+  /*
+   * A name, and a stated expectation — F40, D-176.
+   *
+   * The label is visible rather than an `aria-label`, and the note says where
+   * the answer goes. A placeholder would satisfy neither: it is not read by
+   * assistive technology reliably, and it disappears the moment there is
+   * anything in the field — which is precisely when the owner most wants to
+   * know what the app is about to do with what he typed.
+   */
+  return (
+    <div className="domain-correction" data-testid="standing-controls">
+      <label className="domain-correction__prompt" htmlFor={inputId}>
+        What has changed in {label}?
+      </label>
+      <p className="domain-correction__note">
+        In your own words. It joins this area’s history as something you told the app, and it is
+        what brings the picture back up to date.
+      </p>
+      <input
+        id={inputId}
+        type="text"
+        className="domain-input"
+        value={draft}
+        disabled={disabled}
+        data-testid="standing-input"
+        onChange={(event) => onDraftChange(event.target.value)}
+      />
+      <div className="domain-correction__actions">
+        <button
+          type="button"
+          className="domain-option"
+          disabled={disabled || draft.trim() === ''}
+          data-testid="standing-save"
+          onClick={() => onSubmit(draft)}
+        >
+          Save
+        </button>
+        <button
+          type="button"
+          className="domain-correction__cancel"
+          disabled={disabled}
+          data-testid="standing-cancel"
+          onClick={onClose}
+        >
+          Cancel
         </button>
       </div>
     </div>

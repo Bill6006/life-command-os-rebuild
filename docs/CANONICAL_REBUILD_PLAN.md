@@ -3051,6 +3051,29 @@ Owner physical-phone approval required.
 
 Plus the structural accommodation list above, and the owner-use review's own acceptance questions (its section 11.8) run for the first time.
 
+## What routing 90 built against this section (D-230 to D-237)
+
+The design decisions, and the reasoning for each, are recorded once in
+`docs/VISUAL_DESIGN_RECORD.md`. The four that constrain every later phase:
+
+- **Surface weight is one axis with three values** (D-230) — and it says how
+  settled the *app* is, never how the owner is doing.
+- **Object kinds are typographic, uncoloured, unordered and one size** (D-231).
+  A coloured marker per kind reads as a ranking of the kinds, which is a score
+  in costume.
+- **The progress ladder is ordinal in the code and may never be drawn as one**
+  (D-233), and a destination's four parts are four booleans no surface can add
+  up (D-232).
+- **Motion is attached to a change or it is not there** (D-237). Nothing in this
+  product animates on its own.
+
+**The accommodation list above is now a machine-checked table** (D-235),
+`tests/synthetic/accommodation.ts`, holding two falsifiable claims per row: the
+composition that would carry it takes a variable number of things, and named
+tokens that must be absent from `src/`. The nine rows above are its **A** series;
+the second adjudication's six and the D-222 provenance refinement are its **B**
+series.
+
 ---
 
 # 55. Phase 10 — Performance, PWA, reliability

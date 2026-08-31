@@ -120,6 +120,142 @@ superseded rather than reused.
 
 ---
 
+# Routing Phase 90 — Canonical Phase 9: visual coherence, motion, mobile
+
+**Status: YELLOW — READY FOR INDEPENDENT QA.**
+
+A builder conversation may not approve its own phase (D-077). The gate on this
+one is the **owner's physical phone**, and it is not satisfied by a viewport, an
+emulator or a screenshot — so nothing below claims the phase has passed. What is
+claimed is that the six work packages are built, that each has a regression which
+fails when its defect is reintroduced, and that every automated gate is green.
+
+## What the phase was given, and what it found
+
+Routing 84 built a destination, a milestone, seven rungs of progress evidence, a
+create-and-confirm control, a second questioning surface, two correction gestures
+and one owner permission — and deliberately gave none of them a visual language,
+because it was not allowed to spend this phase's budget. What reached the phone
+was honest, plain and **flat**: on a domain page at 360 pixels, seven surfaces
+with the same gradient, the same hairline, the same radius and the same
+sixteen-pixel drop shadow. That is section 54's "card soup" by name, and it is a
+hierarchy failure rather than a decoration one — the owner had to read every
+panel to find out which mattered.
+
+The full design record, and the reasoning behind each decision, is
+[`VISUAL_DESIGN_RECORD.md`](VISUAL_DESIGN_RECORD.md).
+
+## 90.0 — the ordinary-owner time-advance instrument, gated on its own
+
+Built **first and proved separately**, because bundling an unproven instrument
+with the product whose acceptance depends on it is routing 82's failure pattern
+(`ROUTING_91_BRIEF.md` section 7, and §6.2 of the second adjudication).
+
+`tests/browser/phase90-clock.spec.ts` installs `page.clock` before `page.goto`,
+creates state through the owner's own controls from a genuinely empty store, and
+moves the product's moment across a **block**, a **day** and a **week** boundary.
+No `#/qa`, no `loadInQa`, no fixture seeding, no `travelTo` — and the file reads
+its own text and fails if a later edit reaches for any of them.
+
+**Every assertion is a pair**, and that is the whole design: an advance that stays
+on one side of a boundary and must not change the reading, then a further advance
+that crosses it and must. 09:00 → 11:00 is still "Wednesday morning"; 11:00 →
+13:00 is "Wednesday afternoon". 23:00 → 01:00 changes the day with the block word
+held still, so the day cannot have come from the block. Wednesday plus three days
+leaves the weekly discovery budget spent; two days more crosses the week start
+and the question returns — a product behaviour that can only answer correctly if
+the product's own week moved, and nothing on screen renders a week.
+
+An instrument that only moved time forward and watched a sentence change could
+not tell a moving moment from a re-render. **Proved to bite:** with the
+`fastForward` calls removed, all three boundary tests fail.
+
+## 90.1 and 90.2 — coherence, and typesetting what routing 84 shipped
+
+- **One axis of surface weight** — `loud` (the decision, one per screen),
+  `plain`, `quiet` (what the app has not settled). The quiet tier turns down the
+  _surface_, never the words: an honest "not worked out yet" is one of the most
+  useful things this product says.
+- **Elevation means something.** `--shadow-3` is on the primary surface and
+  nothing else; the ordinary panel dropped to `--shadow-1`.
+- **A closed vocabulary of object kinds** — a session, a course and a milestone
+  are three different things on the page (section 54's gate item 2). The markers
+  are **typographic, uncoloured, unordered and one size**: coloured markers on
+  progress objects read as a ranking, which is a score in costume.
+- **A destination is four rows, always four rows.** An unstated part says so
+  where the answer would have been rather than being omitted and footnoted
+  (G-009). `stated` is four booleans with no length, no total and no order, so
+  nothing can render "2 of 4".
+- **A rung's third line is not fine print.** What a completed session is _not_
+  evidence of is now the same size as what it is, one step quieter, bound to it
+  by a rule on the leading edge. **No rung outranks another**: no numbering, no
+  track, no fill, no colour that climbs.
+- **Motion** is one keyframe, attached to a panel that appeared because something
+  happened. Nothing loops, pulses or breathes; reduced motion zeroes every
+  duration and no state is expressed by movement alone.
+
+## 90.3 — the accommodation list, reserved and none of it built
+
+Fifteen rows — section 54's nine, the second adjudication's six, and the D-222
+provenance refinement — as a **machine-checked table**
+(`tests/synthetic/accommodation.ts`). Each row makes two falsifiable claims: the
+composition that would carry it exists _and takes a variable number of things_,
+and named tokens that must be **absent** from `src/`. The prose version of this
+list has existed since D-158 and could never be checked; a phase can say "we left
+room" about anything.
+
+## 90.4 and 90.5 — the audit findings and one incidental correction
+
+- **AUD-0038(a)** — the coverage flag on Now had no control attached while the
+  Life page for the same area had two. Both now come from **one** component, so
+  the two screens cannot drift; the D-161 route table gained the two new routes.
+- **AUD-0038(b)** — one duration formatter, in `domain/horizon.ts` so every layer
+  can reach it. It turned out to be **three** disagreeing renderings, not two:
+  `arbitrate.ts` switched to hours privately, the premise said "about 120 minutes
+  free", and `describeFactValue` said "60 min". `factValuesEqual` no longer
+  compares durations by their rendered words, because a display change must never
+  move what the app believes.
+- **AUD-0043** — a domain page answers section 7's eighth question, from
+  `insightsFor`'s own gathering lines filtered by the domain each now carries.
+  Absent, not empty, where nothing is in progress. One shared component with
+  Insights, so the two cannot diverge.
+- **AUD-0044** — stale-belief cards group at three, mirroring the coverage card
+  that was already grouping correctly at the top of the same screen. The
+  regression reproduces the audit's own four-card wall (`long-run @ +200 days`).
+- **DEF-0150** — the stale guard citation in `time.ts` now names the real file. A
+  comment fix and nothing else.
+
+## Two defects the review found, neither previously reported
+
+**DEF-0152** — `--border-subtle` and `--edge` are read by four declarations and
+**defined nowhere**. A `var()` that resolves to nothing invalidates the whole
+declaration, so three borders were simply not rendering. Nothing caught it: CSS
+has no undefined-variable error, and a missing hairline on a dark surface looks
+like a design decision. It survived 1,861 tests, three widths, the Android gate
+and nineteen QA rounds. Fixed, and guarded by a link step for the design system.
+
+**DEF-0153** — at 360 pixels the "Not right?" control rendered as two lines beside
+every entry in a five-entry list, because `base.css` gives every button a
+`min-width` floor that a flex row shrinks it to. The touch target was never below
+the minimum, so the Android gate had nothing to report.
+
+## What this phase did not do
+
+No semantic capture (91). No new concept or vocabulary (92). No new conclusion
+from evidence (93). No twelfth domain built — designed in navigation only (94).
+No advancement register and no "closer" sentence (94, 95). No named expectation
+and no reconciliation (96). No inference mechanism (97, held by D-172). No
+scoring change of any kind. No change to `QUESTIONS_PER_DAY`. Phases 1 through 84
+are not reopened.
+
+## Open, and carried forward unchanged
+
+The **nineteen deferred Phase 84 instrument-hardening findings** (D-210) are
+untouched, unedited and still open. See
+[`qa/INSTRUMENT_HARDENING_BACKLOG.md`](qa/INSTRUMENT_HARDENING_BACKLOG.md).
+
+---
+
 # Routing Phase 84 — What the owner is trying to become
 
 **Status: GREEN — INDEPENDENT BOUNDED RETEST PASSED, 2026-08-30.**

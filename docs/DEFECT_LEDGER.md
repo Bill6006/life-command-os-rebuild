@@ -5248,15 +5248,73 @@ built.
 
 ---
 
+## DEF-0152 — two CSS custom properties were read on four declarations and defined nowhere
+
+**Found:** routing 90 visual coherence review, 2026-08-31 · **Status:** Fixed (routing 90)
+
+`--border-subtle` (`DomainPage.css`, `QaScreen.css`) and `--edge`
+(`AppShell.css`, twice) are read by four declarations and **have never been
+defined in any stylesheet.**
+
+**Why this is a defect and not a tidiness point.** A `var()` with no fallback
+that resolves to nothing makes the whole declaration _invalid at computed-value
+time_. `border-top: 1px solid var(--border-subtle)` is therefore not a faint
+border or a wrong colour — it is **no border at all**: on the standing-veto row
+of every domain page, on a laboratory panel, and on the notice that tells the
+owner he is looking at somebody else's evening.
+
+**Why nothing caught it.** CSS has no undefined-variable error, the build does
+not link stylesheets against the token sheet, and a missing hairline on a dark
+surface looks exactly like a design decision. It survived 1,861 unit and
+synthetic tests, a browser matrix at three widths, the Android gate and nineteen
+rounds of independent QA.
+
+**Fixed:** `--border-subtle` → `--line-soft`, `--edge` → `--line`, matching the
+siblings in each file. **And guarded:** `tests/unit/architecture-guards.test.ts`
+now collects every `--name:` definition and every `var(--name)` read across
+`src/**` and fails the build on a read with no definition — a link step for the
+design system, which the language does not provide. Proved to bite by
+reintroduction.
+
+---
+
+## DEF-0153 — a two-word control rendered as two lines beside every entry in a list
+
+**Found:** routing 90 visual coherence review, 2026-08-31 · **Status:** Fixed (routing 90)
+
+At 360 pixels, the **Not right?** control at the end of each row of "Something
+here wrong?" rendered as _"Not"_ over _"right?"_ — five times down the panel on
+an ordinary history.
+
+**Cause.** `base.css` gives every `button` `min-width: var(--touch-target)`.
+That is a floor, not a reservation: inside a flex row the sentence takes the
+space first, the button shrinks to forty-eight pixels, and a two-word label
+wraps. The touch target was never below the minimum, so the Android gate had
+nothing to report.
+
+**Fixed:** the trailing control in a `domain-recent__row` no longer shrinks and
+does not wrap; the sentence beside it wraps instead, which is the right way
+round. `tests/browser/phase90.spec.ts` measures the label's own client rects
+rather than the button's height — the height is dominated by the touch minimum
+and says nothing about the text.
+
+---
+
 ## DEF-0150 — `time.ts` names an ambient-clock guard file that does not exist
 
-**Found:** second adjudication, 2026-08-31 · **Status:** Open · **Owner:** any phase touching `time.ts`
+**Found:** second adjudication, 2026-08-31 · **Status:** Fixed (routing 90) · **Owner:** routing 90, package 90.5
 
 `domain/time.ts:562` cites `tests/unit/no-ambient-clock.test.ts`. That file does
 not exist; **the guard is real and lives in `tests/unit/architecture-guards.test.ts`.**
 Harmless, and worth correcting when the file is next touched — noted because the
 ordinary-owner time-advance instrument rests on that guard being real. It is; only
 its name is wrong.
+
+**Fixed at routing 90, package 90.5.** The comment now names the file the guard
+is actually in. Nothing else moved: the guard was not relocated, not widened and
+not rewritten, because the finding was a stale citation and treating it as
+architectural work would have been the phase spending its budget on the wrong
+thing.
 
 ---
 

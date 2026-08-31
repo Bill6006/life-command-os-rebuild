@@ -12,6 +12,7 @@ import {
   EvidenceLines,
   EvidenceNote,
   EvidenceRate,
+  GatheringList,
 } from '../evidence/EvidencePieces'
 import { originOfSources, originResolver, type RecordOrigin } from '../history/origin'
 import { useMemory } from '../memory/memoryContext'
@@ -96,7 +97,8 @@ export function InsightsScreen() {
   if (!memory.ready || report === undefined || situation === undefined) {
     return (
       <Screen title="Insights">
-        <Panel>
+        {/* The app talking about itself while it opens — quiet, always. */}
+        <Panel tone="quiet">
           <p className="note">Opening your history…</p>
         </Panel>
       </Screen>
@@ -119,7 +121,7 @@ export function InsightsScreen() {
       <Discovery situation={situation} />
 
       {insights.length === 0 ? (
-        <Panel title="Nothing worth saying here yet">
+        <Panel title="Nothing worth saying here yet" tone="quiet">
           {/*
             An honest empty state, and carefully not a claim that the app is
             not learning — it is, on every answer given. What is missing is
@@ -152,23 +154,14 @@ export function InsightsScreen() {
       )}
 
       {gathering.length === 0 ? null : (
-        <Panel title="Still gathering">
+        <Panel title="Still gathering" tone="quiet">
           {/*
             Section 51: "the absence of enough evidence is a valid result".
             Without this the honest answer is invisible — a move with two
             occasions simply produces no card, which reads as the app having
             nothing to say rather than as the app declining to say it.
           */}
-          <ul className="in-gathering">
-            {gathering.map((line) => (
-              <li key={line.subject}>
-                <span className="in-gathering__subject">{line.subject}</span>
-                <span className="in-gathering__needs">
-                  {line.occasions} so far — {line.needs}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <GatheringList lines={gathering} />
         </Panel>
       )}
     </Screen>

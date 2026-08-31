@@ -8507,3 +8507,207 @@ belief.**
 **D-225's cap is a candidate-volume protection and neither causes nor fixes this.**
 
 ---
+
+## D-230 — Surface weight is one axis with three values, and it says how settled the app is
+
+**Phase:** 90 · **Status:** Active · **Serves:** plan sections 24 and 54
+
+Every panel on a domain page was the same panel — same gradient, same hairline,
+same radius, same sixteen-pixel drop shadow, seven of them down a 360-pixel
+screen. That is section 54's **card soup** by name, and the harm is not that it
+is plain: it is that the owner had to read every surface to find out which one
+mattered.
+
+**The design answer is one axis, not a palette.** `loud` is the current decision
+and there is one per screen; `plain` is most things; `quiet` is what the app has
+**not** settled — gathering lines, an area that has gone silent, a correction
+affordance, the record. `--shadow-3` now belongs to the primary surface and
+nothing else, so elevation means something again.
+
+**Two rules make it safe.**
+
+**The quiet tier turns down the _surface_, never the words.** An honest "the app
+has not worked this out" is one of the most useful things this product says, and
+dimming its sentences would be the app apologising for the thing that makes it
+trustworthy. Contrast is not the axis.
+
+**A tone can never become a score.** It describes how settled the **app** is, not
+how the owner is doing. There is deliberately no value it can take that means
+"more" or "better", so there is no arrangement of it that could be read as a
+judgement about him (D-162, section 22).
+
+---
+
+## D-231 — What kind of thing this is, is said typographically and never in colour
+
+**Phase:** 90 · **Status:** Active · **Serves:** plan section 54's gate item 2
+
+Canonical section 54 requires that _"a completed session, a completed course and
+a milestone are three different things on the page."_ Routing 84 built all three
+and gave them one typeface at one weight, so the page was literally true and told
+the owner nothing about what he was reading. `ObjectKind` is the closed
+vocabulary that tells them apart — destination, milestone, goal, session, course,
+evidence, correction, permission.
+
+**It is typographic, uncoloured, unordered and one size, and that is the
+decision.** A coloured badge per kind reaches two of section 24's rejects at once
+— gamer RGB and tiny telemetry labels — and a third that matters more: **a set of
+coloured markers on progress objects reads as a ranking of them**, which is a
+score wearing a costume. Nothing about a marker may say a milestone is worth more
+than a session; it may only say they are not the same kind of thing.
+
+**The union is closed**, so a kind nobody designed is a compile error rather than
+a marker that quietly appears.
+
+---
+
+## D-232 — A destination is four rows whatever the owner has said, and four booleans that cannot be added
+
+**Phase:** 90 · **Status:** Active · **Extends** G-009 · **Bound by** D-162
+
+An unstated part of a destination was omitted from the list and named in a
+sentence underneath. Every word of that was true and it **read as a shorter
+destination**: two rows, no gap, and a footnote the owner had to join up himself.
+The row is now drawn either way, and an unstated one says so where the answer
+would have been.
+
+**`DestinationReading.stated` is four named booleans with no length, no total and
+no order.** That shape is the decision, not an implementation detail. A count of
+filled parts is one step from "2 of 4", which is a completion figure about the
+owner, and section 22 forbids it — so the type is built so that no surface can
+perform the arithmetic. A destination with one part filled in is not a quarter of
+a destination.
+
+**The unstated row changes weight and gains nothing else.** No strike-through, no
+dashed placeholder, no icon, no counter. It is a question nobody has answered,
+and a design that made four of them look like four empty slots would have
+invented the figure this product refuses to render.
+
+---
+
+## D-233 — The progress ladder is ordinal in the code and may never be drawn as one
+
+**Phase:** 90 · **Status:** Active · **Serves:** D-162, plan section 22
+
+`PROGRESS_EVIDENCE` is an ordered array and `rankOf()` returns an index into it.
+That order is real and load-bearing — D-219's advancement work reads it — and it
+is exactly why **no surface may render it**. A ladder drawn as a ladder is a
+scale; a scale about the owner is a score.
+
+So: no rung is numbered, tracked, filled, progressed along, or given a colour
+that climbs. Seven rungs look like seven statements. `tests/browser/phase90.spec.ts`
+reads the computed colour and background of every rung on the page and fails if
+they differ from one another, which is a rule about what the screen may not do
+rather than a check of what it happens to be.
+
+**And the third line of a rung is not fine print.** What a completed session is
+_not_ evidence of was set smaller than the fact above it — the shape of a
+disclaimer, which is the line a reader skips. It is the half F05 exists for. It
+is now the same size as the fact, one step quieter, bound to it by a rule on the
+leading edge: a second half of the statement rather than small print under one.
+
+---
+
+## D-234 — The design system gets a link step, because CSS does not have one
+
+**Phase:** 90 · **Status:** Active · **Records** DEF-0152
+
+Four declarations across three stylesheets read `--border-subtle` and `--edge`.
+**Neither property had ever been defined.** A `var()` with no fallback that
+resolves to nothing invalidates the whole declaration, so those were not faint
+borders or wrong colours — they were **no borders at all**, on the standing-veto
+row of every domain page and on the notice that tells the owner he is looking at
+somebody else's evening.
+
+**Nothing could have caught it.** CSS has no undefined-variable error, the build
+does not link stylesheets against the token sheet, and a missing hairline on a
+dark surface looks exactly like a design decision. It survived 1,861 unit and
+synthetic tests, a browser matrix at three widths, the Android gate and nineteen
+rounds of independent QA.
+
+So `tests/unit/architecture-guards.test.ts` now collects every `--name:`
+definition and every `var(--name)` read across `src/**` and fails the build on a
+read with no definition. Locally-scoped properties stay legitimate — definitions
+are collected from every stylesheet, not from `tokens.css` alone — so what is
+left is genuinely a name nobody wrote.
+
+**The repair is not what makes this safe.** The next renamed token would do the
+same thing just as silently; the link step is the decision.
+
+---
+
+## D-235 — The accommodation list is a table with two falsifiable claims per row
+
+**Phase:** 90 · **Status:** Active · **Implements** D-158, §6.2
+
+Section 54 names nine relationships the visual design must leave room for without
+building; the second adjudication adds six, plus one refinement. The prose
+version has existed since D-158 and **cannot be checked** — a phase can say "we
+left room" about anything, and the gate it protects is the owner's phone, which
+is the most expensive gate in the campaign to re-open.
+
+`tests/synthetic/accommodation.ts` is the list as data. Each row asserts:
+
+- **the reservation** — a file, and text in it proving the composition that would
+  carry the row exists **and takes a variable number of things**, so the row
+  arrives as another item, another state or another sentence rather than as a
+  redesign;
+- **not built** — named tokens that must be **absent** from `src/`, matched on
+  word boundaries.
+
+**Both halves earn their place.** The first catches a later phase quietly
+replacing a list with a fixed arrangement, which would happen during a refactor
+with nothing else noticing. The second catches this phase — or any phase — doing
+routing 91 through 97's work under a visual phase's gate.
+
+**What it does not claim** is that a future feature will be easy, and it is not a
+design for one. It proves a shape is open. Word boundaries rather than substrings
+because the first version reported the twelfth-domain row as _built_, on the
+strength of `invalidating` and `redating` containing "dating".
+
+---
+
+## D-236 — A display change may not move what the app believes
+
+**Phase:** 90 · **Status:** Active · **Records** AUD-0038(b)
+
+One quantity had **three** renderings: `arbitrate.ts` switched to hours in a
+private helper, the premise on Now said "about 120 minutes free", and
+`describeFactValue` said "60 min". There is one formatter now, and it lives in
+`domain/horizon.ts` rather than in `intelligence/vocabulary.ts` — the domain
+layer may not import the intelligence layer, and putting it in the layer the
+audit named would have left the third rendering exactly where it was.
+`vocabulary.ts` re-exports it: two doors, one definition.
+
+**The rule the change surfaced is the part worth recording.** `factValuesEqual`
+compared facts by their _rendered words_. That was safe while a duration rendered
+its own minute count, and stopped being safe the instant ninety-one and
+ninety-four minutes both became "an hour and a half": two genuinely different
+readings would have compared equal, and a change the owner made would have been
+recorded as no change at all.
+
+> **A formatter may change how a fact reads. It may never change whether the app
+> thinks the fact changed.** Equality compares the value.
+
+---
+
+## D-237 — Motion is attached to a change, or it is not there
+
+**Phase:** 90 · **Status:** Active · **Serves:** plan section 25
+
+Section 25 asks for motion that is restrained, fast, reduced-motion compatible
+and **meaningful**. The last word is the constraint, and it is enforced as a
+prohibition rather than as an aspiration: **nothing in this product animates on
+its own.** No loop, no pulse, no breathing, no infinite iteration count.
+`tests/browser/phase90.spec.ts` walks every element on a settled screen and fails
+on one.
+
+The reason is not taste. A product whose subject is a man's actual life is read
+in a spare minute with one thumb, and an interface that moves at him when he has
+not touched it is asking for attention it has not earned.
+
+**And motion is never how a screen is understood.** `prefers-reduced-motion`
+zeroes every duration token, no state is expressed by movement alone, and no
+control has to be waited for.
+
+---

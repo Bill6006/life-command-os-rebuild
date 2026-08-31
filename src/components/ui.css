@@ -47,18 +47,74 @@
 /* ---- Panel ----------------------------------------------------------------
  * The ordinary surface. One hairline, one shadow, one inner highlight — depth
  * from light, not from an outline.
+ *
+ * ## Why the shadow came down in routing 90
+ *
+ * `--shadow-2` is a 16-pixel drop, and it was right when a screen carried two
+ * or three of these. A domain page now carries seven, and seven surfaces each
+ * lifted sixteen pixels off the ground do not read as a page with depth — they
+ * read as a **deck of equal cards**, which is section 54's "card soup" by name
+ * and is a hierarchy failure rather than a styling one: the owner had to read
+ * every panel to find out which one mattered.
+ *
+ * So the ordinary surface keeps the gradient, the hairline and the inner
+ * highlight — everything that makes it a lit surface rather than a hole — and
+ * gives up the elevation. Elevation now means something: `--shadow-3` is on the
+ * primary surface and nothing else, so the one panel that is the current
+ * decision is the one panel that comes forward.
  */
 .panel {
   padding: var(--space-5);
   background: linear-gradient(180deg, var(--surface-2), var(--surface-1));
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-2), var(--inner-lift);
+  box-shadow: var(--shadow-1), var(--inner-lift);
+}
+
+/*
+ * The quiet tier — routing 90.
+ *
+ * What the app has not settled sits *back*, not forward. It loses the gradient
+ * and most of the shadow and keeps the hairline, so it still reads as a surface
+ * with an edge rather than as a hole in the page — "massive empty dark spaces"
+ * is a reject on section 54's list and a flat black rectangle is how you get
+ * one.
+ *
+ * The text inside is unchanged. Contrast is not what is being turned down; the
+ * *surface* is, and the sentences stay at the same weight they would have
+ * anywhere else. Dimming the words of an honest "not yet" would be the app
+ * apologising for the most useful thing it says.
+ */
+.panel--quiet {
+  background: var(--ground-deep);
+  border-color: var(--line-soft);
+  box-shadow: none;
 }
 
 .panel__title {
   margin-bottom: var(--space-3);
   font-size: var(--text-md);
+}
+
+/*
+ * What kind of thing this is — package 90.2.
+ *
+ * Small caps, tracked, muted, and identical for every kind. It is deliberately
+ * not a badge: no fill, no border, no colour that could be read as a state, and
+ * nothing that changes with how far along the object is. A destination marker
+ * and a session marker differ in one respect only — the word.
+ *
+ * It sits on the baseline of the line it labels rather than floating above it,
+ * so an object with a marker occupies the same vertical rhythm as one without.
+ */
+.kind {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 .panel__body {
@@ -131,11 +187,25 @@
   margin: 0;
 }
 
+/*
+ * A label and its value — routing 90, phone density.
+ *
+ * These carry two very different things. On About and in the laboratory the
+ * value is a SHA or a count, and a right-aligned column reads like the
+ * reference table it is. In the reasoning under a move on Now the value is a
+ * **sentence**, and at 360 pixels a right-aligned sentence wraps into a ragged
+ * left edge that the eye has to find twice per line — the shape of a spec
+ * sheet, which is section 24's "dense developer-dashboard grid" arriving one
+ * component at a time.
+ *
+ * So the row stacks on a phone and becomes a column pair where there is room
+ * for one. Nothing is hidden and nothing moves between breakpoints except the
+ * arrangement.
+ */
 .rows__row {
   display: flex;
-  gap: var(--space-4);
-  align-items: baseline;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: var(--space-1);
   padding: var(--space-3) 0;
   border-bottom: 1px solid var(--line-soft);
 }
@@ -154,9 +224,22 @@
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   color: var(--text-primary);
-  text-align: right;
+  text-wrap: pretty;
   /* Long values (a full SHA) must wrap rather than push the page sideways. */
   overflow-wrap: anywhere;
+}
+
+@media (min-width: 30rem) {
+  .rows__row {
+    flex-direction: row;
+    gap: var(--space-4);
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .rows__value {
+    text-align: right;
+  }
 }
 
 .rows__value--mono {
@@ -234,4 +317,64 @@
 
 .qa-link:hover {
   border-bottom-color: var(--accent);
+}
+
+/* ---- Motion that communicates change (canonical section 25) ---------------
+ *
+ * ## What motion is for here, and what it is not for
+ *
+ * Section 25: motion should be restrained, fast, reduced-motion compatible and
+ * **meaningful**. The last word is the constraint. Every animation below is
+ * attached to something that *changed* — a panel that was not on screen a
+ * moment ago, a control the owner just pressed — and there is deliberately
+ * nothing that moves on its own, loops, pulses, breathes or draws attention to
+ * a screen nobody has touched. A product whose subject is a man's actual life
+ * has no business being restless at him.
+ *
+ * ## Why it is one keyframe rather than a system
+ *
+ * The screen already fades and rises on arrival. Something appearing *within* a
+ * screen the owner is already reading is a different event — he has not moved,
+ * the app has — so it arrives faster and travels a shorter distance, which is
+ * how the eye is told "this is new" without being told to look away from what
+ * it was reading.
+ *
+ * ## And it is never how the screen is understood
+ *
+ * `prefers-reduced-motion` zeroes every duration in `tokens.css`, so with
+ * motion off these are instant and nothing is lost: no state is expressed by
+ * movement alone, and no control has to be waited for.
+ */
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(0.375rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+ * A panel that appeared because something happened.
+ *
+ * Applied by the surfaces that draw a panel conditionally — the coverage
+ * response after a flag, a question that has just become answerable — and not
+ * by the ones that are always there. A page whose every panel slid in on every
+ * visit would be an entrance, not a signal.
+ */
+.arrives {
+  animation: arrive var(--dur) var(--ease-out);
+}
+
+/*
+ * Where a value the owner just changed lives.
+ *
+ * The transition is on colour only. A number or a sentence that *moved* when it
+ * changed would make the page shift under a thumb that is still on the glass,
+ * which is the class of defect D-052 exists about.
+ */
+.settles {
+  transition: color var(--dur-slow) var(--ease);
 }

@@ -631,6 +631,23 @@ export const APPROVED_WHEN_A_MOVE_IS_BLOCKED = [
   'Something here wrong?',
   'Nothing is deleted. An entry you withdraw stays in your history, marked as withdrawn.',
   'Correct: Did not fit at the time — {object}.',
+
+  /*
+   * And what the domain page is now in the middle of working out — AUD-0043.
+   *
+   * Blocking a move writes records, and one more occasion can be what takes a
+   * belief from "nothing yet" to "in progress" — so the panel that answers
+   * canonical section 7's eighth question appears in the difference for exactly
+   * the reason this whole list exists.
+   *
+   * **Both lines make no claim about the owner**, which is why they are approved
+   * here rather than being a defect: the title names what the *app* is doing,
+   * and the sentence under it says that none of it is settled and none of it is
+   * being used as though it were. The gathering lines themselves are already
+   * approved above, under Insights, because they are the same lines.
+   */
+  'What the app is working out here',
+  'Nothing here is settled, and none of it is being used as though it were.',
 ]
 
 /** Whether a line is copy the app shows elsewhere once a move is blocked. */

@@ -559,7 +559,7 @@ export function isSameLocalWeek(
  * Nothing below the UI reads the wall clock directly.
  *
  * Every "now" arrives through a clock so the QA lab can travel in time and so
- * a test can pin an instant. `tests/unit/no-ambient-clock.test.ts` fails the
+ * a test can pin an instant. `tests/unit/architecture-guards.test.ts` fails the
  * build if `Date.now()` reappears inside the meaning or memory layers.
  */
 export interface Clock {

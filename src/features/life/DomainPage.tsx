@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { Panel, Screen } from '../../components/ui'
+import { ObjectKind, Panel, Screen } from '../../components/ui'
 import { DOMAIN, type LifeDomainId } from '../../domain/domains'
 import type { EntityRef } from '../../domain/entities'
 import type { FactValue, GoalStatus, GrowthStage } from '../../domain/records'
@@ -48,6 +48,7 @@ import {
   PeoplePanel,
   PermissionPanel,
   ProgressPanel,
+  StandingControls,
 } from './DomainPanels'
 import { growthStageRecord } from '../../intelligence/growth'
 import type { QuestionOption } from '../../intelligence/questions'
@@ -56,6 +57,7 @@ import {
   type DomainCoverage,
   type Situation,
 } from '../../intelligence/situation'
+import { GatheringList } from '../evidence/EvidencePieces'
 import { hashForDestination } from '../../platform/routing'
 import { useMemory } from '../memory/memoryContext'
 import {
@@ -552,6 +554,35 @@ export function DomainPage({ page }: { page: LifePage }) {
         })}
       </Panel>
 
+      {/*
+        The eighth question — AUD-0043.
+
+        Canonical section 7 lists eight things a domain page should answer and
+        seven were answered. This is the missing one, and it goes directly under
+        what the app *believes* because the pair is the point: one is what it has
+        settled, one is what it has not, and a forming belief is worth far more
+        to the owner while it is still forming.
+
+        **Absent, not empty.** Where nothing is in progress there is no panel at
+        all — DEF-0013 is the precedent, and section 7's own rule is that these
+        pages stay dull and low-maintenance. A panel that fired on every area
+        every day would undo D-075's repair on a new screen, which is exactly
+        what AUD-0044 is about one card kind away.
+
+        And it is not a task. There is nothing to press: this says what the app
+        is working on, not what the owner should do about it.
+      */}
+      {data.gathering.length === 0 ? null : (
+        <Panel title="What the app is working out here" tone="quiet">
+          <p className="note">
+            Nothing here is settled, and none of it is being used as though it were.
+          </p>
+          <div data-testid="domain-gathering">
+            <GatheringList lines={data.gathering} />
+          </div>
+        </Panel>
+      )}
+
       {data.goals.length === 0 ? null : (
         <Panel
           title={
@@ -682,7 +713,8 @@ export function DomainPage({ page }: { page: LifePage }) {
       />
 
       {data.recentChanges.length === 0 ? null : (
-        <Panel title="Recently">
+        /* The record, not a claim about it — quiet. */
+        <Panel title="Recently" tone="quiet">
           <ul className="domain-recent">
             {data.recentChanges.map((change: RecentChange) => (
               <li key={change.id} className="domain-recent__row">
@@ -765,10 +797,35 @@ function GoalRow({
         not the same event as finishing a goal that stands on its own. What is
         underneath is one record kind, deliberately (D-178).
       */}
-      {goal.milestoneOf === undefined ? null : (
-        <p className="domain-goal__kind" data-testid="domain-milestone">
-          {goal.status === 'achieved' ? 'Milestone — reached' : 'Milestone'}
-        </p>
+      {/*
+        The same marker this object carries under its destination — routing 90.
+
+        This row and the milestone list inside the destination panel are the two
+        places one milestone appears, and until routing 90 they said "Milestone"
+        in two different typefaces written out in two files. `ObjectKind` is the
+        one vocabulary, so the owner learns the word once (D-231, and section
+        54's "repeated components").
+
+        The **reached** state stays a separate sentence rather than being folded
+        into the marker. A marker says what a thing is; whether it has been
+        reached is a fact about it, and only the owner saying so can cause it
+        (D-181).
+      */}
+      {goal.milestoneOf === undefined ? (
+        <ObjectKind kind="goal" />
+      ) : (
+        <>
+          <ObjectKind kind="milestone" />
+          {goal.status === 'achieved' ? (
+            <p className="domain-goal__kind" data-testid="domain-milestone">
+              Reached — you said so
+            </p>
+          ) : (
+            <p className="domain-goal__kind" data-testid="domain-milestone">
+              Still ahead
+            </p>
+          )}
+        </>
       )}
       <p className="domain-goal__statement">
         {goal.statement}{' '}
@@ -947,7 +1004,21 @@ function CoveragePanel({
   const concept = coverage.weakest
 
   return (
-    <Panel title={showLabel ? coverage.label : 'How this stands'}>
+    /*
+     * Quiet unless the app is actually asking for something — routing 90.
+     *
+     * "How this stands" is the app reporting on its own coverage of an area,
+     * and on most histories on most days it is reporting that everything is
+     * fine. A panel with the same presence as the destination underneath it,
+     * saying nothing has gone wrong, is the app talking about itself at the top
+     * of the page — D-075's finding, on the surface below the one it was found
+     * on. Where the area *does* need a check-in it takes the ordinary weight,
+     * because then it is a thing to act on.
+     */
+    <Panel
+      title={showLabel ? coverage.label : 'How this stands'}
+      tone={canCorrect ? 'plain' : 'quiet'}
+    >
       <p className="domain-coverage__summary">{coverage.summary}</p>
 
       {!canCorrect ? null : concept !== undefined ? (
@@ -955,61 +1026,30 @@ function CoveragePanel({
           <strong>{concept.label}</strong> is what is actually overdue here — answering it below is
           what will settle this.
         </p>
-      ) : open ? (
-        /*
-         * A name, and a stated expectation — F40.
-         *
-         * This was a bare `<input type="text">` with `placeholder="What's
-         * changed"` and nothing else: no accessible name for anyone using
-         * assistive technology, and for everyone else no statement of what the
-         * app wanted or what it would do with the answer. A placeholder is not
-         * a label — it is a hint that disappears the moment there is anything
-         * in the box.
-         *
-         * The label names the area, because a page can carry two of these
-         * (health and sleep share one), and the note says where the answer
-         * goes. `aria-label` would have satisfied a checker; a visible label
-         * satisfies the owner too, which is the half F40 is actually about.
-         */
-        <div className="domain-correction">
-          <label className="domain-correction__prompt" htmlFor={`domain-status-${coverage.domain}`}>
-            What has changed in {coverage.label}?
-          </label>
-          <p className="domain-correction__note">
-            In your own words. It joins this area’s history as something you told the app, and it is
-            what brings the picture back up to date.
-          </p>
-          <input
-            id={`domain-status-${coverage.domain}`}
-            type="text"
-            className="domain-input"
-            value={draft}
-            disabled={disabled}
-            onChange={(event) => onDraftChange(event.target.value)}
-          />
-          <div className="domain-correction__actions">
-            <button
-              type="button"
-              className="domain-option"
-              disabled={disabled || draft.trim() === ''}
-              onClick={() => onSubmit(draft)}
-            >
-              Save
-            </button>
-            <button type="button" className="domain-linkish" disabled={disabled} onClick={onClose}>
-              Cancel
-            </button>
-          </div>
-        </div>
       ) : (
-        <div className="domain-correction__actions">
-          <button type="button" className="domain-linkish" disabled={disabled} onClick={onReviewed}>
-            I've been keeping on top of this
-          </button>
-          <button type="button" className="domain-linkish" disabled={disabled} onClick={onOpen}>
-            Something's changed
-          </button>
-        </div>
+        /*
+         * The same two controls Now offers, from the same component — AUD-0038(a).
+         *
+         * They used to be written out here and nowhere else, which is why the
+         * flag and its response lived on different screens. What changed is
+         * where the markup lives, not what the buttons write: `markReviewed`
+         * and `correctStatus` are untouched, and this page still decides for
+         * itself whether the controls are the honest answer at all — when a
+         * named concept is what is overdue, the pointer above is offered
+         * instead and these are not drawn (QA-B2).
+         */
+        <StandingControls
+          label={coverage.label}
+          inputId={`domain-status-${coverage.domain}`}
+          disabled={disabled}
+          open={open}
+          draft={draft}
+          onOpen={onOpen}
+          onClose={onClose}
+          onDraftChange={onDraftChange}
+          onReviewed={onReviewed}
+          onSubmit={onSubmit}
+        />
       )}
     </Panel>
   )

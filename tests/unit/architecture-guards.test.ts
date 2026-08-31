@@ -1636,6 +1636,97 @@ describe('an interchangeable-action family is a written decision', () => {
  * 2. The token is **strictly greater** than the threshold the gate measures
  *    against. A minimum a design sits exactly on is not a minimum it meets.
  */
+/**
+ * Every design token a surface reads is a token somebody defined — routing 90.
+ *
+ * ## What went wrong, and why nothing caught it
+ *
+ * Four declarations across three stylesheets read `var(--border-subtle)` and
+ * `var(--edge)`. **Neither property has ever been defined.** A `var()` with no
+ * fallback that resolves to nothing makes the whole declaration invalid at
+ * computed-value time, so `border-top: 1px solid var(--border-subtle)` is not a
+ * faint border or a wrong colour — it is **no border at all**, on a laboratory
+ * panel and on the standing-veto row and on the notice that tells the owner he
+ * is looking at somebody else's evening.
+ *
+ * Nothing failed. CSS has no undefined-variable error, the build does not link
+ * stylesheets against the token sheet, and the result is a hairline quietly
+ * missing on a dark surface where a missing hairline looks exactly like a
+ * design decision. It survived every gate this campaign has: 1,861 tests, a
+ * browser matrix at three widths, an Android pass and nineteen rounds of
+ * independent QA.
+ *
+ * ## Why the guard is worth having rather than the fix alone
+ *
+ * The four uses were repaired in the same commit as this test, and repairing
+ * them is not what stops it happening again — the next renamed token does the
+ * same thing just as silently. This is a **link step for the design system**,
+ * which a stylesheet language does not give you and a visual coherence phase is
+ * the right place to add.
+ *
+ * Locally-scoped properties are legitimate: a component may define its own on a
+ * selector and read it back. So the definitions are collected from every
+ * stylesheet rather than from `tokens.css` alone, and what is left is genuinely
+ * a name nobody wrote.
+ */
+describe('no surface reads a design token that does not exist', () => {
+  const styleFiles = (): readonly string[] => {
+    const out: string[] = []
+    const walk = (dir: string): void => {
+      for (const name of readdirSync(dir)) {
+        const full = join(dir, name)
+        if (statSync(full).isDirectory()) {
+          walk(full)
+          continue
+        }
+        if (name.endsWith('.css') || name.endsWith('.tsx')) out.push(full)
+      }
+    }
+    walk(join(ROOT, 'src'))
+    return out
+  }
+
+  /** `--name:` anywhere, which is where a custom property comes into being. */
+  const DEFINED = /(^|[;{\s])(--[a-z0-9-]+)\s*:/gi
+  /** `var(--name` — the fallback, if any, is a separate concern. */
+  const USED = /var\(\s*(--[a-z0-9-]+)/gi
+
+  it('is looking at the stylesheets and the components', () => {
+    expect(styleFiles().length).toBeGreaterThan(8)
+  })
+
+  it('defines every custom property that anything reads', () => {
+    const defined = new Set<string>()
+    const used = new Map<string, string>()
+
+    for (const file of styleFiles()) {
+      const text = readFileSync(file, 'utf8')
+      for (const match of text.matchAll(DEFINED)) defined.add(match[2]!)
+      for (const match of text.matchAll(USED)) {
+        if (!used.has(match[1]!)) used.set(match[1]!, repoPath(file))
+      }
+    }
+
+    const orphans = [...used]
+      .filter(([name]) => !defined.has(name))
+      .map(([name, file]) => `${file} reads ${name}, which nothing defines`)
+      .sort()
+
+    expect(orphans, 'a token read but never written').toEqual([])
+  })
+
+  it('bites on a token nobody defined', () => {
+    /*
+     * A set-difference check goes green when both sets are empty, so this is
+     * what says the comparison is real: the same arithmetic, over a made-up
+     * name, must report it.
+     */
+    const defined = new Set(['--accent'])
+    const used = ['--accent', '--not-a-real-token']
+    expect(used.filter((name) => !defined.has(name))).toEqual(['--not-a-real-token'])
+  })
+})
+
 describe('a touch target is bigger than the smallest allowed target', () => {
   const cssFiles = (): readonly string[] => {
     const out: string[] = []
@@ -1673,12 +1764,26 @@ describe('a touch target is bigger than the smallest allowed target', () => {
     expect(tokenPx()).toBeGreaterThan(gateThreshold())
   })
 
+  /**
+   * A line that sizes something, as opposed to one that names a breakpoint.
+   *
+   * `@media (min-width: 26rem)` is not a control with a hand-written size on
+   * it — it is a statement about the viewport, and the rules inside it are
+   * checked on their own lines like any others. This guard's own comment says
+   * what it is for: *"a **control** sized by a number written here"*. Reading a
+   * media query as one reported the first responsive breakpoint in the
+   * repository as a touch target below the gate's threshold, which is the guard
+   * being wrong about the layout rather than right about a control.
+   */
+  const sizesSomething = (line: string): boolean =>
+    /min-(?:height|width)\s*:/.test(line) && !/^\s*@(?:media|container)\b/.test(line)
+
   it('is the only place a target size is written down', () => {
     const offenders: string[] = []
     for (const file of cssFiles()) {
       const lines = readFileSync(file, 'utf8').split('\n')
       lines.forEach((line, index) => {
-        if (!/min-(?:height|width)\s*:/.test(line)) return
+        if (!sizesSomething(line)) return
         if (line.includes('var(--touch-target)')) return
         /*
          * Not every minimum is a touch target — a panel or a chart can have
@@ -1691,6 +1796,23 @@ describe('a touch target is bigger than the smallest allowed target', () => {
       })
     }
     expect(offenders, 'a target size written outside the token').toEqual([])
+  })
+
+  it('still bites on a control sized by hand', () => {
+    /*
+     * The narrowing above is only safe if what it excluded was the media query
+     * and nothing else. A guard relaxed to make a failure go away, with nothing
+     * proving it still catches what it was written for, is how a gate stops
+     * being one.
+     */
+    expect(sizesSomething('  min-height: 44px;'), 'a hand-written control size').toBe(true)
+    expect(sizesSomething('  min-width: 2.75rem;'), 'in either dimension').toBe(true)
+    expect(sizesSomething('@media (min-width: 26rem) {'), 'a breakpoint is not a control').toBe(
+      false,
+    )
+    expect(sizesSomething('  min-height: var(--touch-target);'), 'the token is still a size').toBe(
+      true,
+    )
   })
 
   it('the gate reports the measurement it tested, unrounded', () => {
@@ -1969,11 +2091,24 @@ describe('F40 — no owner-facing control without a name', () => {
      * where the answer goes, and this is what stops the note being quietly
      * dropped when the component is next touched.
      */
-    const page = readFileSync(join(ROOT, 'src/features/life/DomainPage.tsx'), 'utf8')
-    const notes = [...page.matchAll(/domain-correction__note/g)]
+    /*
+     * Both files, because one of the two controls moved — AUD-0038(a).
+     *
+     * The coverage-status field is now `StandingControls` in `DomainPanels.tsx`,
+     * so that Now and the domain page offer the same control rather than two
+     * copies of it. Reading only `DomainPage.tsx` would have counted one note
+     * and reported the other as dropped, which is the guard being wrong about a
+     * move rather than right about a deletion. The rule is unchanged: **there
+     * are two free-text corrections and each says what happens to the answer**,
+     * wherever the component that draws it lives.
+     */
+    const files = ['src/features/life/DomainPage.tsx', 'src/features/life/DomainPanels.tsx'].map(
+      (path) => readFileSync(join(ROOT, path), 'utf8'),
+    )
+    const notes = files.flatMap((text) => [...text.matchAll(/domain-correction__note/g)])
     expect(notes.length, 'both free-text corrections say what happens to the answer').toBe(2)
     // The comments explaining the repair quote the attribute, so this reads the
     // code rather than the prose. `codeOnly` is what tells them apart.
-    expect(codeOnly(page)).not.toMatch(/placeholder=/)
+    for (const text of files) expect(codeOnly(text)).not.toMatch(/placeholder=/)
   })
 })
