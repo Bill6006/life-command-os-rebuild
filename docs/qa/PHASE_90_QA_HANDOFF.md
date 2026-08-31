@@ -25,7 +25,7 @@ conversation may not approve its own phase.
 | Fact                    | Value                                                                        |
 | ----------------------- | ---------------------------------------------------------------------------- |
 | Product checkpoint      | `c6e0b3a` — the commit the gate was run on (D-147)                     |
-| Documentation head      | `c6e0b3a`, plus the commit that records this file’s final counts              |
+| Documentation head      | `2c45b29` — the first deploy of this checkpoint; a later docs commit moves it |
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                  |
 | Owner-visible behaviour | **changed** — Now, every domain page, Insights, and the shared surface system |
 | Owner phone check       | **required before GREEN, and it is this phase's canonical gate**              |
@@ -168,7 +168,7 @@ what QA observes is itself a trigger.
 | Android-style gate                        | **clean — 233 checks** (183 at routing 83)                          |
 | Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`c6e0b3a`)        |
 | Checkpoint equivalence                    | bundle-equivalent; no files changed between `c6e0b3a` and HEAD      |
-| CI and deployed Preview                   | **NOT YET RUN — see below**                                         |
+| CI and deployed Preview                   | **success** — Verify and Deploy preview both green (run 33427826197)  |
 
 > ### The one browser failure, and why it is not being called a pass
 >
@@ -189,24 +189,35 @@ what QA observes is itself a trigger.
 > and the whole point of this handoff is that QA can check these numbers against
 > its own.
 
-> ### The one gate the builder could not run, stated plainly
+> ### The deploy, and how to re-verify it
 >
-> **`c6e0b3a` has not been pushed**, so CI has not run on it and the Preview has
-> not been redeployed. `checkpoint-equivalence.mjs` says so itself: *"2 commit(s)
-> on HEAD are on no remote branch. QA reads the repository, not your working
-> copy, and CI has not run on these."* The other unpushed commit is `415a8f2`,
-> routing 84's marker move.
+> `c6e0b3a` was pushed after the gate was run. CI run **33427826197** is green on
+> both jobs, and the Preview serves **`2c45b29`** — the documentation commit that
+> records the numbers above. `checkpoint-equivalence.mjs` reads the deployed SHA
+> live and reports **bundle-equivalent**: three files changed between `c6e0b3a`
+> and `2c45b29`, all of them documents, none bundle-relevant. D-097 asks for
+> equivalence rather than literal SHA equality, and a further documentation
+> commit moving the head again is not a reason to refuse to test.
 >
-> Pushing publishes to a public repository and triggers a Pages deploy, which is
-> the owner's to authorise rather than the builder's to do unasked. **Do not
-> begin the cold-use pass until the Preview serves `c6e0b3a`** — step 1 of the
-> protocol is use of the *deployed* app, and testing the previous build would
-> produce a report about routing 84.
+> **Release integrity is clean — 8 files served byte for byte as verified.**
 >
-> Everything in the Android and release-integrity rows above was run against a
-> local `vite preview` of the `c6e0b3a` build, which serves the same bytes the
-> deploy will. Re-run both against the Preview once it is live; that is the run
-> that counts.
+> ### Run integrity with CI's manifest, not with one you built
+>
+> `release-integrity.mjs` defaults to `dist/release-manifest.json`, and a
+> locally-built `dist` is a **different build**: `build-info.json` embeds the
+> commit and the build time, so `index.html` references differently-hashed
+> assets and every digest legitimately differs. Run it that way and it reports
+> four 404s and two mismatches, which look exactly like the defect QA-84-064 was
+> written about and are not one.
+>
+> The manifest to use is the one the gate uploaded, which is also the provenance
+> D-211 requires — a check that only ever runs beside the thing it checks is the
+> shape of the problem rather than the fix:
+>
+> ```bash
+> gh run download 33427826197 --name preview-manifest --dir /tmp/m
+> node scripts/release-integrity.mjs https://bill6006.github.io/life-command-os-rebuild/preview/ --manifest /tmp/m/release-manifest.json
+> ```
 
 **Reintroduction proofs the builder ran** (each is a claim you can repeat):
 

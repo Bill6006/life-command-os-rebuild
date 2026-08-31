@@ -261,12 +261,15 @@ clean, 304 tracked files. Release integrity clean — 8 files served byte for
 byte as verified. Checkpoint equivalence: bundle-equivalent, nothing changed
 between `c6e0b3a` and HEAD. Worktree clean.
 
-**CI has not run and the Preview has not been redeployed**, because `c6e0b3a`
-is unpushed. Pushing publishes to a public repository and triggers a Pages
-deploy, which is the owner's to authorise. The Android and release-integrity
-runs above were against a local `vite preview` of the same build.
-**Independent QA cannot begin until the Preview serves `c6e0b3a`** — step 1 of
-the protocol is cold use of the deployed app.
+**CI is green and the Preview is deployed.** Run **33427826197** passed both
+Verify and Deploy preview; the Preview serves **`2c45b29`**, which
+`checkpoint-equivalence.mjs` reports bundle-equivalent to `c6e0b3a` — the three
+files that changed between them are all documents. Release integrity against
+the **deployed** bytes is clean, 8 files served byte for byte as verified,
+checked against the manifest CI uploaded rather than a local build (D-211).
+
+Independent QA can begin: step 1 of the protocol is cold use of the deployed
+app, and the deployed app is now this phase's.
 
 ## Open, and carried forward unchanged
 

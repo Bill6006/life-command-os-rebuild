@@ -164,20 +164,20 @@ gate is the **owner's physical phone**, which no automated result satisfies.
 | Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`c6e0b3a`)            |
 | Checkpoint equivalence                    | bundle-equivalent; no files changed between `c6e0b3a` and HEAD          |
 | Worktree                                  | clean                                                                   |
-| CI and deployed Preview                   | **not yet run — the checkpoint is unpushed**                            |
+| CI and deployed Preview                   | **green** — run 33427826197; the Preview serves `2c45b29`               |
 
-**The one gate the builder did not run, and why.** `c6e0b3a` is on no remote
-branch, so CI has not run on it and the Preview still serves the previous build.
-`checkpoint-equivalence.mjs` reports this itself. Pushing publishes to a public
-repository and triggers a Pages deploy, which is the owner's to authorise rather
-than the builder's to do unasked — and the campaign's own note is that several
-pushes in an hour jam the deploy queue. The Android and release-integrity rows
-above were run against a local `vite preview` of the `c6e0b3a` build, which
-serves exactly the bytes the deploy will.
+**The deploy.** `c6e0b3a` was pushed after the gate was run, on the owner's
+instruction. CI run **33427826197** is green on both Verify and Deploy preview,
+and the Preview serves **`2c45b29`** — the documentation commit carrying the
+numbers above. `checkpoint-equivalence.mjs` reads the deployed SHA live and
+reports bundle-equivalent: the three files that changed are all documents.
+**Release integrity against the deployed bytes is clean — 8 files served byte
+for byte as verified**, checked with the manifest CI uploaded rather than with a
+local build, which is the provenance D-211 requires.
 
-**Independent QA must not begin the cold-use pass until the Preview serves
-`c6e0b3a`.** Step 1 of the protocol is use of the _deployed_ app; testing the
-previous build would produce a report about routing 84.
+**Independent QA can begin.** The Preview serves this checkpoint's bundle, so
+step 1 of the protocol — cold use of the deployed app — is now a reading of
+routing 90 rather than of routing 84.
 
 ## What the phase did not do
 
