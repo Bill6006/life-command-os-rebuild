@@ -16,7 +16,7 @@ the routing candidate — the opposite of the intent.
 **Input:** [`CAPABILITY_MATRIX.md`](CAPABILITY_MATRIX.md), three structural layers
 and 22 capabilities. **Authority: not the matrix.** Every status, dependency,
 size, evidence claim and phase assignment below was re-checked against source in
-the tree at **`9fc79a4`**. Fifteen corrections were found and are in section 3.
+the tree at **`9fc79a4`**. Seventeen corrections were found and are in section 3.
 The corrected version is what is adjudicated.
 
 **Predecessor:** [`PRODUCT_ADJUDICATION.md`](PRODUCT_ADJUDICATION.md), approved
@@ -81,10 +81,10 @@ what produces section 4's verdict.
 
 ---
 
-## 3 · Matrix verification — fifteen corrections
+## 3 · Matrix verification — seventeen corrections
 
 The matrix asked to be verified rather than inherited. It was. Its central claims
-hold; these fifteen do not, and the corrected versions are what section 7
+hold; these seventeen do not, and the corrected versions are what section 7
 adjudicates.
 
 ### Corrections that change an adjudication
@@ -214,7 +214,7 @@ reuse 85–89 even though they are free, and why canonical 10/11/12 are renumber
 `int(blocks) != int(phase)` and skips on inequality. `CAMPAIGN_HOLDS.md` declares
 `<!-- lco:decision id=D-172 status=open blocks_phase=91 -->`. **Any split or
 renumbering of routing 91 silently releases the D-172 hold on everything that
-moves off 91.** Section 6.10 says exactly what must be declared instead. This
+moves off 91.** Section 6.11 says exactly what must be declared instead. This
 document does not touch `CAMPAIGN_HOLDS.md`.
 
 **3.15 — `emotionalState`'s source comment is stale, and it is C22's risk visible
@@ -224,6 +224,21 @@ the owner."_ **D-166 answered it on 2026-08-27.** The concept itself is correctl
 unchanged — D-166 does not authorise building the six dimensions before Reach —
 but the comment now describes a closed question, in the exact place a later reader
 would go to find out whether it was still open.
+
+### Two further corrections, found while settling owner decisions #6 and #7
+
+**3.16 — plan section 54 says "Six rungs of progress evidence". The code has
+seven.** `PROGRESS_EVIDENCE` is `attempt, part-done, completion, quality,
+retained-capability, transfer, milestone` (`domain/progress.ts:50-72`) —
+`part-done` was added by QA-84-002 and the plan text was not swept. **This
+document's own first draft inherited the error.** It matters because `rankOf()`
+indexes that array, and the ladder is what section 13A's advancement work reads.
+
+**3.17 — `time.ts:562` names a guard file that does not exist.** It cites
+`tests/unit/no-ambient-clock.test.ts`; the ambient-clock guard actually lives in
+`tests/unit/architecture-guards.test.ts`. Harmless, and worth correcting when that
+file is next touched. Noted because section 6.1's time-advance instrument rests on
+that guard being real — **it is; only its name is wrong.**
 
 ### One matrix claim worth restating precisely
 
@@ -400,7 +415,7 @@ adds a daily tap.**
 alcohol, hydration. Each is at least one tap a day, each carries a strong folk-causal
 prior, and the association engine at `MIN_PAIRS = 4` per arm with no
 multiple-comparisons discipline will confirm a weak belief before it can test one.
-They become buildable **after** C3's correction discipline exists (routing 96), not
+They become buildable **after** C3's correction discipline exists (routing 97), not
 before. Deferring them is not a judgement that they do not matter; it is a judgement
 that capturing them before the engine can handle them produces confident nonsense.
 
@@ -512,9 +527,15 @@ and 103.** Their scope is unchanged, exactly as it was unchanged when D-159 gave
 canonical Phase 10 the integer 92 — **D-109 stands.** Three-digit integers parse
 correctly: `_stated_or_inferred_phase` reads `re.search(r"\d+", raw)`
 (`handoff_parser.py:693`) and `QA_FILE_RE` is `^PHASE_(\d+)_QA_HANDOFF\.md$`.
-This is not renumbering for aesthetics — it is forced by 3.13, and the gap at
-97–100 is deliberate headroom, because this campaign has now had to insert phases
-into its own map twice and every insert renumbers everything downstream.
+This is not renumbering for aesthetics — it is forced by 3.13, and the gap above
+canonical 10 is deliberate headroom, because this campaign has now had to insert
+phases into its own map twice and every insert renumbers everything downstream.
+
+**The headroom has already earned itself.** Settling owner decisions #6 and #7
+(section 13A) split the former routing 95 into **95 — advancement and revision**
+and **96 — expectation and reconciliation**, pushing longitudinal inference from
+96 to **97**. That insert landed inside the reserve, so **canonical 10, 11 and 12
+stay at 101, 102 and 103 and nothing downstream renumbered.**
 
 | Product / canonical name                                 | Routing | Status                                 |
 | -------------------------------------------------------- | ------- | -------------------------------------- |
@@ -525,9 +546,10 @@ into its own map twice and every insert renumbers everything downstream.
 | Reach — what the brain can see                           | **92**  | proposed                               |
 | Validity — what it concludes from what it sees           | **93**  | proposed                               |
 | The rest of the life — domains and progression           | **94**  | proposed                               |
-| The revision loop and the named expectation              | **95**  | proposed                               |
-| Longitudinal inference — D-172's mechanism               | **96**  | proposed                               |
-| _(97–100 reserved headroom)_                             | —       | —                                      |
+| **Advancement and revision**                             | **95**  | proposed — carries the settled #6/#7   |
+| **Expectation and reconciliation**                       | **96**  | proposed                               |
+| Longitudinal inference — D-172's mechanism               | **97**  | proposed                               |
+| _(98–100 reserved headroom)_                             | —       | —                                      |
 | **Canonical Phase 10** — performance, PWA, reliability   | **101** | scope unchanged (was 92)               |
 | **Canonical Phase 11** — adversarial hardening           | **102** | scope unchanged (was 93)               |
 | **Canonical Phase 12** — release                         | **103** | scope unchanged (was 94)               |
@@ -783,7 +805,14 @@ where). Plus owner-use **F03** (a strategy must be able to fail), **F08** (block
 aggregation), **F09** (a carried intention's fate), **F14** (maintenance versus
 advancement), **F18** (pattern to changed approach), **F31** (reorientation),
 **F34** bounded (the review loop on Insights and domain pages — D-169), **F42**,
-**F44** bounded (the measurable half only). Plus **C21's enforcement half**: reverse
+**F44** bounded (the measurable half only).
+
+**F14 is no longer in this phase.** It moved to routing 95 when owner decisions #6
+and #7 were settled: F14 (maintenance crowding out advancement) and C13's minimum
+subset are **the same axis** — the negative and descriptive halves of one thing —
+and they need the same domain delivery policy and the same anti-shame gate.
+Splitting them across two phases would build that policy twice and run the human
+wording gate twice on one sentence class. See section 13A. Plus **C21's enforcement half**: reverse
 `constraints.ts:25-28`'s shown-never-enforced rule for **registered blocker
 concepts only**, and **C14's bands**, with histories built to land at each band.
 
@@ -870,64 +899,119 @@ about the child changes** unless owner decision 1 says so.
 
 ---
 
-### 6.7 · Routing 95 — the revision loop and the named expectation
+### 6.7 · Routing 95 — advancement and revision
 
-**Purpose.** The gap the predecessor named first and nobody owns, and which does
-not appear in the capability matrix at all. **A destination the system can only
-receive is a form.** This phase closes the top of the owner's chain.
+**Purpose.** Two things the product has never done: say when the owner is
+**genuinely becoming more capable**, and notice that a destination has stopped
+moving. Both are settled owner decisions — **#7 and #6, section 13A** — and both
+are record-factual, owner-initiated and governed by one delivery policy, which is
+why they are one phase.
+
+**This phase carries the gap the predecessor named first and nobody owned.** _A
+destination the system can only receive is a form._
 
 **Prerequisites.** Routing 94 (destinations across the life), routing 93 (longer
-horizons and honest comparison). **Owner decision 6** governs one surface question
-inside it.
+horizons and honest comparison). **Owner decisions #6 and #7 are settled**, so
+nothing in this phase is blocked on the owner.
 
-**Builder scope.**
+**Builder scope, in package order. Package 1 is first and absolutely so.**
 
-1. **Destination revision.** The system detects and can say: a destination with no
-   movement over a real span; two destinations that do not fit the hours in a week;
-   a destination whose evidence has gone quiet; a milestone repeatedly re-dated.
-   Detected and **said**, never silently altered — the owner revises, the app
-   notices.
-2. **The named expectation and its reconciliation** (5.3). What the app expected of
-   a move, recorded; what happened, compared; **and the app noticing it was wrong.**
-3. **C13, bounded.** _"This kept helping"_ versus _"this has flattened"_. Derived
-   from reconciliation history and from AUD-0029's month-scale reading. **No rate,
-   no trend-of-trend, no rate-of-improvement** — those are rates about the owner and
-   D-162 and section 22 forbid them on every surface. The owner's word for this
-   capability was "increasing"; the honest form of it is a sentence, not a slope.
-4. **C14 made owner-visible** for the owner's own data — the app speaks visibly
-   differently when it knows little than when it knows much. **Not** for anything
-   about the child: that confidence stays internal (D-112 / AUD-0049).
-5. **F03's verdicts and F18's link** finally close here rather than in 93, because a
+1. **The C13 minimum subset — advancement.** Rung advancement (is evidence
+   arriving at higher rungs than in a comparable earlier window), and new ground
+   versus repeatedly reaching the same ground. Plus the settled subject-eligibility
+   rule, the domain delivery table, the frequency bounds and the known-incomplete
+   correction — all of section 13A. **This package is what makes the phase worth
+   running even if nothing after it lands.**
+2. **F14 — maintenance crowding out advancement**, moved here from routing 93. The
+   negative half of package 1's axis, sharing its policy and its gate.
+3. **Destination revision.** A destination with no movement over a real span; two
+   destinations that do not fit the hours in a week; a destination whose evidence
+   has gone quiet; a milestone repeatedly re-dated. Detected and **said in the
+   settled grammar**, never silently altered — the owner revises, the app notices.
+4. **F03's verdicts and F18's link**, which close here rather than in 93 because a
    strategy fails against a destination and the revision loop is what reads it.
 
-**Ordinary-owner QA contract.** This phase's contract is the longest and it is the
-point. Across **eight simulated weeks**, from a fresh store: author two destinations
-in two domains; pursue one and neglect the other; confirm the app can say which is
-not moving, **in the wording owner decision 6 settles**. Accept an expectation the
-app names, let the evening go badly, and confirm the app reconciles what it said
-against what happened and **says so on a surface he would actually open**. Repeat
-until an expectation has failed three times and confirm the app's confidence
-wording visibly weakens. Then revise the neglected destination and confirm the app
-treats the revision as new information rather than as failure — **section 4.4's
-anti-shame rule is the live guard for this whole phase.**
+**One verified implementation fact, recorded so it is not discovered mid-phase.**
+There is **no per-entity progress index today**: `progressReading(situation,
+domains)` groups by **domain**, and `ProgressEntry.about` is a display label
+derived from the first resolvable entity on the record, not a key. Records already
+carry `entities: EntityRef[]` on the envelope, so grouping by entity ref is a
+**small selector — no schema change and no authoring change** — but it is real
+work and it is package 1's first task.
 
-**Synthetic QA contract.** Nine-month histories where a strategy plainly stops
-working and the app must say so; the mirror histories where it plainly does not and
-the app must stay quiet; reconciliation scored across hundreds of expectations to
-show the confidence wording tracks the record; and the **null arm** — a history
-with no stagnation, in which the app must raise nothing at all.
+**Ordinary-owner QA contract.** Across **eight simulated weeks**, from a fresh
+store, in at least two domains of different delivery tiers. Author a destination
+with a milestone in Career and a routine in Fatherhood. Work at the Career one
+until evidence appears at a higher rung, and confirm the app says so — on the
+domain page, naming the typed subject, never the destination. Neglect the
+Fatherhood routine past 28 days and confirm the app says only what the record
+holds, on the domain page and never on Now. Answer the accompanying revision
+question and confirm it is not re-asked. Then trigger the **known-incomplete
+correction** — _"I've been doing this, it just isn't written down"_ — and confirm
+the span goes from empty to unknown: no stagnation statement, and **no advancement
+statement either**. Advance past 60 days with nothing new and confirm **nothing
+repeats**. Confirm no statement ever names a destination or a bare goal as its
+subject, and that Private says nothing on any surface.
 
-**Completion condition.** The revision loop demonstrably closes: earlier evidence
-changes a later statement about a destination, proved from a near-empty store.
-Nothing anywhere emits a rate about the owner. Every stagnation sentence passes the
-anti-shame reading.
+**Synthetic QA contract.** Nine-month histories where rung composition plainly
+advances and the app must say so; mirror histories where it plainly does not and
+the app must stay quiet; the **null arm**, a history with no stagnation, in which
+the app raises nothing at all. Plus the closed structural assertions: an exhaustive
+`Record<EntityKind, …>` subject table proved to fail the build on an unclassified
+kind; no composed statement carrying a subject outside the permitted set; no
+statement whose grammatical subject is "you"; no rendered zero count and no
+denominator; at most one domain named per statement; suppression proved for every
+declared-constraint class; and the frequency bounds proved at 27, 28, 59 and 60
+days.
 
-**Not in this phase.** No forecast. No steering on a prediction. No score. No
-open-space search.
+**Completion condition.** Earlier evidence demonstrably changes a later statement,
+proved from a near-empty store. Nothing anywhere emits a rate, score, percentage,
+rank or grade about the owner. Every statement passes the anti-shame reading **on
+the ordinary-owner track and the phone gate** — not a scanner.
+
+**Not in this phase.** No forecast. No steering on a prediction. No named
+expectation or reconciliation — that is 96. No score. No open-space search. No
+inferred milestone difficulty. No breadth or transfer claims.
 
 ---
 
-### 6.8 · Routing 96 — longitudinal inference: D-172's mechanism
+### 6.8 · Routing 96 — expectation and reconciliation
+
+**Purpose.** The bounded successor to forecasting (section 5.3): the app states
+what it **expects**, records it, and reconciles it against what actually happened —
+which is always scoreable, because the occurrence it is about really occurs.
+
+**Prerequisites.** Routing 95. Separated from it deliberately: this is a **new
+claim class** and 95's is record-factual, and the split is where 95's own package
+rule bites.
+
+**Builder scope.**
+
+1. **The named expectation.** What is expected, of which move, over the horizon the
+   outcome already uses, in the existing evidence-sufficiency words, with what
+   would change it — section 22's five requirements, all satisfiable.
+2. **Reconciliation**, and the app **noticing it was wrong**.
+3. **C14 made owner-visible** for the owner's own data. **Not** for anything about
+   the child: that confidence stays internal (D-112 / AUD-0049).
+
+**Ordinary-owner QA contract.** Accept an expectation the app names, let the
+evening go badly, and confirm the app reconciles what it said against what happened
+on a surface the owner would actually open. Repeat until an expectation has failed
+three times and confirm the confidence wording visibly weakens.
+
+**Synthetic QA contract.** Reconciliation scored across hundreds of expectations to
+show the wording tracks the record; histories where the expectation was right and
+the wording strengthens; and a null arm where the app expects nothing.
+
+**Completion condition.** An expectation that failed repeatedly demonstrably
+changes what the app says next. No forecast about a day that has not happened.
+
+**Not in this phase.** No steering (C11 is refused). No forecast clause on Now
+(C12 falls with it). No advancement work — that shipped at 95.
+
+---
+
+### 6.9 · Routing 97 — longitudinal inference: D-172's mechanism
 
 **Purpose.** D-172's question, answered at the point where the space is worth
 searching: _"how can this system discover hypotheses, combinations, sequences and
@@ -984,7 +1068,7 @@ cannot be done well here" is a successful phase.**
 
 ---
 
-### 6.9 · Routing 101, 102, 103 — canonical Phases 10, 11 and 12
+### 6.10 · Routing 101, 102, 103 — canonical Phases 10, 11 and 12
 
 **Scope unchanged. Only the routing label differs, exactly as when canonical Phase
 10 became 92 — D-109 stands.** They are listed here only because the two QA tracks
@@ -1008,7 +1092,7 @@ apply to them as well and because 102 acquires one input.
 - **103 — canonical Phase 12.** Plan section 57, unchanged, including the release
   integrity check D-211 added.
 
-### 6.10 · What must happen to the D-172 hold, and it is the owner's to do
+### 6.11 · What must happen to the D-172 hold, and it is the owner's to do
 
 `CAMPAIGN_HOLDS.md` declares `blocks_phase=91`, and correction 3.14 shows the match
 is exact-integer. Under this roadmap, **routing 91 becomes semantic capture, which
@@ -1020,7 +1104,7 @@ it was never about and release the phase it was.**
 
 The owner must therefore, at approval time and not before:
 
-- **add** `<!-- lco:decision id=D-172 status=open blocks_phase=96 -->`;
+- **add** `<!-- lco:decision id=D-172 status=open blocks_phase=97 -->`;
 - **decide separately** whether D-172 should also continue to hold 92 (Reach), given
   that widening the vocabulary is half of D-172's own answer. **Recommendation: no.**
   Reach is the answer to D-172's first half and holding it hostage to D-172's second
@@ -1039,34 +1123,34 @@ The owner must therefore, at approval time and not before:
 Every structural layer and every capability row, with the corrected status.
 **BUILD · PRESERVE · BOUND · DEFER · REJECT · SEPARATE PRODUCT · OWNER DECISION.**
 
-| #       | Capability                               | Disposition                                                     | Phase                          | Reasoning                                                                                                                                                                                                                                                                                    |
-| ------- | ---------------------------------------- | --------------------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **S1a** | Outcome-judgement horizon                | **BUILD, BOUNDED**                                              | 92                             | Real, unowned, small: one union, eight consumers. Bounded at `weekly`; `monthly`/`seasonal` refused as judgement horizons because a lifecycle keyed to a day cannot settle them and no evidence supply would score them. Generalise `CourseReflection` rather than invent a mechanism (3.2). |
-| **S1b** | Week / month / season reading            | **PRESERVE**                                                    | 93                             | Correction 3.1: already AUD-0029 + AUD-0007 + AUD-0009 in Validity. It does not need inventing, it needs building where it sits.                                                                                                                                                             |
-| **S2**  | Wider vocabulary                         | **BUILD in tiers, BOUNDED**                                     | 92                             | Tier 1 costs no new tap and unblocks C21 and C5. Tier 2 is three concepts with demonstrable decision value. Tier 3 (caffeine, alcohol, hydration) deferred until C3's correction discipline exists. Tier 4 refused. **The acceptable daily burden is owner decision 3.**                     |
-| **S3**  | Forecasting                              | **REJECT this generation; BOUND a successor**                   | 95                             | Section 59 makes it a reversal, not a hurdle (3.4). A forecast that cannot be scored is a confident sentence. The **named expectation** delivers the falsifiable half and is approved.                                                                                                       |
-| **C1**  | Semantic capture and clarification       | **BUILD**                                                       | **91**                         | The brief's rule honoured literally: it is the whole of 91, with its own gate. It is what the owner is feeling now, and correction 3.6 is its hardest and most valuable item.                                                                                                                |
-| **C2**  | Open-space longitudinal inference        | **BUILD, LAST, with a kill criterion**                          | 96                             | The owner's top-ranked wish and the thing rules are structurally worst at. But it must search a space with something in it. Deterministic-bounded first, model-assist as a named fallback, null arm as the gate.                                                                             |
-| **C3**  | Combinations, sequences, lags            | **BUILD with a correction discipline**                          | 96                             | Four factors across five horizons is 20+ tests; some will look significant by chance. The multiple-comparisons discipline is not optional and is the phase's real content.                                                                                                                   |
-| **C4**  | All-domain understanding                 | **BUILD, split by size**                                        | 94                             | Correction 3.5: cheap for four domains that have a generator, new architecture for five that do not. Sizing it as one job is how it becomes a mega-phase.                                                                                                                                    |
-| **C5**  | Emotional / state modelling              | **PRESERVE — approved, unbuilt**                                | 92                             | D-166. Six dimensions, distinct, independently unknown, never composited. A single `emotional.score` is the wellness score by the back door and is forbidden. Correction 3.15's stale comment goes with it.                                                                                  |
-| **C6**  | Learning progress, retention, transfer   | **PARTIAL — PRESERVE; spaced retrieval SEPARATE PRODUCT**       | 93 (aggregation)               | Correction 3.3: the rungs are shipped and asked at 3 and 10 days. **Whether the app tests him is owner-facing but not owner-values** — it is a product-scope call and I make it: **no.** Spaced retrieval is an entire product; the app records external proof and says which it knows.      |
-| **C7**  | Nutrition, food, caffeine, hydration     | **SEPARATE PRODUCT (food) / DEFER (the rest)**                  | —                              | Section 12. The highest-frequency, highest-friction capture in the whole matrix, aimed at the strongest folk-causal prior, over an engine with no multiple-comparisons discipline.                                                                                                           |
-| **C8**  | Sleep and recovery, long horizons        | **BUILD**                                                       | 93                             | AUD-0009 already. The safest horizon-dependent capability and **S1a's acceptance case**, exactly as the matrix recommends.                                                                                                                                                                   |
-| **C9**  | Same-day → monthly effects               | **= S1a + S1b**                                                 | 92, 93                         | Not a separate capability. Split per 5.1.                                                                                                                                                                                                                                                    |
-| **C10** | Forecasts / predictions                  | **BOUND to the named expectation**                              | 95                             | Everything section 22 requires, plus the thing a forecast could not have: it is always scored, because the occurrence it is about actually happens.                                                                                                                                          |
-| **C11** | Steering on a forecast                   | **REJECT**                                                      | —                              | Unfalsifiable by construction: steering away from a predicted bad day makes the prediction unobservable. Not an evidence problem; more data would not fix it. A system built to revise its model of him must not contain a component immune to revision.                                     |
-| **C12** | Explaining the intervention              | **REJECT with C11**                                             | —                              | Falls with C11, and Q9's single additional clause is better spent on the maintenance-versus-advancement distinction that plan section 54 already reserves it for.                                                                                                                            |
-| **C13** | Sustainable **and increasing**           | **BOUND**                                                       | 95                             | _"This kept helping"_ / _"this has flattened"_ is approved. **Rate of improvement is refused**: "increasing" is literally a rate about the owner, and D-162 and section 22 already forbid it on every surface.                                                                               |
-| **C14** | Confidence calibration                   | **BUILD bands; DEFER calibration**                              | 93, 95                         | Bands are evidence sufficiency and are honest today. True calibration needs scored predictions; the named expectation supplies the only honest version. Owner-visible for his own data (95); internal for the child, **D-112 / AUD-0049 not D-193** (3.7).                                   |
-| **C15** | Research-grounded priors                 | **OWNER DECISION 2 — recommendation: bound to question-aiming** | 92 (if yes)                    | See 13.2. My recommendation is much narrower than the matrix's framing and delivers most of the value at a fraction of the risk.                                                                                                                                                             |
-| **C16** | Fatherhood capability support            | **OWNER DECISION 4 for "what to teach her"; destination BUILD** | 94                             | The destination object is a product call and I make it: yes, once the shape is proved. What may be **suggested** about a child's learning is not mine.                                                                                                                                       |
-| **C17** | Social / charisma / romantic progression | **BUILD**                                                       | 94                             | D-168 is approved and unbuilt — a live C22 item. AUD-0047's rule binds absolutely: suppress, never rank. No person is scored.                                                                                                                                                                |
-| **C18** | Peak-performance state / score           | **DEFER — hurdle unmet, not prohibited**                        | —                              | Section 22 leaves the door open and the door stays open. A composite over six tracked concepts across eleven domains would name nothing. Revisit after 93.                                                                                                                                   |
-| **C19** | Child progress semantics                 | **OWNER DECISION 1 — recommendation: do not reverse**           | —                              | See 13.1. Counts of occasions, settled/not-settled, context transfer and what she is working on are **already permitted and already built**. Only the rate is prohibited.                                                                                                                    |
-| **C20** | Recommendation diversity                 | **PRESERVE — approved, unbuilt**                                | 92                             | AUD-0045 + D-113, high priority, with per-object size and demand as its stated precondition. `A_WALK` is still the only movement subject (`candidates.ts:627`).                                                                                                                              |
-| **C21** | Blocker enforcement / adaptation         | **BUILD, split**                                                | 92 (concept), 93 (enforcement) | Correction 3.15's nuance: it already suppresses the question and never changes the move. Needs a registered concept (92) before the rule can be reversed (93). The owner's own CASE B.                                                                                                       |
-| **C22** | Existing Reach / Validity at risk        | **PRESERVE — all 20**                                           | 92, 93                         | Section 9 is the map. Nothing disappears.                                                                                                                                                                                                                                                    |
+| #       | Capability                               | Disposition                                                     | Phase                          | Reasoning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------- | ---------------------------------------- | --------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **S1a** | Outcome-judgement horizon                | **BUILD, BOUNDED**                                              | 92                             | Real, unowned, small: one union, eight consumers. Bounded at `weekly`; `monthly`/`seasonal` refused as judgement horizons because a lifecycle keyed to a day cannot settle them and no evidence supply would score them. Generalise `CourseReflection` rather than invent a mechanism (3.2).                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **S1b** | Week / month / season reading            | **PRESERVE**                                                    | 93                             | Correction 3.1: already AUD-0029 + AUD-0007 + AUD-0009 in Validity. It does not need inventing, it needs building where it sits.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **S2**  | Wider vocabulary                         | **BUILD in tiers, BOUNDED**                                     | 92                             | Tier 1 costs no new tap and unblocks C21 and C5. Tier 2 is three concepts with demonstrable decision value. Tier 3 (caffeine, alcohol, hydration) deferred until C3's correction discipline exists. Tier 4 refused. **The acceptable daily burden is owner decision 3.**                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **S3**  | Forecasting                              | **REJECT this generation; BOUND a successor**                   | 96                             | Section 59 makes it a reversal, not a hurdle (3.4). A forecast that cannot be scored is a confident sentence. The **named expectation** delivers the falsifiable half and is approved.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **C1**  | Semantic capture and clarification       | **BUILD**                                                       | **91**                         | The brief's rule honoured literally: it is the whole of 91, with its own gate. It is what the owner is feeling now, and correction 3.6 is its hardest and most valuable item.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **C2**  | Open-space longitudinal inference        | **BUILD, LAST, with a kill criterion**                          | 97                             | The owner's top-ranked wish and the thing rules are structurally worst at. But it must search a space with something in it. Deterministic-bounded first, model-assist as a named fallback, null arm as the gate.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **C3**  | Combinations, sequences, lags            | **BUILD with a correction discipline**                          | 97                             | Four factors across five horizons is 20+ tests; some will look significant by chance. The multiple-comparisons discipline is not optional and is the phase's real content.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **C4**  | All-domain understanding                 | **BUILD, split by size**                                        | 94                             | Correction 3.5: cheap for four domains that have a generator, new architecture for five that do not. Sizing it as one job is how it becomes a mega-phase.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **C5**  | Emotional / state modelling              | **PRESERVE — approved, unbuilt**                                | 92                             | D-166. Six dimensions, distinct, independently unknown, never composited. A single `emotional.score` is the wellness score by the back door and is forbidden. Correction 3.15's stale comment goes with it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **C6**  | Learning progress, retention, transfer   | **PARTIAL — PRESERVE; spaced retrieval SEPARATE PRODUCT**       | 93 (aggregation)               | Correction 3.3: the rungs are shipped and asked at 3 and 10 days. **Whether the app tests him is owner-facing but not owner-values** — it is a product-scope call and I make it: **no.** Spaced retrieval is an entire product; the app records external proof and says which it knows.                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **C7**  | Nutrition, food, caffeine, hydration     | **SEPARATE PRODUCT (food) / DEFER (the rest)**                  | —                              | Section 12. The highest-frequency, highest-friction capture in the whole matrix, aimed at the strongest folk-causal prior, over an engine with no multiple-comparisons discipline.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **C8**  | Sleep and recovery, long horizons        | **BUILD**                                                       | 93                             | AUD-0009 already. The safest horizon-dependent capability and **S1a's acceptance case**, exactly as the matrix recommends.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **C9**  | Same-day → monthly effects               | **= S1a + S1b**                                                 | 92, 93                         | Not a separate capability. Split per 5.1.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **C10** | Forecasts / predictions                  | **BOUND to the named expectation**                              | 96                             | Everything section 22 requires, plus the thing a forecast could not have: it is always scored, because the occurrence it is about actually happens.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **C11** | Steering on a forecast                   | **REJECT**                                                      | —                              | Unfalsifiable by construction: steering away from a predicted bad day makes the prediction unobservable. Not an evidence problem; more data would not fix it. A system built to revise its model of him must not contain a component immune to revision.                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **C12** | Explaining the intervention              | **REJECT with C11**                                             | —                              | Falls with C11, and Q9's single additional clause is better spent on the maintenance-versus-advancement distinction that plan section 54 already reserves it for.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **C13** | Sustainable **and increasing**           | **BUILD — OWNER-RESOLVED (#7), bounded**                        | **95, package 1**              | **Settled yes, section 13A.** The product explicitly helps the owner keep becoming more capable, qualitatively: **rung advancement** and **new ground versus repeatedly reaching the same ground**. Refused within it, on technical grounds independent of D-162: any rendered capability score, percentage, rate, rank, grade or acceleration figure. **Correction to this document’s first draft:** D-162 forbids the rendered _figure_, not the capability — `trajectoryCards` already computes a normalised rate of change and deliberately renders none (`insights.ts:1899-1902`). Deferred: inferred milestone difficulty, and breadth/transfer until its upstream evidence and domain dependencies exist. |
+| **C14** | Confidence calibration                   | **BUILD bands; DEFER calibration**                              | 93, 96                         | Bands are evidence sufficiency and are honest today. True calibration needs scored predictions; the named expectation supplies the only honest version. Owner-visible for his own data (95); internal for the child, **D-112 / AUD-0049 not D-193** (3.7).                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **C15** | Research-grounded priors                 | **OWNER DECISION 2 — recommendation: bound to question-aiming** | 92 (if yes)                    | See 13.2. My recommendation is much narrower than the matrix's framing and delivers most of the value at a fraction of the risk.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **C16** | Fatherhood capability support            | **OWNER DECISION 4 for "what to teach her"; destination BUILD** | 94                             | The destination object is a product call and I make it: yes, once the shape is proved. What may be **suggested** about a child's learning is not mine.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **C17** | Social / charisma / romantic progression | **BUILD**                                                       | 94                             | D-168 is approved and unbuilt — a live C22 item. AUD-0047's rule binds absolutely: suppress, never rank. No person is scored.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **C18** | Peak-performance state / score           | **DEFER — hurdle unmet, not prohibited**                        | —                              | Section 22 leaves the door open and the door stays open. A composite over six tracked concepts across eleven domains would name nothing. Revisit after 93.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **C19** | Child progress semantics                 | **OWNER DECISION 1 — recommendation: do not reverse**           | —                              | See 13.1. Counts of occasions, settled/not-settled, context transfer and what she is working on are **already permitted and already built**. Only the rate is prohibited.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **C20** | Recommendation diversity                 | **PRESERVE — approved, unbuilt**                                | 92                             | AUD-0045 + D-113, high priority, with per-object size and demand as its stated precondition. `A_WALK` is still the only movement subject (`candidates.ts:627`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **C21** | Blocker enforcement / adaptation         | **BUILD, split**                                                | 92 (concept), 93 (enforcement) | Correction 3.15's nuance: it already suppresses the question and never changes the move. Needs a registered concept (92) before the rule can be reversed (93). The owner's own CASE B.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **C22** | Existing Reach / Validity at risk        | **PRESERVE — all 20**                                           | 92, 93                         | Section 9 is the map. Nothing disappears.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ---
 
@@ -1089,7 +1173,7 @@ protection list carries forward unchanged.
 | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **D-159** | Routing integers must **increase monotonically in execution order**, not merely exceed 82. And the map changes: canonical 10/11/12 become **101/102/103**; new intelligence phases take 91–96.             | Correction 3.13. `routing_ceiling()` keeps only the maximum phase with a QA report, so an integer below the current ceiling never routes, silently. D-159 states only the lower bound. **D-109 stands: canonical Phase 10's scope is unchanged by its label, exactly as it was when it became 92.** |
 | **D-161** | Extends from record-kind reachability to **screen** reachability: a capability is proved in a browser that has never opened the QA laboratory, with time advanced by test control and never by `travelTo`. | `ROUTING_91_BRIEF.md` section 7's requirement, now feasible: correction in 6.1 shows exactly one wall-clock read in the whole product, so `page.clock` moves the product's moment deterministically.                                                                                                |
-| **D-162** | Explicitly binds the **named expectation, C13's wording, and every stagnation sentence** in routing 95.                                                                                                    | A phase whose subject is _"is this still working"_ is the next place a percentage arrives looking reasonable. The predecessor said this about routing 84 and was right; it is truer of 95.                                                                                                          |
+| **D-162** | Explicitly binds the **named expectation, C13's wording, and every stagnation sentence** in routing 95, and every advancement sentence in 13A.                                                             | A phase whose subject is _"is this still working"_ is the next place a percentage arrives looking reasonable. The predecessor said this about routing 84 and was right; it is truer of 95.                                                                                                          |
 | **D-163** | The second agenda gains one licensed purpose: **aiming a question with a research prior** — if and only if owner decision 2 says yes, and never as a claim about him.                                      | Section 68's honest use of general evidence is to decide what is worth finding out, which is a question, not a recommendation.                                                                                                                                                                      |
 | **D-164** | Extends from "asked when the answer has a use" to **"and the use is delivered"** once C21's enforcement lands in 93.                                                                                       | D-187 is honest today because nothing acts on a blocker. When something does, silence about it becomes a different defect.                                                                                                                                                                          |
 | **D-166** | No change to the decision. Its **source comment must be corrected** when the dimensions are built (correction 3.15).                                                                                       | The comment says the question is open. It is closed. It is C22's risk visible in one file.                                                                                                                                                                                                          |
@@ -1105,8 +1189,8 @@ protection list carries forward unchanged.
 
 | Decision  | Reopened how                                                                                                                                                                                                                                                                                                                                         |
 | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **D-172** | Answered in **two parts**, not one. Part one — _widen what can be searched_ — is Reach (routing 92) and needs no model and no adjudication of mechanism. Part two — _how to search it_ — is routing 96, decided on evidence over a space that by then has something in it. **Its hold must move from 91 to 96** (6.10), and this is the owner's act. |
-| **D-025** | Not reversed. Reconsidered **at routing 96 and not before**, under the condition D-025 itself named — a rubric strong enough to see the difference (AUD-0039) — and only if the bounded deterministic mechanism demonstrably cannot generate a hypothesis nobody planted.                                                                            |
+| **D-172** | Answered in **two parts**, not one. Part one — _widen what can be searched_ — is Reach (routing 92) and needs no model and no adjudication of mechanism. Part two — _how to search it_ — is routing 97, decided on evidence over a space that by then has something in it. **Its hold must move from 91 to 97** (6.11), and this is the owner's act. |
+| **D-025** | Not reversed. Reconsidered **at routing 97 and not before**, under the condition D-025 itself named — a rubric strong enough to see the difference (AUD-0039) — and only if the bounded deterministic mechanism demonstrably cannot generate a hypothesis nobody planted.                                                                            |
 
 **Explicitly not reopened.** D-024's deterministic selection (for every phase up to
 96), D-087's passive Timeline, D-129's counts-not-shares, D-171's local-first
@@ -1173,7 +1257,8 @@ and nothing is left without an owner.**
 | Finding                                                                                                                | Lands in                                                                                      |
 | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | F12 (diversity), F19 reach half, F27 (emotional dimensions), F30 consent half, F32 retraction half, F36 precision half | **92**                                                                                        |
-| F03, F08, F09, F14, F16, F18, F31, F34 bounded, F42, F44 bounded                                                       | **93** (F03 and F18 **complete** at 95, where a strategy can be judged against a destination) |
+| F03, F08, F09, F16, F18, F31, F34 bounded, F42, F44 bounded                                                            | **93** (F03 and F18 **complete** at 95, where a strategy can be judged against a destination) |
+| **F14** — maintenance crowding out advancement                                                                         | **95** — moved from 93 by the settled #6/#7 (13A.9); same axis as C13's minimum               |
 | F20, F21, F22, F23, F24, F25, F28, F29 — the per-domain progression models                                             | **94**                                                                                        |
 | F36 interpretation half                                                                                                | **91**                                                                                        |
 | F37 reliability half                                                                                                   | **101** (canonical Phase 10), scope unchanged                                                 |
@@ -1240,13 +1325,19 @@ D-210.
               └── expensive: Emotional, Faith, Private, Direction, ROMANTIC (generator needed)
   │
   ▼
-95  REVISION LOOP ──┬── destination not moving / incompatible / gone quiet
-                    ├── named expectation + reconciliation  (bounded C10)
-                    ├── C13 bounded  ("kept helping" / "flattened", never a rate)
-                    └── C14 owner-visible
+95  ADVANCEMENT AND REVISION   ◀── settled owner decisions #6 and #7 (13A)
+    ├── pkg 1  C13 minimum: rung advancement + new ground vs same ground
+    │            + subject eligibility, delivery tiers, frequency, known-incomplete
+    │            (first task: the per-entity progress selector, 13A.7)
+    ├── pkg 2  F14 maintenance crowding out advancement   (moved from 93)
+    ├── pkg 3  destination revision — not moving / incompatible / gone quiet
+    └── pkg 4  F03 verdicts + F18 link
   │
   ▼
-96  LONGITUDINAL INFERENCE  (D-172 part two; C2 + C3; null arm is the gate)
+96  EXPECTATION AND RECONCILIATION  (bounded C10; C14 owner-visible)
+  │      ── a new claim class, gated separately from 95's record-factual work
+  ▼
+97  LONGITUDINAL INFERENCE  (D-172 part two; C2 + C3; null arm is the gate)
   │      ── droppable without dropping anything above it
   ▼
 101 → 102 → 103   canonical Phases 10, 11, 12   [scope unchanged; 102 absorbs the instrument backlog]
@@ -1300,39 +1391,46 @@ its handoff before the builder starts, and its instrument proved separately.**
 **Per-phase estimate, stated relatively as the brief requires. No invented round
 counts.**
 
-| Phase                   | Resembles                                  | Why                                                                                                                                                                  | Risk                                                                                                                                                                       |
-| ----------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **90** visual           | **83**, plus a phone gate                  | Re-typesets existing claims rather than adding new ones. But Phase 4 found five defects on a phone that three desktop widths missed, and Phase 7 repeated it.        | Medium. The phone gate is a step-change in reviewer, not in scope.                                                                                                         |
-| **91** semantic capture | **82**                                     | New claims about _what he meant_, but scope is one package and CASE A's eight tests are already written. The best-specified phase in the roadmap before it starts.   | Medium. Correction 3.6 is the item most likely to expand.                                                                                                                  |
-| **92** Reach            | **82**                                     | Mostly makes existing concepts reach decisions; the gate is structural (a privacy guarantee, a no-added-noise count) rather than semantic.                           | Medium. **The six emotional dimensions are new owner-facing readings and will attract copy guards** — that is 84's cost arriving inside 92.                                |
-| **93** Validity         | **84 — the most expensive in the roadmap** | New _conclusions_ about him, across eleven findings plus nine owner-use findings plus C21's reversal. Every conclusion is a claim, and every claim is guard surface. | **High. This is the phase most likely not to converge.** Split rule below.                                                                                                 |
-| **94** domains          | **83 per domain**, but many domains        | Repetitive content work, each domain independently falsifiable. Five domains need a generator, which is real architecture.                                           | Medium, but it is the phase most likely to sprawl. Slice rule below.                                                                                                       |
-| **95** revision loop    | **84 or worse**                            | It says the most emotionally-loaded things the product will ever say — _your strategy is not working_ — against section 4.4's anti-shame rule.                       | **High.** But its scope is small and its gate is sharp.                                                                                                                    |
-| **96** inference        | **materially different from all of them**  | Its failure mode is false discovery, not copy. Its gate is a null arm, which either passes or does not.                                                              | **Bimodal**: short if the mechanism fails the null arm and is abandoned; long if it half-works and someone starts tuning. The kill criterion exists to prevent the second. |
-| **101/102/103**         | unchanged                                  |                                                                                                                                                                      | 102 absorbs the nineteen deferred instrument findings.                                                                                                                     |
+| Phase                                 | Resembles                                            | Why                                                                                                                                                                                                                                                                                             | Risk                                                                                                                                                                                                                                                                                      |
+| ------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **90** visual                         | **83**, plus a phone gate                            | Re-typesets existing claims rather than adding new ones. But Phase 4 found five defects on a phone that three desktop widths missed, and Phase 7 repeated it.                                                                                                                                   | Medium. The phone gate is a step-change in reviewer, not in scope.                                                                                                                                                                                                                        |
+| **91** semantic capture               | **82**                                               | New claims about _what he meant_, but scope is one package and CASE A's eight tests are already written. The best-specified phase in the roadmap before it starts.                                                                                                                              | Medium. Correction 3.6 is the item most likely to expand.                                                                                                                                                                                                                                 |
+| **92** Reach                          | **82**                                               | Mostly makes existing concepts reach decisions; the gate is structural (a privacy guarantee, a no-added-noise count) rather than semantic.                                                                                                                                                      | Medium. **The six emotional dimensions are new owner-facing readings and will attract copy guards** — that is 84's cost arriving inside 92.                                                                                                                                               |
+| **93** Validity                       | **84 — the most expensive in the roadmap**           | New _conclusions_ about him, across eleven findings plus nine owner-use findings plus C21's reversal. Every conclusion is a claim, and every claim is guard surface.                                                                                                                            | **High. This is the phase most likely not to converge.** Split rule below.                                                                                                                                                                                                                |
+| **94** domains                        | **83 per domain**, but many domains                  | Repetitive content work, each domain independently falsifiable. Five domains need a generator, which is real architecture.                                                                                                                                                                      | Medium, but it is the phase most likely to sprawl. Slice rule below.                                                                                                                                                                                                                      |
+| **95** advancement and revision       | **83-shaped for package 1; 84-shaped for the phase** | Package 1 (C13 minimum) describes the **record’s own composition**, so a mechanical oracle exists and its acceptance list is fully enumerable before the build — 83’s best predictor. The later packages say the most emotionally-loaded things the product will ever say, against section 4.4. | **High overall, and front-loaded safely.** The domain delivery table multiplies the copy catalogue by twelve — mitigate by shipping the four push-tier domains first. **The anti-shame gate is human, not automated** (13A.2), which is what keeps it out of 84’s nineteen-round pattern. |
+| **96** expectation and reconciliation | **84-shaped**                                        | A new claim class: what the app expected, expected-versus-happened, and confidence language about his own data. Three new owner-facing claim families.                                                                                                                                          | **High.** This is the half that was split out of the former 95 precisely so it can fail without taking the advancement work with it.                                                                                                                                                      |
+| **97** inference                      | **materially different from all of them**            | Its failure mode is false discovery, not copy. Its gate is a null arm, which either passes or does not.                                                                                                                                                                                         | **Bimodal**: short if the mechanism fails the null arm and is abandoned; long if it half-works and someone starts tuning. The kill criterion exists to prevent the second.                                                                                                                |
+| **101/102/103**                       | unchanged                                            |                                                                                                                                                                                                                                                                                                 | 102 absorbs the nineteen deferred instrument findings.                                                                                                                                                                                                                                    |
 
 **Where scope must be split to keep QA falsifiable.**
 
 - **Routing 93 must carry a split rule in its handoff:** if it exceeds **five work
   packages**, it becomes 93 and a successor, divided at the seam between _reading
   the record over longer horizons_ (AUD-0029/0007/0009/0042) and _acting on what it
-  concludes_ (C21 enforcement, F03, F08, F14, F18). Those two halves have different
+  concludes_ (C21 enforcement, F03, F08, F18). Those two halves have different
   gates and can fail independently, which is the whole point.
 - **Routing 94 slices by domain**, not by capability. Each domain is independently
   buildable and independently falsifiable. A cap of **four domains per QA cycle** is
   the right shape; twelve at once is the mega-phase the campaign has already refused
   twice.
-- **Routing 96's kill criterion is declared in its handoff before the builder
+- **Routing 95 carries its own split rule**: if it exceeds **four packages**, it
+  splits at the seam between _describing advancement_ (record-factual, cheap) and
+  _stating and reconciling expectations_ — which is exactly the seam that produced 96. Applying it once more is the mitigation if 95 grows again.
+- **Routing 97's kill criterion is declared in its handoff before the builder
   starts.** A phase that can conclude "no" is a phase that can end.
 
-**Where the roadmap risks not finishing, said plainly.** Nine phases remain. At the
+**Where the roadmap risks not finishing, said plainly.** Ten phases remain — one more than before, because the settled #6/#7 split the former 95 in two. At the
 observed range of 2 to 19 rounds, that is a long road, and the predecessor's section
 12 item 9 governs. Two specific risks:
 
-1. **93 and 95 are both 84-shaped, and they are adjacent.** Two consecutive
-   nineteen-round phases is where a campaign stops. The split rule for 93 is the
-   mitigation, and if it is not enough, **95 is the one to cut** — the product is
-   coherent without the revision loop, merely less ambitious.
+1. **93, 95 and 96 are the expensive stretch, and they are consecutive.** Three
+   84-shaped phases in a row is where a campaign stops. Two mitigations, both
+   already applied: the split rule for 93, and the settled #6/#7 splitting the
+   former 95 so that its **cheapest and most valuable package runs first** and the
+   new-claim-class work is isolated in 96. **If throughput becomes binding, 96 is
+   now the one to cut, not 95** — the advancement work the owner asked for survives,
+   and only the expectation machinery is lost.
 2. **The copy-guard surface compounds.** Nineteen deferred instrument findings
    already exist, every one of them a proven way to fool a guard, and every new claim
    adds more guard to fool. D-210 closed that loop once by decision. **It will need
@@ -1348,11 +1446,11 @@ an exhaustion.**
 That delivers a visually coherent product that understands what the owner says,
 reads everything it records, concludes honestly over real horizons, enforces the
 constraints he tells it about, and covers three proving domains properly — hardened
-and released. It omits the remaining domains (94), the revision loop (95) and
-open-space discovery (96). **It is a truthful, useful personal operating system. It
+and released. It omits the remaining domains (94), advancement and revision (95),
+expectation and reconciliation (96) and open-space discovery (97). **It is a truthful, useful personal operating system. It
 is not yet the personal intelligence system the owner described**, and the
-difference is precisely 94, 95 and 96 — which is why they are last, and in that
-order.
+difference is precisely 94, 95, 96 and 97 — which is why they are last, and in
+that order.
 
 ---
 
@@ -1386,19 +1484,19 @@ refusal's clothes.
 
 **REJECTED outright**
 
-| Item                                                       | Refused because                                                                                                                                                                                                                                                                                                                          | What is accepted instead                                                                                               |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| **C11 — steering on a forecast**                           | Unfalsifiable by construction. Steering away from a predicted bad evening makes the prediction unobservable, so the app can never learn it was wrong. A system whose purpose is to revise its model of the owner must not contain a component immune to revision. This is not an evidence-volume problem and more data would not fix it. | The **named expectation** (5.3), which is always scored because the occurrence it is about actually happens.           |
-| **C12 — explaining the intervention**                      | Falls with C11. And Q9 caps Now at one additional clause; plan section 54 already reserves it for the maintenance-versus-advancement distinction, which is honest today.                                                                                                                                                                 | Nothing. The clause budget goes where it was already promised.                                                         |
-| **C13's "increasing" as a rate**                           | It is literally a rate about the owner. D-162 and plan section 22 forbid a rate, share, percentage, grade or composite about him on **every** owner surface. Building it would require reversing the central guard of routing 84 in the phase immediately after.                                                                         | _"This kept helping"_ and _"this has flattened"_ — the same information, in the grammar the product is allowed to use. |
-| **`monthly` and `seasonal` as outcome-judgement horizons** | A lifecycle keyed to `(target, dayId)` cannot settle a month-long occurrence, and at six tracked concepts nothing would ever score one. A horizon that cannot be judged is a field, not a capability.                                                                                                                                    | The same span is read at **S1b / AUD-0029**, where it is a reading of the record rather than a judgement of a move.    |
-| **Weather, screen time, location-as-coordinates**          | No owner decision turns on them at any resolution this product could honestly capture, and each is a permanent tap. Section 4.5.                                                                                                                                                                                                         | Nothing.                                                                                                               |
+| Item                                                                                                                     | Refused because                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | What is accepted instead                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **C11 — steering on a forecast**                                                                                         | Unfalsifiable by construction. Steering away from a predicted bad evening makes the prediction unobservable, so the app can never learn it was wrong. A system whose purpose is to revise its model of the owner must not contain a component immune to revision. This is not an evidence-volume problem and more data would not fix it.                                                                                                                                                                                                                                                                                                                                                                                                           | The **named expectation** (5.3), which is always scored because the occurrence it is about actually happens.                                                                                                                                                                                                                                                                                    |
+| **C12 — explaining the intervention**                                                                                    | Falls with C11. And Q9 caps Now at one additional clause; plan section 54 already reserves it for the maintenance-versus-advancement distinction, which is honest today.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Nothing. The clause budget goes where it was already promised.                                                                                                                                                                                                                                                                                                                                  |
+| **A rendered capability acceleration figure** — a slope, a second derivative, a capability score, "improving 12% faster" | Three reasons that stand **independently of D-162**. The progress ladder is **ordinal** — `rankOf` returns an index, so the spacing between _transfer_ and _milestone_ is not a quantity and a derivative of it is arithmetic on labels. The evidence bar compounds: a first derivative already needs `TRAJECTORY_READINGS = 6` over `TRAJECTORY_SPAN_WINDOWS = 6` with a seven-day floor, so distinguishing _improving_ from _improving faster_ needs three separated windows each clearing that bar, per quantity, across six tracked concepts. And differencing amplifies noise over a **non-stationary** series — life seasons, custody weeks, work strain — so a second derivative would be dominated by the season rather than by the owner. | **The capability itself, approved under #7** — rung advancement, and new ground versus repeatedly reaching the same ground. Section 13A. **This entry corrects the first draft of this document**, which refused C13’s capability and cited D-162 as authority. D-162 forbids the rendered figure and explicitly permits _"description with evidence"_; the capability was never its to refuse. |
+| **`monthly` and `seasonal` as outcome-judgement horizons**                                                               | A lifecycle keyed to `(target, dayId)` cannot settle a month-long occurrence, and at six tracked concepts nothing would ever score one. A horizon that cannot be judged is a field, not a capability.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | The same span is read at **S1b / AUD-0029**, where it is a reading of the record rather than a judgement of a move.                                                                                                                                                                                                                                                                             |
+| **Weather, screen time, location-as-coordinates**                                                                        | No owner decision turns on them at any resolution this product could honestly capture, and each is a permanent tap. Section 4.5.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Nothing.                                                                                                                                                                                                                                                                                                                                                                                        |
 
 **SEPARATE PRODUCT**
 
 | Item                                              | Why it is a different product                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **C7 — nutrition and food logging**               | Three independent reasons, any one sufficient. **Burden**: food is the highest-frequency, highest-friction thing a person can log — three to five entries a day, forever — against section 4.5's rule that the app should require _less_ input as it learns more. **Spurious confirmation**: "carbs made me sluggish" is among the strongest folk-causal priors a person holds, and an engine at `MIN_PAIRS = 4` per arm with no multiple-comparisons discipline will confirm it long before it can test it. The owner's own coffee-versus-milk example is exactly this shape. **Scope**: food is a domain with its own vocabulary, its own units, its own database and its own product. Life Command OS's job is to decide _whether_ today can support a hard training session, not to model macronutrients — plan section 23 already draws exactly this line for workout programming and the same reasoning applies. **If the owner logs food elsewhere, the honest integration is a single low-resolution reading the owner supplies, not a food model** — and that is an S2 Tier 3 concept at best, after routing 96. |
+| **C7 — nutrition and food logging**               | Three independent reasons, any one sufficient. **Burden**: food is the highest-frequency, highest-friction thing a person can log — three to five entries a day, forever — against section 4.5's rule that the app should require _less_ input as it learns more. **Spurious confirmation**: "carbs made me sluggish" is among the strongest folk-causal priors a person holds, and an engine at `MIN_PAIRS = 4` per arm with no multiple-comparisons discipline will confirm it long before it can test it. The owner's own coffee-versus-milk example is exactly this shape. **Scope**: food is a domain with its own vocabulary, its own units, its own database and its own product. Life Command OS's job is to decide _whether_ today can support a hard training session, not to model macronutrients — plan section 23 already draws exactly this line for workout programming and the same reasoning applies. **If the owner logs food elsewhere, the honest integration is a single low-resolution reading the owner supplies, not a food model** — and that is an S2 Tier 3 concept at best, after routing 97. |
 | **Spaced-retrieval learning (C6's testing half)** | An app that tests the owner is a study product: a scheduler, an item bank, an interval algorithm, a review UI, and its own idea of mastery. Plan section 23 already says exact programming may live elsewhere, and section 12 item 5 of the predecessor already warned that retention without external evidence becomes a second self-report wearing a better name. **The product records external proof — a lab that ran, an artifact, an interview that happened — and says which it knows.** That is the honest half and it is already shipped as rungs four and five.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 **BOUNDED — accepted in a narrower form than requested**
@@ -1435,9 +1533,24 @@ shorter and the product something else.
 
 ## 13 · Blocking owner decisions
 
-Six. The four named in the brief, and two that met the bar. Each states the real
-decision, why it cannot legitimately be made without the owner, what each option
-actually costs, a recommendation — **and then leaves it unresolved.**
+Seven. The four named in the brief, two that met the bar, and one — C13 — promoted
+after the owner challenged this document's original refusal of it. Each states the
+real decision, why it cannot legitimately be made without the owner, what each
+option actually costs, and a recommendation.
+
+**Two are now RESOLVED by the owner and are recorded in section 13A: #6 and #7.**
+The remaining five — **#1 through #5 — are unresolved and nothing here decides
+them.**
+
+| #   | Decision                             | Status                     |
+| --- | ------------------------------------ | -------------------------- |
+| 1   | C19 — child progress measurement     | **UNRESOLVED**             |
+| 2   | C15 — research-grounded priors       | **UNRESOLVED**             |
+| 3   | S2 — acceptable daily input burden   | **UNRESOLVED**             |
+| 4   | C16 — "what to teach her"            | **UNRESOLVED**             |
+| 5   | Connected data sources               | **UNRESOLVED**             |
+| 6   | Record-state / plateau surfacing     | **RESOLVED — section 13A** |
+| 7   | C13 — sustainable **and increasing** | **RESOLVED — section 13A** |
 
 ### 13.1 · Decision 1 — C19, child progress measurement
 
@@ -1520,9 +1633,9 @@ worse than one he never had, because the engine will read the silence as absence
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **(a) Tier 1 only**                           | Zero new daily taps: everything in Tier 1 is already captured or is a property of candidates. Unblocks C21 and C5. The safest possible answer and it still closes his own CASE B.                                                                       |
 | **(b) Tier 1 + Tier 2** _(my recommendation)_ | Two new light daily readings (`work.strain`, and `health.trained-today` which is mostly derived) plus reach over the relationship graph that already exists. Materially widens what the engine can compare.                                             |
-| **(c) + Tier 3**                              | Caffeine, alcohol, hydration: one to several taps a day each, aimed at the folk-causal beliefs most likely to be falsely confirmed by an engine with no multiple-comparisons discipline. **Should not be built before routing 96 whatever he answers.** |
+| **(c) + Tier 3**                              | Caffeine, alcohol, hydration: one to several taps a day each, aimed at the folk-causal beliefs most likely to be falsely confirmed by an engine with no multiple-comparisons discipline. **Should not be built before routing 97 whatever he answers.** |
 
-**Recommendation: (b), with Tier 3 gated behind 96.** But the honest form of this
+**Recommendation: (b), with Tier 3 gated behind 97.** But the honest form of this
 question is not which tier — it is the daily reality.
 
 > **The question:** _"On an ordinary bad Tuesday — tired, daughter at home, work
@@ -1578,19 +1691,21 @@ work.**
 
 | Option                                                                     | Real cost                                                                                                                                                                                                                                        |
 | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **(a) Stay manual-only**                                                   | Zero build. Honest, private, entirely under his control, and permanently thin. It bounds what routing 96 can ever find, and that bound should then be written down rather than discovered.                                                       |
+| **(a) Stay manual-only**                                                   | Zero build. Honest, private, entirely under his control, and permanently thin. It bounds what routing 97 can ever find, and that bound should then be written down rather than discovered.                                                       |
 | **(b) One narrow read-only source, owner-initiated** _(my recommendation)_ | An import the owner performs, not a live connection — the same shape as the existing backup/restore path, so no account, no server, no new threat model, and D-171 is untouched. Modest build. Roughly doubles the objective evidence available. |
 | **(c) Live connected integrations**                                        | Accounts, tokens, a background sync, a new threat model over the most intimate record he owns, and a permission surface. Large, and it reverses the local-first posture the product has held since Phase 0.                                      |
 
 **Recommendation: (b), scoped as an owner-performed import and decided before
-routing 96 is specified** — because 96's honest expectations depend on how much
+routing 97 is specified** — because 97's honest expectations depend on how much
 evidence exists. **Not decided here.**
 
 > **The question:** _"Do I want this app to be able to read anything about me that I
 > did not type — and if so, may it read one thing I import myself, or should it stay
 > entirely manual?"_
 
-### 13.6 · Decision 6 — how the app tells him something is not working _(additional; meets the bar)_
+### 13.6 · Decision 6 — how the app tells him something is not working — **RESOLVED**
+
+> **Resolved by the owner. The settled resolution is section 13A.** The framing below is preserved as the record of the question that was put.
 
 **The decision.** When the record shows months of no movement toward a destination,
 may the app say so **unprompted, on Now** — or only when he opens that destination?
@@ -1616,6 +1731,309 @@ the evidence can settle it.
 > **The question:** _"When I have not moved on something for months, do I want the
 > app to tell me on Now without being asked, or only when I go and look?"_
 
+### 13.7 · Decision 7 — C13, sustainable **and increasing** — **RESOLVED**
+
+> **Resolved by the owner. The settled resolution is section 13A.**
+
+**Why this decision exists at all, recorded because the correction matters.** This
+document's first draft **refused** C13's "increasing" half and cited D-162 as the
+authority. The owner challenged that reading and was right. Two errors:
+
+1. **D-162 was over-applied.** Its forbidden clause does reach _"every owner
+   surface"_ — the challenge's premise that it is destination-scoped is incomplete —
+   but D-162 states its own resolution as _"description with evidence, not a number
+   with a friendly face"_ and permits _"counts of occasions, dates, the owner's own
+   stated targets in his own units, and honest uncertainty."_ The shipped
+   `trajectoryCards` settles it: it computes a normalised rate of change and
+   **deliberately renders none** (`rates: []`, `insights.ts:1899-1902`). **D-162
+   forbids the rendered figure. It never forbade the capability.**
+2. **A weaker capability was substituted and asserted to be equivalent.** The first
+   draft offered _"this kept helping"_ / _"this has flattened"_ as _"the same
+   information."_ It is not: that is one intervention's continued efficacy, not the
+   owner's capability trajectory. Substituting it narrowed a stated owner intent on
+   the adjudicator's own authority, which is the governance error the brief exists
+   to prevent.
+
+**Whether the product should pursue continuing capability rather than maintenance
+is an owner-value question** — it decides what the system is for, and it decides
+whether a plateau is a neutral state or a shortfall, which sits directly on plan
+section 4.4. It was therefore promoted to a blocking decision rather than answered.
+
+**C11 and C12 were re-examined for the same fault and no value question was found
+in them.** Their refusal is epistemic: steering away from a predicted outcome makes
+the counterfactual unobservable, so the app can never learn it was wrong, and the
+only mechanism that would make it falsifiable is comparison arms with assigned
+exposures — refused as **F17** on owner-protection grounds. **One framing
+correction:** S3 and C11 are refused **on evidence**, and section 59 routes a
+legacy-exclusion reversal to _"an explicit new decision with a current reason"_ —
+so both are **re-openable if blocking decision 5 changes the evidence supply**, in
+the same status class as C18, rather than settled product policy. And **C12 falls
+with C11 and nothing else** — the Q9 clause-budget argument beside it is a real
+design call, not an independent reason.
+
+---
+
+## 13A · The settled resolutions — owner decisions #6 and #7
+
+**Status: RESOLVED BY THE OWNER.** Recorded here as the complete settled
+resolution. **This is persistence of the adjudication, not canonicalization.** No
+decision-log entry, no plan amendment and no hold change is made by writing it
+down; section 14 lists what would eventually carry it into the governing
+documents.
+
+### 13A.1 · #7 — sustainable **and increasing** capability: YES
+
+**Life Command OS should explicitly help the owner continue becoming more capable
+over time, rather than merely maintaining or sustaining his current level.** The
+system is **positively authorized** to say when advancement is genuinely supported
+by the evidence — the permission matters as much as the prohibitions, because a
+resolution phrased only as "do not say these things" would not authorise the half
+that serves the intent.
+
+**Refused within it, and the refusal is technical rather than policy:** fabricated
+numeric capability scores, percentages, rates, ranks, grades, acceleration figures,
+or anything of the shape _"you are improving 12% faster"_ where the evidence cannot
+honestly support it. Qualitative, evidence-grounded advancement is what is built.
+The three reasons that hold **independently of D-162** are in section 12.
+
+**Approved minimum package — routing 95, package 1:**
+
+- **rung advancement** — is evidence arriving at higher rungs than in a comparable
+  earlier window;
+- **new ground versus repeatedly reaching the same ground**;
+- the subject-eligibility, delivery, frequency and correction policy in 13A.2–13A.6.
+
+**Deferred, explicitly:**
+
+- **inferred milestone difficulty** — "harder" is not recorded, inferring it would
+  be the app judging the owner's work, and a supplied difficulty scale is a quantity
+  about him;
+- **breadth and transfer** — until its upstream evidence and domain dependencies
+  actually exist. `transfer` is asked only about a finished course, so its supply is
+  thin, and breadth across domains needs destinations across domains, which is
+  routing 94. This is a dependency, not a judgement.
+
+### 13A.2 · #6 — record-state and plateau surfacing
+
+**The app must not make unsupported claims about the owner** — _"You've stalled,"_
+_"Progress has been flat,"_ _"This hasn't moved in months."_
+
+**The app may describe what its own record contains. Its record is its memory, not
+the owner's history, and is never authority over him.**
+
+**Record-fact grammar is necessary but not sufficient.** A record-factual sentence
+can still land as a judgement — _"nothing has been recorded towards being closer to
+your daughter since March"_ is literally true and unacceptable. **Safety is
+primarily structural**, in this order of weight:
+
+1. eligible statement subject (13A.3);
+2. delivery location and owner initiation;
+3. domain delivery policy (13A.4);
+4. frequency and aggregate limits (13A.5);
+5. suppression under declared life seasons, standing blockers, custody constraints,
+   recovery conditions, standing obligations and other applicable durable context;
+6. veto and correction affordances (13A.6).
+
+**Wording remains the human-reviewed layer.**
+
+> **QA rule, preserved as part of the resolution.** The section 4.4 gate on this
+> work is the **ordinary-owner reality track and the phone gate**, not an
+> open-ended shame or copy scanner. Modal auxiliaries are a closed grammatical
+> class; **shame is not.** Do not guard this with an ever-growing catalogue or
+> classifier — that is the instrument-hardening pattern that turned routing 84 into
+> nineteen rounds (D-210). **Mechanically guard the closed structural rules; read
+> the wording with a person.**
+
+### 13A.3 · Subject eligibility — universal, and independent of domain
+
+**Free-aim kinds are CONTEXT, not record-state or advancement statement subjects.**
+Generic `destination` and `goal` may be named in a question or as context, but may
+never themselves be the assertion subject.
+
+**Subject eligibility is universal across all twelve domains and does not depend on
+the domain tier.**
+
+A record-state or advancement subject must satisfy **both**:
+
+1. **be a typed entity in the closed permitted set**; and
+2. **carry at least one real progress-evidence record naming that entity which maps
+   to a progress rung.**
+
+**Final permitted kinds** — `routine`, `skill`, `learning-topic`,
+`development-skill`, `project`, `work-item`, `financial-goal`; plus
+`health-concern` **only** as the object of an owner-named goal.
+
+**Every other `EntityKind` fails closed**, enforced by an **exhaustive
+`Record<EntityKind, …>` table**, so a future unclassified kind is a **compile-time
+failure** rather than a kind that silently becomes permitted. That is how the hole
+opened in the first place: `destination` was added to `ENTITY_KINDS` and inherited
+permission by omission.
+
+**Subject eligibility is never inferred from free text.** The sentence subject is
+mechanically derived from typed entity structure plus the evidence count.
+
+**Why test 1 is a derivation rather than a stipulation.** `progress.ts`'s
+`case 'goal'` branch breaks unless `milestoneOf !== undefined && status ===
+'achieved'`, and no generator produces a move whose object is a bare `goal` entity —
+`socialCandidates` uses `place` and `person`, `moneyCandidates` uses
+`financial-goal`, `careerCandidates` uses `learning-topic`, and health reaches a
+milestone whose `MILESTONE_ENTITY` is `routine`. **So a bare `goal` entity can never
+accumulate a single rung, in any domain.**
+
+**Preserved prohibitions:**
+
+- no **person or relationship** as an advancement or record-state subject;
+- no **feeling or internal-state** plateau statement — a state does not plateau;
+- no **belief or faith** plateau statement (D-170 forbids grading faith and treating
+  doubt as failure); a **named faith practice is a `routine`** and is eligible;
+- no **counted absence** as a disguised negative rate — no rendered zero count, no
+  denominator;
+- no **cross-domain advancement comparison** — at most one domain named per
+  statement (section 22 forbids the composite);
+- no **attributed silence** — the grammatical subject of a record-state sentence is
+  never "you"; it says _"nothing has been recorded,"_ never _"you haven't"_;
+- no **trend characterization in Private / Sexual Health**. Private may never
+  volunteer and never characterize a trend on any surface; it may list what is
+  recorded.
+
+**A destination may be named in the accompanying revision question**, and is context
+rather than the assertion subject. Where a destination has no eligible subject
+beneath it, there is nothing to assert and only the question fires — which is
+honest, because the app genuinely has nothing to report.
+
+**The irreducible residual, recorded rather than papered over.** The owner may name
+a `routine` "get on better with my manager." The app then quotes **his own label**
+inside a fixed frame, rendered verbatim (D-018 forbids paraphrase). It never authors
+the phrase. The veto handles it in one tap. That floor does not grow under this
+rule.
+
+### 13A.4 · Domain tiers — DELIVERY MODE only
+
+The domain-tier table **no longer governs subject eligibility. It governs delivery
+mode only: push, pull, or never.**
+
+| Delivery                                                | Domains                                                                                                | Reason                                                                                                   |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| **Push** — may be volunteered, and may propose a change | Career & Learning, Money, Health & Physical Capacity, Home & Environment                               | The aim is an achievement the owner controls and progress is externally evidenced                        |
+| **Pull, naming only** — may be shown, proposes nothing  | Sleep & Recovery, Social & Relationships                                                               | Sleep is substantially not willed; social outcomes depend on other people                                |
+| **Pull only** — held, shown where the owner navigates   | Fatherhood / Family, Love / Dating / Romantic, Faith & Meaning, Emotional Health, Long-Range Direction | Relationship, belief and state subjects live here, and the record carries least of what actually happens |
+| **Never**                                               | Private / Sexual Health                                                                                | D-167                                                                                                    |
+
+**Nothing volunteered on Now by default.** Where a move already serves a
+destination, advancement language rides the existing `proposedBecause` reason line,
+so it is **not an additional clause** and never competes for Q9's single slot.
+
+### 13A.5 · Frequency and aggregate bounds — derived from existing cadence
+
+Every number is an existing product constant. No new constant is introduced.
+
+- **First record-state statement only after `DOMAIN_QUIET_DAYS = 28`**
+  (`coverage.ts:260`);
+- **repeat floor `STALE_BELIEF_DAYS = 60`** (`insights.ts:144`);
+- **calendar time alone NEVER permits repetition.** A repeat requires **both** the
+  time floor **and** mechanically new information;
+- a **known-incomplete** marker suppresses the affected span **indefinitely**, until
+  genuinely new evidence begins a fresh span;
+- a **veto** suppresses until lifted;
+- **answered discovery questions are remembered and not re-asked** (D-163).
+
+**Volunteered, question-shaped statements inherit `DISCOVERY_PER_WEEK = 2`**
+(`discovery.ts:72`) **and D-184's one-prompt-per-object rule.** They are the same
+class of communication D-163 created that budget for. **No new aggregate nagging
+budget is needed.**
+
+**Pull-shaped content** consumes no budget but is bounded per view: **at most one
+line per destination on a composed view**, with grouped presentation where
+appropriate (AUD-0044, routing 90).
+
+### 13A.6 · The incomplete-record correction
+
+**Every consequential record-state statement must be answerable.** When the owner
+says the equivalent of _"I've been doing this — it just isn't written down,"_ a
+**known-incomplete marker** is recorded for that subject and span.
+
+**What it is not, and this is the whole design:**
+
+- it is **not progress evidence**;
+- it **does not manufacture** an event, date, quantity, milestone or rung;
+- it **does not silently reaffirm** the destination — correcting the record is not
+  renewing the aim.
+
+**What it does:**
+
+- changes the affected span **from empty to unknown**;
+- prevents that span supporting **either stagnation or advancement** — the asymmetry
+  matters, because a correction that suppressed only the negative statement while
+  still permitting advancement over the same span would be a way to buy good news;
+- suppresses the disputed record-state conclusion for that span.
+
+**"The record is incomplete here" is a distinct correction gesture**, added to
+D-165's grammar as a fifth alongside wrong event, wrong date, wrong current fact and
+disagree-with-the-inference. It inherits D-165's rule unchanged: **it states its
+consequence before it acts.**
+
+> **A correction may cause the app to say less. It may not silently conclude more.**
+
+Repeated corrections may **reduce how often the app speaks about that record** — a
+behaviour change, monotone toward silence — but must never become a conclusion about
+the owner.
+
+**It does not collide with backfill.** A known-incomplete marker is a statement
+_about the record_, the same class as a correction, not a backfilled event. When
+authoring history lands in Reach, a known-incomplete span is precisely where an
+optional, owner-authored, owner-dated fill would be offered.
+
+### 13A.7 · Verified implementation facts recorded with the resolution
+
+**A per-entity progress selector is still needed.** `progressReading(situation,
+domains)` groups by **domain**, and `ProgressEntry.about` is a display label derived
+from the first resolvable entity on the record, not a key. Records already carry
+`entities: EntityRef[]` on the envelope, so grouping by entity ref is a **small
+selector-level implementation — no schema change and no authoring change** — but it
+is real work, and it is routing 95 package 1's first task.
+
+**No authoring burden, and no dependency on unresolved decision #3.** Subject
+eligibility reads only `entity.kind` and the evidence count. `kind` and `domain` are
+**required, non-optional fields on every `SemanticEntity` ever written**, so there is
+no unclassified legacy state, no migration, and nothing manufactured. This adds no
+field, no question and no tap, and therefore **cannot be blocked by, and does not
+pre-empt, owner decision #3.**
+
+**Money needs no additional typed structure.** `MILESTONE_ENTITY[money]` already
+creates a `financial-goal` entity when a milestone is named (`authoring.ts:627`), and
+that is the same act that makes Money capable of producing evidence at all —
+`moneyCandidates` returns `[]` without one (`candidates.ts:721`). So a bare Money aim
+has no eligible subject **and no evidence**; the rule reports an existing product
+state rather than creating a gap.
+
+### 13A.8 · Known limitation, with routing 94 as its owner
+
+**`milestoneEntityKind` falls back to `'goal'`** for every domain absent from
+`MILESTONE_ENTITY` (`authoring.ts:625-631`). Under the settled subject-eligibility
+rule, **milestones in Fatherhood, Social, Home, Faith, Emotional, Private and
+Direction are therefore not record-state or advancement statement subjects today.**
+**Routines and skills in those domains remain eligible** when they satisfy the
+evidence test.
+
+**This is correct under the current implementation**, because those milestone
+entities also carry no usable progress evidence — no generator produces moves about
+them. It is a restriction, not a defect.
+
+**Extending `MILESTONE_ENTITY` for those domains belongs to routing 94**, the
+domains phase, where the per-domain work already lives. **Recorded here with its
+owner so it is not rediscovered in QA or mid-implementation.**
+
+### 13A.9 · Roadmap disposition carried by these decisions
+
+- **Do not move this work into routing 93**, which is already the highest-risk phase.
+- **F14 moves out of routing 93** to join the same advancement axis.
+- **Routing 95 becomes _advancement and revision_**, and the **C13 minimum is its
+  first package**.
+- **Routing 96 becomes _expectation and reconciliation_.**
+- **Longitudinal inference / D-172 moves to routing 97.**
+- **Canonical 101 / 102 / 103 are preserved** — the insert landed inside the reserved
+  headroom — unless later adjudication evidence requires otherwise.
+
 ---
 
 ## 14 · Proposed next step, after owner approval
@@ -1625,6 +2043,13 @@ what approving this would set in motion.
 
 **Stage 0 — documents, before any code, in this order.**
 
+0. **The settled owner decisions #6 and #7** (section 13A) become decision-log
+   entries of their own, alongside the section 8 list — at minimum: _a record-state
+   statement names a typed subject that carries evidence, never a free aim_; _the
+   app describes its record and its record is not authority over the owner_; _the
+   record is incomplete here is a correction gesture, and a correction may cause
+   the app to say less and never to conclude more_; and _advancement is described,
+   never rated_. **None of that is written by this round.**
 1. **`DECISION_LOG.md`** — the new entries in section 8, beginning at **D-212**
    (check the tail before allocating; routing 84 took through D-211). Plus the
    amendments to D-159, D-161, D-162, D-163, D-164 and D-187, each as a new entry
@@ -1650,8 +2075,8 @@ what approving this would set in motion.
    fifteen corrections. The matrix is not rewritten; it is a superseded input and its
    value now is as the record of what the surface looked like.
 7. **`PHASE_STATUS.md`** — the adjudication result and the revised sequence.
-8. **`CAMPAIGN_HOLDS.md`** — **the owner's act, not the builder's**, per section 6.10.
-   Add the D-172 declaration for routing 96 and decide the 91 line. Deleting a line
+8. **`CAMPAIGN_HOLDS.md`** — **the owner's act, not the builder's**, per section 6.11.
+   Add the D-172 declaration for routing 97 and decide the 91 line. Deleting a line
    does not release a hold.
 
 **Stage 1 — the owner answers section 13.** Decisions 1, 2, 4 and 6 shape scope
@@ -1690,6 +2115,10 @@ Recorded so the boundary is checkable rather than asserted.
 - **The orchestrator repository was read and not written.** Four modules were read to
   verify corrections 3.10, 3.12, 3.13 and 3.14.
 - **No product code changed.** `git diff -- src` is empty for this round.
+- **Owner decisions #6 and #7 were settled by the owner and persisted** into section
+  13A. **That is persistence, not canonicalization**: no decision-log entry, no plan
+  amendment, no hold change and no handoff was created by recording them.
+  **Decisions #1 through #5 remain unresolved.**
 - **Routing 90 was not released**, no phase was marked approved, and nothing here is
   roadmap state.
 
