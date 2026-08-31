@@ -5161,3 +5161,113 @@ exercising a history with result evidence in it. Both now do.
   a relative pronoun would have been defensible for each individual sentence and
   would have left a loophole the next template gets written through.
 - Fixed in: `b637ab3`
+
+---
+
+## DEF-0145 — The scaffolding help level is required on every occasion and read by nothing
+
+**Found:** second adjudication, 2026-08-31 · **Status:** Open · **Owner:** routing 94
+
+`OccasionContext.help` is **required** (`records.ts:704`), captured through the
+outcome controls on every growth occasion, persisted, and carried onto
+`GrowthOccasion.occasion`. **`growth.ts` contains zero references to `help`,
+`helpLevelOf` or `HelpLevel`.** The reasoning layer reads the **optional**
+`setting` through `settingsIn()` and discards the mandatory `help`.
+
+`cleared` collapses the occasion to a binary (`reached >= GROWTH_CLEARLY`), which
+merges `a-small-prompt` and `needed-me` into one bit. The consequence:
+`needed-me → needed-me → a-small-prompt → a-small-prompt` contains real movement,
+produces `trailingRun` 0, no suggestion, and **no sentence anywhere in the app** —
+`occasionsSummary` exists only on a suggestion and a suggestion needs
+`runLength >= 3`.
+
+**The app can say "arrived." It cannot say "closer."** This is section 60's
+"written data must have a read path" in the one field the owner is required to
+answer. D-224 approves the reader; this records the defect it repairs.
+
+---
+
+## DEF-0146 — `helpLevelOf()` is exported and has no consumer anywhere
+
+**Found:** second adjudication, 2026-08-31 · **Status:** Open · **Owner:** routing 94
+
+`helpLevelOf()` (`outcomes.ts:884-886`) is exported and a repository-wide search
+finds only its own definition. Dead code, and the visible symptom of DEF-0145.
+
+---
+
+## DEF-0147 — The authoring relation ternary would make an authored `development-skill` reasoning-invisible
+
+**Found:** second adjudication, 2026-08-31 · **Status:** Open (latent) · **Owner:** routing 94
+
+`authoring.ts:378` writes:
+
+```
+relation: entityKind === 'skill' || entityKind === 'routine' ? 'about-person' : 'part-of'
+```
+
+So `about-person` is written **only** for `skill` and `routine`. Fatherhood growth
+candidacy walks `entities.linked(skill.id, 'about-person')` and skips any skill
+whose link does not resolve to the child.
+
+**Latent today**, because `development-skill` is not in `AUTHORABLE_KINDS`. **It
+becomes live the moment D-224's authoring route exists**: a `development-skill`
+authored through the generic path would receive `part-of`, be syntactically valid,
+appear in the entity store, and **produce no candidate ever**. This is precisely
+what D-224's behavioural acceptance test exists to catch.
+
+---
+
+## DEF-0148 — Label-derived entity ids let near-duplicate skills fragment an evidence pool
+
+**Found:** second adjudication, 2026-08-31 · **Status:** Open · **Owner:** routing 94
+
+`entityId(kind, name)` is deterministic and label-derived, so "Getting dressed"
+and "Getting dressed on her own" are **different entities with separate evidence
+pools**. Occasions split across the two, and neither reaches the three-in-a-row
+the growth model requires — so a child who is progressing produces no suggestion.
+
+D-224 requires the authoring proposal to surface the near-match through
+`AuthoringProposal.problems` and let the owner choose. **No auto-merge, no silent
+redirection of his wording.**
+
+---
+
+## DEF-0149 — `concepts.ts` still describes D-166's question as open
+
+**Found:** second adjudication, 2026-08-31 · **Status:** Open · **Owner:** routing 92
+
+`concepts.ts:530-537`, beside `emotionalState`, reads _"Which dimensions exist
+here is his to say, and until he says, this stays what it actually is… Open
+question for the owner."_ **D-166 answered it on 2026-08-27.**
+
+The concept is correctly unchanged — D-166 does not authorise building the six
+dimensions before Reach — but the comment now describes a closed question in the
+exact place a reader would go to check. Correct it when D-221's dimensions are
+built.
+
+---
+
+## DEF-0150 — `time.ts` names an ambient-clock guard file that does not exist
+
+**Found:** second adjudication, 2026-08-31 · **Status:** Open · **Owner:** any phase touching `time.ts`
+
+`domain/time.ts:562` cites `tests/unit/no-ambient-clock.test.ts`. That file does
+not exist; **the guard is real and lives in `tests/unit/architecture-guards.test.ts`.**
+Harmless, and worth correcting when the file is next touched — noted because the
+ordinary-owner time-advance instrument rests on that guard being real. It is; only
+its name is wrong.
+
+---
+
+## DEF-0151 — Plan section 54 stated six progress rungs; the code has seven
+
+**Found:** second adjudication, 2026-08-31 · **Status:** Fixed · **Owner:** canonicalization
+
+`PROGRESS_EVIDENCE` is `attempt, part-done, completion, quality,
+retained-capability, transfer, milestone` — **seven**. `part-done` was added by
+QA-84-002 and plan section 54's prose was not swept. It matters because `rankOf()`
+indexes that array and the ladder is what D-219's advancement work reads.
+
+**Fixed in this canonicalization commit:** section 54 now reads "Seven rungs" and
+names `part-done`.

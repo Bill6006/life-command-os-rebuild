@@ -7771,3 +7771,739 @@ This is the bounded closeout D-210 describes. The nineteen deferred instrument
 findings are untouched, and `qa/INSTRUMENT_HARDENING_BACKLOG.md` is unchanged.
 
 ---
+
+## D-212 — Eleven routed phases, and routing integers increase monotonically — D-159 extended
+
+**Phase:** second adjudication · **Status:** Active · **Extends:** D-159
+
+The owner approved the second adjudication's roadmap on 2026-08-31. The record is
+`docs/PRODUCT_ADJUDICATION_2.md` and the map is:
+
+| Product / canonical name                                 | Routing |
+| -------------------------------------------------------- | ------- |
+| The instrument, and the things that are untrue           | 83      |
+| What the owner is trying to become                       | 84      |
+| **Canonical Phase 9** — visual coherence, motion, mobile | **90**  |
+| Semantic capture and clarification                       | **91**  |
+| Reach — what the brain can see                           | **92**  |
+| Validity — what it concludes from what it sees           | **93**  |
+| Domains and progression                                  | **94**  |
+| Advancement and revision                                 | **95**  |
+| Expectation and reconciliation                           | **96**  |
+| Longitudinal inference — D-172's mechanism               | **97**  |
+| _(98–100 reserved headroom)_                             | —       |
+| **Canonical Phase 10** — performance, PWA, reliability   | **101** |
+| **Canonical Phase 11** — adversarial hardening           | **102** |
+| **Canonical Phase 12** — release                         | **103** |
+
+**D-159 stated half the routing rule. This is the other half.**
+`handoff_source.routing_ceiling()` keeps only the **maximum** phase with a QA
+report, so an integer below the current ceiling never routes — silently, with
+nothing warning anyone. **Routing integers must therefore increase monotonically
+in execution order, not merely exceed 82.**
+
+That is why 85–89 are unusable: they sit below routing 90, which runs first. And
+it is why canonical Phases 10, 11 and 12 move to **101, 102 and 103** — 92, 93
+and 94 are needed by the intelligence phases that run before them. **Their scope
+is unchanged, exactly as it was unchanged when D-159 gave canonical Phase 10 the
+integer 92. D-109 stands.**
+
+Three-digit integers parse correctly: `_stated_or_inferred_phase` reads
+`re.search(r"\d+", raw)` and `QA_FILE_RE` is `^PHASE_(\d+)_QA_HANDOFF\.md$`.
+
+**98–100 are deliberate headroom.** The campaign has now inserted phases into its
+own map twice, and every insert renumbers everything downstream. The reserve has
+already earned itself once: splitting routing 95 in two pushed longitudinal
+inference from 96 to 97 without renumbering anything below it.
+
+---
+
+## D-213 — Routing 94 runs as three internal cycles under one routing integer
+
+**Phase:** 94 · **Status:** Active
+
+Routing 94 covers nine remaining domains and, after the owner-decision sequence,
+nine Fatherhood-specific deliverables. It executes as **three cycles under the
+single integer 94**:
+
+- **94.1 — Fatherhood alone**, carrying its destination plus every added
+  deliverable: the `development-skill` authoring route, the `about-person`
+  relationship repair, the near-duplicate guard, scaffolding guidance, the
+  help-ladder reader, the two-class cap and its trace integrity, the birthdate
+  field, and the normative suppression filter.
+- **94.2 — Sleep, Social, Home, Romantic.**
+- **94.3 — Emotional, Faith, Private, Long-Range Direction.**
+
+**94.1 must have its own explicit acceptance list and gate, and it closes before
+94.2 begins.**
+
+**Why one integer.** D-212's monotonic rule leaves no integers between 94 and 95,
+and **D-159 already settles the convention: a QA round does not get a new routing
+integer.** Rounds 1…n of one phase carry that phase's integer, as they did
+through routing 82's twelve and routing 84's nineteen.
+
+**Why Fatherhood is alone.** The four-domains-per-cycle slice rule counts
+_domains_, and it cannot see that nine deliverables landed on one of them. By
+deliverable count that slice is roughly nine times the weight of the Home slice.
+**The concentration is accepted knowingly rather than hidden by the arithmetic**,
+and gating 94.1 separately is what keeps its failure localisable.
+
+---
+
+## D-214 — Advancement survives before expectation machinery
+
+**Phase:** roadmap · **Status:** Active
+
+**Routing 95 is preserved before routing 96.** If scope pressure forces a
+deferral, **96 is deferred before 95.**
+
+**Why.** Routing 95 carries the advancement and revision work the owner asked
+for — rung advancement, new ground versus repeatedly reaching the same ground,
+and a destination that has stopped moving. Routing 96 carries the named
+expectation and its reconciliation, which is a new claim class. **The half the
+owner asked for survives; the machinery built on top of it is what goes first.**
+
+**This is the ordinary cut order and it is not the minimum-release path.** The
+aggressive path named in the adjudication — 90 → 91 → 92 → 93 → 101 → 102 → 103 —
+is a last resort that drops 94, 95, 96 and 97 together. **It must not be read as
+the routine deferral sequence**, and reaching for it is a decision the owner
+makes, not a consequence of a phase running long.
+
+---
+
+## D-215 — D-172's hold moves from routing 91 to routing 97
+
+**Phase:** roadmap · **Status:** Active · **Amends the target of** D-172
+
+`docs/CAMPAIGN_HOLDS.md` declared `blocks_phase=91` when routing 91 meant
+_"later intelligence — Reach, then Validity."_ **Under D-212's map, routing 91 is
+semantic capture and clarification, and the work D-172 is actually about is
+routing 97.** The declaration and its prose are corrected to match.
+
+**D-172 itself is unchanged and is not resolved.** Its question — how the system
+discovers hypotheses, combinations, sequences and potentially important variables
+that were not hardcoded in advance — is still open, and routing 97 still may not
+start until it is adjudicated.
+
+**Why the target moves rather than the hold being released.**
+`ROUTING_91_BRIEF.md` established that semantic capture and open-space inference
+are two capabilities inside one open question, that **D-172 is about the second
+only**, and that _"it may not be closed by B's adjudication, and B's adjudication
+may not absorb it."_ Holding semantic capture against a question that is not
+about it was the error; the fix is to point the hold at the work it governs.
+
+**Consequence, stated rather than left implicit: routing 91 is no longer blocked
+by D-172. Routings 90 through 96 are not gated by this hold. Routing 97 is.**
+Nothing in this decision starts any routing phase.
+
+**The declaration structure is unchanged.** Only the integer and the prose move.
+`CAMPAIGN_HOLDS.md` itself records why: deleting a line does not release a hold —
+the orchestrator reports the declaration as missing and refuses the phase.
+
+**And part one of D-172's own answer is now scheduled.** D-172 refuses to leave
+the finite concept vocabulary as a permanent ceiling; widening it is routing 92's
+Reach work, which runs long before 97. **Deciding the search mechanism before
+widening the space it searches would spend the campaign's hardest remaining
+decision over six tracked concepts.**
+
+---
+
+## D-216 — The app describes its record; its record is not authority over the owner
+
+**Phase:** 95 · **Status:** Active · **Owner decision #6**
+
+The app may not make unsupported claims about the owner — _"you've stalled,"_
+_"progress has been flat,"_ _"this hasn't moved in months."_ **It may describe
+what its own record contains, and that record is its memory rather than his
+history.**
+
+**Record-fact grammar is necessary and not sufficient.** _"Nothing has been
+recorded towards being closer to your daughter since March"_ is literally true
+and unacceptable. **Safety is primarily structural**, in this order: an eligible
+statement subject (D-217); delivery location and owner initiation; the domain
+delivery policy; frequency and aggregate limits; suppression under declared life
+seasons, standing blockers, custody constraints, recovery conditions and standing
+obligations; and veto and correction affordances. **Wording is the
+human-reviewed layer.**
+
+**Domain delivery tiers, which govern mode only and never subject eligibility:**
+push for Career, Money, Health and Home; pull-with-naming-only for Sleep and
+Social; pull-only for Fatherhood, Romantic, Faith, Emotional and Long-Range
+Direction; **never** for Private / Sexual Health.
+
+**Frequency, from existing constants and no new ones:** a first statement only
+after `DOMAIN_QUIET_DAYS = 28`; a repeat floor of `STALE_BELIEF_DAYS = 60`;
+**calendar time alone never permits a repeat** — both the floor and materially
+new information are required; volunteered question-shaped statements inherit
+`DISCOVERY_PER_WEEK = 2` and D-184's one-prompt-per-object rule; pull content is
+capped at one line per destination per composed view.
+
+**Nothing is volunteered on Now by default.** Where a move already serves a
+destination, advancement language rides the existing `proposedBecause` reason
+line, so it is not an additional clause and never competes for Q9's slot.
+
+**The QA rule, which is part of the decision.** The section 4.4 gate on this work
+is the **ordinary-owner reality track and the phone gate**, not a shame or copy
+scanner. Modal auxiliaries are a closed grammatical class; **shame is not.**
+Guarding this with an ever-growing catalogue is the instrument-hardening pattern
+that turned routing 84 into nineteen rounds (D-210). **Guard the closed
+structural rules mechanically; read the wording with a person.**
+
+---
+
+## D-217 — Free-aim kinds are context, never the subject of an assertion
+
+**Phase:** 95 · **Status:** Active · **Owner decisions #6 and #7**
+
+A record-state or advancement statement requires a subject entity that satisfies
+**both** conditions: its kind is in the closed permitted set, **and** it carries
+at least one progress-evidence record naming it.
+
+**Permitted kinds:** `routine`, `skill`, `learning-topic`, `development-skill`,
+`project`, `work-item`, `financial-goal`; plus `health-concern` only as the object
+of an owner-named goal. **Every other `EntityKind` fails closed, enforced by an
+exhaustive `Record<EntityKind, …>` table** so a future kind is a compile error
+rather than a kind that silently becomes permitted — which is exactly how the
+hole opened, with `destination` inheriting permission by omission.
+
+**Generic `destination` and `goal` are context.** They may be named in a question
+or as a frame; they may never be what a sentence asserts about.
+
+**Subject eligibility is universal across all twelve domains and does not depend
+on the domain tier.** The tier governs delivery mode only.
+
+**The test is on the sentence subject, evaluated per sentence, never on the
+destination that contains it.** A destination-level test gives the wrong answer in
+both directions: classify by the destination and a permitted routine is silenced;
+classify by its contents and _"nothing recorded towards being closer to your
+daughter"_ is permitted.
+
+**Why this is a derivation rather than a stipulation.** `progress.ts`'s
+`case 'goal'` branch breaks unless `milestoneOf !== undefined && status ===
+'achieved'`, and no generator produces a move whose object is a bare `goal`
+entity. **A bare `goal` can never accumulate a single rung, in any domain.**
+
+**Preserved prohibitions:** no person or relationship as a subject; no feeling or
+internal-state plateau — a state does not plateau; no belief or faith plateau,
+though a named faith practice is a `routine` and is eligible; no counted absence,
+meaning no rendered zero count and no denominator; no cross-domain comparison,
+meaning at most one domain named per statement; **no attributed silence — the
+grammatical subject is never "you"**; and no trend characterization in Private.
+
+**The irreducible residual is recorded rather than denied.** The owner may name a
+routine "get on better with my manager." The app then quotes **his own label**
+inside a fixed frame, rendered verbatim, and never authors the phrase.
+
+---
+
+## D-218 — "The record is incomplete here" is a correction, and a correction may only make the app say less
+
+**Phase:** 95 · **Status:** Active · **Owner decision #6** · **Extends** D-165
+
+Every consequential record-state statement must be answerable. When the owner
+says the equivalent of _"I've been doing this — it just isn't written down,"_ a
+**known-incomplete marker** is recorded for that subject and span.
+
+**It is a fifth correction gesture**, alongside D-165's wrong event, wrong date,
+wrong current fact and disagree-with-the-inference, and it inherits D-165's rule
+unchanged: **it states its consequence before it acts.**
+
+**What it is not:** progress evidence. It manufactures no event, date, quantity,
+milestone or rung, and it does not silently reaffirm the destination — correcting
+the record is not renewing the aim.
+
+**What it does:** changes the span **from empty to unknown**, and therefore
+prevents that span supporting **either stagnation or advancement**. The asymmetry
+matters — a correction that suppressed only the negative statement while still
+permitting advancement over the same span would be a way to buy good news.
+
+> **A correction may cause the app to say less. It may not silently conclude
+> more.**
+
+Repeated corrections may reduce how often the app speaks about that record — a
+behaviour change, monotone toward silence — but **must never become a conclusion
+about the owner's character or reliability.**
+
+**It does not collide with backfill.** A known-incomplete marker is a statement
+_about the record_, the same class as a correction, not a backfilled event.
+
+---
+
+## D-219 — Advancement is described, never rated — D-162 extended to the owner's trajectory
+
+**Phase:** 95 · **Status:** Active · **Owner decision #7** · **Extends** D-162
+
+**Life Command OS explicitly helps the owner continue becoming more capable over
+time, rather than merely maintaining his current level.** The system is
+**positively authorized** to say when advancement is genuinely supported by the
+evidence — the permission matters as much as the prohibition, because a rule
+phrased only as "do not say these things" would not authorise the half that
+serves the intent.
+
+**The approved minimum, routing 95 package 1:** **rung advancement** — is
+evidence arriving at higher rungs than in a comparable earlier window — and **new
+ground versus repeatedly reaching the same ground.**
+
+**Refused, on grounds independent of D-162:** any rendered capability score,
+percentage, rate, rank, grade or acceleration figure. The progress ladder is
+**ordinal** — `rankOf` returns an index, so a derivative of it is arithmetic on
+labels; the evidence bar compounds, since distinguishing _improving_ from
+_improving faster_ needs three separated windows each clearing the
+first-derivative bar, per quantity; and differencing amplifies noise over a
+**non-stationary** series, so a second derivative would be dominated by the life
+season rather than by the owner.
+
+**Deferred:** inferred milestone difficulty — "harder" is not recorded and
+inferring it would be the app judging his work — and breadth and transfer, until
+their upstream evidence and domain dependencies exist.
+
+**A correction to the record.** An earlier draft of the second adjudication
+refused this capability and cited D-162 as authority. **D-162 forbids the
+rendered figure and explicitly permits _"description with evidence"_**; the
+shipped `trajectoryCards` computes a normalised rate of change and deliberately
+renders none. **The capability was never D-162's to refuse.**
+
+---
+
+## D-220 — A concept ships as askable only when a consumer can be moved by the answer
+
+**Phase:** 92 · **Status:** Active · **Owner decision #3**
+
+**`QUESTIONS_PER_DAY = 3` remains a hard ceiling and is not raised. Daily push
+burden does not increase. Unknown remains unknown. No question becomes eligible
+merely because it is stale. Information-value gating is untouched.** The owner
+accepts wider evidence coverage even where individual concepts are refreshed less
+often.
+
+**Approved without condition:** the supervision / must-stay concept,
+`requiresLeaving`, a bounded blocker `until`, `health.trained-today` **derived
+whenever existing movement evidence can settle it**, and `context.people-present`
+**reached from the relationship graph that already exists** rather than from new
+owner input.
+
+**The condition on anything askable:**
+
+> **A concept may ship as askable only when an actual consumer exists that makes
+> at least one possible answer capable of materially changing a decision. Do not
+> ship declared-but-unreachable concepts.**
+
+This is `emotionalState`'s failure written as a rule: `materialToDecision: true`,
+`askWhenStale: true`, absent from the `QUESTIONS` catalogue, and read by nothing
+since Phase 1.
+
+**The selector is unchanged.** `mostValuable`'s `overdue` term is already the
+bounded least-recently-used tiebreak, below the two information-value measures and
+above catalogue order. **No staleness quotas, no forced rotation, no coverage rule
+that creates eligibility.**
+
+**A standing starvation gate, with a closed exemption discipline.** A concept
+declaring `materialToDecision: true` that wins zero question slots across the
+complete scenario library is a defect. A concept genuinely too narrow to win may
+be exempt **only** through a named, exhaustive registry carrying the concept id, a
+written reason, the circumstance in which it becomes decision-relevant, and **a
+test proving that circumstance can make it win.** **A concept with no consumer may
+never use the exemption.**
+
+**Performance ships with the expansion, not with routing 101.** Measured: ≈21 full
+`buildView + decide` evaluations per guide render today, ≈50 under a naive
+expansion — and the worst case is the common case, because `shouldAsk` returns
+true for `unknown` and the new concepts are unknown by design. Pre-filter probe
+candidates to concepts with an active consumer; use incremental probe projection;
+keep answer sets to the smallest honest size. **These must not alter selection
+semantics.**
+
+**Tier 3 — caffeine, alcohol, hydration — is deferred to routing 97** and gets no
+ordinary-use logging channel before then.
+
+---
+
+## D-221 — D-166's six dimensions may land in different routing packages
+
+**Phase:** 92 · **Status:** Active · **Clarifies** D-166
+
+**D-166 is not reversed and the six dimensions remain approved.** What is
+clarified is that **D-166 does not require all six to become askable in routing 92.** Their implementation follows their honest consumers:
+
+- **loneliness / social-connection need** — routing 92, via AUD-0013's missing
+  social-demand path;
+- **overwhelm** — routing 92, via the capacity limiter, which renders as _"What is
+  in the way"_;
+- **motivation** and **stress** — routing 92 **only if** an honest
+  capacity/friction or friction/opportunity-cost consumer is demonstrated;
+- **mood** — **not askable in routing 92** without a real consumer;
+- **confidence** — **deferred to routing 94 / F25**, where the progression
+  consumer belongs.
+
+**Approval of the vocabulary is not approval to create unreachable questions.**
+Building all six as askable in 92 would recreate the exact `emotionalState`
+defect for at least two of them — the thing D-220 exists to prevent.
+
+---
+
+## D-222 — Research may decide what is worth asking, and may never become a finding
+
+**Phase:** 92 · **Status:** Active · **Owner decision #2**
+
+General-population research may influence **what Life Command OS decides is worth
+asking or investigating** about the owner. Approved uses: identify potentially
+useful questions; spend the bounded discovery agenda more intelligently; identify
+evidence worth seeking; and know where caution or missing evidence matters.
+
+**A prior may not** become a finding about the owner, determine a recommendation,
+influence ranking because personal evidence is sparse, or persist as a substitute
+for personal evidence.
+
+**When a prior causes a question:** the question still satisfies every discovery
+rule; **the owner's answer becomes the personal evidence**; the prior does not
+become a belief about him; **skipping produces no inferred fact**; and provenance
+must support answering _"why did you ask me this?"_
+
+> **The permission is intentionally self-extinguishing. Research may help decide
+> what is worth learning about the owner. Once he answers, his evidence replaces
+> the prior's role.**
+
+**Ranking influence on sparse evidence is refused, and the reasoning inverts the
+obvious one.** That option's safety rests on the prior weakening as personal
+evidence accumulates. With no connected-data source and a three-question daily
+ceiling, **evidence accumulates slowly and permanently — so a mechanism designed
+to be temporary would become the standing behaviour, and a rule whose safety
+depends on a condition that will not arrive is not safe.**
+
+Population evidence directly determining recommendations with no personal
+evidence is refused outright.
+
+---
+
+## D-223 — Child progress stays qualitative, and C19 is independently load-bearing
+
+**Phase:** 94 · **Status:** Active · **Owner decision #1** · **Preserves** D-070,
+D-112, D-117, D-135, D-136
+
+**The existing protected qualitative, per-entity growth model is kept.** Not
+authorized: rates, shares, percentages, grades, rankings or numeric progress
+summaries about Adaya.
+
+**The reason is the denominator.** The app sees only a fraction of the occasions
+that actually happen, so _"3 of 6 recorded occasions"_ must never silently become
+_"she succeeds 50% of the time."_ **The denominator is the app's observed record,
+not her life**, and more recorded data does not fix it unless the system observes
+a sufficiently complete denominator, which this product should not assume.
+
+**And a percentage cannot answer the question the owner is asking** — _how close
+is she to doing this on her own?_ These three produce 50% and mean different
+things: `✗✗✗✓✓✓`, `✓✓✓✗✗✗`, `✓✗✓✗✓✗`. **A harder task can also lower a percentage
+while she is advancing, and that must never read as regression.**
+
+> **The #6/#7 subject-class rule does not protect this boundary**, because
+> `development-skill` is already a permitted statement subject. **C19 remains
+> independently load-bearing.** Two constraints: the subject rule governs which
+> entity may be a subject; C19 governs what may be said about it.
+
+**Preserved and available:** occasion history including occasions that went the
+other way; the help ladder; current run; setting; widening settings; cross-setting
+generalization; owner-confirmed reversible settled status; `widen-the-setting`;
+qualitative per-entity advancement; and internal confidence that never renders.
+
+**A year-scale qualitative progression view is legal and does not reopen this** —
+March: _"1 in a row, one setting."_ October: _"4 in a row, three settings."_
+
+**The legal composition pattern**, recorded because it is the one to build:
+_"Towards being closer to Adaya — the Saturday-morning routine has occasions
+across three settings now."_ **The destination is context; the routine or
+`development-skill` is the assertion subject.** Fatherhood remains pull-only.
+
+**D-135 is not retracted by D-219's deferral of breadth and transfer.** Its
+setting-spread capability has its own shipped evidence supply — `OccasionSetting`,
+`settingsIn()`, the two-setting bar, `widen-the-setting` — and remains protected.
+
+**And a correction to the adjudication's own record: there is no
+settled-sufficiency defect.** The capture answers write result and help together,
+so `cleared` is equivalent to `help === 'on-her-own'`, and the existing trailing
+run already requires three consecutive independent occasions with D-135 adding two
+settings. **Form (a) is deleted and no D-112/D-135 amendment is required.**
+
+---
+
+## D-224 — The owner names the growth area; the app helps him pitch the help
+
+**Phase:** 94 · **Status:** Active · **Owner decision #4**
+
+The owner may name a growth area to work on with Adaya, and Life Command OS may
+help him plan **how** to support it using evidence it already records. **He
+chooses what. The app may help decide how to pitch his assistance next time.**
+
+> **Teaching support is an optional branch of Fatherhood, never the definition of
+> good Fatherhood.**
+
+**Owner-directed authoring.** `development-skill` is not authorable through
+ordinary use today, and every one arrives through a fixture — F04's pattern one
+entity kind further on. The authoring route reuses the existing create-and-confirm
+contract and introduces **no new record family, provenance model or schema**.
+
+**Authoring is behavioural, not structural.** A `development-skill` authored
+through ordinary owner use must be created; be associated with Adaya **using the
+relationship shape the Fatherhood reasoning actually consumes**; survive
+projection and reload; appear in the Fatherhood skill structure; and **produce an
+eligible `growth-opportunity` candidate on the next qualifying render.**
+**Existing in the entity store is not sufficient**, and an authoring route that
+writes a syntactically valid but reasoning-invisible skill is a failure of this
+decision (DEF-0147).
+
+**Near-duplicates are surfaced, never silently created.** `entityId(kind, name)`
+is label-derived, so _"Getting dressed"_ and _"Getting dressed on her own"_ are
+different entities with separate evidence pools, and neither may reach the
+sequence the growth model needs. Before creating a close match for the same
+child, surface the existing skill through **`AuthoringProposal.problems`** and let
+the owner choose. **Do not auto-merge. Do not silently redirect his wording.**
+Preserve his choice if he creates the distinct skill anyway.
+
+**Scaffolding guidance.** The app may consume the ordinal help ladder
+`needed-me → a-small-prompt → on-her-own` to show approach-to-independence and
+help him decide how much assistance to give next. **Legal language uses ordinal
+rungs, counts, sequence and setting spread. Forbidden: percentages, rates, shares,
+grades, ranks, numeric scores and rendered zero counts.** Guidance preserves
+D-136's shape — proposed, owner-confirmed where a stored judgement is involved,
+reversible, never silently a developmental fact.
+
+**Delivery — both surfaces coexist.** Pull-only governs the **new** "closer"
+register and the **new** guidance, on the Fatherhood or destination surface. **The
+existing growth suggestion is unchanged and stays on Now**, because it is a
+proposal attached to a move he has just acted on — a different speech act from
+volunteering a progress report. **Moving or gating it would break the loop by
+which settled judgements are proposed, confirmed, rejected and revisited.**
+
+**Ordinary time stays first-class.** `time-with` is not merged into
+`growth-opportunity`, is not scored for developmental productivity, and ordinary
+play, affection, presence and shared experience are never characterized as a
+missed developmental opportunity.
+
+**Outside this decision:** system-directed teaching suggestions and any
+system-decided learning sequence — both routed to Q1 and declined there (D-226).
+
+---
+
+## D-225 — At most one practice and one maintenance growth candidate reach arbitration
+
+**Phase:** 94 · **Status:** Active · **Owner decision #4**
+
+`generateCandidates` deduplicates by `verb/object.id`, so different
+`development-skill` entities are different objects and are **not** deduplicated.
+Three non-settled skills produce three `growth-opportunity` candidates against one
+`time-with`. **The threat to ordinary time is candidate volume, not copy**, and it
+is already mildly true today.
+
+**`growth-opportunity` candidates are partitioned by `standing.stage`, and the
+top-scoring candidate of each class is kept: at most one practice candidate and at
+most one maintenance probe.** The bound is constant regardless of how many skills
+the owner authors.
+
+**Two classes rather than one slot**, because `candidates.ts:496` re-admits
+settled skills when `maintenanceProbeDue()` is true, and a single slot would let
+an active skill suppress the probe — the only app-initiated safeguard against
+`settled` becoming permanent, which D-136 and AUD-0015(a) both forbid.
+
+**Selection within a class is the existing move score, then the deterministic id
+tiebreak, and nothing else.** For two growth candidates `compare` collapses past
+its middle terms — they share the verb so friction ties, and share the domain so
+the limiter term ties — **so the discriminator is score alone.** The selection
+answers _which move is most useful tonight_ and cannot answer _which skill is she
+best or worst at_. **No ordering of her development-skills is rendered or
+persisted.**
+
+**Placement: after evaluation, before arbitration.** Not before evaluation,
+because choosing the best candidate needs scores that do not yet exist and any
+other rule would be a judgement about her. Not after arbitration, because the
+crowding-out happens during it.
+
+**Trace integrity.** Set-aside candidates are accounted for truthfully in
+`ranked.length` notes, runner-up reporting, chosen-from-N notes and no-action
+language — for example _"chosen at 0.62 from 5 that fitted, with 3 further growth
+opportunities set aside."_ **The requirement is truthful accounting, not that
+sentence.**
+
+---
+
+## D-226 — Age is known; the normative reference may only suppress, never speak
+
+**Phase:** 94 · **Status:** Active · **Owner decision Q1** · **Unblocks** AUD-0018
+
+**Adaya's date of birth may be recorded** — optional, asked once, durable, never
+re-asked, exactly like custody. It is a fact the owner supplies, not a claim about
+her, and it changes no judgement by itself.
+
+**A bounded, cited normative reference is approved as a one-way protective filter
+only.**
+
+> **The app may never render a norm statement. Not on Now, not on the Fatherhood
+> page, not on pull, not in the trace, not in the export.**
+
+**Why speech was refused in both forms.** A symmetric norm is a percentile with
+extra steps: a table that can say _"most four-year-olds are still working on
+this"_ is the same mechanism that says _"most four-year-olds have this by now."_
+And asymmetric pull-only speech fails for the same reason — its protection
+depends on the owner being unable to tell whether the source covers a skill, which
+does not hold for obviously standard ones. **The asymmetry is the tell: positive
+support produces speech, so absence of speech on a standard skill means the
+negative case.**
+
+**The reassurance is not forgone.** D-224's scaffolding register delivers a better
+version from a better source: _"three weeks, from needing you to a small prompt,
+and it held at Grandma's."_ That is about her, it is true, and it needs no table.
+
+**The rule:**
+
+> **Positive normative support may make the app say LESS. Lack of positive
+> normative support may NEVER make the app say MORE.**
+
+**Non-suppression carries no meaning.** It covers at least: the source does not
+cover this skill; the source is ambiguous; evidence is insufficient; the skill is
+owner-defined with no normative analogue; the source cannot justify suppression.
+**These are indistinguishable and must remain so.** Failure to suppress must not
+increase urgency, score or priority, create a "behind" state or concern flag,
+become evidence against her, or imply the source says she should already have it.
+
+**Placement is the enforcement.** The norm may only cause `fatherhoodCandidates`
+to skip a skill in its existing loop. **Not a dimension** — a `norm-fit` dimension
+would carry a value and a weight, so non-suppression would participate in scoring.
+**Not a rejection** — `features/export/compose.ts` iterates `trace.rejected` into
+the AI review export, a production feature, so a rejection reason would reach the
+owner. **A generation-time skip is never proposed and never rejected, so there is
+nothing to disclose**, which is consistent with section 35: it is a candidate
+never thought of rather than a rejection nobody can see.
+
+**Structural assertion:** the norm module is imported by `candidates.ts` and by
+nothing in the evaluation or arbitration path, and **`Candidate` gains no field.**
+
+**Cap interaction: none.** A suppressed skill is absent before D-225's cap exists
+and cannot consume the practice slot.
+
+**The residual is recorded rather than denied.** The set of suppressed versus
+unsuppressed skills is inferable, diluted heavily by the base rate of not-covered
+owner-defined skills and stronger the more standard the owner's skills are.
+**Accepted as smaller than the harm running today** — that every unsettled skill
+reads as a growth area with no way to know it is ordinary, which is AUD-0018's
+own finding: _"the risk is not shaming the owner, it is quietly framing normal."_
+
+**Declined at the same time:** system-directed teaching suggestions, because they
+need a generative source that does not exist and a checklist that cannot cover
+"ordering her own food" cannot generate a curriculum for it; a system-decided
+learning sequence, which has no source, no scope and the largest collision with
+the protected item; and admitting `milestone-observation`, which needs a checklist
+registry carrying list identity and revision.
+
+---
+
+## D-227 — The legacy quarantine holds; objective episodes stay archived
+
+**Phase:** roadmap · **Status:** Active · **Owner decision Q4** · **Answers** Q4
+
+**Objective legacy episodes stay archived as `imported-legacy-record` and do not
+become admissible evidence. AUD-0030(b) is not built.**
+
+**The reason is a failed justification, not caution.** AUD-0030(b) is justified as
+_"the difference between a brain that starts cold and one that starts with
+years."_ **That is false as built.** `comparable` wraps `comparableEpisodes` for
+all five verb-keyed dimensions, and `comparableEpisodes` requires a
+`DecisionContext` in the current shape and then requires it to resemble tonight.
+**Legacy episodes cannot carry that context**: `context-snapshot` is archived under
+an independent decision, and reconstructing it means importing the old engine's
+taxonomy that D-101 exists to prevent. **The narrow verb-keyed position does not
+rescue it, because it passes through the same gate.**
+
+**Association is not admitted.** Section 59's own note — _"importing these would
+make the old catalogue **the object** of every relationship this app learns"_ —
+describes `observed-change`'s key exactly, and no sealed wrapper changes a key.
+
+**`legacy-import` reliability stays 0.5 as a second fence** and is not asked to be
+the only one.
+
+**The other three rungs.** Owner-reported states already map and remain canonical.
+Owner attributions remain the owner's and may never become observed causal
+relationships — already structural, since an imported judgement cannot manufacture
+the comparison group `association.ts` requires. Old-system conclusions never
+become canonical facts.
+
+**`milestone-observation` is outside this decision and stays archived.** No part
+of this answer admits it, and importing checklist-based developmental claims about
+Adaya is against D-223. It was separately declined at D-226.
+
+**`life-context-change` is routed to routing 92 as vocabulary work.** It is not an
+admissibility question: a `ContextRecord` carries `concept` + `value` and the
+registry has no entry for _"something changed in my life."_ **When the concept
+exists it returns as its own decision**, with its `lifeSeasonCards` consequence and
+its retroactive season-marking effect stated.
+
+**AUD-0030(a) is retained and wanted:** the import screen states plainly which
+families came across as history and which did not. **A "no" here is not silence.**
+
+---
+
+## D-228 — Connected data sources are parked for want of a source, not decided
+
+**Phase:** roadmap · **Status:** Open — parked · **Owner decision #5**
+
+**The owner does not currently track sleep with a device**, so the preferred
+read-only fetch-on-open pilot for `sleepHours` — the concept whose registry entry
+declares `device: 1, owner: 0.85` — **has no source to connect to.** The decision
+is not made and is not deferred on principle; it is parked because the pilot has
+nothing to attach to.
+
+**What this does not imply.** No stored third-party credential is approved. **No
+D-171 amendment is implied, and D-171 stands entire.** No substitute pilot was
+adopted to keep the decision alive.
+
+**Preserved for whenever it returns.** `cashBuffer` declares `device: 0.95,
+derived: 0.9, owner: 0.6` — the only concept where the owner sits below three
+other sources — so **the registry's second-strongest case for connected evidence
+is financial, and true financial connectivity needs a confidential server client,
+which conflicts with local-first and no-server.** That tension is unresolved and
+is the most likely future reason to reopen the architecture question.
+
+**And the provenance ladder is already settled by D-227.** If connected evidence
+ever arrives it inherits that ladder rather than inventing a second provenance
+model.
+
+---
+
+## D-229 — The maintenance probe is a calibration property, not a scoring defect
+
+**Phase:** 93 · **Status:** Active
+
+A due maintenance probe carries `stale-evidence` urgency 0.3 against an active
+skill's `opportunity-window` 0.5 — a **0.20 weighted disadvantage** — and it must
+**win** arbitration to be shown, because an episode exists only after the owner
+acts on a chosen move and `probes` counts only attempted episodes.
+
+**The existing duplication mechanisms recover it, on two paths.** On the **ignore
+path**, each active skill accrues −0.35 per distinct `now` while an unshown probe
+holds the +0.2 _"not offered lately"_ branch: a 0.55 gap at weight 0.8 = **+0.44**.
+On the **response path**, competing skills accumulate `sameThing` (−0.5) while the
+probe carries only `sameShape` (−0.2): **+0.24**. Both clear the deficit.
+
+**Thread-fit can delay it, and the delay is bounded.** A live `growth-ladder`
+thread on a competing skill carries weight 1. But `steps: 3`, `lastsDays: 42`,
+expiry _"set once, here, and never extended"_; `activeThreads` includes finished,
+stopped, abandoned and expired threads, so `threadOfferFor`'s `answered` check
+**permanently blocks a re-offer on the same subject**; `startThreadRecord` has one
+product call site gated on that offer; and `entityId` is deterministic, so
+re-authoring the same normalized label cannot evade the block.
+
+> **At most one growth-ladder thread per `development-skill` for that skill's
+> lifetime, and at most 42 days of thread-fit per skill. Bounded delay, not
+> indefinite starvation.**
+
+**Classification: calibration and regression QA.** **No scoring package, no new
+dimension, no probe-specific urgency escalation, no global `stale-evidence`
+change, and no separate scoring decision.** Routing 93 carries a five-arm
+regression: the ignore path with `now` advanced between visits; the response path
+across evenings; loop close proving `probes` increments and the interval doubles;
+a null arm; and the thread-fit bound arm asserting the documented mechanics rather
+than whatever happens.
+
+**Owner correction remains independently available** through the Fatherhood page's
+stage control. **A delayed app reminder is not an inability to correct the
+belief.**
+
+**D-225's cap is a candidate-volume protection and neither causes nor fixes this.**
+
+---

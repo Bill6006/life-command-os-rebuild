@@ -2388,7 +2388,7 @@ Maintain:
 
 ---
 
-# 43A. Phase names and orchestrator routing integers (D-159)
+# 43A. Phase names and orchestrator routing integers (D-159, D-212)
 
 **A canonical phase name and its routing integer are different things, and this section is the only place they are reconciled.**
 
@@ -2400,22 +2400,57 @@ So `**Phase:** 9`, `09`, `8.3` and `9.1` all parse to something at or below 82 a
 
 ## The map
 
-| Product / canonical name                               | Routing integer | Handoff file                  |
-| ------------------------------------------------------ | --------------- | ----------------------------- |
-| The instrument, and the things that are untrue         | **83**          | `qa/PHASE_83_QA_HANDOFF.md`   |
-| What the owner is trying to become                     | **84**          | `qa/PHASE_84_QA_HANDOFF.md`   |
-| **Canonical Phase 9** — visual coherence, motion, mobile | **90**        | `qa/PHASE_90_QA_HANDOFF.md`   |
-| Later intelligence — Reach, then Validity              | **91**          | `qa/PHASE_91_QA_HANDOFF.md`   |
-| **Canonical Phase 10** — performance, PWA, reliability | **92**          | `qa/PHASE_92_QA_HANDOFF.md`   |
-| **Canonical Phase 11** — adversarial hardening         | **93**          | `qa/PHASE_93_QA_HANDOFF.md`   |
-| **Canonical Phase 12** — release                       | **94**          | `qa/PHASE_94_QA_HANDOFF.md`   |
+Approved by the owner on 2026-08-31 (**D-212**), after the second product adjudication (`docs/PRODUCT_ADJUDICATION_2.md`).
+
+| Product / canonical name                                 | Routing integer | Handoff file                 |
+| -------------------------------------------------------- | --------------- | ---------------------------- |
+| The instrument, and the things that are untrue           | **83**          | `qa/PHASE_83_QA_HANDOFF.md`  |
+| What the owner is trying to become                       | **84**          | `qa/PHASE_84_QA_HANDOFF.md`  |
+| **Canonical Phase 9** — visual coherence, motion, mobile  | **90**          | `qa/PHASE_90_QA_HANDOFF.md`  |
+| Semantic capture and clarification                       | **91**          | `qa/PHASE_91_QA_HANDOFF.md`  |
+| Reach — what the brain can see                           | **92**          | `qa/PHASE_92_QA_HANDOFF.md`  |
+| Validity — what it concludes from what it sees           | **93**          | `qa/PHASE_93_QA_HANDOFF.md`  |
+| Domains and progression                                  | **94**          | `qa/PHASE_94_QA_HANDOFF.md`  |
+| Advancement and revision                                 | **95**          | `qa/PHASE_95_QA_HANDOFF.md`  |
+| Expectation and reconciliation                           | **96**          | `qa/PHASE_96_QA_HANDOFF.md`  |
+| Longitudinal inference — D-172's mechanism               | **97**          | `qa/PHASE_97_QA_HANDOFF.md`  |
+| _(98–100 reserved headroom)_                             | —               | —                            |
+| **Canonical Phase 10** — performance, PWA, reliability    | **101**         | `qa/PHASE_101_QA_HANDOFF.md` |
+| **Canonical Phase 11** — adversarial hardening            | **102**         | `qa/PHASE_102_QA_HANDOFF.md` |
+| **Canonical Phase 12** — release                          | **103**         | `qa/PHASE_103_QA_HANDOFF.md` |
+
+**Eleven routed phases remain.** 83 and 84 are GREEN; 98–100 carry no work.
 
 ## Rules
 
 - Every phase created from here to release carries a routing integer **strictly greater than 82**.
-- **Canonical phases are not renumbered.** Section 54 is still Phase 9, section 55 is still Phase 10. Only the routing label differs, and giving canonical Phase 10 the integer 92 does **not** re-scope it — D-109 stands.
-- **A QA round does not get a new routing integer.** Builder, QA, repair and retest rounds all stay under the same number, as they did through Phase 82's twelve rounds.
+- **Routing integers increase monotonically in execution order** (D-212). `handoff_source.routing_ceiling()` keeps only the **maximum** phase with a QA report, so an integer below the current ceiling never routes — silently, with nothing warning anyone. This is why 85–89 are unusable: they sit below routing 90, which runs first. **Stating only the "greater than 82" half of this rule is what made 85–89 look available.**
+- **Canonical phases are not renumbered.** Section 54 is still Phase 9, section 55 is still Phase 10. Only the routing label differs, and giving canonical Phase 10 the integer **101** does **not** re-scope it — D-109 stands, exactly as it stood when the same phase was labelled 92.
+- **98–100 are deliberate headroom.** The campaign has inserted phases into this map twice, and every insert renumbers everything downstream. The reserve has already earned itself once: splitting routing 95 in two pushed longitudinal inference from 96 to 97 without renumbering anything below it.
+- **A QA round does not get a new routing integer.** Builder, QA, repair and retest rounds all stay under the same number, as they did through Phase 82's twelve rounds and Phase 84's nineteen.
 - A document filename may follow either convention, but the `**Phase:**` field carries the **routing integer**, and a QA handoff filename follows the routing integer so the orchestrator and a human reader agree.
+
+## Routing 94 runs as three internal cycles (D-213)
+
+Routing 94 covers nine remaining domains **and** nine Fatherhood-specific deliverables added by the owner-decision sequence. It executes as three cycles **under the single integer 94**:
+
+- **94.1 — Fatherhood alone.** Its destination, plus the `development-skill` authoring route, the `about-person` relationship repair, the near-duplicate guard, scaffolding guidance, the help-ladder reader, the two-class growth-opportunity cap and its trace integrity, Adaya's birthdate, and the normative suppression filter.
+- **94.2 — Sleep, Social, Home, Romantic.**
+- **94.3 — Emotional, Faith, Private, Long-Range Direction.**
+
+**94.1 has its own explicit acceptance list and gate, and it closes before 94.2 begins.**
+
+**No new routing integer is created for a cycle.** The monotonic rule leaves no integers between 94 and 95, and a cycle is not a phase. The four-domains-per-cycle slice rule counts *domains* and cannot see that nine deliverables landed on one of them; **the concentration is accepted knowingly rather than hidden by that arithmetic**, and gating 94.1 separately is what keeps its failure localisable.
+
+## Deferral order under scope pressure (D-214)
+
+**Routing 95 is preserved before routing 96.** If scope pressure forces a deferral, **96 is deferred before 95** — the advancement and revision work survives, and the expectation machinery built on top of it goes first.
+
+**This is the ordinary cut order.** The minimum-release path named in the second adjudication — 90 → 91 → 92 → 93 → 101 → 102 → 103 — drops 94, 95, 96 and 97 together and is a last resort. **It is not the routine deferral sequence, and reaching for it is an owner decision rather than a consequence of a phase running long.**
+
+## Campaign holds
+
+`docs/CAMPAIGN_HOLDS.md` is the machine-readable declaration of owner decisions that gate a phase. **D-172 gates routing 97** (D-215); routings 90 through 96 are not gated by it. A hold is released by editing its `status`, never by deleting the line — a missing declaration makes the orchestrator refuse the phase.
 
 ---
 
@@ -2989,7 +3024,7 @@ screen today is honest and plain, and re-typesetting it is this phase's work.
 - **A milestone**, which is a goal that names its destination (D-181). It reads
   as a different thing from a goal and from a completed session, and it is
   reached only when the owner says so.
-- **Six rungs of progress evidence** — attempt, completion, quality, retained
+- **Seven rungs of progress evidence** — attempt, part-done, completion, quality, retained
   capability, transfer, milestone — each with its own sentence and its own
   statement of what it is *not* evidence of. A completed session, a completed
   course and a milestone are three different things on the page.
@@ -3020,7 +3055,7 @@ Plus the structural accommodation list above, and the owner-use review's own acc
 
 # 55. Phase 10 — Performance, PWA, reliability
 
-**Routes as phase 92** — see section 43A. **Its scope is unchanged** by that label (D-109, D-159).
+**Routes as phase 101** — see section 43A. **Its scope is unchanged** by that label (D-109, D-159, D-212).
 
 ## Build/harden
 
@@ -3047,7 +3082,7 @@ Plus the structural accommodation list above, and the owner-use review's own acc
 
 # 56. Phase 11 — Independent adversarial hardening
 
-**Routes as phase 93** — see section 43A. Scope unchanged.
+**Routes as phase 102** — see section 43A. Scope unchanged (D-212). It additionally carries the nineteen deferred instrument findings in `qa/INSTRUMENT_HARDENING_BACKLOG.md` as a standing input (D-210).
 
 Use a fresh independent context/agent that did not author the latest repairs.
 
@@ -3084,7 +3119,7 @@ Then rerun integration and a fresh independent retest.
 
 # 57. Phase 12 — Release
 
-**Routes as phase 94** — see section 43A. Scope unchanged.
+**Routes as phase 103** — see section 43A. Scope unchanged (D-212).
 
 ## Release only when
 
