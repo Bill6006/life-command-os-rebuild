@@ -1,132 +1,129 @@
 # Next prompt
 
-**Phase:** 84 — **what the owner is trying to become**
+**Phase:** 90 — **canonical Phase 9: visual coherence, motion, mobile refinement**
 
-**Actor:** Codex / **independent QA**.
-**Conversation:** **SAME** — the Codex conversation that wrote Rounds 1 to 19.
-**Model:** Codex.
-**Reasoning level:** **High** — never Max.
-
----
-
-## This is a bounded retest, not another round
-
-Owner decision **D-210** closed the open-ended loop. Rounds 15 to 19 produced
-twenty findings with no taper; nineteen were instrument findings and are
-**deferred**, preserved verbatim in
-[`qa/INSTRUMENT_HARDENING_BACKLOG.md`](qa/INSTRUMENT_HARDENING_BACKLOG.md) and
-open in the defect ledger. One — **QA-84-064** — remained blocking. It is
-repaired at **`d618588`**.
-
-**General instrument hardening is closed for this phase.** From here only two
-things may block GREEN:
-
-- a **genuinely new owner-visible product defect**; or
-- a **release-integrity defect comparable to QA-84-064**.
-
-**A further finding that a detector can be fooled is not a blocker.** It belongs
-in the backlog, appended, with nothing removed.
+**Actor:** Claude Code / **builder**.
+**Conversation:** NEW — a fresh Claude builder conversation. Routing 84 is GREEN and closed; this is a new phase (D-092, `qa/README.md` conversation rule).
+**Model:** Claude Opus 5.
+**Reasoning level:** **Max** — the audit-repair campaign classification in `qa/README.md` covers every phase created by its adjudication, and this is one.
 
 ---
 
-## What was repaired
+## Read these first, in this order
 
-**QA-84-064 — the live verifier proved a SHA, not the bytes being served.** The
-deploy job published the artifact the gate had verified and then proved the
-deployment by reading `commitSha` out of the served `build-info.json`. A step
-between the download and the publish appended a visible rule to the app
-stylesheet; `build-info.json` was untouched, and the verifier reported
-**"Deployed SHA matches"** over a site that was now saying something the engine
-cannot do. **A commit identifier names what was built and says nothing about
-what is served.**
+1. `docs/CANONICAL_REBUILD_PLAN.md` **section 54** — this phase's canonical scope and gate. Also **section 43A** (the routing map and the monotonic-integer rule), **section 22** (scores and forecasts), **sections 24 and 25** (visual design contract, motion), **section 37** (mobile and accessibility).
+2. `docs/DECISION_LOG.md` **D-212 … D-229** — the roadmap and the eight settled owner decisions. Then the standing guards this phase must not break: **D-162** (a destination is described, never scored), **D-129**, **D-018**, **D-052**, **D-075**, **D-087**, **D-167**, **D-193**.
+3. `docs/PRODUCT_ADJUDICATION_2.md` **§6.2** — the accommodation extension and the time-advance instrument, as approved.
+4. `docs/qa/README.md` — the independent QA protocol. **You may not approve your own phase.**
 
-`npm run build` now writes `dist/release-manifest.json` — a SHA-256 for every
-file it produced, and a digest over that list, with no clock in it.
-`scripts/release-integrity.mjs <base-url> --manifest <path>` fetches each of
-those files **from the live site**, hashes what the host actually returns, and
-requires every digest to be the one recorded when the gates passed. It also
-requires the site's own copy of the manifest to be the verified one, so a
-publication that rewrote the tree _and_ its record is named too. **The manifest
-the deploy job checks against arrives as its own artifact**, not out of the tree
-being published.
-
-**What it does not establish is written down with it (D-211):** a hostile step
-inside the deploy job can subvert any check in that job. What changed is that
-the check reads the artifact rather than a name for it, and that **it can be run
-from outside CI** — the manifest is published, so you can verify any deployment
-from a machine the pipeline does not control:
-
-```bash
-npm run release:integrity -- https://bill6006.github.io/life-command-os-rebuild/preview/ --manifest verified/release-manifest.json
-```
-
-The SHA check stays. It answers a different question — whether the phone is
-looking at this commit at all — and it was never wrong about that.
-
-**One thing was not edited, deliberately.** `qa/INSTRUMENT_HARDENING_BACKLOG.md`
-failed `prettier --check` and formatting it would have been an edit, so it is
-listed in `.prettierignore` instead, beside the QA handoffs and the sealed
-owner-use review that are exempt for the same reason. All **39** `QA-84-0xx`
-identifiers still resolve and the file is byte-identical to the commit that
-added it.
+**Routing 90 is not gated by any campaign hold.** `docs/CAMPAIGN_HOLDS.md` declares D-172 against **routing 97** only.
 
 ---
 
-## What this retest verifies, and nothing else
+## What this phase is
 
-1. **QA-84-064 / release-integrity correctness.** Reproduce it as it was
-   reproduced here — build, take the manifest of the verified bytes, append a
-   visible rule to the app stylesheet, serve the result — and confirm that
-   `verify-deployed-sha.sh` still reports a match while
-   `release-integrity.mjs` names the file. The honest tree must pass.
-2. **The seven Phase 84 acceptance items.**
-3. **CASE A** fresh-store owner use.
-4. **CASE B** fresh-store owner use.
-5. **The normal required regression gates** — the full test suite, the browser
-   matrix at three widths, the Android checks, the privacy scan, checkpoint
-   equivalence, and a clean worktree.
+Visual design began earlier; **this phase performs whole-product coherence.** Routing 84 built the product contract — a destination, a milestone, seven progress rungs, a create-and-confirm control, a second questioning surface, the inability question, two correction gestures and one owner permission — and **none of it has a visual language yet.** That was deliberate: routing 84 was not allowed to spend this phase's budget. Re-typesetting it is the work.
 
-**If all of those pass, Phase 84 may go GREEN.** I may not declare it: a builder
-conversation does not approve its own phase (**D-077**). That is yours to say.
-
-Phase 84 stays **YELLOW** until you do, and **routing 90 must not start**.
-
-## Gates at `d618588`
-
-`npm run verify` **PASS** (84 files, **1,861** tests; the build now writes the
-release manifest; copy scan clean at **8,035** strings, 7,951 placed in a module
-of the build graph); browser **708 / 708** at 360/430/1280 with zero
-failures; privacy clean at 291 tracked files; deployed Android gate **clean at
-233 checks**; **release integrity clean — 8 files served byte for byte as
-verified**; checkpoint equivalence exact; CI green. **`git diff -- src` is
-empty** — the product was not touched.
-
-Decisions **D-211**; defects **DEF-0144**.
+**The gate is the owner's physical phone.** Not a viewport, not a screenshot.
 
 ---
 
-## Independent bounded retest result — PASS
+## Work packages
 
-**Phase 84 is GREEN.** Codex independent QA completed exactly the bounded
-retest above at deployed documentation head `986c086` and found no new
-owner-visible product defect or release-integrity defect comparable to
-QA-84-064.
+### 90.0 — The ordinary-owner time-advance instrument · **first, and gated on its own**
 
-- QA-84-064 reproduced exactly: the visible CSS mutation remained green under
-  the legacy SHA check and failed the release-integrity check with the mutated
-  stylesheet named. The honest tree passed, and the deployed tree passed all 8
-  files against the manifest downloaded separately from the successful CI run.
-- All seven Phase 84 acceptance items passed.
-- Fresh-store CASE A passed with 1 entity / 2 records; fresh-store CASE B passed
-  with 2 entities / 7 records. Both laboratory databases remained empty.
-- `npm run verify` passed with 1,861 tests in 84 files; browser 708/708 at
-  360/430/1280; Android 233 checks; privacy 293 tracked files; rendered-copy
-  scan 8,035 / 7,951; checkpoint equivalence and the clean-tree audit passed.
-- `qa/INSTRUMENT_HARDENING_BACKLOG.md` remains byte-identical to `4e4cedd`.
-  Its deferred findings remain open under D-210 and were not treated as Phase
-  84 blockers.
+**Build this before any product claim rests on it.** Bundling an unproven instrument with the product whose acceptance depends on it is routing 82's failure pattern — instrument and product failing together with no way to tell which.
 
-Routing 90 has not started. There is no further Phase 84 repair or QA round to
-dispatch from this handoff.
+The whole product reads the wall clock in exactly **one** place: `systemClock().now()` at `src/domain/time.ts:576`. `MemoryProvider` captures the moment with `useState(() => clock.now())` and re-reads it on defined events. So Playwright's **`page.clock`**, installed _before_ `page.goto`, then `fastForward` plus a reload, moves the entire product's moment deterministically.
 
-<!-- LCO_COMPLETE -->
+- **No `#/qa`, no `loadInQa`, no fixture seeding, no `travelTo`** — `travelTo` is a laboratory control (`QaScreen.tsx:160`) and must not be used here.
+- Prove the clock moves the product's moment across **a block boundary, a day boundary and a week boundary**, from a fresh store.
+- **Its acceptance is separate from every product acceptance item below.**
+
+This is D-161 extended from record-kind reachability to **screen** reachability: a capability is proved in a browser that has never opened the QA laboratory.
+
+### 90.1 — Whole-product visual coherence
+
+Canonical section 54's review list, in full: hierarchy; spacing; typography; surface depth; contrast; motion; mood; copy; repeated components; phone density; navigation; private-domain discretion; empty states; error states.
+
+**Anti-pattern review, rejecting:** submarine panel; cave; gamer UI; developer dashboard; card soup; massive empty dark spaces; endless tiny metrics; pastel wellness.
+
+### 90.2 — Typeset what routing 84 shipped
+
+Each of these exists, is reachable from a near-empty store, and has no visual language:
+
+- **A destination** per life area, four parts, any of which may be absent — and **an absent part reads as unstated**, never as zero (G-009).
+- **A milestone** — a goal that names its destination (D-181). It must read as a different thing from a goal and from a completed session, and it is reached **only when the owner says so**.
+- **Seven rungs of progress evidence** — attempt, part-done, completion, quality, retained-capability, transfer, milestone — each with its own sentence and its own statement of what it is _not_ evidence of. A completed session, a completed course and a milestone are three different things on the page.
+- **One create-and-confirm control** for a goal, routine, person, place, skill and obligation, showing the interpretation the owner agrees to and what the app will not assume.
+- **A second questioning surface** on Insights, with its own weekly budget, always skippable, able to show what an answer changed.
+- **One optional question after "Can't right now"**, and a way back to an interrupted or half-finished move.
+- **Two correction gestures** on a recorded event — withdraw and re-date — each stating its consequence before it acts.
+- **One owner permission** on the Private page, off by default (D-167).
+
+> **The no-score rule binds every one of them.** No percentage, share, bar, rank, grade or readiness figure about the owner or about Adaya, and a destination must not become a score through the back door. **A phase whose subject is visual coherence is the second place a number arrives looking reasonable** — the first was the phase that built the objects. D-162 and section 22.
+
+### 90.3 — Structural accommodation · **reserve the shape, build none of it**
+
+Passing the phone gate on a design that forecloses one of these re-opens a passed gate later. Canonical section 54's nine rows stand unchanged:
+
+a course of action carrying a **review status and a verdict sentence** · a tradeoff clause naming a **longer horizon** inside Q9's one-additional-clause budget, not a second card · a **recurring constraint** the owner can see and dismiss, on the domain page · a held intention resolving to **fulfilled, missed or expired** · a **maintenance-versus-advancement distinction in the reason line**, not a chart · an evidence card carrying a **competing explanation and an open question** · domain pages composing a **destination section with an existing progression object** · a compact **reentry state** after a long absence · a restrained **"why am I being asked this?"** affordance, no dashboard and no score.
+
+**Six further rows, from the settled owner decisions (D-216 … D-227):**
+
+1. **A cross-domain re-file option** inside a confirmation block — one option row, not a picker screen. Routing 91 needs it; this phase only leaves room.
+2. **An expectation-and-reconciliation line** on an evidence surface: what the app expected, and what happened (D-219, routing 96).
+3. **A destination that is not moving**, readable as a state of the destination rather than as a new card — and **pull-only in its domain's tier** (D-216).
+4. **The six emotional dimensions as six independently-unknown readings**, with no arrangement in which they could be summed or averaged (D-166, D-221).
+5. **A twelfth domain page** in navigation — Love / Dating / Romantic Life (D-168). Designed even though it is built at routing 94.
+6. **A fifth correction gesture** — _"the record is incomplete here"_ — alongside withdraw and re-date, stating its consequence before it acts (D-218).
+
+**And one refinement rather than a new row:** the existing _"why am I being asked this?"_ affordance must be able to carry a **provenance answer**, because under D-222 a research prior may aim a question and must be answerable for. It may never render as a claim about the owner.
+
+### 90.4 — AUD findings assigned to this phase
+
+**AUD-0038(a) and (b)**, **AUD-0043**, **AUD-0044** — the visual-phase members of the audit's own assignment. AUD-0044's stale-belief grouping is also the mechanism behind accommodation row 8's reentry state.
+
+### 90.5 — DEF-0150 · one-line incidental correction
+
+`src/domain/time.ts:562` cites `tests/unit/no-ambient-clock.test.ts`. **That file does not exist**; the ambient-clock guard is real and lives in `tests/unit/architecture-guards.test.ts`. **Correct the comment to name the real file. Nothing else.**
+
+It is in scope here only because package 90.0 rests on that guard being real — it is, and only its name is wrong. **This is a comment fix. Do not turn it into architectural work, do not move the guard, and do not widen it.**
+
+---
+
+## Acceptance gate
+
+1. **Owner physical-phone approval.** The canonical gate, and it is not satisfied by any viewport, emulator or screenshot.
+2. **The structural accommodation list is intact** — all nine canonical rows plus the six above, each reserved and none built.
+3. **The owner-use review's section 11.8 acceptance questions run for the first time.**
+4. **The time-advance instrument is proved independently of every product claim** — block, day and week boundaries, fresh store, no QA laboratory.
+5. **The standing guards still bite**, proved by reintroduction where a guard exists: no score, percentage, share, bar, rank, grade or readiness figure about the owner or about Adaya; no wellness composite; no Life Score; the child copy guard unchanged; D-167's permission still off by default; nothing aggregating across the six emotional dimensions.
+6. **The normal required gates**: full test suite, browser matrix at 360/430/1280, the Android-style pass, privacy scan, checkpoint equivalence, release integrity against the manifest (D-211), CI green, and a clean worktree.
+
+---
+
+## What this phase must NOT do
+
+- **No semantic capture.** Reading owner text for meaning is **routing 91** and must not be pulled forward. `destinationRecords()` keeps `draft.aim.trim()` and the prompt's own domain.
+- **No new concept, no new vocabulary, no registry reach.** That is routing 92.
+- **No new conclusions from evidence.** Routing 93.
+- **No new domain built** — the twelfth is designed in navigation only; building it is routing 94.
+- **No advancement register, no "closer" sentence, no scaffolding guidance.** Routing 94 and 95.
+- **No named expectation and no reconciliation.** Routing 96.
+- **No inference mechanism.** Routing 97, and it is held by D-172.
+- **No scoring change of any kind.** Routing 82 re-cut the instrument and re-baselined the tournament (D-137, D-138); this phase must not disturb either.
+- **No change to `QUESTIONS_PER_DAY`** and no new asking channel.
+- **Phases 1 through 84 are not reopened.**
+
+---
+
+## When you believe it is complete
+
+The phase becomes **YELLOW — READY FOR INDEPENDENT QA**, never GREEN. **A builder conversation may not approve its own phase** (D-077).
+
+In that same response, without being asked, provide: phase status; checkpoint SHA; deployed Preview SHA and whether they match; exact verification counts; known, open and deferred items; the recommended **Codex** model and reasoning level for QA — **a middle level, and never Max, which is not a Codex level**; the conversation instruction (**NEW**); the exact QA report path `docs/qa/PHASE_90_QA_HANDOFF.md`; and the complete QA prompt written into that file.
+
+End with the four lines and the launcher (D-092).
+
+**Do not write a completion marker into this file until this dispatch is actually finished.**
