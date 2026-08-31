@@ -248,6 +248,26 @@ and no reconciliation (96). No inference mechanism (97, held by D-172). No
 scoring change of any kind. No change to `QUESTIONS_PER_DAY`. Phases 1 through 84
 are not reopened.
 
+## The gate, as it stands
+
+Checkpoint **`c6e0b3a`**. `npm run verify` PASS. **1,895** unit, contract,
+synthetic and adversarial tests in 87 files. **761 of 762** browser tests at
+360 / 430 / 1,280 — the one failure is `data.spec.ts:106` with
+`page.goto: net::ERR_ABORTED`, the `vite preview` connection drop
+`playwright.config.ts` documents by name; it passes 27 of 27 in isolation, an
+earlier run on the same source hit it on a different test, and CI absorbs it
+with `retries: 1`. Android-style gate **clean at 233 checks**. Privacy scan
+clean, 304 tracked files. Release integrity clean — 8 files served byte for
+byte as verified. Checkpoint equivalence: bundle-equivalent, nothing changed
+between `c6e0b3a` and HEAD. Worktree clean.
+
+**CI has not run and the Preview has not been redeployed**, because `c6e0b3a`
+is unpushed. Pushing publishes to a public repository and triggers a Pages
+deploy, which is the owner's to authorise. The Android and release-integrity
+runs above were against a local `vite preview` of the same build.
+**Independent QA cannot begin until the Preview serves `c6e0b3a`** — step 1 of
+the protocol is cold use of the deployed app.
+
 ## Open, and carried forward unchanged
 
 The **nineteen deferred Phase 84 instrument-hardening findings** (D-210) are

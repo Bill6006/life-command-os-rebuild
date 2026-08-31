@@ -24,8 +24,8 @@ conversation may not approve its own phase.
 
 | Fact                    | Value                                                                        |
 | ----------------------- | ---------------------------------------------------------------------------- |
-| Product checkpoint      | `CHECKPOINT_SHA` — the commit the gate was run on (D-147)                     |
-| Documentation head      | `DOCS_SHA`                                                                   |
+| Product checkpoint      | `c6e0b3a` — the commit the gate was run on (D-147)                     |
+| Documentation head      | `c6e0b3a`, plus the commit that records this file’s final counts              |
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                  |
 | Owner-visible behaviour | **changed** — Now, every domain page, Insights, and the shared surface system |
 | Owner phone check       | **required before GREEN, and it is this phase's canonical gate**              |
@@ -34,7 +34,7 @@ conversation may not approve its own phase.
 Confirm the deployed SHA against the checkpoint before testing:
 
 ```bash
-node scripts/checkpoint-equivalence.mjs CHECKPOINT_SHA --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+node scripts/checkpoint-equivalence.mjs c6e0b3a --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
 ```
 
 D-097 asks for equivalence rather than literal SHA equality; the checker reports
@@ -159,15 +159,54 @@ Facts, not conclusions. Re-running a green suite to watch it go green again buys
 nothing (`README.md`, step 2); these are here so a discrepancy between them and
 what QA observes is itself a trigger.
 
-| Gate                                      | Result           |
-| ----------------------------------------- | ---------------- |
-| `npm run verify`, clean checkout          | PASS             |
-| Unit / contract / synthetic / adversarial | UNIT_COUNT       |
-| Browser, 360 / 430 / 1,280, one worker    | BROWSER_COUNT    |
-| Privacy scan                              | PRIVACY_RESULT   |
-| Android-style gate, deployed              | ANDROID_RESULT   |
-| Release integrity against the manifest    | INTEGRITY_RESULT |
-| CI                                        | CI_RESULT        |
+| Gate                                      | Result                                                              |
+| ----------------------------------------- | ------------------------------------------------------------------- |
+| `npm run verify`, clean checkout          | PASS                                                                |
+| Unit / contract / synthetic / adversarial | **1,895 passed** in 87 files (1,861 in 84 before)                   |
+| Browser, 360 / 430 / 1,280, one worker    | **761 of 762**, 254 per width — see the note below (708 before)                         |
+| Privacy scan                              | clean, 304 tracked files                                            |
+| Android-style gate                        | **clean — 233 checks** (183 at routing 83)                          |
+| Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`c6e0b3a`)        |
+| Checkpoint equivalence                    | bundle-equivalent; no files changed between `c6e0b3a` and HEAD      |
+| CI and deployed Preview                   | **NOT YET RUN — see below**                                         |
+
+> ### The one browser failure, and why it is not being called a pass
+>
+> The full matrix reported **761 passed, 1 failed**. The failure was
+> `data.spec.ts:106 › reaching Data › lives behind More rather than in the
+> navigation` — `page.goto: net::ERR_ABORTED`, a thirty-second navigation
+> timeout. The spec passes 27 of 27 in isolation on the same build.
+>
+> This is the flake `playwright.config.ts` documents in its own comments: the
+> single `vite preview` process drops connections, and *"failures which merely
+> look like product failures cost real time."* An earlier full run on the same
+> source hit the same error on a **different** test (`shell.spec.ts:128`), which
+> is what a connection drop looks like and is not what a product defect looks
+> like. CI runs with `retries: 1` and absorbs it.
+>
+> **It is reported rather than rounded off.** A builder who writes "762 passed"
+> because a re-run came back green has told QA something that did not happen,
+> and the whole point of this handoff is that QA can check these numbers against
+> its own.
+
+> ### The one gate the builder could not run, stated plainly
+>
+> **`c6e0b3a` has not been pushed**, so CI has not run on it and the Preview has
+> not been redeployed. `checkpoint-equivalence.mjs` says so itself: *"2 commit(s)
+> on HEAD are on no remote branch. QA reads the repository, not your working
+> copy, and CI has not run on these."* The other unpushed commit is `415a8f2`,
+> routing 84's marker move.
+>
+> Pushing publishes to a public repository and triggers a Pages deploy, which is
+> the owner's to authorise rather than the builder's to do unasked. **Do not
+> begin the cold-use pass until the Preview serves `c6e0b3a`** — step 1 of the
+> protocol is use of the *deployed* app, and testing the previous build would
+> produce a report about routing 84.
+>
+> Everything in the Android and release-integrity rows above was run against a
+> local `vite preview` of the `c6e0b3a` build, which serves the same bytes the
+> deploy will. Re-run both against the Preview once it is live; that is the run
+> that counts.
 
 **Reintroduction proofs the builder ran** (each is a claim you can repeat):
 
@@ -183,6 +222,15 @@ what QA observes is itself a trigger.
   on row B5.
 - Add `color: var(--nobody-defined-this)` to any stylesheet → the new token
   guard names the file and the property.
+- Wash out `--ground-deep` in `tokens.css` → the palette test fails on AA, on the
+  accent-as-link rule, and on D-230's quiet-tier rule.
+- Return `` `${count} done — 40% of the way there.` `` from `progressSentence`
+  → **five** standing guards fail, including *routing 84 item 7 — no score about
+  the owner, anywhere*. This is acceptance item 5's reintroduction, run on the
+  guard this phase was most at risk of breaking.
+- Remove the `fastForward` from the week test only → that boundary fails while
+  the block and day tests still pass, which is what says the three are
+  independent rather than one assertion in three costumes.
 
 ---
 

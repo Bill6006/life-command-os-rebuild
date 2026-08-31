@@ -127,3 +127,99 @@ In that same response, without being asked, provide: phase status; checkpoint SH
 End with the four lines and the launcher (D-092).
 
 **Do not write a completion marker into this file until this dispatch is actually finished.**
+
+---
+
+# Dispatch complete — routing 90 is built and submitted
+
+**Written by the routing 90 Claude builder conversation.** Everything above is
+the dispatch as it was received and is unchanged. This section records what was
+done against it.
+
+**Phase status: YELLOW — READY FOR INDEPENDENT QA.** Never GREEN. A builder
+conversation may not approve its own phase (D-077), and this phase's canonical
+gate is the **owner's physical phone**, which no automated result satisfies.
+
+## The six work packages
+
+| Package  | What was delivered                                                                                                                                                           |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **90.0** | `tests/browser/phase90-clock.spec.ts` — block, day and week boundaries under `page.clock`, from a fresh store, no laboratory. Gated on its own and proved by reintroduction. |
+| **90.1** | Surface-weight axis, elevation reserved for the decision, phone density, motion, and the explicit anti-pattern review (design record section 3).                             |
+| **90.2** | Destination, milestone, seven rungs, courses, the authoring control, corrections and the permission all typeset; `ObjectKind` is the shared vocabulary.                      |
+| **90.3** | Fifteen accommodation rows as a machine-checked table — each **reserved**, and **none built**.                                                                               |
+| **90.4** | AUD-0038(a), AUD-0038(b), AUD-0043, AUD-0044 — each with a regression that fails when the defect is reintroduced.                                                            |
+| **90.5** | DEF-0150: one comment now names the guard's real file. Nothing else.                                                                                                         |
+
+## The checkpoint and its gates
+
+| Fact                                      | Value                                                                   |
+| ----------------------------------------- | ----------------------------------------------------------------------- |
+| Product checkpoint                        | `c6e0b3a`                                                               |
+| `npm run verify`, clean checkout          | PASS                                                                    |
+| Unit / contract / synthetic / adversarial | **1,895 passed** in 87 files (1,861 in 84 before)                       |
+| Browser, 360 / 430 / 1,280, one worker    | **761 of 762** — one `ERR_ABORTED` navigation flake, green in isolation |
+| Privacy scan                              | clean, 304 tracked files                                                |
+| Android-style gate                        | **clean — 233 checks**                                                  |
+| Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`c6e0b3a`)            |
+| Checkpoint equivalence                    | bundle-equivalent; no files changed between `c6e0b3a` and HEAD          |
+| Worktree                                  | clean                                                                   |
+| CI and deployed Preview                   | **not yet run — the checkpoint is unpushed**                            |
+
+**The one gate the builder did not run, and why.** `c6e0b3a` is on no remote
+branch, so CI has not run on it and the Preview still serves the previous build.
+`checkpoint-equivalence.mjs` reports this itself. Pushing publishes to a public
+repository and triggers a Pages deploy, which is the owner's to authorise rather
+than the builder's to do unasked — and the campaign's own note is that several
+pushes in an hour jam the deploy queue. The Android and release-integrity rows
+above were run against a local `vite preview` of the `c6e0b3a` build, which
+serves exactly the bytes the deploy will.
+
+**Independent QA must not begin the cold-use pass until the Preview serves
+`c6e0b3a`.** Step 1 of the protocol is use of the _deployed_ app; testing the
+previous build would produce a report about routing 84.
+
+## What the phase did not do
+
+No semantic capture (91). No new concept or vocabulary (92). No new conclusion
+from evidence (93). No twelfth domain built — designed in navigation only (94).
+No advancement register and no "closer" sentence (94, 95). No named expectation
+and no reconciliation (96). No inference mechanism (97, held by D-172). No
+scoring change of any kind. No change to `QUESTIONS_PER_DAY`. Phases 1 through 84
+are not reopened.
+
+## Open and deferred, unchanged
+
+The **nineteen deferred Phase 84 instrument-hardening findings** (D-210,
+`docs/qa/INSTRUMENT_HARDENING_BACKLOG.md`) are untouched and still open.
+Re-finding one of them is not a routing 90 defect.
+
+## Two defects found by the review itself
+
+**DEF-0152** — `--border-subtle` and `--edge` are read by four declarations and
+defined nowhere, so three borders never rendered. Fixed, and guarded by a link
+step for the design system. **DEF-0153** — the "Not right?" control rendered as
+two lines beside every entry in a list at 360 pixels. Fixed and measured.
+
+## The next handoff
+
+The complete QA prompt is written into **`docs/qa/PHASE_90_QA_HANDOFF.md`**,
+Round 0. It carries the checkpoint, the acceptance criteria, what changed stated
+as changes, the reintroduction proofs to repeat, the ordinary-owner and synthetic
+contracts, and the places the builder thinks the risk is.
+
+- **Model:** Codex — independent QA, per D-090. The builder is Claude; the
+  reviewer must not be.
+- **Reasoning level:** **High** — a middle level. **Never Max**, which is
+  Claude's level and stops the orchestrator when it appears in a Codex block.
+- **Conversation:** **NEW** — not this builder conversation, and not any routing
+  84 conversation.
+
+```
+Read docs/qa/PHASE_90_QA_HANDOFF.md in full, in the repository at
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild, and execute
+Round 0's brief exactly as written. This is the independent QA handoff for
+routing phase 90. Do not ask for the file to be pasted.
+```
+
+<!-- LCO_COMPLETE -->
