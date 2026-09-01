@@ -185,6 +185,51 @@ function firstOfKind(
   return undefined
 }
 
+/**
+ * The same, and only where the record still refers to it — QA-91-002.
+ *
+ * ## The finding this closes
+ *
+ * An entity is an index entry, not a record: nothing supersedes one and nothing
+ * removes one. Before routing 91 that could not matter, because the only way a
+ * `financial-goal` came into being was a milestone being named in Money and it
+ * stayed named. Routing 91 added a gesture that takes a cross-domain reading
+ * back — and re-typing the milestone into the area the question was asked in
+ * leaves the money entity behind with nothing pointing at it. The money
+ * generator read the leftover and went on proposing a move about it, so the
+ * owner was told his aim was back in Career while Now went on acting on it as
+ * Money.
+ *
+ * ## Why this is D-021 rather than a new rule
+ *
+ * *"Every other subject a recommendation can be about must already exist in the
+ * owner's history, or the move is not proposed."* An entity nothing in the
+ * effective history refers to is not in his history; it is the leftover of one.
+ * Reading it is the engine naming a subject from its own index, which is the
+ * exact thing D-021 forbids.
+ *
+ * ## Why it is applied here and not to {@link firstOfKind}'s other five callers
+ *
+ * Because it is measured here and is not measured there. **No shipped history
+ * holds a `financial-goal` at all** — `interpretation.test.ts` asserts it — so
+ * this narrowing cannot change any decision the library makes, and the
+ * tournament instrument cannot move (D-137, D-138). The person and place
+ * lookups have no gesture that can orphan them and no such measurement, and
+ * widening an unmeasured narrowing across five generators is how a repair
+ * becomes a regression.
+ */
+function firstStillReferredTo(
+  situation: Situation,
+  kind: SemanticEntity['kind'],
+): SemanticEntity | undefined {
+  for (const entity of situation.entities.byKind(kind)) {
+    for (const record of situation.view.history.effective) {
+      if (record.entities.some((ref) => ref.id === entity.id)) return entity
+    }
+  }
+  return undefined
+}
+
 /** Outcome records that went badly for a subject, most recent first. */
 function roughOutcomesFor(situation: Situation, subject: EntityRef): readonly RecordId[] {
   const found: { readonly id: RecordId; readonly at: number }[] = []
@@ -716,9 +761,12 @@ function nextMilestoneIn(situation: Situation, domain: LifeDomainId): ActiveGoal
   return undefined
 }
 
-/** Money. Needs a goal that exists, never a generic "check your budget". */
+/**
+ * Money. Needs a goal the record still refers to, never a generic "check your
+ * budget" and never a leftover index entry (QA-91-002).
+ */
 const moneyCandidates: Generator = (situation) => {
-  const goal = firstOfKind(situation, 'financial-goal')
+  const goal = firstStillReferredTo(situation, 'financial-goal')
   if (goal === undefined) return []
 
   const ref: EntityRef = { id: goal.id, kind: goal.kind }

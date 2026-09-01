@@ -188,9 +188,55 @@ test.describe('91 — CASE A, walked from a store with nothing in it', () => {
     await expect(unknowns).toContainText('earning more or keeping more of it')
   })
 
-  test('(e) declining leaves the aim on Career with no reading row, and nothing on Money', async ({
+  test('(c) delivers the six as two named sets rather than as one comma-run', async ({ page }) => {
+    /*
+     * QA-91-004, asserted on the **delivered shape** rather than on substrings.
+     *
+     * The old check proved the three words occurred somewhere and that the page
+     * did not overflow sideways — both true of a seven-line paragraph. What was
+     * wrong was never the content: all six unknowns are honest and all six
+     * survive. What was wrong was that they arrived as one sentence, so an
+     * admission read as a disclaimer at the width the phase is gated at.
+     */
+    await freshApp(page)
+    await openTheQuestion(page)
+    await typeAim(page, 'More money')
+
+    const unknowns = page.getByTestId('discovery-unknowns')
+    await expect(unknowns.locator('.unknowns__label')).toHaveText([
+      'These words do not say',
+      'And the app has not been told',
+    ])
+
+    const rows = unknowns.locator('.unknowns__list li')
+    await expect(rows, 'every unknown survives — none is dropped or summarised').toHaveCount(6)
+    await expect(unknowns.locator('.unknowns__list').first().locator('li')).toHaveText([
+      'how much',
+      'by when',
+      'whether this is about earning more or keeping more of it',
+    ])
+
+    /*
+     * And it is still not a questionnaire: six unknowns are not six prompts.
+     * The card carries exactly one answer box, which is D-184's budget read on
+     * the screen rather than in the agenda.
+     */
+    await expect(page.getByTestId('discovery-answer')).toHaveCount(1)
+    await expect(unknowns.locator('input, textarea, select')).toHaveCount(0)
+  })
+
+  test('(e) declining writes no derived row, and leaves the offer where the aim is', async ({
     page,
   }) => {
+    /*
+     * Retitled after QA-91-001, because the old title was the finding.
+     *
+     * It said *"no reading row"* and asserted exactly that — and the absence it
+     * was celebrating was the defect: nothing was written, correctly, and
+     * nothing was left either, so §6.3's *decline, then redo and accept* could
+     * not be performed at all. Declining still costs nothing; what it must not
+     * cost is the choice.
+     */
     await freshApp(page)
     await openTheQuestion(page)
     await typeAim(page, 'More money')
@@ -198,13 +244,24 @@ test.describe('91 — CASE A, walked from a store with nothing in it', () => {
 
     await openPage(page, 'career', 'Career & Learning')
     await expect(page.getByTestId('destination-aim')).toHaveText('More money')
+
+    const reading = page.getByTestId('destination-reading')
+    await expect(reading, 'the words still say what they said').toContainText(
+      'These words sound like they are about Money & Financial Resilience',
+    )
+    await expect(page.getByTestId('destination-reading-accept')).toHaveText(
+      'File it in Money & Financial Resilience',
+    )
     await expect(
-      page.getByTestId('destination-reading'),
-      'no reading was written, so there is no row for one',
+      page.getByTestId('destination-reading-withdraw'),
+      'and there is nothing to take back, because nothing was written',
     ).toHaveCount(0)
 
     await openPage(page, 'money', 'Money')
     await expect(page.getByTestId('destination-aim')).toHaveCount(0)
+
+    await go(page, 'Timeline')
+    await expect(page.locator('body')).not.toContainText('Read this as being about')
   })
 
   test('(b) accepting files it in Money with his words unchanged, and says the app read them', async ({
@@ -342,11 +399,24 @@ test.describe('91 — CASE A, walked from a store with nothing in it', () => {
 
     await openPage(page, 'money', 'Money')
     await page.getByTestId('destination-reading-withdraw').click()
+    await expect(
+      page.getByTestId('destination-reading-consequence'),
+      'a gesture with a consequence says what it is first',
+    ).toContainText('The aim moves to Career & Learning')
+    await page.getByTestId('destination-reading-confirm').click()
     await expect(page.getByTestId('destination-aim')).toHaveCount(0)
 
     await openPage(page, 'career', 'Career & Learning')
     await expect(page.getByTestId('destination-aim')).toHaveText('More money')
-    await expect(page.getByTestId('destination-reading')).toHaveCount(0)
+    /*
+     * The settled reading is gone; the **offer** is back, because the words
+     * still say what they said. That symmetry is the repair for QA-91-001, and
+     * it is why this assertion is about the sentence rather than about the row:
+     * a row-count check here would have to say the row is absent, which was the
+     * one-way world's claim and is no longer true.
+     */
+    await expect(page.getByTestId('destination-reading')).not.toContainText('Read as being about')
+    await expect(page.getByTestId('destination-reading-accept')).toBeVisible()
 
     /*
      * And the taking-back is a row of its own, in the app's own voice.
@@ -503,6 +573,122 @@ test.describe('91 — the same journey in a second area, with a differently-shap
   })
 })
 
+// ---------------------------------------------------------------------------
+// The contract as one journey, in one store — QA Round 1, repair item 5
+// ---------------------------------------------------------------------------
+
+test.describe('91 — the whole contract as one owner, in one store', () => {
+  /*
+   * ## Why this test exists, and why the ones above are not it
+   *
+   * Round 1's sharpest instrument finding: `phase91.spec.ts` called itself the
+   * ordinary-owner journey while (e), (b)/(f), the reversal and the second area
+   * were four separate `test()` cases, and `freshApp()` gives each of them its
+   * own empty context. Two of the phase's contracts are **transitions between**
+   * those states — decline then redo, and withdraw *after* the consequence
+   * exists — and no arrangement of isolated stores can reach a transition. Both
+   * blockers lived in the gap, under a header claiming the gap was covered.
+   *
+   * So this is one store, one sequence, and it is the sequence §6.3 actually
+   * describes. The focused cases above are kept because a failure in one of them
+   * localises better than a failure in a nine-step walk — but they are branches,
+   * and this is the journey.
+   */
+  test('declines, reconsiders, accepts, clarifies, sees Now change, takes it back, and moves on to a second area', async ({
+    page,
+  }) => {
+    await freshApp(page)
+
+    // 1 — the question, the words, and the offer left where it was.
+    await openTheQuestion(page)
+    await typeAim(page, 'More money')
+    await expect(page.getByTestId('discovery-keep')).toHaveAttribute('aria-pressed', 'true')
+    await confirm(page)
+
+    // 2 — declining cost nothing, and cost nothing he cannot get back.
+    await openPage(page, 'career', 'Career & Learning')
+    await expect(page.getByTestId('destination-aim')).toHaveText('More money')
+    await go(page, 'Timeline')
+    await expect(
+      page.locator('body'),
+      'nothing was derived from a reading he did not take',
+    ).not.toContainText('Read this as being about')
+
+    // 3 — the route back, from the object's own row, saying what it will do.
+    await openPage(page, 'career', 'Career & Learning')
+    await page.getByTestId('destination-reading-accept').click()
+    await expect(page.getByTestId('destination-reading-consequence')).toContainText(
+      'The aim moves to Money & Financial Resilience',
+    )
+    await page.getByTestId('destination-reading-confirm').click()
+
+    // 4 — and it landed, with the reading recorded as the app's own sentence.
+    await openPage(page, 'money', 'Money')
+    await expect(page.getByTestId('destination-aim')).toHaveText('More money')
+    await expect(page.getByTestId('destination-reading')).toContainText(
+      'Read as being about Money & Financial Resilience',
+    )
+
+    // 5 — one concrete clarification, in the resolved area's own terms.
+    await openTheQuestion(page)
+    await expect(page.getByTestId('discovery-prompt')).toContainText(
+      'What is the money thing you would deal with first, towards “More money”?',
+    )
+    await page.getByTestId('discovery-answer').fill('Clear the credit card')
+    await confirm(page)
+
+    // 6 — Now says something it could not have said before.
+    await go(page, 'Now')
+    await expect(page.locator('.primary-surface__headline')).toContainText(
+      'Deal with Clear the credit card today.',
+    )
+
+    // 7 — and taking the reading back now names what else moves with it.
+    await openPage(page, 'money', 'Money')
+    await page.getByTestId('destination-reading-withdraw').click()
+    await expect(
+      page.getByTestId('destination-reading-consequence'),
+      'the next step he named is part of what he is taking back',
+    ).toContainText('Clear the credit card')
+    await page.getByTestId('destination-reading-confirm').click()
+
+    // 8 — the aim went back, and so did what the app acts on.
+    await openPage(page, 'career', 'Career & Learning')
+    await expect(page.getByTestId('destination-aim')).toHaveText('More money')
+    await expect(
+      page.getByTestId('destination-next'),
+      'his own sentence came across unchanged',
+    ).toContainText('Clear the credit card')
+
+    await go(page, 'Now')
+    await expect(
+      page.locator('body'),
+      'Now no longer acts on it as a money thing',
+    ).not.toContainText('Deal with Clear the credit card')
+    await expect(page.locator('.primary-surface__headline')).toContainText('Clear the credit card')
+
+    // 9 — a second area, a differently shaped phrase, the same store.
+    await openPage(page, 'money', 'Money')
+    await page.getByTestId('destination-open').click()
+    await page.getByTestId('destination-aim-input').fill('Be able to run 5k without stopping')
+    await expect(page.getByTestId('destination-reading-offer')).toContainText(
+      'These words sound like they are about Health & Physical Capacity',
+    )
+    await page.getByTestId('destination-refile').click()
+    await page.getByTestId('destination-save').click()
+
+    await openPage(page, 'health-recovery', 'Health & Recovery')
+    await expect(page.getByTestId('destination-aim')).toHaveText(
+      'Be able to run 5k without stopping',
+    )
+    await expect(page.getByTestId('destination-reading')).toContainText(
+      'Read as being about Health & Physical Capacity',
+    )
+
+    await neverTheLaboratory(page)
+  })
+})
+
 // OWNER-ENDS
 
 test.describe('91 — the instrument stays an ordinary-owner instrument', () => {
@@ -515,7 +701,7 @@ test.describe('91 — the instrument stays an ordinary-owner instrument', () => 
     expect(to, 'the scan end marker is missing').toBeGreaterThan(from)
 
     const body = source.slice(from + SCAN_FROM.length, to)
-    expect(body.length, 'the scanned region collapsed').toBeGreaterThan(6_000)
+    expect(body.length, 'the scanned region collapsed').toBeGreaterThan(10_000)
 
     for (const forbidden of LABORATORY_CONTROLS) {
       expect(body, `the owner journey must not reach for ${forbidden}`).not.toContain(forbidden)

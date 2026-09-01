@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { ObjectKind, Panel, type ObjectKindName } from '../../components/ui'
+import { ObjectKind, Panel, UnknownSet, type ObjectKindName } from '../../components/ui'
 import type { LifeDomainId } from '../../domain/domains'
 import type { EntityRef } from '../../domain/entities'
 import { permissionDefinition } from '../../domain/privacy'
@@ -22,6 +22,7 @@ import {
   readAimIn,
   type AimReading,
 } from '../../intelligence/interpret'
+import { describeMilestone } from '../../intelligence/authoring'
 import type { CourseReflection } from '../../intelligence/progress'
 import type { ProgressEvidence } from '../../domain/progress'
 import type { OutcomeAnswer } from '../../intelligence/outcomes'
@@ -119,6 +120,7 @@ export function DestinationPanel({
   onRevise,
   onMilestone,
   onWithdrawReading,
+  onAcceptReading,
 }: {
   data: DomainPageData
   situation: Situation
@@ -131,6 +133,7 @@ export function DestinationPanel({
   ) => void
   onMilestone: (destination: DomainDestination, statement: string) => void
   onWithdrawReading: (destination: DomainDestination) => void
+  onAcceptReading: (destination: DomainDestination, reading: AimReading, into: LifeDomainId) => void
 }) {
   const [naming, setNaming] = useState(false)
   const [aim, setAim] = useState('')
@@ -139,6 +142,8 @@ export function DestinationPanel({
   const [draft, setDraft] = useState('')
   /** Where he has chosen to file it; undefined is *where this page is*. */
   const [fileIn, setFileIn] = useState<LifeDomainId | undefined>(undefined)
+  /** The destination whose reading gesture is showing its consequence. */
+  const [deciding, setDeciding] = useState<string | undefined>(undefined)
 
   /*
    * Three proving domains, not twelve.
@@ -296,35 +301,15 @@ export function DestinationPanel({
             </p>
           )}
 
-          {entry.interpretation === undefined ? null : (
-            /*
-              What the app worked out, as its own row — D-143, routing 91.
-
-              Below his four parts and visibly not one of them: the rows above
-              are what he said, and this is what the app read in the words. It
-              states what it rests on, because *a conclusion shown without its
-              grounds is the app asking to be trusted*, and it carries the
-              gesture that takes it back — which is the *reversible* half of
-              acceptance test 7 and the reason this is an offer rather than a
-              decision.
-            */
-            <div className="destination__reading" data-testid="destination-reading">
-              <p className="note">
-                Read as being about {situation.domains.labelFor(entry.interpretation.named)}, from{' '}
-                {entry.interpretation.words.map((word) => `“${word}”`).join(', ')}. You agreed to
-                that; the words above are yours and were not changed.
-              </p>
-              <button
-                type="button"
-                className="domain-linkish"
-                disabled={disabled}
-                data-testid="destination-reading-withdraw"
-                onClick={() => onWithdrawReading(entry)}
-              >
-                Put it back in {situation.domains.labelFor(entry.interpretation.askedIn)}
-              </button>
-            </div>
-          )}
+          <ReadingRow
+            entry={entry}
+            situation={situation}
+            disabled={disabled}
+            deciding={deciding === entry.destination.source}
+            onDecide={(open) => setDeciding(open ? entry.destination.source : undefined)}
+            onWithdrawReading={onWithdrawReading}
+            onAcceptReading={onAcceptReading}
+          />
 
           {filling === entry.destination.source ? (
             <div className="domain-correction">
@@ -465,10 +450,14 @@ export function DestinationPanel({
               )}
             </div>
           )}
-          {proposal === undefined || proposal.unknowns.length === 0 ? null : (
-            <p className="note" data-testid="destination-unknowns">
-              The app will not assume {proposal.unknowns.join(', ')}.
-            </p>
+          {proposal === undefined ? null : (
+            <UnknownSet
+              fromWords={reading?.unknowns ?? []}
+              fromObject={proposal.unknowns.filter(
+                (line) => !(reading?.unknowns ?? []).includes(line),
+              )}
+              testId="destination-unknowns"
+            />
           )}
           <div className="domain-correction__actions">
             <button
@@ -515,6 +504,122 @@ export function DestinationPanel({
         </button>
       )}
     </Panel>
+  )
+}
+
+/**
+ * What the app read in the words, and the two gestures that move it — routing
+ * 91 round 1.
+ *
+ * ## Both directions, because a route that only goes one way is not reversible
+ *
+ * The first version rendered this row **only** for a reading the owner had
+ * accepted, and offered only the withdrawal. Declining therefore wrote nothing
+ * *and left nothing*: QA-91-001 showed that §6.3's own contract — decline, then
+ * redo and accept — could not be performed at all, because the offer existed
+ * for the length of one card and was gone.
+ *
+ * So the row is symmetric. A destination whose words still name another area
+ * carries the offer; a destination whose reading is settled carries the way
+ * back. Neither is a question, neither is on Now, and neither spends the
+ * discovery budget — this is the object's own page, which is where the owner
+ * goes when he wants to look at the object.
+ *
+ * ## And the gesture says what it will do before it does it
+ *
+ * Where a next step has been named, moving the aim moves what kind of thing
+ * that step is, and the sentence naming it is `describeMilestone`'s — the same
+ * one the app used when it was created. A gesture with a consequence states the
+ * consequence first (D-218's shape), so this opens a small block rather than
+ * acting on one press.
+ */
+function ReadingRow({
+  entry,
+  situation,
+  disabled,
+  deciding,
+  onDecide,
+  onWithdrawReading,
+  onAcceptReading,
+}: {
+  entry: DomainDestination
+  situation: Situation
+  disabled: boolean
+  deciding: boolean
+  onDecide: (open: boolean) => void
+  onWithdrawReading: (destination: DomainDestination) => void
+  onAcceptReading: (destination: DomainDestination, reading: AimReading, into: LifeDomainId) => void
+}) {
+  const area = (id: LifeDomainId) => situation.domains.labelFor(id)
+  const settled = entry.interpretation
+  const offered =
+    settled !== undefined
+      ? undefined
+      : readAimIn(entry.destination.aim, entry.destination.domain, situation)
+  const into = settled === undefined ? offered?.offer : settled.askedIn
+  if (into === undefined) return null
+
+  const next = entry.destination.milestones[0]?.goal.statement
+
+  return (
+    <div className="destination__reading" data-testid="destination-reading">
+      <p className="note">
+        {settled === undefined
+          ? describeReading(offered!, area)
+          : `Read as being about ${area(settled.named)}, from ${settled.words
+              .map((word) => `“${word}”`)
+              .join(', ')}. You agreed to that; the words above are yours and were not changed.`}
+      </p>
+
+      {!deciding ? (
+        <button
+          type="button"
+          className="domain-linkish"
+          disabled={disabled}
+          data-testid={
+            settled === undefined ? 'destination-reading-accept' : 'destination-reading-withdraw'
+          }
+          onClick={() => onDecide(true)}
+        >
+          {settled === undefined ? `File it in ${area(into)}` : `Put it back in ${area(into)}`}
+        </button>
+      ) : (
+        <div className="domain-correction" data-testid="destination-reading-consequence">
+          <p className="note">
+            {next === undefined
+              ? `The aim moves to ${area(into)}. Your words stay exactly as they are.`
+              : describeMilestone(next, into, area(into))}
+          </p>
+          <div className="domain-correction__actions">
+            <button
+              type="button"
+              className="domain-option"
+              disabled={disabled}
+              data-testid="destination-reading-confirm"
+              onClick={() => {
+                if (settled === undefined && offered !== undefined) {
+                  onAcceptReading(entry, offered, into)
+                } else {
+                  onWithdrawReading(entry)
+                }
+                onDecide(false)
+              }}
+            >
+              Yes, move it
+            </button>
+            <button
+              type="button"
+              className="domain-correction__cancel"
+              disabled={disabled}
+              data-testid="destination-reading-cancel"
+              onClick={() => onDecide(false)}
+            >
+              Leave it
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 

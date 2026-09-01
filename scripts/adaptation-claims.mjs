@@ -781,9 +781,21 @@ export const APPROVED_FUTURE_COPY = [
     text: 'Leave it empty and the app will not invent one.',
     in: ['src/features/life/DomainPanels.tsx'],
   },
+  /*
+   * Still rendered by the authoring panel, and no longer by either aspiration
+   * surface — QA-91-004.
+   *
+   * The confirmation used to put every unknown in one sentence behind this
+   * lead-in. Six of them made a seven-line comma-run on a 360-wide phone, so
+   * the two aspiration surfaces now name the halves — *these words do not say*
+   * and *the app has not been told* — and render each as a list. Neither of
+   * those is a claim about a later moment, so neither needs approving here.
+   * `Discovery.tsx` therefore no longer ships this string, and the placement
+   * check would fail if that file were left on the list.
+   */
   {
     text: 'The app will not assume ',
-    in: ['src/features/insights/Discovery.tsx', 'src/features/life/DomainPanels.tsx'],
+    in: ['src/features/life/DomainPanels.tsx'],
   },
 
   // Confirmations of behaviour the engine has, built and covered by D-173 item 1.

@@ -9,6 +9,7 @@ import {
   RECORD_KINDS,
   type CanonicalRecord,
   type FactValue,
+  type GoalRecord,
   type RecordKind,
 } from '../../src/domain/records'
 import {
@@ -68,6 +69,7 @@ import {
   destinationRecords,
   destinationRef,
   milestoneFor,
+  refileMilestone,
   proposeAuthoring,
   proposeDestination,
   relationshipEventRecord,
@@ -447,9 +449,29 @@ export const OWNER_ROUTES: readonly OwnerRoute[] = [
     id: 'aim-reading-withdraw',
     surface: 'domain-page',
     gesture: 'Put it back in <area>, on a destination that carries a reading',
-    builder: 'interpret.withdrawAimReading',
+    builder: 'interpret.withdrawAimReading, authoring.refileMilestone',
+    /*
+     * The whole consequence chain, not only the row — QA-91-002.
+     *
+     * Withdrawal re-files every milestone under the aim as well, so it writes
+     * the same `goal` (and, into Career, `explicit-fact`) that naming one
+     * writes. A route that named only the reading builder would have described
+     * a gesture with half its effects.
+     */
     needs: { records: ['aim-reading'] },
-    writes: ['aim-reading', 'destination'],
+    writes: ['aim-reading', 'destination', 'goal', 'explicit-fact'],
+  },
+  {
+    id: 'aim-reading-reconsider',
+    surface: 'domain-page',
+    gesture: 'File it in <area>, on a destination whose words still name one',
+    builder: 'interpret.aimReadingRecord, authoring.refileMilestone',
+    /*
+     * The route back after declining — QA-91-001. The offer is made from the
+     * words each time the object is rendered, so it needs only the destination.
+     */
+    needs: { records: ['destination'] },
+    writes: ['aim-reading', 'destination', 'goal', 'explicit-fact'],
   },
   {
     id: 'authoring',
@@ -757,12 +779,21 @@ export interface JourneyApp {
   /**
    * Take a reading back, the way the destination's own row does — routing 91.
    *
-   * **One gesture with two consequences**, and it is one gesture here because it
-   * is one press there: the reading is withdrawn and the aim goes back to the
-   * area the question was asked in. An instrument that only did the first half
-   * would be modelling a control the page does not have.
+   * **One gesture, the whole chain**, because that is what one press does there
+   * after QA-91-002: the reading is withdrawn, the aim goes back to the area the
+   * question was asked in, **and every milestone under it is re-filed with it**.
+   * The first version of this helper stopped after the first two records, which
+   * is exactly the half-gesture that let the money move survive a withdrawal
+   * while two tests called it reversible.
    */
   withdrawReading(destination: EntityRef): Promise<GestureResult>
+  /**
+   * Take an offer the card was declined, from the object's own row — QA-91-001.
+   *
+   * The route back that did not exist. Same shape as the withdrawal and the
+   * same builders, in the other direction.
+   */
+  acceptReading(destination: EntityRef): Promise<GestureResult>
   /** Introduce a goal, routine, person, place, skill or obligation. */
   introduce(draft: AuthoringDraft): Promise<GestureResult>
   /** Name the next step on a destination that already exists. */
@@ -877,6 +908,24 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
    */
   /** The moment every routing-84 gesture is written at, the way a surface does. */
   const authoringMoment = () => ({ now: at, zone, recordedAt: systemClock().now() })
+
+  /**
+   * The `goal` records under one aim, which both reading gestures move.
+   *
+   * From the resolved destination rather than by scanning for `milestoneOf`,
+   * so the instrument and the page agree about what a milestone of this aim is.
+   */
+  const milestonesUnder = (destination: EntityRef): readonly GoalRecord[] => {
+    const found = situation().direction.destinations.find(
+      (entry) => entry.destination.id === destination.id,
+    )
+    const out: GoalRecord[] = []
+    for (const milestone of found?.milestones ?? []) {
+      const record = view().history.byId(milestone.goal.source)
+      if (record !== undefined && record.kind === 'goal') out.push(record)
+    }
+    return out
+  }
 
   const write = async (records: readonly CanonicalRecord[], note: string) => {
     if (records.length === 0) return { done: false, note, written: 0 }
@@ -1053,12 +1102,51 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
         return { done: false, note: 'the reading points at no aim', written: 0 }
       }
       const moment = authoringMoment()
+      const moved = milestonesUnder(destination).map((goal) =>
+        refileMilestone(goal, previous.askedIn, situation(), moment),
+      )
+      await store.putEntities(moved.flatMap((result) => result.entities))
+      held = await store.snapshot()
       return write(
         [
           withdrawAimReading(previous, moment),
           reviseDestinationRecord(record, { domain: previous.askedIn }, moment),
+          ...moved.flatMap((result) => result.records),
         ],
         `took back the reading of "${record.aim}"`,
+      )
+    },
+
+    async acceptReading(destination) {
+      const found = situation().direction.destinations.find(
+        (entry) => entry.destination.id === destination.id,
+      )
+      if (found === undefined) return { done: false, note: 'no such aim', written: 0 }
+      if (readingFor(view(), destination, at) !== undefined) {
+        return { done: false, note: 'a reading already stands here', written: 0 }
+      }
+      const reading = readAimIn(found.aim, found.domain, situation())
+      const into = reading.offer
+      if (into === undefined) {
+        return { done: false, note: 'these words name nowhere else', written: 0 }
+      }
+      const record = view().history.byId(found.source)
+      if (record === undefined || record.kind !== 'destination') {
+        return { done: false, note: 'the aim has no record', written: 0 }
+      }
+      const moment = authoringMoment()
+      const moved = milestonesUnder(destination).map((goal) =>
+        refileMilestone(goal, into, situation(), moment),
+      )
+      await store.putEntities(moved.flatMap((result) => result.entities))
+      held = await store.snapshot()
+      return write(
+        [
+          reviseDestinationRecord(record, { domain: into }, moment),
+          aimReadingRecord(reading, into, destination, record.id, moment),
+          ...moved.flatMap((result) => result.records),
+        ],
+        `took the offer on "${found.aim}"`,
       )
     },
 

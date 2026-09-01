@@ -8989,3 +8989,147 @@ aspiration surfaces, in `domain-options`; no picker screen; and the row that
 changes nothing selected by default.
 
 ---
+
+## D-245 — A reading is a standing fact about the words, not a moment at the card
+
+**Phase:** 91 (QA round 1 repair) · **Status:** Active · **Amends** D-240
+
+The first version offered the cross-domain reading **only while the owner was
+typing**. Confirming without taking it ended the offer for good: no control
+anywhere could ask for it again, so §6.3's own contract — _decline, then redo and
+accept_ — could not be performed at all. QA-91-001. **Declining cost nothing
+except the choice, which is the one thing it may not cost.**
+
+**So the reading is available wherever the aim is.** A destination whose words
+still name another area carries the offer on its own row; a destination whose
+reading is settled carries the way back. Same row, same shape, opposite
+directions — which is what makes acceptance test 7's _reversible_ true of the
+gesture rather than of one press of it.
+
+**It is a route and never a question.** On the object's own page, where the owner
+goes when he wants to look at the object, beside _Fill that in_. Not on Now, not
+in the discovery agenda, and not against `DISCOVERY_PER_WEEK` — a re-offer that
+spent the budget would be the nagging D-163 forbids, and a re-offer on Now would
+be worse.
+
+### And the app may not read its own record of a sentence as evidence about it
+
+The deeper half, and the reason the offer vanished at all.
+`destinationRecords` writes an entity **whose label is the aim**, so the moment
+_"More money"_ was stored, reading those same words again found a thing the owner
+had "named" in Career called _More money_ — and a named thing outranks every word
+in the table. The app was citing its own transcription of his sentence as
+independent evidence about that sentence.
+
+**The interpreter therefore reads no `destination` entity, ever.** By kind rather
+than by comparing a label to the phrase, because comparing strings would also
+throw away the honest case where he types the exact name of a skill he has. D-188
+already gives the reason: a person, a place and a routine are things he **has**; a
+destination is what they are **for**, and what a thing is for is not evidence
+about words. This sits beside `isOwnerNamed`, which keeps the engine's own five
+routines out for the same reason one layer down.
+
+---
+
+## D-246 — Taking a reading back takes back what it caused
+
+**Phase:** 91 (QA round 1 repair) · **Status:** Active · **Completes** D-242
+
+Withdrawal superseded the `aim-reading` and re-filed the destination, and stopped
+there. QA-91-002: once the clarification had been answered, the milestone was a
+`financial-goal`, so the page said the aim was back in Career while Now went on
+saying _"Deal with Clear the credit card today."_ **The reversal moved the rows
+and left the behaviour.**
+
+**A gesture that reverses a cause reverses its effects.** Withdrawal now re-files
+every milestone under the aim as well, through `refileMilestone`: his sentence
+carried across byte for byte and made the entity kind of the area the question was
+asked in, the earlier `goal` superseded and still legible. Nothing is deleted and
+nothing is edited — what is undone is the **app's classification** of his words,
+which is exactly what he is taking back.
+
+**And it says so before it acts.** Where a next step exists the control opens a
+block carrying `describeMilestone`'s own sentence — the same sentence the app used
+when the step was created — and he confirms. A second confirmation, not a
+surprise.
+
+### An entity nothing refers to is not in his history
+
+The mechanism, and it is D-021 rather than a new rule. An entity is an index
+entry: nothing supersedes one and nothing removes one. Re-typing the milestone
+therefore leaves the money entity behind, and `moneyCandidates` read the leftover
+and went on proposing a move about it.
+
+**The money generator now requires a `financial-goal` the effective record still
+refers to.** _"Every other subject a recommendation can be about must already
+exist in the owner's history, or the move is not proposed"_ — an entity nothing
+points at is the leftover of a history rather than part of one, and reading it is
+the engine naming a subject out of its own index.
+
+**Why only Money.** It is measured there and is not measured elsewhere: **no
+shipped history holds a `financial-goal` at all**, asserted in
+`interpretation.test.ts`, so the narrowing cannot move a single decision the
+library makes and the tournament instrument cannot move with it (D-137, D-138).
+The person and place lookups have no gesture that can orphan them and no such
+measurement, and widening an unmeasured narrowing across five generators is how a
+repair becomes a regression.
+
+---
+
+## D-247 — A token is read for the role it plays, not for the fact that it is there
+
+**Phase:** 91 (QA round 1 repair) · **Status:** Active · **Amends** D-240
+
+Two probes, one class. _"Not about money at all"_ named Money and offered to file
+it there; _"More money by 2027"_ reported the amount as settled and the horizon as
+unknown, from one token that is a date. QA-91-003. **The interpreter counted
+tokens and never asked what the sentence was doing with them.**
+
+**Negation, and the pair that makes the rule a rule.** Only a negation of
+**aboutness** cancels a marker — _not about X_, _nothing to do with X_ — and it
+governs until the clause does. The obvious fix, cancelling a marker with a negator
+anywhere near it, breaks the ordinary case immediately: **"No more debt"** is
+negated and is squarely about money, because he is negating the thing rather than
+the topic. Both directions are held by regressions; either alone would pass over
+the other.
+
+**Number, and what a year is not.** A currency symbol is always an amount. A bare
+number is an amount **unless it is only a four-digit year**, and a year answers
+_by when_. The two predicates had been exchanging one token's meaning.
+
+**Where the bound is, said plainly.** This is not a parser and does not become
+one. It recognises a denial of aboutness and a year, both closed and both
+deterministic, and it goes on abstaining from every phrase it cannot read — an
+unread phrase names nothing, offers nothing and writes nothing. **A phrase list
+containing _"not about money"_ or the number 2027 would have been D-193's failure
+one layer lower**, which is what QA said and is why neither string appears in the
+implementation.
+
+---
+
+## D-248 — An explicit admission is delivered as a set, never as a sentence
+
+**Phase:** 91 (QA round 1 repair) · **Status:** Active
+
+_"More money"_ leaves six things unconcluded, and all six are honest. Rendered as
+one comma-run they became a seven-line paragraph on a 360-wide phone, inside a
+card already carrying a question, a reading, two option rows and a confirmation.
+QA-91-004: **an honest admission read as a disclaimer.**
+
+**Every unknown survives.** None is dropped, summarised or capped — a shorter list
+would be a quieter lie, and `unknowns` exists to be explicit (the brief's rule 5).
+What changed is that the two halves are named — _these words do not say_, and
+_the app has not been told_ — and each is a list, so the owner can see which came
+from what he wrote and skip the half he does not care about.
+
+**Six unknowns are not six questions.** Nothing in the set is answerable in place,
+there is one answer box on the card, and D-184's one-at-a-time budget is
+untouched. A row with a box beside it would be the questionnaire D-163 forbids by
+name, arriving through the honest half of the confirmation.
+
+**The general form, for the phases that add more of these.** A list of what the
+app has not concluded grows with every capability. The moment it is a sentence it
+competes with the thing it qualifies; as a named set it stays scannable at any
+length, and the naming is what tells the owner which half is about him.
+
+---

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { Panel } from '../../components/ui'
+import { Panel, UnknownSet } from '../../components/ui'
 import { systemClock } from '../../domain/time'
 import {
   authoringRecords,
@@ -560,11 +560,13 @@ export function Discovery({ situation }: { situation: Situation }) {
                   ))}
                 </ul>
               )}
-              {proposal.unknowns.length === 0 ? null : (
-                <p className="note" data-testid="discovery-unknowns">
-                  The app will not assume {proposal.unknowns.join(', ')}.
-                </p>
-              )}
+              <UnknownSet
+                fromWords={reading?.unknowns ?? []}
+                fromObject={proposal.unknowns.filter(
+                  (line) => !(reading?.unknowns ?? []).includes(line),
+                )}
+                testId="discovery-unknowns"
+              />
               {proposal.problems.map((problem) => (
                 <p key={problem} className="note" data-testid="discovery-problem">
                   {problem}

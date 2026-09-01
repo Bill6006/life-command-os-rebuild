@@ -5388,3 +5388,39 @@ phase has landed it: the absence sweep skips it and a separate check requires
 the feature to be **present**, in the files and text the visual phase reserved.
 The row is kept rather than deleted, because what it now records is that the
 reserved shape is the shape that was used.
+
+---
+
+## QA-91-001 … QA-91-004 — routing 91 independent QA round 1
+
+**Found:** independent Codex QA, round 1, 2026-09-01 · **Status:** Fixed (routing 91 repair) · **Owner:** routing 91
+
+Recorded together because two of the four share one cause and the other two share
+another. **Two were transitions no isolated-store test could reach, and two were
+a token counted without the role that gives it meaning** — and in both pairs the
+shipped instrument was green over the defect.
+
+| ID        | Finding                                                                                                           | Repair                                                                                                                                                                                              |
+| --------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QA-91-001 | Declining the interpretation ended the offer permanently; §6.3's _decline → redo → accept_ could not be performed | The reading is a standing fact on the aim's own row, in both directions (D-245) — and the interpreter no longer reads the destination it wrote back as evidence about the words it was written from |
+| QA-91-002 | Taking a settled reading back moved the aim and left the money milestone, so Now went on acting on it as Money    | Withdrawal re-files every milestone with the aim and states the consequence first (D-246); the money generator reads only an entity the record still refers to                                      |
+| QA-91-003 | _"Not about money at all"_ offered Money, and 2027 was read as an amount while the horizon stayed unknown         | Aboutness-negation with clause scope, and a year read as a horizon rather than a sum (D-247) — neither string appears in the implementation                                                         |
+| QA-91-004 | Six unknowns rendered as one seven-line comma-run at 360px, so an honest admission read as a disclaimer           | Two named sets, each a list, with every unknown preserved and one answer box (D-248)                                                                                                                |
+
+**A fifth false green was found by running the reintroductions rather than by a
+test — and it was in a test written to close QA-91-002.** The new regression read
+the _winning_ move's area, so putting the leftover-entity defect back left it
+green: the money move was generated again and simply lost the arbitration to
+Career. It now asserts on what the generator produced. **That is D-238's first
+corollary caught inside the repair for a D-238 finding**, and it is the second
+time in this campaign that the reintroduction found what the assertion could not.
+
+**Why the shipped instrument missed all four.** `phase91.spec.ts` called itself
+the ordinary-owner journey while decline, accept, reversal and the second area
+were four `test()` cases with a fresh store each. Two of the contracts are
+transitions **between** those states, and no arrangement of isolated stores
+reaches a transition. The repair adds one sequential journey in one store, and
+keeps the branch tests as branches.
+
+Full reproductions, repairs and verification:
+[`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).

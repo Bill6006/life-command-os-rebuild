@@ -378,3 +378,41 @@
 .settles {
   transition: color var(--dur-slow) var(--ease);
 }
+
+/* ---- What the app is not assuming ----------------------------------------
+ *
+ * QA-91-004. Two named halves, each a list, because six items in one comma-run
+ * is seven lines on a 360-wide phone and reads as a disclaimer rather than as
+ * care. The label is the quiet register the design system already uses for the
+ * app talking about itself, and the rows are plain — no icons, no counter and
+ * nothing that could be read as a checklist, because these are not tasks and
+ * six of them are not six questions.
+ */
+.unknowns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: var(--space-3) 0 0;
+}
+
+.unknowns__label {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.unknowns__label:first-child {
+  margin-top: 0;
+}
+
+.unknowns__list {
+  margin: 0;
+  padding-left: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-normal);
+  text-wrap: pretty;
+}

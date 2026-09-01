@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { ObjectKind, Panel, Screen } from '../../components/ui'
 import { DOMAIN, type LifeDomainId } from '../../domain/domains'
 import type { EntityRef } from '../../domain/entities'
-import type { FactValue, GoalStatus, GrowthStage } from '../../domain/records'
+import type { FactValue, GoalRecord, GoalStatus, GrowthStage } from '../../domain/records'
 import type { RecordId } from '../../domain/ids'
 import {
   civilDateFromDayId,
@@ -30,6 +30,7 @@ import {
   destinationRecords,
   destinationRef,
   milestoneFor,
+  refileMilestone,
   relationshipEventRecord,
   reviseDestinationRecord,
   type AuthoringDraft,
@@ -363,23 +364,94 @@ export function DomainPage({ page }: { page: LifePage }) {
   }
 
   /**
-   * Taking a reading back — acceptance test 7's *reversible* half.
+   * Taking a reading back — acceptance test 7's *reversible* half, repaired.
    *
-   * One gesture with two consequences, and both are supersessions rather than
-   * edits: the reading is withdrawn, and the aim goes back to the area the
-   * question was asked in. Nothing is deleted, so Timeline still shows what the
-   * app read and when he took it back; what changes is which page the aim is on
-   * and what kind of thing its next step becomes.
+   * ## What the first version left behind
+   *
+   * It withdrew the reading and re-filed the destination, and stopped there.
+   * QA-91-002: after the clarification had been answered, the milestone was a
+   * `financial-goal` and the money generator went on reading it, so the aim
+   * said Career while Now said *"Deal with Clear the credit card today."* The
+   * page reversed and the behaviour did not.
+   *
+   * ## What it does now
+   *
+   * The **whole chain**, in one gesture and as supersessions throughout: the
+   * reading is withdrawn, the aim goes back to the area the question was asked
+   * in, and **every milestone under it is re-filed into that area too** — his
+   * sentence carried across byte for byte, the app's classification of it
+   * undone. Nothing is deleted and nothing is edited; Timeline keeps every
+   * earlier row.
+   *
+   * The consequence is stated before it acts, in the control's own block, so
+   * this is a second confirmation rather than a surprise.
    */
   const withdrawReading = (entry: DomainDestination) => {
     const previous = entry.interpretation
     const record = entry.record
     if (previous === undefined || record === undefined) return
+    if (inFlight.current) return
+    inFlight.current = true
+    setWorking(true)
     const at = authoringMoment()
-    append(() => [
-      withdrawAimReading(previous, at),
-      reviseDestinationRecord(record, { domain: previous.askedIn }, at),
-    ])
+
+    const built = entry.destination.milestones
+      .map((milestone) => memory.view.history.byId(milestone.goal.source))
+      .filter((found) => found !== undefined && found.kind === 'goal')
+      .map((found) => refileMilestone(found as GoalRecord, previous.askedIn, situation, at))
+
+    void memory
+      .create({
+        entities: built.flatMap((result) => result.entities),
+        records: [
+          withdrawAimReading(previous, at),
+          reviseDestinationRecord(record, { domain: previous.askedIn }, at),
+          ...built.flatMap((result) => result.records),
+        ],
+        created: undefined,
+      })
+      .finally(() => {
+        inFlight.current = false
+        setWorking(false)
+      })
+  }
+
+  /**
+   * Reconsidering a reading he declined — QA-91-001.
+   *
+   * Declining wrote nothing, which is right, and it also left no way back,
+   * which was not: §6.3's contract is *decline, then redo and accept*, and that
+   * sequence could not be performed at all. The route is here rather than on
+   * the card because the card has moved on and this is where the object lives —
+   * the same page, and the same shape, as *Fill that in*.
+   */
+  const acceptReading = (entry: DomainDestination, reading: AimReading, into: LifeDomainId) => {
+    const record = entry.record
+    if (record === undefined) return
+    if (inFlight.current) return
+    inFlight.current = true
+    setWorking(true)
+    const at = authoringMoment()
+
+    const built = entry.destination.milestones
+      .map((milestone) => memory.view.history.byId(milestone.goal.source))
+      .filter((found) => found !== undefined && found.kind === 'goal')
+      .map((found) => refileMilestone(found as GoalRecord, into, situation, at))
+
+    void memory
+      .create({
+        entities: built.flatMap((result) => result.entities),
+        records: [
+          reviseDestinationRecord(record, { domain: into }, at),
+          aimReadingRecord(reading, into, entry.destination.destination, record.id, at),
+          ...built.flatMap((result) => result.records),
+        ],
+        created: undefined,
+      })
+      .finally(() => {
+        inFlight.current = false
+        setWorking(false)
+      })
   }
 
   const reviseDestination = (
@@ -569,6 +641,7 @@ export function DomainPage({ page }: { page: LifePage }) {
         onRevise={reviseDestination}
         onMilestone={addMilestone}
         onWithdrawReading={withdrawReading}
+        onAcceptReading={acceptReading}
       />
 
       <Panel title="What the app currently believes">

@@ -14,6 +14,7 @@ import type {
   CanonicalRecord,
   DestinationRecord,
   DestinationState,
+  GoalRecord,
   Provenance,
 } from '../domain/records'
 import {
@@ -902,6 +903,104 @@ function milestoneRecords(
         concept: CONCEPT.learningTopic,
         value: { type: 'entity', value: ref },
       }),
+    )
+  }
+
+  return { entities: [entity], records, created: ref }
+}
+
+/**
+ * Move a milestone into another area, keeping the owner's own sentence —
+ * QA-91-002, routing 91 round 1.
+ *
+ * ## What this exists to undo
+ *
+ * A milestone's **entity kind** is a function of the area its destination was
+ * filed in ({@link milestoneEntityKind}), and that is what makes a named next
+ * step reach Now. So accepting a cross-domain reading and then answering the
+ * clarification produces a `financial-goal` in Money — and taking the reading
+ * back afterwards moved the aim and left that behind. The owner was told his
+ * aim was back in Career while Now went on suggesting the money thing.
+ *
+ * ## What it does and does not touch
+ *
+ * **His words are not touched.** `statement` is carried across byte for byte
+ * and becomes the new entity's label, because *"Clear the credit card"* is what
+ * he wrote and stays what he wrote. What changes is the **kind of thing the app
+ * treats it as**, which is the app's own classification and is precisely what he
+ * is taking back — the honest inverse of what accepting the reading did.
+ *
+ * **Nothing is deleted.** The earlier `goal` record is superseded and stays
+ * legible, exactly as every other correction in this product works.
+ *
+ * **And it is said before it is done.** `describeMilestone` composes the
+ * sentence the withdrawal control shows, so what the owner agrees to is the
+ * behaviour that follows rather than a promise written beside it (QA-84-008).
+ */
+export function refileMilestone(
+  previous: GoalRecord,
+  into: LifeDomainId,
+  situation: Situation,
+  moment: AuthoringMoment,
+): AuthoringResult {
+  const kind = milestoneEntityKind(into)
+  const name = previous.statement
+  const build = createRecordFactory({
+    zone: moment.zone,
+    provenance: AUTHORING_PROVENANCE,
+    ...(moment.nextId === undefined ? {} : { nextId: moment.nextId }),
+  })
+
+  const entity = createEntity({
+    kind,
+    label: name,
+    domain: into,
+    privacy: situation.domains.defaultPrivacyFor(into),
+    createdAt: moment.now,
+    ...(previous.milestoneOf === undefined
+      ? {}
+      : { links: [{ relation: 'supports-goal' as const, target: previous.milestoneOf.id }] }),
+  })
+  const ref: EntityRef = { id: entity.id, kind: entity.kind }
+
+  const records: CanonicalRecord[] = [
+    build(
+      'goal',
+      {
+        occurredAt: moment.now,
+        recordedAt: moment.recordedAt,
+        id: moment.nextId?.() ?? newRecordId(),
+        domains: [into],
+        entities: [ref],
+        supersedes: previous.id,
+      },
+      {
+        goal: ref,
+        statement: name,
+        status: previous.status,
+        ...(previous.targetWindow === undefined ? {} : { targetWindow: previous.targetWindow }),
+        ...(previous.milestoneOf === undefined ? {} : { milestoneOf: previous.milestoneOf }),
+      },
+    ),
+  ]
+
+  /*
+   * And the fact the study generator reads, where the area it is moving into is
+   * the one that reads it — the same row `milestoneRecords` writes.
+   */
+  if (kind === 'learning-topic') {
+    records.push(
+      build(
+        'explicit-fact',
+        {
+          occurredAt: moment.now,
+          recordedAt: moment.recordedAt,
+          id: moment.nextId?.() ?? newRecordId(),
+          domains: [into],
+          entities: [ref],
+        },
+        { concept: CONCEPT.learningTopic, value: { type: 'entity', value: ref } },
+      ),
     )
   }
 

@@ -10,6 +10,7 @@ import {
 } from '../../src/domain/privacy'
 import { evidenceSourceOf, isOwnerStated } from '../../src/domain/records'
 import { milestoneEntityKind, milestoneQuestion } from '../../src/intelligence/authoring'
+import { generateCandidates } from '../../src/intelligence/candidates'
 import { outstandingPrompts } from '../../src/intelligence/discovery'
 import {
   READABLE_AREAS,
@@ -800,6 +801,275 @@ describe('91 synthetic — the clarification takes the slot rather than adding o
         expect(count, `${scenario.id}: "${aim}" is asked about ${count} times at once`).toBe(1)
       }
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// QA Round 1 — the four findings, each as the class behind it
+// ---------------------------------------------------------------------------
+
+describe('QA-91-001 — a declined reading can be reconsidered from the object', () => {
+  it('still reads the same area out of the words after the aim is stored', async () => {
+    /*
+     * The engine half of the finding, and the deeper of the two.
+     *
+     * `destinationRecords` writes an entity whose **label is the aim**, so
+     * reading *"More money"* again found a thing the owner had "named" in
+     * Career called *More money* — and a named thing outranks every word in the
+     * table. The app cited its own record of his sentence as evidence about
+     * that sentence, and the offer vanished the moment it was declined.
+     */
+    const app = await firstEvening()
+    expect(app.destinationReading(DOMAIN.career, AIM)?.offer).toBe(DOMAIN.money)
+
+    await app.answerDiscovery(AIM)
+    expect(
+      app.destinationReading(DOMAIN.career, AIM)?.offer,
+      'the same words, read again once the aim exists',
+    ).toBe(DOMAIN.money)
+  })
+
+  it('names a career thing he owns while never naming the aim itself', async () => {
+    /*
+     * The positive beside the negative: excluding destinations must not exclude
+     * the owner's real named things, which are the whole reason the digest
+     * carries labels at all.
+     */
+    const app = await firstEvening()
+    await app.introduce({ kind: 'skill', name: 'Subnetting', domain: DOMAIN.career })
+    await app.answerDiscovery(AIM)
+
+    const reading = app.destinationReading(DOMAIN.health, 'Get better at Subnetting')!
+    expect(reading.names.map((area) => area.domain)).toEqual([DOMAIN.career])
+    expect(reading.names[0]?.byOwnThing, 'and it is his own thing that named it').toBe(true)
+    expect(
+      reading.input.digest.map((source) => source.text),
+      'while the aim itself is not offered back as evidence',
+    ).not.toContain(AIM)
+  })
+
+  it('walks decline, redo and accept in one store, and Now changes at the end', async () => {
+    /*
+     * §6.3's own sequence, which could not be performed at all before this
+     * repair. It is one test because it is one owner and one store: the finding
+     * was invisible precisely because decline and accept lived in two.
+     */
+    const app = await firstEvening()
+
+    await app.answerDiscovery(AIM)
+    expect(aimReadings(app), 'declining wrote nothing').toEqual([])
+    expect(app.situation().direction.destinations[0]?.domain).toBe(DOMAIN.career)
+
+    const destination = app.situation().direction.destinations[0]!.destination
+    const redone = await app.acceptReading(destination)
+    expect(redone.done, redone.note).toBe(true)
+
+    expect(app.situation().direction.destinations[0]?.domain).toBe(DOMAIN.money)
+    expect(aimReadings(app), 'and now there is exactly one derived row').toHaveLength(1)
+    expect(app.agenda().prompt?.prompt).toContain('money thing')
+
+    await app.answerDiscovery('Clear the credit card')
+    expect(app.decision().evaluation?.candidate.semantics.domain).toBe(DOMAIN.money)
+  })
+
+  it('offers nothing to reconsider once a reading already stands', async () => {
+    const app = await firstEvening()
+    await app.answerDiscovery(AIM, true)
+    const again = await app.acceptReading(app.situation().direction.destinations[0]!.destination)
+    expect(again.done, 'one reading, not two').toBe(false)
+    expect(aimReadings(app)).toHaveLength(1)
+  })
+
+  it('offers nothing to reconsider where the words name nowhere else', async () => {
+    const app = await firstEvening()
+    await app.answerDiscovery('Get promoted to senior engineer by the summer')
+    const nothing = await app.acceptReading(app.situation().direction.destinations[0]!.destination)
+    expect(nothing.done).toBe(false)
+    expect(aimReadings(app)).toEqual([])
+  })
+})
+
+describe('QA-91-002 — taking a reading back takes back what it caused', () => {
+  it('moves the milestone with the aim, and Now stops acting on the old area', async () => {
+    /*
+     * The finding, and the assertion the two earlier reversibility tests could
+     * not make: both withdrew **before** the clarification existed, so they
+     * proved that two rows move and never touched the behaviour the phase is
+     * about.
+     */
+    const app = await firstEvening()
+    await app.answerDiscovery(AIM, true)
+    await app.answerDiscovery('Clear the credit card')
+    expect(app.decision().evaluation?.candidate.semantics.domain).toBe(DOMAIN.money)
+    expect(
+      generateCandidates(app.situation()).some(
+        (candidate) => candidate.semantics.domain === DOMAIN.money,
+      ),
+      'the positive first: a money move is on offer while the reading stands',
+    ).toBe(true)
+
+    await app.withdrawReading(app.situation().direction.destinations[0]!.destination)
+
+    expect(app.situation().direction.destinations[0]?.domain).toBe(DOMAIN.career)
+    expect(
+      generateCandidates(app.situation()).filter(
+        (candidate) => candidate.semantics.domain === DOMAIN.money,
+      ),
+      'and afterwards there is none to lose an arbitration with',
+    ).toEqual([])
+    expect(
+      app.decision().evaluation?.candidate.semantics.domain,
+      'the aim went back and so did what the app acts on',
+    ).toBe(DOMAIN.career)
+  })
+
+  it('keeps his own sentence byte-identical through the move', async () => {
+    const app = await firstEvening()
+    await app.answerDiscovery(AIM, true)
+    await app.answerDiscovery('Clear the credit card')
+    await app.withdrawReading(app.situation().direction.destinations[0]!.destination)
+
+    const milestones = app.situation().direction.destinations[0]?.milestones ?? []
+    expect(milestones).toHaveLength(1)
+    expect(milestones[0]?.goal.statement, 'his words, not the app’s category').toBe(
+      'Clear the credit card',
+    )
+    expect(app.situation().direction.destinations[0]?.aim).toBe(AIM)
+  })
+
+  it('supersedes rather than deletes, so the money milestone stays legible', async () => {
+    const app = await firstEvening()
+    await app.answerDiscovery(AIM, true)
+    await app.answerDiscovery('Clear the credit card')
+    const before = app.snapshot().records.filter((record) => record.kind === 'goal')
+    expect(before).toHaveLength(1)
+
+    await app.withdrawReading(app.situation().direction.destinations[0]!.destination)
+    const after = app.snapshot().records.filter((record) => record.kind === 'goal')
+    expect(after, 'two rows, the earlier one still there').toHaveLength(2)
+    expect(after.some((record) => record.id === before[0]!.id)).toBe(true)
+  })
+
+  it('leaves a money entity nothing refers to unable to reach Now', async () => {
+    /*
+     * The mechanism, stated on its own so the repair is not mistaken for a
+     * coincidence of ordering. An entity is an index entry: nothing supersedes
+     * one. What changed is that the money generator reads only an entity the
+     * effective record still refers to — D-021, applied properly.
+     */
+    const app = await firstEvening()
+    await app.answerDiscovery(AIM, true)
+    await app.answerDiscovery('Clear the credit card')
+    await app.withdrawReading(app.situation().direction.destinations[0]!.destination)
+
+    expect(
+      app
+        .situation()
+        .entities.all()
+        .some((entity) => entity.kind === 'financial-goal'),
+      'the leftover entity is still in the index',
+    ).toBe(true)
+
+    /*
+     * Asserted on **what the generator produced**, not on what won.
+     *
+     * The first draft of this test read the winning move's area, and the
+     * reintroduction proof showed it stayed green with the defect put back:
+     * the money candidate was generated again and simply lost the arbitration
+     * to Career, so the assertion could not tell "not proposed" from "proposed
+     * and beaten". That is D-238's first corollary — a check that cannot
+     * localise the defect it is named for — caught in a test written to close
+     * that very class.
+     */
+    expect(
+      generateCandidates(app.situation()).filter(
+        (candidate) => candidate.semantics.domain === DOMAIN.money,
+      ),
+      'no money move is proposed at all',
+    ).toEqual([])
+  })
+
+  it('narrows the money generator over a library that holds no financial goal at all', () => {
+    /*
+     * Why that narrowing cannot have moved anything (D-137, D-138).
+     *
+     * It is a no-op on every shipped history because no shipped history has one
+     * of these. Asserted rather than asserted-about: if somebody later adds a
+     * `financial-goal` fixture, this fails and the equivalence claim has to be
+     * re-made rather than inherited.
+     */
+    const found: string[] = []
+    for (const scenario of SCENARIOS) {
+      const entities = scenario.build().entities as readonly ({ kind?: string } | null)[]
+      if (entities.some((entity) => entity !== null && entity.kind === 'financial-goal')) {
+        found.push(scenario.id)
+      }
+    }
+    expect(found, 'the narrowing is equivalent on everything that ships').toEqual([])
+  })
+})
+
+describe('QA-91-003 — a token is read for its role, not for its presence', () => {
+  const read = (phrase: string, askedIn = DOMAIN.career) =>
+    readAim(interpreterInput(phrase, askedIn, [], NO_PERMISSIONS))
+
+  it('declines an area the owner explicitly says it is not about', () => {
+    const denied = read('Not about money at all')
+    expect(denied.names, 'nothing is named').toEqual([])
+    expect(denied.offer, 'and nothing is offered').toBeUndefined()
+    expect(denied.undecided, 'declining is not the same as being torn').toBe(false)
+  })
+
+  it('and still names it where the owner negates the thing rather than the topic', () => {
+    /*
+     * The pair that makes the rule a rule rather than a patch. *"No more debt"*
+     * is negated and is squarely about money — he wants none of the debt, not
+     * none of the subject. A window rule around any negator would have taken
+     * this away, which is why only a negation of **aboutness** counts.
+     */
+    for (const phrase of ['No more debt', 'Never go overdrawn again', 'Stop wasting money']) {
+      expect(
+        read(phrase).names.map((area) => area.domain),
+        phrase,
+      ).toEqual([DOMAIN.money])
+    }
+  })
+
+  it('stops a denial at the clause it belongs to', () => {
+    const both = read('Not about money, but about the qualification')
+    expect(
+      both.names.map((area) => area.domain),
+      'the denial does not swallow the sentence',
+    ).toEqual([DOMAIN.career])
+  })
+
+  it('reads a four-digit year as a horizon and not as an amount', () => {
+    const dated = read('More money by 2027')
+    expect(dated.unknowns).toContain('how much')
+    expect(dated.unknowns, 'the year answered when').not.toContain('by when')
+  })
+
+  it('reads an ordinary number as an amount and not as a year', () => {
+    const sum = read('Save 3000 by December')
+    expect(sum.unknowns, 'three thousand is a sum').not.toContain('how much')
+    expect(sum.unknowns).not.toContain('by when')
+
+    const both = read('Save £3000 by 2027')
+    expect(both.unknowns).toEqual([])
+  })
+
+  it('holds the two apart on the phrase that carries only a year', () => {
+    /*
+     * The exact inversion QA found: a digit anywhere counted as an amount while
+     * the horizon table knew month names and no years, so one token answered
+     * the wrong question and left the right one open.
+     */
+    const only = read('More money by 2027')
+    const neither = read('More money')
+    expect(neither.unknowns).toContain('how much')
+    expect(neither.unknowns).toContain('by when')
+    expect(only.unknowns).toContain('how much')
+    expect(only.unknowns).not.toContain('by when')
   })
 })
 

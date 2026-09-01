@@ -120,6 +120,67 @@ const KIND_WORDS: Record<ObjectKindName, string> = {
   permission: 'Permission',
 }
 
+/**
+ * What the app is not assuming, as a set rather than as a sentence — QA-91-004.
+ *
+ * ## The finding
+ *
+ * *"More money"* leaves six things unconcluded: three the **words** did not say
+ * and three the **destination** has not been told. Rendered as one comma-run
+ * they became a seven-line paragraph on a 360-wide phone, inside a card that
+ * already carried a question, a reading, two option rows and a confirmation.
+ * Every item was true and the set was not scannable, so an honest admission
+ * read as a disclaimer.
+ *
+ * ## What changed, and what deliberately did not
+ *
+ * **Every unknown survives.** None is dropped, summarised or capped: the whole
+ * point of `unknowns` is that it is explicit, and a shorter list would be a
+ * quieter lie. What changed is that the two halves are named and each is a
+ * list, so the owner can see *which of these came from what I wrote* at a
+ * glance and skip the half he does not care about.
+ *
+ * **And it is still not a question.** Six unknowns are not six prompts. Nothing
+ * here is answerable in place; D-184's one-question-at-a-time budget is
+ * untouched, and a card that offered a box per row would be the questionnaire
+ * D-163 forbids by name.
+ */
+export function UnknownSet({
+  fromWords,
+  fromObject,
+  testId,
+}: {
+  fromWords: readonly string[]
+  fromObject: readonly string[]
+  testId: string
+}) {
+  if (fromWords.length === 0 && fromObject.length === 0) return null
+  return (
+    <div className="unknowns" data-testid={testId}>
+      {fromWords.length === 0 ? null : (
+        <>
+          <p className="unknowns__label">These words do not say</p>
+          <ul className="unknowns__list">
+            {fromWords.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {fromObject.length === 0 ? null : (
+        <>
+          <p className="unknowns__label">And the app has not been told</p>
+          <ul className="unknowns__list">
+            {fromObject.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  )
+}
+
 export function ObjectKind({ kind }: { kind: ObjectKindName }) {
   return (
     <span className="kind" data-kind={kind} data-testid={`kind-${kind}`}>

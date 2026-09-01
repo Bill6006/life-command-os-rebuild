@@ -33,10 +33,18 @@ import { isOwnerNamed } from './vocabulary'
  *
  * **Not a model, and not a network call.** D-025 blocks the call to a model, not
  * interpretation, and the brief's finding stands: the only `fetch` in `src/` is
- * a same-origin `build-info.json` read. Everything here is a table and a word
- * boundary, it runs in-process, and it is deterministic — the same words give
- * the same reading on every device, forever, which is what makes a test of it
- * worth anything.
+ * a same-origin `build-info.json` read. Everything here is a table, a word
+ * boundary, one clause-scoped denial and one test of what a number is; it runs
+ * in-process, and it is deterministic — the same words give the same reading on
+ * every device, forever, which is what makes a test of it worth anything.
+ *
+ * **And it is not a parser, which is the bound it is held to.** QA round 1 found
+ * it counting tokens without the role that gives them meaning: *"Not about money
+ * at all"* named Money, and `2027` was read as an amount while the horizon stayed
+ * unknown (QA-91-003, D-247). What that bought is two more questions it knows how
+ * to ask of a token — is this denied, and is this a year — and nothing else. A
+ * phrase it cannot read still names nothing, offers nothing and writes nothing,
+ * and **abstaining is the ordinary outcome rather than the failure case**.
  *
  * **Not inference over history.** A reading is a function of *these words* and
  * of the things the owner has already named. It never looks at what he did last
@@ -155,6 +163,26 @@ export function interpreterInput(
 
   for (const entity of entities) {
     if (!isOwnerNamed(entity)) continue
+    /*
+     * A destination is never evidence about words — QA-91-001.
+     *
+     * `destinationRecords` writes an entity whose **label is the aim**, so the
+     * moment *"More money"* is stored, reading those same words again finds a
+     * thing the owner *"named"* in Career called *More money* — and an
+     * owner-named thing outranks every word in the table. The app was citing
+     * its own record of his sentence as independent evidence about that
+     * sentence, which named the area the aim was already filed in and drowned
+     * the reading that had just been offered. The visible effect was that
+     * declining consumed the offer for good.
+     *
+     * By kind rather than by comparing the label to the phrase, because
+     * comparing strings would also throw away the honest case where he types
+     * the exact name of a skill he has. D-188's own argument is the reason this
+     * is the right cut: a person, a place and a routine are things he **has**;
+     * a destination is what they are **for**, and it is not a thing in the
+     * world for words to be about.
+     */
+    if (entity.kind === 'destination') continue
     if (entity.label.trim().length < SHORTEST_NAME) continue
     if (!mayReasonFrom(entity.privacy, permissions)) {
       withheld += 1
@@ -473,9 +501,118 @@ function hits(text: string, words: readonly string[]): readonly string[] {
   return found
 }
 
-/** A number, in figures or as a currency amount. */
+/**
+ * Where the owner says the words are **not** about something — QA-91-003.
+ *
+ * ## The finding, and why the obvious fix is wrong
+ *
+ * *"Not about money at all"* named Money and offered to file it there: the
+ * interpreter counted the token and never asked what the sentence did with it.
+ * The obvious repair — cancel a marker that has a negator anywhere near it —
+ * breaks the ordinary case immediately. **"No more debt"** is negated and *is*
+ * about money: he wants none of the debt, not none of the subject.
+ *
+ * So what is recognised here is narrow and is the only shape that actually
+ * denies the subject: a negation of **aboutness**. *Not about X*, *nothing to
+ * do with X*. Everything else — *no more*, *never*, *stop* — negates the thing
+ * rather than the topic, and is left alone.
+ *
+ * ## The span, and why it ends where it does
+ *
+ * A denial governs until the clause does. *"Not about money — about the
+ * qualification"* denies Money and says nothing about Career, so the span stops
+ * at the first clause break: a comma, a semicolon, a full stop, a dash, an
+ * *and* or a *but*. Running to the end of the sentence instead would let one
+ * denial silence a phrase that goes on to name something plainly.
+ */
+const DENIERS = [
+  'not about',
+  'nothing to do with',
+  'not to do with',
+  "isn't about",
+  'is not about',
+  'not really about',
+  'never about',
+]
+
+const CLAUSE_BREAK = /[,;.—–-]|\sand\s|\sbut\s/
+
+function deniedSpans(text: string): readonly (readonly [number, number])[] {
+  const spans: [number, number][] = []
+  for (const denier of DENIERS) {
+    let from = 0
+    for (;;) {
+      const at = text.indexOf(denier, from)
+      if (at === -1) break
+      const after = at + denier.length
+      const rest = text.slice(after)
+      const stop = CLAUSE_BREAK.exec(rest)
+      spans.push([at, stop === null ? text.length : after + stop.index])
+      from = after
+    }
+  }
+  return spans
+}
+
+/**
+ * The words that name an area, with anything the owner denied left out.
+ *
+ * A denied hit is not weaker evidence, it is **not evidence** — so it is
+ * removed rather than discounted. When every hit for an area is denied the
+ * area is not named at all, and when that leaves nothing named the interpreter
+ * abstains, which is what it does for any phrase it cannot read.
+ */
+function assertedHits(
+  text: string,
+  words: readonly string[],
+  denied: readonly (readonly [number, number])[],
+): readonly string[] {
+  const found: string[] = []
+  for (const word of hits(text, words)) {
+    const where = new RegExp(String.raw`\b` + escape(word) + String.raw`\b`).exec(text)
+    if (where === null) continue
+    if (denied.some(([from, to]) => where.index >= from && where.index < to)) continue
+    found.push(word)
+  }
+  return found
+}
+
+/**
+ * A four-digit number a person would read as a year — QA-91-003.
+ *
+ * Bounded on purpose. `2027` is a date; `3000` is an amount; `1899` and `2200`
+ * are amounts again, because nobody sets a life aspiration in either. The range
+ * is the discrimination, and widening it would start eating ordinary sums.
+ */
+const YEAR = /\b(?:19|20|21)\d{2}\b/
+
+function isYear(digits: string): boolean {
+  if (digits.length !== 4) return false
+  const value = Number(digits)
+  return value >= 1900 && value <= 2199
+}
+
+/**
+ * Whether the words say **how much**, which a year does not — QA-91-003.
+ *
+ * The first version asked whether the phrase contained a digit anywhere, and
+ * the horizon table recognised month and season words but no numeric year. So
+ * *"More money by 2027"* had the two predicates exactly the wrong way round: the
+ * amount was reported as settled and the horizon as unknown, from one token
+ * that is a date and not a sum.
+ *
+ * A currency symbol is always an amount. A bare number is an amount **unless it
+ * is only a year**, and a phrase whose only number is a year says nothing at all
+ * about how much.
+ */
 function saysHowMuch(text: string): boolean {
-  return /\d/.test(text) || /[£$€]/.test(text)
+  if (/[£$€]/.test(text)) return true
+  return (text.match(/\d+/g) ?? []).some((digits) => !isYear(digits))
+}
+
+/** Whether the words say **by when**, in a word or in a year. */
+function saysWhen(text: string): boolean {
+  return hits(text, HORIZON).length > 0 || YEAR.test(text)
 }
 
 // ---------------------------------------------------------------------------
@@ -556,12 +693,14 @@ export function readAim(input: InterpreterInput): AimReading {
   const typed = input.digest.find((source) => source.from === 'typed')?.text ?? ''
   const haystack = typed.toLowerCase()
 
+  const denied = deniedSpans(haystack)
+
   const byOwnThing = new Map<LifeDomainId, string[]>()
   for (const source of input.digest) {
     if (source.from !== 'named-thing') continue
     const domain = source.domain
     if (domain === undefined || !READABLE_AREAS.includes(domain)) continue
-    if (hits(haystack, [source.text.toLowerCase()]).length === 0) continue
+    if (assertedHits(haystack, [source.text.toLowerCase()], denied).length === 0) continue
     const held = byOwnThing.get(domain)
     if (held === undefined) byOwnThing.set(domain, [source.text])
     else if (!held.includes(source.text)) held.push(source.text)
@@ -574,7 +713,7 @@ export function readAim(input: InterpreterInput): AimReading {
       names.push({ domain, by: own, byOwnThing: true })
       continue
     }
-    const found = hits(haystack, MARKERS[domain] ?? [])
+    const found = assertedHits(haystack, MARKERS[domain] ?? [], denied)
     if (found.length > 0) names.push({ domain, by: found, byOwnThing: false })
   }
 
@@ -670,7 +809,7 @@ function unknownsFrom(
    * is specific to this one.
    */
   if (named.has(DOMAIN.money) && !saysHowMuch(haystack)) out.push('how much')
-  if (!said(HORIZON)) out.push('by when')
+  if (!saysWhen(haystack)) out.push('by when')
 
   if (named.has(DOMAIN.money) && !said(EARNING_SIDE) && !said(KEEPING_SIDE)) {
     out.push('whether this is about earning more or keeping more of it')

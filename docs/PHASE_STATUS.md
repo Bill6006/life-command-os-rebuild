@@ -180,9 +180,38 @@ that is routing 97 and D-172 holds it. No widened concept vocabulary. No
 emotional dimensions. No scoring change of any kind; `QUESTIONS_PER_DAY` and
 `DISCOVERY_PER_WEEK` are unchanged, and no weight, dimension or threshold moved.
 
+## Independent QA round 1 — FAIL, and what it found
+
+Codex QA tested checkpoint `113bdb6` and returned **FAIL** on four findings. The
+exact CASE A path, both proving domains, the privacy digest and every mechanical
+gate passed; what failed were **two transitions and two tokens**.
+
+- **QA-91-001** — declining the interpretation ended the offer for good, so
+  §6.3's own _decline → redo → accept_ could not be performed. The deeper cause
+  was the interpreter reading the destination it had just written back as
+  evidence about the words it was written from.
+- **QA-91-002** — taking a settled reading back moved the aim and left the money
+  milestone, so the page said Career while Now said _"Deal with Clear the credit
+  card today."_
+- **QA-91-003** — _"Not about money at all"_ offered Money, and 2027 was read as
+  an amount while the horizon stayed unknown.
+- **QA-91-004** — six unknowns in one seven-line comma-run at 360px.
+
+**Every one of the four was invisible to a green suite, and the reason is one
+sentence:** the acceptance file called itself the ordinary-owner journey while
+decline, accept, reversal and the second area were four separate tests with a
+fresh store each — and two of the contracts are transitions _between_ those
+states. Repaired, with one sequential journey in one store (D-245 … D-248).
+
+**And a fifth false green was found by the reintroductions, inside the repair.**
+The new QA-91-002 regression read the winning move's area, so the defect put back
+left it green — the money move was generated again and lost the arbitration. It
+asserts on what the generator produced now. D-238's first corollary, caught in a
+test written for a D-238 finding.
+
 ## Decisions made
 
-**D-240 … D-244** in [`DECISION_LOG.md`](DECISION_LOG.md).
+**D-240 … D-248** in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Accommodation row B1 landed, and the list learned something from it
 
