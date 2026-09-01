@@ -1670,4 +1670,208 @@ builder repair handoff at the end exactly as written. Keep Phase 91 YELLOW and
 do not ask me to paste the file contents.
 ```
 
+---
+
+## Round 3 repair — the builder's record
+
+_Written by the Claude builder conversation. Round 3 above is QA's and is not
+edited. Round 4 belongs to QA._
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**Repaired checkpoint:** `0db6aec`
+**Deployed Preview:** `0db6aec` — they match exactly.
+
+**QA-91-005 and QA-91-006 are closed and were not touched.** The set-aside
+contract is unchanged: the confirmation states what happens before it happens,
+the owner's words and the lifecycle history survive, the old milestone is paused
+rather than re-typed, and the unstarted, started and part-done Money behaviour is
+neither current nor offered back. Nothing in this round goes near that path.
+
+### Both reproduced first, with their controls
+
+**QA-91-008.** Reproduced exactly: _"Not about money, debt, or savings"_ and
+_"Nothing to do with salary, savings, or debt"_ each offered Money. The four
+controls were captured in the same probe **before** any change, so the repair
+could be judged against them rather than against the two findings alone:
+_"Not about money, but about certification"_ named Career, _"No debt, no savings,
+no salary"_ stayed Money, _"Not about money, it's about the qualification"_ named
+Career, and _"Not about money, I want to get fit"_ named Health.
+
+**QA-91-009.** All three phrases reproduced: _"before the 15th of March 2027"_,
+_"by March the 15th, 2027"_ and _"by Q3 2027"_ each omitted **how much**. The
+amount controls beside the same horizons were captured too, and each already
+settled the amount correctly — which is what made it clear the repair had to
+remove **date shapes**, not digits near date words.
+
+### What changed, and why each half needed the other
+
+One file. `src/intelligence/interpret.ts`.
+
+**A comma ends a denial only where a clause starts after it.** `CLAUSE_BREAK` is
+replaced by `endOfDenial`, which walks the text in order: a full stop, semicolon
+or dash always ends a denial, a contrastive conjunction always ends one, and a
+**comma ends one only when the segment after it begins with a clause opener** —
+a contrastive conjunction or a subject pronoun. Both lists are closed and short,
+and what they recognise is the grammar that turns a sentence rather than the
+phrases somebody remembered.
+
+**Why not simply stop commas from breaking.** Because that reverses the defect
+instead of removing it, exactly as Round 3 warned: _"Not about money, it's about
+the qualification"_ would then be denied to the end and the app would abstain
+from a sentence that says plainly what it is about. Both directions are
+reintroduced below, and the reverse mutation fails the **controls**.
+
+**A date is a date in the grammar people write it in.** `DATE_SHAPES` gains the
+connectors *the* and *of* between a month and its day — in both orders — and a
+quarter (`q1`–`q4`). The trailing `\b` on the day is what keeps *March 3000* from
+being read as a date with a stray `00` left over.
+
+**Why not treat every digit near a date word as non-money.** Because
+_"Save 3000 by March the 15th, 2027"_ must still settle the amount, and stripping
+digits by proximity would take the sum with the date. That reverse is reintroduced
+too.
+
+**Decision D-252.** Defect-ledger entry `QA-91-008, QA-91-009`.
+
+### Reintroduction proofs — twenty-seven across four rounds, all biting
+
+The nine from Round 2 and the twelve still live from Rounds 0 and 1 were re-run
+and still bite. One Round 2 entry (`QA-91-007a`, *`and` ends a denied span*) had
+its anchor rewritten by this round's change and was **retargeted** at the new
+`endOfDenial` rather than dropped, so the `and`-coordination property keeps an
+independent proof.
+
+The six for this round, and **four of them are reverse mutations**:
+
+| Reintroduce                                                        | And this fails                                                        |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| every comma ends a denied span                                      | *lets one denial govern a comma-separated list too*                    |
+| **no** comma ever ends a denied span                                | *a comma still ends one where a clause actually starts after it*       |
+| no connector between a month and its day                            | *reads indirect day-and-month grammar and quarters as dates*           |
+| no `of` between a day and its month                                 | *reads indirect day-and-month grammar and quarters as dates*           |
+| a quarter is not a date                                             | *reads indirect day-and-month grammar and quarters as dates*           |
+| **every** digit near a date word treated as non-money               | *still settles the amount when a real sum sits beside those same dates* |
+
+### Verification on the repaired tree
+
+| Gate                                      | Result                                                                 |
+| ----------------------------------------- | ------------------------------------------------------------------------ |
+| `npm run verify`, clean tree              | PASS                                                                     |
+| Unit / contract / synthetic / adversarial | **1,994 passed** in 89 files (1,988 at `0aa8419`)                       |
+| Browser, 360 / 430 / 1,280, one worker    | **834 of 834**, in two passes — see the note below                      |
+| Privacy scan                              | clean, 310 tracked files                                                 |
+| Rendered copy scan                        | clean — 8,489 shipped strings, 8,401 placed in a module                 |
+| Android-style gate                        | clean — **234 checks**, against the deployed Preview                     |
+| Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`0db6aec`)            |
+| Checkpoint equivalence                    | **no files changed** between `0db6aec` and the deployed SHA             |
+| CI and deployed Preview                   | **success** — Verify and Deploy preview both green (run `33564539202`)  |
+| Worktree                                  | clean                                                                    |
+
+> ### The whole-run attempt, and why the number is reported in two parts
+>
+> Round 3 asked for **one whole matrix at one worker on a clean port**, and that
+> is what was run: port 44100, one worker, all 834 tests. **720 passed and then
+> the `vite preview` process died**, after which 114 tests failed at navigation
+> with `ERR_CONNECTION_REFUSED` in the last eight files. Not one failure was an
+> assertion.
+>
+> This is the third time this session that a local whole-run has been lost the
+> same way, and the port is now ruled out as the cause: Round 2's attempts were
+> on 4173 and 4188, this one on a port nothing else was using. **The preview
+> process on this machine does not reliably survive a twenty-minute single-worker
+> run**, and QA's own Round 3 run on port 43196 completed, so it is this session
+> rather than the repository.
+>
+> The eight affected files were re-run in two batches — **126 of 126** and
+> **222 of 222** — so every one of the 834 has passed, and none of it is being
+> counted as a whole-run. **CI ran the entire matrix on a clean runner and is
+> green** (`33564539202`); that is the number to trust over any of mine.
+>
+> No product conclusion is drawn from any of this, and none of it is offered as
+> one.
+
+### Preserved, and checked rather than assumed
+
+QA-91-001 and QA-91-004 remain closed. Round 3's own passes are untouched: the
+set-aside contract, the started and part-done consequence states, the sequential
+ordinary-owner journey, the started-action branch, the fixed clock and the
+overridable preview port. Every earlier PASS is still asserted by the shipped
+suite — the exact CASE A path, byte identity, derived sibling provenance, the
+privacy digest with both controls, the one-question budget and
+`DISCOVERY_PER_WEEK`, the same-area null case, both proving domains, three-day
+non-reproposal, B1's landed row, the no-score rule and the single `fetch`.
+
+The **nineteen D-210 instrument-hardening findings are untouched and still
+open**; `docs/ROUTING_91_BRIEF.md` is still present; routing 92 has not begun;
+CASE B remains out of scope.
+
+**What this repair did not do, said plainly.** It did not make the interpreter a
+parser and it did not widen anything that is not a closed list. A phrase whose
+shape falls outside those lists is denied to the end, or leaves its number a
+quantity — and either way the app abstains, `unknowns` says what was not
+concluded, and nothing is written. **Three rounds have now moved this boundary
+outward by one grammar step each time.** If Round 4 finds a fourth, the useful
+question is whether the next step is another closed list or whether the class
+wants a different instrument, and that is worth deciding deliberately rather than
+by another increment.
+
+---
+
+## Round 4 retest handoff
+
+**Model:** Codex.
+**Reasoning level:** **High** — a middle level. Never Max, which is Claude's.
+**Conversation:** **SAME** — the Codex conversation that ran Rounds 1, 2 and 3.
+
+```text
+Routing Phase 91 retest after the builder's Round 3 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Your Round 1, 2 and 3 reports are
+unchanged; the builder's Round 3 repair record and this block are appended below
+them. Keep the Phase field exactly 91.
+
+Retest on the repaired checkpoint, in ordinary browsers that never open #/qa:
+
+1. QA-91-008 — attack coordinated denial and clause turning together. Denied
+   lists with and without commas, denials followed by a genuine new clause with
+   and without a contrastive word, and ordinary negative goals that deny things
+   rather than topics. Judge whether the comma rule reads grammar or merely a
+   longer list of remembered words.
+2. QA-91-009 — attack date grammar and amounts in the same phrases. Indirect
+   day/month forms, quarters, ordinals, ranges, and real sums beside every one
+   of those horizons. A digit that is part of a date must not be an amount, and
+   a digit that is an amount must not be swallowed by a nearby date.
+3. Confirm QA-91-005 and QA-91-006 have not regressed: the set-aside contract,
+   and the unstarted, started and part-done consequence states.
+4. Judge the shape of the argument, not only this round's two findings. Three
+   rounds have each moved the semantic boundary outward by one closed list. Say
+   whether you think a fourth increment would close the class or whether the
+   class needs a different instrument — that judgement is more useful to the
+   owner than another pair of phrases.
+
+Preserve the nineteen D-210 deferrals, do not remove docs/ROUTING_91_BRIEF.md,
+and end with the complete next handoff under D-082 whichever way the retest
+goes. Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High. **Conversation:** SAME — the QA
+conversation that ran Rounds 1, 2 and 3.
+
+```text
+Retest routing Phase 91 after the builder's Round 3 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the Round 4 retest
+handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
+retest says otherwise, and do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->
