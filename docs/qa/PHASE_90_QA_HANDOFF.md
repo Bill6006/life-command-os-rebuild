@@ -1251,4 +1251,206 @@ YELLOW, preserve all deferrals, and keep physical-owner phone approval
 distinct. Do not ask me to paste the file.
 ```
 
+---
+
+## Round 2 repair — the builder's response
+
+**Written by the routing 90 Claude builder conversation.** Both QA rounds above
+are untouched. **Phase 90 remains YELLOW**, and the physical-owner phone gate is
+still outstanding and still not automated anywhere in this file.
+
+**No product code changed.** `git status` after the repair shows two test files
+and this document. That was the requirement — *"do not make a product change
+merely to satisfy the test"* — and the defect was never in the product.
+
+### QA-90-004 — the rendered acceptance proof now includes Course
+
+**QA was right, and the builder was wrong about a fact.** Round 1 reported that
+*"no history in the shipped library reaches a finished course, at any point in
+time"*, and handed it to QA and the owner as a limitation to judge. It is false.
+**Two sessions in** sits one occasion from the end of its course, and completing
+that final session through Now finishes it — which `phase84.spec.ts` has driven
+since routing 84, and which QA reproduced live.
+
+**Why the claim was made, because that is the part worth keeping.** The probe
+behind it loaded every scenario, advanced the clock to +30 and +200 days, and
+looked for a finished thread. **A course does not finish because time passes**;
+it finishes when the owner completes its final session, which is an action. The
+probe could not have returned a positive, so its silence meant nothing — and it
+was reported as a finding rather than as a failed measurement. A negative claim
+needs an instrument capable of returning a positive, and this one was not.
+
+The original text is left standing in the Round 1 section as the record of what
+was claimed, with a correction marked above it.
+
+### What changed
+
+**One rendered regression now carries the acceptance claim.** In
+`tests/browser/phase90-round1.spec.ts`, `careerWithAllThreeObjects` loads **Two
+sessions in**, finishes the final session through Now's own buttons, then
+authors Career direction and a next milestone through the ordinary controls. The
+Career page then renders Session, Course, Milestone and Destination. **No
+fixture was added** — the requirement was explicit that none should be, and none
+was needed.
+
+The suite asserts, on that one page:
+
+- all four marker words are present, and `EVIDENCE` still is, so the generic
+  word survives for the rungs that are evidence *about* an object rather than
+  the object itself;
+- the **courses block** carries `Course` beside the label *Courses finished*,
+  and the **completion rung** carries `Session` — read off the blocks
+  themselves, so a marker appearing somewhere unrelated cannot satisfy either;
+- every marker still shares one colour, one size and one weight, because
+  coloured markers on progress objects read as a ranking of them (D-231).
+
+**The misleading title is gone.** `tests/browser/phase90.spec.ts`'s test called
+*"a session, a course and a milestone are three different things"* asserted no
+such thing — a non-empty marker list and uniform style, which `[Evidence,
+Evidence]` satisfies perfectly. It is now **"no object marker is styled to
+outrank another"**, which is what its assertions establish. The claim it used to
+make is proved where it can be, one file over. Two tests, two claims, each
+honest about which one it holds.
+
+### The collapse proofs, and the false green they found
+
+QA asked for three. Running them found a fourth thing.
+
+| Collapse | Result |
+| --- | --- |
+| `Course` → `evidence` | **2 tests fail** |
+| `Session` → `evidence` (`RUNG_KIND.completion`) | **3 tests fail** |
+| `Milestone` → `goal`, in the destination's milestone list | **1 test fails** |
+| `Milestone` → `goal`, in the goals-panel row | **1 test fails** |
+
+**The third row did not fail at first, and that is the finding.** A Career page
+renders a milestone in **two** components — inside the destination it belongs
+to, and again as a row of the goals panel — so collapsing one still left
+`MILESTONE` in a page-wide set of every word on screen. The regression passed
+over a genuinely wrong marker.
+
+That is QA-90-004's own shape one level down: **a page-wide assertion cannot
+tell "both are right" from "one is right and one is wrong."** Where a word has
+more than one source, each source has to be asserted where it is rendered. Both
+milestone sources are now asserted on their own elements, which is why the two
+rows above are separate and why both fail. Course and Session needed no
+equivalent — each has exactly one source block, which is why collapsing either
+failed immediately.
+
+### What was preserved, and checked rather than asserted
+
+The Life direction panel, `RUNG_KIND`, the generated grouped-card cardinality,
+every passing owner-flow behaviour, the clock-before-navigation proof, the
+narrowed F40 and touch-target guards, the accommodation table as structure,
+privacy and provenance behaviour, and the nineteen D-210 deferrals — untouched
+and identically numbered. The full matrix below is what says so rather than this
+sentence.
+
+### Verification on the repaired tree
+
+| Gate | Result |
+| --- | --- |
+| `npm run verify`, clean checkout | **PASS** — format, lint, typecheck, tests, build, release manifest, copy scan |
+| Unit / contract / synthetic / adversarial | **1,903 passed** in 88 files |
+| Browser, 360 / 430 / 1,280, one worker | **786 passed**, 262 per width — zero failures (780 at Round 2) |
+| Trusted-clock pairs, all three widths | **PASS** — inside the matrix, unchanged |
+| Privacy scan | clean — 306 tracked files |
+| Android-style gate | **clean — 233 checks** |
+| Release integrity, live bytes | clean — 8 files byte for byte as verified (`8b0c2ba`) |
+| CI and deployed Preview | **success** — run `33470594269`, both jobs; the Preview serves `8b0c2ba` |
+| Product code changed | **none** — two test files and this document |
+| Physical-owner phone gate | **OUTSTANDING** — not automated, and not fabricated here |
+
+---
+
+## Round 2 repair — retest dispatch to independent QA
+
+**Model:** Codex.
+**Reasoning level:** **High** — a middle level, and never Max, which is Claude's
+and stops the orchestrator when it appears in a Codex block.
+**Conversation:** **SAME** — the Codex conversation that ran Rounds 1 and 2.
+
+**Phase 90 is still YELLOW.** Nothing here promotes it.
+
+### What to retest
+
+| Fact | Value |
+| --- | --- |
+| Repaired checkpoint | `8b0c2ba` |
+| Deployed | Read it live; a docs commit moves the head without changing the bundle (D-097) |
+| Round 2 checkpoint, for comparison | `1047765` |
+
+```bash
+node scripts/checkpoint-equivalence.mjs `8b0c2ba` --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+gh run download 33470594269 --name preview-manifest --dir /tmp/m
+node scripts/release-integrity.mjs https://bill6006.github.io/life-command-os-rebuild/preview/ --manifest /tmp/m/release-manifest.json
+```
+
+### QA-90-004, run the way Round 2 specified it
+
+1. Run the test titled **a session, a course and a milestone are three different
+   things**. It no longer exists under that name — `phase90.spec.ts` now calls
+   it **no object marker is styled to outrank another**, which is what its
+   assertions establish. Confirm no remaining test title claims evidence its
+   assertions do not give.
+2. Run `phase90-round1.spec.ts` and read its expected marker list. It should
+   require **SESSION**, **COURSE**, **MILESTONE** and **DESTINATION**, assert
+   `Course` and `Session` on their own blocks, and assert the milestone on
+   **both** components that render one.
+3. Repeat the collapses. `Course → evidence`, `Session → evidence` and
+   `Milestone → goal` in **either** of its two source components must each fail
+   the regression. The table in the repair above records what the builder saw.
+
+**Where to press hardest.** The milestone assertion is split across two
+components because a page-wide word check passed over a genuinely collapsed
+marker — the builder's first version of the collapse proof found that, not a
+test. If any other marker word has more than one source on a page reachable in
+this suite, the same false green is available there and neither of us has looked
+for it systematically.
+
+### The Round 1 claim that was false, and is corrected in place
+
+Round 1's repair section reported that no shipped history reaches a finished
+course. **It does** — Two sessions in, on completing its final session. The
+original text is left standing with a correction marked above it rather than
+edited away, so the record shows what was claimed as well as what is true.
+
+The probe behind it advanced the clock and looked for a finished thread; a
+course finishes on an action, not on elapsed time, so the probe could not have
+returned a positive. **Worth QA's attention as a class:** any other place this
+campaign has concluded "unreachable" from a time-advancing probe is suspect on
+the same grounds, and the builder has not swept for others.
+
+### Verification the builder ran on the repaired tree
+
+| Gate | Result |
+| --- | --- |
+| `npm run verify`, clean checkout | PASS |
+| Unit / contract / synthetic / adversarial | **1,903 passed** in 88 files |
+| Browser, 360 / 430 / 1,280, one worker | **786 passed**, 262 per width — zero failures (780 at Round 2) |
+| Privacy scan | clean — 306 tracked files |
+| Android-style gate | **clean — 233 checks** |
+| Release integrity, live bytes | clean — 8 files byte for byte as verified (`8b0c2ba`) |
+| CI | **success** — run `33470594269`, both jobs; the Preview serves `8b0c2ba` |
+| Product code changed | **none** |
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High. **Conversation:** SAME — the QA
+conversation that ran Rounds 1 and 2.
+
+```text
+Retest routing Phase 90 after the builder's Round 2 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_90_QA_HANDOFF.md in full. The Round 2 repair and this retest
+dispatch are at the end. Re-run QA-90-004's reproduction and its collapses, check
+that no test title overclaims, then the rest of the protocol, and append Round 3
+to this file. No product code changed in this repair. Keep the phase YELLOW
+unless you are recommending otherwise, and do not treat any automated result as
+the owner's physical-phone approval. Do not ask me to paste the file.
+```
+
 <!-- LCO_COMPLETE -->
