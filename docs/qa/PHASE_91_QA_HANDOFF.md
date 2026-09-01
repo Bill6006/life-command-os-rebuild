@@ -1401,4 +1401,273 @@ handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
 retest says otherwise, and do not ask me to paste the file contents.
 ```
 
+---
+
+## Round 3 independent QA — FAIL
+
+**Phase:** 91 — remains **YELLOW**.
+**Product checkpoint:** `0aa84190144b4d57a692ed22f7aa9c86b3aa7d01`.
+**Deployed documentation head:**
+`94153a6d234077084a566af589c7f22895fca0d6`, bundle-equivalent to the product
+checkpoint. Its only later path is this handoff.
+**Overall verdict:** **FAIL.** QA-91-005 and QA-91-006 close. QA-91-007 does
+not close as a semantic class; two adjacent owner phrases still turn punctuation
+or date digits into meaning the owner did not give.
+
+### Retest method
+
+The live checkpoint identity and later documentation-only equivalence were
+proved before and after the behavioral checks. Every behavior below was reached
+through ordinary owner surfaces in an isolated fresh browser origin; none of
+those browsers opened `#/qa`. The set-aside path was exercised with no lifecycle
+state, after **Start it**, and after **Only part of it**.
+
+The semantic boundary was attacked first through a temporary direct probe with
+positive controls, then the two failures were reproduced through the fresh
+ordinary Insights question. The temporary probe and all five temporary preview
+servers were removed before the gates.
+
+### QA-91-005 — PASS
+
+The set-aside contract is honest rather than merely different from the rejected
+re-file contract.
+
+- Before withdrawal, the confirmation says that _Clear the credit card_ was the
+  next step in Money, will be **set aside**, stays on the record, and will stop
+  being suggested. It promises nothing about studying it.
+- After confirmation, Career keeps _More money_ byte-identical, keeps _Clear the
+  credit card_ byte-identical as **set aside — the aim moved**, and says
+  **Nothing is named as the next step yet.**
+- Now says **Nothing to suggest just yet** and contains neither the Money move
+  nor a fabricated Career/study move about the credit card.
+
+The owner's answer and truthful history survive; only its status as the active
+answer to the old area's question ends. The ordinary **Fill that in** route
+remains if the owner wants to name a next step for the moved aim. That is an
+honest inverse of the accepted interpretation without asserting another one.
+
+### QA-91-006 — PASS
+
+Both consequence states requested by the handoff close:
+
+- After **Start it**, withdrawal removes the Money move and **Under way** from
+  Now. Timeline still records the suggestion, start, withdrawal, and paused
+  goal.
+- After **Start it** then **Only part of it**, withdrawal removes the move and
+  **Part done** from Now and does not offer it back. Timeline still records both
+  lifecycle events and the paused goal.
+
+The started-action browser branch covers the exact state Round 2 found, and the
+synthetic branch separately covers the part-done resumption door. The active-goal
+lookup and lifecycle guard agree: a record that something was suggested,
+started, or partly done is history, not a reason to keep the withdrawn
+interpretation current.
+
+### QA-91-008 — punctuation inside a coordinated denial revives denied objects
+
+**Severity:** Blocker. **Disposition:** QA-91-007 is not closed.
+
+Two fresh probes:
+
+| Phrase | Actual | Required |
+| --- | --- | --- |
+| _Not about money, debt, or savings_ | offers Money from _savings_ and _debt_ | abstain; the comma separates coordinated objects under one denial |
+| _Nothing to do with salary, savings, or debt_ | offers Money from _savings_ and _debt_ | abstain for the same reason |
+
+The owner-facing confirmation says the first phrase sounds like Money and
+offers **File it in Money & Financial Resilience instead**. At
+`interpret.ts:558`, every comma is a `CLAUSE_BREAK`; the denied span therefore
+ends after _money_ or _salary_ even when the comma is only list punctuation.
+
+The controls pass: _Not about money, but about certification_ names Career, and
+_No debt, no savings, no salary_ remains positive Money evidence. The repair
+must distinguish a coordinated list from a genuine contrastive clause; removing
+commas from the boundary wholesale would merely reverse the defect.
+
+### QA-91-009 — common date grammar still supplies a fictional amount
+
+**Severity:** Blocker. **Disposition:** QA-91-007 is not closed.
+
+The following phrases all correctly satisfy **by when** and incorrectly omit
+**how much**:
+
+- _More money before the 15th of March 2027_
+- _More money by March the 15th, 2027_
+- _More money by Q3 2027_
+
+The ordinary 360px confirmation for the first phrase shows only the
+earning-versus-saving semantic unknown above the object unknowns. The missing
+**how much** line means the app has treated `15` as an amount.
+
+`DATE_SHAPES` at `interpret.ts:625-631` removes direct month/day adjacency and
+bare years before `saysHowMuch` looks for remaining digits. It does not remove
+the common _15th of March_, _March the 15th_, or quarter shape, so `15` or `3`
+becomes money. Real amount controls beside the same horizon shapes still settle
+the amount correctly.
+
+This is the same role error as Round 2, one grammar step outside the repaired
+list. The builder's two-digit-year proof now genuinely reaches `saysADate`; it
+is no longer dead. It proves that one closed date shape is live, not that date
+components generally cannot become sums.
+
+### Repair and instrument judgment
+
+The builder's sixth false green was real and is repaired: the sequential journey
+now asserts the post-withdraw meaning, set-aside state, missing next step, and
+absence from Now instead of a headline substring. No further false green was
+found in the withdrawal or started-action instrument.
+
+The semantic instrument remains narrower than its class headings. It proves
+`and`/`or` coordination without list punctuation and a closed list of direct
+date spellings, while the live parser still fails coordinated comma lists and
+common indirect/quarter dates. Those are acceptance gaps under D-238, not any
+of the nineteen D-210 deferrals.
+
+The two builder-owned instrument changes do not weaken the gate:
+
+- `freshApp` installs the fixed clock before navigation. All Phase 91 tests use
+  that entry point, all Phase 90 clock-contract tests remain green, and all
+  Phase 91 cases passed at all three widths. It removes wall-clock variance; it
+  does not replace the product's time mechanism.
+- `LCOS_PREVIEW_PORT` defaults to 4173 unchanged. QA ran the whole matrix on
+  port 43196, and the previously hard-coded Phase 84 request path reached the
+  configured server. The one timeout described below passed 3/3 on a clean
+  port-43197 rerun.
+
+### Acceptance disposition
+
+| Acceptance item | Verdict | Evidence |
+| --- | --- | --- |
+| 1. Exact CASE A interpretation | PASS | Money is offered from Career without moving the aim first. |
+| 2. Exact owner bytes | PASS | Aim and milestone wording remain byte-identical. |
+| 3. Token meaning, not presence | **FAIL** | Commas in denied lists and digits in common date grammar still become positive meaning. |
+| 4. One derived sibling with provenance | PASS | The accepted reading remains separate and derived. |
+| 5. Decline, no derived row, direct redo | PASS | The aim row retains the ordinary reconsideration route. |
+| 6. Clarify once and change Now | PASS | The Money clarification produces the expected move. |
+| 7. Honest reversible withdrawal | PASS | Unstarted, started, and part-done consequences are set aside without rewriting or deletion. |
+| 8. Second proving domain | PASS | The differently shaped second-domain branch remains green. |
+| Sequential ordinary-owner journey | PASS | It asserts the repaired meaning and state, not a shared substring. |
+| Started-action branch | PASS | It creates lifecycle rows and proves the withdrawn move is not current. |
+| Synthetic/adversarial boundary | **FAIL** | QA-91-008 and QA-91-009 remain outside the shipped pairs. |
+| Same-area/null case | PASS | No duplicate same-area interpretation is produced. |
+
+### Mechanical and live verification
+
+| Gate | Round 3 result |
+| --- | --- |
+| `npm run verify` | PASS |
+| Unit / contract / synthetic / adversarial | **1,988 passed** in 89 files |
+| Rendered copy scan | clean — 8,470 shipped strings; 8,382 placed in module |
+| Privacy scan | clean — 310 tracked files |
+| Browser matrix, 360 / 430 / 1,280, one worker, port 43196 | **833 passed, 1 dynamic-chunk/navigation timeout** of 834 in 20.3 minutes |
+| Focused timeout retest, all three widths, port 43197 | **3 passed** |
+| Android-style gate | clean — **234 checks** against deployed `94153a6` |
+| Checkpoint equivalence | live `94153a6` differs from `0aa8419` only in this handoff; bundle-equivalent |
+| Product CI and deploy | success — run `33548428392`; whole **834-test** matrix green |
+| Deployed docs-head CI and deploy | success — run `33551674634` |
+| Release integrity | clean — 8 files served byte for byte from `94153a6`'s own CI manifest |
+| Network boundary | one `fetch` in `src`, for same-origin build identity |
+
+The local timeout occurred in `phase84.spec.ts:481` before its product
+assertion. The captured page remained on **Loading the QA laboratory…** after a
+dynamic route navigation and never reached the QA heading. The exact test then
+passed at 360, 430 and 1,280 on a clean server. It is reported as 833 plus one
+timeout, not rounded to 834; CI supplies the clean whole-run result.
+
+QA-91-001, QA-91-004 and every other Round 1 PASS remain intact. The nineteen
+D-210 findings remain untouched with backlog hash
+`58d5af071355d252c4a254fc685fcc9e8e88f417`;
+`docs/ROUTING_91_BRIEF.md` remains present; CASE B remains deferred; routing 92
+has not begun.
+
+---
+
+## Round 3 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** **Max** — this is a conservative parser-boundary repair
+where over-correction can invert ordinary owner meaning.
+**Conversation:** **CURRENT** — return to the original routing 91 Claude builder
+conversation.
+
+```text
+Routing Phase 91 repair after independent QA Round 3 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. The Round 3 report at the end is
+the authoritative independent QA verdict. Keep the Phase field exactly 91 and
+keep the phase YELLOW.
+
+QA-91-005 and QA-91-006 are closed. Preserve the set-aside contract exactly:
+the confirmation states what happens, owner words and truthful lifecycle history
+remain, the old milestone is paused rather than retyped, and unstarted, started,
+and part-done Money behavior is neither current nor offered back after
+withdrawal.
+
+Before changing implementation, reproduce both remaining semantic failures in
+fresh ordinary-owner stores that never open #/qa:
+
+1. "Not about money, debt, or savings" and "Nothing to do with salary, savings,
+   or debt" offer Money because a comma ends the denied span before the other
+   coordinated objects. Hold the controls: "Not about money, but about
+   certification" must name Career, while "No debt, no savings, no salary" must
+   remain positive Money evidence.
+2. "More money before the 15th of March 2027", "More money by March the 15th,
+   2027", and "More money by Q3 2027" omit how much because 15 or 3 survives
+   date stripping and becomes an amount. Hold real amounts beside those same
+   horizons, direct numeric and month-word dates, bare years, and the existing
+   two-digit-year proof.
+
+Repair the semantic classes, not those strings. Do not make every comma continue
+a denial, treat every digit near a date word as non-money, add hidden phrase
+special cases, add a model/network call, add a score, add another question, or
+widen the three readable domains. The bounded parser must distinguish list
+coordination from a genuine clause turn and date components from real amounts,
+then abstain where it cannot do so safely.
+
+Add direct positive/negative pairs for coordinated denied lists versus
+contrastive clauses and ordinary negative goals. Add date-role pairs for
+indirect month/day grammar and quarters versus real sums beside the same
+horizons. Titles must state no more than their assertions prove. Reintroduce the
+comma boundary and the date-digit leak independently, show each new regression
+fails for its title's reason, and restore the tree.
+
+Preserve every accepted CASE A behavior, QA-91-001, QA-91-004, the Round 3
+withdrawal passes, byte identity, derived provenance, privacy, one-question
+budget, both proving domains, three-day non-reproposal, B1, no-score, one-fetch,
+all explicit deferrals and all nineteen D-210 findings. Keep the fixed-clock and
+overridable-port instrument corrections. CASE B and routings 92-97 remain out of
+scope.
+
+Run npm run verify, one whole 360/430/1280 browser matrix at one worker on a
+clean port, the Android-style gate, privacy and copy scans, checkpoint
+equivalence, CI, and live release integrity against the deployed head's own
+manifest. Commit and push the repaired product checkpoint, wait for Preview
+deployment, then append the builder repair record and a complete Round 4 retest
+handoff to this same file. Dispatch Round 4 to the SAME Codex QA conversation at
+High. Do not ask the owner to paste file contents, do not remove
+docs/ROUTING_91_BRIEF.md before GREEN, and do not start routing 92.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+
+**Intelligence level:** Max.
+
+**Conversation:** CURRENT — the original routing 91 Claude builder conversation.
+
+```text
+Continue routing Phase 91 after independent QA Round 3 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the complete Round 3
+builder repair handoff at the end exactly as written. Keep Phase 91 YELLOW and
+do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->
