@@ -1296,7 +1296,7 @@ function contradictionCard(
  * list the rest without recomputing any of it — AUD-0044's risk note is that
  * grouping hides which belief is oldest unless the card names it.
  */
-interface StaleBelief {
+export interface StaleBelief {
   readonly card: Built
   readonly subject: string
   readonly days: number
@@ -1382,7 +1382,7 @@ export const STALE_BELIEFS_BEFORE_GROUPING = 3
  * Deliberately before Phase 9 lays out the card stack, because the alternative
  * is styling the wall rather than removing it.
  */
-function staleBeliefCards(stale: readonly StaleBelief[]): readonly Built[] {
+export function staleBeliefCards(stale: readonly StaleBelief[]): readonly Built[] {
   if (stale.length < STALE_BELIEFS_BEFORE_GROUPING) return stale.map((entry) => entry.card)
 
   const oldest = stale.reduce((most, entry) => (entry.days > most.days ? entry : most))
@@ -1433,7 +1433,25 @@ function staleBeliefCards(stale: readonly StaleBelief[]): readonly Built[] {
           mix: undefined,
           reasoning: [
             'Old evidence is not thrown away — it counts for less as it ages, and never for nothing.',
-            'These are grouped because four cards saying the same thing about four different subjects is a wall, not a finding.',
+            /*
+             * The count is the one being grouped — QA-90-003.
+             *
+             * This sentence was written while the only case anybody had looked
+             * at was the audit's four-card wall, and it said "four cards ...
+             * four different subjects" as a literal. The threshold is
+             * `STALE_BELIEFS_BEFORE_GROUPING`, which is **three**, so the very
+             * first legal branch rendered a headline reading "3 things the app
+             * is still going on" above an explanation of four — the card
+             * contradicting its own count, on the surface whose whole job is to
+             * be checkable.
+             *
+             * **The class is a rendered cardinality written as a literal**, and
+             * it is worth naming because a literal is right on the day it is
+             * written and silently wrong at every other size. Every count this
+             * card renders — headline, comparable, and this line — now comes
+             * from `stale.length`.
+             */
+            `These are grouped because ${stale.length} cards saying the same thing about ${stale.length} different subjects is a wall, not a finding.`,
           ],
         },
       },

@@ -194,3 +194,44 @@
   color: var(--text-secondary);
   font-size: var(--text-sm);
 }
+
+/*
+ * What he is aiming at, above what has come in lately — QA-90-001.
+ *
+ * The same rhythm as an area row, so the two panels read as one page rather
+ * than as a feature bolted above a screen. The aim is the loudest line here
+ * because it is the only sentence on Life the app did not compose; the area
+ * above it and the milestone below it are quieter, which is what makes it a
+ * direction with a place rather than a heading with a caption.
+ *
+ * Nothing here is a measurement. No bar, no ring, no count, no order that could
+ * be read as ranking one direction above another — they are listed in the order
+ * he set them, and D-162 is the reason that is the only order allowed.
+ */
+.life-direction + .life-direction {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-soft);
+}
+
+.life-direction__area {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.life-direction__aim {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+
+.life-direction__next {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}

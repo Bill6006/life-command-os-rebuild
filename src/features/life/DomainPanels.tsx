@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { ObjectKind, Panel } from '../../components/ui'
+import { ObjectKind, Panel, type ObjectKindName } from '../../components/ui'
 import type { LifeDomainId } from '../../domain/domains'
 import type { EntityRef } from '../../domain/entities'
 import { permissionDefinition } from '../../domain/privacy'
@@ -16,6 +16,7 @@ import {
   type DestinationDraft,
 } from '../../intelligence/authoring'
 import type { CourseReflection } from '../../intelligence/progress'
+import type { ProgressEvidence } from '../../domain/progress'
 import type { OutcomeAnswer } from '../../intelligence/outcomes'
 import type { BlockerDecision } from '../../intelligence/blockers'
 import type { Situation } from '../../intelligence/situation'
@@ -449,6 +450,43 @@ function noteFor(entry: DomainDestination): string {
  * that rung is **not** evidence of — which is the half a progress display
  * usually leaves out and the half the review is about.
  */
+/**
+ * Which named object each rung is evidence about — QA-90-002.
+ *
+ * ## The defect this exists to close
+ *
+ * Every rung was rendered with `kind="evidence"`, including the one whose
+ * visible measure is **Sessions done**. So the page that section 54 requires to
+ * show *"a completed session, a completed course and a milestone are three
+ * different things"* rendered two markers, both reading **Evidence**, and the
+ * `session` kind was declared in `ui.tsx` and used nowhere in the product.
+ *
+ * A shared vocabulary that resolves every member to one word is not a shared
+ * vocabulary — it is a label. The marker has to name the thing.
+ *
+ * ## Why a table, and why exhaustive
+ *
+ * Two of the seven rungs *are* one of the three named objects: `completion` is
+ * a session, and `milestone` is a milestone. The other five are evidence
+ * **about** an object rather than the object itself — "got part way", "how they
+ * went", "what has stuck" — and `evidence` is the honest word for them.
+ *
+ * `Record<ProgressEvidence, ObjectKindName>` rather than a switch with a
+ * default, so an eighth rung is a **compile error** rather than a rung that
+ * silently inherits the generic marker. That is exactly how this defect
+ * happened: a default that was right for most rows and wrong for the two that
+ * mattered, with nothing to notice it.
+ */
+const RUNG_KIND: Record<ProgressEvidence, ObjectKindName> = {
+  attempt: 'evidence',
+  'part-done': 'evidence',
+  completion: 'session',
+  quality: 'evidence',
+  'retained-capability': 'evidence',
+  transfer: 'evidence',
+  milestone: 'milestone',
+}
+
 export function ProgressPanel({
   data,
   reflection,
@@ -492,7 +530,7 @@ export function ProgressPanel({
       */}
       {progress.rungs.map((rung) => (
         <div key={rung.kind} className="rung" data-testid={`progress-${rung.kind}`}>
-          <ObjectKind kind="evidence" />
+          <ObjectKind kind={RUNG_KIND[rung.kind]} />
           <p className="rung__label">{rung.label}</p>
           <p className="rung__says">{rung.says}</p>
           <p className="rung__not">{rung.doesNotSay}</p>
@@ -946,6 +984,15 @@ export function CorrectionsPanel({
             <span className="domain-recent__text">{event.text}</span>
             {open === event.id ? (
               <div className="domain-correction" data-testid="correction-open">
+                {/*
+                  A correction is one of the eight objects too — QA-90-002.
+
+                  Marked once the gesture is open rather than on every row: the
+                  closed row is the *event*, and what the marker names is the
+                  thing the owner is about to do to it. Putting it on the row
+                  would label his history as a correction, which it is not.
+                */}
+                <ObjectKind kind="correction" />
                 <div className="domain-options">
                   <button
                     type="button"

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Panel, Screen } from '../../components/ui'
+import { ObjectKind, Panel, Screen } from '../../components/ui'
 import type { LifeDomainId } from '../../domain/domains'
 import { assembleSituation, type DomainCoverage } from '../../intelligence/situation'
 import { hashForLifePage } from '../../platform/routing'
@@ -169,6 +169,27 @@ export function LifeScreen() {
     [coverage],
   )
 
+  /**
+   * The directions the owner has authored, in the order he set them.
+   *
+   * A read of `situation.direction.destinations` and nothing more: the aim is
+   * his, the area label comes from the same registry the groups below use, and
+   * the milestone line is a goal statement he wrote. An unreached milestone is
+   * shown and a reached one is not — what is *next* is direction, and what is
+   * done is history, which Timeline and the domain page already carry.
+   */
+  const directions = useMemo(() => {
+    if (situation === undefined) return []
+    return situation.direction.destinations.map((destination) => {
+      const next = destination.milestones.find((milestone) => !milestone.reached)
+      return {
+        destination,
+        label: situation.domains.labelFor(destination.domain) ?? destination.domain,
+        next: next?.goal.statement,
+      }
+    })
+  }, [situation])
+
   return (
     <Screen
       title="Life"
@@ -183,6 +204,71 @@ export function LifeScreen() {
         </Panel>
       ) : (
         <>
+          {/*
+            What he is aiming at, before what has come in lately — QA-90-001.
+
+            ## The finding
+
+            The ordinary-owner contract for this phase ends *"repeat the first
+            half in a second domain and confirm Life reads as direction rather
+            than recency."* It did not. Every group on this screen is built from
+            `DomainCoverage` through `standingFor`, which answers **how recently
+            has anything come in** — so an owner who had authored a destination
+            and a milestone in Health and again in Career opened Life and saw
+            *Recent* and *Nothing here yet*, and neither thing he had said he
+            was aiming at.
+
+            That is the whole screen answering the wrong question. Coverage is a
+            true and useful reading and it stays exactly as it was; what was
+            missing is that it was the **only** reading.
+
+            ## Why this is presentation and not a second brain
+
+            `situation.direction.destinations` is already assembled by the same
+            `assembleSituation` the coverage groups come from. Nothing is
+            recomputed, nothing is concluded, and D-075's constraint — one
+            coverage computation, presentation only — is untouched. Two readings
+            of one history would eventually disagree; this is one reading, shown
+            twice over.
+
+            ## What it may say, and what it may not
+
+            **His own words, and nothing else.** The aim is rendered verbatim
+            from what he typed (D-188's byte-identity rule), the area is named,
+            and the app adds no verb of its own — no "on track", no "you are
+            getting closer", no count of how many parts are filled in. There is
+            nothing here that could become a score (D-162), because there is
+            nothing here the app authored.
+
+            **Absent, not empty.** With no destination anywhere the panel does
+            not render at all, so a first run and every history in the existing
+            library are unchanged — DEF-0013's precedent, and the reason this
+            could not become the homework D-075 took off this screen.
+          */}
+          {directions.length === 0 ? null : (
+            <Panel title="Where you are heading">
+              {directions.map((entry) => (
+                <div
+                  key={entry.destination.source}
+                  className="life-direction"
+                  data-testid="life-direction"
+                >
+                  <ObjectKind kind="destination" />
+                  <p className="life-direction__area">
+                    <AreaLink domain={entry.destination.domain} label={entry.label} />
+                  </p>
+                  <p className="life-direction__aim">{entry.destination.aim}</p>
+                  {entry.next === undefined ? null : (
+                    <p className="life-direction__next" data-testid="life-direction-next">
+                      <ObjectKind kind="milestone" />
+                      {entry.next}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </Panel>
+          )}
+
           <Panel title="How each area stands">
             {groups.map((group) => (
               <section
