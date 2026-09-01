@@ -921,4 +921,327 @@ automated result as the owner's physical-phone approval. Do not ask me to paste
 the file.
 ```
 
+---
+
+## Round 2 independent QA — FAIL
+
+**Phase:** routing Phase 90, the Phase 9 visual-coherence gate.
+
+**Repaired product checkpoint tested:**
+`10477659d73d01bfc3e6f4ea49664e92f9928e7a`.
+
+**Deployed documentation head tested:**
+`b18008bf6d57bbc5e1244ede8d53ba0aa6c264b1`, bundle-equivalent to the repaired
+product checkpoint. The only path changed between them is this handoff.
+
+**Live CI run:** `33455815211`, successful; its downloaded preview manifest
+matched all eight live files byte for byte.
+
+**Android configuration:** deployed Preview, 360 x 780 CSS pixels, DPR 3,
+touch/mobile enabled, Android 14 / Galaxy S24-style `SM-S921B` user agent.
+
+**Overall verdict: FAIL. Routing Phase 90 remains YELLOW.** All three Round 1
+product failures are repaired on the deployed application. QA-90-001 and
+QA-90-003 have honest regressions. QA-90-002 passes when exercised by a person,
+but the required rendered regression still does not prove the named three
+objects: the old test accepts any markers and the new repair test deliberately
+omits **Course**. That leaves the same acceptance claim capable of a false
+green. The separate physical-owner phone approval also remains outstanding.
+
+### Governing criteria and retest scope
+
+I retained the settled Round 1 findings and reviewed only the builder's repair
+and its first unfinished acceptance item. The governing material remains the
+handoff's ordinary-owner and synthetic contracts; canonical-plan §§54, 24, 25,
+37 and 22; D-230 through D-237; D-162, D-129, D-018, D-052, D-075, D-087,
+D-167, D-176, D-181 and D-193; G-009; adjudication §§6.1 and 6.2; owner review
+§11.8; the complete visual design record; routing-90 status and dispatch;
+DEF-0150, DEF-0152 and DEF-0153; and the D-218/D-222 accommodation dispatch.
+
+The decisive requirement is explicit in canonical-plan §54 and D-231: a
+completed session, a completed course and a milestone are three different
+things on the page. It is not enough for source types to exist or for a test
+with that title to accept an arbitrary homogeneous marker list.
+
+### Round 1 blocker retest
+
+| Finding | Product result | Regression result | Round 2 disposition |
+| --- | --- | --- | --- |
+| QA-90-001 — Life omitted authored direction | **PASS** | **PASS** | Closed |
+| QA-90-002 — named object kinds collapsed / false green | **PASS live** | **FAIL** — Course is not rendered or asserted | Continued as QA-90-004 |
+| QA-90-003 — three-item group said four | **PASS** | **PASS** | Closed |
+
+### QA-90-001 retest — PASS
+
+I restored a valid empty owner backup through the ordinary Data UI, without
+opening the laboratory. At deployed 360 x 800 I then:
+
+1. answered the discovery question with Career aim **Move into a networking
+   role**;
+2. authored Career goal **Finish the CCNA study plan**;
+3. authored Health destination **Move comfortably through a full day** and
+   next milestone **Walk three times this week**;
+4. accepted Now's goal-serving move **Get some movement in: Walk three times
+   this week**, whose reason was **Serves the goal you set**;
+5. started it, navigated to Timeline, returned to Now and found it still
+   **Under way**; and
+6. completed it, then opened Life.
+
+Life now begins with **Where you are heading**, renders both verbatim Career
+and Health aims, renders the unreached Health milestone, and retains the
+coverage/recency groups below. On a restored empty store, the heading is absent
+and the honest coverage groups remain. After marking the Health milestone
+reached, the aim remains while only that domain's next-milestone line
+disappears. Fatherhood's existing **Three times running** surface also retained
+its Session/Evidence reading.
+
+The builder's uncapped-list risk is not currently reproducible as an
+eleven-direction wall: only the three currently proving domains — Health,
+Career and Money — expose the destination control, and all three directions
+remain readable at phone width. That observation does not waive a future
+scaling concern if the control expands to more domains.
+
+### QA-90-003 retest — PASS
+
+Using a temporary QA-only production-module probe, I loaded the long-run
+history, removed records whose domain list contained `social`, advanced the
+trusted date by 200 days and evaluated the first grouped stale-belief card.
+The headline began **3 things**, its comparable-evidence count was `3`, and its
+reasoning said **3 cards** about **3 different subjects**. The focused
+`phase90-round1-repairs` synthetic suite also passed all eight cases and covers
+group sizes three through eight.
+
+The temporary probe was removed before final verification. No probe source,
+test, backup or generated evidence file remains in the repository.
+
+### QA-90-002 product retest — PASS
+
+On **Nine months of evenings**, Career's progress rungs rendered **Session**
+and **Evidence** with identical restrained presentation: `rgb(141, 150, 170)`,
+12 px and weight 600. I then used the shipped **Two sessions in** scenario,
+started and completed its third and final session through Now, and returned to
+Career. The page rendered:
+
+- **Session** — Sessions done;
+- **Course** — Courses finished; and
+- the completed course label **subnetting**.
+
+After authoring Career direction and a next milestone through the ordinary UI,
+the same page rendered Destination, Milestone, Session and Course markers with
+the same color, size and weight. The semantic product repair is therefore
+correct and the course state is reachable without a new laboratory fixture.
+
+### QA-90-004 — the named three-object regression still omits Course
+
+**Severity:** Blocker. **Class:** phase-acceptance instrument / false green.
+
+**Governing contract:** canonical-plan §54, D-231 and Round 1's explicit repair
+requirement to make the regression reach and assert Session, Course and
+Milestone.
+
+**Exact reproduction**
+
+1. Run the browser test titled **a session, a course and a milestone are three
+   different things** in `tests/browser/phase90.spec.ts`.
+2. Inspect its assertions: it requires only a non-empty `.kind` list and
+   uniform color, size and weight. It never asserts any of the three words.
+3. Run the repaired marker regression in
+   `tests/browser/phase90-round1.spec.ts`. Inspect its explicit expected list:
+   it proves **SESSION**, **MILESTONE** and **DESTINATION**, not **COURSE**.
+4. Load **Two sessions in**, start and complete the final session in Now, then
+   open Career. The ordinary page renders Session and Course. Authoring Career
+   direction and a milestone places Milestone on that same rendered page.
+5. Observe that `tests/browser/phase84.spec.ts` already drives the final-session
+   flow and asserts the resulting session/course progress structures, although
+   it does not assert their `.kind` text or visual equality.
+
+**Actual:** both Phase 90 tests pass without ever requiring a rendered Course
+marker. The original claim can still pass over the wrong object set, and the
+new repair regression proves a different three-item set than the governing
+acceptance requirement.
+
+**Expected:** one rendered owner-flow regression must place Session, Course and
+Milestone on the page together, assert those exact semantic marker words, and
+assert their intentionally identical restrained style. Deliberately collapsing
+any one of those three kinds must make that regression fail.
+
+The builder's statement that no shipped history reaches a finished course is
+incorrect. The live **Two sessions in** journey and the existing Phase 84
+browser flow both reach one. `RUNG_KIND`'s exhaustive source guard is useful,
+but source declarations and source-use checks cannot replace the rendered
+acceptance proof. This finding is Phase 90's named acceptance claim, not one of
+the nineteen general D-210 instrument-hardening deferrals.
+
+### Visual, responsive and mobile findings
+
+No independent overflow, clipping, tap-target, typography or dark-theme defect
+reproduced. The repaired Life panel, empty state, reached-milestone state and
+combined marker surface were inspected live at 360 x 800. The complete browser
+matrix passed at 360, 430 and 1280, and the deployed Android-style gate
+completed 233 checks cleanly.
+
+These technical passes do not constitute the required physical-owner phone
+approval. That gate was not performed in this environment and remains
+**OUTSTANDING / blocking** even after QA-90-004 is repaired.
+
+### Phase-90 acceptance criteria
+
+| Acceptance criterion | Result | Evidence |
+| --- | --- | --- |
+| 1. Physical-owner phone gate | **OUTSTANDING / blocking** | Deployed phone-width and Android-style technical checks passed; no physical-owner approval was supplied. |
+| 2. Accommodation table is structural only | **PASS** | The repair did not convert reserved shapes or deferred accommodations into shipped claims. |
+| 3. Ten owner-review acceptance questions are run honestly | **PASS as review; prior partial/no answers remain** | Round 1's recorded §11.8 answers remain the honest whole-app review; this narrow repair creates no basis to upgrade them. |
+| 4. Trusted clock before navigation, both pairs at three widths | **PASS** | The full matrix passed the block/day and week/day pairs with `page.clock` installed before navigation in a fresh context. |
+| 5. Narrowed guards plus named visual/semantic checks | **FAIL** | Product semantics, F40, touch targets, provenance and grouped cardinality pass; the rendered Session/Course/Milestone proof omits Course. |
+| 6. Normal gates plus responsive browser and Android-style gate | **PASS mechanically; phase FAIL on acceptance** | All aggregate gates are green, which is why the remaining false-green acceptance test cannot be inferred away. |
+
+### Full verification on the restored tree
+
+These gates were run once against the repaired tree and are not rerun merely to
+rewrite this QA document.
+
+| Gate | Result |
+| --- | --- |
+| Round 1 exact product reproductions | **PASS** — QA-90-001, QA-90-002 product behavior and QA-90-003 no longer reproduce |
+| Checkpoint equivalence | **PASS** — deployed `b18008b` differs from repaired product checkpoint `1047765` only in this handoff; no bundle-relevant path differs |
+| Live artifact integrity | **PASS** — CI run `33455815211`, eight files byte for byte |
+| `npm run verify` | **PASS** — format, lint, typecheck, tests, build, release manifest and rendered-copy scan |
+| Unit / contract / synthetic / adversarial | **1,903 passed** in 88 files |
+| Focused Round 1 repair synthetic suite | **8 passed** |
+| Rendered-copy scan | **clean — 8,171 shipped strings**, 8,085 placed in a build-graph module, 1 script chunk, 2 stylesheets |
+| Browser, three widths, one worker | **780 passed** in 17.3 minutes — 260 each at 360, 430 and 1280; zero failures |
+| Trusted-clock pairs | **PASS** inside the matrix at all three widths, fresh store and clock before navigation |
+| Deployed Android-style gate | **clean — 233 checks** |
+| Privacy scan | **clean — 306 tracked files** |
+| CI for deployed head | **PASS** — run `33455815211` |
+| QA cleanup | **PASS** — all temporary QA material removed |
+
+### Automated tests that still give false confidence
+
+- `tests/browser/phase90.spec.ts` retains a title about Session, Course and
+  Milestone while asserting only that some markers exist and share style.
+- `tests/browser/phase90-round1.spec.ts` adds exact semantic assertions, but
+  its three named markers are Session, Milestone and Destination. Course is
+  absent.
+- `tests/browser/phase84.spec.ts` already proves that the owner can finish the
+  third session and obtain session/course progress. It does not assert marker
+  text, but it disproves the premise that Course is unreachable and supplies
+  the flow the Phase 90 acceptance regression needs.
+
+The product behavior was manually proven correct. The defect is the executable
+acceptance claim, not an invitation to change working product semantics.
+
+### Explicit deferrals preserved
+
+The nineteen D-210 Phase 84 instrument-hardening findings remain untouched,
+open and identically numbered. The advancement register, richer
+explainability, adaptation promises, longitudinal personalization, Phase 10/11
+work and every other named future item remain deferred. QA-90-004 is not a
+renamed deferred item: it is the still-incomplete direct repair of QA-90-002
+and of this phase's explicit D-231 acceptance proof.
+
+### Overall verdict and repair requirement
+
+**FAIL. Routing Phase 90 remains YELLOW.** Preserve all three working product
+repairs and every passing gate. Repair the whole false-green marker-test class:
+make an owner-flow browser regression render Session, Course and Milestone
+together; assert those exact words and their uniform restrained styles; and
+prove the regression fails when each semantic marker is deliberately collapsed
+to the wrong kind. Make the old misleading test honest — replace it, strengthen
+it or retitle it so no green test claims an assertion it does not make.
+
+No product-code change should be necessary unless the honest regression
+reveals a new behavior defect. Rerun the aggregate, three-width browser,
+trusted-clock, Android-style, privacy, integrity and CI gates after the repair;
+deploy the resulting checkpoint; preserve all deferrals; and dispatch Round 3
+to this same Codex QA conversation at High. The physical-owner phone approval
+remains a distinct necessary gate and must not be fabricated by automation.
+
+---
+
+## Round 2 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+
+**Intelligence level:** **Max** — this remains an adjudication-created audit
+repair campaign, now narrowed to a false-green rendered acceptance class.
+
+**Conversation:** **CURRENT** — the original routing 90 Claude builder
+conversation.
+
+```text
+Routing Phase 90 repair after independent QA Round 2 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_90_QA_HANDOFF.md in full. Round 2 at the end confirms that
+all three Round 1 product defects are repaired, but continues QA-90-002 as the
+single acceptance-instrument Blocker QA-90-004. Execute this Round 2 repair
+handoff exactly as written.
+
+Keep Phase 90 YELLOW. Preserve the working Life direction panel, semantic
+RUNG_KIND implementation, generated grouped-card cardinality, all passing
+owner-flow behavior, all clock/accommodation/privacy/provenance behavior and
+every explicit deferral. Do not make a product change merely to satisfy the
+test.
+
+Repair the whole false-green marker-test class. The Phase 90 test titled "a
+session, a course and a milestone are three different things" currently
+asserts only that an arbitrary non-empty marker list shares color, size and
+weight. The Round 1 repair test asserts SESSION, MILESTONE and DESTINATION, not
+COURSE. Both pass without proving the governing §54/D-231 claim.
+
+Use the already shipped ordinary path: load "Two sessions in", start and
+complete its final session through Now, open Career, and author Career
+direction/next milestone through ordinary controls as needed. The live product
+and tests/browser/phase84.spec.ts already prove this flow reaches a finished
+course. Build one rendered regression that places Session, Course and Milestone
+on the page together, asserts those exact semantic marker words, and asserts
+their intentionally identical restrained color, size and weight. Make the old
+misleading test honest by replacing it, strengthening it or retitling it so no
+test title claims evidence its assertions do not establish.
+
+Deliberately reintroduce each collapse and show the new regression fails:
+Course -> Evidence, Session -> Evidence, and Milestone -> a generic/wrong kind.
+Restore the correct implementation afterward. Source exhaustiveness and
+source-use guards may remain, but they do not substitute for the rendered
+proof. Do not add a fixture solely to manufacture Course; the existing
+ordinary scenario already reaches it.
+
+Run npm run verify, the complete one-worker browser matrix at 360 / 430 / 1280,
+both trusted-clock pairs at all three widths, the deployed Android-style gate,
+privacy scan, CI and live byte-for-byte artifact integrity. Deploy the repaired
+checkpoint, append the builder response and verification evidence to this
+file, keep Phase 90 YELLOW, and dispatch Round 3 to the SAME Codex QA
+conversation at High. The physical-owner phone gate remains outstanding and
+must not be represented as automated approval.
+
+Do not edit either QA round, alter
+docs/qa/INSTRUMENT_HARDENING_BACKLOG.md, put the completion marker in another
+handoff, start the next phase or ask me to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+
+**Intelligence level:** Max.
+
+**Conversation:** CURRENT — the original routing 90 Claude builder conversation.
+
+```text
+Continue routing Phase 90 after independent QA Round 2 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_90_QA_HANDOFF.md in full and execute the complete Round 2
+FAIL builder repair handoff at the end. Preserve the repaired product; close
+QA-90-004 by making the rendered browser regression actually prove Session,
+Course and Milestone, including reintroduction failure evidence. Keep Phase 90
+YELLOW, preserve all deferrals, and keep physical-owner phone approval
+distinct. Do not ask me to paste the file.
+```
+
 <!-- LCO_COMPLETE -->
