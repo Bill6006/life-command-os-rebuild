@@ -2419,7 +2419,7 @@ Approved by the owner on 2026-08-31 (**D-212**), after the second product adjudi
 | **Canonical Phase 11** — adversarial hardening            | **102**         | `qa/PHASE_102_QA_HANDOFF.md` |
 | **Canonical Phase 12** — release                          | **103**         | `qa/PHASE_103_QA_HANDOFF.md` |
 
-**Eleven routed phases remain.** 83 and 84 are GREEN; 98–100 carry no work.
+**Eleven routed phases remain.** 83, 84 and 90 are GREEN; 98–100 carry no work.
 
 ## Rules
 

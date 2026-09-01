@@ -8711,3 +8711,80 @@ zeroes every duration token, no state is expressed by movement alone, and no
 control has to be waited for.
 
 ---
+
+## D-238 — A test's title is a claim, and it is held to the same standard as the product's copy
+
+**Phase:** 90 (GREEN closeout) · **Status:** Active · **Extends** D-193
+
+Routing 90 went through three independent QA rounds. **Every blocker in all
+three was an instrument defect rather than a product one, and four of the five
+were false greens in regressions the builder had written and reported as
+proof.**
+
+- A test titled _"a session, a course and a milestone are three different
+  things"_ asserted a non-empty marker list and uniform styling. `[Evidence,
+Evidence]` satisfies that perfectly. It was green over the exact defect it was
+  named for, twice — once when the kinds were collapsed, and again after the
+  repair, because uniformity was all it ever read.
+- Its replacement asserted Session, Milestone and **Destination**, quietly
+  substituting a fourth object for the one the acceptance sentence names.
+- A grouped-card guard checked size four, which was the only size anybody had
+  looked at, and stayed green while the first legal branch said "four" about
+  three.
+- A page-wide marker check passed over a genuinely collapsed marker, because the
+  word had **two** rendering sources and the other one still supplied it.
+
+**The rule.** A test name is read by every later reader as a statement of what
+is proved. Where the assertions establish less than the title claims, the title
+is wrong in the way a product sentence printed wider than its evidence is wrong
+— which is the defect class this entire campaign exists to find. **Retitle it to
+what it holds, or make it hold what it says.**
+
+**Two corollaries, both learned by being caught out:**
+
+**A page-wide assertion cannot localise a defect.** Asserting that a word
+appears _somewhere_ on a screen cannot distinguish "both sources are correct"
+from "one is correct and one is wrong". Where a rendered word has more than one
+source, assert each source where it renders.
+
+**A negative claim needs an instrument that could have returned a positive.**
+The builder reported that no shipped history reaches a finished course, from a
+probe that advanced the clock and looked for a finished thread. A course
+finishes on an **action**, so the probe could not have found one, and its
+silence carried no information. It was handed to QA as a known gap and cost a
+round. Before writing _nothing / none / unreachable_, demonstrate the positive
+case at least once with the same instrument.
+
+**Why this is a decision and not a note.** D-193 already governs guards over
+_copy_, and its history is four rewrites of one guard. This is the same failure
+one layer out — the guard's own description of itself — and the campaign has now
+spent three QA rounds on it in a single phase.
+
+---
+
+## D-239 — Routing 90 is GREEN, and the phone gate is what closed it
+
+**Phase:** 90 · **Status:** Active · **Decided by the owner, 2026-09-01**
+
+Independent Codex QA returned PASS on repaired checkpoint `8b0c2ba` (Round 3),
+and the owner approved the canonical physical-phone gate on 2026-09-01. Routing
+90 is **GREEN**.
+
+**Both were required and neither substitutes for the other.** QA establishes
+that the product does what the phase claimed; only the owner can answer plan
+section 24's actual question, which is whether the thing in his hand feels
+bland, cave-like, overly technical or lifeless. That question fails a phase with
+every test green, and no viewport, emulator, Android-style context or QA PASS
+can be asked it.
+
+**What the approval does not do.** It upgrades none of the owner-use review's
+§11.8 answers — several remain _partial_ or _no_, exactly as Round 1 recorded
+them — and it settles nothing about the capabilities routings 91 to 97 exist to
+build. It approves a visual system and a phone experience, which is what the
+phase was.
+
+**The handset was not stated** and has not been invented. The dispatch asked for
+the device; the approval named none, and that is recorded as a gap in the
+evidence rather than filled in.
+
+---

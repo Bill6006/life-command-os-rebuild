@@ -5248,6 +5248,40 @@ built.
 
 ---
 
+## Routing 90 — independent QA findings, all closed at GREEN
+
+**Found:** independent Codex QA, routing 90 Rounds 1 and 2, 2026-08-31 to
+2026-09-01 · **Status:** all Fixed and retested · **Closed by:** Round 3 PASS
+and the owner's physical-phone approval
+
+Recorded together because they share one cause. **Every one was an instrument
+defect rather than a product defect, and four of the five were false greens in
+regressions the builder wrote and reported as proof** — the finding D-238 is
+written from.
+
+| ID        | Finding                                                                                                                 | Repair                                                                                                                               |
+| --------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| QA-90-001 | Life still read as recency after two authored directions; no destination reached the screen                             | A `Where you are heading` panel reading `situation.direction.destinations` — one computation, shown twice over (D-075 intact)        |
+| QA-90-002 | Every progress rung rendered `kind="evidence"`, including _Sessions done_; the declared `session` kind was used nowhere | `RUNG_KIND`, an exhaustive `Record<ProgressEvidence, ObjectKindName>`, so a new rung is a compile error rather than a silent generic |
+| QA-90-003 | The grouped stale-belief card explained itself as "four cards" while its threshold is three                             | The count is generated from the set it groups; guarded at every legal size, with the rule split by what each sentence may report     |
+| QA-90-004 | The rendered acceptance proof omitted **Course**, and a test title claimed evidence its assertions did not give         | One owner-flow regression proving Session, Course and Milestone on a page; the overclaiming title retitled to what it holds          |
+
+**A fifth false green was found by running the collapse proofs rather than by a
+test.** `Milestone → goal` passed at first: a Career page renders a milestone in
+two components, and a page-wide word set still saw the word from the other. Both
+sources are asserted where they render now. This is D-238's first corollary.
+
+**And one incorrect builder claim, corrected in place.** Round 1 reported that no
+shipped history reaches a finished course. It does — `Two sessions in`, on
+completing its final session. The probe behind the claim advanced the clock, and
+a course finishes on an action. The original text stands in the QA handoff with
+a correction marked above it. D-238's second corollary.
+
+Full reproductions, repairs and collapse results:
+[`qa/PHASE_90_QA_HANDOFF.md`](qa/PHASE_90_QA_HANDOFF.md).
+
+---
+
 ## DEF-0152 — two CSS custom properties were read on four declarations and defined nowhere
 
 **Found:** routing 90 visual coherence review, 2026-08-31 · **Status:** Fixed (routing 90)

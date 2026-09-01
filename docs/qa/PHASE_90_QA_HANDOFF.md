@@ -1820,6 +1820,28 @@ hand.
   **bland, cave-like, overly technical or lifeless**, even with every test
   green. Does it feel like something worth opening tomorrow?
 
+### The owner's result — APPROVED, 2026-09-01
+
+> **The owner approved the routing 90 phone gate on 2026-09-01.**
+>
+> The approval was given explicitly, in answer to a direct question naming this
+> gate and the deployed address, after Round 3's PASS. It is recorded here
+> because the dispatch requires the result to be written down rather than
+> inferred, and because a gate whose outcome lives only in a conversation is not
+> a gate anybody can check later.
+>
+> **The handset was not stated, and is not invented here.** The dispatch asks
+> for the real device and browser; the owner's approval did not name one. That
+> is recorded as a gap in the evidence rather than filled in, and the owner can
+> add it to this line at any time. Everything else the gate asked for — the
+> journey and the judgement of how the product feels in the hand — is his to
+> have made and is what the approval attests to.
+>
+> **This unblocks the formal GREEN closeout and nothing else.** It is not a
+> statement that the product is finished, and it does not upgrade a single one
+> of the owner-use review's §11.8 answers: those remain exactly as Round 1
+> recorded them, several of them *partial* or *no*.
+
 ### What to send back
 
 Either is a complete answer, and a rejection is as useful as an approval:

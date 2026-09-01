@@ -122,13 +122,23 @@ superseded rather than reused.
 
 # Routing Phase 90 — Canonical Phase 9: visual coherence, motion, mobile
 
-**Status: YELLOW — READY FOR INDEPENDENT QA.**
+**Status: GREEN — INDEPENDENT QA PASSED AND THE OWNER APPROVED THE PHONE GATE,
+2026-09-01.**
 
-A builder conversation may not approve its own phase (D-077). The gate on this
-one is the **owner's physical phone**, and it is not satisfied by a viewport, an
-emulator or a screenshot — so nothing below claims the phase has passed. What is
-claimed is that the six work packages are built, that each has a regression which
-fails when its defect is reintroduced, and that every automated gate is green.
+Independent Codex QA failed this phase twice and was right twice. Round 3
+returned PASS on repaired checkpoint `8b0c2ba`, and the owner approved the
+canonical physical-phone gate on 2026-09-01. Both were required: the QA PASS
+says the product does what the phase claimed, and only the owner can say whether
+what he is holding is worth opening tomorrow (plan section 24).
+
+**Every blocker across three rounds was an instrument defect rather than a
+product one, and four of the five were false greens in tests this builder
+wrote.** That is the finding worth carrying forward from this phase, and it is
+set out below.
+
+**The approval does not upgrade the owner-use review's §11.8 answers.** Several
+of them remain _partial_ or _no_, exactly as Round 1 recorded them. Phase 90 was
+never the phase that would change them.
 
 ## What the phase was given, and what it found
 
@@ -261,15 +271,41 @@ clean, 304 tracked files. Release integrity clean — 8 files served byte for
 byte as verified. Checkpoint equivalence: bundle-equivalent, nothing changed
 between `c6e0b3a` and HEAD. Worktree clean.
 
-**CI is green and the Preview is deployed.** Run **33427826197** passed both
-Verify and Deploy preview; the Preview serves **`2c45b29`**, which
-`checkpoint-equivalence.mjs` reports bundle-equivalent to `c6e0b3a` — the three
-files that changed between them are all documents. Release integrity against
-the **deployed** bytes is clean, 8 files served byte for byte as verified,
-checked against the manifest CI uploaded rather than a local build (D-211).
+**CI is green and the Preview is deployed.** The first checkpoint `c6e0b3a`
+deployed at run `33427826197`; the phase then went through three QA rounds and
+two repairs, ending at **`8b0c2ba`** (CI run `33470594269`), which is what QA
+passed and what the owner approved. Release integrity against the deployed bytes
+was clean at every checkpoint, checked against the manifest CI uploaded rather
+than a local build (D-211).
 
-Independent QA can begin: step 1 of the protocol is cold use of the deployed
-app, and the deployed app is now this phase's.
+## The three QA rounds, and what they cost
+
+**Round 1 — FAIL, three blockers.** Life still read as recency after two
+authored directions; every progress rung rendered `kind="evidence"`, so the
+declared `session` kind was used nowhere and the test titled for three kinds
+passed over `[Evidence, Evidence]`; and the grouped stale-belief card explained
+itself as "four cards" while its threshold is three. **Two of the three were
+false greens in regressions this builder wrote.**
+
+**Round 2 — FAIL, one blocker (QA-90-004).** All three product repairs were
+correct, but the rendered acceptance proof still omitted **Course**, and the
+builder had reported — wrongly — that no shipped history reaches a finished
+course. It does: `Two sessions in` reaches one the moment the owner completes
+its final session. The probe behind that claim advanced the clock and looked for
+a finished thread, and **a course finishes on an action rather than on elapsed
+time**, so the probe could not have returned a positive. Its silence was
+reported as a finding rather than as a failed measurement.
+
+**Round 3 — PASS.** The acceptance regression now drives the shipped flow and
+asserts Session, Course, Milestone and Destination on one owner-reachable page,
+with Course and Session read off their own blocks and the milestone asserted at
+**both** components that render one. Every collapse QA asked for makes it fail.
+
+**The fourth false green was found by running the collapses, not by a test.**
+`Milestone → goal` passed at first, because a Career page renders a milestone in
+two components and a page-wide word set still saw the word from the other one. A
+page-wide assertion cannot tell _both are right_ from _one is right and one is
+wrong_.
 
 ## Open, and carried forward unchanged
 

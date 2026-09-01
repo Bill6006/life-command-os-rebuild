@@ -1,9 +1,9 @@
 # Next prompt
 
-**Phase:** 90 — **canonical Phase 9: visual coherence, motion, mobile refinement**
+**Phase:** 91 — **semantic capture and clarification**
 
 **Actor:** Claude Code / **builder**.
-**Conversation:** NEW — a fresh Claude builder conversation. Routing 84 is GREEN and closed; this is a new phase (D-092, `qa/README.md` conversation rule).
+**Conversation:** **NEW** — a fresh Claude builder conversation. Routing 90 is GREEN and closed; this is a new phase (D-092, `qa/README.md` conversation rule).
 **Model:** Claude Opus 5.
 **Reasoning level:** **Max** — the audit-repair campaign classification in `qa/README.md` covers every phase created by its adjudication, and this is one.
 
@@ -11,110 +11,96 @@
 
 ## Read these first, in this order
 
-1. `docs/CANONICAL_REBUILD_PLAN.md` **section 54** — this phase's canonical scope and gate. Also **section 43A** (the routing map and the monotonic-integer rule), **section 22** (scores and forecasts), **sections 24 and 25** (visual design contract, motion), **section 37** (mobile and accessibility).
-2. `docs/DECISION_LOG.md` **D-212 … D-229** — the roadmap and the eight settled owner decisions. Then the standing guards this phase must not break: **D-162** (a destination is described, never scored), **D-129**, **D-018**, **D-052**, **D-075**, **D-087**, **D-167**, **D-193**.
-3. `docs/PRODUCT_ADJUDICATION_2.md` **§6.2** — the accommodation extension and the time-advance instrument, as approved.
-4. `docs/qa/README.md` — the independent QA protocol. **You may not approve your own phase.**
+1. `docs/ROUTING_91_BRIEF.md` **in full** — this phase's reasoning, its CASE A acceptance tests, and the seven rules any interpreter must obey. It is a brief rather than a handoff and carries **no completion marker**; do not give it one.
+2. `docs/PRODUCT_ADJUDICATION_2.md` **§6.3** — the approved scope, the two QA contracts and the completion condition. Also **§6.1**, which defines the ordinary-owner and synthetic tracks and the time-advance mechanism.
+3. `docs/DECISION_LOG.md` — **D-188** (destinations are proposed), **D-143** (what the app was told and what it worked out are two rows), **D-167** (the private permission, off by default), **D-162** (no score), **D-176**, **D-184**. Then **D-238**, which routing 90 earned and which binds every test this phase writes.
+4. `docs/CANONICAL_REBUILD_PLAN.md` **section 43A** (the routing map and the monotonic-integer rule) and **section 22** (scores and forecasts).
+5. `docs/qa/README.md` — the independent QA protocol. **You may not approve your own phase.**
 
-**Routing 90 is not gated by any campaign hold.** `docs/CAMPAIGN_HOLDS.md` declares D-172 against **routing 97** only.
+**Routing 91 is not gated by any campaign hold.** `docs/CAMPAIGN_HOLDS.md` declares D-172 against **routing 97** only, and D-172 is about longitudinal inference — CASE B — which this phase must not touch.
 
 ---
 
 ## What this phase is
 
-Visual design began earlier; **this phase performs whole-product coherence.** Routing 84 built the product contract — a destination, a milestone, seven progress rungs, a create-and-confirm control, a second questioning surface, the inability question, two correction gestures and one owner permission — and **none of it has a visual language yet.** That was deliberate: routing 84 was not allowed to spend this phase's budget. Re-typesetting it is the work.
+**Make the words the owner types mean something.**
 
-**The gate is the owner's physical phone.** Not a viewport, not a screenshot.
+Today he types _"More money"_ under the Career aspiration prompt and the app files it in Career, stores it, and does nothing else with it. The brief's finding is that **two capabilities were hiding inside one open question** — capture (what did he mean by what he just wrote?) and longitudinal inference (what can be discovered from accumulated evidence?) — and that the smaller, more urgent one had no owner anywhere in the roadmap.
+
+This phase is the whole of routing 91, and its gate is its own. It may not be absorbed into D-172's adjudication, and D-172's adjudication may not absorb it.
+
+**A deterministic capture-time interpreter needs no secret and no network.** D-025 blocks a network call to a model, not interpretation; the only `fetch` in `src/` is a same-origin `build-info.json` read.
 
 ---
 
 ## Work packages
 
-### 90.0 — The ordinary-owner time-advance instrument · **first, and gated on its own**
+### 91.1 — A second producer of `AuthoringProposal`, reading words rather than a kind-picker
 
-**Build this before any product claim rests on it.** Bundling an unproven instrument with the product whose acceptance depends on it is routing 82's failure pattern — instrument and product failing together with no way to tell which.
+Alongside `proposeDestination()` (D-188), obeying **all seven** of the brief's section 4 rules:
 
-The whole product reads the wall clock in exactly **one** place: `systemClock().now()` at `src/domain/time.ts:576`. `MemoryProvider` captures the moment with `useState(() => clock.now())` and re-reads it on defined events. So Playwright's **`page.clock`**, installed _before_ `page.goto`, then `fastForward` plus a reload, moves the entire product's moment deterministically.
+1. **Proposed, never silently asserted** — nothing written without confirmation.
+2. **The owner's wording is preserved byte-identically.** D-162 forbids scoring it; this forbids editing it.
+3. **A derived meaning is a sibling row, never a replacement** — `provenance: 'derived'`, pointing at his record (D-143).
+4. **Cross-domain meaning is proposed or clarified, never assumed.** The app may ask whether this belongs in Money. It may not move it.
+5. **`unknowns` is explicit.** An empty `unknowns` for a two-word aim is a failure, not a success.
+6. **The private boundary is D-167's** — and see 91.3, because it is not yet a single chokepoint.
+7. **No score.** D-162 binds here as everywhere.
 
-- **No `#/qa`, no `loadInQa`, no fixture seeding, no `travelTo`** — `travelTo` is a laboratory control (`QaScreen.tsx:160`) and must not be used here.
-- Prove the clock moves the product's moment across **a block boundary, a day boundary and a week boundary**, from a fresh store.
-- **Its acceptance is separate from every product acceptance item below.**
+### 91.2 — Close correction 3.6's gap · **the hardest item in the phase**
 
-This is D-161 extended from record-kind reachability to **screen** reachability: a capability is proved in a browser that has never opened the QA laboratory.
+A destination with no milestone creates a `destination` entity **no generator consumes**, so a bare aim reaches nothing. Either the clarification must reach a milestone, or the bare aim must reach Now by some other route.
 
-### 90.1 — Whole-product visual coherence
+**Naming which, and proving it, is this phase's hardest item**, and it is the difference between shipping interpretation and shipping a better-worded string. Acceptance test 6 — _Now produces a move it did not produce before_ — is the strongest single test on the list and is what this package exists to satisfy.
 
-Canonical section 54's review list, in full: hierarchy; spacing; typography; surface depth; contrast; motion; mood; copy; repeated components; phone density; navigation; private-domain discretion; empty states; error states.
+### 91.3 — Consolidate the private boundary
 
-**Anti-pattern review, rejecting:** submarine panel; cave; gamer UI; developer dashboard; card soup; massive empty dark spaces; endless tiny metrics; pastel wellness.
-
-### 90.2 — Typeset what routing 84 shipped
-
-Each of these exists, is reachable from a near-empty store, and has no visual language:
-
-- **A destination** per life area, four parts, any of which may be absent — and **an absent part reads as unstated**, never as zero (G-009).
-- **A milestone** — a goal that names its destination (D-181). It must read as a different thing from a goal and from a completed session, and it is reached **only when the owner says so**.
-- **Seven rungs of progress evidence** — attempt, part-done, completion, quality, retained-capability, transfer, milestone — each with its own sentence and its own statement of what it is _not_ evidence of. A completed session, a completed course and a milestone are three different things on the page.
-- **One create-and-confirm control** for a goal, routine, person, place, skill and obligation, showing the interpretation the owner agrees to and what the app will not assume.
-- **A second questioning surface** on Insights, with its own weekly budget, always skippable, able to show what an answer changed.
-- **One optional question after "Can't right now"**, and a way back to an interrupted or half-finished move.
-- **Two correction gestures** on a recorded event — withdraw and re-date — each stating its consequence before it acts.
-- **One owner permission** on the Private page, off by default (D-167).
-
-> **The no-score rule binds every one of them.** No percentage, share, bar, rank, grade or readiness figure about the owner or about Adaya, and a destination must not become a score through the back door. **A phase whose subject is visual coherence is the second place a number arrives looking reasonable** — the first was the phase that built the objects. D-162 and section 22.
-
-### 90.3 — Structural accommodation · **reserve the shape, build none of it**
-
-Passing the phone gate on a design that forecloses one of these re-opens a passed gate later. Canonical section 54's nine rows stand unchanged:
-
-a course of action carrying a **review status and a verdict sentence** · a tradeoff clause naming a **longer horizon** inside Q9's one-additional-clause budget, not a second card · a **recurring constraint** the owner can see and dismiss, on the domain page · a held intention resolving to **fulfilled, missed or expired** · a **maintenance-versus-advancement distinction in the reason line**, not a chart · an evidence card carrying a **competing explanation and an open question** · domain pages composing a **destination section with an existing progression object** · a compact **reentry state** after a long absence · a restrained **"why am I being asked this?"** affordance, no dashboard and no score.
-
-**Six further rows, from the settled owner decisions (D-216 … D-227):**
-
-1. **A cross-domain re-file option** inside a confirmation block — one option row, not a picker screen. Routing 91 needs it; this phase only leaves room.
-2. **An expectation-and-reconciliation line** on an evidence surface: what the app expected, and what happened (D-219, routing 96).
-3. **A destination that is not moving**, readable as a state of the destination rather than as a new card — and **pull-only in its domain's tier** (D-216).
-4. **The six emotional dimensions as six independently-unknown readings**, with no arrangement in which they could be summed or averaged (D-166, D-221).
-5. **A twelfth domain page** in navigation — Love / Dating / Romantic Life (D-168). Designed even though it is built at routing 94.
-6. **A fifth correction gesture** — _"the record is incomplete here"_ — alongside withdraw and re-date, stating its consequence before it acts (D-218).
-
-**And one refinement rather than a new row:** the existing _"why am I being asked this?"_ affordance must be able to carry a **provenance answer**, because under D-222 a research prior may aim a question and must be answerable for. It may never render as a claim about the owner.
-
-### 90.4 — AUD findings assigned to this phase
-
-**AUD-0038(a) and (b)**, **AUD-0043**, **AUD-0044** — the visual-phase members of the audit's own assignment. AUD-0044's stale-belief grouping is also the mechanism behind accommodation row 8's reentry state.
-
-### 90.5 — DEF-0150 · one-line incidental correction
-
-`src/domain/time.ts:562` cites `tests/unit/no-ambient-clock.test.ts`. **That file does not exist**; the ambient-clock guard is real and lives in `tests/unit/architecture-guards.test.ts`. **Correct the comment to name the real file. Nothing else.**
-
-It is in scope here only because package 90.0 rests on that guard being real — it is, and only its name is wrong. **This is a comment fix. Do not turn it into architectural work, do not move the guard, and do not widen it.**
+`situation.ts:525` is the reasoning check. **Six other sites exclude private material permission-blind** — `coverage.ts:638,871` and `insights.ts:1601,1816,2026,2559`. Consolidating them is part of this package rather than an assumption it may make, so that _"private text never reaches the interpreter with D-167 off"_ becomes a property rather than a convention.
 
 ---
 
 ## Acceptance gate
 
-1. **Owner physical-phone approval.** The canonical gate, and it is not satisfied by any viewport, emulator or screenshot.
-2. **The structural accommodation list is intact** — all nine canonical rows plus the six above, each reserved and none built.
-3. **The owner-use review's section 11.8 acceptance questions run for the first time.**
-4. **The time-advance instrument is proved independently of every product claim** — block, day and week boundaries, fresh store, no QA laboratory.
-5. **The standing guards still bite**, proved by reintroduction where a guard exists: no score, percentage, share, bar, rank, grade or readiness figure about the owner or about Adaya; no wellness composite; no Life Score; the child copy guard unchanged; D-167's permission still off by default; nothing aggregating across the six emotional dimensions.
-6. **The normal required gates**: full test suite, browser matrix at 360/430/1280, the Android-style pass, privacy scan, checkpoint equivalence, release integrity against the manifest (D-211), CI green, and a clean worktree.
+**All eight CASE A acceptance tests** (`ROUTING_91_BRIEF.md` section 3), from a fresh store, in a browser that has never opened `#/qa` — plus test 6 proved in **two** domains.
+
+1. It reaches the right domain — _"More money"_ names Money, or asks which.
+2. The words survive byte-identically, and any derived meaning is a separate row.
+3. Ambiguity is declared, not resolved.
+4. Exactly one follow-up, and it is concrete — under the existing discovery budget, not three.
+5. Declining costs nothing — the aim survives, no derived record is written.
+6. **Now changes.** A destination in the resolved domain produces a candidate where none existed.
+7. Cross-domain links are proposed, never asserted — confirmable and reversible.
+8. Privacy holds — with D-167 off, no private text reaches the interpreter, **proved by asserting the digest's contents rather than by reading copy**.
+
+**The ordinary-owner contract**, from §6.3: fresh store, no laboratory. Open Insights, meet the Career aspiration question, type _"More money"_, and walk (a) through (h) — including **(g) advance three days and confirm the interpretation is not re-proposed**, which is what routing 90's time-advance instrument (`tests/browser/phase90-clock.spec.ts`) exists for. Then the same journey in a second domain with a differently-shaped phrase, to prove the interpreter is not one hard-coded case.
+
+**The synthetic contract:** byte-identity of stored wording across every phrase in the copy library; `provenance: 'derived'` on every derived row; a digest assertion that private material is absent from the interpreter's input; adversarial phrases — empty, whitespace, a single character, thousands of characters, mixed-domain, contradictory; and **the null case, where an unambiguous phrase produces no clarification at all**.
+
+**The normal required gates:** full test suite, browser matrix at 360/430/1280, the Android-style pass, privacy scan, checkpoint equivalence, release integrity against the manifest (D-211), CI green, and a clean worktree.
+
+---
+
+## What routing 90 learned, and this phase is bound by
+
+**D-238 — a test's title is a claim.** Routing 90 took three independent QA rounds, **every blocker was an instrument defect rather than a product one, and four of the five were false greens in regressions the builder wrote and reported as proof.** Two corollaries bind directly here:
+
+- **A page-wide assertion cannot localise a defect.** Where a rendered value has more than one source, assert each source where it renders.
+- **A negative claim needs an instrument that could have returned a positive.** Before writing _nothing / none / unreachable_, demonstrate the positive case once with the same instrument. Routing 90 reported a false "unreachable" from a clock-only probe and cost QA a round.
+
+This phase is full of assertions of the form _"no derived record was written"_ and _"no private text reached the interpreter"_. Every one of them is a negative claim, and every one needs a probe that has been shown to find the positive.
 
 ---
 
 ## What this phase must NOT do
 
-- **No semantic capture.** Reading owner text for meaning is **routing 91** and must not be pulled forward. `destinationRecords()` keeps `draft.aim.trim()` and the prompt's own domain.
-- **No new concept, no new vocabulary, no registry reach.** That is routing 92.
-- **No new conclusions from evidence.** Routing 93.
-- **No new domain built** — the twelfth is designed in navigation only; building it is routing 94.
-- **No advancement register, no "closer" sentence, no scaffolding guidance.** Routing 94 and 95.
-- **No named expectation and no reconciliation.** Routing 96.
-- **No inference mechanism.** Routing 97, and it is held by D-172.
-- **No scoring change of any kind.** Routing 82 re-cut the instrument and re-baselined the tournament (D-137, D-138); this phase must not disturb either.
-- **No change to `QUESTIONS_PER_DAY`** and no new asking channel.
-- **Phases 1 through 84 are not reopened.**
+- **CASE B, explicitly.** The brief is right that capture without enforcement produces the worst outcome available — the app says it understood and offers the walk again tomorrow at full score.
+- **No model, no hybrid, no network call.** D-025.
+- **No inference over history.** That is routing 97, and it is held by D-172.
+- **No widened vocabulary** beyond what the interpreter itself needs. That is routing 92.
+- **No emotional dimensions.** D-166 and D-221 place them in 92 and 94.
+- **No new conclusions from evidence** (93), no new domain built (94), no advancement register (95), no named expectation or reconciliation (96).
+- **No scoring change of any kind**, and no change to `QUESTIONS_PER_DAY` or `DISCOVERY_PER_WEEK`.
+- **Phases 1 through 90 are not reopened.**
 
 ---
 
@@ -122,104 +108,25 @@ It is in scope here only because package 90.0 rests on that guard being real —
 
 The phase becomes **YELLOW — READY FOR INDEPENDENT QA**, never GREEN. **A builder conversation may not approve its own phase** (D-077).
 
-In that same response, without being asked, provide: phase status; checkpoint SHA; deployed Preview SHA and whether they match; exact verification counts; known, open and deferred items; the recommended **Codex** model and reasoning level for QA — **a middle level, and never Max, which is not a Codex level**; the conversation instruction (**NEW**); the exact QA report path `docs/qa/PHASE_90_QA_HANDOFF.md`; and the complete QA prompt written into that file.
+In that same response, without being asked, provide: phase status; checkpoint SHA; deployed Preview SHA and whether they match; exact verification counts; known, open and deferred items — including the nineteen D-210 instrument-hardening findings, which stay untouched; the recommended **Codex** model and reasoning level for QA — **a middle level, and never Max, which is not a Codex level**; the conversation instruction (**NEW**); the exact QA report path `docs/qa/PHASE_91_QA_HANDOFF.md`; and the complete QA prompt written into that file.
 
 End with the four lines and the launcher (D-092).
 
-**Do not write a completion marker into this file until this dispatch is actually finished.**
-
 ---
 
-# Dispatch complete — routing 90 is built and submitted
+## Short launcher
 
-**Written by the routing 90 Claude builder conversation.** Everything above is
-the dispatch as it was received and is unchanged. This section records what was
-done against it.
+**Model:** Claude Opus 5. **Reasoning level:** Max. **Conversation:** NEW.
 
-**Phase status: YELLOW — READY FOR INDEPENDENT QA.** Never GREEN. A builder
-conversation may not approve its own phase (D-077), and this phase's canonical
-gate is the **owner's physical phone**, which no automated result satisfies.
+```text
+Continue the Life Command OS rebuild.
 
-## The six work packages
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-| Package  | What was delivered                                                                                                                                                           |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **90.0** | `tests/browser/phase90-clock.spec.ts` — block, day and week boundaries under `page.clock`, from a fresh store, no laboratory. Gated on its own and proved by reintroduction. |
-| **90.1** | Surface-weight axis, elevation reserved for the decision, phone density, motion, and the explicit anti-pattern review (design record section 3).                             |
-| **90.2** | Destination, milestone, seven rungs, courses, the authoring control, corrections and the permission all typeset; `ObjectKind` is the shared vocabulary.                      |
-| **90.3** | Fifteen accommodation rows as a machine-checked table — each **reserved**, and **none built**.                                                                               |
-| **90.4** | AUD-0038(a), AUD-0038(b), AUD-0043, AUD-0044 — each with a regression that fails when the defect is reintroduced.                                                            |
-| **90.5** | DEF-0150: one comment now names the guard's real file. Nothing else.                                                                                                         |
-
-## The checkpoint and its gates
-
-| Fact                                      | Value                                                                   |
-| ----------------------------------------- | ----------------------------------------------------------------------- |
-| Product checkpoint                        | `c6e0b3a`                                                               |
-| `npm run verify`, clean checkout          | PASS                                                                    |
-| Unit / contract / synthetic / adversarial | **1,895 passed** in 87 files (1,861 in 84 before)                       |
-| Browser, 360 / 430 / 1,280, one worker    | **761 of 762** — one `ERR_ABORTED` navigation flake, green in isolation |
-| Privacy scan                              | clean, 304 tracked files                                                |
-| Android-style gate                        | **clean — 233 checks**                                                  |
-| Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`c6e0b3a`)            |
-| Checkpoint equivalence                    | bundle-equivalent; no files changed between `c6e0b3a` and HEAD          |
-| Worktree                                  | clean                                                                   |
-| CI and deployed Preview                   | **green** — run 33427826197; the Preview serves `2c45b29`               |
-
-**The deploy.** `c6e0b3a` was pushed after the gate was run, on the owner's
-instruction. CI run **33427826197** is green on both Verify and Deploy preview,
-and the Preview serves **`2c45b29`** — the documentation commit carrying the
-numbers above. `checkpoint-equivalence.mjs` reads the deployed SHA live and
-reports bundle-equivalent: the three files that changed are all documents.
-**Release integrity against the deployed bytes is clean — 8 files served byte
-for byte as verified**, checked with the manifest CI uploaded rather than with a
-local build, which is the provenance D-211 requires.
-
-**Independent QA can begin.** The Preview serves this checkpoint's bundle, so
-step 1 of the protocol — cold use of the deployed app — is now a reading of
-routing 90 rather than of routing 84.
-
-## What the phase did not do
-
-No semantic capture (91). No new concept or vocabulary (92). No new conclusion
-from evidence (93). No twelfth domain built — designed in navigation only (94).
-No advancement register and no "closer" sentence (94, 95). No named expectation
-and no reconciliation (96). No inference mechanism (97, held by D-172). No
-scoring change of any kind. No change to `QUESTIONS_PER_DAY`. Phases 1 through 84
-are not reopened.
-
-## Open and deferred, unchanged
-
-The **nineteen deferred Phase 84 instrument-hardening findings** (D-210,
-`docs/qa/INSTRUMENT_HARDENING_BACKLOG.md`) are untouched and still open.
-Re-finding one of them is not a routing 90 defect.
-
-## Two defects found by the review itself
-
-**DEF-0152** — `--border-subtle` and `--edge` are read by four declarations and
-defined nowhere, so three borders never rendered. Fixed, and guarded by a link
-step for the design system. **DEF-0153** — the "Not right?" control rendered as
-two lines beside every entry in a list at 360 pixels. Fixed and measured.
-
-## The next handoff
-
-The complete QA prompt is written into **`docs/qa/PHASE_90_QA_HANDOFF.md`**,
-Round 0. It carries the checkpoint, the acceptance criteria, what changed stated
-as changes, the reintroduction proofs to repeat, the ordinary-owner and synthetic
-contracts, and the places the builder thinks the risk is.
-
-- **Model:** Codex — independent QA, per D-090. The builder is Claude; the
-  reviewer must not be.
-- **Reasoning level:** **High** — a middle level. **Never Max**, which is
-  Claude's level and stops the orchestrator when it appears in a Codex block.
-- **Conversation:** **NEW** — not this builder conversation, and not any routing
-  84 conversation.
-
-```
-Read docs/qa/PHASE_90_QA_HANDOFF.md in full, in the repository at
-D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild, and execute
-Round 0's brief exactly as written. This is the independent QA handoff for
-routing phase 90. Do not ask for the file to be pasted.
+Read docs/NEXT_PROMPT.md in full and execute the current handoff exactly as
+written. This is routing phase 91, semantic capture and clarification. Do not
+ask me to paste the file contents.
 ```
 
-<!-- LCO_COMPLETE -->
+**Do not write a completion marker into this file until this dispatch is actually finished.**
