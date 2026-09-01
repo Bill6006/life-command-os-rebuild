@@ -1453,4 +1453,299 @@ unless you are recommending otherwise, and do not treat any automated result as
 the owner's physical-phone approval. Do not ask me to paste the file.
 ```
 
+---
+
+## Round 3 independent QA — PASS
+
+**Phase:** routing Phase 90, the Phase 9 visual-coherence gate.
+
+**QA-tested product checkpoint:**
+`8b0c2ba8d8c005f912baf91cf5aeea82b64501e3`.
+
+**Deployed documentation head tested:**
+`a6ef17df13c8ec8b09b667230302db83c82d371a`.
+
+**Checkpoint relationship:** one changed file — this handoff — and no
+bundle-relevant change. The deployed head serves the product bytes from
+`8b0c2ba`.
+
+**Overall QA result: PASS.** QA-90-004 is closed. The rendered acceptance
+instrument now proves Session, Course and Milestone on one owner-reachable page,
+and every requested semantic collapse makes it fail.
+
+**Phase status remains YELLOW.** This PASS is not the owner's physical-phone
+approval. That separate canonical gate is still **OUTSTANDING / blocking**, so
+formal GREEN closeout must wait for an explicit owner result from a real phone.
+
+### What changed in the repaired checkpoint
+
+No product code changed between the Round 2 checkpoint and this repair.
+`tests/browser/phase90-round1.spec.ts` now drives the already-shipped **Two
+sessions in** flow through Now's Start and Done controls, authors Career
+direction and a milestone through ordinary domain controls, and asserts the
+named semantic marker at each relevant component. `tests/browser/phase90.spec.ts`
+now titles its original homogeneous-style assertion for the claim it actually
+proves: **no object marker is styled to outrank another**.
+
+The repair diff is confined to those two browser files plus the builder's
+handoff record. No fixture was added and no product behavior was changed.
+
+### QA-90-004 exact retest — PASS
+
+The old title **a session, a course and a milestone are three different
+things** no longer exists. Its replacement in `phase90.spec.ts` asserts only
+uniform marker restraint, matching its title.
+
+The acceptance claim now lives in `phase90-round1.spec.ts`. At 360 px, all five
+tests in its QA-90-002 / QA-90-004 describe passed. The flow:
+
+1. loads **Two sessions in**;
+2. opens Now through the normal navigation;
+3. starts and completes the third and final subnetting session;
+4. opens Career and authors aim **Move into a networking role** with milestone
+   **Finish the CCNA**; and
+5. reads the resulting objects from the rendered Career page.
+
+The tests require:
+
+- exact page-wide presence of **SESSION**, **COURSE**, **MILESTONE** and
+  **DESTINATION**, while retaining **EVIDENCE** for generic evidence rungs;
+- **Course** inside `progress-courses`, beside **Courses finished**;
+- **Session** inside `progress-completion`, beside **Sessions done**;
+- **Milestone** inside the destination's milestone component; and
+- **Milestone** again inside the goals-panel row.
+
+The last two assertions matter. A page-wide set remained green when one of the
+two milestone components was deliberately collapsed; the component-local
+assertions close that false-green class.
+
+### Deployed rendered proof — PASS
+
+I repeated the flow on the deployed Preview at 360 x 800. The Preview identified
+itself as `a6ef17d`. After completing the final subnetting session and authoring
+the Career direction, the page rendered:
+
+| Marker | Component | Computed color | Size | Weight |
+| --- | --- | --- | --- | --- |
+| Destination | destination | `rgb(141, 150, 170)` | 12 px | 600 |
+| Milestone | destination milestone | `rgb(141, 150, 170)` | 12 px | 600 |
+| Milestone | goals-panel row | `rgb(141, 150, 170)` | 12 px | 600 |
+| Evidence | attempt rung | `rgb(141, 150, 170)` | 12 px | 600 |
+| Session | completion rung | `rgb(141, 150, 170)` | 12 px | 600 |
+| Course | finished-courses block | `rgb(141, 150, 170)` | 12 px | 600 |
+
+The words are semantically distinct and their visual treatment remains
+deliberately equal. No marker reads as a rank, score or preferred object.
+
+This was accessible-DOM and computed-style evidence from the live page; no
+repository screenshot artifact was needed for this text/style closure.
+
+### Independent collapse proofs
+
+Each collapse was applied alone to production source, rebuilt, exercised
+against the five 360 px QA-90-004 tests, and restored with a patch before the
+next mutation.
+
+| Reintroduced defect | Expected failure observed |
+| --- | --- |
+| Finished Course marker `course` -> `evidence` | **2 failed, 3 passed** — exact-page presence and the courses block both rejected it |
+| `RUNG_KIND.completion` Session -> `evidence` | **3 failed, 2 passed** — completion block, exact-page presence and paired course/session block rejected it |
+| Destination-list Milestone -> `goal` | **1 failed, 4 passed** — the destination-local milestone assertion rejected it |
+| Goals-panel Milestone -> `goal` | **1 failed, 4 passed** — the goal-row-local milestone assertion rejected it |
+
+After restoration, all five focused tests passed again and `git diff` was empty.
+The collapse counts exactly match the builder's report.
+
+### False-confidence and reachability audit
+
+The Round 2 false greens are closed:
+
+- the old Phase 90 test no longer claims semantic evidence it does not assert;
+- the repaired test requires Course rather than substituting Destination for
+  it;
+- Course and Session are asserted on their own source blocks rather than only
+  somewhere on the page; and
+- both independently rendered Milestone components are asserted locally.
+
+I inventoried every production `ObjectKind` use. On this Career page,
+Milestone is the only semantic word produced by two independent component
+sources. Evidence may appear more than once, but those instances share the one
+exhaustive `RUNG_KIND` source. Destination also appears on Life, but not as a
+second independent source on this page. No sibling page-wide false green was
+found.
+
+I also swept the routing-90 tests, source and handoff for other claims of
+unreachability derived from a clock-only scenario probe. The corrected
+finished-course claim is the only such claim in this campaign. The +200-day
+stale-belief probe establishes a time-dependent positive branch; it is not a
+negative claim about an action-dependent state.
+
+### Phase-90 acceptance criteria after Round 3
+
+| Acceptance criterion | Result | Evidence |
+| --- | --- | --- |
+| 1. Physical-owner phone gate | **OUTSTANDING / blocking** | Technical phone-width and Android-style evidence passed. No physical-owner approval was supplied, and QA does not fabricate one. |
+| 2. Accommodation table is structural only | **PASS** | No product code or accommodation record changed; every reserved/unbuilt shape remains as before. |
+| 3. Ten owner-review acceptance questions are run honestly | **PASS as review; prior partial/no answers remain** | Round 1's §11.8 answers remain authoritative. A test-only repair supplies no reason to upgrade a research answer. |
+| 4. Trusted clock before navigation, both pairs at three widths | **PASS** | The block/day and week/day tests passed at 360, 430 and 1280 with a fresh store and `page.clock` installed before navigation. |
+| 5. Narrowed guards plus named visual/semantic checks | **PASS** | The rendered Session/Course/Milestone proof is now exact and bites under every requested collapse; standing guards remain green. |
+| 6. Normal gates plus responsive browser and Android-style gate | **PASS** | Aggregate verification, 786-case matrix, privacy, Android, CI, equivalence and live integrity are all clean. |
+
+### Full verification on the restored tree
+
+| Gate | Round 3 result |
+| --- | --- |
+| Focused QA-90-004 baseline | **5 / 5 passed** at 360 px |
+| Four collapse reintroductions | **Expected FAIL observed** — 2, 3, 1 and 1 failures respectively |
+| Focused suite after restoration | **5 / 5 passed** |
+| `npm run verify` | **PASS** — format, lint, typecheck, tests, build, manifest and rendered-copy scan |
+| Unit / contract / synthetic / adversarial | **1,903 / 1,903 passed** in 88 files |
+| Rendered-copy scan | **clean — 8,171 shipped strings**, 8,085 placed in a module, 1 script chunk, 2 stylesheets |
+| Browser matrix, one worker | **786 / 786 passed in 17.7 minutes** — 262 each at 360, 430 and 1280 |
+| Trusted-clock pairs | **PASS** inside the matrix at all three widths |
+| Deployed Android-style gate | **clean — 233 checks** against `a6ef17d` |
+| Android configuration | Galaxy S24-style, 360 x 780 CSS px, DPR 3, touch/mobile, Android 14 / `SM-S921B` user agent |
+| Privacy scan | **clean — 306 tracked files** |
+| Product-checkpoint CI | **PASS** — run `33470594269`, Verify and Deploy preview |
+| Deployed-head CI | **PASS** — run `33472004086`, Verify and Deploy preview |
+| Checkpoint equivalence | **PASS** — `8b0c2ba` to deployed `a6ef17d`; only this handoff differs, nothing bundle-relevant |
+| Live release integrity | **PASS** — the `a6ef17d` CI manifest matches all 8 served files byte for byte |
+| Remote containment | **PASS** — no commit on HEAD is absent from every remote |
+| Restored worktree | **clean** before this report was written |
+
+The three Node-based remote gates were run with `node --use-system-ca`, which
+retains TLS verification while using the host's Windows trust store.
+
+### Deferrals preserved
+
+The nineteen D-210 Phase 84 instrument-hardening findings remain untouched,
+open and identically numbered. `docs/qa/INSTRUMENT_HARDENING_BACKLOG.md` remains
+blob `58d5af071355d252c4a254fc685fcc9e8e88f417`. The advancement register,
+richer explainability, adaptation promises, longitudinal personalization,
+Phase 10/11 work and every other named future item remain deferred exactly as
+before.
+
+### Overall disposition
+
+**PASS for independent QA. QA-90-004 is closed, and no new product,
+instrument, semantic or mobile defect was found.** The repaired product
+checkpoint is suitable for the canonical owner physical-phone gate.
+
+**Do not mark Phase 90 GREEN yet.** Phase 90 remains YELLOW until the owner
+personally runs the ordinary-owner contract on a real phone and explicitly
+approves the visual/mobile result. A viewport, Android-style context, automated
+matrix or this QA PASS cannot substitute for that decision.
+
+If the owner approves, the original builder may perform a documentation-only
+formal GREEN closeout and route the next package. If the owner rejects any
+screen or interaction, record the exact device/reproduction, keep the phase
+YELLOW, repair the whole defect class and return to this same QA conversation.
+
+---
+
+## Complete next handoff — owner phone gate, then conditional formal closeout
+
+**System:** Claude / original routing 90 builder.
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent — the next
+step must preserve the adjudication-created audit campaign while separating
+owner judgement from automated evidence.
+
+**Intelligence level:** **Max** — the standing audit-campaign level remains in
+force through the owner gate and formal closeout.
+
+**Conversation:** **CURRENT** — return to the original routing 90 Claude builder
+conversation, which owns the phase record and formal closeout.
+
+```text
+Routing Phase 90 owner physical-phone gate after independent QA Round 3 PASS.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_90_QA_HANDOFF.md in full. Round 3 is the authoritative
+independent QA retest. Keep the Phase field exactly 90.
+
+Independent QA passed repaired product checkpoint
+8b0c2ba8d8c005f912baf91cf5aeea82b64501e3. The deployed Preview head tested was
+a6ef17df13c8ec8b09b667230302db83c82d371a, bundle-equivalent with only this
+handoff changed. npm run verify passed 1,903 tests in 88 files; the browser
+matrix passed 786 of 786, 262 at each of 360 / 430 / 1280; Android passed 233
+checks; privacy, CI and all eight live artifact bytes were clean. QA-90-004's
+Course, Session and both Milestone-source collapses all failed the repaired
+regression as required. No product code changed in the Round 2 repair.
+
+Do not mark Phase 90 GREEN yet. The canonical owner physical-phone gate remains
+outstanding and cannot be supplied by a viewport, emulator, automated Android
+context, screenshot, Claude or Codex.
+
+Coordinate the real-phone gate with the owner against the deployed Preview. On
+a fresh owner store, with no #/qa and no fixture seeding, have the owner run the
+ordinary contract recorded in this handoff: reach Now; answer a discovery
+question; author a destination and milestone in one domain; receive a move that
+serves it; start it; be interrupted; return; complete it; answer the outcome;
+return on the next owner-local day and confirm the earlier occurrence does not
+read as already done; confirm the milestone remains unreached; repeat direction
+authoring in a second domain; and confirm Life reads as direction rather than
+recency.
+
+The owner must also judge the actual phone experience: hierarchy, density,
+legibility, safe areas, sticky navigation, tap targets, button stability,
+scrolling, overflow, motion, and whether the visual system feels coherent and
+alive rather than bland, cave-like, technical or like homework. Record the
+owner's explicit approval or rejection and the real device/browser used. Do not
+infer approval from silence or from the automated evidence.
+
+If the owner explicitly approves, perform the formal Phase 90 GREEN closeout:
+
+1. Confirm the QA-tested checkpoint, deployed relationship, Round 3 PASS and
+   the owner's separately recorded physical-phone approval.
+2. Mark routing Phase 90 GREEN in the governing phase record and update the
+   decision log, defect ledger, canonical plan/status material and any other
+   governing documents required by the closeout protocol.
+3. Close QA-90-004 and the earlier routing-90 findings only to the extent the
+   QA record supports. Preserve every PASS, every owner-review partial/no answer
+   and every explicit deferral, including all nineteen D-210 items.
+4. Make no product-code or test change during a documentation closeout. Any
+   executable change returns Phase 90 to YELLOW and requires independent QA.
+5. Write the complete next-package builder prompt into docs/NEXT_PROMPT.md,
+   with model, Max level, conversation instruction, complete prompt and short
+   launcher. Do not start that package during the closeout.
+6. Leave both QA rounds and Round 3 untouched. Keep this report's terminal
+   completion marker at the end of this report only; do not copy it into
+   docs/NEXT_PROMPT.md or another handoff.
+7. Commit and push the closeout, wait for Verify and Preview deployment, read
+   the deployed SHA live, and prove its relationship to 8b0c2ba with
+   scripts/checkpoint-equivalence.mjs. Report the closeout SHA, deployed SHA,
+   relationship, owner phone evidence, QA report path and exact next launcher.
+
+If the owner rejects any part of the phone gate, do not perform formal closeout.
+Keep Phase 90 YELLOW, record the exact device, screen, interaction and expected
+versus actual result, repair the whole failure class under section 42, rerun the
+full gate, deploy a repaired checkpoint and dispatch the next retest to the SAME
+Codex QA conversation at High.
+
+Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+
+**Intelligence level:** Max.
+
+**Conversation:** CURRENT — the original routing 90 Claude builder conversation.
+
+```text
+Continue routing Phase 90 after independent QA Round 3 PASS.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_90_QA_HANDOFF.md in full and execute the complete owner
+physical-phone gate and conditional formal-closeout handoff at the end exactly
+as written. Keep Phase 90 YELLOW until explicit owner phone approval is
+recorded. Do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->
