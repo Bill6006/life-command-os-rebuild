@@ -1536,7 +1536,17 @@ async function composedHere(
   scenarioId: string,
   sections: readonly string[],
 ): Promise<readonly string[]> {
-  const info = (await (await request.get(`http://127.0.0.1:4173${APP}build-info.json`)).json()) as {
+  /*
+   * Relative to the configured base URL rather than to a literal port.
+   *
+   * `playwright.config.ts` takes the preview port from `LCOS_PREVIEW_PORT` so a
+   * local matrix can run beside whatever else is bound to 4173, and this was the
+   * one place the number was written out by hand — so overriding the port made
+   * this test, and only this test, ask a machine that was not serving the app.
+   * `request` already carries `baseURL`, so a relative path is both shorter and
+   * incapable of drifting from it.
+   */
+  const info = (await (await request.get(`${APP}build-info.json`)).json()) as {
     commitSha: string
     commitShort: string
     branch: string

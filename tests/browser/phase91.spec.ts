@@ -50,8 +50,7 @@ const APP = '/life-command-os-rebuild/preview/'
 /** UTC, so "three days later" means three local days and not two-and-a-bit. */
 test.use({ timezoneId: 'UTC' })
 
-/** A Tuesday morning, nowhere near a DST transition in UTC (there are none). */
-const TUESDAY_0900 = new Date('2026-03-03T09:00:00Z')
+/** Days, for the one test that moves the moment on purpose. */
 const DAYS = (n: number) => n * 24 * 60 * 60 * 1000
 
 async function go(page: Page, name: 'Now' | 'Life' | 'Timeline' | 'Insights') {
@@ -59,8 +58,28 @@ async function go(page: Page, name: 'Now' | 'Life' | 'Timeline' | 'Insights') {
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
 }
 
-/** A store with nothing in it, and the app says so itself before anything else. */
+/**
+ * A store with nothing in it, at a fixed moment — and the app says so itself.
+ *
+ * ## Why the clock is installed for every test in this file
+ *
+ * It was not, and that was a defect in the instrument rather than a preference.
+ * Outside the laboratory the product's moment is the **wall clock at mount**
+ * (`ROUTING_91_BRIEF.md` §7's third mechanic), so what Now proposes depends on
+ * the block the run happens to fall in. Two of these tests assert that a money
+ * move reaches Now; run late enough in the day they got *"Nothing needs to move
+ * tonight."* instead — a true sentence about a different evening, and a failure
+ * that says nothing about the phase.
+ *
+ * Routing 90 built `page.clock` for exactly this and gated it on its own
+ * (`phase90-clock.spec.ts`). Using it here costs one line and makes every
+ * assertion below a statement about the product rather than about the hour the
+ * gate was run at.
+ */
+const FIXED_MOMENT = new Date('2026-03-03T09:00:00Z')
+
 async function freshApp(page: Page) {
+  await page.clock.install({ time: FIXED_MOMENT })
   await page.goto(APP)
   await expect(page.getByRole('heading', { name: 'There is no history here yet.' })).toBeVisible()
 }
@@ -351,7 +370,6 @@ test.describe('91 — CASE A, walked from a store with nothing in it', () => {
   })
 
   test('(g) three days later the interpretation is not put to him again', async ({ page }) => {
-    await page.clock.install({ time: TUESDAY_0900 })
     await freshApp(page)
 
     await openTheQuestion(page)
@@ -646,26 +664,54 @@ test.describe('91 — the whole contract as one owner, in one store', () => {
     // 7 — and taking the reading back now names what else moves with it.
     await openPage(page, 'money', 'Money')
     await page.getByTestId('destination-reading-withdraw').click()
+    const consequence = page.getByTestId('destination-reading-consequence')
     await expect(
-      page.getByTestId('destination-reading-consequence'),
+      consequence,
       'the next step he named is part of what he is taking back',
     ).toContainText('Clear the credit card')
+    await expect(
+      consequence,
+      'and the gesture states what it does to it, before it does it',
+    ).toContainText('it is set aside')
+    await expect(
+      consequence,
+      'promising nothing about studying a credit card — QA-91-005',
+    ).not.toContainText('currently studying')
     await page.getByTestId('destination-reading-confirm').click()
 
-    // 8 — the aim went back, and so did what the app acts on.
+    /*
+     * 8 — the aim went back, and so did everything the reading caused.
+     *
+     * QA-91-005 is why this asserts the **meaning** of the post-withdraw state
+     * rather than a headline substring. The Round 1 version checked only that
+     * the headline contained *Clear the credit card* — which the fabricated
+     * *"Build a small lab with Clear the credit card"* satisfied perfectly, so
+     * the journey blessed the exact defect it was walking through.
+     */
     await openPage(page, 'career', 'Career & Learning')
     await expect(page.getByTestId('destination-aim')).toHaveText('More money')
     await expect(
-      page.getByTestId('destination-next'),
-      'his own sentence came across unchanged',
+      page.getByTestId('destination-milestones'),
+      'his own sentence is still on the record',
     ).toContainText('Clear the credit card')
+    await expect(
+      page.getByTestId('destination-milestones'),
+      'and it reads as set aside rather than as still ahead',
+    ).toContainText('set aside — the aim moved')
+    await expect(
+      page.getByTestId('destination-next'),
+      'so the aim has no next step, and says so',
+    ).toContainText('Nothing is named as the next step yet.')
 
     await go(page, 'Now')
     await expect(
       page.locator('body'),
-      'Now no longer acts on it as a money thing',
+      'Now stopped acting on it as a money thing',
     ).not.toContainText('Deal with Clear the credit card')
-    await expect(page.locator('.primary-surface__headline')).toContainText('Clear the credit card')
+    await expect(
+      page.locator('body'),
+      'and invented nothing to act on it as a study thing — QA-91-005',
+    ).not.toContainText('Clear the credit card')
 
     // 9 — a second area, a differently shaped phrase, the same store.
     await openPage(page, 'money', 'Money')
@@ -684,6 +730,52 @@ test.describe('91 — the whole contract as one owner, in one store', () => {
     await expect(page.getByTestId('destination-reading')).toContainText(
       'Read as being about Health & Physical Capacity',
     )
+
+    await neverTheLaboratory(page)
+  })
+})
+
+test.describe('91 — a consequence that was started does not outlive the reading', () => {
+  test('stops offering the money move after it is started and the reading is taken back', async ({
+    page,
+  }) => {
+    /*
+     * QA-91-006, as its own branch because it is a different owner state and
+     * because the sequential journey above never presses **Start it**. The
+     * lifecycle rows are real and stay real; what may not survive is the offer.
+     */
+    await freshApp(page)
+    await openTheQuestion(page)
+    await typeAim(page, 'More money')
+    await page.getByTestId('discovery-refile').click()
+    await confirm(page)
+    await openTheQuestion(page)
+    await page.getByTestId('discovery-answer').fill('Clear the credit card')
+    await confirm(page)
+
+    await go(page, 'Now')
+    await expect(page.locator('.primary-surface__headline')).toContainText(
+      'Deal with Clear the credit card today.',
+    )
+    await page.getByTestId('now-actions').getByRole('button', { name: 'Start it' }).click()
+    await expect(page.locator('body'), 'the positive first: it really is under way').toContainText(
+      'Under way',
+    )
+
+    await openPage(page, 'money', 'Money')
+    await page.getByTestId('destination-reading-withdraw').click()
+    await page.getByTestId('destination-reading-confirm').click()
+
+    await go(page, 'Now')
+    await expect(
+      page.locator('body'),
+      'the withdrawn money interpretation is not still current',
+    ).not.toContainText('Deal with Clear the credit card')
+    await expect(page.locator('body')).not.toContainText('Under way')
+
+    // And what he actually did is still on the record.
+    await go(page, 'Timeline')
+    await expect(page.locator('body')).toContainText('Clear the credit card')
 
     await neverTheLaboratory(page)
   })

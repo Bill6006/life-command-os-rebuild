@@ -535,7 +535,27 @@ const DENIERS = [
   'never about',
 ]
 
-const CLAUSE_BREAK = /[,;.—–-]|\sand\s|\sbut\s/
+/**
+ * What ends a denial, and what merely continues it — QA-91-007.
+ *
+ * The first version ended a denied span at `and`, which reads *"Not about money
+ * and debt"* as a denial of money followed by a fresh claim about debt. It is
+ * not: one negation is governing two coordinated objects, and the sentence
+ * denies both. `and` and `or` therefore **continue** a denial.
+ *
+ * What ends one is a real clause boundary — punctuation, or a contrastive
+ * conjunction that turns the sentence around. *"Not about money, but about the
+ * qualification"* names Career, and does so because of the comma and the *but*
+ * rather than because anybody listed the phrase.
+ *
+ * **The bound, said plainly.** A sentence that resumes a positive claim after a
+ * bare `and` with no punctuation — *"Not about money and I want to get fit"* —
+ * is denied to the end and names nothing. That is a false negative, and it is
+ * the direction this file errs in everywhere: an unread phrase names nothing,
+ * offers nothing and writes nothing, and abstaining is the ordinary outcome
+ * rather than the failure case.
+ */
+const CLAUSE_BREAK = /[,;.—–]|\s-\s|\sbut\s|\sthough\s|\srather\s|\sinstead\s/
 
 function deniedSpans(text: string): readonly (readonly [number, number])[] {
   const spans: [number, number][] = []
@@ -586,10 +606,40 @@ function assertedHits(
  */
 const YEAR = /\b(?:19|20|21)\d{2}\b/
 
-function isYear(digits: string): boolean {
-  if (digits.length !== 4) return false
-  const value = Number(digits)
-  return value >= 1900 && value <= 2199
+/**
+ * The shapes a date takes, so their digits stop being read as sums — QA-91-007.
+ *
+ * A four-digit year was already exempt, and that was not enough: *"More money
+ * before 03/15/2027"* still reported the amount as settled, because `03` and
+ * `15` are digits and neither is a year. **The day and the month of a date were
+ * being read as money.**
+ *
+ * So a date is removed before the question *does this say how much* is asked at
+ * all. Three shapes, each closed: a slashed or dashed date in either order, a
+ * month word with a day beside it, and a bare year. Anything else with a digit
+ * in it is a quantity, which is what a number ordinarily is.
+ */
+const MONTH_WORDS =
+  'january|february|march|april|may|june|july|august|september|october|november|december'
+
+const DATE_SHAPES: readonly RegExp[] = [
+  /\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b/g,
+  /\b\d{4}[/.-]\d{1,2}[/.-]\d{1,2}\b/g,
+  new RegExp(String.raw`\b(?:${MONTH_WORDS})\b\s+\d{1,2}(?:st|nd|rd|th)?\b`, 'g'),
+  new RegExp(String.raw`\b\d{1,2}(?:st|nd|rd|th)?\s+(?:${MONTH_WORDS})\b`, 'g'),
+  /\b(?:19|20|21)\d{2}\b/g,
+]
+
+/** The same words with every date taken out of them. */
+function withoutDates(text: string): string {
+  let left = text
+  for (const shape of DATE_SHAPES) left = left.replace(shape, ' ')
+  return left
+}
+
+/** Whether anything here is a date at all, in any of the shapes above. */
+function saysADate(text: string): boolean {
+  return DATE_SHAPES.some((shape) => new RegExp(shape.source).test(text))
 }
 
 /**
@@ -607,12 +657,12 @@ function isYear(digits: string): boolean {
  */
 function saysHowMuch(text: string): boolean {
   if (/[£$€]/.test(text)) return true
-  return (text.match(/\d+/g) ?? []).some((digits) => !isYear(digits))
+  return /\d/.test(withoutDates(text))
 }
 
-/** Whether the words say **by when**, in a word or in a year. */
+/** Whether the words say **by when**, in a word, a year or a written date. */
 function saysWhen(text: string): boolean {
-  return hits(text, HORIZON).length > 0 || YEAR.test(text)
+  return hits(text, HORIZON).length > 0 || YEAR.test(text) || saysADate(text)
 }
 
 // ---------------------------------------------------------------------------

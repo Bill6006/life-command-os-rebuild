@@ -30,7 +30,7 @@ import {
   destinationRecords,
   destinationRef,
   milestoneFor,
-  refileMilestone,
+  setMilestoneAside,
   relationshipEventRecord,
   reviseDestinationRecord,
   type AuthoringDraft,
@@ -395,25 +395,34 @@ export function DomainPage({ page }: { page: LifePage }) {
     setWorking(true)
     const at = authoringMoment()
 
-    const built = entry.destination.milestones
-      .map((milestone) => memory.view.history.byId(milestone.goal.source))
-      .filter((found) => found !== undefined && found.kind === 'goal')
-      .map((found) => refileMilestone(found as GoalRecord, previous.askedIn, situation, at))
-
     void memory
-      .create({
-        entities: built.flatMap((result) => result.entities),
-        records: [
-          withdrawAimReading(previous, at),
-          reviseDestinationRecord(record, { domain: previous.askedIn }, at),
-          ...built.flatMap((result) => result.records),
-        ],
-        created: undefined,
-      })
+      .append([
+        withdrawAimReading(previous, at),
+        reviseDestinationRecord(record, { domain: previous.askedIn }, at),
+        ...liveMilestonesOf(entry).map((goal) => setMilestoneAside(goal, at)),
+      ])
       .finally(() => {
         inFlight.current = false
         setWorking(false)
       })
+  }
+
+  /**
+   * The `goal` records under an aim that the app is still acting on.
+   *
+   * Both reading gestures set these aside, and both read them from the resolved
+   * destination rather than by scanning for `milestoneOf`, so the page and the
+   * engine agree about what a milestone of this aim is. Already-reached and
+   * already-set-aside steps are left alone: there is nothing to stop suggesting.
+   */
+  const liveMilestonesOf = (entry: DomainDestination): readonly GoalRecord[] => {
+    const out: GoalRecord[] = []
+    for (const milestone of entry.destination.milestones) {
+      if (milestone.reached || milestone.setAside) continue
+      const found = memory.view.history.byId(milestone.goal.source)
+      if (found !== undefined && found.kind === 'goal') out.push(found)
+    }
+    return out
   }
 
   /**
@@ -433,21 +442,12 @@ export function DomainPage({ page }: { page: LifePage }) {
     setWorking(true)
     const at = authoringMoment()
 
-    const built = entry.destination.milestones
-      .map((milestone) => memory.view.history.byId(milestone.goal.source))
-      .filter((found) => found !== undefined && found.kind === 'goal')
-      .map((found) => refileMilestone(found as GoalRecord, into, situation, at))
-
     void memory
-      .create({
-        entities: built.flatMap((result) => result.entities),
-        records: [
-          reviseDestinationRecord(record, { domain: into }, at),
-          aimReadingRecord(reading, into, entry.destination.destination, record.id, at),
-          ...built.flatMap((result) => result.records),
-        ],
-        created: undefined,
-      })
+      .append([
+        reviseDestinationRecord(record, { domain: into }, at),
+        aimReadingRecord(reading, into, entry.destination.destination, record.id, at),
+        ...liveMilestonesOf(entry).map((goal) => setMilestoneAside(goal, at)),
+      ])
       .finally(() => {
         inFlight.current = false
         setWorking(false)

@@ -5,6 +5,19 @@ import { defineConfig, devices } from '@playwright/test'
  * width. Physical-phone validation remains mandatory and is not replaced by
  * these projects.
  */
+/**
+ * The preview port, overridable so a matrix can run beside another project.
+ *
+ * Default 4173 and unchanged: CI sets nothing and behaves exactly as it did.
+ * What this buys is a local run that does not collide with whatever else is
+ * already bound to that port — a collision that is not a product signal and,
+ * on one run of routing 91's round 2 gate, produced 686 failures of which 679
+ * were `ERR_CONNECTION_REFUSED`. A gate that cannot be told apart from a busy
+ * machine is a gate nobody can read.
+ */
+const PREVIEW_PORT = Number(process.env.LCOS_PREVIEW_PORT ?? 4173)
+const PREVIEW_ORIGIN = `http://127.0.0.1:${PREVIEW_PORT}`
+
 export default defineConfig({
   testDir: './tests/browser',
   fullyParallel: true,
@@ -28,7 +41,7 @@ export default defineConfig({
     // ::1 and 127.0.0.1, and parallel workers hitting the dual-stack name drop
     // connections (ERR_ABORTED / navigation timeouts) that look like product
     // failures but are not.
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: PREVIEW_ORIGIN,
     trace: 'on-first-retry',
   },
   projects: [
@@ -52,8 +65,8 @@ export default defineConfig({
    * `npm run test:browser`, which builds first.
    */
   webServer: {
-    command: 'npm run preview -- --host 127.0.0.1 --port 4173 --strictPort',
-    url: 'http://127.0.0.1:4173/life-command-os-rebuild/preview/',
+    command: `npm run preview -- --host 127.0.0.1 --port ${PREVIEW_PORT} --strictPort`,
+    url: `${PREVIEW_ORIGIN}/life-command-os-rebuild/preview/`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: { LCOS_TARGET: 'preview' },

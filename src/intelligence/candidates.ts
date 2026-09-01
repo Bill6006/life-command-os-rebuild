@@ -186,7 +186,7 @@ function firstOfKind(
 }
 
 /**
- * The same, and only where the record still refers to it — QA-91-002.
+ * The entity an **active** goal names — QA-91-002, QA-91-006.
  *
  * ## The finding this closes
  *
@@ -200,13 +200,23 @@ function firstOfKind(
  * owner was told his aim was back in Career while Now went on acting on it as
  * Money.
  *
- * ## Why this is D-021 rather than a new rule
+ * ## The first repair was right about the class and too loose about the test
  *
- * *"Every other subject a recommendation can be about must already exist in the
- * owner's history, or the move is not proposed."* An entity nothing in the
- * effective history refers to is not in his history; it is the leftover of one.
- * Reading it is the engine naming a subject from its own index, which is the
- * exact thing D-021 forbids.
+ * Round 1 asked whether **any** effective record still referred to the entity.
+ * QA-91-006 broke it in one press: start the money move, then withdraw the
+ * reading, and the `action-recommendation` and `action-start` rows go on
+ * referring to the financial goal — so the withdrawn interpretation stayed live
+ * and *Under way* on Now. **A record of having been offered something is not a
+ * reason to offer it again.**
+ *
+ * ## What actually makes a money item open
+ *
+ * An **active goal naming it**. That is what the generator's own sentence has
+ * always meant — *"needs a goal that exists, never a generic check your
+ * budget"* — and it answers all three states at once: a leftover index entry
+ * with no goal, a goal set aside when the aim moved, and a goal with lifecycle
+ * rows hanging off it. `direction.goals` is `activeGoals`, so this is one lookup
+ * against the list the rest of the engine already treats as what is live.
  *
  * ## Why it is applied here and not to {@link firstOfKind}'s other five callers
  *
@@ -218,14 +228,14 @@ function firstOfKind(
  * widening an unmeasured narrowing across five generators is how a repair
  * becomes a regression.
  */
-function firstStillReferredTo(
+function openGoalEntity(
   situation: Situation,
   kind: SemanticEntity['kind'],
 ): SemanticEntity | undefined {
-  for (const entity of situation.entities.byKind(kind)) {
-    for (const record of situation.view.history.effective) {
-      if (record.entities.some((ref) => ref.id === entity.id)) return entity
-    }
+  for (const goal of situation.direction.goals) {
+    if (goal.goal.kind !== kind) continue
+    const entity = situation.entities.resolve(goal.goal)
+    if (entity !== undefined) return entity
   }
   return undefined
 }
@@ -762,11 +772,12 @@ function nextMilestoneIn(situation: Situation, domain: LifeDomainId): ActiveGoal
 }
 
 /**
- * Money. Needs a goal the record still refers to, never a generic "check your
- * budget" and never a leftover index entry (QA-91-002).
+ * Money. Needs an **open** goal, never a generic "check your budget", never a
+ * leftover index entry and never one the owner has set aside (QA-91-002,
+ * QA-91-006).
  */
 const moneyCandidates: Generator = (situation) => {
-  const goal = firstStillReferredTo(situation, 'financial-goal')
+  const goal = openGoalEntity(situation, 'financial-goal')
   if (goal === undefined) return []
 
   const ref: EntityRef = { id: goal.id, kind: goal.kind }

@@ -69,7 +69,7 @@ import {
   destinationRecords,
   destinationRef,
   milestoneFor,
-  refileMilestone,
+  setMilestoneAside,
   proposeAuthoring,
   proposeDestination,
   relationshipEventRecord,
@@ -449,29 +449,28 @@ export const OWNER_ROUTES: readonly OwnerRoute[] = [
     id: 'aim-reading-withdraw',
     surface: 'domain-page',
     gesture: 'Put it back in <area>, on a destination that carries a reading',
-    builder: 'interpret.withdrawAimReading, authoring.refileMilestone',
+    builder: 'interpret.withdrawAimReading, authoring.setMilestoneAside',
     /*
      * The whole consequence chain, not only the row — QA-91-002.
      *
-     * Withdrawal re-files every milestone under the aim as well, so it writes
-     * the same `goal` (and, into Career, `explicit-fact`) that naming one
-     * writes. A route that named only the reading builder would have described
-     * a gesture with half its effects.
+     * Withdrawal sets every live milestone under the aim aside as well, so it
+     * writes a superseding `goal`. A route that named only the reading builder
+     * would have described a gesture with half its effects.
      */
     needs: { records: ['aim-reading'] },
-    writes: ['aim-reading', 'destination', 'goal', 'explicit-fact'],
+    writes: ['aim-reading', 'destination', 'goal'],
   },
   {
     id: 'aim-reading-reconsider',
     surface: 'domain-page',
     gesture: 'File it in <area>, on a destination whose words still name one',
-    builder: 'interpret.aimReadingRecord, authoring.refileMilestone',
+    builder: 'interpret.aimReadingRecord, authoring.setMilestoneAside',
     /*
      * The route back after declining — QA-91-001. The offer is made from the
      * words each time the object is rendered, so it needs only the destination.
      */
     needs: { records: ['destination'] },
-    writes: ['aim-reading', 'destination', 'goal', 'explicit-fact'],
+    writes: ['aim-reading', 'destination', 'goal'],
   },
   {
     id: 'authoring',
@@ -910,17 +909,21 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
   const authoringMoment = () => ({ now: at, zone, recordedAt: systemClock().now() })
 
   /**
-   * The `goal` records under one aim, which both reading gestures move.
+   * The `goal` records under one aim that the app is still acting on.
    *
-   * From the resolved destination rather than by scanning for `milestoneOf`,
-   * so the instrument and the page agree about what a milestone of this aim is.
+   * From the resolved destination rather than by scanning for `milestoneOf`, so
+   * the instrument and the page agree about what a milestone of this aim is —
+   * and skipping the reached and the already-set-aside, because there is nothing
+   * to stop suggesting about either. `DomainPage.liveMilestonesOf` is what this
+   * mirrors, condition for condition.
    */
-  const milestonesUnder = (destination: EntityRef): readonly GoalRecord[] => {
+  const liveMilestonesUnder = (destination: EntityRef): readonly GoalRecord[] => {
     const found = situation().direction.destinations.find(
       (entry) => entry.destination.id === destination.id,
     )
     const out: GoalRecord[] = []
     for (const milestone of found?.milestones ?? []) {
+      if (milestone.reached || milestone.setAside) continue
       const record = view().history.byId(milestone.goal.source)
       if (record !== undefined && record.kind === 'goal') out.push(record)
     }
@@ -1102,16 +1105,11 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
         return { done: false, note: 'the reading points at no aim', written: 0 }
       }
       const moment = authoringMoment()
-      const moved = milestonesUnder(destination).map((goal) =>
-        refileMilestone(goal, previous.askedIn, situation(), moment),
-      )
-      await store.putEntities(moved.flatMap((result) => result.entities))
-      held = await store.snapshot()
       return write(
         [
           withdrawAimReading(previous, moment),
           reviseDestinationRecord(record, { domain: previous.askedIn }, moment),
-          ...moved.flatMap((result) => result.records),
+          ...liveMilestonesUnder(destination).map((goal) => setMilestoneAside(goal, moment)),
         ],
         `took back the reading of "${record.aim}"`,
       )
@@ -1135,16 +1133,11 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
         return { done: false, note: 'the aim has no record', written: 0 }
       }
       const moment = authoringMoment()
-      const moved = milestonesUnder(destination).map((goal) =>
-        refileMilestone(goal, into, situation(), moment),
-      )
-      await store.putEntities(moved.flatMap((result) => result.entities))
-      held = await store.snapshot()
       return write(
         [
           reviseDestinationRecord(record, { domain: into }, moment),
           aimReadingRecord(reading, into, destination, record.id, moment),
-          ...moved.flatMap((result) => result.records),
+          ...liveMilestonesUnder(destination).map((goal) => setMilestoneAside(goal, moment)),
         ],
         `took the offer on "${found.aim}"`,
       )

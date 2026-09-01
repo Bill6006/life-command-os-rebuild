@@ -22,7 +22,6 @@ import {
   readAimIn,
   type AimReading,
 } from '../../intelligence/interpret'
-import { describeMilestone } from '../../intelligence/authoring'
 import type { CourseReflection } from '../../intelligence/progress'
 import type { ProgressEvidence } from '../../domain/progress'
 import type { OutcomeAnswer } from '../../intelligence/outcomes'
@@ -273,8 +272,22 @@ export function DestinationPanel({
                     ranks it: reached is *settled*, not *better*, so it reads as
                     a completed sentence rather than as a win.
                   */}
+                  {/*
+                    Three states, because there are three — QA-91-005.
+
+                    "Reached" is the owner having said so. "Still ahead" is a
+                    step the app is still suggesting. A step **set aside** when
+                    the aim moved areas is neither, and calling it *still ahead*
+                    was the screen contradicting an engine that had stopped
+                    proposing it. It says why it was set aside, because a state
+                    without its cause is the app asking to be trusted (D-143).
+                  */}
                   <span className="milestone__state">
-                    {milestone.reached ? 'reached — you said so' : 'still ahead'}
+                    {milestone.reached
+                      ? 'reached — you said so'
+                      : milestone.setAside
+                        ? 'set aside — the aim moved'
+                        : 'still ahead'}
                   </span>
                 </li>
               ))}
@@ -559,7 +572,17 @@ function ReadingRow({
   const into = settled === undefined ? offered?.offer : settled.askedIn
   if (into === undefined) return null
 
-  const next = entry.destination.milestones[0]?.goal.statement
+  /*
+   * What the gesture will actually do to the step he named — QA-91-005.
+   *
+   * This showed `describeMilestone(next, into)`, which is the sentence for
+   * **creating** a next step in an area: it told him the app would treat
+   * *"Clear the credit card"* as what he is currently studying, and then it did.
+   * The consequence a gesture states has to be the consequence it has.
+   */
+  const next = entry.destination.milestones.find(
+    (milestone) => !milestone.reached && !milestone.setAside,
+  )?.goal.statement
 
   return (
     <div className="destination__reading" data-testid="destination-reading">
@@ -588,7 +611,7 @@ function ReadingRow({
           <p className="note">
             {next === undefined
               ? `The aim moves to ${area(into)}. Your words stay exactly as they are.`
-              : describeMilestone(next, into, area(into))}
+              : `The aim moves to ${area(into)}. “${next}” was the next step towards it here, so it is set aside — it stays on the record, and the app stops suggesting it.`}
           </p>
           <div className="domain-correction__actions">
             <button

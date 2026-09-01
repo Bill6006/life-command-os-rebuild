@@ -1,4 +1,5 @@
 import { createRecordFactory } from '../domain/build'
+import type { EntityRef } from '../domain/entities'
 import { derivedRecordId, newRecordId, type RecordId } from '../domain/ids'
 import type { ActionTarget, RecommendationSemantics } from '../domain/recommendation'
 import {
@@ -533,12 +534,38 @@ export interface ResumableMove {
   readonly actions: readonly LifecycleAction[]
 }
 
+/**
+ * Whether the thing a move was about is a goal the app has stopped suggesting.
+ *
+ * QA-91-006's class. Moving an aim between areas sets aside the next step named
+ * under the old one, and the lifecycle rows from an evening it was offered on go
+ * on existing — truthfully, and they should. What must not follow is the app
+ * offering the move **back**: a half-finished thing it has stopped proposing is
+ * not something to pick up again, and putting it on Now would be the withdrawn
+ * interpretation arriving through a second door.
+ *
+ * Only ever true of a subject some `goal` record names, so a routine, a place or
+ * a person the engine proposes is untouched by it. `history.effective` has
+ * already dropped superseded rows, so there is one live goal record to read.
+ */
+function goalSetAside(view: MemoryView, object: EntityRef): boolean {
+  let named = false
+  for (const record of view.history.effective) {
+    if (record.kind !== 'goal') continue
+    if (record.goal.id !== object.id) continue
+    named = true
+    if (record.status === 'active') return false
+  }
+  return named
+}
+
 export function resumableToday(view: MemoryView, situation: Situation): readonly ResumableMove[] {
   const out: ResumableMove[] = []
   for (const episode of collectEpisodes(view, situation.zone)) {
     if (episode.dayId !== situation.dayId) continue
     if (episode.state !== 'unable-now' && episode.state !== 'part-done') continue
     if (episode.shownAt > situation.at) continue
+    if (goalSetAside(view, episode.semantics.target.object)) continue
     out.push({
       episode,
       semantics: episode.semantics,

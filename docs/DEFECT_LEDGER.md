@@ -5424,3 +5424,36 @@ keeps the branch tests as branches.
 
 Full reproductions, repairs and verification:
 [`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).
+
+---
+
+## QA-91-005 … QA-91-007 — routing 91 independent QA round 2
+
+**Found:** independent Codex QA, round 2, 2026-09-01 · **Status:** Fixed (routing 91 round 2 repair) · **Owner:** routing 91
+
+QA-91-001 and QA-91-004 were closed by the Round 1 repair. Three blockers
+remained, and **two of them were the Round 1 repair itself being wrong** rather
+than incomplete.
+
+| ID        | Finding                                                                                                       | Repair                                                                                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| QA-91-005 | Withdrawal re-typed the money milestone as a study topic, so Now proposed building a lab with a credit card   | The step is **set aside** instead: superseded, statement byte-identical, no longer active. Undoing an interpretation is not substituting another one (D-249) |
+| QA-91-006 | Starting the move first kept it live — `action-recommendation` and `action-start` rows counted as a reference | What keeps a money item open is an **active goal**, not any record that mentions it; and a set-aside move is not offered back to be resumed (D-250)          |
+| QA-91-007 | `and` ended a denied span, and a date's day and month were read as an amount                                  | A denial governs what it coordinates; a date is a date in all of its parts (D-251)                                                                           |
+
+**The Round 1 repair for QA-91-002 was wrong in an instructive direction.** It
+treated an entity kind as a folder and re-filed the milestone. `MILESTONE_ENTITY`
+is what makes a step reach Now at all, so an entity kind is **meaning** — and
+undoing one interpretation by substituting another leaves the app asserting
+something nobody said, then asking the owner to confirm it.
+
+**A sixth false green, in the journey written to stop them.** The sequential
+ordinary-owner journey asserted that the post-withdraw headline contained
+_Clear the credit card_ — which _"Build a small lab with Clear the credit
+card"_ satisfies perfectly, so the journey walked through the defect and blessed
+it. It asserts the meaning and the area of the post-withdraw state now. Neither
+that journey nor the synthetic regression modelled a **started** action, which
+is the whole of QA-91-006.
+
+Full reproductions, repairs and verification:
+[`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).

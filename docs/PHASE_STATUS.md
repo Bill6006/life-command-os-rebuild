@@ -209,9 +209,39 @@ left it green — the money move was generated again and lost the arbitration. I
 asserts on what the generator produced now. D-238's first corollary, caught in a
 test written for a D-238 finding.
 
+## Independent QA round 2 — FAIL, and the repair that was wrong rather than short
+
+Round 2 closed **QA-91-001** and **QA-91-004** and failed three more. Two of the
+three were the Round 1 repair itself being **wrong**, which is worth recording
+plainly because the reasoning that produced it was reasonable.
+
+- **QA-91-005** — withdrawal re-typed the money milestone as a study topic, so
+  Now proposed _"Build a small lab with Clear the credit card"_, and the only
+  reversal on offer asked the owner to confirm it. `MILESTONE_ENTITY` is what
+  makes a step reach Now, so an entity kind is **meaning, not filing** — and
+  undoing an interpretation by substituting another one is not undoing it. The
+  step is set aside now (D-249), and the app asks for a new one rather than
+  guessing.
+- **QA-91-006** — starting the move before withdrawing kept it live, because
+  `action-recommendation` and `action-start` rows count as references. **A
+  record of having been offered something is not a reason to offer it again**:
+  what keeps a money item open is an active goal (D-250), and a set-aside move
+  is not offered back to be resumed either.
+- **QA-91-007** — `and` ended a denied span, so _"Not about money and debt"_
+  still offered Money; and a date's day and month were read as an amount. A
+  denial governs what it coordinates, and a date is a date in all of its parts
+  (D-251).
+
+**A sixth false green, and it was in the journey written to stop them.** The
+sequential journey asserted that the post-withdraw headline contained _Clear the
+credit card_ — which the fabricated lab sentence satisfies perfectly. It walked
+through the defect and blessed it. It asserts the meaning and the area of that
+state now, and a started-action branch was added, because neither instrument
+modelled the state QA-91-006 lives in.
+
 ## Decisions made
 
-**D-240 … D-248** in [`DECISION_LOG.md`](DECISION_LOG.md).
+**D-240 … D-251** in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Accommodation row B1 landed, and the list learned something from it
 

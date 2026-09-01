@@ -9133,3 +9133,114 @@ competes with the thing it qualifies; as a named set it stays scannable at any
 length, and the naming is what tells the owner which half is about him.
 
 ---
+
+## D-249 — Undoing an interpretation is not substituting another one
+
+**Phase:** 91 (QA round 2 repair) · **Status:** Active · **Replaces the
+mechanism of** D-246
+
+D-246 said withdrawal must take back what the reading caused, and it was right.
+The **way** it did it was wrong, and wrong in an instructive direction: it
+**re-typed** the milestone into the area the aim was moving to, so a
+`financial-goal` became a `learning-topic`. QA-91-005 is what that produced —
+_"Build a small lab with Clear the credit card rather than reading about Clear
+the credit card"_ — and the only offered reversal asked the owner to confirm it.
+
+**An entity kind is meaning, not filing.** `MILESTONE_ENTITY` is what makes a
+named step reach Now at all, and it does so by deciding **what kind of thing the
+step is**. Moving a step between areas therefore cannot be a re-filing; it is a
+re-interpretation, and doing one to undo another leaves the app asserting
+something nobody said. The first repair treated the entity kind as a folder.
+
+**So the step is set aside instead.** The `goal` record is superseded with its
+statement byte-identical, its `milestoneOf` intact and its status no longer
+active — the same shape the owner's own _"No longer this"_ gesture writes,
+through the same builder, because it is the same act. `paused` rather than
+`abandoned`: he has not given up on clearing the credit card. What ended is the
+question it was the answer to.
+
+**And the app asks rather than guessing.** A set-aside milestone is not a
+destination's `next`, so the aim reads as having none and the destination's own
+_Fill that in_ is there to name one. If the answer is the same sentence he can
+type it again, in the area that is now asking — and it becomes the kind of
+object that area actually consumes. **The difference between this and the repair
+it replaces is a question mark.**
+
+**Three states, not two.** A step that was set aside is not reached and is not
+still ahead, and calling it _still ahead_ was the screen contradicting an engine
+that had stopped proposing it. It reads _set aside — the aim moved_, which names
+the state and its cause (D-143).
+
+---
+
+## D-250 — What keeps a thing live is an open goal, never a record that mentions it
+
+**Phase:** 91 (QA round 2 repair) · **Status:** Active · **Corrects** D-246
+
+D-246 narrowed the money lookup from _"an entity of this kind exists"_ to _"an
+entity some effective record still refers to"_. That closed the orphan and was
+still too loose. QA-91-006 broke it in one press: **start** the money move and
+then withdraw the reading, and the `action-recommendation` and `action-start`
+rows go on referring to the financial goal — so the withdrawn interpretation
+stayed live, and _Under way_, on Now.
+
+**A record of having been offered something is not a reason to offer it again.**
+That is the rule, and the first narrowing had it backwards: it treated the
+evidence of a past proposal as grounds for a present one.
+
+**What makes a money item open is an active goal naming it.** That is what the
+generator's own sentence always meant — _"needs a goal that exists, never a
+generic check your budget"_ — and it answers all three states at once: a
+leftover index entry that no goal names, a goal set aside when the aim moved,
+and a goal with lifecycle rows hanging off it. It is one lookup against
+`direction.goals`, which is the list the rest of the engine already treats as
+what is live.
+
+**And the same rule reaches the lifecycle.** A move left part-done is offered
+back on Now, so a set-aside subject could return through that door instead of
+the generator's. `resumableToday` no longer offers back a move whose subject is
+a goal that is not active. It can only ever silence a subject some `goal` record
+names, so a routine the engine proposed for itself is untouched.
+
+**What is preserved, exactly.** Every lifecycle record stays: he started it, and
+the record says so on Timeline. What is withdrawn is the **offer**, not the
+history — which is the distinction QA asked for in those words.
+
+---
+
+## D-251 — A token's role is read from the phrase, and a denial governs what it coordinates
+
+**Phase:** 91 (QA round 2 repair) · **Status:** Active · **Extends** D-247
+
+D-247 established that a token is read for its role. Round 2 found two classes
+where the role was still being taken from the token alone.
+
+**A negation governs everything it coordinates.** `and` was ending a denied
+span, so _"Not about money and debt"_ read as a denial of money followed by a
+fresh claim about debt. One negation is governing two objects and denies both.
+`and` and `or` now **continue** a denial; what ends one is punctuation or a
+contrastive conjunction — _but_, _though_, _rather_, _instead_ — which is what
+turns a sentence around.
+
+**And the pair that keeps it a rule rather than a patch.** _"No more debt and
+less spending"_ coordinates two ordinary negations of things rather than of the
+topic, and is squarely about money. Widening what continues a denial must not
+widen what a denial swallows.
+
+**A date is a date in all of its parts.** A four-digit year was exempt from
+being an amount and the rest of a date was not, so _"before 03/15/2027"_ reported
+the amount as settled from a `03` and a `15`. Dates are now removed from the
+phrase **before** the question _does this say how much_ is asked: a slashed or
+dashed date in either order, a month word with a day beside it, and a bare year.
+Anything else with a digit in it is a quantity, which is what a number
+ordinarily is.
+
+**The bound, stated because it is real.** A sentence that resumes a positive
+claim after a bare `and` with no punctuation — _"Not about money and I want to
+get fit"_ — is denied to the end and names nothing. That is a false negative and
+it is the direction this file errs in everywhere: an unread phrase names
+nothing, offers nothing and writes nothing. **Abstaining is the ordinary outcome
+here, not the failure case**, and a repair that reduced abstention by guessing
+would be the wrong trade.
+
+---

@@ -41,6 +41,16 @@ import type { ActiveGoal } from './direction'
 export interface DestinationMilestone {
   readonly goal: ActiveGoal
   /**
+   * Set aside because the aim moved areas — QA-91-005.
+   *
+   * A milestone is named in answer to a question the area asked, so moving the
+   * aim leaves it belonging to a question that is no longer being put. It is not
+   * reached and it is not still ahead; it is a third state, and it needs its own
+   * word because *"still ahead"* about a step the app has stopped suggesting is
+   * the screen disagreeing with the engine.
+   */
+  readonly setAside: boolean
+  /**
    * Whether the owner has said this one is done.
    *
    * Read from the goal's own status and from nowhere else. **Never inferred
@@ -100,7 +110,11 @@ export function resolveDestinations(
 
     const milestones = goals
       .filter((goal) => goal.milestoneOf?.id === destination.destination.id)
-      .map((goal) => ({ goal, reached: goal.status === 'achieved' }))
+      .map((goal) => ({
+        goal,
+        reached: goal.status === 'achieved',
+        setAside: goal.status !== 'active' && goal.status !== 'achieved',
+      }))
 
     out.push({
       destination: destination.destination,
@@ -113,7 +127,15 @@ export function resolveDestinations(
       evidence: destination.evidence ?? [],
       unknowns: destination.unknowns ?? [],
       milestones,
-      next: milestones.find((milestone) => !milestone.reached),
+      /*
+       * The first one still to be reached **and still live** — QA-91-005.
+       *
+       * A milestone set aside when the aim moved is not what is next: the app
+       * has stopped suggesting it, and reporting it as the next step would make
+       * the destination look like it has a way forward it does not have, and
+       * would stop the agenda ever asking for a real one.
+       */
+      next: milestones.find((milestone) => !milestone.reached && !milestone.setAside),
     })
   }
 

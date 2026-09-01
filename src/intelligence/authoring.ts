@@ -29,6 +29,7 @@ import {
   type TimeZoneId,
 } from '../domain/time'
 import { dueWindow } from '../domain/windows'
+import { goalCorrectionRecord } from './corrections'
 import type { Situation } from './situation'
 
 /**
@@ -910,101 +911,45 @@ function milestoneRecords(
 }
 
 /**
- * Move a milestone into another area, keeping the owner's own sentence —
- * QA-91-002, routing 91 round 1.
+ * Set a next step aside because the aim moved areas — QA-91-005.
  *
- * ## What this exists to undo
+ * ## What the first repair got wrong, and it was the interesting kind of wrong
  *
- * A milestone's **entity kind** is a function of the area its destination was
- * filed in ({@link milestoneEntityKind}), and that is what makes a named next
- * step reach Now. So accepting a cross-domain reading and then answering the
- * clarification produces a `financial-goal` in Money — and taking the reading
- * back afterwards moved the aim and left that behind. The owner was told his
- * aim was back in Career while Now went on suggesting the money thing.
+ * Round 1 **re-typed** the milestone into the area the aim was moving to, so
+ * that a `financial-goal` became a `learning-topic`. The reasoning was that the
+ * app should undo its own classification. What it actually did was invent a new
+ * one: the entity kind is not filing, it is **meaning**, and the career
+ * generator duly proposed *"Build a small lab with Clear the credit card rather
+ * than reading about Clear the credit card."* Undoing an interpretation by
+ * substituting another interpretation is not undoing it.
  *
- * ## What it does and does not touch
+ * ## What it does instead
  *
- * **His words are not touched.** `statement` is carried across byte for byte
- * and becomes the new entity's label, because *"Clear the credit card"* is what
- * he wrote and stays what he wrote. What changes is the **kind of thing the app
- * treats it as**, which is the app's own classification and is precisely what he
- * is taking back — the honest inverse of what accepting the reading did.
+ * Nothing to the words and nothing to the meaning. The step he named in answer
+ * to the old area's question is **set aside**: the `goal` record is superseded
+ * with its statement byte-identical, its `milestoneOf` intact and its status no
+ * longer active, so the app stops suggesting it and the record still says he
+ * named it. It is the same shape the owner's own *"No longer this"* gesture
+ * writes, through the same builder, because it is the same act.
  *
- * **Nothing is deleted.** The earlier `goal` record is superseded and stays
- * legible, exactly as every other correction in this product works.
+ * `paused` rather than `abandoned`: he has not given up on clearing the credit
+ * card. What ended is the question it was the answer to.
  *
- * **And it is said before it is done.** `describeMilestone` composes the
- * sentence the withdrawal control shows, so what the owner agrees to is the
- * behaviour that follows rather than a promise written beside it (QA-84-008).
+ * ## And the agenda asks again, in the new area's own words
+ *
+ * A set-aside milestone is not a destination's `next` (`destinations.ts`), so
+ * the one outstanding question about this aim comes back — and the resolved
+ * area now words it. If the answer is the same sentence he can type it again,
+ * and it becomes the kind of object that area actually consumes. **The app asks
+ * rather than guessing**, which is the whole difference between this and the
+ * repair it replaces.
  */
-export function refileMilestone(
-  previous: GoalRecord,
-  into: LifeDomainId,
-  situation: Situation,
-  moment: AuthoringMoment,
-): AuthoringResult {
-  const kind = milestoneEntityKind(into)
-  const name = previous.statement
-  const build = createRecordFactory({
-    zone: moment.zone,
-    provenance: AUTHORING_PROVENANCE,
-    ...(moment.nextId === undefined ? {} : { nextId: moment.nextId }),
-  })
-
-  const entity = createEntity({
-    kind,
-    label: name,
-    domain: into,
-    privacy: situation.domains.defaultPrivacyFor(into),
-    createdAt: moment.now,
-    ...(previous.milestoneOf === undefined
-      ? {}
-      : { links: [{ relation: 'supports-goal' as const, target: previous.milestoneOf.id }] }),
-  })
-  const ref: EntityRef = { id: entity.id, kind: entity.kind }
-
-  const records: CanonicalRecord[] = [
-    build(
-      'goal',
-      {
-        occurredAt: moment.now,
-        recordedAt: moment.recordedAt,
-        id: moment.nextId?.() ?? newRecordId(),
-        domains: [into],
-        entities: [ref],
-        supersedes: previous.id,
-      },
-      {
-        goal: ref,
-        statement: name,
-        status: previous.status,
-        ...(previous.targetWindow === undefined ? {} : { targetWindow: previous.targetWindow }),
-        ...(previous.milestoneOf === undefined ? {} : { milestoneOf: previous.milestoneOf }),
-      },
-    ),
-  ]
-
-  /*
-   * And the fact the study generator reads, where the area it is moving into is
-   * the one that reads it — the same row `milestoneRecords` writes.
-   */
-  if (kind === 'learning-topic') {
-    records.push(
-      build(
-        'explicit-fact',
-        {
-          occurredAt: moment.now,
-          recordedAt: moment.recordedAt,
-          id: moment.nextId?.() ?? newRecordId(),
-          domains: [into],
-          entities: [ref],
-        },
-        { concept: CONCEPT.learningTopic, value: { type: 'entity', value: ref } },
-      ),
-    )
-  }
-
-  return { entities: [entity], records, created: ref }
+export function setMilestoneAside(previous: GoalRecord, moment: AuthoringMoment): GoalRecord {
+  return goalCorrectionRecord(
+    { previous, statement: previous.statement, status: 'paused' },
+    { now: moment.now, zone: moment.zone, recordedAt: moment.recordedAt },
+    moment.nextId?.() ?? newRecordId(),
+  )
 }
 
 /**
