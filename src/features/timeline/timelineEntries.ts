@@ -211,6 +211,7 @@ export function assembleTimeline(situation: Situation, limit = TIMELINE_PAGE): T
     entities: situation.entities,
     history: situation.view.history,
     concepts: situation.concepts,
+    domains: situation.domains,
     // Fixed, and there is no control anywhere that changes it. Section 11.
     policy: DISCREET_PRIMARY,
   }

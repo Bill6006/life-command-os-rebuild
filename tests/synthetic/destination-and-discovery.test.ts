@@ -1895,6 +1895,7 @@ describe('QA-84 round 2 — the repairs', () => {
         entities: situation.entities,
         history: view.history,
         concepts: situation.concepts,
+        domains: situation.domains,
         policy: { surface: 'inspection' as const, revealPrivate: false },
       }
       for (const record of view.history.effective) {

@@ -206,3 +206,46 @@ export function permissionDefinition(id: PermissionId): (typeof PERMISSIONS)[num
   if (found === undefined) throw new RangeError(`No permission called "${id}"`)
   return found
 }
+
+// ---------------------------------------------------------------------------
+// The boundary as one place rather than seven — routing 91, package 91.3
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether the app may raise material of this class **of its own accord**.
+ *
+ * ## The finding this closes
+ *
+ * `ROUTING_91_BRIEF.md` section 4 item 6 records that the private boundary was
+ * *"not yet a single chokepoint"*: {@link mayReasonFrom} is the reasoning check
+ * and is real, but six further sites excluded private material by comparing a
+ * privacy value to the string `'private'` in place —
+ * `coverage.ts` twice, `insights.ts` four times. Every one of them was correct.
+ * The problem is that each was a **convention** re-decided at the call site, so
+ * *"private material is never raised unasked"* was a claim about six lines
+ * rather than a property of the code, and a seventh site would have been written
+ * the same way with nothing noticing.
+ *
+ * ## Why this is a different question from {@link mayReasonFrom}
+ *
+ * The two are deliberately separate functions and neither may be substituted for
+ * the other.
+ *
+ * - {@link mayReasonFrom} asks **"may the engine know this?"** and the owner's
+ *   permission answers it (D-167). It is the one the interpreter uses.
+ * - This asks **"may the app bring this up when nobody asked?"** and the answer
+ *   is no, permission or not. Coverage nagging about a silent private area, a
+ *   trajectory card about a private reading, an evidence row naming one — those
+ *   are section 11's *display discretion* concern, and D-167 is explicit that
+ *   granting the permission does **not** put an intimate reading on a screen.
+ *
+ * So this takes no {@link PermissionState} argument, and that absence is the
+ * design: a caller who wanted to make it permission-aware would have to change
+ * this function, in this file, beside the sentence saying why it is not.
+ *
+ * Whether the owner may *look* at his own private material on its own page is a
+ * third question again, and {@link mayShowDetail} answers it.
+ */
+export function mayRaiseUnasked(privacy: PrivacyClass): boolean {
+  return privacy !== 'private'
+}

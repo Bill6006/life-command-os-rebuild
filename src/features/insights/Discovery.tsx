@@ -6,6 +6,7 @@ import {
   destinationRecords,
   milestoneConfirmation,
   milestoneFor,
+  destinationRef,
   minutesFromClock,
   proposeAuthoring,
   proposeDestination,
@@ -19,6 +20,14 @@ import {
   discoveryResponseRecord,
   type DiscoveryPrompt,
 } from '../../intelligence/discovery'
+import {
+  aimReadingRecord,
+  describeOffer,
+  describeReading,
+  proposeInterpretedDestination,
+  readAimIn,
+} from '../../intelligence/interpret'
+import type { LifeDomainId } from '../../domain/domains'
 import type { Situation } from '../../intelligence/situation'
 import type { IsoWeekday } from '../../domain/time'
 import { useMemory } from '../memory/memoryContext'
@@ -106,6 +115,16 @@ export function Discovery({ situation }: { situation: Situation }) {
    * names every area exactly once.
    */
   const [open, setOpen] = useState(false)
+  /**
+   * The area the owner has chosen to file this in, where he has chosen one.
+   *
+   * Undefined means *where the question was*, which is the default and is the
+   * brief's rule 4 written as a state rather than as a caution: nothing moves
+   * unless he moves it. It is validated against the live reading below, so
+   * editing the words after taking an offer cannot file the aim in an area the
+   * new words do not name.
+   */
+  const [fileIn, setFileIn] = useState<LifeDomainId | undefined>(undefined)
   const inFlight = useRef(false)
 
   const agenda = useMemo(
@@ -177,21 +196,57 @@ export function Discovery({ situation }: { situation: Situation }) {
    * lesson: a sentence a surface builds inline is a sentence no test can hold
    * to what is actually written.
    */
+  /**
+   * What the words say, worked out as he types — routing 91, package 91.1.
+   *
+   * Recomputed from the text and from what he has already named, and from
+   * nothing else. It is deterministic and in-process, so there is no request to
+   * debounce and nothing to wait for; the offer appears under the box while the
+   * box still has focus, which is the only moment at which *"is this about
+   * money?"* is a question he can answer without effort.
+   */
+  const reading = useMemo(
+    () =>
+      prompt === undefined || prompt.shape !== 'destination' || draft.trim() === ''
+        ? undefined
+        : readAimIn(draft.trim(), prompt.domain, situation),
+    [prompt, draft, situation],
+  )
+
+  /*
+   * A choice only counts while it is still on offer.
+   *
+   * He can take the Money row and then keep typing, and the new words may name
+   * something else or nothing. Filing the aim where the *previous* words pointed
+   * would be the app acting on a reading it is no longer making — so the choice
+   * is checked against the live offer rather than remembered.
+   */
+  const filedIn = reading?.offer !== undefined && fileIn === reading.offer ? fileIn : undefined
+  const area = (id: LifeDomainId) => situation.domains.labelFor(id)
+  const offer = reading === undefined ? undefined : describeOffer(reading, area)
+  const readingLine = reading === undefined ? undefined : describeReading(reading, area)
+
   const proposal: AuthoringProposal | undefined =
     prompt === undefined || draft.trim() === ''
       ? undefined
-      : prompt.shape === 'destination'
-        ? proposeDestination({ aim: draft.trim(), domain: prompt.domain }, situation)
-        : prompt.shape === 'obligation'
-          ? proposeAuthoring(
-              obligationDraft(draft.trim()) ?? {
-                kind: 'obligation',
-                name: draft.trim(),
-                domain: prompt.domain,
-              },
-              situation,
-            )
-          : undefined
+      : prompt.shape === 'destination' && reading !== undefined
+        ? proposeInterpretedDestination(
+            { aim: draft.trim(), domain: filedIn ?? prompt.domain },
+            reading,
+            situation,
+          )
+        : prompt.shape === 'destination'
+          ? proposeDestination({ aim: draft.trim(), domain: prompt.domain }, situation)
+          : prompt.shape === 'obligation'
+            ? proposeAuthoring(
+                obligationDraft(draft.trim()) ?? {
+                  kind: 'obligation',
+                  name: draft.trim(),
+                  domain: prompt.domain,
+                },
+                situation,
+              )
+            : undefined
 
   const moment = () => ({
     now: memory.now,
@@ -214,6 +269,7 @@ export function Discovery({ situation }: { situation: Situation }) {
       setDraft('')
       setSecond('')
       setThird('')
+      setFileIn(undefined)
     })
   }
 
@@ -243,9 +299,38 @@ export function Discovery({ situation }: { situation: Situation }) {
        * with a problem in it builds nothing, and he is told what the problem
        * is rather than finding out from a record that never appeared.
        */
-      const proposed = proposeDestination({ aim: said, domain: asked.domain }, situation)
+      const read = reading
+      const into = filedIn ?? asked.domain
+      const proposed =
+        read === undefined
+          ? proposeDestination({ aim: said, domain: into }, situation)
+          : proposeInterpretedDestination({ aim: said, domain: into }, read, situation)
       if (proposed.problems.length > 0) return undefined
-      return destinationRecords({ aim: said, domain: asked.domain }, situation, at)
+      const built = destinationRecords({ aim: said, domain: into }, situation, at)
+
+      /*
+       * The sibling row, and only when he took the offer — acceptance test 5.
+       *
+       * *"Declining costs nothing. Rejecting the interpretation leaves the aim
+       * stored and produces no derived record."* So this is inside the branch
+       * rather than beside it: keeping the aim where the question was writes
+       * exactly what routing 84 wrote, byte for byte, and there is no row
+       * anywhere saying the app had a thought about it.
+       *
+       * It goes **after** the destination and never before, because it carries
+       * that record's id: what the app worked out points at what it was told,
+       * which is the direction D-143 requires and the only direction that can
+       * be checked.
+       */
+      const source = built.records[0]
+      if (read === undefined || filedIn === undefined || source === undefined) return built
+      return {
+        ...built,
+        records: [
+          ...built.records,
+          aimReadingRecord(read, filedIn, built.created ?? destinationRef(said), source.id, at),
+        ],
+      }
     }
     if (asked.shape === 'milestone') {
       const destination = asked.destination
@@ -311,6 +396,7 @@ export function Discovery({ situation }: { situation: Situation }) {
       setDraft('')
       setSecond('')
       setThird('')
+      setFileIn(undefined)
     })
   }
 
@@ -425,6 +511,45 @@ export function Discovery({ situation }: { situation: Situation }) {
               </select>
             </>
           ) : null}
+          {readingLine === undefined ? null : (
+            /*
+              What the words sound like, and the one choice that follows — the
+              brief's rule 4 and accommodation row B1.
+
+              **Two option rows inside the confirmation block, not a picker
+              screen.** The app says what it read and offers to act on it; the
+              row that keeps the aim where the question was is selected until he
+              says otherwise, so the default state of this control is the app
+              having changed nothing.
+            */
+            <div data-testid="discovery-reading">
+              <p className="note">{readingLine}</p>
+              {offer === undefined ? null : (
+                <div className="domain-options">
+                  <button
+                    type="button"
+                    className="domain-option"
+                    aria-pressed={filedIn === undefined}
+                    disabled={busy}
+                    data-testid="discovery-keep"
+                    onClick={() => setFileIn(undefined)}
+                  >
+                    {offer.keep}
+                  </button>
+                  <button
+                    type="button"
+                    className="domain-option"
+                    aria-pressed={filedIn !== undefined}
+                    disabled={busy}
+                    data-testid="discovery-refile"
+                    onClick={() => setFileIn(reading?.offer)}
+                  >
+                    {offer.refile}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           {proposal === undefined ? null : (
             <div data-testid="discovery-proposal">
               <p className="domain-correction__prompt">{proposal.interpretation}</p>

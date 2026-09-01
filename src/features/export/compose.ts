@@ -292,6 +292,7 @@ function describeContext(situation: Situation, policy: DisplayPolicy): DescribeC
     entities: situation.entities,
     history: situation.view.history,
     concepts: situation.concepts,
+    domains: situation.domains,
     policy,
   }
 }

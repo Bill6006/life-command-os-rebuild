@@ -8788,3 +8788,195 @@ the device; the approval named none, and that is recorded as a gap in the
 evidence rather than filled in.
 
 ---
+
+## D-240 — An interpretation is a proposal, and the aim moves only when the owner moves it
+
+**Phase:** 91 · **Status:** Active · **Realises** `ROUTING_91_BRIEF.md` §4
+
+The interpreter reads the words the owner types and produces an
+`AuthoringProposal` — the same shape `proposeAuthoring` and `proposeDestination`
+return — and writes nothing. `proposeInterpretedDestination` **composes**
+`proposeDestination` rather than replacing it: D-188's sentence, D-188's creates
+list and D-188's three structural unknowns are unchanged and still held by their
+own suite, and what interpretation adds is what the words said, what they did
+not say, and the plain statement that the aim is going somewhere other than
+where the question was.
+
+**The cross-domain reading is an offer with two rows and a default that changes
+nothing.** _"These words sound like they are about Money & Financial Resilience,
+from “money”"_, then **Keep it in Career & Learning** — selected — and **File it
+in Money & Financial Resilience instead**. The brief's rule 4 is _the app may ask
+whether this belongs in Money; it may not move it_, and that is what a default
+selection expresses that a sentence in a comment does not.
+
+**Where two areas are named equally, nothing is read and the offer becomes the
+question.** `elsewhere` is the confident reading and is set only where one area
+other than the asked one leads, and leads the asked area too. `offer` is the area
+on the option row and can be set while `elsewhere` is not — which is acceptance
+test 1's second half, _"names Money, **or asks which**"_. Where two areas other
+than the asked one tie, there is no single question to put, so nothing is offered
+and the draw is declared in `unknowns` as _which area this belongs to_. Breaking
+that tie by registry order would be resolving an ambiguity by alphabet.
+
+**No score.** D-162. Ordering the named areas is a sort key that lives for the
+length of one function; nothing is stored, rendered or comparable between two
+readings, and there is no confidence field anywhere on the record.
+
+**What it may name is three areas, and that bound is deliberate.** Career, Health
+and Money — the areas an aspiration question is asked in and a destination
+control is offered in. Naming a fourth would be an offer the product cannot
+honour: no prompt, no control, no generator. _"Be someone she is proud of"_
+therefore names nothing, and the app says nothing rather than guessing. Widening
+it is routing 92's and 94's.
+
+---
+
+## D-241 — The clarification is what reaches the milestone, and a bare aim still reaches nothing
+
+**Phase:** 91 · **Status:** Active · **Closes** correction 3.6 · **Extends** D-188
+
+Correction 3.6: `MILESTONE_ENTITY` is what makes a destination reach Now, and it
+is written by `milestoneRecords`, not by `destinationRecords`. A destination with
+no milestone therefore creates a `destination` entity **no generator consumes**,
+in any area. The phase had two ways out — make the bare aim reach Now some other
+way, or make the clarification reach a milestone — and naming which was its
+hardest item.
+
+**It is the clarification, and the deciding argument is that a bare aim has
+nothing to act on.** _"More money"_ names no work. A generator that produced a
+move from it would have to invent the work, which is `vocabulary.ts`'s one
+prohibition — _the engine may name its own routines; it may never name the
+owner's life_ — and F36's precision rule in the same breath. What the app can
+honestly do is ask **one** concrete question and let his answer be the work.
+
+**So the interpreter adds no question. It changes the one already being asked.**
+`milestoneQuestion` is keyed on the same `MILESTONE_ENTITY` table that decides
+what the answer becomes, so _"What is the money thing you would deal with first,
+towards “More money”?"_ and the `financial-goal` it creates cannot drift apart —
+QA-84-008's lesson, where a confirmation was accurate when written and false when
+shipped because the sentence and the behaviour lived where no compiler edge
+joined them. D-184's one-question-per-object rule is untouched,
+`DISCOVERY_PER_WEEK` is untouched, and the measured property that what is
+outstanding never rises after an answer is untouched.
+
+**One ordering change, and it is the only one.** A clarification on a destination
+the app has just read is hoisted above a fresh aspiration question in an area the
+owner has said nothing about. Without it, answering the Career question with
+words the app read as being about Money made _"what are you hoping Health looks
+like?"_ the next thing asked — the app saying it understood and then changing the
+subject, which is the brief's own worst outcome one level up from where it names
+it. Nothing else is reordered, nothing is added and nothing is removed.
+
+**The bare-aim case is unchanged and is still honest.** After the aim is stored
+and before the clarification is answered, Now offers nothing about it, on both
+branches. That is correction 3.6 still being true of a bare aim, and it is the
+right answer.
+
+---
+
+## D-242 — What the app worked out from his words is its own record kind
+
+**Phase:** 91 · **Status:** Active · **Applies** D-143 to interpretation
+
+`aim-reading` is a canonical record with `provenance.source: 'derived'`, carrying
+the destination it is about, **the id of the record holding his words**, the area
+the words name, the area the question was about, the words that named it, and
+what they did not say.
+
+**A sibling, never a replacement.** The `destination` row is his, byte-identical,
+and is not touched. D-143's rule is that what the app was told and what it worked
+out are two rows; this is that rule applied to interpretation, and `reads` makes
+the relationship a field rather than a convention.
+
+**Written only after he agrees.** A reading he declines leaves no trace of any
+kind — no row, no flag, no provenance-derived record anywhere in the store. That
+is acceptance test 5, and it is enforced by where the call sits rather than by a
+condition inside it.
+
+**And it states what it rests on.** _"Read this as being about Money & Financial
+Resilience — from “money”."_ D-143's closing rule is that a conclusion shown
+without its grounds is the app asking to be trusted; the `words` field is those
+grounds, and the domain page and Timeline both render them.
+
+**Reversible by supersession, like everything else here.** Taking a reading back
+writes another `aim-reading` with `withdrawn` set and `supersedes` pointing at the
+first, and re-files the aim into the area the question was asked in. Nothing is
+edited and nothing is deleted. `reviseDestinationRecord` gains an optional
+`domain` for exactly this one gesture and no other.
+
+**A separate record kind rather than a flag on the destination**, because a
+reading is written by a different author, at a different moment, and can be taken
+back on its own. Folding it into the destination would have put the app's
+conclusion inside the row that exists to hold his words.
+
+---
+
+## D-243 — The private boundary is three named questions, in one file
+
+**Phase:** 91 · **Status:** Active · **Completes** D-167 · **Closes**
+`ROUTING_91_BRIEF.md` §4 item 6
+
+`ROUTING_91_BRIEF.md` recorded that the private boundary was _"not yet a single
+chokepoint"_: `createFactReader` is a real structural check and six further sites
+excluded private material by comparing a privacy value to the string `'private'`
+in place. Every one of them was correct. The problem is that each was a
+**convention re-decided at the call site**, so _"private material is never raised
+unasked"_ was a claim about six lines rather than a property of the code.
+
+Three questions now live in `privacy.ts`, and nothing under `src/intelligence`
+answers any of them itself:
+
+- **`mayReasonFrom(privacy, permissions)`** — _may the engine know this?_ The
+  owner's permission answers it. This is the interpreter's door.
+- **`mayRaiseUnasked(privacy)`** — _may the app bring this up when nobody asked?_
+  No, permission or not. It takes no `PermissionState`, and that absence is the
+  design: making it permission-aware would mean editing this function, beside the
+  sentence saying why it is not. Coverage nagging about a quiet private area and
+  a trajectory card about a private reading are section 11's display-discretion
+  concern, and D-167 is explicit that granting the permission does not put an
+  intimate reading on a screen.
+- **`mayShowDetail(privacy, policy)`** — _may this surface print it?_
+
+**Enforced rather than remembered.** `interpretation.test.ts` fails the build if
+any file under `src/intelligence` compares anything to the private class, and
+demonstrates the sweep biting on the shape it forbids.
+
+**And the interpreter's own boundary is `mayReasonFrom`, not a second check.**
+The interpreter reads the owner's words and the labels of things he has already
+named — a private thing's label is private text, so it is exactly what the
+permission governs. `InterpreterInput.digest` is what it was handed and
+`InterpreterInput.withheld` counts what the permission kept out, so the negative
+claim _"no private text reached the interpreter"_ is made on the input itself and
+has a positive control built into the product rather than into a test.
+
+**Where the interpreter looks is bounded twice over.** It reads only the owner's
+own named things — `STANDING_ENTITIES` are the five routines the engine may name
+for itself, and reading one of those back out of his words would be the app
+quoting itself as evidence about his life.
+
+---
+
+## D-244 — A landed accommodation row swaps absence for presence
+
+**Phase:** 91 · **Status:** Active · **Extends** D-235, D-238
+
+The structural accommodation list makes two falsifiable claims per row: the
+composition that would carry it exists (`landsIn`), and tokens specific to the
+feature are absent from `src/` (`notBuilt`). Routing 91 landed **B1**, the
+cross-domain re-file option, and in doing so exposed the flaw in the second half:
+**an absence check goes green on a repository that has built the feature under
+different identifiers.** Nothing in this phase is called `refileDomain` or
+`crossDomainRefile`, so the guard passed over a built row while still reporting it
+as reserved — D-238's exact class, arriving on the list rather than in it.
+
+So a row carries `landed` and `built` once its phase has landed it. The absence
+sweep skips it, and a separate check requires the feature to be **present**, in
+the composition the visual phase reserved. The row is kept rather than deleted,
+because what it now records is that the reserved shape is the shape that was
+used — which is the whole thing section 54's list exists to find out.
+
+**B1 landed as reserved:** two option rows inside the confirmation block, on both
+aspiration surfaces, in `domain-options`; no picker screen; and the row that
+changes nothing selected by default.
+
+---

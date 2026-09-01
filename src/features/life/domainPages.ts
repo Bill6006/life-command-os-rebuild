@@ -1,7 +1,7 @@
 import type { ActiveGoal } from '../../intelligence/situation'
 import { DOMAIN, type LifeDomainId } from '../../domain/domains'
 import type { EntityIndex, EntityKind, EntityRef } from '../../domain/entities'
-import type { GrowthStage } from '../../domain/records'
+import type { AimReadingRecord, GrowthStage } from '../../domain/records'
 import type { RecordId } from '../../domain/ids'
 import { PRIVATE_PAGE_PROMISE, type DisplayPolicy } from '../../domain/privacy'
 import {
@@ -26,6 +26,7 @@ import {
   type DestinationReading,
 } from '../../intelligence/destinations'
 import { isCorrectableEvent } from '../../intelligence/corrections'
+import { readingFor } from '../../intelligence/interpret'
 import { insightsFor, type GatheringLine } from '../../intelligence/insights'
 import { readProgress, type ProgressReading } from '../../intelligence/progress'
 import type { ConceptId } from '../../domain/windows'
@@ -394,6 +395,7 @@ function recentChanges(
     entities: situation.entities,
     history: situation.view.history,
     concepts: situation.concepts,
+    domains: situation.domains,
     policy,
   }
 
@@ -496,6 +498,15 @@ export interface DomainDestination {
   readonly reading: DestinationReading
   readonly record: DestinationRecord | undefined
   readonly origin: RecordOrigin | undefined
+  /**
+   * What the app read in his words, where it read anything — routing 91.
+   *
+   * A **sibling** of `record` and never folded into it. The page renders the
+   * two as two rows for D-143's reason: what he was told and what the app
+   * worked out are different claims with different authors, and a page that
+   * merged them would be printing the app's conclusion in his voice.
+   */
+  readonly interpretation: AimReadingRecord | undefined
 }
 
 /**
@@ -595,6 +606,7 @@ function destinationsFor(
       reading: describeDestination(destination),
       record: found?.kind === 'destination' ? found : undefined,
       origin: found === undefined ? undefined : originOf(found),
+      interpretation: readingFor(situation.view, destination.destination, situation.at),
     }
   })
 }
@@ -636,6 +648,7 @@ function correctableFor(
     entities: situation.entities,
     history: situation.view.history,
     concepts: situation.concepts,
+    domains: situation.domains,
     policy,
   }
   const matching = situation.view.history.effective.filter(

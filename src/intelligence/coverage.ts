@@ -4,7 +4,7 @@ import type { DomainRegistry, LifeDomainId } from '../domain/domains'
 import type { EntityIndex, SemanticEntity } from '../domain/entities'
 import type { RecordId } from '../domain/ids'
 import { unknown, type KnowledgeState, type Unknown } from '../domain/knowledge'
-import type { PrivacyClass } from '../domain/privacy'
+import { mayRaiseUnasked, type PrivacyClass } from '../domain/privacy'
 import {
   bearsConcept,
   evidenceSourceOf,
@@ -635,7 +635,7 @@ function domainsAnActionCouldRefresh(
 
   const out = new Set<LifeDomainId>()
   for (const domain of domains.all()) {
-    if (domains.defaultPrivacyFor(domain.id) === 'private') continue
+    if (!mayRaiseUnasked(domains.defaultPrivacyFor(domain.id))) continue
     const move = refreshingMoveFor(domain.id)
     if (move === undefined) continue
     if (named.get(domain.id)?.has(move.kind) !== true) continue
@@ -867,8 +867,8 @@ export function assembleCoverage(
   }
 
   const neglected = domains.filter((entry) => entry.status === 'stale' && entry.matters)
-  const raisable = neglected.filter(
-    (entry) => moment.domains.defaultPrivacyFor(entry.domain) !== 'private',
+  const raisable = neglected.filter((entry) =>
+    mayRaiseUnasked(moment.domains.defaultPrivacyFor(entry.domain)),
   )
 
   // The longest silence wins, and a tie is settled by the registry's own order

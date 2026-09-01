@@ -23,6 +23,8 @@ import { occursOn } from '../domain/schedule'
 import {
   discreetPlaceholder,
   mayReasonFrom,
+  mayShowDetail,
+  DISCREET_PRIMARY,
   type PermissionState,
   type PrivacyClass,
 } from '../domain/privacy'
@@ -555,7 +557,7 @@ function createFactReader(
           reading:
             knowledge.state === 'unknown'
               ? `not known — ${knowledge.reason}`
-              : definition.privacy === 'private'
+              : !mayShowDetail(definition.privacy, DISCREET_PRIMARY)
                 ? discreetPlaceholder(definition.privacy)
                 : describeFactValue(knowledge.value, (ref) => entities.labelFor(ref)),
           usedFor: usedForList,

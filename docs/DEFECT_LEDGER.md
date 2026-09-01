@@ -5363,3 +5363,28 @@ indexes that array and the ladder is what D-219's advancement work reads.
 
 **Fixed in this canonicalization commit:** section 54 now reads "Seven rungs" and
 names `part-done`.
+
+---
+
+## DEF-0154 — the accommodation list's absence check went green over a built row
+
+**Found:** routing 91, while landing the row · **Status:** Fixed (routing 91) · **Owner:** routing 91
+
+`phase90-accommodation.test.ts` makes two falsifiable claims per row: the
+composition that would carry it exists, and tokens specific to the feature are
+**absent** from `src/`. Routing 91 landed **B1** — the cross-domain re-file
+option, whose own row names routing 91 as the phase that would land it — and the
+absence check stayed green, because nothing in this phase happens to be called
+`refileDomain` or `crossDomainRefile`.
+
+**A phase that builds a reserved feature does not have to use the identifier
+somebody guessed for it a phase earlier.** So the check would have gone on
+reporting B1 as reserved for as long as the row existed, which is D-238's exact
+class — a guard green over the thing it was named for — arriving on the
+accommodation list rather than inside it.
+
+**Fixed at routing 91 (D-244).** A row carries `landed` and `built` once its
+phase has landed it: the absence sweep skips it and a separate check requires
+the feature to be **present**, in the files and text the visual phase reserved.
+The row is kept rather than deleted, because what it now records is that the
+reserved shape is the shape that was used.

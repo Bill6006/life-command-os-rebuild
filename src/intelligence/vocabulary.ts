@@ -103,3 +103,19 @@ export const STANDING_ENTITIES: readonly SemanticEntity[] = [
 export function decisionEntities(owned: readonly SemanticEntity[]): EntityIndex {
   return createEntityIndex([...STANDING_ENTITIES, ...owned])
 }
+
+const STANDING_IDS = new Set(STANDING_ENTITIES.map((entity) => entity.id))
+
+/**
+ * Whether this is one of his, rather than one of the engine's — routing 91.
+ *
+ * The index a decision renders against holds both, deliberately, and everything
+ * that renders a move needs both. The **interpreter** needs only the first: the
+ * whole reason a named thing beats a word from a table is that it came from
+ * him, and *"a walk"* is the engine's own word for its own suggestion. Reading
+ * that back as though he had named it would be the app quoting itself as
+ * evidence about his life.
+ */
+export function isOwnerNamed(entity: SemanticEntity): boolean {
+  return !STANDING_IDS.has(entity.id)
+}

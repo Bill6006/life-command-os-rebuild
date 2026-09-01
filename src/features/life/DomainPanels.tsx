@@ -15,6 +15,13 @@ import {
   type AuthoringDraft,
   type DestinationDraft,
 } from '../../intelligence/authoring'
+import {
+  describeOffer,
+  describeReading,
+  proposeInterpretedDestination,
+  readAimIn,
+  type AimReading,
+} from '../../intelligence/interpret'
 import type { CourseReflection } from '../../intelligence/progress'
 import type { ProgressEvidence } from '../../domain/progress'
 import type { OutcomeAnswer } from '../../intelligence/outcomes'
@@ -105,27 +112,33 @@ function DestinationPart({
 
 export function DestinationPanel({
   data,
+  situation,
   area,
   disabled,
   onName,
   onRevise,
   onMilestone,
+  onWithdrawReading,
 }: {
   data: DomainPageData
+  situation: Situation
   area: string
   disabled: boolean
-  onName: (draft: DestinationDraft) => void
+  onName: (draft: DestinationDraft, reading?: AimReading) => void
   onRevise: (
     destination: DomainDestination,
     changes: { baseline?: string; evidence?: readonly string[]; unknowns?: readonly string[] },
   ) => void
   onMilestone: (destination: DomainDestination, statement: string) => void
+  onWithdrawReading: (destination: DomainDestination) => void
 }) {
   const [naming, setNaming] = useState(false)
   const [aim, setAim] = useState('')
   const [milestone, setMilestone] = useState('')
   const [filling, setFilling] = useState<string | undefined>(undefined)
   const [draft, setDraft] = useState('')
+  /** Where he has chosen to file it; undefined is *where this page is*. */
+  const [fileIn, setFileIn] = useState<LifeDomainId | undefined>(undefined)
 
   /*
    * Three proving domains, not twelve.
@@ -136,6 +149,31 @@ export function DestinationPanel({
    * proved.
    */
   const proving = PROVING_DOMAINS.includes(data.page.domains[0]!)
+
+  /*
+   * The same reading the discovery card makes, on the other surface that takes
+   * an aspiration — routing 91.
+   *
+   * One interpreter and two callers rather than one interpreter and one
+   * caller, because QA-83-003's second finding is that two screens reaching one
+   * builder are two controls: a seam built on only one of them is a seam the
+   * owner falls through the first time he uses the other.
+   */
+  const here = data.page.domains[0]!
+  const reading = aim.trim() === '' ? undefined : readAimIn(aim.trim(), here, situation)
+  const filedIn = reading?.offer !== undefined && fileIn === reading.offer ? fileIn : undefined
+  const label = (id: LifeDomainId) => situation.domains.labelFor(id)
+  const offer = reading === undefined ? undefined : describeOffer(reading, label)
+  const readingLine = reading === undefined ? undefined : describeReading(reading, label)
+  const proposal =
+    reading === undefined
+      ? undefined
+      : proposeInterpretedDestination(
+          { aim: aim.trim(), domain: filedIn ?? here },
+          reading,
+          situation,
+        )
+
   if (!proving && data.destinations.length === 0) return null
 
   return (
@@ -258,6 +296,36 @@ export function DestinationPanel({
             </p>
           )}
 
+          {entry.interpretation === undefined ? null : (
+            /*
+              What the app worked out, as its own row — D-143, routing 91.
+
+              Below his four parts and visibly not one of them: the rows above
+              are what he said, and this is what the app read in the words. It
+              states what it rests on, because *a conclusion shown without its
+              grounds is the app asking to be trusted*, and it carries the
+              gesture that takes it back — which is the *reversible* half of
+              acceptance test 7 and the reason this is an offer rather than a
+              decision.
+            */
+            <div className="destination__reading" data-testid="destination-reading">
+              <p className="note">
+                Read as being about {situation.domains.labelFor(entry.interpretation.named)}, from{' '}
+                {entry.interpretation.words.map((word) => `“${word}”`).join(', ')}. You agreed to
+                that; the words above are yours and were not changed.
+              </p>
+              <button
+                type="button"
+                className="domain-linkish"
+                disabled={disabled}
+                data-testid="destination-reading-withdraw"
+                onClick={() => onWithdrawReading(entry)}
+              >
+                Put it back in {situation.domains.labelFor(entry.interpretation.askedIn)}
+              </button>
+            </div>
+          )}
+
           {filling === entry.destination.source ? (
             <div className="domain-correction">
               <label
@@ -357,7 +425,7 @@ export function DestinationPanel({
               confirmation was false precisely where the owner is least able to
               check it.
             */}
-            {milestoneConfirmation(milestone, data.page.domains[0]!, area)}
+            {milestoneConfirmation(milestone, filedIn ?? here, label(filedIn ?? here))}
           </p>
           <input
             id="destination-milestone"
@@ -368,6 +436,40 @@ export function DestinationPanel({
             data-testid="destination-milestone-input"
             onChange={(event) => setMilestone(event.target.value)}
           />
+          {readingLine === undefined ? null : (
+            <div data-testid="destination-reading-offer">
+              <p className="note">{readingLine}</p>
+              {offer === undefined ? null : (
+                <div className="domain-options">
+                  <button
+                    type="button"
+                    className="domain-option"
+                    aria-pressed={filedIn === undefined}
+                    disabled={disabled}
+                    data-testid="destination-keep"
+                    onClick={() => setFileIn(undefined)}
+                  >
+                    {offer.keep}
+                  </button>
+                  <button
+                    type="button"
+                    className="domain-option"
+                    aria-pressed={filedIn !== undefined}
+                    disabled={disabled}
+                    data-testid="destination-refile"
+                    onClick={() => setFileIn(reading?.offer)}
+                  >
+                    {offer.refile}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          {proposal === undefined || proposal.unknowns.length === 0 ? null : (
+            <p className="note" data-testid="destination-unknowns">
+              The app will not assume {proposal.unknowns.join(', ')}.
+            </p>
+          )}
           <div className="domain-correction__actions">
             <button
               type="button"
@@ -375,14 +477,18 @@ export function DestinationPanel({
               disabled={disabled || aim.trim() === ''}
               data-testid="destination-save"
               onClick={() => {
-                onName({
-                  aim,
-                  domain: data.page.domains[0]!,
-                  ...(milestone.trim() === '' ? {} : { milestone }),
-                })
+                onName(
+                  {
+                    aim,
+                    domain: filedIn ?? here,
+                    ...(milestone.trim() === '' ? {} : { milestone }),
+                  },
+                  reading,
+                )
                 setNaming(false)
                 setAim('')
                 setMilestone('')
+                setFileIn(undefined)
               }}
             >
               That is it

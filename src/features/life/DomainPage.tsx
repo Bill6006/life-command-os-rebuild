@@ -28,12 +28,14 @@ import {
 import {
   authoringRecords,
   destinationRecords,
+  destinationRef,
   milestoneFor,
   relationshipEventRecord,
   reviseDestinationRecord,
   type AuthoringDraft,
   type DestinationDraft,
 } from '../../intelligence/authoring'
+import { aimReadingRecord, withdrawAimReading, type AimReading } from '../../intelligence/interpret'
 import {
   courseReflectionRecord,
   nextCourseReflection,
@@ -324,14 +326,60 @@ export function DomainPage({ page }: { page: LifePage }) {
    * The entity and the record travel together through `create`, because a goal
    * whose subject is not in the index is a renderer with nothing to name.
    */
-  const nameDestination = (draft: DestinationDraft) => {
+  const nameDestination = (draft: DestinationDraft, reading?: AimReading) => {
     if (inFlight.current) return
     inFlight.current = true
     setWorking(true)
-    void memory.create(destinationRecords(draft, situation, authoringMoment())).finally(() => {
+    const at = authoringMoment()
+    const built = destinationRecords(draft, situation, at)
+    /*
+     * The sibling row, and only where the offer was taken — acceptance test 5.
+     *
+     * The same rule the discovery card follows, because it is the same gesture
+     * on a second surface: a reading he declined leaves no derived record of any
+     * kind, and one he took points at the record holding his own words.
+     */
+    const source = built.records[0]
+    const derived =
+      reading === undefined || reading.askedIn === draft.domain || source === undefined
+        ? built
+        : {
+            ...built,
+            records: [
+              ...built.records,
+              aimReadingRecord(
+                reading,
+                draft.domain,
+                built.created ?? destinationRef(draft.aim.trim()),
+                source.id,
+                at,
+              ),
+            ],
+          }
+    void memory.create(derived).finally(() => {
       inFlight.current = false
       setWorking(false)
     })
+  }
+
+  /**
+   * Taking a reading back — acceptance test 7's *reversible* half.
+   *
+   * One gesture with two consequences, and both are supersessions rather than
+   * edits: the reading is withdrawn, and the aim goes back to the area the
+   * question was asked in. Nothing is deleted, so Timeline still shows what the
+   * app read and when he took it back; what changes is which page the aim is on
+   * and what kind of thing its next step becomes.
+   */
+  const withdrawReading = (entry: DomainDestination) => {
+    const previous = entry.interpretation
+    const record = entry.record
+    if (previous === undefined || record === undefined) return
+    const at = authoringMoment()
+    append(() => [
+      withdrawAimReading(previous, at),
+      reviseDestinationRecord(record, { domain: previous.askedIn }, at),
+    ])
   }
 
   const reviseDestination = (
@@ -514,11 +562,13 @@ export function DomainPage({ page }: { page: LifePage }) {
 
       <DestinationPanel
         data={data}
+        situation={situation}
         area={situation.domains.labelFor(page.domains[0]!)}
         disabled={busy}
         onName={nameDestination}
         onRevise={reviseDestination}
         onMilestone={addMilestone}
+        onWithdrawReading={withdrawReading}
       />
 
       <Panel title="What the app currently believes">

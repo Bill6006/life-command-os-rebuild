@@ -66,6 +66,7 @@ import {
 import {
   authoringRecords,
   destinationRecords,
+  destinationRef,
   milestoneFor,
   proposeAuthoring,
   proposeDestination,
@@ -95,6 +96,14 @@ import {
   discoveryResponseRecord,
   type DiscoveryAgenda,
 } from '../../src/intelligence/discovery'
+import {
+  aimReadingRecord,
+  proposeInterpretedDestination,
+  readAimIn,
+  readingFor,
+  withdrawAimReading,
+  type AimReading,
+} from '../../src/intelligence/interpret'
 import { describeRecord } from '../../src/features/history/describe'
 import { createMemoryStore } from '../../src/memory/memoryStore'
 import { snapshotFromWire } from '../../src/memory/snapshot'
@@ -422,6 +431,27 @@ export const OWNER_ROUTES: readonly OwnerRoute[] = [
     writes: ['destination'],
   },
   {
+    id: 'aim-reading',
+    surface: 'domain-page',
+    gesture: 'File it in <area> instead, on the aspiration form',
+    builder: 'interpret.aimReadingRecord',
+    /*
+     * Nothing, and that is the point of routing 91 — the reading is made from
+     * the words as he types them, so the row it writes is reachable in the same
+     * gesture that creates the destination it is a sibling of.
+     */
+    needs: {},
+    writes: ['destination', 'aim-reading'],
+  },
+  {
+    id: 'aim-reading-withdraw',
+    surface: 'domain-page',
+    gesture: 'Put it back in <area>, on a destination that carries a reading',
+    builder: 'interpret.withdrawAimReading',
+    needs: { records: ['aim-reading'] },
+    writes: ['aim-reading', 'destination'],
+  },
+  {
     id: 'authoring',
     surface: 'domain-page',
     gesture: 'Tell the app about something',
@@ -517,14 +547,21 @@ export const OWNER_ROUTES: readonly OwnerRoute[] = [
     surface: 'insights',
     gesture: 'answering the second agenda',
     builder:
-      'authoring.destinationRecords, authoring.milestoneFor, authoring.authoringRecords, authoring.reviseDestinationRecord',
+      'authoring.destinationRecords, authoring.milestoneFor, authoring.authoringRecords, authoring.reviseDestinationRecord, interpret.aimReadingRecord',
     /*
      * The same builders as the domain page's controls and a different control,
      * which is what the per-screen rule is for — QA-83-003's second finding
      * exactly. Two screens calling one builder are two controls.
      */
     needs: {},
-    writes: ['destination', 'goal', 'explicit-fact', 'commitment', 'commitment-window'],
+    writes: [
+      'destination',
+      'aim-reading',
+      'goal',
+      'explicit-fact',
+      'commitment',
+      'commitment-window',
+    ],
   },
 ]
 
@@ -704,8 +741,28 @@ export interface JourneyApp {
   // Routing 84's own gestures, each the surface's own call
   // -------------------------------------------------------------------------
 
-  /** Say what he is aiming at, the way the domain page's control does. */
-  nameDestination(draft: DestinationDraft): Promise<GestureResult>
+  /**
+   * Say what he is aiming at, the way the domain page's control does.
+   *
+   * `askedIn` is the page the form was on, and it is what makes this the
+   * control rather than the builder: the panel reads the words against the area
+   * he is standing in, and where the reading names somewhere else and he takes
+   * the offer, `draft.domain` is that somewhere and a derived sibling row goes
+   * in beside the aim (routing 91). Left out, this is routing 84's gesture
+   * exactly.
+   */
+  nameDestination(draft: DestinationDraft, askedIn?: LifeDomainId): Promise<GestureResult>
+  /** What the domain page's aspiration form would read in those words. */
+  destinationReading(askedIn: LifeDomainId, aim: string): AimReading | undefined
+  /**
+   * Take a reading back, the way the destination's own row does — routing 91.
+   *
+   * **One gesture with two consequences**, and it is one gesture here because it
+   * is one press there: the reading is withdrawn and the aim goes back to the
+   * area the question was asked in. An instrument that only did the first half
+   * would be modelling a control the page does not have.
+   */
+  withdrawReading(destination: EntityRef): Promise<GestureResult>
   /** Introduce a goal, routine, person, place, skill or obligation. */
   introduce(draft: AuthoringDraft): Promise<GestureResult>
   /** Name the next step on a destination that already exists. */
@@ -722,9 +779,31 @@ export interface JourneyApp {
    * `undefined` where the shape has no proposal of its own, which is how the
    * surface decides too.
    */
-  discoveryProposal(said: string): AuthoringProposal | undefined
-  /** Answer the second agenda's question with a destination, as Life does. */
-  answerDiscovery(said: string): Promise<GestureResult>
+  discoveryProposal(said: string, takeOffer?: boolean): AuthoringProposal | undefined
+  /**
+   * What the card read in those words — routing 91.
+   *
+   * The reading itself rather than the sentence about it, so a test can assert
+   * on {@link AimReading.input} — the digest the interpreter was handed — which
+   * is what acceptance test 8 asks for and what no amount of reading rendered
+   * copy can establish.
+   */
+  discoveryReading(said: string): AimReading | undefined
+  /**
+   * Answer whatever the second agenda is asking, the way Insights does.
+   *
+   * **Every shape, not only a destination.** It used to run
+   * `proposeDestination` whatever was being asked, so answering the next-step
+   * question would have written a second aspiration — the instrument modelling
+   * a control that does not exist, while the card beside it branched on four
+   * shapes. `Discovery.tsx`'s own `build` is what this mirrors, branch for
+   * branch.
+   *
+   * `takeOffer` is the owner pressing *File it in … instead*. Left out, the aim
+   * is filed where the question was, which is what the card does until he says
+   * otherwise.
+   */
+  answerDiscovery(said: string, takeOffer?: boolean): Promise<GestureResult>
   /** Leave it, the way "Not now" does. */
   skipDiscovery(): Promise<GestureResult>
   /** Whether the app would ask what was in the way, and why either way. */
@@ -960,14 +1039,55 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
       return write(result.records, `introduced ${result.created?.id ?? 'something'}`)
     },
 
-    async nameDestination(draft) {
-      const built = destinationRecords(draft, situation(), authoringMoment())
+    destinationReading(askedIn, aim) {
+      return aim.trim() === '' ? undefined : readAimIn(aim.trim(), askedIn, situation())
+    },
+
+    async withdrawReading(destination) {
+      const previous = readingFor(view(), destination, at)
+      if (previous === undefined) {
+        return { done: false, note: 'nothing was read about this aim', written: 0 }
+      }
+      const record = view().history.byId(previous.reads)
+      if (record === undefined || record.kind !== 'destination') {
+        return { done: false, note: 'the reading points at no aim', written: 0 }
+      }
+      const moment = authoringMoment()
+      return write(
+        [
+          withdrawAimReading(previous, moment),
+          reviseDestinationRecord(record, { domain: previous.askedIn }, moment),
+        ],
+        `took back the reading of "${record.aim}"`,
+      )
+    },
+
+    async nameDestination(draft, askedIn) {
+      const moment = authoringMoment()
+      const built = destinationRecords(draft, situation(), moment)
       if (built.records.length === 0) {
         return { done: false, note: 'the destination could not be built', written: 0 }
       }
+      const from = askedIn ?? draft.domain
+      const reading =
+        draft.aim.trim() === '' ? undefined : readAimIn(draft.aim.trim(), from, situation())
+      const source = built.records[0]
+      const records =
+        reading === undefined || from === draft.domain || source === undefined
+          ? built.records
+          : [
+              ...built.records,
+              aimReadingRecord(
+                reading,
+                draft.domain,
+                built.created ?? destinationRef(draft.aim.trim()),
+                source.id,
+                moment,
+              ),
+            ]
       await store.putEntities(built.entities)
       held = await store.snapshot()
-      return write(built.records, `said he is aiming at "${draft.aim}"`)
+      return write(records, `said he is aiming at "${draft.aim}"`)
     },
 
     async introduce(draft) {
@@ -993,29 +1113,100 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
 
     agenda: () => discoveryAgenda(situation(), { now: at, zone, weekStartsOn: 1 }),
 
-    discoveryProposal(said) {
+    discoveryReading(said) {
       const asked = discoveryAgenda(situation(), { now: at, zone, weekStartsOn: 1 }).prompt
-      if (asked === undefined || asked.shape !== 'destination') return undefined
-      return proposeDestination({ aim: said.trim(), domain: asked.domain }, situation())
+      if (asked === undefined || asked.shape !== 'destination' || said.trim() === '') {
+        return undefined
+      }
+      return readAimIn(said.trim(), asked.domain, situation())
     },
 
-    async answerDiscovery(said) {
+    discoveryProposal(said, takeOffer) {
+      const asked = discoveryAgenda(situation(), { now: at, zone, weekStartsOn: 1 }).prompt
+      if (asked === undefined || asked.shape !== 'destination') return undefined
+      if (said.trim() === '') {
+        return proposeDestination({ aim: said.trim(), domain: asked.domain }, situation())
+      }
+      const reading = readAimIn(said.trim(), asked.domain, situation())
+      const into = takeOffer === true ? (reading.offer ?? asked.domain) : asked.domain
+      return proposeInterpretedDestination({ aim: said.trim(), domain: into }, reading, situation())
+    },
+
+    async answerDiscovery(said, takeOffer) {
       const asked = discoveryAgenda(situation(), { now: at, zone, weekStartsOn: 1 }).prompt
       if (asked === undefined) return { done: false, note: 'nothing is being asked', written: 0 }
-      /*
-       * Through the proposal, because the card is — D-188.
-       *
-       * The instrument's whole worth is that a gesture here is the gesture
-       * there. While this called `destinationRecords` directly it was modelling
-       * the bypass rather than the control, and would have gone on passing
-       * after the bypass was removed.
-       */
-      const proposed = proposeDestination({ aim: said.trim(), domain: asked.domain }, situation())
-      if (proposed.problems.length > 0) {
-        return { done: false, note: proposed.problems.join('; '), written: 0 }
-      }
       const moment = authoringMoment()
-      const built = destinationRecords({ aim: said, domain: asked.domain }, situation(), moment)
+      const trimmed = said.trim()
+      if (trimmed === '') return { done: false, note: 'nothing was typed', written: 0 }
+
+      /*
+       * The four shapes the card actually branches on, in its own order.
+       *
+       * A destination goes through the proposal (D-188); a next step goes
+       * through `milestoneFor`, because re-running the destination builder
+       * would write a second aspiration carrying the same aim; a baseline and a
+       * *what would count* revise the record they belong to.
+       */
+      let built: AuthoringResult | undefined
+      if (asked.shape === 'destination') {
+        const reading = readAimIn(trimmed, asked.domain, situation())
+        const into = takeOffer === true ? (reading.offer ?? asked.domain) : asked.domain
+        const proposed = proposeInterpretedDestination(
+          { aim: trimmed, domain: into },
+          reading,
+          situation(),
+        )
+        if (proposed.problems.length > 0) {
+          return { done: false, note: proposed.problems.join('; '), written: 0 }
+        }
+        const made = destinationRecords({ aim: said, domain: into }, situation(), moment)
+        const source = made.records[0]
+        built =
+          into === asked.domain || source === undefined
+            ? made
+            : {
+                ...made,
+                records: [
+                  ...made.records,
+                  aimReadingRecord(
+                    reading,
+                    into,
+                    made.created ?? destinationRef(trimmed),
+                    source.id,
+                    moment,
+                  ),
+                ],
+              }
+      } else if (asked.shape === 'milestone') {
+        const destination = asked.destination
+        if (destination === undefined) {
+          return { done: false, note: 'the question names no destination', written: 0 }
+        }
+        built = milestoneFor(destination.destination, asked.domain, trimmed, situation(), moment)
+      } else {
+        const held_ =
+          asked.destination === undefined
+            ? undefined
+            : view().history.byId(asked.destination.source)
+        if (held_ === undefined || held_.kind !== 'destination') {
+          return { done: false, note: 'the question names no destination record', written: 0 }
+        }
+        built = {
+          entities: [],
+          records: [
+            reviseDestinationRecord(
+              held_,
+              asked.shape === 'baseline' ? { baseline: trimmed } : { evidence: [trimmed] },
+              moment,
+            ),
+          ],
+          created: undefined,
+        }
+      }
+
+      if (built === undefined || built.records.length === 0) {
+        return { done: false, note: 'the answer produced nothing', written: 0 }
+      }
       await store.putEntities(built.entities)
       held = await store.snapshot()
       return write(
@@ -1171,6 +1362,7 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
         entities: current.entities,
         history: current.view.history,
         concepts: current.concepts,
+        domains: current.domains,
         policy: { surface: 'inspection' as const, revealPrivate: false },
       }
       const out: string[] = []

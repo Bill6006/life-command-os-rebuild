@@ -567,6 +567,12 @@ describe('there is exactly one arbitration path', () => {
    * - `discovery` is the second information agenda. It is deliberately not on
    *   Now's critical path and by construction cannot move tonight's answer —
    *   which is the whole reason it is a separate instrument from the guide.
+   * - `interpret` reads the words the owner types and **proposes**. It writes
+   *   nothing, ranks nothing and decides nothing: it returns the same
+   *   `AuthoringProposal` shape `authoring` returns, and the surface writes only
+   *   after the owner has agreed. It is on this list for the same reason
+   *   `authoring` is — a form that offers to create something has to be able to
+   *   say what it would create.
    *
    * Adding to this list stays an edit somebody makes deliberately, with a
    * sentence saying why. That is the guard's value, and it is why the list is
@@ -593,6 +599,7 @@ describe('there is exactly one arbitration path', () => {
     'progress',
     'blockers',
     'discovery',
+    'interpret',
   ]
   const DECIDES = [
     'candidates',

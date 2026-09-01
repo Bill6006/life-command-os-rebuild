@@ -185,6 +185,7 @@ describe('the record layer already knew, and now says so', () => {
       entities: VIEW.entities,
       history: VIEW.history,
       concepts: SITUATION.concepts,
+      domains: SITUATION.domains,
       policy: DISCREET_PRIMARY,
     })
     expect(described?.withheld).toBe(true)

@@ -178,6 +178,28 @@
   cursor: default;
 }
 
+/*
+ * A chosen option, when the row is a choice rather than a command — routing 91.
+ *
+ * Most `.domain-option` buttons do a thing and are gone. The cross-domain
+ * re-file rows are a **choice held on screen**, and the owner has to be able to
+ * see which of the two is standing before he presses *That is it* — a toggle
+ * with no visible state is a control that lies about what will happen.
+ *
+ * `aria-pressed` rather than a class, so what the eye reads and what a screen
+ * reader announces come from the same attribute and cannot disagree. The
+ * treatment is the one the navigation already uses for *where you are*, which
+ * is the same idea: accent on a dim accent ground, and the border firmed up so
+ * the state survives at the contrast the palette is tested at rather than
+ * resting on colour alone (section 37).
+ */
+.domain-option[aria-pressed='true'] {
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-color: var(--accent-edge);
+  font-weight: var(--weight-semibold);
+}
+
 .domain-goal {
   padding: var(--space-3) 0;
   border-top: 1px solid var(--line-soft);
@@ -524,6 +546,25 @@
     gap: var(--space-1) var(--space-4);
     align-items: baseline;
   }
+}
+
+/* ---- What the app read in the words --------------------------------------
+ *
+ * Routing 91, D-143. It sits under the owner's four parts and has to read as a
+ * different author's sentence rather than as a fifth part — so it is set apart
+ * by a rule above it and the muted colour the design system already uses for a
+ * thing the app is saying about itself, and it gains nothing else. No badge, no
+ * colour that ranks it and no emphasis: a reading is a claim the owner can take
+ * back, which is not a claim worth drawing attention to over his own words.
+ */
+.destination__reading {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
 }
 
 /* ---- A milestone ---------------------------------------------------------

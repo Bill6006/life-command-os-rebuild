@@ -40,7 +40,7 @@ const TEXT = new Map(
  * gate, and a phase that left no room for one would have passed the owner's
  * phone gate on a design the next phase has to re-open.
  */
-describe('90.3 — the accommodation list is reserved, and none of it is built', () => {
+describe('90.3 — the accommodation list, and what each row now claims', () => {
   it('carries section 54’s nine rows and the adjudication’s six, and no more', () => {
     /*
      * Fifteen rows plus the refinement the adjudication attaches to A9 rather
@@ -79,7 +79,7 @@ describe('90.3 — the accommodation list is reserved, and none of it is built',
     expect(missing, 'a reserved shape has gone').toEqual([])
   })
 
-  it('has built none of them', () => {
+  it('has built none of the rows still reserved', () => {
     /*
      * The other half, and the one that would catch this phase overreaching.
      *
@@ -91,6 +91,15 @@ describe('90.3 — the accommodation list is reserved, and none of it is built',
      */
     const built: string[] = []
     for (const row of ACCOMMODATION) {
+      /*
+       * A landed row makes the opposite claim, and is checked below.
+       *
+       * Leaving it in this sweep would be worse than useless: it passes anyway,
+       * because a phase that builds the feature does not have to use the token
+       * somebody guessed for it years earlier — which is precisely how a guard
+       * goes green over the thing it was named for (D-238).
+       */
+      if (row.landed !== undefined) continue
       for (const token of row.notBuilt) {
         /*
          * On a word boundary, not as a substring.
@@ -110,7 +119,36 @@ describe('90.3 — the accommodation list is reserved, and none of it is built',
     expect(built, 'routing 90 may reserve these and may not build them').toEqual([])
   })
 
-  it('bites when a row is built', () => {
+  it('holds every landed row to where it actually landed', () => {
+    /*
+     * The other half of the swap — routing 91.
+     *
+     * B1 is the first row a later phase has landed. What is checked is no longer
+     * that its tokens are absent (they always were, under any implementation)
+     * but that the feature is **present**, in the composition the visual phase
+     * reserved for it. A landed row with nothing behind it fails here.
+     */
+    const landed = ACCOMMODATION.filter((row) => row.landed !== undefined)
+    expect(landed.length, 'routing 91 landed B1').toBeGreaterThan(0)
+
+    const missing: string[] = []
+    for (const row of landed) {
+      expect(row.built, `${row.id}: landed with nowhere named`).toBeDefined()
+      for (const { file, proof } of row.built ?? []) {
+        const text = TEXT.get(file)
+        if (text === undefined) {
+          missing.push(`${row.id}: ${file} does not exist`)
+          continue
+        }
+        for (const needle of proof) {
+          if (!text.includes(needle)) missing.push(`${row.id}: ${file} has no "${needle}"`)
+        }
+      }
+    }
+    expect(missing, 'a landed row is not where it says it landed').toEqual([])
+  })
+
+  it('bites when a reserved row is built', () => {
     /*
      * A list of things that must be absent goes green on an empty repository
      * too. This is what tells the two apart.

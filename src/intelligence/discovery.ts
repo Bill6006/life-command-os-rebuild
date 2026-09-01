@@ -4,8 +4,9 @@ import { newRecordId, type RecordId } from '../domain/ids'
 import type { CanonicalRecord, DiscoveryResponseRecord, Provenance } from '../domain/records'
 import { localWeekIdAt, type Instant, type TimeZoneId, type WeekStartDay } from '../domain/time'
 import { buildView, type MemoryView } from '../memory/view'
-import { PROVING_DOMAINS } from './authoring'
+import { milestoneQuestion, PROVING_DOMAINS } from './authoring'
 import type { ActiveDestination } from './destinations'
+import { readingFor } from './interpret'
 import { decide, type DecideOptions, type DecisionMoment } from './engine'
 import type { Situation } from './situation'
 
@@ -146,6 +147,24 @@ interface AgendaMoment {
 export function outstandingPrompts(situation: Situation): readonly DiscoveryPrompt[] {
   const out: DiscoveryPrompt[] = []
   const destinations = situation.direction.destinations
+  /*
+   * Finishing what was started comes before starting something else — routing 91.
+   *
+   * The agenda walks the three proving areas in registry order, so answering the
+   * Career aspiration used to make *"what are you hoping Health looks like?"* the
+   * next question. That was harmless while an aspiration was an inert string. It
+   * is not harmless now: the app has just said it read his words as being about
+   * Money and offered to act on that, and the one question that would make the
+   * offer true is the clarification. Asking about Health instead is the app
+   * saying it understood and then changing the subject — the brief's own worst
+   * outcome, one level up from where it names it.
+   *
+   * So a clarification is hoisted, and **only** a clarification: everything else
+   * keeps the order routing 84 shipped, and nothing is added or removed by this,
+   * so the measured property that what is outstanding never rises after an answer
+   * is untouched.
+   */
+  const first: DiscoveryPrompt[] = []
 
   for (const domain of PROVING_DOMAINS) {
     const area = situation.domains.labelFor(domain)
@@ -182,20 +201,49 @@ export function outstandingPrompts(situation: Situation): readonly DiscoveryProm
        * The measurement is in `destination-and-discovery.test.ts`: what is
        * outstanding never rises after an answer, on any history in the library.
        */
-      const already = out.length
+      const already = out.length + first.length
       if (destination.next === undefined) {
-        out.push({
+        /*
+         * The one follow-up, and where it was read it is concrete — routing 91.
+         *
+         * **The same slot, better words.** D-184 already guarantees one question
+         * per destination at a time, and that is the budget acceptance test 4
+         * means by *"exactly one follow-up, not three"*. So interpretation does
+         * not add a question here; it changes the one that was already going to
+         * be asked, from *"what would be the next step"* to the thing that area
+         * actually needs — and it does so only where the words were read and the
+         * owner agreed with the reading.
+         *
+         * Where he declined, or where the words named nothing, this is D-188's
+         * sentence unchanged. That is the synthetic contract's null case: an
+         * unambiguous phrase produces no clarification at all.
+         */
+        const read = readingFor(situation.view, destination.destination, situation.at) !== undefined
+        ;(read ? first : out).push({
+          /*
+           * **One id, both wordings** — D-163's "a skip is respected".
+           *
+           * Two ids would mean that skipping the money-flavoured question and
+           * then taking the reading back put the plain one in front of him
+           * again, because nothing would have been settled against it. One
+           * thing is being asked about — the next step towards this aim — and
+           * what the reading changes is how it is worded, not what it is.
+           */
           id: `next-step.${destination.destination.id}`,
           topic: 'next-step',
           domain,
           shape: 'milestone',
-          prompt: `What would be the next step towards “${destination.aim}”?`,
+          prompt: read
+            ? milestoneQuestion(domain, destination.aim)
+            : `What would be the next step towards “${destination.aim}”?`,
           note: 'This becomes a milestone with its own date, and the app will start suggesting work towards it.',
-          because: 'there is an aim here with nothing named on the way to it',
+          because: read
+            ? `the words were read as being about ${situation.domains.labelFor(domain)} and nothing names one`
+            : 'there is an aim here with nothing named on the way to it',
           destination,
         })
       }
-      if (out.length > already) continue
+      if (out.length + first.length > already) continue
       if (destination.baseline === undefined) {
         out.push({
           id: `baseline.${destination.destination.id}`,
@@ -208,7 +256,7 @@ export function outstandingPrompts(situation: Situation): readonly DiscoveryProm
           destination,
         })
       }
-      if (out.length > already) continue
+      if (out.length + first.length > already) continue
       if (destination.evidence.length === 0) {
         out.push({
           id: `evidence.${destination.destination.id}`,
@@ -248,7 +296,7 @@ export function outstandingPrompts(situation: Situation): readonly DiscoveryProm
     })
   }
 
-  return out
+  return [...first, ...out]
 }
 
 function standingWindows(situation: Situation): number {

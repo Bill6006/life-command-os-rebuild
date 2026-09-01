@@ -20,6 +20,12 @@ import {
 import type { Decision } from './engine'
 import { describeDays } from './coverage'
 import { describeUnknown } from '../domain/knowledge'
+import {
+  discreetPlaceholder,
+  mayRaiseUnasked,
+  mayShowDetail,
+  DISCREET_PRIMARY,
+} from '../domain/privacy'
 import type { ProvenanceSource } from '../domain/records'
 import {
   actionScopeOf,
@@ -1736,8 +1742,8 @@ function coverageCards(situation: Situation): readonly Built[] {
    * still reported on Life and on its own page, which is where the owner goes
    * when he wants it.
    */
-  const quiet = situation.coverage.neglected.filter(
-    (domain) => situation.domains.defaultPrivacyFor(domain.domain) !== 'private',
+  const quiet = situation.coverage.neglected.filter((domain) =>
+    mayRaiseUnasked(situation.domains.defaultPrivacyFor(domain.domain)),
   )
   if (quiet.length === 0) return []
 
@@ -1952,7 +1958,7 @@ function trajectoryCards(situation: Situation): readonly Built[] {
      * tonight, and never once reported what they had done over time.
      */
     if (definition.tracked === undefined) continue
-    if (definition.privacy === 'private') continue
+    if (!mayRaiseUnasked(definition.privacy)) continue
     const value = numericValue(record.value)
     if (value === undefined) continue
 
@@ -2162,7 +2168,7 @@ function lifeSeasonCards(situation: Situation): readonly Built[] {
     if (record.durability !== 'durable') continue
     if (record.validFrom > situation.at) continue
     if (record.validUntil !== undefined && situation.at >= record.validUntil) continue
-    if (record.privacy === 'private') continue
+    if (!mayRaiseUnasked(record.privacy)) continue
 
     const before = situation.view.history.effective.filter(
       (other) => other.occurredAt < record.validFrom,
@@ -2718,7 +2724,7 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
      * "show that it exists, not what it says" — a surface that silently omitted
      * the row would tell the owner his history is thinner than it is.
      */
-    const withheld = fact.privacy === 'private'
+    const withheld = !mayShowDetail(fact.privacy, DISCREET_PRIMARY)
     /*
      * `ConsideredFact.reading` spells an absence as "not known — never-observed"
      * — the gap's own identifier, which is inspector language and belongs in
@@ -2727,7 +2733,7 @@ export function evidenceForDecision(decision: Decision): DecisionEvidence | unde
      * why it is hedging.
      */
     const reading = withheld
-      ? 'Private entry'
+      ? discreetPlaceholder(fact.privacy)
       : fact.state === 'unknown'
         ? 'Not known yet'
         : fact.reading

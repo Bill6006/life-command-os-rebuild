@@ -54,8 +54,33 @@ export interface AccommodationRow {
    * that its presence would mean the feature and not merely a word — and the
    * boundary is why: a plain substring search reported the row for a twelfth
    * domain as *built* because `invalidating` and `redating` contain "dating".
+   *
+   * **Ignored once {@link landed} is set**, because a row the phase that owns it
+   * has built is no longer a reservation.
    */
   readonly notBuilt: readonly string[]
+  /**
+   * The routing that actually built this row, once one has — routing 91.
+   *
+   * ## Why a row needs this at all
+   *
+   * The list is written as fifteen absences, and an absence check goes green on
+   * a repository that has built the feature under different identifiers. That is
+   * D-238's exact defect class — *green over the thing it was named for* — and
+   * it would arrive here the first time one of these rows landed, silently, with
+   * `routing` still saying which phase was supposed to land it.
+   *
+   * So a landed row swaps one claim for the other: the tokens stop being checked
+   * for absence, and {@link built} is checked for presence instead. The row is
+   * kept rather than deleted, because what it now records is that the shape the
+   * visual phase reserved is the shape the later phase used.
+   */
+  readonly landed?: string
+  /**
+   * Where the landed row actually is, in the same file-and-text form as
+   * {@link landsIn}. Required whenever {@link landed} is set, and checked.
+   */
+  readonly built?: readonly { readonly file: string; readonly proof: readonly string[] }[]
 }
 
 const PANELS = 'src/features/life/DomainPanels.tsx'
@@ -151,6 +176,24 @@ export const ACCOMMODATION: readonly AccommodationRow[] = [
     routing: '91',
     landsIn: [{ file: PANELS, proof: ['authoring-proposal', 'domain-options'] }],
     notBuilt: ['refileDomain', 'crossDomainRefile'],
+    /*
+     * Landed, and the shape held: two option rows inside the confirmation
+     * block on both aspiration surfaces, with the row that changes nothing
+     * selected until the owner says otherwise. No picker screen was added, and
+     * `domain-options` is the composition routing 90 reserved.
+     */
+    landed: '91',
+    built: [
+      {
+        file: PANELS,
+        proof: ['destination-keep', 'destination-refile', 'destination-reading-offer'],
+      },
+      {
+        file: 'src/features/insights/Discovery.tsx',
+        proof: ['discovery-keep', 'discovery-refile', 'discovery-reading'],
+      },
+      { file: 'src/intelligence/interpret.ts', proof: ['export function describeOffer'] },
+    ],
   },
   {
     id: 'B2',

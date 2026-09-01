@@ -51,6 +51,26 @@ export const RECORD_KINDS = [
    * storing rather than inferring.
    */
   'destination',
+  /**
+   * What the app read in the words the owner typed — routing 91, D-242.
+   *
+   * A **sibling** of the destination record, never a replacement for it. His
+   * words are stored byte-identical in the `destination` row and are not
+   * touched here; this row says what the app worked out from them — which area
+   * they name, which words named it, and what they did not say. D-143's rule
+   * applied to interpretation: what the app was told and what it worked out are
+   * two rows, and the second one states what it rests on.
+   *
+   * **It is only ever written after the owner agrees**, so a reading he
+   * declined leaves no trace of any kind, and it carries
+   * `provenance.source: 'derived'` so nothing downstream can mistake it for
+   * something he said.
+   *
+   * Withdrawn by writing another one with `withdrawn` set and `supersedes`
+   * pointing at it, exactly as a destination is revised. The reading he took
+   * back stays legible in Timeline; what changes is what the app reads.
+   */
+  'aim-reading',
   'commitment',
   /**
    * A named obligation with a place in the owner's day — AUD-0004.
@@ -358,6 +378,34 @@ export type DestinationRecord = Record_<
     readonly evidence?: readonly string[]
     /** What he does not know yet. Kept, because an unknown is a fact. */
     readonly unknowns?: readonly string[]
+  }
+>
+
+/**
+ * What the app read in the owner's own words — routing 91.
+ *
+ * Every field is either one of his words, an area id, or a sentence naming what
+ * the words did not say. There is no confidence number and no score: D-162
+ * binds here as everywhere, and an interpretation with a number on it would be
+ * the first thing on this product a percentage could be computed from.
+ */
+export type AimReadingRecord = Record_<
+  'aim-reading',
+  {
+    /** The destination whose words were read. */
+    readonly destination: EntityRef
+    /** The record holding his words — the row this one is a sibling of. */
+    readonly reads: RecordId
+    /** The area the words name. */
+    readonly named: LifeDomainId
+    /** The area the question that drew the words was about. */
+    readonly askedIn: LifeDomainId
+    /** The words that named the area, exactly as he typed them. */
+    readonly words: readonly string[]
+    /** What the words did not say. Never empty for a reading that was offered. */
+    readonly unknowns: readonly string[]
+    /** Set on the row that takes an earlier reading back. */
+    readonly withdrawn?: boolean
   }
 >
 
@@ -894,6 +942,7 @@ export type CanonicalRecord =
   | ConstraintRecord
   | GoalRecord
   | DestinationRecord
+  | AimReadingRecord
   | CommitmentRecord
   | CommitmentWindowRecord
   | ThreadRecord

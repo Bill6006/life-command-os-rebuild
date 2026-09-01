@@ -406,6 +406,7 @@ describe('QA-84-013 — and closed over what a record reads as, wherever it is r
       entities: current.entities,
       history: current.view.history,
       concepts: current.concepts,
+      domains: current.domains,
       policy: { surface: 'inspection' as const, revealPrivate: false },
     }
 
@@ -570,6 +571,7 @@ describe('QA-84-014 — and closed over the value the owner actually reads', () 
       entities: situation.entities,
       history: situation.view.history,
       concepts: situation.concepts,
+      domains: situation.domains,
       policy: DISCREET_PRIMARY,
     }
   }
@@ -582,6 +584,7 @@ describe('QA-84-014 — and closed over the value the owner actually reads', () 
       entities: situation.entities,
       history: situation.view.history,
       concepts: situation.concepts,
+      domains: situation.domains,
       policy: { surface: 'inspection' as const, revealPrivate },
     }
   }

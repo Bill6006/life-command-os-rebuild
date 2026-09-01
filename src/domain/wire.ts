@@ -161,6 +161,11 @@ function readDomains(reader: Reader, key: string): readonly LifeDomainId[] {
   return (list ?? []) as readonly LifeDomainId[]
 }
 
+function readDomain(reader: Reader, key: string): LifeDomainId | undefined {
+  const value = readString(reader, key)
+  return value === undefined ? undefined : (value as LifeDomainId)
+}
+
 function readConcept(reader: Reader, key: string): ConceptId | undefined {
   const value = readString(reader, key)
   return value === undefined ? undefined : (value as ConceptId)
@@ -546,6 +551,16 @@ function readPayload(reader: Reader, kind: RecordKind): Record<string, unknown> 
           reader.value.evidence === undefined ? undefined : readStringArray(reader, 'evidence'),
         unknowns:
           reader.value.unknowns === undefined ? undefined : readStringArray(reader, 'unknowns'),
+      }
+    case 'aim-reading':
+      return {
+        destination: readEntityRefFrom(reader, 'destination'),
+        reads: readRecordId(reader, 'reads'),
+        named: readDomain(reader, 'named'),
+        askedIn: readDomain(reader, 'askedIn'),
+        words: readStringArray(reader, 'words'),
+        unknowns: readStringArray(reader, 'unknowns'),
+        withdrawn: readOptionalBoolean(reader, 'withdrawn'),
       }
     case 'commitment':
       return {
@@ -1001,6 +1016,16 @@ function payloadOut(record: CanonicalRecord): Record<string, unknown> {
         ...(record.baseline === undefined ? {} : { baseline: record.baseline }),
         ...(record.evidence === undefined ? {} : { evidence: [...record.evidence] }),
         ...(record.unknowns === undefined ? {} : { unknowns: [...record.unknowns] }),
+      }
+    case 'aim-reading':
+      return {
+        destination: refOut(record.destination),
+        reads: record.reads,
+        named: record.named,
+        askedIn: record.askedIn,
+        words: [...record.words],
+        unknowns: [...record.unknowns],
+        ...(record.withdrawn === undefined ? {} : { withdrawn: record.withdrawn }),
       }
     case 'commitment':
       return {

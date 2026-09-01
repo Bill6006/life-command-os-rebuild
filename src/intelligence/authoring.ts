@@ -662,8 +662,13 @@ export function milestoneEntityKind(domain: LifeDomainId): EntityKind {
  *
  * Read the words. The aim is stored byte-identical to what he typed, in the
  * prompt's own domain — *"More money"* under a Career prompt stays Career.
- * Whether it means something about money, what amount, by when, is routing 91
- * package 1 (D-172), and nothing here opens it.
+ *
+ * **That question is answered now, and it is answered somewhere else.** Routing
+ * 91 built `interpret.proposeInterpretedDestination`, which **composes** this
+ * function and adds what the words said and what they left open (D-240). This
+ * one is unchanged and still does not read anything: a caller that wants a
+ * reading asks for one, and every caller that does not gets D-188's contract
+ * exactly as it was written.
  */
 export function proposeDestination(
   draft: DestinationDraft,
@@ -791,6 +796,45 @@ export function describeMilestone(name: string, domain: LifeDomainId, area: stri
   return `The next step in ${area}: “${name}”.`
 }
 
+/**
+ * The question whose answer becomes the next step, in the area's own terms —
+ * routing 91, package 91.2.
+ *
+ * ## The gap this closes, named exactly
+ *
+ * Correction 3.6: `MILESTONE_ENTITY` is what makes a destination reach Now, and
+ * it is written by {@link milestoneRecords} — **not** by
+ * {@link destinationRecords}. So a destination with no milestone creates a
+ * `destination` entity that no generator consumes, in any area, and a bare aim
+ * changes nothing at all. The phase had two ways out: make the bare aim reach
+ * Now by some other route, or make the clarification reach a milestone.
+ *
+ * **It is the clarification, and the reason is that a bare aim has nothing to
+ * act on.** *"More money"* names no work. A generator that produced a move from
+ * it would have to invent the work — which is `vocabulary.ts`'s one prohibition
+ * (*the engine may name its own routines; it may never name the owner's life*)
+ * and F36's precision rule in the same breath. What the app can honestly do is
+ * ask **one** concrete question and let his answer be the work.
+ *
+ * ## Why it is keyed on the same table the entity is
+ *
+ * {@link milestoneEntityKind} decides what the answer becomes, and this decides
+ * what he is asked for. Keying both on one table is QA-84-008's standing lesson:
+ * the Health confirmation was accurate when it was written and false when it
+ * shipped, because the sentence and the behaviour it described lived where no
+ * compiler edge joined them. Here the question, the entity and
+ * {@link describeMilestone} are three readings of one row.
+ */
+export function milestoneQuestion(domain: LifeDomainId, aim: string): string {
+  const kind = milestoneEntityKind(domain)
+  if (kind === 'learning-topic')
+    return `What would you be learning or working on, towards “${aim}”?`
+  if (kind === 'financial-goal')
+    return `What is the money thing you would deal with first, towards “${aim}”?`
+  if (kind === 'routine') return `What would you actually do, towards “${aim}”?`
+  return `What would be the next step towards “${aim}”?`
+}
+
 function milestoneRecords(
   name: string,
   draft: DestinationDraft,
@@ -880,6 +924,15 @@ export function reviseDestinationRecord(
     readonly baseline?: string | null
     readonly evidence?: readonly string[]
     readonly unknowns?: readonly string[]
+    /**
+     * Which area it is filed in — routing 91, and only the owner moves it.
+     *
+     * Reached by exactly one gesture: taking back a reading he had agreed to,
+     * which puts the aim back in the area the question was asked in. There is
+     * no control anywhere that moves a destination the app was never told to
+     * move, and the brief's rule 4 is what says there may not be one.
+     */
+    readonly domain?: LifeDomainId
   },
   moment: AuthoringMoment,
   id?: RecordId,
@@ -900,7 +953,7 @@ export function reviseDestinationRecord(
       occurredAt: moment.now,
       recordedAt: moment.recordedAt,
       ...(id === undefined ? {} : { id }),
-      domains: [...previous.domains],
+      domains: changes.domain === undefined ? [...previous.domains] : [changes.domain],
       entities: [...previous.entities],
       privacy: previous.privacy,
       supersedes: previous.id,

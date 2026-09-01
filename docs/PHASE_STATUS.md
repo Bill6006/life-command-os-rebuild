@@ -120,6 +120,85 @@ superseded rather than reused.
 
 ---
 
+# Routing Phase 91 — Semantic capture and clarification
+
+**Status: YELLOW — READY FOR INDEPENDENT QA.** A builder conversation may not
+approve its own phase (D-077).
+
+## The finding this phase answers, in one sentence
+
+_"Nothing anywhere reads owner text for meaning."_ The whole of interpretation
+was `const aim = draft.aim.trim()`, and the area came from **the prompt that was
+asked** rather than from anything the words said. So the owner typed _"More
+money"_ under _"What do you hope Career & Learning eventually looks like?"_, the
+app filed a Career string, and its effect on Now was zero — and stayed zero,
+because a destination with no milestone creates a `destination` entity **no
+generator consumes** (correction 3.6).
+
+## What it built
+
+**91.1 — a second producer of `AuthoringProposal` that reads words.**
+`interpret.ts` reads the words the owner types and the labels of things he has
+already named, names one of three areas or declines, says what the words did not
+say, and offers **one** cross-domain re-file inside the confirmation block. It
+writes nothing: the surface writes only after he agrees. The seven rules of
+`ROUTING_91_BRIEF.md` §4 are D-240, D-242 and D-243.
+
+**91.2 — correction 3.6's gap, closed by naming which half closes it.** The
+phase's hardest item was choosing between _make the bare aim reach Now_ and
+_make the clarification reach a milestone_. It is the clarification (D-241), and
+the deciding argument is that a bare aim has nothing to act on: _"More money"_
+names no work, and a generator that produced a move from it would have to invent
+the work — which `vocabulary.ts` forbids by name. So the interpreter adds no
+question; it changes the one already being asked, from _"what would be the next
+step"_ to _"what is the money thing you would deal with first"_, keyed on the
+same table that decides what the answer becomes.
+
+**91.3 — the private boundary as a property.** Seven sites decided the private
+class in place; three named questions in `privacy.ts` now answer them, and a
+sweep fails the build if anything under `src/intelligence` compares to the class
+itself (D-243).
+
+## What actually changes for the owner
+
+From a store with nothing in it: he answers the Career aspiration question with
+_"More money"_, the app says the words sound like they are about Money and offers
+to file them there, he takes the offer, it asks him **one** concrete question —
+_"What is the money thing you would deal with first?"_ — and Now says **"Deal
+with Clear the credit card today."**
+
+Decline the reading on the same two words and the same two presses, and Now says
+_"Spend 10 minutes recalling Clear the credit card before you reopen your
+notes."_ Neither arm is broken. They are different, and the difference is the
+interpretation — which is the whole phase in one pair of assertions.
+
+## What it deliberately did not do
+
+CASE B. No model, no hybrid, no network call (D-025 is untouched — there is still
+exactly one `fetch` in `src/`, for `build-info.json`). No inference over history —
+that is routing 97 and D-172 holds it. No widened concept vocabulary. No
+emotional dimensions. No scoring change of any kind; `QUESTIONS_PER_DAY` and
+`DISCOVERY_PER_WEEK` are unchanged, and no weight, dimension or threshold moved.
+
+## Decisions made
+
+**D-240 … D-244** in [`DECISION_LOG.md`](DECISION_LOG.md).
+
+## Accommodation row B1 landed, and the list learned something from it
+
+B1 — _a cross-domain re-file option inside a confirmation block, not a picker
+screen_ — was routing 90's reservation **for routing 91**, and this phase landed
+it: two option rows in `domain-options`, on both aspiration surfaces, with the row
+that changes nothing selected by default.
+
+Landing it exposed a flaw in the list's own second claim. Its absence check went
+**green over a built row**, because nothing in this phase happens to be called
+`refileDomain` or `crossDomainRefile` — D-238's exact class, arriving on the
+accommodation list rather than in it. A landed row now swaps absence for
+presence (D-244).
+
+---
+
 # Routing Phase 90 — Canonical Phase 9: visual coherence, motion, mobile
 
 **Status: GREEN — INDEPENDENT QA PASSED AND THE OWNER APPROVED THE PHONE GATE,

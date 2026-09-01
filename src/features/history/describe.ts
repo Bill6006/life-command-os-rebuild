@@ -1,4 +1,5 @@
 import type { ConceptRegistry } from '../../domain/concepts'
+import type { DomainRegistry } from '../../domain/domains'
 import type { EntityIndex } from '../../domain/entities'
 import type { RecordId } from '../../domain/ids'
 import { discreetPlaceholder, mayShowDetail, type DisplayPolicy } from '../../domain/privacy'
@@ -68,6 +69,16 @@ export interface DescribeContext {
   readonly entities: EntityIndex
   readonly history: ResolvedHistory
   readonly concepts: ConceptRegistry
+  /**
+   * The areas, because one entry names one — routing 91.
+   *
+   * An `aim-reading` says which area the app read the owner's words as being
+   * about, and a row that said `money` rather than *Money & Financial
+   * Resilience* would be printing a schema id at the owner (DEF-0007's
+   * class). It arrives here rather than being reached for so that a history
+   * rendered against an extended registry uses that registry's own words.
+   */
+  readonly domains: DomainRegistry
   readonly policy: DisplayPolicy
 }
 
@@ -113,6 +124,16 @@ const TAGS = {
   permission: 'Permission',
   // The second agenda's own memory, and the tag says which agenda it was —
   // "Asked" would be indistinguishable from the guide's three a day.
+  /*
+   * What the app worked out from his words, and the tag says whose sentence
+   * it is — routing 91, D-143.
+   *
+   * Not 'Aiming at', which is the destination's own tag and is his. A reading
+   * sitting under the same word as the thing it was read from would be the
+   * app's conclusion wearing the owner's label, on the one surface that exists
+   * to say what happened.
+   */
+  'aim-reading': 'Worked out',
   'discovery-response': 'Getting to know you',
   /*
    * "Kept" rather than "Imported", now that the origin is its own field.
@@ -166,6 +187,18 @@ const PART_DONE_TAG = 'Part done'
 export function tagOf(record: CanonicalRecord): string {
   if (record.kind === 'action-completion' && record.extent === 'partial') return PART_DONE_TAG
   return TAGS[record.kind]
+}
+
+/**
+ * A list in a sentence, with the last one joined by *and*.
+ *
+ * One word reads as one word rather than as a list of one, which is what a
+ * bare `join(', ')` gets wrong on the ordinary case — the owner types two
+ * words and one of them names the area.
+ */
+function listOf(items: readonly string[]): string {
+  if (items.length <= 1) return items[0] ?? ''
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]!}`
 }
 
 function lowerFirst(text: string): string {
@@ -335,7 +368,7 @@ export function describeRecord(
   record: CanonicalRecord,
   context: DescribeContext,
 ): DescribedRecord | undefined {
-  const { entities, history, concepts, policy } = context
+  const { entities, history, concepts, domains, policy } = context
   const tag = tagOf(record)
   const origin = originOf(record)
 
@@ -418,6 +451,23 @@ export function describeRecord(
        */
       return plain(
         `${record.aim}${record.state === 'active' ? '' : ` (${record.state.replace('-', ' ')})`}`,
+      )
+    case 'aim-reading':
+      /*
+       * A conclusion shown with its grounds — D-143.
+       *
+       * *"No" is a true row and a useless one*: the rule the decision states
+       * about a derived belief applies exactly here. The row names the area the
+       * words were read as being about **and the words that named it**, so a
+       * reading the owner disagrees with is one he can see the reason for
+       * rather than one he has to take on trust.
+       */
+      return plain(
+        record.withdrawn === true
+          ? `Took back reading this as being about ${domains.labelFor(record.named)}.`
+          : `Read this as being about ${domains.labelFor(record.named)} — from ${listOf(
+              record.words.map((word) => `“${word}”`),
+            )}.`,
       )
     case 'commitment':
       return plain(`Commitment: ${record.statement}`)
