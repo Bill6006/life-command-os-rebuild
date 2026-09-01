@@ -9244,3 +9244,50 @@ here, not the failure case**, and a repair that reduced abstention by guessing
 would be the wrong trade.
 
 ---
+
+## D-252 — A list is not a clause, and a date is not a sum
+
+**Phase:** 91 (QA round 3 repair) · **Status:** Active · **Completes** D-247, D-251
+
+Round 3 closed the withdrawal contract and left the semantic boundary open one
+grammar step further out in both of its classes. Neither finding was a new kind
+of mistake; both were the same rule stopping one shape short.
+
+**A comma between coordinated items is not a clause boundary.** Every comma
+ended a denied span, so _"Not about money, debt, or savings"_ denied the money
+and then read _debt_ and _savings_ as positive evidence for the very area being
+denied. D-251 had already established that `and` and `or` continue a denial; the
+comma is the same list with different punctuation.
+
+**And the obvious fix reverses the defect rather than removing it.** If no comma
+ever ended a denial, _"Not about money, it's about the qualification"_ would deny
+the Career half too and the app would abstain from a sentence that says plainly
+what it is about. So a comma ends a denial **only when a clause actually starts
+after it** — a contrastive conjunction, or a subject pronoun. Both lists are
+closed and short, and what they recognise is the grammar that turns a sentence
+rather than the phrases somebody remembered. Punctuation that genuinely ends a
+sentence still always ends a denial, and so does a contrastive with no comma in
+front of it.
+
+**A date is a date in the grammar people write it in.** D-251 removed dates
+before asking whether the words say how much, and recognised only adjacency —
+so _"by March the 15th"_ left a `15` and _"by Q3 2027"_ left a `3`, and each
+became the amount. English puts _the_ and _of_ between a month and its day as
+readily as it puts nothing there, and it writes a quarter with a digit. Both
+connectors are closed words and a quarter has four values.
+
+**The pair that keeps each of these a rule.** _"No debt, no savings, no salary"_
+is three ordinary negations and stays positive Money evidence, because none of
+them denies the topic. _"Save 3000 by March the 15th"_ still settles the amount,
+because stripping every digit near a date word would take the sum with it. Each
+repair is held by a reintroduction in **both** directions, and the reverse
+mutations fail the controls rather than the findings.
+
+**What is still refused, and deliberately.** This does not become a parser. A
+phrase whose shape is outside the closed lists is denied to the end or leaves its
+number a quantity, and either way the app abstains rather than guessing —
+`unknowns` says what was not concluded and nothing is written. **Three rounds
+have now moved this boundary outward by one grammar step each time, and every
+move has been a closed list rather than a phrase.** The next one should be too.
+
+---

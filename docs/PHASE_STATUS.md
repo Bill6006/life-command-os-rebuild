@@ -239,9 +239,37 @@ through the defect and blessed it. It asserts the meaning and the area of that
 state now, and a started-action branch was added, because neither instrument
 modelled the state QA-91-006 lives in.
 
+## Independent QA round 3 — FAIL, and the boundary moving one step at a time
+
+Round 3 **closed QA-91-005 and QA-91-006**: the set-aside contract was judged
+honest rather than merely different from the one it replaced, and the started and
+part-done consequence states both close. The semantic boundary failed again, one
+grammar step further out in each of its two classes.
+
+- **QA-91-008** — every comma ended a denied span, so _"Not about money, debt, or
+  savings"_ denied the money and then read _debt_ and _savings_ as evidence for
+  it. A comma between coordinated items is not a clause boundary.
+- **QA-91-009** — _"March the 15th"_, _"the 15th of March"_ and _"Q3"_ each left a
+  digit behind, and it became the amount.
+
+**Both repairs are held in both directions**, because the reverse of each is also
+a defect: a comma that never ends a denial swallows the sentence's own second
+half, and stripping every digit near a date word takes the real sum with it
+(D-252).
+
+**Three rounds have now moved this boundary outward by one grammar step each
+time, and every move has been a closed list rather than a phrase.** That is the
+pattern worth naming: the interpreter is not becoming a parser, and each round's
+finding has been the previous rule stopping one shape short rather than a new
+kind of mistake.
+
+**No new false green.** QA judged the Round 2 instrument corrections sound — the
+sequential journey, the started-action branch, the fixed clock and the
+overridable preview port.
+
 ## Decisions made
 
-**D-240 … D-251** in [`DECISION_LOG.md`](DECISION_LOG.md).
+**D-240 … D-252** in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Accommodation row B1 landed, and the list learned something from it
 

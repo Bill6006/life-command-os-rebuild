@@ -5457,3 +5457,33 @@ is the whole of QA-91-006.
 
 Full reproductions, repairs and verification:
 [`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).
+
+---
+
+## QA-91-008, QA-91-009 — routing 91 independent QA round 3
+
+**Found:** independent Codex QA, round 3, 2026-09-01 · **Status:** Fixed (routing 91 round 3 repair) · **Owner:** routing 91
+
+QA-91-005 and QA-91-006 closed: the set-aside contract was judged honest rather
+than merely different from the re-file contract it replaced, and the started and
+part-done consequence states both close. Two semantic findings remained, and both
+were the same rule stopping one grammar step short.
+
+| ID        | Finding                                                                                                      | Repair                                                                                                             |
+| --------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| QA-91-008 | Every comma ended a denied span, so _"Not about money, debt, or savings"_ read _debt_ and _savings_ as Money | A comma ends a denial only where a clause starts after it — a contrastive conjunction or a subject pronoun (D-252) |
+| QA-91-009 | _"March the 15th"_, _"the 15th of March"_ and _"Q3"_ left a digit behind, which became the amount            | The connectors _the_ and _of_ are recognised between a month and its day, and a quarter is a date shape (D-252)    |
+
+**Both repairs are held in both directions.** The reverse of each is a defect
+too: a comma that never ends a denial swallows the sentence's own second half,
+and stripping every digit near a date word takes the real sum with it. Six
+reintroductions cover the two findings and the two reversals, and the reverse
+mutations fail the **controls** rather than the findings.
+
+**No new false green.** QA judged the Round 2 instrument corrections sound — the
+sequential journey asserts the post-withdraw meaning, the started-action branch
+covers the state it was written for, and the fixed clock and overridable port do
+not weaken what the suite proves.
+
+Full reproductions, repairs and verification:
+[`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).

@@ -536,26 +536,85 @@ const DENIERS = [
 ]
 
 /**
- * What ends a denial, and what merely continues it — QA-91-007.
+ * What ends a denial, and what merely continues it — QA-91-007, QA-91-008.
+ *
+ * ## Two rounds, two halves of the same question
  *
  * The first version ended a denied span at `and`, which reads *"Not about money
  * and debt"* as a denial of money followed by a fresh claim about debt. It is
- * not: one negation is governing two coordinated objects, and the sentence
- * denies both. `and` and `or` therefore **continue** a denial.
+ * not: one negation governs two coordinated objects and denies both. So `and`
+ * and `or` continue a denial.
  *
- * What ends one is a real clause boundary — punctuation, or a contrastive
- * conjunction that turns the sentence around. *"Not about money, but about the
- * qualification"* names Career, and does so because of the comma and the *but*
- * rather than because anybody listed the phrase.
+ * QA-91-008 found the same fault wearing punctuation. **Every comma ended the
+ * span**, so *"Not about money, debt, or savings"* denied only the money and
+ * then read *debt* and *savings* as positive evidence for it. A comma between
+ * coordinated items is not a clause boundary; it is the same list with a
+ * different separator.
  *
- * **The bound, said plainly.** A sentence that resumes a positive claim after a
- * bare `and` with no punctuation — *"Not about money and I want to get fit"* —
+ * ## And why the obvious fix is wrong in the other direction
+ *
+ * Making every comma continue a denial reverses the defect rather than removing
+ * it: *"Not about money, it's about the qualification"* would deny the Career
+ * half too, and the app would abstain from a sentence that says plainly what it
+ * is about.
+ *
+ * So a comma ends a denial **only when a clause actually starts after it** —
+ * a contrastive conjunction, or a subject pronoun. Both lists are closed and
+ * short, and neither is a list of phrases: what they recognise is the grammar
+ * that turns a sentence, not the words somebody remembered. Punctuation that
+ * genuinely ends a sentence — a full stop, a semicolon, a dash — always ends a
+ * denial, and so does a contrastive conjunction with no comma in front of it.
+ *
+ * **The bound, said plainly.** A sentence that resumes a positive claim with no
+ * punctuation and no opener — *"Not about money savings or a pension fund"* —
  * is denied to the end and names nothing. That is a false negative, and it is
  * the direction this file errs in everywhere: an unread phrase names nothing,
  * offers nothing and writes nothing, and abstaining is the ordinary outcome
  * rather than the failure case.
  */
-const CLAUSE_BREAK = /[,;.—–]|\s-\s|\sbut\s|\sthough\s|\srather\s|\sinstead\s/
+const CONTRASTIVE = ['but', 'though', 'rather', 'instead', 'however', 'yet']
+
+/**
+ * What can begin a clause after a comma, which is a closed class.
+ *
+ * The contrastives above, plus the subject pronouns. A comma followed by one of
+ * these is a sentence turning; a comma followed by anything else is a list
+ * carrying on. `\b` after the word is what lets *it's* and *they're* match on
+ * their pronoun.
+ */
+const CLAUSE_OPENERS = [
+  ...CONTRASTIVE,
+  'i',
+  'we',
+  'you',
+  'he',
+  'she',
+  'it',
+  'they',
+  'that',
+  'this',
+  'there',
+]
+
+function startsWithOneOf(text: string, words: readonly string[]): boolean {
+  const from = text.replace(/^\s+/, '')
+  return words.some((word) => new RegExp(String.raw`^` + escape(word) + String.raw`\b`).test(from))
+}
+
+/** Where a denial stops governing, walked in order so the earliest break wins. */
+function endOfDenial(rest: string): number {
+  for (let at = 0; at < rest.length; at += 1) {
+    const char = rest[at]
+    if (char === ';' || char === '.' || char === '—' || char === '–') return at
+    if (char === '-' && rest[at - 1] === ' ' && rest[at + 1] === ' ') return at
+    if (char === ',') {
+      if (startsWithOneOf(rest.slice(at + 1), CLAUSE_OPENERS)) return at
+      continue
+    }
+    if (char === ' ' && startsWithOneOf(rest.slice(at + 1), CONTRASTIVE)) return at
+  }
+  return rest.length
+}
 
 function deniedSpans(text: string): readonly (readonly [number, number])[] {
   const spans: [number, number][] = []
@@ -565,9 +624,7 @@ function deniedSpans(text: string): readonly (readonly [number, number])[] {
       const at = text.indexOf(denier, from)
       if (at === -1) break
       const after = at + denier.length
-      const rest = text.slice(after)
-      const stop = CLAUSE_BREAK.exec(rest)
-      spans.push([at, stop === null ? text.length : after + stop.index])
+      spans.push([at, after + endOfDenial(text.slice(after))])
       from = after
     }
   }
@@ -623,10 +680,35 @@ const MONTH_WORDS =
   'january|february|march|april|may|june|july|august|september|october|november|december'
 
 const DATE_SHAPES: readonly RegExp[] = [
+  // 03/15/2027, 15-03-2027
   /\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b/g,
+  // 2027-03-15
   /\b\d{4}[/.-]\d{1,2}[/.-]\d{1,2}\b/g,
-  new RegExp(String.raw`\b(?:${MONTH_WORDS})\b\s+\d{1,2}(?:st|nd|rd|th)?\b`, 'g'),
-  new RegExp(String.raw`\b\d{1,2}(?:st|nd|rd|th)?\s+(?:${MONTH_WORDS})\b`, 'g'),
+  /*
+   * March 15, and March **the** 15th — QA-91-009.
+   *
+   * The connector is the whole of what was missing. English puts *the* and *of*
+   * between a month and its day as readily as it puts nothing there, and the
+   * first version recognised only adjacency — so *"by March the 15th"* left a
+   * `15` behind for `saysHowMuch` to read as a sum. Both connectors are closed
+   * words rather than a phrase list, and the trailing `\b` is what stops *March
+   * 3000* being read as a date with a stray `00` left over.
+   */
+  new RegExp(String.raw`\b(?:${MONTH_WORDS})\b\s+(?:the\s+)?\d{1,2}(?:st|nd|rd|th)?\b`, 'g'),
+  // 15 March, and the 15th **of** March
+  new RegExp(
+    String.raw`\b\d{1,2}(?:st|nd|rd|th)?\s+(?:of\s+)?(?:the\s+)?(?:${MONTH_WORDS})\b`,
+    'g',
+  ),
+  /*
+   * A quarter, which is a horizon a person writes with a digit — QA-91-009.
+   *
+   * *"by Q3 2027"* left a `3` behind. Four values and nothing else: a `q`
+   * followed by anything outside 1–4 is not a quarter, and the boundaries keep
+   * it out of ordinary words.
+   */
+  /\bq[1-4]\b/g,
+  // 2027
   /\b(?:19|20|21)\d{2}\b/g,
 ]
 

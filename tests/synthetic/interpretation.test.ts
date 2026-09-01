@@ -1180,6 +1180,53 @@ describe('QA-91-003 — a token is read for its role, not for its presence', () 
     }
   })
 
+  it('lets one denial govern a comma-separated list too — QA-91-008', () => {
+    /*
+     * The same fault as `and`, wearing punctuation. Every comma ended the span,
+     * so the denial covered only the first item and the rest of the list came
+     * back as positive evidence for the very area being denied.
+     */
+    for (const phrase of [
+      'Not about money, debt, or savings',
+      'Nothing to do with salary, savings, or debt',
+      'Not about money, savings or a pension fund',
+    ]) {
+      const denied = read(phrase)
+      expect(denied.names, phrase).toEqual([])
+      expect(denied.offer, phrase).toBeUndefined()
+    }
+  })
+
+  it('and a comma still ends one where a clause actually starts after it', () => {
+    /*
+     * The half that stops the repair reversing the defect. Making every comma
+     * continue a denial would deny the sentence's own second half, so the app
+     * would abstain from phrases that say plainly what they are about.
+     *
+     * Three openers, three shapes: a contrastive conjunction, a pronoun with a
+     * contraction on it, and a bare pronoun subject.
+     */
+    expect(
+      read('Not about money, but about certification').names.map((area) => area.domain),
+    ).toEqual([DOMAIN.career])
+    expect(
+      read("Not about money, it's about the qualification").names.map((area) => area.domain),
+    ).toEqual([DOMAIN.career])
+    expect(read('Not about money, I want to get fit').names.map((area) => area.domain)).toEqual([
+      DOMAIN.health,
+    ])
+  })
+
+  it('leaves a comma-separated list of ordinary negatives alone', () => {
+    /*
+     * No denial of aboutness anywhere in it, so nothing here is governed at
+     * all: he is negating three things and every one of them is about money.
+     */
+    expect(read('No debt, no savings, no salary').names.map((area) => area.domain)).toEqual([
+      DOMAIN.money,
+    ])
+  })
+
   it('and still ends one at a real clause boundary', () => {
     /*
      * The other half of the pair. Widening what continues a denial must not
@@ -1225,6 +1272,47 @@ describe('QA-91-003 — a token is read for its role, not for its presence', () 
       expect(dated.unknowns, `${phrase}: the amount is still unknown`).toContain('how much')
       expect(dated.unknowns, `${phrase}: the date answered when`).not.toContain('by when')
     }
+  })
+
+  it('reads indirect day-and-month grammar and quarters as dates — QA-91-009', () => {
+    /*
+     * One grammar step outside the shapes Round 2 closed. English puts *the*
+     * and *of* between a month and its day, and writes a quarter with a digit —
+     * so *"by March the 15th"* left a `15` and *"by Q3 2027"* left a `3`, and
+     * each became the amount.
+     */
+    for (const phrase of [
+      'More money before the 15th of March 2027',
+      'More money by March the 15th, 2027',
+      'More money by Q3 2027',
+      'More money by the 3rd of April',
+    ]) {
+      const dated = read(phrase)
+      expect(dated.unknowns, `${phrase}: the amount is still unknown`).toContain('how much')
+      expect(dated.unknowns, `${phrase}: the date answered when`).not.toContain('by when')
+    }
+  })
+
+  it('and still settles the amount when a real sum sits beside those same dates', () => {
+    /*
+     * The other half of the pair, and the one a wider rule would have broken:
+     * stripping every digit near a date word would take the sum with it.
+     */
+    for (const phrase of [
+      'Save £3000 before the 15th of March 2027',
+      'Save 3000 by March the 15th, 2027',
+      'Save 3000 by Q3 2027',
+    ]) {
+      expect(read(phrase).unknowns, phrase).toEqual([])
+    }
+  })
+
+  it('and still reads a sum that merely happens to sit near a month word', () => {
+    /*
+     * *"Save 15 by March"* is a sum and a horizon, not a date: nothing joins the
+     * number to the month, so neither is taken for the other.
+     */
+    expect(read('Save 15 by March').unknowns).toEqual([])
   })
 
   it('and still reads a real sum beside a real date', () => {
