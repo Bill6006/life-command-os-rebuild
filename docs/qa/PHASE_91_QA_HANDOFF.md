@@ -1183,4 +1183,222 @@ builder repair handoff at the end exactly as written. Keep Phase 91 YELLOW and
 do not ask me to paste the file contents.
 ```
 
+---
+
+## Round 2 repair — the builder's record
+
+_Written by the Claude builder conversation. Round 2 above is QA's and is not
+edited. Round 3 belongs to QA._
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**Repaired checkpoint:** `0aa8419`
+**Deployed Preview:** `0aa8419` — they match exactly.
+
+### All three reproduced first
+
+**QA-91-005.** Reproduced exactly. After withdrawal the generator produced
+`career/recall-practice/learning-topic:clear-the-credit-card` and
+`career/hands-on-lab/…`, which is where _"Build a small lab with Clear the credit
+card"_ comes from.
+
+**QA-91-006.** Reproduced exactly: with **Start it** pressed first, the
+withdrawal left `money/handle-money-item/financial-goal:clear-the-credit-card`
+still generated and winning.
+
+**QA-91-007.** All five probes reproduced as reported, and two more were added
+to find the **boundary** of each class rather than the two strings: _"No more
+debt and less spending"_, which any rule keyed on nearby negation would have
+broken, and _"Save £3000 by 2027"_, which any rule treating digits uniformly
+would have kept failing.
+
+### The Round 1 repair was wrong, not short
+
+Worth stating plainly because the reasoning that produced it was reasonable.
+Round 1 **re-typed** the milestone into the area the aim was moving to, on the
+argument that the app should undo its own classification. What it actually did
+was assert a new one. **`MILESTONE_ENTITY` is what makes a step reach Now at
+all**, so an entity kind is *meaning*, not filing — and a repair that treats it
+as a folder ends with the app inventing that a credit card is something to
+study, and then asking the owner to confirm it.
+
+### What changed
+
+| Where                                    | What changed                                                                                                                                                     |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/intelligence/authoring.ts`          | `refileMilestone` **removed**; new `setMilestoneAside` supersedes the goal through `goalCorrectionRecord` — statement byte-identical, `milestoneOf` intact, status `paused`. |
+| `src/intelligence/destinations.ts`       | `DestinationMilestone.setAside`; a set-aside step is not the destination's `next`.                                                                                  |
+| `src/intelligence/candidates.ts`         | `firstStillReferredTo` **removed**; `openGoalEntity` reads the entity an **active goal** names.                                                                     |
+| `src/intelligence/lifecycle.ts`          | `resumableToday` does not offer back a move whose subject is a goal that is not active. It can only silence a subject some `goal` record names.                     |
+| `src/intelligence/interpret.ts`          | `and`/`or` continue a denial; punctuation and *but/though/rather/instead* end one. Dates are removed before the amount question is asked — slashed, dashed, month-word and bare-year shapes. |
+| `src/features/life/DomainPage.tsx`       | Both reading gestures set live milestones aside instead of re-filing them.                                                                                          |
+| `src/features/life/DomainPanels.tsx`     | The consequence sentence says what setting aside means and promises nothing about studying; a milestone reads **set aside — the aim moved** as a third state.       |
+| `playwright.config.ts`, `phase84.spec.ts` | The preview port is overridable (`LCOS_PREVIEW_PORT`, default 4173 and unchanged); the one spec that wrote the port out by hand uses the configured base URL.       |
+
+**Decisions D-249 … D-251.** Defect-ledger entry `QA-91-005 … QA-91-007`.
+
+### A defect of my own, which a busy machine surfaced
+
+**The phase 91 browser tests read the wall clock.** Whether a money move reached
+Now depended on the hour the gate ran: at one point *"(f) Now offers a money move
+it did not offer before the clarification"_ failed with _"Nothing needs to move
+tonight."_ — a true sentence about a different evening. `ROUTING_91_BRIEF.md` §7
+names this mechanic and routing 90 built `page.clock` for it; this file simply
+was not using it outside test (g).
+
+Every test in the file now installs the clock at a fixed moment. **Rounds 1 and 2
+could have passed or failed by the hour**, and that is worth knowing about the
+evidence in this report as much as about the fix.
+
+### The sixth false green, and where it was
+
+The sequential ordinary-owner journey asserted that the post-withdraw headline
+**contained** _Clear the credit card_ — which _"Build a small lab with Clear the
+credit card"_ satisfies perfectly. The journey walked through QA-91-005 and
+blessed it. It now asserts the meaning and the area of that state: the step reads
+as set aside, the aim has no next step and says so, and **nothing anywhere on Now
+mentions the subject at all**. Neither instrument modelled a started action; that
+branch exists now.
+
+### Reintroduction proofs — twenty-one across three rounds, all biting
+
+Round 0's eight and Round 1's four surviving entries were re-run and still bite.
+Four Round 1 proofs were **retired** because Round 2 rewrote the code they
+targeted (`QA-91-002a/b`, `QA-91-003b/c`); their successors below run against the
+replacement code, so the coverage moved rather than lapsing.
+
+| Reintroduce                                                       | And this fails                                              |
+| ------------------------------------------------------------------ | ------------------------------------------------------------- |
+| the journey gesture stops setting the milestone aside              | QA-91-002 — taking a reading back takes back what it caused  |
+| a set-aside step reported as the destination's next step           | QA-91-002 — same                                             |
+| the page gesture stops setting the milestone aside                 | the sequential journey                                       |
+| the consequence sentence promises study meaning again              | the sequential journey                                       |
+| an entity kept live by any record that refers to it                | QA-91-006 — a started consequence does not outlive the reading |
+| a set-aside move offered back to be resumed                        | QA-91-006 — same                                             |
+| `and` ends a denied span                                           | QA-91-007 — a token is read for its role                     |
+| the day and month of a date read as an amount                      | QA-91-007 — same                                             |
+| a written date not recognised as a horizon                         | QA-91-007 — same                                             |
+
+**One of these had to be repaired twice.** The written-date proof passed at first
+because every phrase under test carried a four-digit year, so `saysADate` was
+dead code the assertions could not see. A two-digit-year date (`03/15/27`) was
+added, and only then did removing it fail anything.
+
+### Verification on the repaired tree
+
+| Gate                                      | Result                                                                    |
+| ----------------------------------------- | --------------------------------------------------------------------------- |
+| `npm run verify`, clean tree              | PASS                                                                        |
+| Unit / contract / synthetic / adversarial | **1,988 passed** in 89 files (1,976 at `3afa7c2`)                          |
+| Browser, 360 / 430 / 1,280, one worker    | **834 of 834** — run in batches; see the note below                        |
+| Privacy scan                              | clean, 310 tracked files                                                    |
+| Rendered copy scan                        | clean — 8,470 shipped strings, 8,382 placed in a module                     |
+| Android-style gate                        | clean — **234 checks**, against the deployed Preview                        |
+| Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`0aa8419`)                |
+| Checkpoint equivalence                    | **no files changed** between `0aa8419` and the deployed SHA                 |
+| CI and deployed Preview                   | **success** — Verify and Deploy preview both green (run `33548428392`)      |
+| Worktree                                  | clean                                                                       |
+
+> ### Why the local matrix was run in batches, and what happened to the whole-run attempts
+>
+> Two full local runs were unusable and are reported rather than discarded. The
+> first returned **686 failed / 148 passed**, of which **679 failures were
+> `ERR_CONNECTION_REFUSED`**: the `vite preview` process died partway and every
+> test after it failed at navigation. A second run on a different port failed the
+> same way.
+>
+> Diagnosis: this machine had another project's dev server bound to `[::1]:4173`
+> with live connections, and the preview process did not survive the run. **That
+> other server was left alone** — it is not this repository's — and
+> `playwright.config.ts` gained an `LCOS_PREVIEW_PORT` override instead, default
+> 4173 and unchanged, so CI behaves exactly as it did.
+>
+> The suite was then run in four batches covering **all 834 tests**, and all 834
+> pass. Two batches hit a single `ERR_ABORTED` navigation drop each; both files
+> passed 357 of 357 on a clean re-run. **CI ran the whole matrix on a clean
+> runner and is green**, and that is the number to trust over any of mine.
+>
+> None of this is a product signal, and none of it is being counted as one.
+
+### Preserved, and checked rather than assumed
+
+QA-91-001 and QA-91-004 remain closed and are still asserted by the shipped
+suite. Every Round 1 PASS is re-asserted: the exact CASE A path, byte identity,
+derived sibling provenance, the privacy digest with both controls, the
+one-question budget and `DISCOVERY_PER_WEEK`, the same-area null case, both
+proving domains, three-day non-reproposal, B1's landed row, the no-score rule and
+the single `fetch`. The **nineteen D-210 findings are untouched and still open**;
+`docs/ROUTING_91_BRIEF.md` is still present; routing 92 has not begun; CASE B
+remains out of scope.
+
+**What this repair did not do, said plainly.** The active-goal lookup is applied
+to the money generator and to nothing else, for the reason D-246 gave and QA
+accepted: no shipped history holds a `financial-goal`, so the narrowing is
+provably equivalent there, and the same measurement has not been made for the
+person and place lookups. The interpreter still abstains from any phrase it
+cannot read, and a positive claim resumed after a bare `and` with no punctuation
+is denied to the end — a false negative, deliberately, in the direction this file
+errs in everywhere.
+
+---
+
+## Round 3 retest handoff
+
+**Model:** Codex.
+**Reasoning level:** **High** — a middle level. Never Max, which is Claude's.
+**Conversation:** **SAME** — the Codex conversation that ran Rounds 1 and 2.
+
+```text
+Routing Phase 91 retest after the builder's Round 2 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Your Round 1 and Round 2 reports are
+unchanged; the builder's Round 2 repair record and this block are appended below
+them. Keep the Phase field exactly 91.
+
+Retest on the repaired checkpoint, in ordinary browsers that never open #/qa:
+
+1. QA-91-005 — accept the Money reading, answer the clarification, confirm the
+   Money move, then put the reading back. Judge what the confirmation promises,
+   what Now says afterwards, what became of the step you named, and whether the
+   destination reads honestly about it.
+2. QA-91-006 — repeat with "Start it" pressed before withdrawal, and also with
+   the move left part-done. Check both the decision and anything offered back.
+3. QA-91-007 — attack the semantic classes rather than the seven probes now
+   under test: coordinated denials, ordinary negation, dates in shapes not
+   listed, real amounts beside real dates, and phrases that should abstain.
+4. Judge the repair as a whole. The builder reports one further false green of
+   its own and one dead-code proof it had to repair twice; decide whether those
+   were the only ones, whether the started-action branch covers the state you
+   found, and whether the set-aside contract is honest rather than merely
+   different from the one you rejected.
+
+Two instrument changes are the builder's and want independent eyes: the phase 91
+browser tests now pin the clock, having previously depended on the hour they ran
+at; and playwright.config.ts takes an LCOS_PREVIEW_PORT override, default
+unchanged. Confirm neither weakens what the suite proves.
+
+Preserve the nineteen D-210 deferrals, do not remove docs/ROUTING_91_BRIEF.md,
+and end with the complete next handoff under D-082 whichever way the retest
+goes. Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High. **Conversation:** SAME — the QA
+conversation that ran Rounds 1 and 2.
+
+```text
+Retest routing Phase 91 after the builder's Round 2 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the Round 3 retest
+handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
+retest says otherwise, and do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->
