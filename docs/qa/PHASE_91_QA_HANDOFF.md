@@ -706,4 +706,233 @@ builder repair handoff at the end exactly as written. Keep Phase 91 YELLOW and
 do not ask me to paste the file contents.
 ```
 
+---
+
+## Round 1 repair — the builder's record
+
+_Written by the Claude builder conversation. Round 1 above is QA's and is not
+edited; this section records what was reproduced, what was changed and what was
+run. Round 2 belongs to QA._
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**Repaired checkpoint:** `3afa7c2`
+**Deployed Preview:** `3afa7c2` — they match exactly
+
+### All four reproduced first, and reproduction found the cause of two of them
+
+**QA-91-001.** Reproduced exactly: after declining, the next prompt is the
+generic next-step question and no control anywhere can ask for the interpretation
+again. Reproduction then found **why**, which the report could not see from
+outside: `destinationRecords` writes an entity **whose label is the aim**, so
+reading _"More money"_ again found a thing the owner had "named" in Career called
+_More money_ — and a named thing outranks every word in the table. The app was
+citing its own transcription of his sentence as independent evidence about that
+sentence. `destinationReading(career, "More money")` returned `offer: undefined`
+where it had returned `money` a moment earlier.
+
+**QA-91-002.** Reproduced exactly: aim in Career, Now still _"Deal with Clear the
+credit card today."_, and one entity left in the index —
+`financial-goal:Clear the credit card`. The mechanism is that **an entity is an
+index entry**: nothing supersedes one and nothing removes one, so re-typing the
+milestone would have left the money entity behind and `moneyCandidates` reads it
+directly.
+
+**QA-91-003.** Both probes reproduced. Two further phrases were probed to find
+the boundary of the class rather than the two strings: **"No more debt"** is
+negated and *is* about money, and **"Save £3000 by 2027"** carries both a sum and
+a year. Any repair that cancelled a marker near a negator would have broken the
+first; any repair that treated digits uniformly would have kept failing the
+second.
+
+**QA-91-004.** Reproduced at 360px: after the reading, two option rows and the
+proposal, the six unknowns arrive as one seven-line comma-run.
+
+### What changed
+
+| Where                                          | What changed                                                                                                                                                                          |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/intelligence/interpret.ts`                | The digest excludes `destination` entities (D-245). A denial of **aboutness** cancels a marker, scoped to its clause; a four-digit year is a horizon and not an amount (D-247).           |
+| `src/features/life/DomainPanels.tsx`           | The reading row is symmetric: an offer where the words still name another area, the way back where a reading is settled. Both state the consequence before acting (D-245, D-246).        |
+| `src/features/life/DomainPage.tsx`             | `withdrawReading` re-files every milestone with the aim; new `acceptReading` is the route back after declining.                                                                          |
+| `src/intelligence/authoring.ts`                | New `refileMilestone` — supersedes a milestone into another area's entity kind, carrying his sentence byte for byte.                                                                     |
+| `src/intelligence/candidates.ts`               | `moneyCandidates` reads a `financial-goal` **the effective record still refers to** (D-246). New `firstStillReferredTo`; `firstOfKind`'s other five callers are untouched and it says why. |
+| `src/components/ui.tsx` / `ui.css`             | New `UnknownSet` — two named halves, each a list, every unknown preserved (D-248).                                                                                                        |
+| `src/features/insights/Discovery.tsx`          | Renders `UnknownSet` instead of the comma-run.                                                                                                                                           |
+| `scripts/adaptation-claims.mjs`                | `'The app will not assume '` keeps only `DomainPanels.tsx` on its `in` list — the authoring panel still renders it and neither aspiration surface does. The two new headings carry no modal and no forward deixis, so neither is a claim. |
+
+**Decisions D-245 … D-248.** Defect-ledger entry `QA-91-001 … QA-91-004`.
+
+### The instrument, which is where all four were hiding
+
+- **One sequential ordinary-owner journey, in one store** —
+  `phase91.spec.ts`, _"declines, reconsiders, accepts, clarifies, sees Now
+  change, takes it back, and moves on to a second area"_. Nine steps, never
+  `#/qa`. The focused branch tests are kept **as branches**; the header no longer
+  claims they are the journey.
+- **`(e)` was retitled**, because its old title was the finding: it said _"no
+  reading row"_ and asserted exactly that, and the absence it was celebrating was
+  the defect.
+- **Positive/negative semantic pairs** — asserted versus denied area terms, with
+  _"No more debt"_ held on the positive side; currency versus a numeric year; and
+  a denial that stops at its clause.
+- **The settled-withdrawal regression** creates the consequence first and asserts
+  on **what the generator produced**, not on what won.
+- **The journey helper** now mirrors both gestures fully; its earlier
+  `withdrawReading` wrote two records where the page writes the chain, which is
+  what let two tests call a half-gesture reversible.
+
+### A fifth false green, found by the reintroductions and inside this repair
+
+The first draft of the new QA-91-002 regression read the **winning** move's area.
+Putting the defect back left it green: the money move was generated again and
+lost the arbitration to Career, so the assertion could not tell _"not proposed"_
+from _"proposed and beaten"_. It asserts on `generateCandidates` now.
+
+**That is D-238's first corollary, caught inside the repair for a D-238 finding**,
+and it is the second time in this campaign that a reintroduction found what an
+assertion could not. It is reported rather than quietly fixed.
+
+### Reintroduction proofs — sixteen, all of which bite
+
+Round 0's eight were re-run and still bite. The eight for this round:
+
+| Reintroduce                                                              | And this fails                                          |
+| ------------------------------------------------------------------------ | -------------------------------------------------------- |
+| drop the `destination` exclusion in `interpreterInput`                    | QA-91-001 — a declined reading can be reconsidered      |
+| make the journey's `acceptReading` return early                           | QA-91-001 — same                                        |
+| make the journey's `withdrawReading` move no milestone                    | QA-91-002 — taking a reading back takes back what it caused |
+| put `firstOfKind` back in `moneyCandidates`                               | QA-91-002 — same                                        |
+| empty `deniedSpans`                                                       | QA-91-003 — a token is read for its role                |
+| `saysHowMuch` back to any digit                                           | QA-91-003 — same                                        |
+| drop `YEAR` from `saysWhen`                                               | QA-91-003 — same                                        |
+| render the unknowns as one run again                                      | QA-91-004 — the six as two named sets                   |
+
+### Verification on the repaired tree
+
+| Gate                                      | Result                     |
+| ----------------------------------------- | -------------------------- |
+| `npm run verify`, clean tree              | PASS                       |
+| Unit / contract / synthetic / adversarial | **1,976 passed** in 89 files (1,960 at `113bdb6`)           |
+| Browser, 360 / 430 / 1,280, one worker    | **828 passed, 3 dropped connections** of 831 — see the note below         |
+| Privacy scan                              | clean, 310 tracked files   |
+| Rendered copy scan                        | clean — 8,454 shipped strings |
+| Android-style gate                        | clean — **234 checks**, against the deployed Preview             |
+| Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`3afa7c2`)           |
+| Checkpoint equivalence                    | **no files changed** between `3afa7c2` and the deployed SHA               |
+| CI and deployed Preview                   | **success** — Verify and Deploy preview both green (run `33508385860`); the Preview serves `3afa7c2`                  |
+| Worktree                                  | clean                      |
+
+> ### The three browser failures, and why they are not being called a pass
+>
+> The local matrix reported **828 passed, 3 failed** of 831. All three died on
+> `page.goto: net::ERR_ABORTED; maybe frame was detached?` — a navigation drop,
+> before any product assertion ran — in three different files at two different
+> widths: `now.spec.ts:185`, `qa-lab.spec.ts:498` and `shell.spec.ts:257`.
+>
+> This is the flake `playwright.config.ts` documents in its own comments: one
+> `vite preview` process serving one worker drops connections, and *"failures
+> which merely look like product failures cost real time."* **One of the three
+> is a privacy assertion**, so it was not taken on trust: all three files were
+> re-run across all three widths and passed **204 of 204**, and CI — which runs
+> with `retries: 1` — is green on the same commit.
+>
+> It is reported rather than rounded off. A builder who writes "831 passed"
+> because a re-run came back green has told QA something that did not happen.
+
+### One instrument correction the deployed gate found
+
+The Android-style gate holds two routing-84 checks over the discovery card, and
+this repair made both stale. They are corrected rather than deleted:
+
+- **`and what it is not assuming, before anything is written — D-188`** asserted
+  the literal `will not assume`, which was the whole sentence until D-248 split
+  the unknowns into two named sets. The contract is unchanged; the wording is
+  not. It now asserts both halves by name.
+- **`and does not read a second meaning into the phrase — D-172`** was routing
+  84's claim, and routing 91 is the phase that reverses it. **It was still
+  passing** — because the reading renders in a *sibling* of the element that
+  check reads, so it was green for a reason unrelated to what it said. It is
+  replaced by the live rule: the app reads the second meaning, offers it, and
+  leaves the aim where the question was until the owner says otherwise.
+
+### Preserved, and checked rather than assumed
+
+Every Round 1 PASS is re-asserted by the shipped suite: the exact CASE A path,
+byte identity, derived sibling provenance, the privacy digest with both its
+controls, the one-question budget and `DISCOVERY_PER_WEEK`, the same-area null
+case, both proving domains, three-day non-reproposal, B1's landed row, the
+no-score rule and the single `fetch`. The **nineteen D-210 instrument-hardening
+findings are untouched and still open**; `docs/ROUTING_91_BRIEF.md` is still
+present; routing 92 has not been started; CASE B remains out of scope.
+
+**One thing this repair did not do, said plainly.** `firstStillReferredTo` is
+applied to the money lookup and to nothing else. The same latent shape exists for
+the person and place lookups, and it is left alone because no gesture can orphan
+those and because the equivalence that makes the money narrowing safe — **no
+shipped history holds a `financial-goal` at all**, which the suite asserts — has
+not been measured for them. Widening it on this round would be an unmeasured
+change to five generators inside a repair.
+
+---
+
+## Round 2 retest handoff
+
+**Model:** Codex.
+**Reasoning level:** **High** — a middle level. Never Max, which is Claude's.
+**Conversation:** **SAME** — the Codex conversation that ran Round 1, retesting
+its own findings.
+
+```text
+Routing Phase 91 retest after the builder's Round 1 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Your Round 1 report is unchanged;
+the builder's repair record and this block are appended below it. Keep the Phase
+field exactly 91.
+
+Retest the four findings you raised, on the repaired checkpoint, in an ordinary
+browser that never opens #/qa:
+
+1. QA-91-001 — from one fresh store, type "More money" under Career, keep it in
+   Career and confirm, then reconsider and accept from the aim's own row, answer
+   the clarification and confirm Now changed. Check that declining still writes
+   no derived row, and that the route back is a route rather than a prompt.
+2. QA-91-002 — accept the reading, answer the clarification, confirm the Money
+   move, then take the reading back and check what Now says afterwards and what
+   became of the next step you named.
+3. QA-91-003 — attack the semantic boundary yourself rather than only the two
+   phrases you reported. Negated aboutness against ordinary negation; sums
+   against years and dates; and phrases it should abstain from.
+4. QA-91-004 — read the full "More money" confirmation at 360px and judge the
+   delivered shape.
+
+Then judge the repair as a whole: whether the fifth false green the builder
+reports was really the only one, whether the new sequential journey covers the
+transitions or merely looks like it does, whether the narrowed money lookup
+changed anything it should not have, and whether any Round 1 PASS regressed.
+
+Preserve the nineteen D-210 deferrals, do not remove docs/ROUTING_91_BRIEF.md,
+and end with the complete next handoff under D-082 whichever way the retest
+goes. Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High. **Conversation:** SAME — the Round 1
+QA conversation.
+
+```text
+Retest routing Phase 91 after the builder's Round 1 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the Round 2 retest
+handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
+retest says otherwise, and do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->

@@ -1438,15 +1438,48 @@ async function main() {
     /More money/.test(r84Proposed),
     r84Proposed.replace(/\s+/g, ' ').trim().slice(0, 200),
   )
+  /*
+   * D-188's contract, in the words the card actually uses — QA-91-004.
+   *
+   * This asserted the literal `will not assume`, which was the whole sentence
+   * until routing 91 split the unknowns into two named sets so that six of them
+   * stopped arriving as a seven-line comma-run (D-248). **The contract is
+   * unchanged and the wording is not**: what has to be true is that the card
+   * says what it has not concluded before anything is written, and both halves
+   * are named here so a future rewording fails loudly rather than passing on a
+   * substring that happens to survive.
+   */
   check(
-    'and what it is not assuming, before anything is written — D-188',
-    /will not assume/.test(r84Proposed) && /next step/.test(r84Proposed),
+    'and what it is not assuming, before anything is written — D-188, D-248',
+    /do not say/.test(r84Proposed) &&
+      /has not been told/.test(r84Proposed) &&
+      /next step/.test(r84Proposed),
     r84Proposed.replace(/\s+/g, ' ').trim().slice(0, 200),
   )
+
+  /*
+   * And the reading is offered rather than asserted — routing 91, rule 4.
+   *
+   * What stood here was routing 84's D-172 check: *does not read a second
+   * meaning into the phrase*. Routing 91 is the phase that reads it, so that
+   * claim is no longer the product's. It was still passing — but only because
+   * the reading renders in a **sibling** of the block this variable holds, which
+   * is a check passing for a reason unrelated to what it says (D-238).
+   *
+   * The live rule is stronger and is what is asserted now: the app may say the
+   * words sound like they are about Money, and until the owner says otherwise
+   * the aim is still going where the question was.
+   */
+  const r84Reading = await page.getByTestId('discovery-reading').innerText()
   check(
-    'and does not read a second meaning into the phrase — D-172',
-    !/Money|budget|savings|salary/.test(r84Proposed),
-    r84Proposed.replace(/\s+/g, ' ').trim().slice(0, 200),
+    'reads a second meaning and offers it rather than taking it — routing 91, rule 4',
+    /sound like they are about Money/.test(r84Reading) &&
+      /aiming at in Career & Learning/.test(r84Proposed),
+    `${r84Reading} | ${r84Proposed}`.replace(/\s+/g, ' ').trim().slice(0, 220),
+  )
+  check(
+    'with the row that changes nothing selected until he says otherwise',
+    (await page.getByTestId('discovery-keep').getAttribute('aria-pressed')) === 'true',
   )
   await sideways('Insights, the agenda with a proposal on it')
 
