@@ -1748,4 +1748,103 @@ as written. Keep Phase 90 YELLOW until explicit owner phone approval is
 recorded. Do not ask me to paste the file contents.
 ```
 
+---
+
+## The owner physical-phone gate — dispatched, and outstanding
+
+**Written by the routing 90 Claude builder conversation.** All three QA rounds
+above are untouched. **Phase 90 remains YELLOW.**
+
+**Nothing here is an approval, and nothing here may be read as one.** The
+canonical gate on this phase is the owner running the product on his own handset
+and saying what he thinks. No viewport, emulator, Android-style context,
+screenshot, automated matrix, QA PASS, or anything this conversation can do
+substitutes for it — that is stated in plan section 24, in Round 3's own
+disposition, and in the dispatch this section answers.
+
+### The build to run it against
+
+| Fact | Value |
+| --- | --- |
+| Address | **https://bill6006.github.io/life-command-os-rebuild/preview/** |
+| Serving | `a6ef17d`, verified live on 2026-09-01 |
+| Product bytes | identical to the QA-tested checkpoint `8b0c2ba` — only this handoff differs, nothing bundle-relevant |
+| Release integrity | clean against CI run `33472004086`'s own manifest, 8 files byte for byte |
+
+**Open it on the phone, not on a desktop browser narrowed to phone width.** The
+whole reason this gate exists is that Phase 4 passed 171 browser tests at three
+widths and then failed a handset on five counts, three of them blocking.
+
+**Start from an empty store.** If the phone has been used for this before,
+clear the site's data first, or use a private window. The journey below is about
+what a first run does.
+
+### The journey, in the order the contract states it
+
+This is the ordinary-owner contract from §6.2, unchanged. **No `#/qa`, no test
+histories, no seeding** — everything is reached through the controls the product
+offers.
+
+1. Open **Now**. Answer the discovery question it offers.
+2. In one life area, say what you are **aiming at**, and name a **milestone**
+   under it.
+3. Go back to **Now**. It should offer a move that serves what you just said.
+4. **Start it.** Then leave the screen — go to Timeline, or put the phone down.
+5. **Come back.** It should still be under way, not lost and not restarted.
+6. **Complete it**, and answer the question about how it went.
+7. **Come back the next day.** Confirm the move you finished does **not** read
+   as already done today, and that the milestone still reads as unreached.
+8. Do step 2 again in a **second** area.
+9. Open **Life**. Confirm it reads as **where you are heading**, not merely as
+   what has come in lately.
+
+### And then the part no test can do
+
+Steps 1–9 are behaviour, and QA has already checked all of it in an emulator.
+**What this gate is actually for is the other question:** how it feels in your
+hand.
+
+- **Hierarchy.** On each screen, is it obvious what matters most, before you
+  have read anything?
+- **Density.** Is a domain page a page, or is it homework?
+- **Legibility.** Text size, contrast, and the quieter grey used for what the
+  app has not settled — readable in the light you actually use the phone in?
+- **The thumb.** Do the buttons sit where a thumb reaches? Does anything move
+  under your finger between tapping and letting go? Does the bottom navigation
+  ever cover something you were about to press?
+- **Safe areas and scrolling.** Anything under the notch or the home bar?
+  Anything that scrolls sideways when it should not?
+- **Motion.** Does anything move that should not, or move so slowly it is in
+  your way?
+- **The overall feel.** Section 24's own words: it fails this gate if it feels
+  **bland, cave-like, overly technical or lifeless**, even with every test
+  green. Does it feel like something worth opening tomorrow?
+
+### What to send back
+
+Either is a complete answer, and a rejection is as useful as an approval:
+
+- **Approved** — and which phone and browser you used.
+- **Not approved** — and for each problem: the screen, what you did, what you
+  expected, what happened, and the phone. As specific as you can; the repair has
+  to reproduce it before it can fix it.
+
+**A silence is not an approval**, and neither is a long gap. This section stays
+here, and the phase stays YELLOW, until there is an explicit result written into
+it.
+
+### What happens next, either way
+
+**If approved:** the builder performs a documentation-only GREEN closeout —
+phase record, decision log, defect ledger, canonical plan — preserving every
+PASS, every partial or negative answer in the owner-use review's §11.8, and all
+nineteen D-210 deferrals. No product or test change may happen during a
+closeout; an executable change returns the phase to YELLOW. The next package's
+prompt is written into `docs/NEXT_PROMPT.md` and not started.
+
+**If rejected:** the phase stays YELLOW, the exact device and reproduction are
+recorded here, the whole failure class is repaired under plan section 42, the
+full gate is rerun, a repaired checkpoint is deployed, and the retest goes to the
+**same** Codex QA conversation at High.
+
 <!-- LCO_COMPLETE -->
