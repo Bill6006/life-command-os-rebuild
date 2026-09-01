@@ -129,4 +129,91 @@ written. This is routing phase 91, semantic capture and clarification. Do not
 ask me to paste the file contents.
 ```
 
-**Do not write a completion marker into this file until this dispatch is actually finished.**
+---
+
+# What this dispatch built
+
+**Status: YELLOW — READY FOR INDEPENDENT QA.** A builder conversation may not
+approve its own phase (D-077).
+
+**91.1 — a second producer of `AuthoringProposal` that reads words.**
+`src/intelligence/interpret.ts` reads what the owner typed and the labels of
+things he has already named, names one of three areas or declines, says what the
+words did not say, and offers **one** cross-domain re-file inside the
+confirmation block with the row that changes nothing selected. It writes
+nothing. The reading he accepts is an `aim-reading` record carrying
+`provenance: 'derived'` and the id of the row holding his own words (D-143), and
+he can take it back from the aim's own row.
+
+**91.2 — correction 3.6, closed by naming which half closes it.** The
+clarification reaches the milestone; a bare aim still reaches nothing, because a
+bare aim has nothing to act on and inventing the work is the one thing
+`vocabulary.ts` forbids by name. So no question is added — the one already being
+asked takes the resolved area's own wording, keyed on the same table that decides
+what the answer becomes.
+
+**91.3 — the private boundary as a property.** Seven in-place comparisons against
+the private class replaced by three named questions in `privacy.ts`, and a sweep
+that fails the build on an eighth. The interpreter's door is `mayReasonFrom`, and
+its input digest carries a count of what the permission kept out — so the
+negative claim has a positive control inside the product rather than inside a
+test.
+
+**What actually changes for the owner:** he answers the Career aspiration
+question with _"More money"_, the app says the words sound like they are about
+Money and offers to file them there, he takes the offer, it asks **one** concrete
+question — _"What is the money thing you would deal with first?"_ — and Now says
+**"Deal with Clear the credit card today."** Decline the reading, on the same two
+words and the same two presses, and Now offers a Career move about what he is
+studying instead. Neither arm is broken; the difference is the interpretation.
+
+**Accommodation row B1 landed**, and landing it found **DEF-0154**: the
+accommodation list's absence check went green over a built row, because a phase
+does not have to use the identifier somebody guessed for it. A landed row now
+swaps absence for presence (D-244).
+
+**Decisions:** D-240 … D-244.
+
+## Not in this phase, and unchanged
+
+CASE B. No model, no hybrid, no network call — there is still exactly one `fetch`
+in `src/`, for `build-info.json` (D-025). No inference over history (97, held by
+D-172). No widened concept vocabulary (92). No emotional dimensions (92, 94). No
+new conclusions from evidence (93), no new domain (94), no advancement register
+(95), no named expectation or reconciliation (96). No scoring change of any kind,
+and no change to `QUESTIONS_PER_DAY` or `DISCOVERY_PER_WEEK`. Phases 1 through 90
+are not reopened.
+
+## Open and deferred, unchanged
+
+The **nineteen deferred Phase 84 instrument-hardening findings** (D-210,
+`docs/qa/INSTRUMENT_HARDENING_BACKLOG.md`) are untouched and still open.
+Re-finding one of them is not a routing 91 defect.
+
+`docs/ROUTING_91_BRIEF.md` is **kept until GREEN**, against its own §10, because
+it is the document this phase is judged against and deleting the gate before the
+gate is run would be the wrong order. Removing it is a closeout action.
+
+## The next handoff
+
+The complete QA prompt is written into **`docs/qa/PHASE_91_QA_HANDOFF.md`**,
+Round 0. It carries the checkpoint, the acceptance criteria, what changed stated
+as changes, the reintroduction proofs to repeat, the ordinary-owner and synthetic
+contracts, and the places the builder thinks the risk is.
+
+- **Model:** Codex — independent QA, per D-090. The builder is Claude; the
+  reviewer must not be.
+- **Reasoning level:** **High** — a middle level. **Never Max**, which is
+  Claude's level and does not exist in Codex's range.
+- **Conversation:** **NEW** — not this builder conversation, and not any routing
+  90 conversation.
+
+```
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full, in the repository at
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild, and execute
+Round 0's brief exactly as written. This is the independent QA handoff for
+routing phase 91, semantic capture and clarification. Do not ask for the file
+to be pasted.
+```
+
+<!-- LCO_COMPLETE -->

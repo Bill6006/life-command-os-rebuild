@@ -8917,11 +8917,20 @@ conclusion inside the row that exists to hold his words.
 `ROUTING_91_BRIEF.md` §4 item 6
 
 `ROUTING_91_BRIEF.md` recorded that the private boundary was _"not yet a single
-chokepoint"_: `createFactReader` is a real structural check and six further sites
-excluded private material by comparing a privacy value to the string `'private'`
-in place. Every one of them was correct. The problem is that each was a
-**convention re-decided at the call site**, so _"private material is never raised
-unasked"_ was a claim about six lines rather than a property of the code.
+chokepoint"_. `createFactReader`'s own check is real and was already a predicate;
+**seven further comparisons against the string `'private'` sat inline under
+`src/intelligence`**, and every one of them was correct. The problem is that each
+was a **convention re-decided at the call site**, so _"private material is never
+raised unasked"_ was a claim about seven lines rather than a property of the code.
+
+**The two counts in the governing documents are both approximations, and this is
+what is actually there.** The brief's §4 item 6 names six permission-blind sites;
+correction 3.11 names five and includes a display placeholder among them. Counted
+against the tree at `45d5f01`: **five** are permission-blind exclusions —
+`coverage.ts` twice, `insights.ts` three times — and **two** are display
+placeholders that answer a different question, in `insights.ts` and
+`situation.ts`. Seven in total, and the distinction between the two kinds is
+exactly what the three named questions below make legible.
 
 Three questions now live in `privacy.ts`, and nothing under `src/intelligence`
 answers any of them itself:
