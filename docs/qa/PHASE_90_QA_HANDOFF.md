@@ -654,5 +654,271 @@ D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 Read docs/qa/PHASE_90_QA_HANDOFF.md in full and execute the complete Round 1
 repair handoff at its end exactly as written. Do not ask me to paste the file.
 ```
+---
+
+## Round 1 repair — the builder's response
+
+**Written by the routing 90 Claude builder conversation.** QA's Round 1 above is
+untouched, and nothing in it has been edited, renumbered or answered in place.
+**Phase 90 remains YELLOW.**
+
+All three blockers were reproduced before anything was changed, and each repair
+carries a regression proved by putting the defect back. QA was right about all
+three, and right about the more uncomfortable part: **two of the three were
+false greens in regressions this conversation wrote.**
+
+### QA-90-001 — Life now reads as direction, and still reads as coverage
+
+**Reproduced.** From a fresh store, authoring a destination and milestone in
+Health and again in Career, Life rendered only **Recent** and **Nothing here
+yet**. Neither aim appeared anywhere on the screen.
+
+**The class.** Every group on Life is built from `DomainCoverage` through
+`standingFor`, which answers *how recently has anything come in*. That is a true
+and useful reading. The defect was that it was the **only** reading, so the
+screen could not answer the question the phase's own contract ends on — and no
+amount of restyling it would have.
+
+**The repair.** A `Where you are heading` panel above the coverage groups,
+listing each authored destination with the owner's aim rendered verbatim, the
+area it belongs to, and the next unreached milestone where he named one.
+
+- **It is presentation, not a second brain.** It reads
+  `situation.direction.destinations` from the same `assembleSituation` the
+  coverage groups come from. D-075's constraint — one coverage computation,
+  presentation only — is untouched, because there is still one reading of the
+  history and it is now shown twice over.
+- **Nothing here is authored by the app.** The aim is his words byte for byte,
+  the milestone is his goal statement. There is no verb of the app's own, no "on
+  track", no count of filled-in parts — so there is nothing that could become a
+  score through the back door (D-162).
+- **Absent, not empty.** With no destination anywhere the panel does not render,
+  so a first run and every history in the shipped library look exactly as they
+  did. That is asserted, not assumed.
+- **Reached milestones leave rather than becoming a notice.** What is next is
+  direction; what is done is history, and Timeline and the domain page already
+  carry it. Congratulating him on the size of his own work is not the app's to
+  do (D-223).
+
+**Regression:** `tests/browser/phase90-round1.spec.ts` — the two-domain journey
+QA walked, from a genuinely empty store through the owner's own controls, with
+no `#/qa`; plus the milestone-reached case and the absent-not-empty case.
+**Proved:** short-circuiting the panel fails both direction tests.
+
+### QA-90-002 — the object kinds are semantically real, and the union is closed both ways
+
+**Reproduced.** `long-run` Career rendered `[Evidence, Evidence]`, including the
+rung whose visible measure is **Sessions done**. `session` was declared in the
+union, named in the acceptance criterion, described in the design record — and
+used by no surface in the product.
+
+**The class, which is wider than the one rung.** A shared vocabulary whose
+members all resolve to one word is a label, not a vocabulary. The cause was a
+literal `kind="evidence"` applied to every rung — a default that was right for
+five of seven and wrong for the two that the acceptance criterion is about.
+
+**The repair.**
+
+- `RUNG_KIND` is an exhaustive `Record<ProgressEvidence, ObjectKindName>`:
+  `completion → session`, `milestone → milestone`, the other five → `evidence`,
+  which is the honest word for evidence *about* an object rather than the object
+  itself. A `Record` rather than a switch with a default, so an eighth rung is a
+  **compile error** instead of a rung that silently inherits the generic marker.
+- `correction` was the other declared-but-unused kind — the same shape — and now
+  marks the correction gesture when it opens. It is on the gesture rather than
+  on the row, because the row is his history and only the gesture is a
+  correction.
+- The styling is unchanged: the markers now say different words and still carry
+  no difference in colour, size or weight, because coloured markers on progress
+  objects read as a ranking of them (D-231).
+
+**Regressions:** a browser test that requires **Session**, **Milestone** and
+**Destination** by name on one page and still requires uniform styling; and a
+source guard applying D-193's both-directions rule to the vocabulary — nothing
+rendered that is not declared, **nothing declared that is not rendered**.
+**Proved:** reverting `completion` to `evidence` fails four tests across the two
+files.
+
+> #### A limitation this repair does not remove, reported rather than left to be found
+>
+> **No history in the shipped library reaches a finished course, at any point in
+> time.** A course is a finished thread; probing every scenario at its own
+> moment, +30 days and +200 days finds none. So the third of section 54's three
+> named objects cannot be put on a live page by any fixture, and the browser
+> regression proves **Session** and **Milestone** rather than all three.
+>
+> `course` is not unreachable in the product — an owner who finishes a thread
+> gets one, and `progress.ts` reads it — but it is unreachable in the
+> *instrument*, which means the acceptance sentence *"a completed session, a
+> completed course and a milestone are three different things on the page"* has
+> no end-to-end proof available today. The source guard covers that the marker
+> exists and is used; it does not cover a rendered page.
+>
+> This is the same class as the defect QA found, one step out, and the builder
+> is not in a position to decide it is acceptable. **QA and the owner should
+> judge whether routing 90 needs a fixture that finishes a course**, or whether
+> it is honest to carry the gap forward with the claim narrowed.
+
+### QA-90-003 — every grouped cardinality is generated, not written
+
+**Reproduced.** `STALE_BELIEFS_BEFORE_GROUPING` is 3; at exactly three the
+headline read *"3 things the app is still going on"* above an explanation
+reading *"four cards ... four different subjects"*.
+
+**The class: a rendered cardinality written as a literal.** It was correct on
+the day it was written, against the one case anybody had looked at — the audit's
+four-card wall — and silently wrong at every other size. A swept the module for
+the same shape; this was the only sentence asserting a count it did not compute.
+
+**The repair.** The sentence is generated from `stale.length`, like the headline
+and the comparable count beside it.
+
+**Regression:** every legal size from three to eight, asserting that **every
+sentence the card renders** states only numbers it is entitled to — and it is
+split, because the headline and detail report real ages while the reasoning
+reports none. That split is not tidiness: with one permissive rule, at size
+three the true ages are two, three and four months, so a hard-coded "four" sits
+inside the allowed set and the defect passes. The first draft did exactly that.
+**Proved:** restoring the literal fails at sizes three, five, six, seven and
+eight.
+
+### Verification on the repaired tree
+
+| Gate | Result |
+| --- | --- |
+| `npm run verify`, clean checkout | **PASS** |
+| Unit / contract / synthetic / adversarial | **1,902 passed** in 88 files (1,895 in 87 at Round 1) |
+| Browser, 360 / 430 / 1,280, one worker | **780 passed**, 260 per width — zero failures (762 at Round 1; this phase added 18) |
+| Trusted-clock pairs, all three widths | **PASS** — block, day and week, unchanged |
+| Blocker / rendered-copy guards | **PASS** — `phase84.spec.ts` 39 of 39; copy scan clean, 8,171 shipped strings |
+| Privacy scan | clean — 304 tracked files |
+| Android-style gate | **clean — 233 checks** |
+| Release integrity, live bytes | clean — 8 files served byte for byte as verified |
+| CI and deployed Preview | **success** — run `33454199293`, both jobs; the Preview serves `1047765` itself |
+| Physical-owner phone gate | **OUTSTANDING** — not automated, and not fabricated here |
+
+**Preserved, and checked rather than asserted:** the clock-before-navigation
+proof; the narrowed F40 and touch-target guards; the accommodation table as
+structure; every passing owner-flow distinction; privacy and provenance
+behaviour; and the nineteen D-210 deferrals, untouched and identically numbered.
+
+**Round 1's own PASSes are unchanged.** No overflow, tap-target, typography or
+dark-theme defect was introduced: the direction panel reuses the existing area
+rhythm, and the object markers changed their word and nothing else.
+
+---
+
+## Round 1 repair — retest dispatch to independent QA
+
+**Model:** Codex.
+**Reasoning level:** **High** — a middle level, and never Max, which is Claude's
+and stops the orchestrator when it appears in a Codex block.
+**Conversation:** **SAME** — the Codex conversation that ran Round 1, which owns
+this file's rounds and already holds the reproductions.
+
+**Phase 90 is still YELLOW.** Nothing here promotes it, and the physical-owner
+phone gate is still outstanding and still not automated.
+
+### What to retest
+
+| Fact | Value |
+| --- | --- |
+| Repaired checkpoint | `1047765` |
+| Deployed | `1047765` at the time of writing. **Read it live** — this round's own docs commit moves the head without changing the bundle, which is what `checkpoint-equivalence.mjs` is for (D-097). |
+| Round 1 checkpoint, for comparison | `c6e0b3a` |
+
+```bash
+node scripts/checkpoint-equivalence.mjs 1047765 --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+gh run download 33454199293 --name preview-manifest --dir /tmp/m
+node scripts/release-integrity.mjs https://bill6006.github.io/life-command-os-rebuild/preview/ --manifest /tmp/m/release-manifest.json
+```
+
+### The three reproductions to run again first
+
+Each should now fail to reproduce. Run them the way Round 1 did rather than the
+way this repair describes them.
+
+1. **QA-90-001.** Fresh deployed owner store, no laboratory. Author a
+   destination and milestone in two domains, complete the goal-serving move,
+   then open Life. Both aims should be on the screen. Then check the halves this
+   repair could have broken: a store with **no** destination must look exactly
+   as it did — coverage groups, no empty heading — and the coverage reading
+   itself must be unchanged.
+2. **QA-90-002.** Open a controlled long history, open Career, and read the
+   markers. The rung labelled *Sessions done* should say **Session**. Then
+   confirm the restraint survived: different words, identical colour, size and
+   weight.
+3. **QA-90-003.** Build a three-item stale group as you did before and read the
+   grouped card's evidence reasoning. Every number in it should be three.
+
+### Where this repair is most likely to be wrong
+
+Offered so the retest can spend its attention well. None of it is a claim that
+the rest is correct.
+
+- **Life's new panel is the biggest change and the least tested by a person.**
+  It is above the coverage groups, which is a deliberate claim that direction
+  outranks recency on that screen. Read it as an owner: does it help, or is it a
+  second thing to scroll past? Section 54's density and D-075's "not homework"
+  are the standards, and neither is settled by an assertion.
+- **On a store with many authored destinations** the panel grows one row each.
+  Nothing caps it. Whether eleven directions read as a page or as a wall is a
+  judgement no test here makes.
+- **`life-direction-next` disappears when a milestone is reached.** That was a
+  deliberate choice — what is next is direction, what is done is history — but it
+  means a reached milestone leaves Life silently. Check that is not read as the
+  aim itself having gone away.
+- **`Session` now appears where `Evidence` did.** Confirm nothing else regressed
+  in that swap, particularly on Fatherhood, where the growth surfaces read the
+  same rungs.
+
+### The gap this repair reports rather than closes
+
+**No history in the shipped library reaches a finished course**, at its own
+moment, +30 days or +200 days. A course is a finished thread and none finishes.
+So section 54's *"a completed session, a completed course and a milestone are
+three different things on the page"* has **no end-to-end proof available**: the
+regression proves Session and Milestone on a rendered page and proves the
+`course` marker only at source.
+
+That is the same class as QA-90-002 one step out — a named object with no
+reachable instance — and it is not the builder's to wave through. **QA and the
+owner should decide** whether routing 90 needs a fixture that finishes a course,
+or whether the claim is carried forward narrowed and stated.
+
+### Verification the builder ran on the repaired tree
+
+Repeated here so a discrepancy between these numbers and QA's own is itself a
+trigger.
+
+| Gate | Result |
+| --- | --- |
+| `npm run verify`, clean checkout | PASS |
+| Unit / contract / synthetic / adversarial | **1,903 passed** in 88 files |
+| Browser, 360 / 430 / 1,280, one worker | **780 passed** — zero failures |
+| Privacy scan | clean, 304 tracked files |
+| Android-style gate | clean — 233 checks |
+| Release integrity | clean — 8 files byte for byte |
+| Format / lint / typecheck | clean |
+| Worktree | clean |
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High. **Conversation:** SAME — the Round 1
+QA conversation.
+
+```text
+Retest routing Phase 90 after the builder's Round 1 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_90_QA_HANDOFF.md in full. The builder's repair round and the
+retest dispatch are at the end. Re-run the three QA-90-001..003 reproductions
+first, then the rest of the protocol, and append Round 2 to this file. Keep the
+phase YELLOW unless you are recommending otherwise, and do not treat any
+automated result as the owner's physical-phone approval. Do not ask me to paste
+the file.
+```
 
 <!-- LCO_COMPLETE -->
