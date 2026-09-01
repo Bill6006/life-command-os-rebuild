@@ -935,4 +935,252 @@ handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
 retest says otherwise, and do not ask me to paste the file contents.
 ```
 
+---
+
+## Round 2 independent QA — FAIL
+
+**Phase:** 91 — remains **YELLOW**.
+**Product checkpoint:** `3afa7c299eca5e2f2f54960ec1f04313bfab3046`.
+**Deployed docs head at retest:**
+`a430a44d4369e6e607aa4770da0c56e15293f7b6`, bundle-equivalent to the product
+checkpoint.
+**Overall verdict:** **FAIL.** QA-91-001 and QA-91-004 are closed.
+QA-91-002 and QA-91-003 are not closed. The repair has three blocker-class
+failures, including one additional false-green browser journey.
+
+### Retest method
+
+The product checkpoint and deployed docs head were proved bundle-equivalent
+before the behavioral retest. The ordinary-owner checks used isolated fresh
+browser origins running that source and never opened `#/qa`. The Round 1 passes
+were treated as settled and checked for regression rather than re-derived.
+
+### Closed findings
+
+- **QA-91-001 — PASS.** In one fresh Career store, _More money_ could be kept in
+  Career without producing a derived reading, and its aim row retained the
+  direct **File it in Money & Financial Resilience** route. That route is a
+  gesture, not a replacement prompt. Accepting it then produced one Money
+  clarification and the corresponding Now move.
+- **QA-91-004 — PASS.** At 360px all six unknowns are present as two named lists,
+  **These words do not say** and **And the app has not been told**, with three
+  items in each and one answer box. The delivered shape is scannable and does
+  not spend another question.
+
+### QA-91-005 — withdrawal turns a Money answer into invented study semantics
+
+**Severity:** Blocker. **Disposition:** QA-91-002 is not closed.
+
+From a fresh ordinary-owner store:
+
+1. Under Career, record _More money_, accept the Money reading and answer the
+   clarification with _Clear the credit card_.
+2. Now correctly says **Deal with Clear the credit card today.**
+3. Use **Put it back in Career & Learning** and confirm the reversal.
+
+The confirmation itself says the app will treat _Clear the credit card_ as what
+the owner is currently studying. After confirmation, Now says:
+
+> Build a small lab with Clear the credit card rather than reading about Clear
+> the credit card.
+
+The old Money candidate is gone, but it has been replaced by fabricated Career
+and study meaning. The only offered reversal requires the owner to confirm that
+nonsense. This is not an honest or reversible treatment of the consequence
+created from the Money interpretation.
+
+The implementation explains the result: `DomainPanels.tsx` calls
+`describeMilestone(next, into...)` while `refileMilestone` recasts the next step
+as an entity of the destination area's kind and writes `learningTopic` for
+Career. The sequential journey at `phase91.spec.ts:668` only checks that the
+post-withdraw headline contains _Clear the credit card_, so it passes this exact
+absurd headline. This is an additional false green beyond the one reported by
+the builder.
+
+### QA-91-006 — a started action keeps the old Money consequence alive
+
+**Severity:** Blocker. **Disposition:** QA-91-002 is not closed for an already
+started consequence either.
+
+The same path was repeated, but **Start it** was pressed on the Money move before
+withdrawing the reading. After withdrawal, Now still shows:
+
+- **Handle a money item**
+- **Deal with Clear the credit card today.**
+- **Where this stands: Under way**
+
+The new Career candidate exists but loses arbitration; the old Money behavior
+remains live. `firstStillReferredTo` in `candidates.ts:221-230` treats any
+effective record referring to the entity as sufficient to retain it. The
+action-recommendation and action-start records therefore keep the withdrawn
+financial goal eligible. The ordinary-owner journey never starts the action,
+and the synthetic regression creates no lifecycle records, so neither
+instrument covers this consequence state.
+
+The repair must define and verify what withdrawal means after a recommendation
+has been started. It may preserve truthful owner history, but it must not
+silently keep presenting the withdrawn Money interpretation as current.
+
+### QA-91-007 — semantic roles still collapse at coordination and numeric dates
+
+**Severity:** Blocker. **Disposition:** QA-91-003 is not closed as a semantic
+class.
+
+The repaired exact probes do pass: _No more debt_ offers Money; _Not about money
+at all_ abstains; a bare year is not an amount; and a currency amount plus a
+year supplies both roles. Adjacent probes expose two unhandled classes:
+
+| Probe | Actual result | Required result |
+| --- | --- | --- |
+| _Not about money and debt_ | offers Money from _debt_ | abstain; one negation governs both coordinated objects |
+| _Nothing to do with salary and savings_ | offers Money from _savings_ | abstain for the same reason |
+| _No more debt and less spending_ | offers Money | offer Money; this is ordinary positive negation, not denied aboutness |
+| _More money before 03/15/2027_ | omits **how much** | keep **how much** unknown; the digits are a date |
+| _More money before March 15, 2027_ | omits **how much** | keep **how much** unknown; day and year are date parts |
+
+At `interpret.ts:538`, every `and` ends the denied span even when it coordinates
+two objects under the same negation. At `interpret.ts:608`, `saysHowMuch` treats
+digits as an amount unless the whole token is exactly a four-digit year, so the
+day and month components of a date become money. The present semantic tests
+cover a `but` clause and a four-digit year/month-word form, not these classes.
+
+### The builder's reported fifth false green
+
+The reported winner-versus-generator false green is real: a test of only the
+winning move could miss an unwanted generated Money candidate that lost
+arbitration. It was not the only false green. The post-withdraw journey's
+headline substring assertion also accepts the fabricated Career study
+recommendation, and neither the journey nor the generator regression models a
+started action.
+
+### Acceptance disposition
+
+| Acceptance item | Verdict | Evidence |
+| --- | --- | --- |
+| 1. Exact CASE A interpretation | PASS | The Money reading is offered without changing the aim first. |
+| 2. Exact owner bytes | PASS | _More money_ remains byte-identical. |
+| 3. Token meaning, not presence | **FAIL** | Exact repaired probes pass; coordinated negation and numeric full dates do not. |
+| 4. One derived sibling with provenance | PASS | Acceptance writes the derived reading as the sibling specified. |
+| 5. Decline, no derived row, direct redo | PASS | The declined choice is reachable again from the aim row. |
+| 6. Clarify once and change Now | PASS | _Clear the credit card_ produces the Money move. |
+| 7. Honest reversible withdrawal | **FAIL** | It fabricates study semantics, or keeps the started Money consequence live. |
+| 8. Second proving domain | PASS | The differently shaped second-domain path remains covered. |
+| One sequential ordinary-owner journey | **FAIL** | It runs, but its weak headline assertion blesses the wrong post-withdraw meaning and it omits the started state. |
+| Synthetic/adversarial boundary | **FAIL** | Coordination and numeric dates remain false positives. |
+| Same-area/null case | PASS | No duplicate same-area interpretation is offered. |
+
+### Mechanical and live verification
+
+| Gate | Result |
+| --- | --- |
+| `npm run verify` | PASS |
+| Unit / contract / synthetic / adversarial | **1,976 passed** in 89 files |
+| Browser, 360 / 430 / 1,280, one worker | **831 passed** in 18.5 minutes |
+| Privacy scan | clean, 310 tracked files |
+| Rendered copy scan | clean — 8,454 shipped strings; 8,366 placed in module |
+| Android-style gate | clean — **234 checks** against deployed `a430a44` |
+| Checkpoint equivalence | deployed `a430a44` is bundle-equivalent to `3afa7c2` |
+| Product CI | success — run `33508385860` |
+| Deployed docs-head CI | success — run `33511371387` |
+| Release integrity | clean — 8 product files served byte for byte from the product manifest |
+
+The narrower Money lookup does not change the shipped library: no shipped
+history contains a `financial-goal`, and the aggregate stayed stable. It becomes
+too broad only once an ordinary owner has lifecycle records referring to the
+withdrawn entity, as QA-91-006 demonstrates.
+
+Every other Round 1 PASS remained intact: derived sibling provenance, privacy
+digest and both controls, one-question budget, both proving domains, three-day
+non-reproposal, B1, the no-score rule and the one-fetch boundary. The nineteen
+D-210 instrument-hardening findings remain open with backlog hash
+`58d5af071355d252c4a254fc685fcc9e8e88f417`;
+`docs/ROUTING_91_BRIEF.md` remains present; CASE B remains deferred; routing 92
+has not begun.
+
+---
+
+## Round 2 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+**Intelligence level:** **Max** — this repair crosses interpretation semantics,
+append-only consequence history and the ordinary-owner acceptance instrument.
+**Conversation:** **CURRENT** — return to the original routing 91 Claude builder
+conversation.
+
+```text
+Routing Phase 91 repair after independent QA Round 2 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. The Round 2 report at the end is
+the authoritative independent QA verdict. Keep the Phase field exactly 91 and
+keep the phase YELLOW.
+
+Before changing implementation, reproduce all three Round 2 blockers in fresh
+ordinary-owner stores that never open #/qa:
+
+1. Accept the Money reading for Career's "More money", answer "Clear the credit
+   card", confirm the Money move, then put the reading back in Career. Observe
+   that the only confirmation recasts the answer as something being studied and
+   Now proposes a small lab about a credit card. Repair the whole consequence
+   contract without inventing Career or study meaning and without deleting or
+   rewriting the owner's words or truthful history.
+2. Repeat the path, press "Start it" before withdrawal, then withdraw. Observe
+   that the old Money move remains current and Under way because lifecycle rows
+   keep the financial goal eligible. Define the honest fate of an already
+   started consequence and make the visible state agree with the withdrawal.
+3. Attack the semantic class with the exact positive and negative pairs in
+   QA-91-007. Distinguish coordinated objects from a genuine clause break, and
+   distinguish day/month digits in dates from amounts. Preserve "No more debt"
+   as a positive Money statement and preserve real currency-plus-date cases.
+
+Do not prescribe the result by patching these strings. Preserve owner-authored
+bytes and append-only history; do not add a model/network call, a score, another
+question, another readable domain or hidden special-case vocabulary. The
+withdrawal design must explicitly account for the Money clarification and for
+recommendation lifecycle rows, rather than merely changing which generated
+candidate wins.
+
+Strengthen the one sequential ordinary-owner journey so it asserts the meaning
+and area of the post-withdraw state, not merely that a headline contains the
+owner's next-step words. Add the started-action branch. Add direct semantic
+positive/negative pairs for coordinated denied aboutness, ordinary positive
+negation, numeric full dates, worded full dates, real amounts and mixed
+amount-plus-date phrases. Each regression must fail for its title's reason under
+a targeted reintroduction; restore the tree afterwards.
+
+Preserve QA-91-001 and QA-91-004, every other Round 1 PASS, all explicit
+deferrals, the nineteen D-210 findings and their backlog hash, and the existing
+ROUTING_91_BRIEF.md. CASE B and routings 92-97 remain out of scope.
+
+Run npm run verify, the full 360/430/1280 browser matrix at one worker, the
+Android-style gate, privacy and copy scans, checkpoint equivalence, CI, and live
+release integrity against the deployed head's own manifest. Commit and push the
+repaired product checkpoint, wait for Preview deployment, then append the
+builder repair record and a complete Round 3 retest handoff to this same file.
+Dispatch Round 3 to the SAME Codex QA conversation at High. Do not ask the owner
+to paste file contents, do not remove docs/ROUTING_91_BRIEF.md before GREEN, and
+do not start routing 92.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or nearest current Opus-class equivalent.
+
+**Intelligence level:** Max.
+
+**Conversation:** CURRENT — the original routing 91 Claude builder conversation.
+
+```text
+Continue routing Phase 91 after independent QA Round 2 FAIL.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the complete Round 2
+builder repair handoff at the end exactly as written. Keep Phase 91 YELLOW and
+do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->
