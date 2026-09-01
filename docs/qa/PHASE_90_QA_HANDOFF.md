@@ -741,6 +741,13 @@ files.
 
 > #### A limitation this repair does not remove, reported rather than left to be found
 >
+> > **CORRECTED AT ROUND 2 — this claim was false.** The shipped **Two sessions
+> > in** history reaches a finished course as soon as the owner completes its
+> > final session, and `phase84.spec.ts` has driven that flow since routing 84.
+> > The probe behind the claim below only advanced the clock, and a course does
+> > not finish because time passes. See QA-90-004 and the Round 2 repair. The
+> > original text is left standing as the record of what was claimed.
+>
 > **No history in the shipped library reaches a finished course, at any point in
 > time.** A course is a finished thread; probing every scenario at its own
 > moment, +30 days and +200 days finds none. So the third of section 54's three

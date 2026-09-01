@@ -144,20 +144,48 @@ test.describe('QA-90-001 — Life reads as direction once there is direction to 
   })
 })
 
-test.describe('QA-90-002 — the named object kinds are distinct where they are reachable', () => {
+test.describe('QA-90-002 / QA-90-004 — the three named object kinds, rendered and distinct', () => {
   /**
-   * A history with a completed session on Career, plus a milestone the owner
-   * authors here.
+   * All three of section 54's named objects on one Career page — QA-90-004.
    *
-   * `long-run` is the history QA read: its Career page carries a `completion`
-   * rung ("Sessions done") and a `quality` rung, which is where it saw
-   * `[Evidence, Evidence]`. Authoring a milestone on top of it puts a second
-   * named kind on the same page, through the owner's own control.
+   * ## The correction this encodes
+   *
+   * The Round 1 repair asserted Session, Milestone and Destination and left
+   * **Course** out, on the strength of a claim that no shipped history reaches
+   * a finished course. **That claim was wrong.** The probe behind it advanced
+   * the clock and looked for a finished thread — but a course does not finish
+   * because time passes, it finishes when the owner completes its final
+   * session. `phase84.spec.ts` has driven exactly that flow since routing 84,
+   * and QA reproduced it live.
+   *
+   * The lesson is worth more than the fix: *"unreachable"* was concluded from a
+   * probe that could not have found the thing it was looking for, and then
+   * written into a handoff as a limitation for somebody else to judge. A
+   * negative claim needs a probe capable of returning a positive.
+   *
+   * ## The flow, which is entirely the owner's
+   *
+   * **Two sessions in** sits one occasion from the end of its course. Finishing
+   * that session through Now's buttons produces a completed **Session** and a
+   * finished **Course**; authoring direction on the same page produces a
+   * **Destination** and a **Milestone**. No fixture was added to manufacture
+   * any of it — the requirement was explicit that none should be.
    */
-  async function careerWithASessionAndAMilestone(page: Page) {
+  async function careerWithAllThreeObjects(page: Page) {
     await page.goto(`${APP}#/qa`)
     await expect(page.getByRole('heading', { level: 1, name: 'QA' })).toBeVisible()
-    await page.getByRole('button', { name: /Nine months of evenings/ }).click()
+    await page.getByRole('button', { name: /Two sessions in/ }).click()
+
+    await go(page, 'Now')
+    const actions = page.getByTestId('now-actions')
+    await expect(actions, 'the final session was not offered').toBeVisible()
+    const start = actions.getByRole('button', { name: 'Start it' })
+    await expect(start).toBeEnabled({ timeout: 15_000 })
+    await start.click()
+    const done = actions.getByRole('button', { name: 'Done', exact: true })
+    await expect(done).toBeEnabled({ timeout: 15_000 })
+    await done.click()
+
     await authorDirection(page, 'career', 'Move into a networking role', 'Finish the CCNA')
   }
 
@@ -167,7 +195,7 @@ test.describe('QA-90-002 — the named object kinds are distinct where they are 
      * was rendered with `kind="evidence"`, so the page said Evidence about a
      * session and the `session` kind existed nowhere in the product.
      */
-    await careerWithASessionAndAMilestone(page)
+    await careerWithAllThreeObjects(page)
 
     const completion = page.getByTestId('progress-completion')
     await expect(completion).toBeVisible()
@@ -175,8 +203,16 @@ test.describe('QA-90-002 — the named object kinds are distinct where they are 
     await expect(completion.locator('.kind')).toHaveText('Session')
   })
 
-  test('puts Session and Milestone on one page, saying different things', async ({ page }) => {
-    await careerWithASessionAndAMilestone(page)
+  test('puts a Session, a Course and a Milestone on one page, saying three different things', async ({
+    page,
+  }) => {
+    /*
+     * Canonical section 54's gate item 2, as one rendered proof: *"a completed
+     * session, a completed course and a milestone are three different things on
+     * the page."* All three are on **this** page, reached by the owner's own
+     * buttons, and each says its own word.
+     */
+    await careerWithAllThreeObjects(page)
 
     /*
      * Compared upper-case, because that is what the owner actually sees.
@@ -186,19 +222,71 @@ test.describe('QA-90-002 — the named object kinds are distinct where they are 
      * the right choice on a test about what is on a page — it just has to
      * compare against the rendered form.
      */
-    const words = new Set(
+    const seen = new Set(
       (await page.locator('.kind').allInnerTexts()).map((word) => word.trim().toUpperCase()),
     )
-    for (const kind of ['SESSION', 'MILESTONE', 'DESTINATION']) {
-      expect([...words], `${kind} is on the page`).toContain(kind)
+
+    for (const kind of ['SESSION', 'COURSE', 'MILESTONE', 'DESTINATION']) {
+      expect([...seen], `${kind} is on the page`).toContain(kind)
     }
+
     /*
      * And the generic word is still available for the rungs that are evidence
      * *about* an object rather than the object itself — "how they went" is not
      * a session. Collapsing everything into Session would be the same defect
      * pointing the other way.
      */
-    expect([...words]).toContain('EVIDENCE')
+    expect([...seen]).toContain('EVIDENCE')
+  })
+
+  test('marks the finished course as a Course, beside the session that finished it', async ({
+    page,
+  }) => {
+    /*
+     * The half Round 1 left unproved, read off the two blocks themselves rather
+     * than off every marker on the screen — so a Course marker appearing
+     * somewhere unrelated could not satisfy it.
+     */
+    await careerWithAllThreeObjects(page)
+
+    const courses = page.getByTestId('progress-courses')
+    await expect(courses).toBeVisible()
+    await expect(courses.locator('.rung__label')).toContainText('Courses finished')
+    await expect(courses.locator('.kind')).toHaveText('Course')
+
+    const completion = page.getByTestId('progress-completion')
+    await expect(completion.locator('.kind')).toHaveText('Session')
+  })
+
+  test('marks the milestone at every place the page renders one', async ({ page }) => {
+    /*
+     * ## Why this is not covered by the page-wide word check above
+     *
+     * The first version of the collapse proof found this: reverting the
+     * destination list's marker to `goal` **did not fail any test**, because a
+     * milestone is drawn in *two* places on a Career page — inside the
+     * destination it belongs to, and again as a row of the goals panel — and a
+     * set of every word on the screen still contained MILESTONE from the other
+     * one.
+     *
+     * That is the same false-green shape as QA-90-004 itself, one level down: a
+     * page-wide assertion cannot tell "both are right" from "one is right and
+     * one is wrong". Where a word has more than one source, each source has to
+     * be asserted where it is rendered.
+     *
+     * Course and Session needed no equivalent because each has exactly one
+     * source block, which is why collapsing either of them failed immediately.
+     */
+    await careerWithAllThreeObjects(page)
+
+    // Inside the destination it belongs to.
+    const underDestination = page.getByTestId('destination-milestones').locator('.milestone')
+    await expect(underDestination.first()).toBeVisible()
+    await expect(underDestination.first().locator('.kind')).toHaveText('Milestone')
+
+    // And again as a row of the goals panel, which is a different component.
+    const goalRow = page.locator('.domain-goal', { hasText: 'Finish the CCNA' })
+    await expect(goalRow.locator('.kind')).toHaveText('Milestone')
   })
 
   test('keeps every marker styled alike, whatever it says', async ({ page }) => {
@@ -208,7 +296,7 @@ test.describe('QA-90-002 — the named object kinds are distinct where they are 
      * weight — a set of coloured markers on progress objects reads as a ranking
      * of them, which is a score in costume (D-231).
      */
-    await careerWithASessionAndAMilestone(page)
+    await careerWithAllThreeObjects(page)
 
     const markers = await page.locator('.kind').evaluateAll((nodes) =>
       nodes.map((node) => {

@@ -169,11 +169,26 @@ test.describe('90.2 — routing 84’s objects read as different kinds of thing'
     expect(text, 'and not a percentage').not.toContain('%')
   })
 
-  test('a session, a course and a milestone are three different things', async ({ page }) => {
+  test('no object marker is styled to outrank another', async ({ page }) => {
     /*
-     * Section 54's gate item 2, read as a person reads it: the three markers
-     * exist, they carry three different words, and none of them is styled to
-     * outrank another.
+     * ## Retitled after QA-90-004, and the retitling is the repair
+     *
+     * This was called *"a session, a course and a milestone are three different
+     * things"* and asserted no such thing. It required a non-empty `.kind` list
+     * and then that every marker shared a colour, a size and a weight — which
+     * `[Evidence, Evidence]` satisfies perfectly. It was green over the exact
+     * defect it was named for, twice: once when the kinds were collapsed, and
+     * again after the Round 1 repair, because uniformity was all it ever read.
+     *
+     * A title is a claim. This one now says what the assertions establish:
+     * **restraint** — no kind coloured apart, larger or heavier than another,
+     * because coloured markers on progress objects read as a ranking of them
+     * and a ranking of progress objects is a score in costume (D-231).
+     *
+     * The claim it used to make is proved where it can be: one rendered page
+     * carrying all three, reached through the owner's own controls, in
+     * `phase90-round1.spec.ts`. Two tests, two claims, each honest about which
+     * one it holds.
      */
     await loadInQa(page, 'Nine months of evenings')
     await openPage(page, 'career')
