@@ -1874,4 +1874,263 @@ handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
 retest says otherwise, and do not ask me to paste the file contents.
 ```
 
+## Round 4 independent QA — FAIL
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**QA-tested product checkpoint:** `0db6aec`
+
+**QA-tested deployed/report head:** `6e41a23`. The only change from `0db6aec`
+is this handoff file, so the deployed build is bundle-equivalent to the product
+checkpoint. CI run `33570275912` is green for both **Verify** and **Deploy
+preview**, and its own manifest matches all eight files served by Preview.
+
+**Verdict:** the Round 3 repair closes the exact QA-91-008 and QA-91-009
+reproductions, but both defect classes remain open one ordinary grammar step
+outside the new lists. This is the fourth consecutive round in which another
+closed list or regex shape moves the boundary without closing it. **A fifth
+increment of the same instrument is not an acceptable repair.** The interpreter
+now needs an instrument that distinguishes clause/coordination structure and
+date/amount spans as roles, while continuing to abstain where it cannot read
+them safely.
+
+### The Round 3 findings themselves now pass
+
+**QA-91-008 — PASS on its submitted phrases and controls.** In a fresh ordinary
+owner path that never opened `#/qa`, _"Not about money, debt, or savings"_
+offered no Money interpretation. The same held synthetically for _"Nothing to
+do with salary, savings, or debt"_ and a list using both `and` and `or`.
+Contrastive turns still name their positive area, and _"No debt, no savings, no
+salary"_ remains an ordinary Money goal rather than a topic denial.
+
+**QA-91-009 — PASS on its submitted phrases and controls.** _"More money by
+March the 15th, 2027"_ now says **how much** is unknown while recognising the
+horizon. The same holds for _"the 15th of March"_ and `Q3`. Real sums beside
+those exact horizons remain amounts.
+
+Those are real repairs. They are not enough to close either class.
+
+### QA-91-010 — a clause is still recognised from remembered openers
+
+**BLOCKER.** A topic denial followed by a genuine positive clause is swallowed
+unless the new clause starts with one of the short words in `CLAUSE_OPENERS`, or
+with an explicit contrastive. A noun subject, a gerund subject, and ordinary
+sentence-ending punctuation all fall outside that instrument.
+
+The temporary Round 4 probe expected the positive area and received no named
+area for all five:
+
+- _"Not about money, certification is the real goal"_
+- _"Not about money, getting certified is the real goal"_
+- _"Not about money: certification is the real goal"_
+- _"Not about money? I want the qualification"_
+- _"Not about money! The qualification matters"_
+
+The owner-visible reproduction is sharper because it crosses areas. At 360px,
+from a fresh store in a browser that never opened `#/qa`, typing _"Not about
+money, fitness is the real goal"_ under the Career question produced no Health
+reading and no **File it in Health** option. The app instead proposed keeping
+the whole sentence as a Career aim. The positive clause says plainly that the
+goal is fitness; the preceding clause denies Money only.
+
+The positive and reverse controls passed beside it:
+
+- comma-separated and `and`/`or`-coordinated denied lists stay wholly denied;
+- comma-plus-pronoun and explicit-contrast clauses turn successfully;
+- ordinary negative goals such as _"Stop wasting money and clear the debt"_
+  stay in Money.
+
+`endOfDenial` therefore does not yet read clause grammar. It reads punctuation
+and a closed list of possible first words. Extending `CLAUSE_OPENERS` with nouns,
+gerunds, or another remembered set would recreate this finding at the next
+ordinary subject form.
+
+### QA-91-011 — date digits are still removed one remembered shape at a time
+
+**BLOCKER.** Ordinal quarters and date ranges still leave date digits behind for
+`saysHowMuch` to count as money. All six date-only phrases below incorrectly
+omitted **how much** from `unknowns`:
+
+- _"More money by the 3rd quarter of 2027"_
+- _"More money by quarter 3 of 2027"_
+- _"More money between March 15th and 17th, 2027"_
+- _"More money from the 15th to the 17th of March 2027"_
+- _"More money by March 15–17, 2027"_
+- _"More money between 03/15 and 03/17/2027"_
+
+The ordinary-owner 360px path reproduced the first exactly. Its **These words do
+not say** list contained only whether this meant earning or keeping money; it
+did not contain **how much**. The third in _3rd quarter_ had been taken as the
+amount.
+
+Six amount controls passed beside the failures: `3000` beside each ordinal
+quarter and range remained a sum, as did `17` beside _March the 15th_ and `3`
+beside `Q3`. The submitted Round 3 date forms also remained fixed.
+
+`DATE_SHAPES` still removes independent regex matches before asking whether any
+digit remains. A range naturally has two related endpoints, and an ordinal or
+`quarter 3` expresses a date role without spelling `Q3`. Adding separate range
+and ordinal-quarter regexes would move the same boundary again; it would not
+establish which numeric span is a horizon and which is an amount.
+
+### The class judgement Round 4 asked for
+
+**The class needs a different instrument.** Four repairs have now added token
+roles, coordination, comma/openers, and date shapes. Round 4 broke both new
+closed sets with grammar that is neither obscure nor adversarial: a noun begins
+a clause, punctuation ends a sentence, a quarter may be ordinal, and a date may
+be a range.
+
+The safer direction remains abstention. This verdict does not ask for a broad
+language model, probabilistic inference, or guessing. It asks for a bounded,
+deterministic representation of structure before domain and amount decisions
+are made: clause/coordination spans for denials, and typed date/amount spans for
+numbers. If the instrument cannot classify a phrase, it must still name the
+unknown and write nothing derived.
+
+### QA-91-005 and QA-91-006 remain closed
+
+The Round 3 repair touched only `src/intelligence/interpret.ts`; nevertheless QA
+re-ran the consequence contracts rather than assuming them:
+
+- the complete interpretation synthetic file passed **90 of 90**, including
+  unstarted, started, and part-done withdrawal consequences;
+- the whole ordinary-owner withdrawal journey and the started-action branch
+  passed at 360, 430, and 1,280 — **6 of 6** focused browser cases;
+- those same paths passed again inside the whole browser matrix.
+
+The set-aside confirmation still names the consequence before acting, the aim
+and milestone history survive, the milestone reads _set aside — the aim moved_,
+and Now neither proposes nor resumes the withdrawn Money move. Started and
+part-done history remains truthful on Timeline.
+
+### Probe accounting and required gates
+
+The temporary Round 4 probe had **25 cases: 11 failed and 14 passed**. The eleven
+failures were the five clause-boundary phrases and six date/quarter/range
+phrases above. The fourteen controls covered denied lists, explicit turns,
+ordinary negative goals, and real sums beside every tested horizon class. The
+probe was removed before the repository gates; no test-only file remains.
+
+| Gate | Round 4 result |
+| ---- | -------------- |
+| `npm run verify` | PASS |
+| Unit / contract / synthetic / adversarial | **1,994 passed** in 89 files |
+| Full browser matrix, 360 / 430 / 1,280, one worker, clean port 44102 | **834 of 834 passed** in one run, 20.3 minutes |
+| Focused consequence-state browser retest | **6 of 6 passed** |
+| Privacy scan | clean — 310 tracked files |
+| Rendered copy scan | clean — 8,489 shipped strings, 8,401 placed in a module |
+| Android-style deployed gate | clean — **234 checks** against `6e41a23` |
+| Checkpoint equivalence | only this handoff differs from `0db6aec`; bundle-equivalent |
+| CI / deploy | success — run `33570275912`, both jobs green, full browser step green |
+| Release integrity | clean — 8 files served byte for byte from that run's own manifest |
+| Worktree before this report | clean |
+
+The earlier acceptance paths and instrument judgements remain settled. The
+nineteen D-210 instrument-hardening findings remain open and untouched;
+`docs/ROUTING_91_BRIEF.md` remains present; CASE B remains out of scope; routing
+92 has not begun.
+
+---
+
+## Round 4 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1, or the strongest current Opus-equivalent available —
+the next repair changes the interpreter's instrument rather than adding two
+local cases.
+
+**Intelligence level:** **Max** — the builder must hold the false-positive and
+false-negative directions together while replacing a boundary that four
+incremental repairs did not close.
+
+**Conversation:** **CURRENT** — the original Phase 91 Claude builder
+conversation, because it owns the implementation decisions and all prior repair
+context.
+
+```text
+Repair routing Phase 91 after independent QA Round 4. Keep the Phase field
+exactly 91 and keep the phase YELLOW.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Treat the Round 1, Round 2, Round 3,
+and Round 4 QA reports as settled evidence. The current report is “Round 4
+independent QA — FAIL” at the end, against product checkpoint 0db6aec and the
+bundle-equivalent deployed/report head 6e41a23.
+
+Reproduce both new blockers before changing code:
+
+1. QA-91-010 — a topic denial followed by a genuine positive clause is swallowed
+   when that clause begins with a noun or gerund, or follows `:`, `?`, or `!`.
+   Reproduce the five exact phrases in the report and the ordinary-owner
+   cross-domain phrase “Not about money, fitness is the real goal”. Keep the
+   coordinated-list, explicit-contrast, pronoun-clause, and ordinary-negative-goal
+   controls beside them.
+2. QA-91-011 — ordinal quarters and date ranges leave date digits to be counted
+   as money. Reproduce all six exact date-only phrases in the report, with the
+   real-amount controls beside every horizon class.
+
+Round 4's required class judgement is part of the acceptance expectation: do not
+repair these by appending more words to CLAUSE_OPENERS or more remembered regex
+branches to DATE_SHAPES. Four rounds have shown that closed-list increment does
+not close the grammar class. Build a bounded deterministic instrument that
+represents the relevant structure before interpretation: denial scope must
+distinguish coordination from a following clause without enumerating possible
+subject words, and numeric spans must be classified as dates/ranges or amounts
+without swallowing a real sum beside the same horizon. Unknown grammar must
+still abstain, name what is unknown, and write nothing derived.
+
+This is a defect-led repair, not permission to turn the interpreter into a broad
+language model or to guess. Keep the implementation local, explain its bound,
+and add tests that prove the class in both directions rather than only the eleven
+phrases. Include biting reintroduction proofs for the structural properties and
+their reverse mutations.
+
+Preserve every prior PASS, especially:
+
+- QA-91-005 and QA-91-006: the set-aside confirmation, preserved aim and
+  lifecycle history, and unstarted/started/part-done consequence states;
+- QA-91-008: comma-separated and conjunction-coordinated denials, genuine clause
+  turns, and ordinary negative goals;
+- QA-91-009: indirect day/month forms, Q1–Q4, and real sums beside those dates;
+- all eight CASE A acceptance tests, the one-question budget, byte identity,
+  derived provenance, privacy digest, null case, second proving domain,
+  three-day non-reproposal, no-score rule, fixed clock, preview-port override,
+  and the single fetch.
+
+Do not remove docs/ROUTING_91_BRIEF.md. Preserve all nineteen D-210
+instrument-hardening deferrals exactly as open. Do not begin routing 92 and do
+not pull CASE B into Phase 91.
+
+Update the governing decision and defect records for QA-91-010 and QA-91-011.
+Run npm run verify, one complete 360/430/1280 browser matrix at one worker on a
+clean port, the Android-style deployed gate, privacy and copy scans, checkpoint
+equivalence, CI, and release integrity using that CI run's own manifest. Commit,
+push, deploy, and prove the repaired checkpoint is what Preview serves.
+
+Append the builder's Round 4 repair record and a complete Round 5 retest handoff
+to docs/qa/PHASE_91_QA_HANDOFF.md. Do not edit any QA report. Route Round 5 to
+the SAME Codex QA conversation that ran Rounds 1 through 4, at High reasoning,
+and require it to attack the structural instrument rather than merely replaying
+the submitted phrases. End the file with the required completion marker.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or strongest current Opus-equivalent. **Intelligence
+level:** Max. **Conversation:** CURRENT — the original Phase 91 builder.
+
+```text
+Repair routing Phase 91 after independent QA Round 4.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the complete Round 4
+builder repair handoff at the end exactly as written. Keep Phase 91 YELLOW,
+preserve every passed contract and explicit deferral, and do not ask me to paste
+the file contents.
+```
+
 <!-- LCO_COMPLETE -->
