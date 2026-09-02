@@ -4292,5 +4292,294 @@ builder architecture handoff at the end exactly as written. Keep Phase 91
 YELLOW, preserve every passed contract and explicit deferral, and do not ask me
 to paste the file contents.
 ```
+---
+
+## Round 8 architecture — the builder's record
+
+_Written by the Claude builder conversation. Round 8 above is QA's and is not
+edited. Round 9 belongs to QA._
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**Checkpoint:** `d7e49ee`
+**Deployed Preview:** `d7e49ee` — they match exactly
+
+**The architectural judgement is accepted in full.** Seven bounded instruments,
+each broken by ordinary English in the round after it shipped, and most broken on
+both sides of their own distinction. Round 8 is right that requiring a nearby
+complement moved the proxy rather than removing it, and right that an eighth
+parser is not a neutral continuation.
+
+**This round does not repair the instrument. It stops it concluding what it
+cannot show, and asks the owner instead.**
+
+### Both reproduced first, with all eight controls
+
+All eleven failures reproduced before any change, and the eight paired controls
+held. The reproduction is also what shows the change is not a dodge: four of the
+eleven — the two amount-plus-time phrases and the two temporal measures — are now
+**answered correctly**, not deferred. Those were genuine defects and they are
+genuinely fixed.
+
+### The local advisor was investigated, and it is the wrong instrument
+
+The handoff asked for D-025's local advisor to be used where appropriate. It was
+read first, and it is out of scope by **its own contract** rather than by its
+quality. `src/intelligence/advisor.ts` permits exactly two things — nudge a
+candidate the deterministic layer already produced, by a bounded amount, and
+rephrase a reason line — and states that an advisor _"may not add a candidate,
+remove one, write a record, set a fact, change a constraint, or decide
+anything."_
+
+Deciding which area a sentence is about **is setting a fact**. The advisor seat
+ranks moves; it does not read scope. Using it here would mean widening the one
+fence canonical section 18 built, which is the opposite of what that fence is
+for. That it is also keyword matching is true but secondary: the contract settles
+it before the quality does.
+
+### What the architecture is
+
+**Read what is demonstrably closed. Ask the owner about the rest.**
+
+Closed, for area scope — four cases and nothing else:
+
+1. no denial at all, so every marker is asserted and nothing is apportioned;
+2. a denial with one marker in its reach;
+3. a denial whose markers are separated by nothing but list material, **with
+   nothing but list material after the last of them** — because a word trailing
+   the final item is where a predicate hides;
+4. a reach ended by punctuation or a contrastive, the two boundaries no round of
+   QA has ever broken.
+
+Closed, for a number — **adjacency, or nothing**: a currency symbol on it, an
+amount unit as the very next token or fused to it, the money word whose object it
+is, a temporal unit or month touching it, a written date, or a year in a slot
+only a time can fill.
+
+Everything else is **unresolved**, and unresolved means the same in both: name
+nothing, conclude nothing, write nothing derived — **and raise the question**.
+
+### Why this is not Round 5's abstention, which QA was right to reject
+
+Round 5 also withheld markers it could not place, and QA rejected it for
+withholding **silently**: the reading named fewer areas and the owner was never
+told a judgement had been skipped.
+
+The difference is the whole decision. An unresolved scope sets
+`scopeUnresolved`, makes the reading `undecided`, puts _which area this belongs
+to_ in `unknowns`, and offers the single candidate where there is exactly one.
+The owner picks, and only then is anything derived written.
+
+**The seam was already there.** `undecided` and `offer` exist because CASE A
+acceptance test 1 asks the app to name Money _"or ask which"_, and accommodation
+row B1 settled that one option row is the answer rather than a picker screen.
+Nothing new was built for the surface. The interpreter stopped pretending it
+knew, and the question it raises is the question that surface was built to put.
+
+**Decision D-257**, which replaces the mechanism of D-247, D-251, D-252, D-253,
+D-254, D-255 and D-256. Defect-ledger entry `QA-91-018, QA-91-019`.
+
+### What it costs, stated rather than buried
+
+**Twenty-two fixtures from Rounds 2 to 7 are gone.** Each asserted an
+auto-conclusion in a case the instrument can no longer show — _"not about money
+and fitness is the real goal"_, _"save at least 3000"_, _"a 3rd of my salary"_,
+the ranges, the rates, the shares, the denominations. Those readings are
+questions now.
+
+That is a real reduction in what the app concludes by itself. It is the point
+rather than a side effect: every one of those readings was, at some round, either
+wrong or right by accident. An answer the owner confirms is worth more than an
+answer the app guessed, and the guessing is what eight rounds of evidence say
+cannot be made reliable here.
+
+**Round 9 should attack that trade rather than accept it.** If the closed set is
+drawn too tightly, ordinary phrases are being turned into questions that did not
+need asking, and that is a worse product even though it is a safer one. That is
+the live risk in this change, and it is measured rather than asserted: of the
+**twenty owner phrases in the plan’s own scenario library, not one is turned
+into a question**. There is a shipped test on that number, so if the closed set
+is ever drawn too tightly it shows there first. The confirmation path is reached
+by denials whose scope cannot be shown, and an ordinary aspiration is not a
+denial.
+
+### The instrument got smaller, for the first time since Round 4
+
+Its code goes from **1,022 lines to 727** — down nearly a third, and smaller than
+any version since Round 4. Seven rounds added machinery to close a gap that would
+not close; deciding not to answer the unanswerable is what removed it.
+
+No claim is attached to that number. It is reported because every previous round
+reported growth, and the direction reversing is the one measurable consequence of
+changing shape.
+
+### The owner decision D-025 requires, written and not taken
+
+`docs/ROUTING_91_OWNER_DECISION.md` sets out the smallest secure service, the
+digest-only request, the structured validated response, the privacy boundary, the
+cost and the failure fallback.
+
+**Nothing was created and nothing was chosen.** There is no service, no account,
+no secret, and `advisor.ts` is unchanged. The document's own status line says so.
+The part worth reading is the fallback: if that service were absent, slow or
+wrong, the app does exactly what it does today — because D-257's
+confirmation-first reading **is** the fallback, which is what makes the whole
+thing an adapter change rather than an architecture change.
+
+### Reintroduction proofs — thirty-three live, sixteen of them this round
+
+**Four of the sixteen are reverse mutations**, and every one proves the
+architecture rather than a phrase:
+
+| Reintroduce                                                     | And this fails                                              |
+| ----------------------------------------------------------------- | -------------------------------------------------------------- |
+| an unresolved scope is asserted rather than withheld              | _names nothing out of a scope it could not read_             |
+| an unresolved scope goes quiet instead of asking — Round 5 again  | _asks where it cannot show the scope, instead of guessing_   |
+| a trailing predicate no longer opens the question                 | _…the same_                                                  |
+| anything between two markers counts as list material              | _…the same_                                                  |
+| nothing counts as list material, so no list is ever closed        | _concludes a list that is a list and nothing but a list_     |
+| the offer may name the area that was asked                        | _the whole-library invariant_                                |
+| two candidates are offered as one, which is a picker              | _still puts one question and never two_                      |
+| each kind of adjacent numeric evidence, one proof apiece — symbol, unit, money word, temporal unit, written date, temporal slot | _reads a number the evidence beside it settles_ |
+| an unread number defaults to a quantity, as Round 7 did           | _leaves a fact open where nothing beside the number settles it_ |
+| a horizon word touching a number still answers `by when`          | _a horizon word touching a number belongs to that number_    |
+| a free-standing horizon word no longer answers it                 | _reads a number the evidence beside it settles_              |
+
+**Thirty-one Round 7 proofs were retired**, and not one for one: the code they
+mutate is gone because the architecture stopped asking those questions. Sixteen
+replace thirty-one because there is far less to prove, which is the point of
+D-257 rather than a gap in it.
+
+### Two proofs went green, and both were resolved rather than recorded
+
+- the **currency symbol** rule did nothing the phrase-level check in
+  `saysHowMuch` was not already doing. Two paths to one fact agree until they
+  disagree — the fault `saysWhen` was carrying last round — so the duplicate
+  path was **removed** and the token rule is now the only one;
+- the **amount unit** rule was covered by the money word in front of the number
+  in every phrase under test. A phrase where the unit is the only evidence —
+  _"more money, around 5000 euros"_ — was added, and the proof then bit.
+
+### Verification
+
+| Gate                                      | Result                                                       |
+| ----------------------------------------- | -------------------------------------------------------------- |
+| `npm run verify`, clean tree              | PASS                                                           |
+| Unit / contract / synthetic / adversarial | **2,027 passed** in 89 files (2,040 at `a0c7d55`)             |
+| Phase 91 browser spec, 360 / 430 / 1,280  | **48 of 48**, one run, 1.3 minutes                             |
+| Whole local browser matrix                | **could not be completed on this machine** — see below         |
+| Privacy scan                              | clean, 310 tracked files                                       |
+| Rendered copy scan                        | clean — 8,519 shipped strings, 8,429 placed in a module        |
+| Adaptation-claim scan                     | clean                                                          |
+| Android-style gate                        | clean — **234 checks**, against the deployed Preview           |
+| Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`d7e49ee`)   |
+| Checkpoint equivalence                    | **no files changed** between `d7e49ee` and the deployed SHA    |
+| CI and deployed Preview                   | **success** — both jobs green (run `33644760650`)              |
+| CI's own browser matrix                   | **834 of 834**, 19.4 minutes, against `d7e49ee` itself         |
+| Worktree                                  | clean                                                          |
+
+The interpretation file goes from **136 tests to 124**: twenty-two superseded
+fixtures removed, ten architecture tests added. **Every other test file is
+untouched and green**, which is the load-bearing fact here — the contracts held
+while the mechanism underneath them was replaced.
+
+**The whole local matrix could not be run, and that is reported rather than
+worked around.** Two attempts on two clean ports died partway with
+`net::ERR_CONNECTION_REFUSED` — the `vite preview` process going down mid-run,
+which this machine has done repeatedly through this phase and which is never a
+product signal: the failures land in unrelated `data` and `legacy-import` specs
+at whatever point the server stops. Rather than report a number that means
+nothing, the phase's own spec was run alone and passed **48 of 48** at all three
+widths, and **CI's own 834-case matrix against the exact pushed commit is the
+evidence for the whole**. It is in the row above.
+
+### Preserved, and checked rather than assumed
+
+All eight CASE A acceptance tests; the one-question budget; QA-91-001 and
+QA-91-004; QA-91-005 and QA-91-006 with the set-aside confirmation, preserved aim,
+lifecycle history and the unstarted, started and part-done consequence states;
+byte identity; derived provenance; the privacy digest with both controls; the
+null case; the second proving domain; three-day non-reproposal; B1; the no-score
+rule; the fixed clock; the preview-port override; and the single `fetch` — **no
+network call was added, and the owner-decision document did not add one.**
+
+The **nineteen D-210 instrument-hardening findings are untouched and still
+open**, backlog blob `58d5af071355d252c4a254fc685fcc9e8e88f417`.
+`docs/ROUTING_91_BRIEF.md` is present; routing 92 has not begun; CASE B remains
+out of scope.
+
+---
+
+## Round 9 retest handoff
+
+**Model:** Codex.
+**Reasoning level:** **High** — a middle level. Never Max, which is Claude's.
+**Conversation:** **SAME** — the Codex conversation that ran Rounds 1 to 8.
+
+```text
+Routing Phase 91 retest after the builder's Round 8 architecture change.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Your Round 1 to Round 8 reports are
+unchanged; the builder's Round 8 architecture record and this block are appended
+below them. Keep the Phase field exactly 91.
+
+This is not an eighth parser. The interpreter now concludes only what is
+demonstrably closed and routes everything else to the owner through the existing
+confirmation seam. Attack the ARCHITECTURE, in this order:
+
+1. Attack the closed set as too WIDE. Find a phrase the instrument still
+   concludes where the conclusion is wrong: a denial with one marker whose reach
+   is misjudged, a list that is not a list, a number whose adjacent evidence
+   belongs to something else, a horizon word wrongly attached or wrongly freed.
+   A wrong conclusion is now the only kind of semantic defect that can exist,
+   because everything else is a question.
+2. Attack the closed set as too NARROW, which is the live product risk and is
+   named as such in the record. Find ordinary owner phrases that are now turned
+   into questions and should not be. Say how many of the plan's own CASE A and
+   library phrases still read without asking, and whether the confirmation rate
+   is one an owner would tolerate. If this trade is bad, say so plainly — the
+   builder record invites that judgement rather than defending against it.
+3. Attack the seam itself. Confirm an unresolved reading writes NOTHING derived,
+   names no area, raises exactly one question, never offers the area that was
+   asked, and never becomes a picker. Confirm that answering it lands, and that
+   declining it costs nothing. Round 5's abstention was rejected for withholding
+   silently; check that this one really does ask.
+4. Confirm no regression in QA-91-001, QA-91-004, QA-91-005, QA-91-006, all
+   eight CASE A tests, all six consequence paths, byte identity, provenance,
+   privacy, the one-question budget, the fixed clock and the single fetch. The
+   owner-decision document must remain a document: no service, no secret, no
+   network call.
+5. Judge docs/ROUTING_91_OWNER_DECISION.md on its own terms. It is a
+   specification the owner has not decided. Say whether it is complete enough to
+   decide from, whether the privacy boundary and the fallback are stated
+   honestly, and whether anything in it has been quietly built.
+
+Twenty-two fixtures from Rounds 2 to 7 were removed because each asserted a
+conclusion the instrument no longer makes. Check that removal rather than
+accepting it: any one of them that should still be concluded is a finding.
+
+Preserve the nineteen D-210 deferrals, do not remove docs/ROUTING_91_BRIEF.md,
+and end with the complete next handoff under D-082 whichever way the retest
+goes. Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High. **Conversation:** SAME — the QA
+conversation that ran Rounds 1 to 8.
+
+```text
+Retest routing Phase 91 after the builder's Round 8 architecture change.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the Round 9 retest
+handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
+retest says otherwise, and do not ask me to paste the file contents.
+```
 
 <!-- LCO_COMPLETE -->
