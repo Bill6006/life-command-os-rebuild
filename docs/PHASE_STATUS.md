@@ -441,9 +441,47 @@ one recorded as correct but unproven.
 attached to that**. The distinction D-255 offered has failed; whether this is a
 seventh boundary is Round 8's to judge.
 
+## Independent QA round 8 — FAIL, and the round that changed the shape
+
+Round 8 confirmed every established contract and then ruled the **repair shape
+exhausted**: seven bounded instruments, each broken by ordinary English in the
+round after it shipped, and each broken on both sides of its own distinction.
+Requiring a nearby complement, Round 8 said, moves the proxy from token
+membership to token membership plus one neighbouring shape.
+
+- **QA-91-018** — a trailing predicate, a bare-object imperative, a plural noun
+  phrase, a lowercase month and a lowercase field name all defeated the
+  complement test, in both directions.
+- **QA-91-019** — a deictic pointing a later unit gave the _number_ the date
+  role, so _"earn 50000 next year"_ lost its amount.
+
+**The judgement is accepted, and D-257 replaces the mechanism of seven
+decisions.** The interpreter now reads only what is demonstrably closed — a
+denial with one marker, a list that is only a list, a reach ended by punctuation
+or a contrastive, a number with its evidence touching it — and routes everything
+else to the owner through the confirmation seam that already existed for it.
+
+**This is not Round 5's abstention.** That one withheld silently and QA was right
+to reject it. An unresolved scope now sets `scopeUnresolved`, makes the reading
+undecided, puts _which area this belongs to_ in `unknowns`, and offers the single
+candidate where there is one. Nothing derived is written until the owner picks.
+
+**The local advisor D-025 names was investigated and is out of scope by its own
+contract** — it may nudge a candidate or rephrase a reason, never set a fact.
+
+**What it costs is stated rather than hidden**: twenty-two fixtures from Rounds 2
+to 7 are gone, because each asserted a conclusion the instrument can no longer
+show. Those readings are questions now. **The instrument fell from 1,022 lines to
+727** — the first time it has shrunk since Round 4.
+
+**Sixteen reintroductions, four reverse**, proving the architecture rather than
+the phrases. And the owner decision D-025 requires is written out in
+[`ROUTING_91_OWNER_DECISION.md`](ROUTING_91_OWNER_DECISION.md) rather than taken:
+no service was created, no secret exists, and nothing was chosen.
+
 ## Decisions made
 
-**D-240 … D-256** in [`DECISION_LOG.md`](DECISION_LOG.md).
+**D-240 … D-257** in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Accommodation row B1 landed, and the list learned something from it
 

@@ -9779,3 +9779,117 @@ and the month answers _by when_ whichever way the ordinal is read. It is kept an
 recorded as unproven, which is the shape QA checked and accepted at Round 5.
 
 ---
+
+## D-257 — Read what is closed, and ask the owner about the rest
+
+**Phase:** 91 (QA round 8 architecture) · **Status:** Active · **Replaces the mechanism of** D-247, D-251, D-252, D-253, D-254, D-255, D-256
+
+### The evidence that ends seven rounds of repair
+
+Rounds 1 to 7 each built a bounded instrument to decide two things from free
+text: how far a denial of aboutness reaches, and what a number is for.
+Independent QA broke every one of them, in the round immediately after it
+shipped, with English no one would call unusual — and broke most of them on
+**both sides** of whatever distinction that round had drawn.
+
+The pattern is the finding. It is not that any single rule was badly chosen:
+each was sound about the phrases it was shown. It is that a bounded surface
+instrument cannot separate a noun from a verb, a modifier from a complement, a
+contact relative from a new clause, or a measured duration from a deadline —
+and each repair that appeared to manage it was relying on something that turned
+out to be an accident of the examples.
+
+Round 8 ruled the repair shape exhausted and asked for an architecture instead
+of an eighth parser. **That judgement is accepted.**
+
+### What was investigated first, and why it is not the answer
+
+D-025 names _"a local advisor that reads the free text the rules cannot parse"_,
+and the Round 8 handoff asked for it to be used where appropriate. It was read
+and it is the wrong instrument, for a reason in its own contract rather than in
+its quality: `advisor.ts` permits an advisor to do exactly two things — **nudge**
+a candidate the deterministic layer already produced, by a bounded amount, and
+**rephrase** a reason line. It _"may not add a candidate, remove one, write a
+record, set a fact, change a constraint, or decide anything."_
+
+Deciding which area a phrase is about, and what a number means, is setting a
+fact. The advisor seat ranks moves; it does not read scope. Using it here would
+mean widening the one fence section 18 built, which is the opposite of what that
+fence is for. (It is also keyword matching, so it would be the same failed shape
+in a different file — but the contract settles it before quality does.)
+
+### The architecture: conclude what is shown, ask about the rest
+
+The interpreter now reads only what is **demonstrably closed**, and routes
+everything else to the owner through the seam that already exists for it.
+
+**Closed, for area scope** — four cases and nothing else:
+
+1. no denial at all, so every marker is asserted and nothing is apportioned;
+2. a denial with one marker in its reach;
+3. a denial whose markers are separated by nothing but list material, with
+   nothing but list material after the last of them;
+4. a reach ended by punctuation or a contrastive — the two boundaries no round
+   of QA has ever broken.
+
+**Closed, for a number** — adjacency, or nothing: a currency symbol on the
+number, an amount unit as the very next token or fused to it, the money word
+whose object the number is, a temporal unit or month touching it, a written
+date, or a year in a slot only a time can fill.
+
+**Everything else is unresolved**, and unresolved means the same thing in both:
+name nothing, conclude nothing, write nothing derived — **and raise the
+question**.
+
+### Why this is not Round 5's abstention, which QA was right to reject
+
+Round 5 also withheld markers it could not place, and QA rejected it because it
+withheld **silently**: the reading simply named fewer areas and the owner was
+never told a judgement had been skipped. An abstention nobody is told about is a
+quieter wrong answer.
+
+The difference is the whole of this decision. An unresolved scope sets
+`scopeUnresolved`, makes the reading `undecided`, puts _which area this belongs
+to_ in `unknowns`, and offers the single candidate where there is exactly one.
+The owner picks, and only then is anything derived written.
+
+**The seam was already there.** `undecided` and `offer` exist because acceptance
+test 1 asks the app to name Money _"or ask which"_, and B1 settled that one
+option row is the answer rather than a picker screen. Nothing new was built for
+the surface; the interpreter simply stopped pretending it knew.
+
+### What this costs, stated plainly
+
+Twenty-two fixtures from Rounds 2 to 7 are gone. Each asserted an auto-conclusion
+in a case the instrument can no longer show — _"not about money and fitness is
+the real goal"_, _"save at least 3000"_, _"a 3rd of my salary"_, the ranges, the
+rates, the shares. Those readings are now questions.
+
+That is a real reduction in what the app concludes by itself, and it is the
+point rather than a side effect: every one of those readings was, at some round,
+either wrong or right by accident. **An answer the owner confirms is worth more
+than an answer the app guessed**, and the guessing is what eight rounds of
+evidence say cannot be made reliable at this scale.
+
+### The instrument got smaller, for the first time since Round 4
+
+Its code goes from **1,022 lines to 727** — a reduction of nearly a third, and
+smaller than any version since Round 4. Seven rounds added machinery to close a
+gap that would not close. Deciding not to answer the unanswerable is what
+finally removed it.
+
+No claim is attached to that number. It is reported because every previous round
+reported growth, and the direction reversing is the one measurable consequence of
+the change of shape.
+
+### If the product wants broad automatic interpretation
+
+Then D-025's owner decision is the route, and Round 8 asked for it to be written
+rather than taken. It is written in
+[`ROUTING_91_OWNER_DECISION.md`](ROUTING_91_OWNER_DECISION.md): the smallest
+secure service, a digest-only request, a structured validated response, the
+privacy boundary, the cost and the failure fallback. **Nothing was created and
+nothing was chosen.** The service does not exist, no secret exists, and the
+adapter seat in `advisor.ts` is unchanged.
+
+---

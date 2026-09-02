@@ -5670,3 +5670,39 @@ under test carries a month that settles the date anyway. Both are recorded.
 
 Full reproductions, repairs and verification:
 [`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).
+
+## QA-91-018, QA-91-019 — routing 91 independent QA round 8
+
+**Found:** independent Codex QA, round 8, 2026-09-02 · **Status:** Fixed by architecture (D-257) · **Owner:** routing 91
+
+The eighth round, and the one that ended the repair shape rather than the
+defect. QA ruled that seven successive bounded instruments had each been broken
+by ordinary English, and that requiring a nearby complement moves the proxy
+rather than removing it. That judgement is accepted.
+
+| ID        | Finding                                                                                                                                                                                            | Resolution                                                                                                                             |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| QA-91-018 | A required complement can belong to another role — trailing predicates, bare-object imperatives, plural noun phrases, lowercase month and field-name lookalikes, determiner-free contact relatives | Scope is read only where it is demonstrably closed; everything else raises the question through the existing confirmation seam (D-257) |
+| QA-91-019 | A nearby pointed unit was taken as the number's own role, collapsing an amount and its time expression                                                                                             | A number's role is adjacency or nothing, and a horizon word touching a number takes that number's role (D-257)                         |
+
+**Both are resolved by concluding less.** _"Earn 50000 next year"_ and _"save 3000
+this March"_ now settle the amount from the money word beside the number;
+_"save 2 months salary"_ settles the amount and leaves the deadline open. The
+scope failures are resolved by asking rather than by a better guess.
+
+**The local advisor was investigated as the handoff asked**, and is out of scope
+by its own contract: it may nudge a candidate or rephrase a reason, and _"may
+not add a candidate, remove one, write a record, set a fact, change a
+constraint, or decide anything."_
+
+**Sixteen reintroductions, four of them reverse mutations**, proving the
+architecture rather than the eleven phrases: that a closed reading is still
+concluded, that an unresolved one names nothing, that it raises the question
+instead of going quiet, and that one question stays one question.
+
+**Twenty-two fixtures from Rounds 2 to 7 were removed**, each asserting an
+auto-conclusion the instrument no longer makes. The instrument's code fell from
+1,022 lines to 727.
+
+Full reproductions, resolution and verification:
+[`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).
