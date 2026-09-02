@@ -5631,3 +5631,42 @@ as a date — which produced the measure rule.
 
 Full reproductions, repairs and verification:
 [`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).
+
+## QA-91-016, QA-91-017 — routing 91 independent QA round 7
+
+**Found:** independent Codex QA, round 7, 2026-09-02 · **Status:** Fixed (routing 91 round 7 repair) · **Owner:** routing 91
+
+The seventh round on the same two classes, and the round in which **D-255's
+load-bearing claim itself failed**. A closed vocabulary is not a closed set of
+roles: the same forms serve different jobs in different sentences, and both
+instruments were reading membership instead of the job (D-256).
+
+| ID        | Finding                                                                                                                                                | Repair                                                                                                                                                                         |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| QA-91-016 | `you`, `IT`, `May`, `being` and `that` were read as syntax wherever they appeared, while ordinary lexical predicates and imperatives were read nowhere | A form counts only where it brings what its role requires; a clause is introduced or belongs to the noun before it; predicates are read from inflection and complement (D-256) |
+| QA-91-017 | `in`, `to`, `at`, `of` and `and` ended a numeric phrase even inside denominations, scalar bounds, complements and coordinated amounts                  | Only a clause or a temporally-used preposition closes a phrase; the rate question splits into point, rate and neither (D-256)                                                  |
+
+**Round 6's declared bound is overturned**, as QA required: lexical verbs and
+imperatives are now read, from the third-person inflection and from the
+prepositional complement an imperative takes. What remains invisible is a bare
+predicate with neither — _"fitness counts"_ — and that has its own test.
+
+**One fact now has one path.** `saysWhen` was answering _by when_ from the horizon
+table even where the role logic had called the expression a rate. It asks the
+role logic now.
+
+**Thirty-one reintroductions, nine of them reverse mutations**, and twenty-four
+Round 6 proofs retired onto named successors.
+
+**Three defects were found in the repair before any gate**, two by attacking the
+finished work and one by a reintroduction that went green — _"not about money or
+may certification goals"_, all lowercase, was naming Career from a word inside
+the denial because the modal guard was leaning on a capital.
+
+**Two further proofs went green without a defect behind them.** The guard against
+`be`/`been`/`being` could never fire, so the code went rather than the proof; and
+the ordinal-before-preposition guard is correct but unprovable while every phrase
+under test carries a month that settles the date anyway. Both are recorded.
+
+Full reproductions, repairs and verification:
+[`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).

@@ -396,9 +396,54 @@ every list which grew is a list of things that **end** a relationship, and those
 are closed classes. If that fails, this is the sixth boundary and should be
 called one.
 
+## Independent QA round 7 — FAIL, and the round the closed-class claim failed
+
+Round 7 accepted the Round 6 repairs on their submitted phrases and then broke
+both instruments again — with the builder's own load-bearing claim as the target.
+D-255 had said that a list of what **ends** a relationship is safe because such
+lists are closed classes. Round 7's answer stands:
+
+> A closed vocabulary is not a closed set of roles.
+
+- **QA-91-016** — `you` as a list item, `IT` as an acronym, `May` as a month,
+  `being` as a non-finite form and `that` as a demonstrative were all read as
+  syntax; and in the other direction _"fitness matters most"_ and _"focus on
+  fitness"_ were read as nothing at all, because Round 6 had declared lexical
+  predicates a bound.
+- **QA-91-017** — `in`, `to`, `at`, `of` and `and` ended a numeric phrase even
+  when they were inside the construction whose role was being read: a
+  denomination, a scalar bound, a complement, a coordinated amount.
+
+**The claim is withdrawn, and D-256 replaces it with one rule**: a form is
+evidence only where it is doing that form's job where it stands. A modal needs
+the bare verb it governs; a pronoun needs a predicate; a capital mid-sentence is
+a name rather than syntax. A clause is _introduced_ — by a coordinator, a comma
+or a subordinator — or it belongs to the noun in front of it, which is what keeps
+_"the money I earn"_ inside its denial.
+
+**Two predicates are now read from structure** rather than from a verb list: the
+third-person inflection in predicate position, and an imperative taking a
+prepositional complement. Round 6's bound is gone; what is left is _"fitness
+counts"_, and it is named with its own test.
+
+**The numeric boundary is contextual.** Only a clause or a temporally-used
+preposition closes a phrase, and the rate question turned out to be two: whether
+something points a unit at a **moment**, and whether a distributive determiner
+spreads an amount over it. _"3000 at the end of March"_ is neither, which is what
+stopped a real deadline being suppressed as a wage.
+
+**Thirty-one reintroductions, nine reverse**, twenty-four earlier proofs retired
+onto named successors, and three that went green — one of which was a real defect
+(all-lowercase _"may certification goals"_), one of which removed dead code, and
+one recorded as correct but unproven.
+
+**The instrument grew again**, 926 to 1,034 lines, and this time **no claim is
+attached to that**. The distinction D-255 offered has failed; whether this is a
+seventh boundary is Round 8's to judge.
+
 ## Decisions made
 
-**D-240 … D-255** in [`DECISION_LOG.md`](DECISION_LOG.md).
+**D-240 … D-256** in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Accommodation row B1 landed, and the list learned something from it
 

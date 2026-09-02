@@ -676,123 +676,99 @@ function mentions(haystack: string, digest: readonly InterpreterSource[]): reado
 }
 
 /**
- * The mentions the owner denied — QA-91-014.
+ * The mentions the owner denied — QA-91-016.
  *
- * ## Four versions of one wrong question
+ * ## What Round 6 got right, and the one thing it got wrong
  *
- * Round 3 asked whether a comma stood between two markers. Round 4 added the
- * area. Round 5 replaced both with coordination, read from the **text between
- * two markers**. QA broke the third from both sides in one round, and the two
- * halves are worth putting side by side:
+ * Round 6 moved the question off the markers: a denial runs until the sentence
+ * turns, and a **finite clause** turns it. That part survives. What failed was
+ * how a clause was recognised — by asking whether a token appeared in a closed
+ * list. **A closed vocabulary is not a closed set of roles**, and QA broke it in
+ * both directions with ordinary English:
  *
- * - *"Not about money and physical fitness"* is a two-item denial. `physical` is
- *   the item's own modifier, it is not list material, and the run broke — so
- *   Health was named from a word inside the denial.
- * - *"Not about money and fitness is the real goal"* is a denial followed by a
- *   clause. There is **nothing at all** between the coordinator and the marker,
- *   so the run continued — and Health was denied although the owner had just
- *   called it the real goal.
+ * - *"or fitness **being** the issue"* — `being` is non-finite here, and the
+ *   denial stopped at it, asserting an area the owner had denied;
+ * - *"or **May** certification goals"* and *"or **IT** certification"* — a month
+ *   and an acronym, lowercased into a modal and a pronoun by the tokeniser;
+ * - *"money, **you**, or fitness"* — a pronoun as a list item, not a subject;
+ * - *"the money **I** earn"* — a contact relative, read as a new clause;
+ * - *"and **that** is why fitness matters"* — a demonstrative, read as a
+ *   relative and skipped;
+ * - and the other way, *"and fitness **matters** most"* and *"and **focus** on
+ *   fitness"* — ordinary predicates the closed list could not see at all.
  *
- * **The text between two markers cannot answer this, in either direction.** One
- * phrase has extra words and is still a list; the other has none and is not.
+ * ## A form is evidence only where it does the job the form implies
  *
- * ## The question is where the denial stops, and a clause is what stops it
+ * Every one of those is the same mistake, so there is one repair. A closed-class
+ * form counts **only when what it requires is actually present**:
  *
- * A denial of aboutness runs until the sentence turns, and what turns a sentence
- * is a **new clause**. So the instrument reads clauses, and the rule that used
- * to walk the markers is gone:
+ * - a **modal** requires a bare verb after it, so `may certification` is not one;
+ * - a **subject pronoun** requires a predicate after it, so `you,` and
+ *   `IT certification` are not subjects;
+ * - a **finite** verb is finite, so `be`, `been` and `being` are in none of the
+ *   lists at all — they need an auxiliary they do not have here;
+ * - **capitalisation mid-sentence** is evidence of a name, not of syntax, so
+ *   `May` and `IT` are read as what they are. The tokeniser lowercases; this
+ *   reads the owner's own text instead.
  *
- * 1. a denial reaches until sentence punctuation, a contrastive, or **the start
- *    of a finite clause**;
- * 2. every marker inside that reach is denied — coordinated, comma-separated,
- *    modified or bare, because all of them are things the sentence has not
- *    turned away from yet;
- * 3. everything after it is read normally, which is how *"my real goal is
- *    fitness or certification"* gets to assert two areas.
+ * ## And a clause has to be introduced, or it belongs to the noun before it
  *
- * `listLink`, the run walk, the last-coordinator rule and the abstention it
- * needed are all deleted. So is the declared bound that an asyndetic list denies
- * only its first item: with reach doing the work, *"not about money, fitness,
- * certification"* denies all three, which is what it means.
+ * *"the money I earn"* and *"money that I earn"* both have a subject and a verb,
+ * and both are still one denial: the clause **describes the money**. What tells
+ * them apart from *"and I want fitness"* is what stands in front — a coordinator,
+ * a comma or a subordinator introduces a new clause, and nothing at all means the
+ * clause is attached to the noun it follows.
  *
- * ## What a finite clause is read from, and why this is not Round 3 again
+ * A relative pronoun does the same job, but only where it *follows a noun*:
+ * `money that I earn` attaches, and `and that is why…` is a demonstrative
+ * subject, which is the difference the form alone cannot carry.
  *
- * Round 3 kept a list of words a clause might **begin** with, and failed at the
- * first noun, because subjects are an open class. This reads the **predicate**
- * instead, and the finite-verb system of English is closed: the copula, the
- * auxiliaries and the modals. A subject pronoun is closed too, and is the other
- * half of the same evidence — as is a contraction, which carries its verb
- * attached to its subject and so is both halves in one word.
+ * ## Predicates the closed classes cannot see
  *
- * Having found the verb, the clause starts at the head of its subject: walk left
- * over words until a comma, a coordinator, a phrase introducer, or the denier
- * itself. That is what puts the boundary before `fitness` in *"and fitness is
- * the real goal"*, before `fitness` again in *"because fitness is the real
- * goal"*, and before `my` in *"my real goal is fitness or certification"*.
+ * Two structural readings, because QA ruled — rightly — that leaving them out
+ * removes evidence the owner supplied:
+ *
+ * - a word carrying the **third-person inflection** in predicate position: after
+ *   at least one word of subject, followed by something that is not a
+ *   preposition. That is what reads *"fitness matters most"* while leaving
+ *   *"savings goals for 2027"* a noun phrase;
+ * - an **imperative**, which is a clause-initial word followed by a preposition:
+ *   *"focus on fitness"*. *"physical fitness"* is not one, because `fitness` is
+ *   not a preposition.
  *
  * ## The bound, said plainly
  *
- * A clause whose verb is an ordinary lexical one and whose subject is a noun —
- * *"not about money and fitness matters most"* — is not seen, and the denial
- * reaches over it. That denies a marker the owner asserted, so the reading names
- * **fewer** areas than it should rather than more, which is the direction this
- * file errs in everywhere. Adding lexical verbs would move the boundary rather
- * than close it, so the closed grammatical classes are where it stops.
+ * A predicate with neither an auxiliary, nor the third-person inflection, nor a
+ * prepositional complement — *"and fitness counts"* — is still invisible, and the
+ * denial reaches over it. That is narrower than Round 6's bound, which covered
+ * every lexical verb, and it is named here with its own test rather than left to
+ * be found.
  */
 const COORDINATORS = ['and', 'or', 'nor']
 
-/** The copula, the auxiliaries and the modals — the closed finite-verb system. */
-const FINITE_VERBS = [
-  'is',
-  'are',
-  'was',
-  'were',
-  'am',
-  'be',
-  'been',
-  'being',
-  'has',
-  'have',
-  'had',
-  'do',
-  'does',
-  'did',
-  'will',
-  'would',
-  'shall',
-  'should',
-  'can',
-  'could',
-  'may',
-  'might',
-  'must',
-]
+/** Every word any area is marked by, for asking whether a token is one. */
+const MARKER_WORDS = new Set(Object.values(MARKERS).flat())
 
-/**
- * Pronouns that tie a clause to the noun in front of it instead of starting one.
- *
- * *"Not about money that I earn"* has a subject and a verb in it, and it is
- * still one denial: the clause describes the money rather than turning away from
- * it. Ending the denial there would assert `earn` and name the very area the
- * owner just denied.
- */
-const RELATIVE_PRONOUNS = ['that', 'which', 'who', 'whom', 'whose']
+/** The copula and the auxiliaries — finite forms only. */
+const FINITE_VERBS = ['is', 'are', 'was', 'were', 'am', 'has', 'have', 'had', 'do', 'does', 'did']
+
+/** Modals, which are finite but require a bare verb of their own. */
+const MODALS = ['will', 'would', 'shall', 'should', 'can', 'could', 'may', 'might', 'must']
 
 /** The verb halves of the contractions, which attach to their own subject. */
 const CONTRACTED_VERBS = ['s', 're', 'll', 've', 'd', 'm']
 
-/** Pronouns that can only be the subject of a clause, never an item in a list. */
+/** Pronouns that can be the subject of a clause — where a predicate follows. */
 const SUBJECT_PRONOUNS = ['i', 'we', 'you', 'he', 'she', 'they', 'it']
 
-/**
- * Words that introduce a phrase, and so cannot be inside the one they precede.
- *
- * Prepositions and subordinators, both closed classes. Walking left from a verb
- * to the head of its subject has to stop at one of these or it walks straight
- * out of the clause: in *"not about money because fitness is the real goal"* the
- * subject is `fitness`, and `because` is the whole of what says so.
- */
-const PHRASE_INTRODUCERS = [
+/** Pronouns that tie a clause to the noun in front of it, where one is there. */
+const RELATIVE_PRONOUNS = ['that', 'which', 'who', 'whom', 'whose']
+
+/** What may stand in front of a noun, and so allow a contact relative after it. */
+const DETERMINERS = ['the', 'a', 'an', 'my', 'our', 'this', 'that', 'these', 'those', 'your']
+
+/** Prepositions — a closed class, and the complement an imperative takes. */
+const PREPOSITIONS = [
   'about',
   'of',
   'for',
@@ -804,6 +780,7 @@ const PHRASE_INTRODUCERS = [
   'from',
   'by',
   'into',
+  'onto',
   'over',
   'under',
   'between',
@@ -822,67 +799,165 @@ const PHRASE_INTRODUCERS = [
   'until',
   'till',
   'during',
+  'since',
   'per',
   'than',
-  'because',
-  'since',
-  'as',
-  'when',
-  'while',
-  'if',
-  'so',
-  'that',
-  'which',
-  'who',
-  'whereas',
-  'unless',
-  'whether',
 ]
+
+/** Subordinators, which introduce a clause rather than attach one. */
+const SUBORDINATORS = ['because', 'when', 'while', 'if', 'so', 'unless', 'whether', 'whereas', 'as']
+
+/** Everything that introduces a phrase of its own, for the walk to the subject. */
+const PHRASE_INTRODUCERS = [...PREPOSITIONS, ...SUBORDINATORS]
+
+interface Word {
+  readonly at: number
+  readonly text: string
+  readonly word: string
+  readonly tail: string
+}
+
+/** The words of a stretch of text, keeping the owner's own capitals. */
+function wordsOf(rest: string, cased: string): readonly Word[] {
+  return [...rest.matchAll(/[^\s,;.!?]+/g)].map((match) => {
+    const lower = match[0].toLowerCase()
+    // `don't` is an auxiliary and a negation, not a word called `don`.
+    const split = lower.includes("n't") ? lower.split("n't") : lower.split("'")
+    return {
+      at: match.index,
+      text: cased.slice(match.index, match.index + match[0].length),
+      word: split[0] ?? lower,
+      tail: lower.includes("n't") ? 't' : (split[1] ?? ''),
+    }
+  })
+}
+
+/** A capital in the middle of a sentence names something; it is not syntax. */
+function isName(words: readonly Word[], index: number): boolean {
+  const here = words[index]!
+  if (index === 0 || here.word === 'i') return false
+  if (!/^[A-Z]/.test(here.text)) return false
+  return here.text === here.text.toUpperCase() || /^[a-z]/.test(words[index - 1]!.text)
+}
 
 /**
  * Where a finite clause starts inside `rest`, or `-1` where none does.
  *
- * The verb is the evidence and the subject is the boundary: having found one,
- * walk left to the head of the noun phrase in front of it, stopping at a comma,
- * a coordinator or the beginning.
+ * Each candidate is checked for the complement its own form requires, and then
+ * for whether anything introduces it. A clause nothing introduces belongs to the
+ * noun in front of it.
  */
-function startOfClause(rest: string): number {
-  const words = [...rest.matchAll(/[^\s,;.!?]+/g)]
+function startOfClause(rest: string, cased: string): number {
+  const words = wordsOf(rest, cased)
 
   for (let index = 0; index < words.length; index += 1) {
-    const word = words[index]![0].toLowerCase()
-    // A contraction carries its verb attached: `it's` is a subject and a copula.
-    const [bare = '', contraction] = word.split("'")
-
-    // A subject pronoun is a clause on its own evidence — it cannot be an item.
-    const subject =
-      SUBJECT_PRONOUNS.includes(bare) ||
-      (contraction !== undefined && CONTRACTED_VERBS.includes(contraction))
+    const here = words[index]!
+    const next = words[index + 1]
+    if (isName(words, index)) continue
 
     let head = index
-    if (!subject) {
-      if (!FINITE_VERBS.includes(word)) continue
-      while (head > 0) {
-        const previous = words[head - 1]!
-        const before = previous[0].toLowerCase()
-        if (COORDINATORS.includes(before) || PHRASE_INTRODUCERS.includes(before)) break
-        // A comma between two words separates them; only unbroken text is a phrase.
-        if (rest.slice(previous.index + previous[0].length, words[head]!.index).includes(',')) break
-        head -= 1
-      }
+    if (SUBJECT_PRONOUNS.includes(here.word) && here.tail === '') {
+      // A subject needs a predicate; `you,` and `IT certification` have none.
+      if (next === undefined) continue
+      if (rest.slice(here.at + here.text.length, next.at).includes(',')) continue
+      if (COORDINATORS.includes(next.word)) continue
+    } else if (CONTRACTED_VERBS.includes(here.tail)) {
+      // A contraction carries subject and verb in one word.
+    } else {
+      // `to do` is an infinitive: the marker in front of it is what says so.
+      const infinitive = index > 0 && words[index - 1]!.word === 'to'
+      const finite =
+        (!infinitive && FINITE_VERBS.includes(here.word)) ||
+        // A modal is only a modal where the bare verb it governs is there.
+        (MODALS.includes(here.word) && bareVerbFollows(words, index)) ||
+        thirdPerson(words, index) ||
+        imperative(words, index)
+      if (!finite) continue
+      head = subjectHead(words, index, rest)
     }
 
-    // ...unless a relative pronoun ties the whole clause to the noun before it.
-    const introducer = head > 0 ? words[head - 1]![0].toLowerCase() : ''
-    if (RELATIVE_PRONOUNS.includes(introducer)) continue
-
-    return words[head]!.index
+    if (introduced(words, head, rest)) return words[head]!.at
   }
 
   return -1
 }
 
-function deniedMentions(haystack: string, all: readonly Mention[]): ReadonlySet<Mention> {
+/** A word carrying the third-person inflection, in a position a predicate can be. */
+function thirdPerson(words: readonly Word[], index: number): boolean {
+  const here = words[index]!
+  const next = words[index + 1]
+  if (index === 0 || next === undefined) return false
+  if (!/[a-z]{3,}s$/.test(here.word) || here.word.endsWith('ss')) return false
+  if (MARKER_WORDS.has(here.word)) return false
+  // A bare prepositional phrase after it reads as the noun's, not a predicate's.
+  return !PREPOSITIONS.includes(next.word)
+}
+
+/** An imperative: clause-initial, and taking the complement a verb takes. */
+function imperative(words: readonly Word[], index: number): boolean {
+  const next = words[index + 1]
+  if (next === undefined || !PREPOSITIONS.includes(next.word)) return false
+  // The first word after the denier is its own complement, never a command.
+  if (index === 0) return false
+  const before = words[index - 1]!
+  return COORDINATORS.includes(before.word) || SUBORDINATORS.includes(before.word)
+}
+
+/**
+ * Whether what follows a modal could be the bare verb a modal has to govern.
+ *
+ * A name is not one, and neither is a noun the marker table already knows or a
+ * determiner introducing one. *"may certification goals"* is a month and a plan,
+ * whether or not the owner reached for the shift key.
+ */
+function bareVerbFollows(words: readonly Word[], index: number): boolean {
+  const next = words[index + 1]
+  if (next === undefined || isName(words, index + 1)) return false
+  return !MARKER_WORDS.has(next.word) && !DETERMINERS.includes(next.word)
+}
+
+/** Walk left from a verb to the head of the noun phrase that is its subject. */
+function subjectHead(words: readonly Word[], index: number, rest: string): number {
+  let head = index
+  while (head > 0) {
+    const previous = words[head - 1]!
+    if (COORDINATORS.includes(previous.word) || PHRASE_INTRODUCERS.includes(previous.word)) break
+    // A relative pronoun is the head of its own clause, not part of the subject.
+    if (RELATIVE_PRONOUNS.includes(previous.word)) break
+    if (rest.slice(previous.at + previous.text.length, words[head]!.at).includes(',')) break
+    head -= 1
+  }
+  return head
+}
+
+/**
+ * Whether anything introduces this clause, or it belongs to the noun before it.
+ *
+ * A coordinator, a comma or a subordinator introduces one. A relative pronoun
+ * standing after a noun attaches one, and so does nothing at all — *"the money I
+ * earn"* — where the noun carries a determiner to hang the relative on.
+ */
+function introduced(words: readonly Word[], head: number, rest: string): boolean {
+  if (head === 0) return true
+  const before = words[head - 1]!
+  if (COORDINATORS.includes(before.word) || SUBORDINATORS.includes(before.word)) return true
+  if (rest.slice(before.at + before.text.length, words[head]!.at).includes(',')) return true
+
+  // A relative pronoun attaches, but only where it is standing after a noun.
+  if (RELATIVE_PRONOUNS.includes(before.word)) {
+    return head >= 2 && COORDINATORS.includes(words[head - 2]!.word)
+  }
+
+  // A contact relative needs a noun phrase to attach to, and that means a
+  // determiner: *"the money I earn"* attaches, *"money I want fitness"* does not.
+  return !(head >= 2 && DETERMINERS.includes(words[head - 2]!.word))
+}
+
+function deniedMentions(
+  haystack: string,
+  cased: string,
+  all: readonly Mention[],
+): ReadonlySet<Mention> {
   const denied = new Set<Mention>()
 
   for (const denier of DENIERS) {
@@ -892,8 +967,9 @@ function deniedMentions(haystack: string, all: readonly Mention[]): ReadonlySet<
       if (at === -1) break
       const after = at + denier.length
       const rest = haystack.slice(after)
-      const clause = startOfClause(rest.slice(0, reachOfDenial(rest)))
-      const until = after + (clause === -1 ? reachOfDenial(rest) : clause)
+      const reach = reachOfDenial(rest)
+      const clause = startOfClause(rest.slice(0, reach), cased.slice(after, after + reach))
+      const until = after + (clause === -1 ? reach : clause)
       from = after
 
       for (const mention of all) {
@@ -1013,14 +1089,30 @@ const AMOUNT_UNITS = [
 const CURRENCY = /[£$€]/
 
 /**
- * What closes a phrase, and therefore ends one word's governance of another.
+ * What closes a phrase — QA-91-017.
  *
- * Prepositions, subordinators, coordinators and finite verbs — every one a
- * closed class. The modifiers a noun may carry are not a closed class, which is
- * why this is the list that grew rather than the list of words a unit is allowed
- * to reach across.
+ * Round 6 stopped at every preposition and every coordinator, and QA broke that
+ * with five ordinary constructions in which those same forms are **inside** the
+ * relationship being read: `2027 in US dollars`, `up to 3000`, `at least 3000`,
+ * `salary of 50000` and `2027 and change dollars`. A form that can end a phrase
+ * does not end every phrase it appears in.
+ *
+ * So only two things close one, and both are about what the words are doing:
+ *
+ * - a **clause**, because a predicate cannot be inside a noun phrase. That is
+ *   the same evidence {@link startOfClause} reads, reused here;
+ * - a preposition that puts what follows it **in time**, because a time slot is
+ *   not the denomination of a sum. `by`, `before` and `until` always do that;
+ *   `at`, `on` and `in` do it only when something temporal follows, which is the
+ *   whole difference between *"on March 15"* and *"at least 3000"*.
  */
-const PHRASE_END = [...PHRASE_INTRODUCERS, ...COORDINATORS, ...FINITE_VERBS]
+const CLAUSE_WORDS = [...FINITE_VERBS, ...MODALS, ...SUBJECT_PRONOUNS]
+
+/** Prepositions that put what follows them in a time slot, wherever they stand. */
+const ALWAYS_TEMPORAL = ['by', 'before', 'after', 'until', 'till', 'during', 'since']
+
+/** ...and the ones that do it only when something temporal actually follows. */
+const SOMETIMES_TEMPORAL = ['at', 'on', 'in']
 
 /**
  * The words that make a bare number the sum they are about.
@@ -1032,9 +1124,6 @@ const PHRASE_END = [...PHRASE_INTRODUCERS, ...COORDINATORS, ...FINITE_VERBS]
  */
 const AMOUNT_GOVERNORS: readonly string[] = MARKERS[DOMAIN.money] ?? []
 
-/** Prepositions that put what follows them in a time slot rather than a sum. */
-const TEMPORAL_PREPOSITIONS = ['by', 'before', 'after', 'until', 'till', 'on', 'at', 'during']
-
 /** `until` is absent by design: a temporal preposition never joins two sums. */
 const RANGE_JOIN = ['–', '—', '-', 'to', 'and', 'through', 'thru']
 
@@ -1045,25 +1134,54 @@ function anyOf(words: readonly string[]): string {
 /**
  * The words of one phrase, reading outward from a number until the phrase ends.
  *
- * Punctuation closes the phrase at the edge it stands on, so *"March 15th, 2027"*
- * does not let the month govern the year, and `2027 US dollars` does let the
- * unit govern the sum.
+ * A comma closes it at the edge the comma stands on, so *"March 15th, 2027"*
+ * does not let the month govern the year. A **colon** does not close it: note
+ * grammar puts the heading on one side and its value on the other, and
+ * *"Savings: 3000"* is one statement.
  */
 function phraseWords(text: string, outward: 'left' | 'right'): readonly string[] {
   const words: string[] = []
   const found = [...text.matchAll(/\S+/g)]
+  const ordered = outward === 'left' ? [...found].reverse() : found
 
-  for (const match of outward === 'left' ? [...found].reverse() : found) {
+  for (const match of ordered) {
     const token = match[0].toLowerCase()
-    const closes = outward === 'left' ? /[,;:]$/.test(token) : /[,;:]/.test(token)
+    const closes = outward === 'left' ? /[,;]$/.test(token) : /[,;]/.test(token)
     const bare = token.replace(/[^a-z0-9'/-]+$/, '').replace(/^[^a-z0-9'/-]+/, '')
+    const parts = bare.split('/').filter((part) => part !== '')
+    const first = parts[0] ?? bare
+
     if (outward === 'left' && closes) break
-    if (PHRASE_END.includes(bare.split("'")[0] ?? bare)) break
-    words.push(bare)
+    // A predicate cannot be inside a noun phrase, so a clause ends this one.
+    if (CLAUSE_WORDS.includes(first.split("'")[0] ?? first)) break
+    if (ALWAYS_TEMPORAL.includes(first)) break
+    if (SOMETIMES_TEMPORAL.includes(first) && temporalFollows(text, outward, match.index, words)) {
+      break
+    }
+    words.push(...parts)
     if (outward === 'right' && closes) break
   }
 
   return words
+}
+
+/**
+ * Whether an *at*, *on* or *in* is doing temporal work where it stands.
+ *
+ * Reading rightward its complement is still ahead, so it is looked for; reading
+ * leftward the complement is the material already crossed, so that is looked at
+ * instead. *"on March 15"* is a time and *"at least 3000"* is a bound.
+ */
+function temporalFollows(
+  text: string,
+  outward: 'left' | 'right',
+  at: number,
+  crossed: readonly string[],
+): boolean {
+  if (outward === 'left') return crossed.some((word) => TEMPORAL_UNITS.includes(word))
+  return [...text.slice(at).matchAll(/[a-z]+/g)]
+    .slice(1, 4)
+    .some((word) => TEMPORAL_UNITS.includes(word[0]))
 }
 
 /** Whether one of `words` governs the number from the given side. */
@@ -1071,20 +1189,49 @@ function governs(text: string, outward: 'left' | 'right', words: readonly string
   return phraseWords(text, outward).some((word) => words.includes(word))
 }
 
-/** Articles that turn a following unit into a rate: *50,000 **a** year*. */
-const RATE_ARTICLES = ['a', 'an']
+/** The articles, which determine a noun without pointing it at any moment. */
+const ARTICLES = ['a', 'an', 'the']
+
+/** What can point a unit at one moment: *17 **next** month*, *the **coming** week*. */
+const POINT_DEICTICS = ['next', 'this', 'last', 'coming', 'following', 'previous']
+
+/** The determiners that distribute a unit over an amount, and nothing else. */
+const DISTRIBUTIVE = ['a', 'an', 'each', 'every', 'per']
 
 /**
- * Whether a temporal unit after the number is telling the time, or the rate.
+ * What a temporal unit after the number is doing: a moment, a rate, or neither.
  *
- * *"17 next month"* is a date and *"50000 a year"* is a wage, and the article is
- * the whole of the difference. A rate says how often, which is not when.
+ * Round 6 asked whether an **article** stood in front of the unit, and QA broke
+ * it with *each*, *every*, *per* and `/`. Two questions were hiding inside that
+ * one, and they have different answers:
+ *
+ * - the unit names a **moment** when it stands straight after the number —
+ *   *"in 6 months"* — or when a deictic points it, as in *"17 next month"*;
+ * - it names a **rate** when a distributive determiner spreads the amount over
+ *   it, which is what *a*, *each*, *every*, *per* and `/` all do.
+ *
+ * Anything else is **neither**: in *"3000 at the end of March"* the month is the
+ * complement of *end of*, so it neither dates the sum nor divides it — and that
+ * distinction is what stops the deadline being suppressed as though it were a
+ * wage. Collapsing the two questions is what made Round 6 wrong on both.
  */
-function datedByUnitAfter(after: string): boolean {
+type UnitRole = 'point' | 'rate' | 'neither'
+
+function unitAfter(after: string): { readonly role: UnitRole; readonly word: string } {
   const words = phraseWords(after, 'right')
   const unit = words.findIndex((word) => TEMPORAL_UNITS.includes(word))
-  if (unit === -1) return false
-  return unit === 0 || !RATE_ARTICLES.includes(words[unit - 1] ?? '')
+  if (unit === -1) return { role: 'neither', word: '' }
+
+  const word = words[unit]!
+  if (after.startsWith('/')) return { role: 'rate', word }
+  const determiner = words[unit - 1] ?? ''
+  if (unit === 0 || POINT_DEICTICS.includes(determiner)) return { role: 'point', word }
+  if (DISTRIBUTIVE.includes(determiner)) return { role: 'rate', word }
+  return { role: 'neither', word }
+}
+
+function datedByUnitAfter(after: string): boolean {
+  return unitAfter(after).role === 'point'
 }
 
 /** A share taken *of* something, reached across the unit it is counted in. */
@@ -1111,7 +1258,9 @@ function measuresANoun(after: string): boolean {
   if (unit === -1) return false
   const measured = words[unit + 1]
   if (measured === undefined || measured === '' || /^\d/.test(measured)) return false
-  return !TEMPORAL_UNITS.includes(measured) && !RATE_ARTICLES.includes(measured)
+  // A preposition introduces the unit's own complement, not the thing measured.
+  if (PREPOSITIONS.includes(measured)) return false
+  return !TEMPORAL_UNITS.includes(measured) && !ARTICLES.includes(measured)
 }
 
 /**
@@ -1149,6 +1298,8 @@ function ordinalModifies(after: string): boolean {
   if (!/^(?:st|nd|rd|th)\b/.test(after)) return false
   const next = phraseWords(after.replace(/^(?:st|nd|rd|th)/, ''), 'right')[0]
   if (next === undefined || next === '') return false
+  // `the 15th of March` modifies nothing: `of` introduces a phrase of its own.
+  if (PREPOSITIONS.includes(next)) return false
   return !TEMPORAL_UNITS.includes(next) && !RANGE_JOIN.includes(next) && !/^\d/.test(next)
 }
 
@@ -1212,9 +1363,7 @@ function numberSpans(text: string): readonly NumberSpan[] {
      * the whole difference between *"save 3000"* and *"more money by 17"*.
      */
     const reach = phraseWords(before, 'left')
-    const governed =
-      reach.some((word) => AMOUNT_GOVERNORS.includes(word)) &&
-      !reach.some((word) => TEMPORAL_PREPOSITIONS.includes(word))
+    const governed = reach.some((word) => AMOUNT_GOVERNORS.includes(word))
     spans.push({
       at,
       to,
@@ -1230,6 +1379,11 @@ function numberSpans(text: string): readonly NumberSpan[] {
 
 /** The separators a written date is punctuated with, and nothing else. */
 const DATE_PUNCTUATION = ['/', '-', '.']
+
+/** Whether a preposition has put what follows it in time, with no comma since. */
+function inTemporalSlot(before: string): boolean {
+  return new RegExp(String.raw`\b(?:${anyOf(ALWAYS_TEMPORAL)})\b[^,;]*$`).test(before)
+}
 
 /**
  * Numbers punctuated together into one written date.
@@ -1260,11 +1414,19 @@ function writtenDates(text: string, spans: NumberSpan[]): void {
     }
 
     const parts = spans.slice(index, end + 1).map((span) => text.slice(span.at, span.to))
-    // Three parts, a slash, or a leading zero: each says "written date" alone.
+    /*
+     * Three parts, a slash, or a leading zero: each says "written date" alone.
+     *
+     * ...and so does the slot the numbers stand in. QA-91-017 submitted `3-15`
+     * and `12.31`, which ascend and carry no leading zero, after *by*: a
+     * preposition that puts what follows it in time cannot be introducing a
+     * range of sums, so the pair is a date whatever its digits say.
+     */
     const written =
       separator === '/' ||
       end - index >= 2 ||
-      parts.some((part) => part.length > 1 && part.startsWith('0'))
+      parts.some((part) => part.length > 1 && part.startsWith('0')) ||
+      inTemporalSlot(text.slice(0, spans[index]!.at))
 
     // And two parts that descend are not the two ends of a range.
     const descending = parts.every((part, at) => at === 0 || Number(parts[at - 1]) > Number(part))
@@ -1337,9 +1499,44 @@ function saysHowMuch(text: string): boolean {
   return numberSpans(text).some((span) => span.role === 'amount')
 }
 
-/** Whether the words say **by when**, in a word or in a number read as a date. */
+/**
+ * Where a temporal unit is standing as a rate rather than as a moment.
+ *
+ * The role logic already reads *"50000 a year"* as a wage, but `saysWhen` was
+ * reading `year` straight off the horizon table and answering *by when* anyway —
+ * two paths to one fact, agreeing only by accident. This is what the second path
+ * has to know in order to agree with the first.
+ */
+function rateUnits(text: string): ReadonlySet<number> {
+  const rates = new Set<number>()
+  for (const match of text.matchAll(/\d+/g)) {
+    const after = text.slice(match.index + match[0].length)
+    const unit = unitAfter(after)
+    if (unit.role !== 'rate') continue
+    const found = new RegExp(String.raw`\b${escape(unit.word)}\b`).exec(after)
+    if (found !== null) rates.add(match.index + match[0].length + found.index)
+  }
+  return rates
+}
+
+/**
+ * Whether the words say **by when**, in a word or in a number read as a date.
+ *
+ * A horizon word that is doing rate work says how often, not when, so it is not
+ * an answer to this question.
+ */
 function saysWhen(text: string): boolean {
-  return hits(text, HORIZON).length > 0 || numberSpans(text).some((span) => span.role === 'date')
+  if (numberSpans(text).some((span) => span.role === 'date')) return true
+  const rates = rateUnits(text)
+  for (const word of HORIZON) {
+    const pattern = new RegExp(String.raw`\b${escape(word)}\b`, 'g')
+    for (;;) {
+      const found = pattern.exec(text)
+      if (found === null) break
+      if (!rates.has(found.index)) return true
+    }
+  }
+  return false
 }
 
 // ---------------------------------------------------------------------------
@@ -1429,7 +1626,7 @@ export function readAim(input: InterpreterInput): AimReading {
    * span*, which is the question four rounds of boundary repairs were stuck on.
    */
   const all = mentions(haystack, input.digest)
-  const denied = deniedMentions(haystack, all)
+  const denied = deniedMentions(haystack, typed, all)
   const asserted = all.filter((mention) => !denied.has(mention))
 
   const byArea = new Map<LifeDomainId, { own: string[]; words: string[] }>()

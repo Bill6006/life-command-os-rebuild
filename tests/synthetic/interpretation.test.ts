@@ -1601,6 +1601,210 @@ describe('QA-91-003 — a token is read for its role, not for its presence', () 
     }
   })
 
+  // -------------------------------------------------------------------------
+  // Round 7 — a form is evidence only where it does that form's job
+
+  it('reads a predicate the closed classes cannot see — QA-91-016', () => {
+    /*
+     * Round 6 declared these a bound, and QA overturned it: leaving them out
+     * removes evidence the owner supplied, and naming fewer areas is not a
+     * correct reading. A lexical verb is read from its third-person inflection
+     * or from the prepositional complement an imperative takes.
+     */
+    for (const phrase of [
+      'Not about money and fitness matters most',
+      'Not about money and focus on fitness',
+      "Not about money and don't neglect fitness",
+      'Not about money and that is why fitness matters',
+    ]) {
+      expect(
+        read(phrase).names.map((area) => area.domain),
+        phrase,
+      ).toEqual([DOMAIN.health])
+    }
+  })
+
+  it('and still reads a noun phrase that merely ends in an inflection', () => {
+    /*
+     * The reverse, and the reason the rule is about position rather than shape.
+     * *"savings goals for 2027"* ends in `-s` and takes a prepositional phrase,
+     * which is what a noun does; a predicate's complement is not a bare `for`.
+     */
+    for (const phrase of [
+      'Not about money and my savings goals for 2027',
+      'Not about money and fitness classes on Tuesdays',
+      'Not about money and physical fitness',
+    ]) {
+      expect(read(phrase).names, phrase).toEqual([])
+    }
+  })
+
+  it('reads a closed-class form only where it does that form’s job', () => {
+    /*
+     * The whole of QA-91-016 in one rule. `being` is non-finite, `May` and `IT`
+     * are a month and an acronym the tokeniser lowercased into syntax, and `you`
+     * here is an item in a list rather than the subject of anything. Each form
+     * needs what its role requires, and none of these has it.
+     */
+    for (const phrase of [
+      'Not about money or fitness being the issue',
+      'Not about money or May certification goals',
+      // ...and again with no capital to lean on, which is how owners often type.
+      'not about money or may certification goals',
+      'Not about money or IT certification',
+      'Not about money, you, or fitness',
+      // A comma after the pronoun, with the next item not a coordinator.
+      'Not about money, you, fitness, or certification',
+    ]) {
+      expect(read(phrase).names, phrase).toEqual([])
+    }
+  })
+
+  it('and still reads the same forms where they do hold their role', () => {
+    /*
+     * The other direction, which is what stops the rule refusing every pronoun
+     * and every modal. Each of these has the complement its form requires.
+     */
+    for (const phrase of [
+      'Not about money and I want fitness',
+      'Not about money and we focus on fitness',
+      'Not about money and my physical fitness is the priority',
+    ]) {
+      expect(
+        read(phrase).names.map((area) => area.domain),
+        phrase,
+      ).toEqual([DOMAIN.health])
+    }
+  })
+
+  it('keeps a contact relative inside the denial, and a demonstrative outside it', () => {
+    /*
+     * *"the money I earn"* has a subject and a verb and is still one denial: the
+     * clause describes the money. Nothing introduces it, and the determiner is
+     * what gives it a noun phrase to attach to.
+     *
+     * *"and that is why…"* has the same relative form doing demonstrative work,
+     * and a coordinator in front of it — so it is a clause, and the area it
+     * asserts survives.
+     */
+    expect(read('Not about the money I earn').names).toEqual([])
+    expect(read('Not about money that I earn').names).toEqual([])
+    expect(
+      read('Not about money and that is why fitness matters').names.map((area) => area.domain),
+    ).toEqual([DOMAIN.health])
+  })
+
+  it('reads three areas across one denial and two assertions', () => {
+    /*
+     * The case that needs every part of the rule at once: a denial, a lexical
+     * predicate ending it, and a second clause after a comma.
+     */
+    expect(
+      read(
+        'Not about money and the fitness plan matters most, certification is the goal',
+      ).names.map((area) => area.domain),
+    ).toEqual([DOMAIN.career, DOMAIN.health])
+  })
+
+  it('names the bound: a predicate with no inflection and no complement', () => {
+    /*
+     * Declared rather than left to be found, and narrower than Round 6's, which
+     * QA overturned. What is still invisible is a bare predicate carrying
+     * neither the third-person inflection nor a prepositional complement —
+     * *"fitness counts"* — so the denial reaches over it and names one area
+     * fewer. That errs toward saying less, and it is the only bound left here.
+     */
+    expect(read('Not about money and fitness counts').names).toEqual([])
+  })
+
+  it('reads a preposition inside the amount it belongs to — QA-91-017', () => {
+    /*
+     * Round 6 stopped numeric governance at every preposition and coordinator,
+     * and those same forms introduce a denomination, a scalar bound, a
+     * complement and material inside an amount. A form that can end a phrase
+     * does not end every phrase it appears in.
+     */
+    const denominated = read('Save 2027 in US dollars')
+    expect(denominated.unknowns, 'the sum is settled').not.toContain('how much')
+    expect(denominated.unknowns, 'and nothing said when').toContain('by when')
+
+    for (const phrase of [
+      'Save up to 3000 by March',
+      'Save at least 3000 by March',
+      'Salary of 50000 by March',
+      'Save 2027 and change dollars by March',
+      'Savings: 3000 by March',
+    ]) {
+      expect(read(phrase).unknowns, phrase).toEqual([])
+    }
+  })
+
+  it('and still stops where a preposition really does put the number in time', () => {
+    /*
+     * The reverse. `by`, `before` and `until` always put what follows them in a
+     * time slot; `at`, `on` and `in` do it only when something temporal follows,
+     * which is the whole difference between *"on March 15"* and *"at least
+     * 3000"*.
+     */
+    for (const phrase of ['Save 3000 on March 15', 'Save 3000 in March', 'Save 17 by March 15']) {
+      expect(read(phrase).unknowns, phrase).toEqual([])
+    }
+    const untyped = read('More money by 17')
+    expect(untyped.unknowns, 'a deadline slot types nothing').toContain('how much')
+    expect(untyped.unknowns).toContain('by when')
+  })
+
+  it('reads an ascending two-part date from the slot it stands in', () => {
+    /*
+     * `3-15` and `12.31` ascend and carry no leading zero, so the digits alone
+     * cannot separate them from a range. A preposition that puts what follows it
+     * in time is not introducing a range of sums, and that settles it.
+     */
+    for (const phrase of ['More money by 3-15', 'More money by 12.31']) {
+      const dated = read(phrase)
+      expect(dated.unknowns, `${phrase}: the amount is still unknown`).toContain('how much')
+      expect(dated.unknowns, `${phrase}: the date answered when`).not.toContain('by when')
+    }
+  })
+
+  it('and still reads the same digits as a range outside that slot', () => {
+    for (const phrase of ['Save 2000-3000 by March', 'Save 15-17 by March', 'Save 2.5 by March']) {
+      expect(read(phrase).unknowns, phrase).toEqual([])
+    }
+  })
+
+  it('reads every spelling of a rate, and lets none of them set a deadline', () => {
+    /*
+     * A rate says how often, not when. Round 6 read only *a year*, and read even
+     * that inconsistently: the role logic called it a wage while `saysWhen` read
+     * `year` straight off the horizon table and answered the deadline anyway.
+     * Both paths now agree, because the second one asks the first.
+     */
+    for (const phrase of [
+      'Earn 50000 a year',
+      'Earn 50000 each year',
+      'Earn 50000 every year',
+      'Earn 50000 per year',
+      'Earn 50000/year',
+    ]) {
+      const rate = read(phrase)
+      expect(rate.unknowns, `${phrase}: the sum is settled`).not.toContain('how much')
+      expect(rate.unknowns, `${phrase}: a rate is not a deadline`).toContain('by when')
+    }
+  })
+
+  it('and still reads a unit that is pointed at a moment, or at neither', () => {
+    /*
+     * Two reverses in one. A unit standing straight after the number or pointed
+     * by a deictic is a moment; and a unit that is the complement of something
+     * else — *"at the end of March"* — is neither a moment for this number nor a
+     * rate dividing it, which is what keeps that deadline readable.
+     */
+    expect(read('More money from 15 to 17 next month').unknowns).toContain('how much')
+    expect(read('More money in 6 months').unknowns).toContain('how much')
+    expect(read('Save 3000 at the end of March').unknowns, 'a deadline, not a wage').toEqual([])
+  })
+
   it('reads a written date from its punctuation, and a range from its arity', () => {
     /*
      * A slash is never a range, so a slashed chain is a date however long it is.
@@ -1739,19 +1943,6 @@ describe('QA-91-003 — a token is read for its role, not for its presence', () 
      */
     expect(read('Not about money that I earn').names).toEqual([])
     expect(read('Nothing to do with the salary which I am paid').names).toEqual([])
-  })
-
-  it('names the bound: a clause built on a lexical verb is not seen', () => {
-    /*
-     * Declared rather than left to be found. The copula, the auxiliaries, the
-     * modals and the subject pronouns are closed classes; ordinary verbs are
-     * not, and *"fitness matters most"* is a clause this instrument cannot see.
-     *
-     * The denial therefore reaches over it, and the reading names **fewer**
-     * areas than it should rather than more — the direction this file errs in
-     * everywhere. Listing lexical verbs would move the boundary, not close it.
-     */
-    expect(read('Not about money and fitness matters most').names).toEqual([])
   })
 
   it('governs a number across an ordinary modifier — QA-91-015', () => {

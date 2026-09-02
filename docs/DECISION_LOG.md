@@ -9651,3 +9651,131 @@ apostrophe already hid the unit, and probing why turned up `2 months salary`
 measure rule above.
 
 ---
+
+## D-256 — A form is evidence only where it does that form's job
+
+**Phase:** 91 (QA round 7 repair) · **Status:** Active · **Replaces the mechanism of** D-255
+
+### D-255's load-bearing claim failed, and this records how
+
+D-255 said the lists that were removed were lists of what may appear **inside** a
+relationship, and the lists that grew were lists of what **ends** one — and that
+the second kind is safe because prepositions, coordinators, verbs and pronouns
+are closed classes. It put that in those words so it could be attacked, and Round
+7 attacked it correctly:
+
+> A closed vocabulary is not a closed set of roles.
+
+`you` is a pronoun and also a list item. `IT` is an acronym. `May` is a month.
+`being` is a non-finite form. `that` is a demonstrative as often as a relative.
+And `in`, `to`, `at`, `of` and `and` all appear **inside** the very
+constructions whose role was being read — a denomination, a scalar bound, a
+complement, a coordinated amount. Membership answered the wrong question in both
+instruments, and it failed in both directions at once.
+
+**So the claim is withdrawn.** Being closed is not what makes a class safe to
+read. What makes a form evidence is that it is **doing that form's job where it
+stands**, and that is what this decision replaces it with.
+
+### Every closed form now has to bring what its role requires
+
+One rule, applied everywhere, and it repairs six of Round 7's failures at once:
+
+- a **modal** governs a bare verb, so `may certification goals` is a month and a
+  plan — with or without the capital the owner may not have typed;
+- a **subject pronoun** has a predicate after it, so `you,` in a list and
+  `IT certification` are not subjects;
+- a **finite** verb is finite, so `be`, `been` and `being` are in none of the
+  lists at all;
+- **capitalisation** mid-sentence is evidence of a name rather than of syntax,
+  and the tokeniser's lowercasing was throwing that away. The owner's own text is
+  read instead.
+
+### And a clause is introduced, or it belongs to the noun in front of it
+
+_"the money I earn"_ and _"money that I earn"_ both have a subject and a verb, and
+both are still one denial: the clause **describes the money**. What separates them
+from _"and I want fitness"_ is what stands in front — a coordinator, a comma or a
+subordinator introduces a clause, and nothing at all attaches one. A relative
+pronoun attaches too, but only where it follows a noun, which is what makes
+_"and that is why…"_ a demonstrative subject rather than a relative.
+
+### Two predicates the closed classes could not see
+
+Round 6 declared lexical verbs and imperatives a bound. QA overturned it —
+_"'fewer areas' is not a correct semantic-capture result"_ — and was right, so
+both are now read from structure rather than from a list of verbs:
+
+- the **third-person inflection** in predicate position, after at least one word
+  of subject and followed by something that is not a preposition. That reads
+  _"fitness matters most"_ while leaving _"savings goals for 2027"_ a noun phrase;
+- an **imperative**, a clause-initial word taking the prepositional complement a
+  verb takes: _"focus on fitness"_, where _"physical fitness"_ is not one.
+
+### The numeric boundary is contextual, and the rate question was two questions
+
+`PHRASE_END` is gone. Only two things close a numeric phrase now: a **clause**,
+because a predicate cannot be inside a noun phrase — the same evidence the denial
+instrument reads, reused — and a preposition that puts what follows it **in
+time**. `by`, `before` and `until` always do; `at`, `on` and `in` do only when
+something temporal follows, which is the whole difference between _"on March 15"_
+and _"at least 3000"_. A colon does not close one either: note grammar puts a
+heading on one side and its value on the other.
+
+**And the rate rule was collapsing two questions into one.** Round 6 asked
+whether an article stood before the unit. The two questions are whether anything
+**points the unit at a moment** — the unit standing straight after the number, or
+a deictic — and whether a **distributive determiner** spreads the amount over it.
+Neither implies the other, and _"3000 at the end of March"_ is the case that
+proves it: the month is the complement of _end of_, so it is **neither** a moment
+for that number nor a rate dividing it. Collapsing them suppressed a real
+deadline as though it were a wage.
+
+**One fact, one path.** `saysWhen` was reading a horizon word straight off the
+table and answering _by when_ even where the role logic had just called the
+expression a rate — two paths to one fact, agreeing only by accident. The second
+now asks the first.
+
+### The instrument got bigger again: 926 lines to 1,034
+
+Said plainly, and this time **without a claim attached to it**. D-255 answered the
+same growth with a distinction that has now failed, so there is no replacement
+distinction offered here. What can be said is narrower and checkable: no phrase
+from Round 7's report was added to any list, and the lists that grew — modals
+separated from auxiliaries, the distributive determiners, the point deictics —
+each carry a _requirement_ that is tested at the point of use rather than a
+membership that is trusted.
+
+Whether that is a seventh boundary is Round 8's to judge. The honest position is
+that six rounds of syntactic instruments have each been broken by ordinary
+English, and the pattern in the failures is now the strongest evidence available
+about where this ends.
+
+### The bound, said plainly, and it is one bound
+
+A predicate with neither an auxiliary, nor the third-person inflection, nor a
+prepositional complement — _"and fitness counts"_ — is still invisible, and the
+denial reaches over it. That is much narrower than Round 6's, which covered every
+lexical verb, and it has its own test.
+
+### Three defects in the repair, and three proofs that had to earn their keep
+
+Two came from attacking the finished repair the way Round 8 will be asked to: an
+imperative rule that read the denier's own complement as a command, and a rate
+rule that suppressed the deadline in _"3000 at the end of March"_.
+
+The third came from a reintroduction going green. The modal guard leant on the
+capital in `May`, so it did nothing that the capitalisation rule was not already
+doing — and probing why turned up **`not about money or may certification
+goals`**, all lowercase, naming Career from a word inside the denial. A real
+defect, found by a proof that failed to bite.
+
+Two more went green for a reason that was not a defect. The guard against
+`be`/`been`/`being` could never fire, because those forms are in none of the
+lists that make a token finite, so **the code went rather than the proof**. And
+the guard that stops an ordinal modifying a preposition is correct but unproven:
+every phrase under test that puts an ordinal before _of_ also carries a month,
+and the month answers _by when_ whichever way the ordinal is read. It is kept and
+recorded as unproven, which is the shape QA checked and accepted at Round 5.
+
+---
