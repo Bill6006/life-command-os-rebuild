@@ -40,16 +40,42 @@ service_. Everything below is the shape of that, and the cost of it.
 A single endpoint, owned by the owner, holding one secret:
 
 - one HTTPS function — a serverless function is the smallest form of it — that
-  accepts a POST from the app's origin only;
+  accepts a POST and nothing else;
 - it holds the model API key as a server-side environment secret. The key never
   reaches the browser and never appears in the bundle;
 - it has **no database, no logging of request bodies, and no storage of any
-  kind**. It receives, forwards, validates and replies;
-- it is rate-limited per origin, and it rejects any body that does not match the
-  request schema below before it forwards anything.
+  kind**. It receives, validates, forwards, validates again and replies;
+- it rejects any body that does not match the request schema below **before** it
+  forwards anything.
 
 Nothing else lives there. It is not an application server; it is a key holder
 with a validator attached.
+
+### An earlier draft of this document was wrong about the boundary
+
+It proposed origin checking and per-origin rate limiting _as though they were an
+abuse boundary_. They are not. **`Origin` is a browser courtesy, not client
+authentication**: any script anywhere can send whatever `Origin` header it likes,
+and CORS only stops _other web pages_ reading a reply — it stops nobody spending
+the owner's key. Independent QA was right to call that out, and it is corrected
+here rather than quietly.
+
+What an abuse boundary actually needs, and what the owner is choosing between:
+
+- **a shared secret the app holds.** Simple, and it has the same flaw as the API
+  key: anything shipped to the browser can be read out of it. It raises the cost
+  of casual abuse and stops nothing determined;
+- **a signed short-lived token**, minted by the same function from a passphrase
+  the owner enters once and the device stores. Real authentication, and the only
+  option here that survives someone reading the bundle. It costs the owner one
+  passphrase and the app one small sign-in path it does not currently have;
+- **no authentication, and a hard spend cap instead** — see §7. Honest for a
+  single-owner app, and it accepts that anyone who finds the URL can spend up to
+  the cap.
+
+**This document does not choose.** The middle option is the only one that is
+actually secure; the third may be the reasonable one for an app with one user.
+That trade is the owner's.
 
 ## 2. The request, which is a digest and not a history
 
@@ -105,6 +131,42 @@ The reply is not prose and is not trusted:
 - what the model provider retains is **their** policy, not this app's, and is
   part of what the owner is deciding. It cannot be promised away here.
 
+### Provider, model, region and retention — the choices, not a recommendation
+
+These are four separate decisions and the document deliberately makes none of
+them:
+
+- **provider.** Whichever is chosen, the question to ask it is the same: does the
+  API tier used here train on inputs by default, and can that be turned off in
+  writing? Several providers separate a consumer tier that may train from an API
+  tier that does not; that separation is the thing to verify, not the brand;
+- **model.** The task is three fields out of one sentence. It is a small-model
+  task, and the smallest capable model is both the cheapest and the one that
+  sees the least;
+- **region.** If the owner is in the UK or EU, an EU-hosted endpoint keeps the
+  sentence inside that jurisdiction. Not every provider offers one, and this may
+  be the constraint that picks the provider;
+- **retention.** Ask for zero-retention or the shortest available abuse-log
+  window, in writing, and record the answer here. A thirty-day abuse log is
+  common and is not nothing: it means the sentence exists on someone else's
+  disk for thirty days.
+
+### How "no request logging" is actually enforced
+
+Saying the function does not log is not enforcement. What makes it checkable:
+
+- the function's source is one file the owner can read end to end, and it is in
+  this repository if the decision is taken, not on a console somewhere;
+- **the platform's own request logging is the part that leaks**, not the code.
+  Most serverless hosts log request bodies unless told otherwise, so the setting
+  that disables body logging has to be named, set, and screenshotted alongside
+  this document;
+- a deploy check that greps the function for `console.log`, `JSON.stringify` of
+  the body, and any analytics import, and fails the deploy if it finds one;
+- the owner can verify the whole thing at any time by sending one request and
+  looking at what the host shows. If the sentence appears in a log line, the
+  policy has failed and the endpoint should be pulled.
+
 ## 5. Cost, honestly
 
 - a serverless function at this volume is within the free tier of the common
@@ -117,7 +179,52 @@ The reply is not prose and is not trusted:
   dependency that can fail, and a third party seeing sentences about the owner's
   life.
 
-## 6. The failure fallback, which is what exists today
+## 6. What the owner would see, per request
+
+The UX is not a detail here: it is where consent actually happens.
+
+- **per-request consent, not a blanket setting.** The row that today says _the
+  app has not decided which_ would carry one extra control: _"Ask a model to
+  read this sentence?"_. Nothing is sent until it is pressed. A setting the
+  owner turned on once, months ago, is not consent to send the sentence he is
+  typing now;
+- **the sentence is shown as it will be sent**, because that is the whole of
+  what leaves. There is no second, hidden payload to disclose;
+- **offline and unavailable are the same thing**: the control is absent, the
+  confirmation question stands, and nothing tells the owner to try later. An app
+  that degrades to asking him is not broken when the network is;
+- **latency has a budget.** If a reply has not arrived in about two seconds, the
+  question is put and the reply is discarded when it lands. A spinner in front
+  of a question the app could already ask is a worse product than the question;
+- **a wrong answer is still a question.** The reply resolves what the
+  interpreter could not, and the existing confirmation row still shows it before
+  anything derived is written. The model never writes a record.
+
+## 7. Running it: keys, monitoring, incidents and a cap
+
+The part that is easy to leave out of a sketch and impossible to leave out of a
+deployment:
+
+- **key rotation.** One key, one place, rotated on a fixed schedule and
+  immediately on any suspicion. Rotation must be a single environment-variable
+  change with no redeploy of the app, which is an argument for keeping the
+  function this small;
+- **monitoring.** Request count and error rate only — never bodies. The one
+  number worth alerting on is requests per day above the owner's own plausible
+  usage, because that is what a leaked endpoint looks like;
+- **a hard spend cap at the provider**, set below the point where the owner
+  would mind. This is the backstop that makes the "no authentication" option in
+  §1 survivable at all;
+- **incident response, written before it is needed.** If the endpoint is being
+  abused: rotate the key, take the function down, and the app returns to the
+  confirmation question with no data loss and no migration. That the fallback is
+  the current product is what makes the incident cheap;
+- **what an incident costs the owner's privacy.** Sentences already sent are
+  already sent. Taking the endpoint down stops the next one and cannot recall
+  the last one, and that asymmetry is the reason this is a decision rather than
+  a setting.
+
+## 8. The failure fallback, which is what exists today
 
 This matters more than the rest, and it is the reason the decision is not
 urgent: **if the service is absent, slow, rate-limited, erroring or returns
@@ -134,6 +241,18 @@ D-025 said it would be.
 Whether the owner wants a sentence about their life sent to a model provider, in
 exchange for the app answering a question it would otherwise ask them. That is
 the whole of it, and it is not a developer's call.
+
+Nor are the choices this document deliberately leaves open: which provider, which
+model, which region, which retention terms, and which of the three abuse
+boundaries in §1. Each is written out so it can be decided; none is decided.
+
+**And the honest summary of the trade.** Today the app asks a question in the
+cases it cannot read. With a service, it would answer most of those and still
+show the answer for confirmation. What is bought is fewer questions. What is
+paid is that the sentence leaves the device, an account and a key exist, and
+there is something that can be abused. For an app whose confirmation-first
+fallback already works, that may simply not be worth it — and this document is
+written so the owner can conclude that as easily as the other way.
 
 **Until the owner decides, nothing here is built.** Phase 91 ships the
 confirmation-first reading, and this document stays a specification.

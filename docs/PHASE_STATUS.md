@@ -479,9 +479,40 @@ the phrases. And the owner decision D-025 requires is written out in
 [`ROUTING_91_OWNER_DECISION.md`](ROUTING_91_OWNER_DECISION.md) rather than taken:
 no service was created, no secret exists, and nothing was chosen.
 
+## Independent QA round 9 — FAIL, on the delivery rather than the shape
+
+Round 9 kept D-257's architecture — _"still preferable to an eighth parser"_ —
+and found two things wrong with how it had been delivered.
+
+- **QA-91-020** — the confirmation seam was **state, not an interaction**. Where
+  an unresolved phrase left two candidates, or left only the area asked about,
+  the screen said _"the app has not decided which"_ above no control at all.
+  That is Round 5's silent abstention with a label on it.
+- **QA-91-021** — adjacency was wrong in both directions: a rate or a measure
+  beside a number was read as a deadline, and a scalar bound, a complement and a
+  share of a salary were asked about again although the owner had supplied them.
+
+**The row now carries however many answers the question has** (D-258), never
+offers back the area that was asked, and pre-selects nothing while it is still
+asking — with browser coverage at all three widths for the branches that had
+none. It is still one row and one question: B1's rule is that the owner is not
+sent to a picker, not that a question may have one answer.
+
+**A temporal word is now read for the work it is doing.** It answers _by when_
+only where a preposition, a deictic or a standalone day word **places** it; and a
+money word governs the number whose object it is, across the words that can
+stand between them. A confirmation the owner has already answered is a tax, not
+caution.
+
+**Two guards were deleted rather than kept unproved**, both found by
+reintroductions that went green.
+
+**The owner-decision document was completed** on every point QA named, and still
+builds nothing: no service, no secret, no adapter, and one `fetch` in `src/`.
+
 ## Decisions made
 
-**D-240 … D-257** in [`DECISION_LOG.md`](DECISION_LOG.md).
+**D-240 … D-258** in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Accommodation row B1 landed, and the list learned something from it
 

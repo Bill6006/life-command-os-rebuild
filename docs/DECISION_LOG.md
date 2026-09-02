@@ -9893,3 +9893,87 @@ nothing was chosen.** The service does not exist, no secret exists, and the
 adapter seat in `advisor.ts` is unchanged.
 
 ---
+
+## D-258 — A question is a control, and a temporal word is read for its work
+
+**Phase:** 91 (QA round 9 repair) · **Status:** Active · **Completes** D-257
+
+D-257 stopped the interpreter concluding what it could not show and routed the
+rest to the owner. Round 9 agreed with the direction and found two things wrong
+with the delivery. Both are corrected here, and the architecture is unchanged.
+
+### QA-91-020 — the seam was state, not an interaction
+
+`scopeUnresolved`, `undecided` and a line in `unknowns` are things the reading
+_says_. They are not something the owner can do. Where an unresolved phrase left
+two candidates, or left only the area the question was asked in, `describeOffer`
+returned nothing at all — so the screen drew the sentence _"the app has not
+decided which"_ above no control whatsoever, and _"That is it"_ filed the aim
+anyway.
+
+**That is Round 5's silent abstention with a label on it**, which is exactly what
+QA rejected then and rightly rejects now. The one-question budget is not
+permission to render zero questions.
+
+So the row now carries **however many answers the question has**:
+
+- the reading exposes `candidates` — the areas it would be choosing between;
+- an unresolved scope always has some, falling back to the other readable areas
+  where the words name only the one asked about, because what could not be
+  settled is whether the denial covers the area he is standing in;
+- the asked area is never among them: it is the _keep_ side of the row, never an
+  inferred alternative;
+- the row says whether it is still `asking`, and while it is, **nothing is
+  pre-selected**. The owner has not answered until he has answered.
+
+**This is still one row and one question.** Accommodation row B1's rule is that
+he is not sent to a picker screen, not that a question may have only one answer.
+The clarification takes the follow-up slot the surface already had, so the
+question budget is unchanged.
+
+### QA-91-021 — adjacency is not proof of what a temporal word is doing
+
+D-257 read a number from what was touching it. QA broke that from both sides.
+
+**Too wide.** A unit beside a number may be measuring or dividing rather than
+dating: _"2 months salary"_ sizes money in months, _"per calendar year"_ spreads
+an amount over a year — and the second is not even touching the number. So a
+temporal word answers _by when_ only where something **places** it: a preposition
+that puts what follows it in time, a deictic that points at one moment, or a day
+word that names a day by itself. A determiner may stand between the placer and
+the placed, which is what _"by the summer"_ needs.
+
+**Too narrow.** _"save at least 3000"_, _"salary of 50000"_, _"a 3rd of my
+salary"_ are amounts the owner plainly supplied, and one-token adjacency asked
+for them again. A money word now governs the number whose object it is across
+the words that can stand between them, stopping where the amount's phrase does:
+at a preposition that puts what follows in time, at a clause, at a comma. An
+ordinal picking out a noun — _"my 2nd salary payment"_ — is not a size, and the
+`of` is what separates it from a share.
+
+**A confirmation the owner has already answered is not caution, it is a tax.**
+That is the half of D-257 this round had wrong, and it matters as much as the
+wrong conclusions.
+
+### Two guards went rather than being kept unproved
+
+Reintroduction found the rate check inside the unit-adjacency test unreachable —
+a rate always puts a determiner between the number and its unit, so the unit is
+never touching the number there — and the "stop at another number" guard in the
+money reach doing nothing any phrase could show. **Both were deleted.** Unproved
+code goes; that is the same call made at Round 8 for the non-finite guard.
+
+### The owner decision document was incomplete, and QA was right about that too
+
+It proposed origin checking and per-origin rate limiting as though they were an
+abuse boundary. `Origin` is a browser courtesy, not client authentication.
+[`ROUTING_91_OWNER_DECISION.md`](ROUTING_91_OWNER_DECISION.md) now sets out three
+real boundaries and chooses none, names provider, model, region and retention as
+four separate decisions, says how "no request logging" would actually be
+enforced rather than asserted, and adds the per-request consent, offline,
+latency, key-rotation, monitoring, incident and spend-cap story.
+
+**Still nothing built.** No service, no account, no secret, no adapter change,
+and `src/` still holds exactly one `fetch`.
+
+---

@@ -801,3 +801,112 @@ test.describe('91 — the instrument stays an ordinary-owner instrument', () => 
     expect(body, 'and it starts from an empty store every time').toContain('freshApp')
   })
 })
+
+/**
+ * 91 — an unresolved scope is a question the owner can actually answer.
+ *
+ * QA-91-020 found the interpreter announcing that it had not decided, and the
+ * screen drawing no control to decide with, wherever the words left more than
+ * one candidate or left only the area being asked about. State is not an
+ * interaction: the row has to be there, it has to be answerable, and answering
+ * or declining both have to land.
+ *
+ * Everything here runs from a store with nothing in it, through the ordinary
+ * Insights question, at 360, 430 and 1,280.
+ */
+test.describe('91 — the question an unresolved reading raises', () => {
+  test('shows a real question with an answer for each candidate, and writes nothing first', async ({
+    page,
+  }) => {
+    await freshApp(page)
+    await openTheQuestion(page)
+    await typeAim(page, 'Not about money and fitness counts')
+    await neverTheLaboratory(page)
+
+    // The reading says it has not decided...
+    await expect(page.getByTestId('discovery-reading')).toBeVisible()
+
+    // ...and there is a row to decide with, one answer per candidate.
+    const keep = page.getByTestId('discovery-keep')
+    await expect(keep).toHaveText('Keep it in Career & Learning')
+    const answers = page.locator('[data-testid^="discovery-refile-"]')
+    await expect(answers).toHaveCount(2)
+    await expect(page.getByTestId('discovery-refile-money')).toBeVisible()
+    await expect(page.getByTestId('discovery-refile-health')).toBeVisible()
+
+    // Nothing is pressed for him: the question is still open.
+    await expect(keep).toHaveAttribute('aria-pressed', 'false')
+    await expect(page.getByTestId('discovery-refile-money')).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+
+    // And it is one row, not a screen he has been sent to.
+    await expect(page.getByTestId('discovery-answer')).toBeVisible()
+  })
+
+  test('answers it, and the answer is what lands', async ({ page }) => {
+    await freshApp(page)
+    await openTheQuestion(page)
+    await typeAim(page, 'Not about money and fitness counts')
+
+    await page.getByTestId('discovery-refile-health').click()
+    await expect(page.getByTestId('discovery-refile-health')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await confirm(page)
+
+    await openPage(page, 'health-recovery', 'Health')
+    await expect(page.getByTestId('destination-aim')).toHaveText(
+      'Not about money and fitness counts',
+    )
+    await neverTheLaboratory(page)
+  })
+
+  test('declines it, and declining costs nothing', async ({ page }) => {
+    await freshApp(page)
+    await openTheQuestion(page)
+    await typeAim(page, 'Not about money and fitness counts')
+
+    await page.getByTestId('discovery-keep').click()
+    await expect(page.getByTestId('discovery-keep')).toHaveAttribute('aria-pressed', 'true')
+    await confirm(page)
+
+    await openPage(page, 'career', 'Career & Learning')
+    await expect(page.getByTestId('destination-aim')).toHaveText(
+      'Not about money and fitness counts',
+    )
+    await neverTheLaboratory(page)
+  })
+
+  test('asks the same way where the words name only the area he was asked about', async ({
+    page,
+  }) => {
+    await freshApp(page)
+    await openTheQuestion(page)
+    await typeAim(page, 'Not about certification and learning matters')
+
+    // No outside candidate, and still a question — the denial may be denying
+    // the very area he is standing in, and that is what he is being asked.
+    await expect(page.getByTestId('discovery-keep')).toHaveText('Keep it in Career & Learning')
+    const answers = page.locator('[data-testid^="discovery-refile-"]')
+    await expect(answers).toHaveCount(2)
+    await expect(page.getByTestId('discovery-keep')).toHaveAttribute('aria-pressed', 'false')
+    await neverTheLaboratory(page)
+  })
+
+  test('and a settled reading still shows the one offer it always did', async ({ page }) => {
+    await freshApp(page)
+    await openTheQuestion(page)
+    await typeAim(page, 'More money')
+
+    await expect(page.getByTestId('discovery-keep')).toHaveText('Keep it in Career & Learning')
+    await expect(page.getByTestId('discovery-refile')).toHaveText(
+      'File it in Money & Financial Resilience instead',
+    )
+    // The settled row is not pending: keeping is the standing answer.
+    await expect(page.getByTestId('discovery-keep')).toHaveAttribute('aria-pressed', 'true')
+    await neverTheLaboratory(page)
+  })
+})

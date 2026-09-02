@@ -4582,4 +4582,272 @@ handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
 retest says otherwise, and do not ask me to paste the file contents.
 ```
 
+---
+
+## Round 9 independent QA — FAIL
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**Product checkpoint:** `d7e49ee`  
+**QA-tested deployed/report head:** `91d064a`. The only change from the product
+checkpoint is this handoff file, so the two commits are bundle-equivalent. CI
+run `33647412482` is green, Preview serves `91d064a`, and all eight served files
+match that run's own manifest.
+
+**Verdict:** FAIL. D-257 chose the right direction — abstain and confirm rather
+than keep widening a parser — but the delivered confirmation seam is not a
+confirmation seam for every unresolved reading, and numeric adjacency is not a
+safe closed set. Two blocking findings remain.
+
+### QA-91-020 — an unresolved scope can say it is asking without putting a question
+
+**Severity:** Blocking.
+
+`scopeUnresolved`, `undecided` and an unknown string are state, not an owner
+interaction. Where an unresolved phrase leaves two candidates, or leaves only
+the area in which the question was asked, `describeOffer` returns nothing. The
+surface therefore has no row or control through which the owner can answer the
+question the reading claims to have raised.
+
+This was reproduced through the ordinary owner flow from a fresh Preview store,
+without opening `#/qa`:
+
+1. Insights asked _“What are you hoping Career & Learning eventually looks
+   like?”_
+2. The answer was _“Not about money and fitness is the real goal.”_
+3. The page rendered _“These words point at — the app has not decided which.”_
+   It listed _“which area this belongs to”_ under _“These words do not say”_,
+   but displayed no area question and no answer control.
+4. _“That is it”_ remained enabled. Pressing it filed the owner destination in
+   Career & Learning. No derived reading was written, but the unresolved filing
+   was accepted without the promised area clarification.
+
+The same missing control occurs for the multi-candidate
+_“Not about money and fitness counts”_ and for an asked-area-only case,
+_“Not about certification and learning matters”_ when asked in Career. The
+single-candidate control _“Not about money I earn”_ still produces one real
+offer, and the established accept/decline tests remain green. The defect is the
+uncovered zero-offer branch: it is Round 5's silent abstention with an unknown
+label attached to it.
+
+The one-question budget is not permission to render zero questions. A question
+must be an actionable owner interaction. An answer must settle the scope, and a
+decline must cost nothing; neither can be proved where there is nothing to
+answer or decline.
+
+### QA-91-021 — numeric adjacency is both too wide and too narrow
+
+**Severity:** Blocking.
+
+The closed set still concludes the wrong thing where an adjacent temporal word
+belongs to a rate or measure, and it asks redundant questions where the owner
+has plainly supplied an amount.
+
+Wrong conclusions — the too-wide side:
+
+| Owner words | What goes wrong |
+| ----------- | --------------- |
+| _A deposit of 2 months salary_ | `months` is allowed to settle a deadline while the deposit amount is left open. |
+| _A goal of 3 years rent_ | the measure and deadline roles are not kept apart. |
+| _Earn 50000 per calendar year_ | the rate's `year` is accepted as answering _by when_. |
+| _Earn 50000 every calendar year_ | the same wrong deadline conclusion survives a second rate shape. |
+| _Save 2 full months salary_ | the salary measure is accepted as a deadline. |
+
+Redundant questions — the too-narrow side:
+
+| Owner words | Unnecessary question |
+| ----------- | -------------------- |
+| _Save at least 3000 by March_ | _how much_ |
+| _Save up to 3000 by March_ | _how much_ |
+| _Salary of 50000 by March_ | _how much_ |
+| _Save a 3rd of my salary by December_ | _how much_ |
+
+Those four are not exotic: bounds, a salary complement and a share of salary
+are among the twenty-two removed claims and should not all become redundant
+questions. The plan library's twenty owner phrases still pass 20 of 20 without
+raising a scope question, but that denominator does not exercise these numeric
+roles. Four of four deliberately ordinary finance phrases outside it ask for an
+amount the owner just supplied. That confirmation burden is not tolerable as
+the product's general fallback.
+
+The paired numeric controls held: _“Earn 50000 next year”_, _“Save 3000 this
+March”_ and _“Save 3000 by March”_ all remain settled. The scope control
+_“Not about money-related fitness goals”_ remains closed, and the one-candidate
+scope control above still offers one area. The boundary, not all interpretation,
+is what failed.
+
+### The architecture and the twenty-two removed fixtures
+
+The architectural decision is still preferable to an eighth parser. The
+failures do not justify restoring the seven retired instruments or appending
+submitted words to more lists. They show two different gaps in D-257's delivery:
+
+- scope abstention needs a real confirmation mechanism for every unresolved
+  branch, not a prose unknown that some branches cannot answer;
+- numeric roles are not made closed merely by adjacency. A duration may measure
+  money or frequency while sitting beside a number, and an amount remains an
+  amount when ordinary modifiers sit between its governing words.
+
+The twenty-two removals therefore cannot be accepted as a unit. At least the
+four clear amount cases above should still be understood without asking
+_how much_; the rate and measure cases are more serious because the current
+replacement sometimes makes a wrong deadline conclusion rather than asking.
+
+The temporary Round 9 probe carried **17 cases**: **12 failures** and **five
+paired controls**. It was removed before the repository gates. No product code
+was changed by QA.
+
+### Owner decision document — honest boundary, incomplete decision
+
+`docs/ROUTING_91_OWNER_DECISION.md` remains a document only. No service,
+account, secret, adapter or product network call has been created. `src/` still
+contains exactly one `fetch`, the existing build-info request.
+
+The document is honest about the central privacy fact: the exact owner sentence
+would leave the device, while history would not. It also states the right local
+fallback — an unavailable, slow or rejected service returns to confirmation
+rather than guessing.
+
+It is not yet complete enough for an owner to decide deployment. It proposes
+origin CORS and per-origin rate limiting as though they formed an abuse boundary,
+but `Origin` is not client authentication. It does not select a provider, model,
+region or retention policy; say how no request logging is enforced; specify
+per-request consent, offline and latency UX; or give an operational story for
+monitoring, key rotation, incident response and bounded cost. Those are choices
+the owner would actually be deciding. The document is a useful architecture
+sketch, not yet a decision-ready service specification.
+
+### Preserved contracts and gates
+
+QA-91-001, QA-91-004, QA-91-005, QA-91-006 and QA-91-008 through QA-91-019
+remain green on their established cases. All eight CASE A tests, all six
+set-aside consequence paths, byte identity, derived provenance, the privacy
+digest with both controls, the one-question ceiling, the fixed clock, the null
+case, the second proving domain, non-reproposal and the no-score rule remain
+green. The shipped Phase 91 browser file passed all 48 cases at all three
+widths.
+
+| Gate | Round 9 result |
+| ---- | -------------- |
+| Focused interpretation suite | **124 of 124 passed** |
+| Phase 91 ordinary-owner browser retest | **48 of 48 passed** |
+| `npm run verify` | PASS |
+| Unit / contract / synthetic / adversarial | **2,028 passed** in 89 files |
+| Full browser matrix, 360 / 430 / 1,280, one worker, clean port 4182 | **834 of 834 passed** in one run, 20.3 minutes |
+| Privacy scan | clean — 311 tracked files |
+| Rendered copy and adaptation-claim scan | clean — 8,519 shipped strings, 8,429 placed in a module |
+| Android-style deployed gate | clean — **234 checks** against `91d064a` |
+| Checkpoint equivalence | only this handoff differs from `d7e49ee`; bundle-equivalent |
+| CI / deploy before this report | success — run `33647412482`, full browser step green |
+| Release integrity | clean — 8 files served byte for byte from that run's own manifest |
+
+The nineteen D-210 instrument-hardening findings remain open and untouched;
+their backlog blob remains `58d5af071355d252c4a254fc685fcc9e8e88f417`.
+`docs/ROUTING_91_BRIEF.md` remains present, CASE B remains out of scope, and
+routing 92 has not begun.
+
+---
+
+## Round 9 FAIL — complete builder repair handoff
+
+**Model:** strongest current Claude Opus-equivalent. **Intelligence level:**
+**Max**. **Conversation:** **CURRENT** — the original Phase 91 builder.
+
+```text
+Repair routing Phase 91 after independent QA Round 9. Keep the Phase field
+exactly 91 and keep the phase YELLOW.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Treat all nine QA reports as
+settled evidence. The current report is “Round 9 independent QA — FAIL” against
+product checkpoint d7e49ee and bundle-equivalent deployed/report head 91d064a.
+
+Reproduce QA-91-020 and QA-91-021 before changing code. Recreate the temporary
+17-case probe: the three unresolved-scope failures, the five wrong numeric-role
+conclusions, the four unnecessary amount questions and all five paired controls.
+Also reproduce QA-91-020 through the ordinary fresh-store Insights flow, without
+opening #/qa: the current screen says “These words point at — the app has not
+decided which”, provides no area question, enables “That is it”, and files the
+aim in Career.
+
+Keep D-257's architecture: read only what is demonstrably closed and confirm the
+rest. Do not restore any retired parser, add the submitted phrases or their
+tokens to lists, widen a neighbour window, or write an eighth hand-built parser.
+
+Repair the confirmation seam as an owner interaction. Every scopeUnresolved
+reading — including zero outside candidates, one outside candidate, multiple
+outside candidates and only the asked-in area — must name no settled area,
+write no derived reading, and put exactly one actionable area question. An
+unknown string is not a question. The owner must be able to answer it and see
+the answer land, or decline it and lose nothing. Never offer the asked-in area
+as though it were an inferred alternative, never silently take “That is it” as
+an area answer, and never turn the surface into a multi-question picker. The
+clarification must take the existing follow-up slot rather than add to the
+question budget. Preserve the owner's words byte-identically.
+
+Add ordinary-owner browser coverage at 360, 430 and 1,280 for both the
+multi-candidate and asked-area-only branches. Prove the visible question,
+answer, decline, no-write-before-answer, write-after-answer and no-picker
+contracts from a fresh store. Keep the existing one-candidate accept/decline
+journey green.
+
+Repair numeric interpretation at the architecture boundary. Adjacency alone is
+not proof that a temporal word is a deadline; a rate or measure can be adjacent
+too. Conversely, ordinary bounds, complements and shares do not erase an amount
+the owner supplied. Do not solve the nine phrases with forms or vocabulary.
+Either establish a genuinely structural closed role or route the numeric role
+through one explicit confirmation that asks about the role, not redundantly for
+the number already on screen. If deterministic free text cannot make that
+distinction without another parser, stop auto-concluding that numeric role and
+use the confirmation architecture. Never replace a wrong conclusion with a
+prose unknown that has no control.
+
+Complete docs/ROUTING_91_OWNER_DECISION.md without taking the decision or
+building the service. Make the owner-decision boundary concrete: authentication
+and abuse control rather than CORS as identity; provider/model/region/retention
+choices; enforceable request-logging policy; per-request consent, offline,
+latency and fallback UX; monitoring, key rotation, incident response and bounded
+cost. Continue to state plainly that the exact submitted sentence leaves the
+device. Add no account, service, secret, adapter or network call.
+
+Preserve QA-91-001, QA-91-004, QA-91-005, QA-91-006 and QA-91-008 through
+QA-91-019; all eight CASE A tests; all six consequence paths; byte identity;
+derived provenance; the privacy digest and both controls; the one-question
+budget; the null case; the second proving domain; three-day non-reproposal; B1;
+the no-score rule; the fixed clock; the preview-port override; and the single
+fetch. Preserve all nineteen D-210 deferrals, docs/ROUTING_91_BRIEF.md and CASE
+B's scope. Do not begin routing 92.
+
+Add class and reintroduction proofs for the repaired architecture, not fixtures
+that merely memorize these phrases. Run npm run verify, the Phase 91 browser
+file and one full 360/430/1280 browser matrix on a clean port and one worker;
+then privacy, copy/adaptation, Android, checkpoint equivalence, CI and release
+integrity using that CI run's own manifest. Commit, push, deploy and prove
+Preview.
+
+Append the builder's Round 9 repair record and a complete Round 10 retest
+handoff to docs/qa/PHASE_91_QA_HANDOFF.md. Do not edit any QA report. Route Round
+10 to this SAME Codex QA conversation at High reasoning. End this file with the
+required completion marker.
+```
+
+### Short launcher
+
+**Model:** strongest current Claude Opus-equivalent. **Intelligence level:** Max.
+**Conversation:** CURRENT — the original Phase 91 builder.
+
+```text
+Repair routing Phase 91 after independent QA Round 9.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the complete Round 9
+builder repair handoff at the end exactly as written. Keep Phase 91 YELLOW,
+preserve every passed contract and explicit deferral, and do not ask me to paste
+the file contents.
+```
+
 <!-- LCO_COMPLETE -->

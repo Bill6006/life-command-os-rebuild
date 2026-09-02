@@ -5706,3 +5706,33 @@ auto-conclusion the instrument no longer makes. The instrument's code fell from
 
 Full reproductions, resolution and verification:
 [`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).
+
+## QA-91-020, QA-91-021 — routing 91 independent QA round 9
+
+**Found:** independent Codex QA, round 9, 2026-09-02 · **Status:** Fixed (routing 91 round 9 repair) · **Owner:** routing 91
+
+The ninth round, and the first to accept the architecture and fault its delivery
+rather than its shape (D-258).
+
+| ID        | Finding                                                                                                                                                        | Repair                                                                                                                                                       |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| QA-91-020 | An unresolved reading claimed to be asking and rendered no control on two of its four branches                                                                 | The reading exposes the `candidates` it is choosing between; the row carries one answer each, pre-selects none, and never offers back the asked area (D-258) |
+| QA-91-021 | Adjacency was both too wide — a rate or measure beside a number read as a deadline — and too narrow — a scalar bound, a complement and a share asked for again | A temporal word answers _when_ only where something places it; a money word governs the number whose object it is (D-258)                                    |
+
+**Five wrong conclusions and four redundant questions**, all repaired, with the
+five paired controls held.
+
+**Browser coverage at 360, 430 and 1,280** for the multi-candidate and
+asked-area-only branches: the visible question, the answer landing, the decline
+costing nothing, and nothing written before an answer.
+
+**Thirteen reintroductions, four of them reverse mutations.** Two further
+proofs found guards that no phrase could show, and both guards were deleted.
+
+**The owner-decision document was completed** on the points QA named — authentication
+rather than CORS as identity, provider/model/region/retention, enforceable
+logging policy, consent and offline UX, and the operational story. Nothing was
+built and nothing was chosen.
+
+Full reproductions, repairs and verification:
+[`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).

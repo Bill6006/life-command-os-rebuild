@@ -914,7 +914,105 @@ function unitToken(token: Token | undefined, units: readonly string[]): boolean 
   return units.includes(token.word) || (bare !== '' && units.includes(bare))
 }
 
-/** Every number in the phrase, with the role its neighbours actually show. */
+/**
+ * What can point a unit at one moment, and what spreads an amount over it.
+ *
+ * Both closed, and both needed, because QA-91-021 broke adjacency from each
+ * side at once: *"per calendar year"* is a wage and *"this March"* is a
+ * deadline, and neither is settled by what is touching the number.
+ */
+const POINT_DEICTICS = ['next', 'this', 'last', 'coming', 'following', 'previous']
+const DISTRIBUTIVE = ['a', 'an', 'each', 'every', 'per']
+
+/**
+ * Where an amount's phrase ends, besides a temporal preposition or a comma.
+ *
+ * The copula, the auxiliaries, the modals and the subject pronouns — closed
+ * classes, and used here only to stop a money word reaching across a clause
+ * into a number that is not its object.
+ */
+const CLAUSE_WORDS = [
+  'is',
+  'are',
+  'was',
+  'were',
+  'am',
+  'has',
+  'have',
+  'had',
+  'do',
+  'does',
+  'did',
+  'will',
+  'would',
+  'shall',
+  'should',
+  'can',
+  'could',
+  'may',
+  'might',
+  'must',
+  'i',
+  'we',
+  'you',
+  'he',
+  'she',
+  'they',
+  'it',
+]
+
+/**
+ * The function words a measured noun can never be.
+ *
+ * *"3rd quarter **of** 2027"* puts a preposition after the unit, not the thing
+ * being measured, so it is a date rather than a size.
+ */
+const FUNCTION_WORDS = [
+  ...CLAUSE_WORDS,
+  ...DISTRIBUTIVE,
+  ...POINT_DEICTICS,
+  'of',
+  'in',
+  'on',
+  'at',
+  'for',
+  'to',
+  'with',
+  'and',
+  'or',
+  'the',
+  'my',
+  'our',
+  'your',
+  // The degree words that sit on a quantity without changing whose it is.
+  'least',
+  'most',
+  'up',
+  'about',
+  'around',
+  'over',
+  'under',
+  'nearly',
+  'roughly',
+  'almost',
+]
+
+/**
+ * What can place a horizon word in time.
+ *
+ * A preposition that puts what follows it somewhere, or a deictic that points
+ * at one moment. `per`, `full` and a bare number are not among them, which is
+ * the whole of QA-91-021's too-wide half.
+ */
+const PLACERS = [...ALWAYS_TEMPORAL, 'in', 'on', 'at', 'of', ...POINT_DEICTICS]
+
+/** Determiners, which stand between a placer and the word it places. */
+const ARTICLES = ['the', 'a', 'an', 'my', 'our', 'your']
+
+/** Day words that name a day on their own, with no preposition to place them. */
+const STANDALONE_DAYS = ['today', 'tonight', 'tomorrow', 'yesterday']
+
+/** Every number in the phrase, with the role its construction actually shows. */
 function numberTokens(text: string): readonly NumberToken[] {
   const tokens = tokensOf(text)
   const numbers: NumberToken[] = []
@@ -922,31 +1020,116 @@ function numberTokens(text: string): readonly NumberToken[] {
   for (let index = 0; index < tokens.length; index += 1) {
     const here = tokens[index]!
     if (!/\d/.test(here.word)) continue
-    numbers.push({
-      at: here.at,
-      raw: here.word,
-      role: roleOf(here, tokens[index - 1], tokens[index + 1]),
-    })
+    numbers.push({ at: here.at, raw: here.word, role: roleOf(tokens, index) })
   }
 
   return numbers
 }
 
-function roleOf(here: Token, before: Token | undefined, after: Token | undefined): Role {
-  // An amount says so on the number itself, or in the token either side of it.
+/**
+ * A temporal unit that is **measuring something** rather than dating anything.
+ *
+ * *"2 months salary"* and *"3 years rent"* put a noun after the unit, and that
+ * noun is what is being measured: the number counts months, and the months
+ * measure money. *"in 6 months"* has nothing after the unit, and *"15 Mar 2027"*
+ * has another number, so neither of those is a measure.
+ */
+function measured(tokens: readonly Token[], unit: number): boolean {
+  // `2 months of salary` and `2 months salary` are one relation, two spellings.
+  const next = tokens[unit + 1]?.word === 'of' ? tokens[unit + 2] : tokens[unit + 1]
+  if (next === undefined || next.word === '') return false
+  if (/\d/.test(next.word)) return false
+  if (FUNCTION_WORDS.includes(next.word)) return false
+  return !unitToken(next, TEMPORAL_UNITS)
+}
+
+/**
+ * A unit touching the number that is telling the time rather than measuring.
+ *
+ * A rate never reaches here: *"50000 a year"* and *"per calendar year"* always
+ * put a determiner between the number and the unit, so the unit is not touching
+ * it at all. That is why the rate is read in {@link saysWhen}, where the
+ * question is what **placed** the word — and why the guard that used to sit here
+ * against a distributive was removed as unreachable rather than kept unproved.
+ */
+function datesTheNumber(tokens: readonly Token[], index: number): boolean {
+  const before = index - 1
+  if (unitToken(tokens[before], TEMPORAL_UNITS)) return true
+  const after = index + 1
+  if (!unitToken(tokens[after], TEMPORAL_UNITS)) return false
+  return !measured(tokens, after)
+}
+
+/**
+ * A money word governing the number, earlier in the same stretch of phrase.
+ *
+ * *"save at least 3000"*, *"salary of 50000"*, *"a 3rd of my salary"* — the
+ * owner has plainly said how much, and Round 8's one-token adjacency asked him
+ * again anyway. The reach stops where the amount's phrase does: at a
+ * preposition that puts what follows it in time, at a clause, and at a comma.
+ */
+function moneyGoverns(tokens: readonly Token[], index: number): boolean {
+  /*
+   * An ordinal says which one, not how many — unless it is a share.
+   *
+   * *"my 2nd salary payment"* identifies a payment and *"a 3rd of my salary"*
+   * is a size, and what separates them is the `of`. Without it the money word
+   * in front governs a noun the ordinal is picking out, not an amount.
+   */
+  const here = tokens[index]!
+  if (/^\d+(?:st|nd|rd|th)$/.test(here.word) && tokens[index + 1]?.word !== 'of') return false
+
+  return reaches(tokens, index, -1) || reaches(tokens, index, 1)
+}
+
+/**
+ * Walk one way from the number looking for the money word it belongs to.
+ *
+ * Both ways, because English puts it on either side: *"save 3000"* and *"5000
+ * of debt"* are the same relation read from opposite ends. The walk stops where
+ * the amount's phrase does — a preposition that puts what follows it in time, a
+ * clause, a comma, or any word that is not one of the few that can stand
+ * between a money word and its own amount. A guard against crossing another
+ * number stood here too, and went: no phrase could be found where it changed
+ * the reading, and unproved code goes.
+ */
+function reaches(tokens: readonly Token[], index: number, step: -1 | 1): boolean {
+  for (let at = index + step; at >= 0 && at < tokens.length; at += step) {
+    const token = tokens[at]!
+    if (MARKER_WORDS.has(token.word)) return true
+    if (ALWAYS_TEMPORAL.includes(token.word) || CLAUSE_WORDS.includes(token.word)) return false
+    if (/[,;:]$/.test(token.raw)) return false
+    if (!FUNCTION_WORDS.includes(token.word)) return false
+  }
+  return false
+}
+
+function roleOf(tokens: readonly Token[], index: number): Role {
+  const here = tokens[index]!
+  const before = tokens[index - 1]
+  const after = tokens[index + 1]
+
+  // An amount says so on the number itself, or in the unit beside it.
   if (CURRENCY.test(here.raw)) return 'amount'
   if (unitToken(after, AMOUNT_UNITS) || unitToken(here, AMOUNT_UNITS)) return 'amount'
   if (here.word.endsWith('%')) return 'amount'
-  if (before !== undefined && MARKER_WORDS.has(before.word)) return 'amount'
 
-  // A written date is written as one, and a unit touching the number is its own.
+  // A written date is written as one.
   if (SLASHED.test(here.word) || THREE_PART.test(here.word)) return 'date'
-  if (unitToken(before, TEMPORAL_UNITS) || unitToken(after, TEMPORAL_UNITS)) return 'date'
 
-  // ...and a slot only a time can fill takes a year or a punctuated pair.
+  // A unit touching the number dates it — unless that unit is doing other work.
+  if (datesTheNumber(tokens, index)) return 'date'
+
+  // A unit measuring a noun makes the number the size of that noun.
+  if (unitToken(after, TEMPORAL_UNITS) && measured(tokens, index + 1)) return 'amount'
+
+  // A slot only a time can fill takes a year or a punctuated pair.
   if (before !== undefined && ALWAYS_TEMPORAL.includes(before.word)) {
     if (YEARISH.test(here.word) || PUNCTUATED_PAIR.test(here.word)) return 'date'
   }
+
+  // ...and last, the money word whose object this number is.
+  if (moneyGoverns(tokens, index)) return 'amount'
 
   return 'unresolved'
 }
@@ -967,8 +1150,14 @@ function saysHowMuch(text: string): boolean {
 /**
  * Whether the words say **by when**.
  *
- * A horizon word touching a number is that number's unit, so it answers this
- * only where the number is a date. A free-standing one answers on its own.
+ * Round 8 asked whether a horizon word was touching a number, and QA broke it
+ * with one word of distance: *"per **calendar** year"* and *"2 **full** months
+ * salary"* are a wage and a measure, and neither is a deadline.
+ *
+ * So a horizon word answers this only where something **places** it — a
+ * preposition that puts what follows it in time, a deictic that points at one
+ * moment, or a day word that names a day by itself. A unit with none of those
+ * is measuring or dividing something, and is not an answer to *when*.
  */
 function saysWhen(text: string): boolean {
   if (numberTokens(text).some((number) => number.role === 'date')) return true
@@ -976,10 +1165,12 @@ function saysWhen(text: string): boolean {
   const tokens = tokensOf(text)
   return tokens.some((token, index) => {
     if (!HORIZON.includes(token.word)) return false
-    const before = tokens[index - 1]
-    const after = tokens[index + 1]
-    const touching = (other: Token | undefined) => other !== undefined && /\d/.test(other.word)
-    return !touching(before) && !touching(after)
+    if (STANDALONE_DAYS.includes(token.word)) return true
+    // A determiner may stand between the placer and what it places: `by the summer`.
+    let back = index - 1
+    while (back >= 0 && ARTICLES.includes(tokens[back]!.word)) back -= 1
+    const before = tokens[back]
+    return before !== undefined && PLACERS.includes(before.word)
   })
 }
 
@@ -1033,6 +1224,20 @@ export interface AimReading {
   readonly offer: LifeDomainId | undefined
   /** The words point at more than one area and none of them wins. */
   readonly undecided: boolean
+  /**
+   * The areas the question is between, which is what makes it answerable.
+   *
+   * QA-91-020: `scopeUnresolved` and an unknown string are **state**, not an
+   * owner interaction. A reading that says it is asking has to carry what the
+   * owner would be choosing from, or the surface has nothing to draw and the
+   * abstention is Round 5's silent one with a label on it.
+   *
+   * One entry for a settled cross-area reading, and for an unresolved scope
+   * every candidate other than the area he was asked about — falling back to
+   * the other readable areas where the words name only that one, because the
+   * denial may be denying it.
+   */
+  readonly candidates: readonly LifeDomainId[]
   /**
    * The words deny something, and this file cannot show which markers it covers.
    *
@@ -1184,6 +1389,23 @@ export function readAim(input: InterpreterInput): AimReading {
   const elsewhere = !unresolved && offer !== undefined && leaderRank > askedRank ? offer : undefined
   const undecided = unresolved || (contested && elsewhere === undefined)
 
+  /*
+   * What the owner would be choosing from, so that the question can be put.
+   *
+   * An unresolved scope always has something to ask: the areas the words name
+   * besides the one he was asked about, or — where the words name only that
+   * one — the other areas he could file it in, because what the instrument
+   * could not settle is whether the denial covers the area he is standing on.
+   */
+  const elsewhereReadable = READABLE_AREAS.filter((domain) => domain !== input.askedIn)
+  const candidates: readonly LifeDomainId[] = unresolved
+    ? elsewhereUnplaced.length > 0
+      ? elsewhereUnplaced
+      : elsewhereReadable
+    : offer === undefined
+      ? []
+      : [offer]
+
   return {
     words: typed,
     askedIn: input.askedIn,
@@ -1192,6 +1414,7 @@ export function readAim(input: InterpreterInput): AimReading {
     offer,
     undecided,
     scopeUnresolved: unresolved,
+    candidates,
     unknowns: unknownsFrom(haystack, ordered, undecided),
     input,
   }
@@ -1291,16 +1514,44 @@ export function describeReading(
   return undefined
 }
 
-/** The two option rows, in the words of the choice they actually are — rule 4. */
+/**
+ * The option row, in the words of the choice it actually is — rule 4.
+ *
+ * ## Why this is a list now
+ *
+ * It used to return one keep and one refile, which is the whole of a settled
+ * cross-area reading: there is exactly one other area in the running. An
+ * **unresolved** scope is not that shape — the words may name two other areas,
+ * or only the one he was asked about — and QA-91-020 found the surface drawing
+ * no row at all in both of those cases. A reading that claims to be asking, and
+ * renders no control, is the silent abstention QA rejected at Round 5.
+ *
+ * So the row carries however many answers the question has. It is still **one
+ * row and one question** — accommodation row B1's rule is that the owner is not
+ * sent to a picker screen, not that a question may only ever have one answer.
+ *
+ * `answered` says whether the owner has chosen yet, which is what lets an
+ * unresolved row show that it is still waiting rather than pre-selecting an
+ * answer on his behalf.
+ */
+export interface OfferRow {
+  readonly keep: string
+  readonly options: readonly { readonly domain: LifeDomainId; readonly label: string }[]
+  readonly asking: boolean
+}
+
 export function describeOffer(
   reading: AimReading,
   area: (id: LifeDomainId) => string,
-): { readonly keep: string; readonly refile: string } | undefined {
-  const offer = reading.offer
-  if (offer === undefined) return undefined
+): OfferRow | undefined {
+  if (reading.candidates.length === 0) return undefined
   return {
     keep: `Keep it in ${area(reading.askedIn)}`,
-    refile: `File it in ${area(offer)} instead`,
+    options: reading.candidates.map((domain) => ({
+      domain,
+      label: `File it in ${area(domain)} instead`,
+    })),
+    asking: reading.scopeUnresolved,
   }
 }
 

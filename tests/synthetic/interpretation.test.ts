@@ -92,7 +92,10 @@ describe('CASE A 1 — “More money” under the Career question names Money', 
     const offer = describeOffer(reading, (id) => coreDomains.labelFor(id))
 
     expect(offer?.keep).toBe('Keep it in Career & Learning')
-    expect(offer?.refile).toBe('File it in Money & Financial Resilience instead')
+    expect(offer?.options.map((option) => option.label)).toEqual([
+      'File it in Money & Financial Resilience instead',
+    ])
+    expect(offer?.asking, 'a settled reading is not asking anything').toBe(false)
 
     /*
      * The default is the app having changed nothing — the brief's rule 4.
@@ -1878,8 +1881,184 @@ describe('QA-91-003 — a token is read for its role, not for its presence', () 
     expect(untyped.unknowns, 'no amount was established').toContain('how much')
     expect(untyped.unknowns, 'and no date either').toContain('by when')
 
-    for (const phrase of ['Save at least 3000 by March', 'Save a 3rd of my salary by December']) {
-      expect(read(phrase).unknowns, `${phrase}: the sum is not shown`).toContain('how much')
+    // QA-91-021 overturned the two phrases that used to sit here: a scalar bound
+    // and a share of a salary are amounts the owner supplied, and asking again
+    // was a redundant question rather than an honest abstention. They are now
+    // asserted the other way round, in the test below this one.
+    expect(read('More money by 17').unknowns, 'a number nothing types').toContain('how much')
+  })
+
+  // -------------------------------------------------------------------------
+  // Round 9 — the question is a control, and the number is read from its
+  // construction rather than from whatever is touching it
+
+  it('puts an answerable question on every unresolved branch — QA-91-020', () => {
+    /*
+     * `scopeUnresolved` and an unknown string are state, not an interaction.
+     * QA-91-020 found the surface drawing no control at all where the words
+     * left two candidates, or left only the area that was asked about — which
+     * is Round 5's silent abstention with a label on it.
+     *
+     * Every branch now carries what the owner would be choosing from, so the
+     * row can be drawn: two outside candidates, one, and none at all.
+     */
+    const label = (id: LifeDomainId) => coreDomains.labelFor(id)
+    for (const [phrase, askedIn] of [
+      ['Not about money and fitness is the real goal', DOMAIN.career],
+      ['Not about money and fitness counts', DOMAIN.career],
+      ['Not about certification and learning matters', DOMAIN.career],
+      ['Not about money I earn', DOMAIN.career],
+      ['Not about money I earn', DOMAIN.money],
+    ] as const) {
+      const reading = readAim(interpreterInput(phrase, askedIn, [], NO_PERMISSIONS))
+      const row = describeOffer(reading, label)
+      const where = `${phrase} @${askedIn}`
+
+      expect(reading.scopeUnresolved, `${where}: the scope is not shown`).toBe(true)
+      expect(row, `${where}: so there is a row to answer through`).toBeDefined()
+      expect(row!.options.length, `${where}: with at least one answer on it`).toBeGreaterThan(0)
+      expect(row!.asking, `${where}: and it says it is still asking`).toBe(true)
+      expect(reading.names, `${where}: while nothing is claimed`).toEqual([])
+    }
+  })
+
+  it('and never offers back the area the question was asked in', () => {
+    /*
+     * The asked area is the *keep* side of the row and never an answer on it.
+     * Offering it as though it were an inferred alternative would be the app
+     * proposing what the owner already did.
+     */
+    for (const askedIn of [DOMAIN.career, DOMAIN.money, DOMAIN.health]) {
+      const reading = readAim(
+        interpreterInput('Not about money and fitness counts', askedIn, [], NO_PERMISSIONS),
+      )
+      expect(reading.candidates, `asked in ${askedIn}`).not.toContain(askedIn)
+    }
+  })
+
+  it('and a settled reading carries one answer and is not asking', () => {
+    /*
+     * The reverse: a reading that did resolve keeps the shape it always had —
+     * one alternative, no question pending — so the row does not start
+     * announcing doubt the words do not support.
+     */
+    const settled = readAim(interpreterInput('More money', DOMAIN.career, [], NO_PERMISSIONS))
+    const row = describeOffer(settled, (id) => coreDomains.labelFor(id))
+    expect(settled.scopeUnresolved).toBe(false)
+    expect(row?.options).toHaveLength(1)
+    expect(row?.asking, 'nothing is pending').toBe(false)
+  })
+
+  it('reads a temporal unit that is measuring or dividing, not dating — QA-91-021', () => {
+    /*
+     * Adjacency is not proof that a temporal word is a deadline. *"2 months
+     * salary"* measures money in months, *"per calendar year"* divides an
+     * amount over a year, and Round 8 read a deadline out of both — the second
+     * from a word that was not even touching the number.
+     */
+    for (const phrase of [
+      'A deposit of 2 months salary',
+      'A goal of 3 years rent',
+      'Earn 50000 per calendar year',
+      'Earn 50000 every calendar year',
+      'Save 2 full months salary',
+    ]) {
+      const measured = read(phrase)
+      expect(measured.unknowns, `${phrase}: the size is stated`).not.toContain('how much')
+      expect(measured.unknowns, `${phrase}: and no deadline is`).toContain('by when')
+    }
+  })
+
+  it('and still reads a unit something has placed in time', () => {
+    /*
+     * The reverse, and the reason the rule is about placement rather than
+     * distance. A preposition, a deictic, or a day word standing on its own all
+     * put a unit at a moment; a determiner may sit between.
+     */
+    for (const phrase of [
+      'Save 3000 by March',
+      'Save 3000 this March',
+      'Earn 50000 next year',
+      'Save 2 months salary by March',
+      'Get promoted to senior engineer by the summer',
+    ]) {
+      expect(read(phrase).unknowns, `${phrase}: something placed it`).not.toContain('by when')
+    }
+  })
+
+  it('does not ask again for an amount the owner has already given', () => {
+    /*
+     * The too-narrow half. A scalar bound, a complement and a share of a salary
+     * are all amounts plainly supplied, and Round 8's one-token adjacency asked
+     * for them a second time. A confirmation the owner has already answered is
+     * not caution, it is a tax.
+     */
+    for (const phrase of [
+      'Save at least 3000 by March',
+      'Save up to 3000 by March',
+      'Salary of 50000 by March',
+      'Save a 3rd of my salary by December',
+    ]) {
+      expect(read(phrase).unknowns, phrase).toEqual([])
+    }
+  })
+
+  it('and still asks where the money word governs no amount of its own', () => {
+    /*
+     * The reverse of that reach. A money word does not carry across a
+     * preposition that puts what follows it in time, across another number, or
+     * across a comma — and an ordinal picking out a noun is not a size.
+     */
+    expect(read('More money by 17').unknowns, 'a deadline slot types nothing').toContain('how much')
+    expect(
+      read('More money from 15 to 17 next month').unknowns,
+      'a range is not the money word’s own amount',
+    ).toContain('how much')
+    expect(
+      read('Save my 2nd salary payment').unknowns,
+      'an ordinal picks a payment rather than sizing one',
+    ).toContain('how much')
+  })
+
+  it('asks nothing redundant of ordinary money phrases either', () => {
+    /*
+     * The confirmation burden, measured on a denominator that exercises the
+     * numeric roles — which the plan's own library does not.
+     *
+     * QA-91-021's point was not that four phrases were wrong; it was that four
+     * of four ordinary finance sentences asked for an amount the owner had just
+     * supplied, and a fallback with that rate is not tolerable as the product's
+     * general behaviour. So these are the shapes an owner actually types about
+     * money, and none of them may ask about a fact it can already see.
+     */
+    const settled = [
+      'Save 3000 by March',
+      'Save at least 3000 by March',
+      'Save up to 3000 by March',
+      'Salary of 50000 by March',
+      'Save a 3rd of my salary by December',
+      'Save £3000 by 2027',
+      'Save 2027 dollars by March',
+      'Earn 50000 next year',
+      'Save 3000 this March',
+      'Save 2 months salary by March',
+      'Save 10 percent of my salary by March',
+      'Clear 5000 of debt by December',
+    ]
+
+    const asking = settled.filter((phrase) => read(phrase).unknowns.includes('how much'))
+    expect(asking, 'the amount is on the screen already').toEqual([])
+    expect(settled.length, 'and the measure is worth making').toBeGreaterThan(10)
+  })
+
+  it('and still asks where an ordinary money phrase really does leave it open', () => {
+    /*
+     * The reverse, so the test above cannot be satisfied by concluding
+     * everything. Each of these genuinely omits the amount, and each is asked
+     * about rather than guessed at.
+     */
+    for (const phrase of ['More money by March', 'More money by 17', 'More money in 6 months']) {
+      expect(read(phrase).unknowns, phrase).toContain('how much')
     }
   })
 })

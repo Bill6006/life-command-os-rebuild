@@ -125,6 +125,8 @@ export function Discovery({ situation }: { situation: Situation }) {
    * new words do not name.
    */
   const [fileIn, setFileIn] = useState<LifeDomainId | undefined>(undefined)
+  /** Whether he has answered the scope question, as against not yet. */
+  const [answeredScope, setAnsweredScope] = useState(false)
   const inFlight = useRef(false)
 
   const agenda = useMemo(
@@ -221,7 +223,9 @@ export function Discovery({ situation }: { situation: Situation }) {
    * would be the app acting on a reading it is no longer making — so the choice
    * is checked against the live offer rather than remembered.
    */
-  const filedIn = reading?.offer !== undefined && fileIn === reading.offer ? fileIn : undefined
+  // Any candidate the question is between, not only the single settled offer.
+  const filedIn =
+    fileIn !== undefined && (reading?.candidates ?? []).includes(fileIn) ? fileIn : undefined
   const area = (id: LifeDomainId) => situation.domains.labelFor(id)
   const offer = reading === undefined ? undefined : describeOffer(reading, area)
   const readingLine = reading === undefined ? undefined : describeReading(reading, area)
@@ -516,11 +520,16 @@ export function Discovery({ situation }: { situation: Situation }) {
               What the words sound like, and the one choice that follows — the
               brief's rule 4 and accommodation row B1.
 
-              **Two option rows inside the confirmation block, not a picker
-              screen.** The app says what it read and offers to act on it; the
-              row that keeps the aim where the question was is selected until he
-              says otherwise, so the default state of this control is the app
-              having changed nothing.
+              **One option row inside the confirmation block, not a picker
+              screen.** The app says what it read and offers to act on it. A
+              settled reading keeps the aim where the question was until he says
+              otherwise, so the default state of that control is the app having
+              changed nothing.
+
+              An **unresolved** scope carries as many answers as the question
+              has, and pre-selects none of them: it is waiting, and B1's rule is
+              that he is not sent to a picker screen rather than that a question
+              may only ever have one answer (D-258, QA-91-020).
             */
             <div data-testid="discovery-reading">
               <p className="note">{readingLine}</p>
@@ -529,23 +538,36 @@ export function Discovery({ situation }: { situation: Situation }) {
                   <button
                     type="button"
                     className="domain-option"
-                    aria-pressed={filedIn === undefined}
+                    aria-pressed={filedIn === undefined && (answeredScope || !offer.asking)}
                     disabled={busy}
                     data-testid="discovery-keep"
-                    onClick={() => setFileIn(undefined)}
+                    onClick={() => {
+                      setFileIn(undefined)
+                      setAnsweredScope(true)
+                    }}
                   >
                     {offer.keep}
                   </button>
-                  <button
-                    type="button"
-                    className="domain-option"
-                    aria-pressed={filedIn !== undefined}
-                    disabled={busy}
-                    data-testid="discovery-refile"
-                    onClick={() => setFileIn(reading?.offer)}
-                  >
-                    {offer.refile}
-                  </button>
+                  {offer.options.map((option) => (
+                    <button
+                      key={option.domain}
+                      type="button"
+                      className="domain-option"
+                      aria-pressed={filedIn === option.domain}
+                      disabled={busy}
+                      data-testid={
+                        offer.options.length === 1
+                          ? 'discovery-refile'
+                          : `discovery-refile-${option.domain}`
+                      }
+                      onClick={() => {
+                        setFileIn(option.domain)
+                        setAnsweredScope(true)
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>

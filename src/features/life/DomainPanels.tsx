@@ -141,6 +141,8 @@ export function DestinationPanel({
   const [draft, setDraft] = useState('')
   /** Where he has chosen to file it; undefined is *where this page is*. */
   const [fileIn, setFileIn] = useState<LifeDomainId | undefined>(undefined)
+  /** Whether he has answered the scope question, as against not yet. */
+  const [answeredScope, setAnsweredScope] = useState(false)
   /** The destination whose reading gesture is showing its consequence. */
   const [deciding, setDeciding] = useState<string | undefined>(undefined)
 
@@ -165,7 +167,9 @@ export function DestinationPanel({
    */
   const here = data.page.domains[0]!
   const reading = aim.trim() === '' ? undefined : readAimIn(aim.trim(), here, situation)
-  const filedIn = reading?.offer !== undefined && fileIn === reading.offer ? fileIn : undefined
+  // Any candidate the question is between, not only the single settled offer.
+  const filedIn =
+    fileIn !== undefined && (reading?.candidates ?? []).includes(fileIn) ? fileIn : undefined
   const label = (id: LifeDomainId) => situation.domains.labelFor(id)
   const offer = reading === undefined ? undefined : describeOffer(reading, label)
   const readingLine = reading === undefined ? undefined : describeReading(reading, label)
@@ -442,23 +446,36 @@ export function DestinationPanel({
                   <button
                     type="button"
                     className="domain-option"
-                    aria-pressed={filedIn === undefined}
+                    aria-pressed={filedIn === undefined && (answeredScope || !offer.asking)}
                     disabled={disabled}
                     data-testid="destination-keep"
-                    onClick={() => setFileIn(undefined)}
+                    onClick={() => {
+                      setFileIn(undefined)
+                      setAnsweredScope(true)
+                    }}
                   >
                     {offer.keep}
                   </button>
-                  <button
-                    type="button"
-                    className="domain-option"
-                    aria-pressed={filedIn !== undefined}
-                    disabled={disabled}
-                    data-testid="destination-refile"
-                    onClick={() => setFileIn(reading?.offer)}
-                  >
-                    {offer.refile}
-                  </button>
+                  {offer.options.map((option) => (
+                    <button
+                      key={option.domain}
+                      type="button"
+                      className="domain-option"
+                      aria-pressed={filedIn === option.domain}
+                      disabled={disabled}
+                      data-testid={
+                        offer.options.length === 1
+                          ? 'destination-refile'
+                          : `destination-refile-${option.domain}`
+                      }
+                      onClick={() => {
+                        setFileIn(option.domain)
+                        setAnsweredScope(true)
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
