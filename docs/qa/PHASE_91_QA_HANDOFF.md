@@ -4849,5 +4849,269 @@ builder repair handoff at the end exactly as written. Keep Phase 91 YELLOW,
 preserve every passed contract and explicit deferral, and do not ask me to paste
 the file contents.
 ```
+---
+
+## Round 9 repair — the builder's record
+
+_Written by the Claude builder conversation. Round 9 above is QA's and is not
+edited. Round 10 belongs to QA._
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**Repaired checkpoint:** `f98f0a6`
+**Deployed Preview:** `f98f0a6` — they match exactly
+
+**Both findings are accepted, and the architecture is unchanged.** Round 9 kept
+D-257 — abstain and confirm rather than widen a parser — and faulted the
+delivery. It was right on both counts, and the second one is the more useful
+correction: a confirmation the owner has already answered is a tax, not caution.
+
+### Both reproduced first, with all five controls
+
+All twelve failures reproduced before any change and the five paired controls
+held. The three scope failures were also confirmed through the ordinary Insights
+flow from a fresh Preview store: the screen said _"These words point at — the
+app has not decided which"_ and drew no control at all.
+
+### QA-91-020 — the question is a control now, on every branch
+
+`scopeUnresolved`, `undecided` and a line in `unknowns` are things the reading
+**says**. They are not something the owner can do, and where the words left two
+candidates or left only the area being asked about, `describeOffer` returned
+nothing — so the sentence appeared above an empty space and _"That is it"_ filed
+the aim regardless. **That is Round 5's silent abstention with a label on it.**
+
+The reading now exposes the **candidates** it would be choosing between, and the
+row carries one answer each:
+
+- an unresolved scope always has candidates, falling back to the other readable
+  areas where the words name only the one asked about — because what could not
+  be settled is whether the denial covers the area he is standing in;
+- the asked area is **never** among them. It is the *keep* side of the row, and
+  never an inferred alternative;
+- the row says whether it is still `asking`, and while it is, **nothing is
+  pre-selected**. He has not answered until he has answered.
+
+**Still one row and one question.** B1's rule is that he is not sent to a picker
+screen, not that a question may have only one answer, and the clarification takes
+the follow-up slot the surface already had — so the question budget is unchanged.
+
+### QA-91-021 — a temporal word is read for the work it is doing
+
+**Too wide.** A unit beside a number may be measuring or dividing rather than
+dating. *"2 months salary"* sizes money in months; *"per calendar year"* spreads
+an amount over a year, and is not even touching the number. So a temporal word
+answers *by when* only where something **places** it — a preposition that puts
+what follows it in time, a deictic that points at one moment, or a day word that
+names a day by itself. A determiner may stand between, which is what *"by the
+summer"* needs.
+
+**Too narrow.** *"save at least 3000"*, *"salary of 50000"*, *"a 3rd of my
+salary"* are amounts plainly supplied, and one-token adjacency asked for them
+again. A money word now governs the number whose object it is, across the words
+that can stand between them, stopping where the amount's phrase does: at a
+preposition that puts what follows in time, at a clause, at a comma. An ordinal
+picking out a noun — *"my 2nd salary payment"* — is not a size, and the `of` is
+what separates it from a share.
+
+**And the reach reads both ways**, because English puts the money word on either
+side: *"save 3000"* and *"clear 5000 of debt"* are one relation from opposite
+ends. That was found by the confirmation-burden measure below rather than by the
+report, and it is the kind of thing that measure exists to find.
+
+**Decision D-258**, completing D-257. Defect-ledger entry `QA-91-020,
+QA-91-021`.
+
+### Browser coverage for the branches that had none
+
+Five new cases at 360, 430 and 1,280, from a store with nothing in it and
+without opening `#/qa`: the multi-candidate question is visible with an answer
+per candidate and nothing pre-selected; answering it files the aim in the area
+chosen; declining it leaves the aim where the question was and writes no derived
+reading; the asked-area-only branch asks the same way; and a settled reading
+still shows the single offer it always did, pre-selected as before.
+
+The Phase 91 file now runs **63 cases at three widths** and all pass.
+
+### The confirmation burden, measured on a denominator that exercises it
+
+QA-91-021's real point was not four phrases: it was that four of four ordinary
+finance sentences asked for an amount already on the screen, and that a fallback
+with that rate is not tolerable as the product's general behaviour. The plan's
+own library is twenty phrases and does not exercise these roles at all.
+
+So there is now a shipped measure over **twelve ordinary money sentences** —
+bounds, complements, shares, percentages, measures, rates and plain sums — and
+**none of them asks about an amount it can already see**. A second test holds the
+other side, so the first cannot be satisfied by concluding everything: *"more
+money by March"*, *"more money by 17"* and *"more money in 6 months"* genuinely
+omit the amount and are still asked about.
+
+Writing that measure is what turned up the one-directional reach: *"clear 5000
+of debt by December"* was asking, because the money word was on the right.
+
+### Three guards went rather than being kept unproved
+
+Reintroduction found the rate check inside the unit-adjacency test unreachable —
+a rate always puts a determiner between the number and its unit, so the unit is
+never touching the number there. The stop-at-another-number guard in the money
+reach did nothing any phrase could show; it was deleted, briefly reinstated when
+the reach was made symmetric, tested again, and deleted again. **All three were
+deleted.** That is the same call Round 8 made for the non-finite guard: unproved
+code goes, and it goes even when it looks sensible.
+
+### The owner decision document, completed on every point QA named
+
+QA was right that it was not decision-ready, and specifically right that it
+proposed origin checking and per-origin rate limiting **as though they were an
+abuse boundary**. `Origin` is a browser courtesy, not client authentication. The
+document now says that in those words, and sets out three real boundaries — a
+shared secret, a signed short-lived token, or no authentication with a hard spend
+cap — and **chooses none of them**.
+
+It also now separates provider, model, region and retention into four decisions;
+says how "no request logging" would be *enforced* rather than asserted, including
+that the platform's own body logging is the part that leaks; and adds the
+per-request consent, offline, latency, key-rotation, monitoring, incident and
+spend-cap story.
+
+**Nothing was built.** No service, no account, no secret, no adapter change, and
+`src/` still holds exactly one `fetch`. The closing section states the trade
+plainly and is written so the owner can decline as easily as accept.
+
+### Reintroduction proofs — thirty live, thirteen of them this round
+
+**Four of the thirteen are reverse mutations:**
+
+| Reintroduce                                                | And this fails                                             |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| an unresolved reading carries nothing to answer with       | _puts an answerable question on every unresolved branch_   |
+| the asked area is offered back as an alternative           | _never offers back the area the question was asked in_     |
+| the asked-area-only branch falls back to no answers        | _puts an answerable question on every unresolved branch_   |
+| the row never says it is asking; then a settled row does   | _…that branch_ / _a settled reading is not asking_         |
+| an unresolved reading names the markers it could not place | _puts an answerable question on every unresolved branch_   |
+| a unit measuring a noun is read as a date                  | _reads a temporal unit that is measuring or dividing_      |
+| every unit is treated as a measure                         | _reads a number the evidence beside it settles_            |
+| nothing places a horizon word; then a determiner may not stand between | _still reads a unit something has placed in time_ |
+| a money word governs only what it touches, as Round 8 did  | _does not ask again for an amount already given_           |
+| an ordinal picking out a noun is the verb's amount         | _still asks where the money word governs no amount_        |
+| a measure written with `of` is not reached                 | _reads a share counted in a temporal unit as a quantity_   |
+
+**Sixteen Round 8 proofs were retired** onto those successors, with the mapping
+written into the script that used to run them.
+
+### Verification
+
+| Gate                                      | Result                                                       |
+| ----------------------------------------- | -------------------------------------------------------------- |
+| `npm run verify`, clean tree              | PASS                                                           |
+| Unit / contract / synthetic / adversarial | **2,037 passed** in 89 files (2,028 at `d7e49ee`)             |
+| Phase 91 browser file, 360 / 430 / 1,280  | **63 of 63**, including the five new seam cases                |
+| Copy scan after the seam change           | clean — 8,569 shipped strings, 8,479 placed in a module        |
+| Browser, 360 / 430 / 1,280, one worker    | **848 of 848**, one whole run, clean port, **19.1 minutes**    |
+| Privacy scan                              | clean, 311 tracked files                                       |
+| Rendered copy scan                        | clean — 8,569 shipped strings, 8,479 placed in a module        |
+| Adaptation-claim scan                     | clean                                                          |
+| Android-style gate                        | clean — **234 checks**, against the deployed Preview           |
+| Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`f98f0a6`)   |
+| Checkpoint equivalence                    | bundle-equivalent to the deployed SHA                          |
+| CI and deployed Preview                   | **success** — both jobs green (run `33661722508`)              |
+| CI's own browser matrix                   | **849 of 849**, 20.1 minutes, against `f98f0a6` itself         |
+| Worktree                                  | clean                                                          |
+
+**One housekeeping note.** Round 9's QA report was left uncommitted in the
+working tree, so it is carried into the repair commit unedited — 268 insertions
+and no deletions to that file, which is checkable with
+`git diff 91d064a f98f0a6 -- docs/qa/PHASE_91_QA_HANDOFF.md`. No QA text was
+changed.
+
+### Preserved, and checked rather than assumed
+
+All eight CASE A acceptance tests; the one-question budget; QA-91-001 and
+QA-91-004; QA-91-005 and QA-91-006 with the set-aside confirmation, preserved
+aim, lifecycle history and the unstarted, started and part-done consequence
+states; QA-91-008 through QA-91-019 on their established cases; byte identity;
+derived provenance; the privacy digest with both controls; the null case; the
+second proving domain; three-day non-reproposal; B1; the no-score rule; the fixed
+clock; the preview-port override; and the single `fetch`.
+
+The **nineteen D-210 instrument-hardening findings are untouched and still
+open**, backlog blob `58d5af071355d252c4a254fc685fcc9e8e88f417`.
+`docs/ROUTING_91_BRIEF.md` is present; routing 92 has not begun; CASE B remains
+out of scope.
+
+---
+
+## Round 10 retest handoff
+
+**Model:** Codex.
+**Reasoning level:** **High** — a middle level. Never Max, which is Claude's.
+**Conversation:** **SAME** — the Codex conversation that ran Rounds 1 to 9.
+
+```text
+Routing Phase 91 retest after the builder's Round 9 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Your Round 1 to Round 9 reports are
+unchanged; the builder's Round 9 repair record and this block are appended below
+them. Keep the Phase field exactly 91.
+
+D-257's architecture is unchanged and both Round 9 findings are accepted.
+Attack the repaired delivery:
+
+1. The seam. Every unresolved reading now carries candidates, the row draws one
+   answer each, nothing is pre-selected while it is asking, and the asked area
+   is never an answer. Attack all of it from the ordinary owner flow: branches
+   with one, two and no outside candidates; answering, changing the answer, and
+   declining; what "That is it" does before and after an answer; whether
+   anything derived can be written before one; and whether the row has become a
+   picker in practice at 360px even if not in principle.
+2. The numeric boundary, which moved in both directions. A temporal word now
+   answers `by when` only where a preposition, a deictic or a standalone day
+   word places it; a money word governs the number whose object it is across the
+   words that can stand between them. Attack both: placements that should count
+   and do not, words that place nothing and are read as placing, money reaches
+   that are too long or too short, ordinals, shares, measures and rates.
+3. Measure the confirmation burden again, on a denominator that exercises these
+   roles. The plan library is twenty phrases and does not; Round 9 was right
+   that four of four ordinary finance phrases outside it were asking redundantly.
+   Say whether the rate is now tolerable, and name the phrases if it is not.
+4. Judge docs/ROUTING_91_OWNER_DECISION.md again. It was rewritten on every
+   point you named. Say whether the three abuse boundaries are stated honestly,
+   whether the logging-enforcement story is checkable rather than asserted, and
+   whether it is now decision-ready — or what is still missing. Confirm again
+   that nothing has been built: no service, no secret, no adapter, one fetch.
+5. Confirm no regression in QA-91-001, QA-91-004, QA-91-005, QA-91-006 and
+   QA-91-008 through QA-91-019, all eight CASE A tests, all six consequence
+   paths, byte identity, provenance, privacy, the one-question budget and the
+   fixed clock.
+
+Two guards were deleted this round rather than kept unproved, both found by
+reintroductions that went green. Check that deletion rather than accepting it:
+if either guard was load-bearing for a phrase the tests do not carry, that is a
+finding.
+
+Preserve the nineteen D-210 deferrals, do not remove docs/ROUTING_91_BRIEF.md,
+and end with the complete next handoff under D-082 whichever way the retest
+goes. Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High. **Conversation:** SAME — the QA
+conversation that ran Rounds 1 to 9.
+
+```text
+Retest routing Phase 91 after the builder's Round 9 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the Round 10 retest
+handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
+retest says otherwise, and do not ask me to paste the file contents.
+```
 
 <!-- LCO_COMPLETE -->
