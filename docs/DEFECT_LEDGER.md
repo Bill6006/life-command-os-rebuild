@@ -5487,3 +5487,44 @@ not weaken what the suite proves.
 
 Full reproductions, repairs and verification:
 [`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).
+
+---
+
+## QA-91-010, QA-91-011 — routing 91 independent QA round 4
+
+**Found:** independent Codex QA, round 4, 2026-09-01 · **Status:** Fixed (routing 91 round 4 repair) · **Owner:** routing 91
+
+The fourth round in which the same two classes were broken one grammar step
+outside the previous repair, and the round in which QA ruled that **a fifth
+increment of the same instrument was not an acceptable repair**. Both were fixed
+by replacing the mechanism rather than widening it (D-253).
+
+| ID        | Finding                                                                                                                          | Repair                                                                                                     |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| QA-91-010 | A denial swallowed a following positive clause unless it began with a remembered word — a noun or gerund subject, or `:` `?` `!` | A denial cancels **the area it names**, not a span of characters; the subject-word list is deleted (D-253) |
+| QA-91-011 | Ordinal quarters and date ranges left digits for `saysHowMuch` to read as money                                                  | Numbers are **classified** as date or amount, with the range role propagating between spans (D-253)        |
+
+**Both repairs delete machinery rather than adding it.** `CLAUSE_OPENERS` and
+the span-boundary walk are gone; the date-shape deletion is gone. What replaced
+them answers a question — _which area did he deny_, _what is this number for_ —
+so a new grammar form reaches the same rule instead of falling outside a list.
+
+**Seven reintroductions, three of them reverse mutations.** Cancelling every area
+in reach, cancelling only the named area, dropping the contrastive terminator,
+disabling range propagation, disabling the quarter and ordinal forms, disabling
+month adjacency, and treating every number near a date as a date. Each fails the
+test whose title names its property.
+
+**One coverage gap found by the reintroductions, again.** Dropping the
+contrastive terminator failed nothing: once a denial cancels by area, a contrast
+that turns to a _different_ area needs no help. The terminator earns its place
+only on a **same-area** contrast — _"not about the salary, but about the
+pension"_ — and no test covered that. One was added, and the proof then bit.
+
+**And one gap that was the lexicon rather than the instrument.** _"Getting
+certified"_ named nothing with no denial in the sentence at all; `certified` was
+missing beside `certification` and `qualified`. Recorded separately because it is
+the marker table doing its job, not a fifth boundary widening.
+
+Full reproductions, repairs and verification:
+[`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).

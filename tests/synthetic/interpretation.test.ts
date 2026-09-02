@@ -1197,6 +1197,66 @@ describe('QA-91-003 — a token is read for its role, not for its presence', () 
     }
   })
 
+  it('cancels the area it denies, whatever the next clause begins with — QA-91-010', () => {
+    /*
+     * The instrument, rather than a fifth list.
+     *
+     * Three rounds asked *where does the denied span end* and answered with a
+     * boundary — `and`, then commas, then commas qualified by a list of words a
+     * clause might begin with. A noun subject broke the third, and nouns cannot
+     * be enumerated. A denial of aboutness is about an **area**, and an area it
+     * did not name survives whatever follows it: a noun, a gerund, a colon, a
+     * question mark and an exclamation all work for the same reason.
+     */
+    for (const phrase of [
+      'Not about money, certification is the real goal',
+      'Not about money, getting certified is the real goal',
+      'Not about money: certification is the real goal',
+      'Not about money? I want the qualification',
+      'Not about money! The qualification matters',
+    ]) {
+      expect(
+        read(phrase).names.map((area) => area.domain),
+        phrase,
+      ).toEqual([DOMAIN.career])
+    }
+    expect(
+      read('Not about money, fitness is the real goal').names.map((area) => area.domain),
+      'and across areas, which is where the owner notices',
+    ).toEqual([DOMAIN.health])
+  })
+
+  it('and lets a contrastive assert an area it has just denied', () => {
+    /*
+     * What the contrastive terminator is actually for, found by reintroducing
+     * it and watching nothing fail.
+     *
+     * Once a denial cancels by **area**, a contrast that turns to a *different*
+     * area needs no help — Career was never Money. The terminator earns its
+     * place on the case where the contrast stays inside the denied area: he says
+     * it is not about the salary but is about the pension, and both are Money.
+     * Without the turn, the area rule would cancel the pension too and the app
+     * would abstain from a sentence that names its subject plainly.
+     */
+    expect(
+      read('Not about the salary, but about the pension').names.map((area) => area.domain),
+      'the contrast asserts an area the denial had just cancelled',
+    ).toEqual([DOMAIN.money])
+    expect(
+      read('Not about the salary though the pension matters').names.map((area) => area.domain),
+    ).toEqual([DOMAIN.money])
+  })
+
+  it('and still denies a different area that is coordinated straight on to it', () => {
+    /*
+     * The bound in the other direction. *"Not about money or fitness"* denies
+     * both, because the second is joined to the first with nothing between them
+     * — which is what a coordination is, and what a comma is not.
+     */
+    expect(read('Not about money or fitness').names, 'both denied').toEqual([])
+    expect(read('Not about money and the gym').names).toEqual([])
+  })
+
   it('and a comma still ends one where a clause actually starts after it', () => {
     /*
      * The half that stops the repair reversing the defect. Making every comma
@@ -1290,6 +1350,50 @@ describe('QA-91-003 — a token is read for its role, not for its presence', () 
       const dated = read(phrase)
       expect(dated.unknowns, `${phrase}: the amount is still unknown`).toContain('how much')
       expect(dated.unknowns, `${phrase}: the date answered when`).not.toContain('by when')
+    }
+  })
+
+  it('reads a range and an ordinal quarter as dates — QA-91-011', () => {
+    /*
+     * Classification rather than deletion.
+     *
+     * Removing matched date shapes worked exactly as far as the shape list
+     * reached: an ordinal quarter says a date without spelling `Q3`, and a range
+     * has two ends of which only one carries the date's own grammar. Numbers are
+     * classified now, and a number joined immediately to a date by a range
+     * connector is a date because that is what a range is.
+     */
+    for (const phrase of [
+      'More money by the 3rd quarter of 2027',
+      'More money by quarter 3 of 2027',
+      'More money between March 15th and 17th, 2027',
+      'More money from the 15th to the 17th of March 2027',
+      'More money by March 15–17, 2027',
+      'More money between 03/15 and 03/17/2027',
+    ]) {
+      const dated = read(phrase)
+      expect(dated.unknowns, `${phrase}: the amount is still unknown`).toContain('how much')
+      expect(dated.unknowns, `${phrase}: the date answered when`).not.toContain('by when')
+    }
+  })
+
+  it('and still settles the amount for a sum standing beside every one of them', () => {
+    /*
+     * The direction a wider rule would have broken. The sum is not joined to any
+     * date by a range connector, so it keeps its own role — which is the whole
+     * point of classifying spans rather than deleting them.
+     */
+    for (const phrase of [
+      'Save 3000 by the 3rd quarter of 2027',
+      'Save 3000 by quarter 3 of 2027',
+      'Save 3000 between March 15th and 17th, 2027',
+      'Save 3000 from the 15th to the 17th of March 2027',
+      'Save 3000 by March 15–17, 2027',
+      'Save 3000 between 03/15 and 03/17/2027',
+      'Save 17 by March the 15th, 2027',
+      'Save 3000 by Q3 2027',
+    ]) {
+      expect(read(phrase).unknowns, phrase).toEqual([])
     }
   })
 

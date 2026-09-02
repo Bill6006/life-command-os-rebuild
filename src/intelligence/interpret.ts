@@ -286,6 +286,12 @@ const MARKERS: Readonly<Record<string, readonly string[]>> = {
     'certification',
     'certifications',
     'certificate',
+    // The participle beside its noun, which is how a person says it — the
+    // probe for QA-91-010 found *"getting certified"* naming nothing at all,
+    // with no denial in the sentence. A gap in the lexicon rather than in the
+    // scope instrument, and it is listed here because that is what this table
+    // is for.
+    'certified',
     'cert',
     'certs',
     'degree',
@@ -517,13 +523,42 @@ function hits(text: string, words: readonly string[]): readonly string[] {
  * do with X*. Everything else — *no more*, *never*, *stop* — negates the thing
  * rather than the topic, and is left alone.
  *
- * ## The span, and why it ends where it does
+ * ## What a denial governs, and the four rounds it took to ask the right question
  *
- * A denial governs until the clause does. *"Not about money — about the
- * qualification"* denies Money and says nothing about Career, so the span stops
- * at the first clause break: a comma, a semicolon, a full stop, a dash, an
- * *and* or a *but*. Running to the end of the sentence instead would let one
- * denial silence a phrase that goes on to name something plainly.
+ * The first three versions all asked *"where does the denied span end?"* and
+ * answered with a boundary: first `and`, then commas, then commas qualified by a
+ * closed list of words a clause might begin with. QA-91-010 broke the third the
+ * same way the first two broke — *"Not about money, certification is the real
+ * goal"* begins its clause with a noun, and nouns cannot be enumerated. **A
+ * fifth list would have failed at the next ordinary subject.**
+ *
+ * The question was wrong. A denial of aboutness is about a **topic**, and in
+ * this interpreter a topic is an area. *"It is not about money"* says nothing
+ * whatever about fitness, wherever the sentence goes next and whatever it starts
+ * that clause with. So the scope is not a span of characters to be terminated —
+ * it is **an area to be cancelled**:
+ *
+ * 1. A denial names the area of the first marker that follows it.
+ * 2. Inside its reach it cancels markers **of that area**.
+ * 3. It cancels a marker of a *different* area only where that marker is
+ *    directly coordinated with the last thing cancelled — no comma between them
+ *    — because *"not about money or fitness"* really does deny both.
+ * 4. Its reach ends at a contrastive conjunction or at sentence-ending
+ *    punctuation, so *"not about the salary, but about the pension"* can still
+ *    assert an area it has just denied.
+ *
+ * **This deletes a closed list rather than extending one.** There is no list of
+ * subject words any more, and there is nothing to extend at the next grammar
+ * form: a noun, a gerund, a colon, a question mark and an exclamation all work
+ * for the same reason, which is that none of them is Money.
+ *
+ * ## The bound, said plainly
+ *
+ * A denial and a same-area assertion in one sentence with no contrastive word —
+ * *"Not about money, savings is what I mean"* — is read as denying both, and the
+ * interpreter abstains. That is a false negative, and it is the direction this
+ * file errs in everywhere: an unread phrase names nothing, offers nothing and
+ * writes nothing.
  */
 const DENIERS = [
   'not about',
@@ -574,177 +609,253 @@ const DENIERS = [
  */
 const CONTRASTIVE = ['but', 'though', 'rather', 'instead', 'however', 'yet']
 
-/**
- * What can begin a clause after a comma, which is a closed class.
- *
- * The contrastives above, plus the subject pronouns. A comma followed by one of
- * these is a sentence turning; a comma followed by anything else is a list
- * carrying on. `\b` after the word is what lets *it's* and *they're* match on
- * their pronoun.
- */
-const CLAUSE_OPENERS = [
-  ...CONTRASTIVE,
-  'i',
-  'we',
-  'you',
-  'he',
-  'she',
-  'it',
-  'they',
-  'that',
-  'this',
-  'there',
-]
+/** Punctuation that ends a sentence, and therefore ends a denial's reach. */
+const SENTENCE_END = [';', '.', '!', '?', ':', '—', '–']
 
-function startsWithOneOf(text: string, words: readonly string[]): boolean {
-  const from = text.replace(/^\s+/, '')
-  return words.some((word) => new RegExp(String.raw`^` + escape(word) + String.raw`\b`).test(from))
-}
-
-/** Where a denial stops governing, walked in order so the earliest break wins. */
-function endOfDenial(rest: string): number {
+/** How far a denial can reach, before any question of what it cancels. */
+function reachOfDenial(rest: string): number {
   for (let at = 0; at < rest.length; at += 1) {
     const char = rest[at]
-    if (char === ';' || char === '.' || char === '—' || char === '–') return at
+    if (char !== undefined && SENTENCE_END.includes(char)) return at
     if (char === '-' && rest[at - 1] === ' ' && rest[at + 1] === ' ') return at
-    if (char === ',') {
-      if (startsWithOneOf(rest.slice(at + 1), CLAUSE_OPENERS)) return at
-      continue
+    if (char === ' ') {
+      const from = rest.slice(at + 1)
+      if (
+        CONTRASTIVE.some((word) => new RegExp(String.raw`^` + word + String.raw`\b`).test(from))
+      ) {
+        return at
+      }
     }
-    if (char === ' ' && startsWithOneOf(rest.slice(at + 1), CONTRASTIVE)) return at
   }
   return rest.length
 }
 
-function deniedSpans(text: string): readonly (readonly [number, number])[] {
-  const spans: [number, number][] = []
+/** One occurrence of one marker, with where it sits and what it names. */
+interface Mention {
+  readonly domain: LifeDomainId
+  readonly word: string
+  readonly at: number
+  readonly to: number
+  readonly byOwnThing: boolean
+}
+
+/**
+ * Every marker in the phrase, in the order a reader meets them.
+ *
+ * Position is what the denial instrument needs and what the old one threw away:
+ * `hits` returned words, so the only question that could be asked afterwards was
+ * *"is this word inside a span?"*. Carrying the offsets lets the denial ask the
+ * question it actually has, which is *which of these did he deny*.
+ */
+function mentions(haystack: string, digest: readonly InterpreterSource[]): readonly Mention[] {
+  const found: Mention[] = []
+
+  const add = (domain: LifeDomainId, word: string, byOwnThing: boolean) => {
+    const pattern = new RegExp(String.raw`\b` + escape(word) + String.raw`\b`, 'g')
+    for (;;) {
+      const match = pattern.exec(haystack)
+      if (match === null) break
+      found.push({ domain, word, at: match.index, to: match.index + match[0].length, byOwnThing })
+    }
+  }
+
+  for (const source of digest) {
+    if (source.from !== 'named-thing') continue
+    const domain = source.domain
+    if (domain === undefined || !READABLE_AREAS.includes(domain)) continue
+    add(domain, source.text.toLowerCase(), true)
+  }
+  for (const domain of READABLE_AREAS) {
+    for (const word of MARKERS[domain] ?? []) {
+      if (!haystack.includes(word)) continue
+      add(domain, word, false)
+    }
+  }
+
+  return found.sort((left, right) => left.at - right.at)
+}
+
+/**
+ * The mentions the owner denied, by the area each denial is about.
+ *
+ * The three rules of the header, in the order they apply. Nothing here looks at
+ * what a clause starts with, because nothing here needs to: what is cancelled is
+ * an area, and an area the denial did not name survives whatever follows it.
+ */
+function deniedMentions(haystack: string, all: readonly Mention[]): ReadonlySet<Mention> {
+  const denied = new Set<Mention>()
+
   for (const denier of DENIERS) {
     let from = 0
     for (;;) {
-      const at = text.indexOf(denier, from)
+      const at = haystack.indexOf(denier, from)
       if (at === -1) break
       const after = at + denier.length
-      spans.push([at, after + endOfDenial(text.slice(after))])
+      const until = after + reachOfDenial(haystack.slice(after))
       from = after
+
+      const inside = all.filter((mention) => mention.at >= after && mention.at < until)
+      const about = inside[0]?.domain
+      if (about === undefined) continue
+
+      let last: Mention | undefined
+      for (const mention of inside) {
+        const sameArea = mention.domain === about
+        // A different area is denied too where it is coordinated straight on to
+        // the last thing denied — *not about money or fitness* — and not where a
+        // comma has ended the list the denial was reading.
+        const coordinated = last !== undefined && !haystack.slice(last.to, mention.at).includes(',')
+        if (!sameArea && !coordinated) continue
+        denied.add(mention)
+        last = mention
+      }
     }
   }
-  return spans
+
+  return denied
 }
 
 /**
- * The words that name an area, with anything the owner denied left out.
+ * What a number in the phrase is **for** — QA-91-011.
  *
- * A denied hit is not weaker evidence, it is **not evidence** — so it is
- * removed rather than discounted. When every hit for an area is denied the
- * area is not named at all, and when that leaves nothing named the interpreter
- * abstains, which is what it does for any phrase it cannot read.
- */
-function assertedHits(
-  text: string,
-  words: readonly string[],
-  denied: readonly (readonly [number, number])[],
-): readonly string[] {
-  const found: string[] = []
-  for (const word of hits(text, words)) {
-    const where = new RegExp(String.raw`\b` + escape(word) + String.raw`\b`).exec(text)
-    if (where === null) continue
-    if (denied.some(([from, to]) => where.index >= from && where.index < to)) continue
-    found.push(word)
-  }
-  return found
-}
-
-/**
- * A four-digit number a person would read as a year — QA-91-003.
+ * ## Why this replaces deleting shapes
  *
- * Bounded on purpose. `2027` is a date; `3000` is an amount; `1899` and `2200`
- * are amounts again, because nobody sets a life aspiration in either. The range
- * is the discrimination, and widening it would start eating ordinary sums.
- */
-const YEAR = /\b(?:19|20|21)\d{2}\b/
-
-/**
- * The shapes a date takes, so their digits stop being read as sums — QA-91-007.
+ * The previous three versions removed matched date patterns from the text and
+ * then asked whether any digit was left. That works exactly as far as the list
+ * of patterns reaches, and QA broke it twice: an **ordinal quarter** expresses a
+ * date without spelling `Q3`, and a **range** has two endpoints of which only
+ * one carries the date's own grammar. Adding a regex for each would have moved
+ * the boundary a fifth time without answering the question underneath it, which
+ * is *which number here is a horizon and which is a sum*.
  *
- * A four-digit year was already exempt, and that was not enough: *"More money
- * before 03/15/2027"* still reported the amount as settled, because `03` and
- * `15` are digits and neither is a year. **The day and the month of a date were
- * being read as money.**
+ * So numbers are found first and **classified**. Every digit run in the phrase
+ * becomes a span with a role, and the roles are decided by structure:
  *
- * So a date is removed before the question *does this say how much* is asked at
- * all. Three shapes, each closed: a slashed or dashed date in either order, a
- * month word with a day beside it, and a bare year. Anything else with a digit
- * in it is a quantity, which is what a number ordinarily is.
+ * - a number written inside a date form — slashed, month-adjacent, quarter,
+ *   ordinal, or a plausible year — is a **date**;
+ * - a number joined to a date **immediately** by a range connector is a date
+ *   too, because that is what a range is;
+ * - everything else is an **amount**, which is what a number ordinarily is.
+ *
+ * ## What that buys over the old shape list
+ *
+ * The range rule is *propagation between spans* rather than a pattern, so it
+ * covers `15th and 17th`, `15th to the 17th` and `15–17` without knowing any of
+ * them; and *"Save 3000 between March 15th and 17th"* keeps its amount, because
+ * `3000` is not immediately joined to anything with a date role.
+ *
+ * ## The bound
+ *
+ * A number in a date form nobody has written down here reads as an amount, and
+ * the app then says it does not know the horizon rather than inventing one.
+ * That is the safe direction: `unknowns` names what was not concluded, and
+ * nothing derived is written from it.
  */
 const MONTH_WORDS =
   'january|february|march|april|may|june|july|august|september|october|november|december'
 
-const DATE_SHAPES: readonly RegExp[] = [
-  // 03/15/2027, 15-03-2027
-  /\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b/g,
-  // 2027-03-15
+/** The connectors that make two numbers the ends of one range. */
+const RANGE_JOIN = '–|—|-|to|and|through|until|thru'
+
+/**
+ * Forms in which a number is written as part of a date, each a closed shape.
+ *
+ * These no longer have to be exhaustive over date grammar, because they only
+ * have to catch **one** end of a range for the propagation below to carry the
+ * other. That is the difference between a list that must cover a language and a
+ * list that must cover a construction.
+ */
+const DATE_FORMS: readonly RegExp[] = [
+  // 03/15/2027, 15-03-2027, 2027-03-15, and the bare 03/15 of a range
+  /\b\d{1,2}[/.]\d{1,2}(?:[/.]\d{2,4})?\b/g,
   /\b\d{4}[/.-]\d{1,2}[/.-]\d{1,2}\b/g,
-  /*
-   * March 15, and March **the** 15th — QA-91-009.
-   *
-   * The connector is the whole of what was missing. English puts *the* and *of*
-   * between a month and its day as readily as it puts nothing there, and the
-   * first version recognised only adjacency — so *"by March the 15th"* left a
-   * `15` behind for `saysHowMuch` to read as a sum. Both connectors are closed
-   * words rather than a phrase list, and the trailing `\b` is what stops *March
-   * 3000* being read as a date with a stray `00` left over.
-   */
+  /\b\d{1,2}-\d{1,2}-\d{2,4}\b/g,
+  // March 15, March the 15th, 15 March, the 15th of March
   new RegExp(String.raw`\b(?:${MONTH_WORDS})\b\s+(?:the\s+)?\d{1,2}(?:st|nd|rd|th)?\b`, 'g'),
-  // 15 March, and the 15th **of** March
   new RegExp(
     String.raw`\b\d{1,2}(?:st|nd|rd|th)?\s+(?:of\s+)?(?:the\s+)?(?:${MONTH_WORDS})\b`,
     'g',
   ),
-  /*
-   * A quarter, which is a horizon a person writes with a digit — QA-91-009.
-   *
-   * *"by Q3 2027"* left a `3` behind. Four values and nothing else: a `q`
-   * followed by anything outside 1–4 is not a quarter, and the boundaries keep
-   * it out of ordinary words.
-   */
+  // Q3, quarter 3, and the 3rd quarter
   /\bq[1-4]\b/g,
-  // 2027
+  /\bquarters?\s+\d{1,2}\b/g,
+  /\b\d{1,2}(?:st|nd|rd|th)\s+quarter\b/g,
+  // An ordinal names a position rather than a quantity, wherever it stands.
+  /\b\d{1,2}(?:st|nd|rd|th)\b/g,
+  // A plausible year.
   /\b(?:19|20|21)\d{2}\b/g,
 ]
 
-/** The same words with every date taken out of them. */
-function withoutDates(text: string): string {
-  let left = text
-  for (const shape of DATE_SHAPES) left = left.replace(shape, ' ')
-  return left
-}
-
-/** Whether anything here is a date at all, in any of the shapes above. */
-function saysADate(text: string): boolean {
-  return DATE_SHAPES.some((shape) => new RegExp(shape.source).test(text))
+interface NumberSpan {
+  readonly at: number
+  readonly to: number
+  role: 'date' | 'amount'
 }
 
 /**
- * Whether the words say **how much**, which a year does not — QA-91-003.
+ * Every number in the phrase, with what it is for.
  *
- * The first version asked whether the phrase contained a digit anywhere, and
- * the horizon table recognised month and season words but no numeric year. So
- * *"More money by 2027"* had the two predicates exactly the wrong way round: the
- * amount was reported as settled and the horizon as unknown, from one token
- * that is a date and not a sum.
+ * Ranges are settled after the forms rather than inside them: two spans joined
+ * by nothing but a range connector are the ends of one thing, so if either is a
+ * date both are. Run to a fixed point, so `15 to 17 to 19` settles all three.
+ */
+function numberSpans(text: string): readonly NumberSpan[] {
+  const dated: [number, number][] = []
+  for (const form of DATE_FORMS) {
+    const pattern = new RegExp(form.source, 'g')
+    for (;;) {
+      const match = pattern.exec(text)
+      if (match === null) break
+      dated.push([match.index, match.index + match[0].length])
+    }
+  }
+
+  const spans: NumberSpan[] = []
+  const digits = /\d+/g
+  for (;;) {
+    const match = digits.exec(text)
+    if (match === null) break
+    const at = match.index
+    const to = at + match[0].length
+    const inside = dated.some(([from, until]) => at >= from && to <= until)
+    spans.push({ at, to, role: inside ? 'date' : 'amount' })
+  }
+
+  const joined = new RegExp(
+    String.raw`^\s*(?:st|nd|rd|th)?\s*(?:${RANGE_JOIN})\s*(?:the\s+)?$`,
+    'i',
+  )
+  for (let settled = false; !settled;) {
+    settled = true
+    for (let index = 1; index < spans.length; index += 1) {
+      const left = spans[index - 1]!
+      const right = spans[index]!
+      if (left.role === right.role) continue
+      if (!joined.test(text.slice(left.to, right.at))) continue
+      if (left.role === 'date') right.role = 'date'
+      else left.role = 'date'
+      settled = false
+    }
+  }
+
+  return spans
+}
+
+/**
+ * Whether the words say **how much**, which no part of a date does.
  *
- * A currency symbol is always an amount. A bare number is an amount **unless it
- * is only a year**, and a phrase whose only number is a year says nothing at all
- * about how much.
+ * A currency symbol is always an amount. Otherwise it is whether any number in
+ * the phrase was classified as one — so a sum standing beside a horizon still
+ * settles the amount, and a horizon standing alone still leaves it open.
  */
 function saysHowMuch(text: string): boolean {
   if (/[£$€]/.test(text)) return true
-  return /\d/.test(withoutDates(text))
+  return numberSpans(text).some((span) => span.role === 'amount')
 }
 
-/** Whether the words say **by when**, in a word, a year or a written date. */
+/** Whether the words say **by when**, in a word or in a number read as a date. */
 function saysWhen(text: string): boolean {
-  return hits(text, HORIZON).length > 0 || YEAR.test(text) || saysADate(text)
+  return hits(text, HORIZON).length > 0 || numberSpans(text).some((span) => span.role === 'date')
 }
 
 // ---------------------------------------------------------------------------
@@ -825,28 +936,40 @@ export function readAim(input: InterpreterInput): AimReading {
   const typed = input.digest.find((source) => source.from === 'typed')?.text ?? ''
   const haystack = typed.toLowerCase()
 
-  const denied = deniedSpans(haystack)
+  /*
+   * What he mentioned, then what he denied, then what is left.
+   *
+   * Three passes rather than one filter, because the denial instrument needs to
+   * see the mentions **in order and with their positions** to answer *which area
+   * did he deny*. `assertedHits` could only ever answer *is this word inside a
+   * span*, which is the question four rounds of boundary repairs were stuck on.
+   */
+  const all = mentions(haystack, input.digest)
+  const denied = deniedMentions(haystack, all)
+  const asserted = all.filter((mention) => !denied.has(mention))
 
-  const byOwnThing = new Map<LifeDomainId, string[]>()
-  for (const source of input.digest) {
-    if (source.from !== 'named-thing') continue
-    const domain = source.domain
-    if (domain === undefined || !READABLE_AREAS.includes(domain)) continue
-    if (assertedHits(haystack, [source.text.toLowerCase()], denied).length === 0) continue
-    const held = byOwnThing.get(domain)
-    if (held === undefined) byOwnThing.set(domain, [source.text])
-    else if (!held.includes(source.text)) held.push(source.text)
+  const byArea = new Map<LifeDomainId, { own: string[]; words: string[] }>()
+  for (const mention of asserted) {
+    const held = byArea.get(mention.domain) ?? { own: [], words: [] }
+    const into = mention.byOwnThing ? held.own : held.words
+    // The owner's own capitals for a thing he named; the table's word otherwise.
+    const said = mention.byOwnThing
+      ? (input.digest.find(
+          (source) => source.from === 'named-thing' && source.text.toLowerCase() === mention.word,
+        )?.text ?? mention.word)
+      : mention.word
+    if (!into.includes(said)) into.push(said)
+    byArea.set(mention.domain, held)
   }
 
   const names: NamedArea[] = []
   for (const domain of READABLE_AREAS) {
-    const own = byOwnThing.get(domain)
-    if (own !== undefined) {
-      names.push({ domain, by: own, byOwnThing: true })
-      continue
-    }
-    const found = assertedHits(haystack, MARKERS[domain] ?? [], denied)
-    if (found.length > 0) names.push({ domain, by: found, byOwnThing: false })
+    const held = byArea.get(domain)
+    if (held === undefined) continue
+    // A thing he named beats a word from the table, and where he named one the
+    // table's words are not also listed as evidence for the same area.
+    if (held.own.length > 0) names.push({ domain, by: held.own, byOwnThing: true })
+    else if (held.words.length > 0) names.push({ domain, by: held.words, byOwnThing: false })
   }
 
   /*

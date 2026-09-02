@@ -267,9 +267,39 @@ kind of mistake.
 sequential journey, the started-action branch, the fixed clock and the
 overridable preview port.
 
+## Independent QA round 4 — FAIL, and the round that changed the instrument
+
+Round 4 closed nothing new and broke both semantic classes again, one ordinary
+grammar step outside the Round 3 lists: **a noun or gerund subject** after a
+denial (QA-91-010), and **ordinal quarters and date ranges** (QA-91-011). QA's
+verdict was the important part — _a fifth increment of the same instrument is not
+an acceptable repair_ — and it asked for a bounded deterministic representation
+of structure instead.
+
+**Both classes were repaired by deleting machinery rather than widening it**
+(D-253). The question in each was wrong:
+
+- A denial of aboutness is about a **topic**, and here a topic is an area. It
+  cancels **the area it names**, not a span of characters — so a noun, a gerund,
+  a colon, a question mark and an exclamation all work for the same reason, which
+  is that none of them is Money. The closed list of subject words is gone.
+- A number is **classified** rather than deleted: a date form makes it a date, a
+  range connector carries that role to the other end, and everything else is an
+  amount. So a sum standing beside a horizon keeps its own role.
+
+**Seven reintroductions, three of them reverse mutations**, and one more coverage
+gap that only a reintroduction could find: dropping the contrastive terminator
+failed nothing, because once a denial cancels by area a contrast to a _different_
+area needs no help. It earns its place on a **same-area** contrast, and that case
+had no test until this round.
+
+**One gap was the lexicon, not the instrument.** _"Getting certified"_ named
+nothing with no denial in the sentence at all — `certified` was simply missing
+beside `certification` and `qualified`. Recorded as what it is.
+
 ## Decisions made
 
-**D-240 … D-252** in [`DECISION_LOG.md`](DECISION_LOG.md).
+**D-240 … D-253** in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Accommodation row B1 landed, and the list learned something from it
 

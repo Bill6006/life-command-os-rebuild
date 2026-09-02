@@ -9291,3 +9291,77 @@ have now moved this boundary outward by one grammar step each time, and every
 move has been a closed list rather than a phrase.** The next one should be too.
 
 ---
+
+## D-253 — The interpreter reads roles, not boundaries
+
+**Phase:** 91 (QA round 4 repair) · **Status:** Active · **Replaces the mechanism of** D-247, D-251, D-252
+
+Four rounds repaired the same two classes by widening a closed list, and QA broke
+the fourth with grammar that is neither obscure nor adversarial: a noun begins a
+clause, an exclamation ends a sentence, a quarter may be ordinal, a date may be a
+range. **A fifth increment of the same instrument is not a repair**, and this
+decision records what replaced it and why the replacement is smaller rather than
+larger.
+
+### The question was wrong, in both classes
+
+**Denial.** Rounds 1 to 3 asked _"where does the denied span end?"_ and answered
+with a boundary — first `and`, then commas, then commas qualified by a list of
+words a clause might begin with. Subjects are an open class, so the third failed
+at the first noun (QA-91-010).
+
+The construction being read is _"not **about** X"_, and aboutness is a claim
+about a **topic**. In this interpreter a topic is an area. So the scope is not a
+span of characters to terminate; it is **an area to cancel**:
+
+1. a denial names the area of the first marker after it;
+2. inside its reach it cancels markers **of that area**;
+3. it cancels a marker of a different area only where that marker is coordinated
+   straight on to the last thing cancelled — no comma between — because _"not
+   about money or fitness"_ really does deny both;
+4. its reach ends at a contrastive conjunction or sentence-ending punctuation, so
+   _"not about the salary, but about the pension"_ can assert an area it has just
+   denied.
+
+**A noun, a gerund, a colon, a question mark and an exclamation now all work for
+the same reason: none of them is Money.** The closed list of subject words is
+deleted, not extended.
+
+**Number.** Rounds 2 and 3 removed matched date patterns and then asked whether a
+digit was left, which works exactly as far as the pattern list reaches
+(QA-91-011). Numbers are now **found first and classified**: a number written in
+a date form is a date, a number joined immediately to a date by a range connector
+is a date because that is what a range is, and everything else is an amount —
+which is what a number ordinarily is.
+
+The range rule is **propagation between spans**, not another pattern, so it
+covers `15th and 17th`, `15th to the 17th` and `15–17` without knowing any of
+them. And a sum standing beside a horizon keeps its own role, because roles are
+assigned per span rather than by deleting text.
+
+### What is still refused
+
+This does not become a parser, a model, or a guess. Both instruments are
+deterministic, in-process and bounded, and both abstain the same way they always
+did: an area the interpreter cannot read names nothing, a number in a date form
+nobody has written down reads as an amount and the horizon stays unknown, and
+either way `unknowns` says what was not concluded and nothing derived is written.
+
+**The lexicon is a separate thing from the instrument, and it stayed one.**
+Probing QA-91-010 found _"getting certified"_ naming nothing with no denial in
+the sentence at all — a gap in the marker table rather than in scope. `certified`
+was added beside the `certification`, `certificate` and `qualified` already
+there. Adding a word an area is plainly about is what that table is for; it is
+not what four rounds of boundary-widening were.
+
+### Why this is expected to hold where four increments did not
+
+The earlier repairs each closed the shape they were shown. These two close a
+**question**: _which area did he deny_, and _what is this number for_. A new
+grammar form reaches the same two questions rather than falling outside a list —
+a different subject, a different punctuation mark, a different range connector
+and a different date spelling are all answered by the rules above without
+touching them. **That is the claim, and Round 5 is asked to attack it rather
+than to replay the eleven phrases.**
+
+---
