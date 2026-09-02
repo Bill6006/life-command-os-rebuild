@@ -9527,3 +9527,127 @@ is a shape. That is what the year clause in `temporal` is for, and it has its ow
 reverse proof.
 
 ---
+
+## D-255 — A denial stops at a clause, and a number is read inside its phrase
+
+**Phase:** 91 (QA round 6 repair) · **Status:** Active · **Replaces the mechanism of** D-254
+
+D-254 stopped reading proxies for the _lexical_ evidence — a coordinator makes a
+list, a unit makes a number — and it was right about both. Then it wrapped a new
+proxy around each: the denial read the **text between two markers**, and the
+number read a **whitelist, a count and a connector**. Round 6 broke both from
+both sides, again, and the class judgement was that this is a fifth boundary in
+different clothes. It was.
+
+### Denial: the words between two markers cannot answer this
+
+Put the two failures side by side and the instrument has nowhere to stand:
+
+- _"Not about money and physical fitness"_ is a two-item denial. `physical` is the
+  item's own modifier, it is not list material, the run broke — and Health was
+  named from a word **inside** the denial.
+- _"Not about money and fitness is the real goal"_ is a denial followed by a
+  clause. There is **nothing at all** between the coordinator and the marker, so
+  the run continued — and Health was denied although the owner had just called it
+  the real goal.
+
+One phrase has extra words and is still a list; the other has none and is not.
+**No rule over the text between two markers separates them.**
+
+So the question moved off the markers entirely. A denial of aboutness runs until
+the sentence turns, and what turns a sentence is a **new clause**:
+
+1. a denial reaches until sentence punctuation, a contrastive, or the start of a
+   finite clause;
+2. **every** marker inside that reach is denied — coordinated, comma-separated,
+   modified or bare;
+3. everything after it is read normally.
+
+`listLink`, the run walk, the last-coordinator rule and the abstention are all
+deleted, and with them both of D-254's declared bounds. QA overturned each, and
+was right each time: an asyndetic list _does_ deny all of its items, and an
+abstention that erases a clause it could positively read is a second mistake
+rather than caution.
+
+**A clause is read from its predicate, and that is why this is not Round 3.**
+Round 3 kept a list of words a clause might _begin_ with and failed at the first
+noun, because subjects are an open class. The finite-verb system is not: the
+copula, the auxiliaries and the modals are closed, subject pronouns are closed,
+and a contraction carries both halves in one word. Having found the verb, the
+clause starts at the head of its subject — walk left to a comma, a coordinator or
+a phrase introducer. A **relative** pronoun is the exception that proves it:
+_"money that I earn"_ has a subject and a verb and is still one denial, because
+the clause describes the money rather than turning away from it.
+
+### Number: three proxies wrapped around the right evidence
+
+D-254 read units, which is the role's actual evidence, and then read three things
+that are not:
+
+| The proxy                                 | What broke it                      | What replaced it                                                          |
+| ----------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------- |
+| a whitelist of words a unit may cross     | `week number 3`, `2027 US dollars` | governance runs to the end of the **phrase**, and what ends one is closed |
+| how many numbers are punctuated together  | `31.12`, `03-15`                   | the digits themselves: a **leading zero**, or a **descending** pair       |
+| a connector carrying a role between spans | `save 3000 until 15 March`         | `until` is a temporal preposition and can never join two sums             |
+
+Three more followed from the same review. An **ordinal that modifies a noun** —
+_"my 2nd salary payment"_ — says which payment, not when. A **measure** is one
+relation in three spellings, and `2 months of salary`, `2 months' salary` and
+`2 months salary` are all quantities; what says so is the noun **after** the
+unit, because a date ends at its unit and a measure carries on. And a **rate** is
+not a date: _"50000 a year"_ is a wage, and the article is the whole difference.
+
+### The default became an abstention, which is the change that matters most
+
+D-254 read every untyped number as a quantity and named that a bound. QA was
+right that it is too broad: in _"more money by 17"_ the number could be a day, a
+sum or an age. There is now a third role — `unknown` — and it settles neither
+question, so both stay open.
+
+What still makes a bare number a quantity is the **verb governing it**. _"Save
+3000"_ has a money marker in front of it inside the same phrase with no temporal
+preposition between; _"more money by 17"_ has the same marker and a `by`. That is
+the entire difference, and it is a grammatical relationship rather than a shape.
+
+### The instrument got bigger again, and the claim is narrower than that
+
+Its code goes from 801 lines to 926. **The claim is not that this is smaller.**
+It is that every list which grew is a list of things that **end a relationship** —
+prepositions, subordinators, coordinators, finite verbs, subject pronouns — and
+those are closed classes, where the modifiers a noun may carry and the verbs a
+clause may use are not. D-254 said something like this about units; Round 6 held
+it against the whitelist that surrounded them, and rightly.
+
+If that distinction fails — if a closed grammatical class is a form list in
+another coat — then this is the sixth boundary and should be called one. That is
+the load-bearing claim, and it is put here in those words so it can be attacked
+as one.
+
+### The bound, said plainly, and it is one bound rather than three
+
+A clause built on an ordinary lexical verb with a noun subject — _"not about
+money and fitness matters most"_ — is not seen, so the denial reaches over it.
+The reading then names **fewer** areas than it should, never more, and it never
+contradicts the owner. Listing lexical verbs would move that boundary rather than
+close it, which is what six rounds have now taught, so it stops at the closed
+classes and says so.
+
+### Three defects in the repair itself, and three proofs that had to earn their keep
+
+Found before any gate and recorded rather than tidied away. Attacking the
+finished repair the way Round 7 is being asked to found a **relative clause**
+ending a denial and asserting the area it denied, and a **rate** read as a date —
+which was a regression the phrase model introduced against Round 5's behaviour.
+Completing the preposition list with `between` fixed a third, caught by the
+shipped suite.
+
+Then three of the twenty-four reintroductions went green, and each was a finding
+rather than a chore. Two were redundancy — the contraction rule and the quarter
+unit were each covered by another rule for the only phrase under test — and both
+now have a phrase where they are the only thing answering. The third was a real
+defect: the possessive branch of the share rule was unnecessary because an
+apostrophe already hid the unit, and probing why turned up `2 months salary`
+**without** the apostrophe being read as a date. That is what produced the
+measure rule above.
+
+---

@@ -1345,6 +1345,8 @@ describe('QA-91-003 — a token is read for its role, not for its presence', () 
       'More money before the 15th of March 2027',
       'More money by March the 15th, 2027',
       'More money by Q3 2027',
+      // Without the year beside it, the quarter is the only thing saying when.
+      'More money by Q3',
       'More money by the 3rd of April',
     ]) {
       const dated = read(phrase)
@@ -1499,17 +1501,18 @@ describe('QA-91-003 — a token is read for its role, not for its presence', () 
     }
   })
 
-  it('names the bound it keeps: an unjoined list denies only its first item', () => {
+  it('denies an asyndetic list too, because a denial runs until the sentence turns', () => {
     /*
-     * Said out loud rather than left to be discovered. With no coordinator
-     * anywhere, *"not about money, fitness, certification"* denies money and
-     * reads the other two as asserted. That is this file erring the way it errs
-     * everywhere — declining to conclude from evidence it has not got, rather
-     * than treating a comma as though it were a conjunction.
+     * Round 5 declared the opposite as a deliberate bound, and QA-91-014 ruled
+     * it wrong: terse owner prose drops the conjunction, and *"not about money,
+     * fitness, certification"* means none of the three. Absence of a spoken
+     * coordinator is not absence of coordination.
+     *
+     * With reach doing the work there is no coordinator to look for. Everything
+     * up to the point where the sentence turns is denied.
      */
-    expect(
-      read('Not about money, fitness, certification').names.map((area) => area.domain),
-    ).toEqual([DOMAIN.career, DOMAIN.health])
+    expect(read('Not about money, fitness, certification').names).toEqual([])
+    expect(read('Not about money, debt, savings').names).toEqual([])
   })
 
   it('reads an unlisted date form from the unit beside it — QA-91-013', () => {
@@ -1621,18 +1624,23 @@ describe('QA-91-003 — a token is read for its role, not for its presence', () 
     ).toEqual([])
   })
 
-  it('abstains from a list it can see but cannot follow', () => {
+  it('denies an item that carries its own modifier — QA-91-014', () => {
     /*
-     * *"Not about money, physical fitness, or certification"* is plainly one
-     * list, and the run stops at `physical` because a modifier is not list
-     * material. The `or` past the end of the run says the list did not stop
-     * where the instrument did.
+     * Round 5 read the text **between** two markers, so `physical` broke the run
+     * and Health was named from a word inside the denial. A modifier belongs to
+     * its item; it is not evidence that the list has ended.
      *
-     * Calling the rest **asserted** would name two areas the owner has just
-     * denied — the worse of the two mistakes — so nothing is read from them and
-     * the reading names no area at all.
+     * Two-item and three-item forms both, because the three-item one used to
+     * survive by accident: a later coordinator triggered an abstention that
+     * named nothing, which looks the same from outside and was not the same.
      */
-    expect(read('Not about money, physical fitness, or certification').names).toEqual([])
+    for (const phrase of [
+      'Not about money and physical fitness',
+      'Not about money or professional certification',
+      'Not about money, physical fitness, or certification',
+    ]) {
+      expect(read(phrase).names, phrase).toEqual([])
+    }
   })
 
   it('and still reads a clause a coordinator merely happens to precede', () => {
@@ -1653,21 +1661,19 @@ describe('QA-91-003 — a token is read for its role, not for its presence', () 
     }
   })
 
-  it('and names the price of abstaining, which is a reading lost', () => {
+  it('reads a clause the denial did not reach, instead of withholding it', () => {
     /*
-     * The bound, declared rather than left to be found. A clause that reaches a
-     * coordinated pair breaks the run and still carries an `or` past the break,
-     * so two areas the owner asserted are withheld instead of named.
+     * Round 5 withheld both areas here and declared the loss a price worth
+     * paying. QA-91-014 ruled that wrong, and it was: the owner says plainly
+     * what the goal is, and an abstention that erases a clause it could read is
+     * not caution, it is a second mistake.
      *
-     * That is a reading **lost**, not a reading invented. Where it cannot follow
-     * the sentence the instrument goes quiet, and it never contradicts the owner
-     * — which is the direction this file errs in everywhere.
+     * The denial stops at the clause, so there is nothing left to abstain from.
      */
-    expect(read('Not about money, my real goal is fitness or certification').names).toEqual([])
-
-    // And the same sentence with a contrastive, which it can follow.
     expect(
-      read('Not about money, but fitness or certification').names.map((area) => area.domain),
+      read('Not about money, my real goal is fitness or certification').names.map(
+        (area) => area.domain,
+      ),
     ).toEqual([DOMAIN.career, DOMAIN.health])
   })
 
@@ -1697,6 +1703,180 @@ describe('QA-91-003 — a token is read for its role, not for its presence', () 
       expect(dated.unknowns, `${phrase}: the amount is still unknown`).toContain('how much')
       expect(dated.unknowns, `${phrase}: the date answered when`).not.toContain('by when')
     }
+  })
+
+  // -------------------------------------------------------------------------
+  // Round 6 — the denial reads clauses, and the number reads its phrase
+
+  it('stops the denial where a finite clause begins, with nothing in between', () => {
+    /*
+     * Round 5 read the text **between** two markers, and here there is none: the
+     * coordinator sits straight against the marker, so the run continued and
+     * Health was denied although the owner had just called it the real goal.
+     *
+     * A clause is what turns a sentence, so a clause is what stops a denial.
+     */
+    for (const phrase of [
+      'Not about money and fitness is the real goal',
+      'Nothing to do with money, fitness is what I care about',
+      "Not about money, it's fitness that counts",
+      // A contraction on a noun: no pronoun to fall back on, and still a clause.
+      "Not about money, the goal's fitness",
+    ]) {
+      expect(
+        read(phrase).names.map((area) => area.domain),
+        phrase,
+      ).toEqual([DOMAIN.health])
+    }
+  })
+
+  it('keeps a relative clause inside the denial it describes', () => {
+    /*
+     * The other side of the same rule, and the one that stops it running away:
+     * *"money that I earn"* has a subject and a verb in it and is still one
+     * denial. Ending the denial there would assert `earn` and name the very area
+     * the owner denied.
+     */
+    expect(read('Not about money that I earn').names).toEqual([])
+    expect(read('Nothing to do with the salary which I am paid').names).toEqual([])
+  })
+
+  it('names the bound: a clause built on a lexical verb is not seen', () => {
+    /*
+     * Declared rather than left to be found. The copula, the auxiliaries, the
+     * modals and the subject pronouns are closed classes; ordinary verbs are
+     * not, and *"fitness matters most"* is a clause this instrument cannot see.
+     *
+     * The denial therefore reaches over it, and the reading names **fewer**
+     * areas than it should rather than more — the direction this file errs in
+     * everywhere. Listing lexical verbs would move the boundary, not close it.
+     */
+    expect(read('Not about money and fitness matters most').names).toEqual([])
+  })
+
+  it('governs a number across an ordinary modifier — QA-91-015', () => {
+    /*
+     * Round 5 whitelisted the seven words a unit could reach across, and two
+     * everyday ones broke it: `number` between a unit and its number, and `US`
+     * between a number and its unit. Both sit inside one noun phrase.
+     */
+    expect(read('More money by week number 3 of 2027').unknowns, 'a week is not a sum').toContain(
+      'how much',
+    )
+    const sum = read('Save 2027 US dollars')
+    expect(sum.unknowns, 'and dollars are not a year').not.toContain('how much')
+    expect(sum.unknowns, 'with nothing said about when').toContain('by when')
+  })
+
+  it('and still refuses to govern across a preposition, which starts a phrase', () => {
+    /*
+     * The reverse. Widening governance to any nearby word would make every sum
+     * with a deadline into a date, so what ends the reach is a closed class:
+     * a preposition, a coordinator or a finite verb.
+     */
+    for (const phrase of ['Save 15 to 17 by March', 'Save 17 by March 15']) {
+      expect(read(phrase).unknowns, phrase).toEqual([])
+    }
+  })
+
+  it('keeps a sum and a deadline apart when a temporal preposition relates them', () => {
+    /*
+     * `until` means *up to the time of*. It relates a quantity to a deadline and
+     * cannot join two sums, so it is not a range connector and the date does not
+     * propagate backwards into the amount.
+     */
+    for (const phrase of ['Save 3000 until 15 March', 'Save 3000 until March 15']) {
+      expect(read(phrase).unknowns, phrase).toEqual([])
+    }
+  })
+
+  it('reads a two-part written date from its digits rather than its arity', () => {
+    /*
+     * Counting the parts said both of these were amount ranges. The evidence is
+     * inside the digits: a leading zero is how a date field is written and not
+     * how a sum is, and a pair that descends cannot be the ends of a range.
+     */
+    for (const phrase of ['More money by 31.12', 'More money by 03-15']) {
+      const dated = read(phrase)
+      expect(dated.unknowns, `${phrase}: the amount is still unknown`).toContain('how much')
+      expect(dated.unknowns, `${phrase}: the date answered when`).not.toContain('by when')
+    }
+  })
+
+  it('and still reads an ascending pair of plain numbers as the range it is', () => {
+    for (const phrase of ['Save 2000-3000 by March', 'Save 15-17 by March']) {
+      expect(read(phrase).unknowns, phrase).toEqual([])
+    }
+  })
+
+  it('reads currency on either side of the number, and the genitive both ways', () => {
+    /*
+     * Two asymmetries QA found in one instrument: `saysHowMuch` saw a currency
+     * symbol anywhere while the span rule saw it only in front, and the share
+     * rule read *of* but not the possessive that means the same thing.
+     */
+    for (const phrase of ['Save 2027€', 'Save $2027']) {
+      const sum = read(phrase)
+      expect(sum.unknowns, `${phrase}: the sum is settled`).not.toContain('how much')
+      expect(sum.unknowns, `${phrase}: and nothing said when`).toContain('by when')
+    }
+    for (const phrase of [
+      "Save 2 months' salary by March",
+      'Save 2 months of salary by March',
+      // And with no marker at all, which is how it is most often written.
+      'Save 2 months salary by March',
+    ]) {
+      expect(read(phrase).unknowns, phrase).toEqual([])
+    }
+  })
+
+  it('reads an ordinal that modifies a noun as neither a date nor a sum', () => {
+    /*
+     * *"my 2nd salary payment"* says which payment. Round 5 let the suffix alone
+     * establish a date, so the app claimed a deadline the owner never gave.
+     */
+    const which = read('Save my 2nd salary payment')
+    expect(which.unknowns, 'no deadline was stated').toContain('by when')
+    expect(which.unknowns, 'and no amount either').toContain('how much')
+  })
+
+  it('and still reads a bare ordinal standing on its own as the date it is', () => {
+    expect(read('Save 3000 by the 15th').unknowns, 'a sum and a day').toEqual([])
+    expect(read('More money between the 15th and 17th').unknowns).toContain('how much')
+  })
+
+  it('leaves both facts open for a number nothing in the phrase has typed', () => {
+    /*
+     * Round 5 defaulted every untyped number to a quantity, and QA was right
+     * that this is too broad: in *"more money by 17"* the number could be a day,
+     * a sum or an age. Nothing says, so nothing is concluded.
+     */
+    const untyped = read('More money by 17')
+    expect(untyped.unknowns, 'no amount was established').toContain('how much')
+    expect(untyped.unknowns, 'and no date either').toContain('by when')
+  })
+
+  it('and still reads a bare number the verb governs as the sum it is', () => {
+    /*
+     * The reverse, and the reason the rule above is about governance rather than
+     * about shape. *"Save 3000"* has a money marker in front of it inside the
+     * same phrase and no temporal preposition between; *"more money by 17"* has
+     * the same marker and a `by`, which is the whole difference.
+     */
+    const sum = read('Save 3000')
+    expect(sum.unknowns, 'the sum is settled').not.toContain('how much')
+    expect(sum.unknowns, 'and nothing said when').toContain('by when')
+  })
+
+  it('reads a rate as a rate rather than as a date', () => {
+    /*
+     * *"50000 a year"* is a wage and *"17 next month"* is a deadline, and the
+     * article is the whole of the difference. A rate says how often, not when.
+     */
+    for (const phrase of ['Earn 50000 a year', 'Save 100 a week']) {
+      expect(read(phrase).unknowns, `${phrase}: the sum is settled`).not.toContain('how much')
+    }
+    expect(read('More money from 15 to 17 next month').unknowns).toContain('how much')
   })
 })
 

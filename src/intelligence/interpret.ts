@@ -676,93 +676,214 @@ function mentions(haystack: string, digest: readonly InterpreterSource[]): reado
 }
 
 /**
- * The mentions the owner denied — QA-91-012.
+ * The mentions the owner denied — QA-91-014.
  *
- * ## What the last two versions used instead of evidence
+ * ## Four versions of one wrong question
  *
- * Round 3 asked whether a comma stood between two markers. Round 4 asked whether
- * a comma stood between them **and** whether they named the same area. Both are
- * proxies for the thing that actually matters, and QA broke the second from both
- * sides in one round: *"Not about money, or fitness"* is one punctuated
- * coordination and was read as two, while *"Not about money because fitness is
- * the real goal"* is a denial followed by a clause and was read as one. **A
- * comma can sit inside a list, and a clause can begin without one.**
+ * Round 3 asked whether a comma stood between two markers. Round 4 added the
+ * area. Round 5 replaced both with coordination, read from the **text between
+ * two markers**. QA broke the third from both sides in one round, and the two
+ * halves are worth putting side by side:
  *
- * ## What coordination actually looks like
+ * - *"Not about money and physical fitness"* is a two-item denial. `physical` is
+ *   the item's own modifier, it is not list material, and the run broke — so
+ *   Health was named from a word inside the denial.
+ * - *"Not about money and fitness is the real goal"* is a denial followed by a
+ *   clause. There is **nothing at all** between the coordinator and the marker,
+ *   so the run continued — and Health was denied although the owner had just
+ *   called it the real goal.
  *
- * A coordinated list is joined by **coordinators** — *and*, *or*, *nor* — with
- * commas as separators between the items. That is the evidence, and it is what
- * is read here:
+ * **The text between two markers cannot answer this, in either direction.** One
+ * phrase has extra words and is still a list; the other has none and is not.
  *
- * 1. From the first marker after the denier, walk the markers in order. Two are
- *    in the same run only when the text between them is nothing but list
- *    material: whitespace, commas, coordinators and determiners. Anything else —
- *    a verb, a subordinator, a pronoun, a noun — ends the run, because a run of
- *    list material is what a list is made of.
- * 2. The list ends with the item the **last coordinator introduces**. In
- *    *"A, B, or C"* that is C, so all three are denied; in *"A and B, C is the
- *    goal"* it is B, so C is outside and is asserted.
- * 3. With no coordinator anywhere in the run, the denial covers its first marker
- *    alone — which is what *"not about money"* means on its own.
+ * ## The question is where the denial stops, and a clause is what stops it
  *
- * **Area is no longer consulted at all.** Round 4 needed it because it had no
- * way to tell a list from a clause; with coordination read directly, the area
- * rule is redundant and is gone. So is the comma test.
+ * A denial of aboutness runs until the sentence turns, and what turns a sentence
+ * is a **new clause**. So the instrument reads clauses, and the rule that used
+ * to walk the markers is gone:
+ *
+ * 1. a denial reaches until sentence punctuation, a contrastive, or **the start
+ *    of a finite clause**;
+ * 2. every marker inside that reach is denied — coordinated, comma-separated,
+ *    modified or bare, because all of them are things the sentence has not
+ *    turned away from yet;
+ * 3. everything after it is read normally, which is how *"my real goal is
+ *    fitness or certification"* gets to assert two areas.
+ *
+ * `listLink`, the run walk, the last-coordinator rule and the abstention it
+ * needed are all deleted. So is the declared bound that an asyndetic list denies
+ * only its first item: with reach doing the work, *"not about money, fitness,
+ * certification"* denies all three, which is what it means.
+ *
+ * ## What a finite clause is read from, and why this is not Round 3 again
+ *
+ * Round 3 kept a list of words a clause might **begin** with, and failed at the
+ * first noun, because subjects are an open class. This reads the **predicate**
+ * instead, and the finite-verb system of English is closed: the copula, the
+ * auxiliaries and the modals. A subject pronoun is closed too, and is the other
+ * half of the same evidence — as is a contraction, which carries its verb
+ * attached to its subject and so is both halves in one word.
+ *
+ * Having found the verb, the clause starts at the head of its subject: walk left
+ * over words until a comma, a coordinator, a phrase introducer, or the denier
+ * itself. That is what puts the boundary before `fitness` in *"and fitness is
+ * the real goal"*, before `fitness` again in *"because fitness is the real
+ * goal"*, and before `my` in *"my real goal is fitness or certification"*.
  *
  * ## The bound, said plainly
  *
- * An asyndetic list — *"not about money, debt, savings"* with no *and* or *or*
- * anywhere — is read as denying only the first item, and the rest are asserted.
- * That is the direction this file errs in everywhere: it declines to conclude
- * from evidence it has not got, rather than treating a comma as though it were
- * a conjunction.
+ * A clause whose verb is an ordinary lexical one and whose subject is a noun —
+ * *"not about money and fitness matters most"* — is not seen, and the denial
+ * reaches over it. That denies a marker the owner asserted, so the reading names
+ * **fewer** areas than it should rather than more, which is the direction this
+ * file errs in everywhere. Adding lexical verbs would move the boundary rather
+ * than close it, so the closed grammatical classes are where it stops.
  */
 const COORDINATORS = ['and', 'or', 'nor']
 
-/** What may stand in front of an item without being one. */
-const DETERMINERS = ['the', 'a', 'an', 'my', 'our', 'any', 'some']
-
-/** Words that can sit inside a list without ending it. */
-const LIST_FILLER = [...COORDINATORS, ...DETERMINERS]
+/** The copula, the auxiliaries and the modals — the closed finite-verb system. */
+const FINITE_VERBS = [
+  'is',
+  'are',
+  'was',
+  'were',
+  'am',
+  'be',
+  'been',
+  'being',
+  'has',
+  'have',
+  'had',
+  'do',
+  'does',
+  'did',
+  'will',
+  'would',
+  'shall',
+  'should',
+  'can',
+  'could',
+  'may',
+  'might',
+  'must',
+]
 
 /**
- * Whether the text between two markers is nothing but list material, and
- * whether a coordinator was part of it.
- */
-function listLink(between: string): { readonly links: boolean; readonly coordinates: boolean } {
-  const words = between.split(/[\s,]+/).filter((word) => word !== '')
-  const links = words.every((word) => LIST_FILLER.includes(word))
-  return { links, coordinates: links && words.some((word) => COORDINATORS.includes(word)) }
-}
-
-/**
- * Whether a coordinator introduces what comes next, across determiners only.
+ * Pronouns that tie a clause to the noun in front of it instead of starting one.
  *
- * *", or certification"* is a coordinator introducing an item. *"and I want
- * fitness"* is a coordinator followed by a clause, and the words in between are
- * what say so.
+ * *"Not about money that I earn"* has a subject and a verb in it, and it is
+ * still one denial: the clause describes the money rather than turning away from
+ * it. Ending the denial there would assert `earn` and name the very area the
+ * owner just denied.
  */
-function introducedByCoordinator(between: string): boolean {
-  const words = between.split(/[\s,]+/).filter((word) => word !== '')
-  let end = words.length
-  while (end > 0 && DETERMINERS.includes(words[end - 1]!)) end -= 1
-  return end > 0 && COORDINATORS.includes(words[end - 1]!)
+const RELATIVE_PRONOUNS = ['that', 'which', 'who', 'whom', 'whose']
+
+/** The verb halves of the contractions, which attach to their own subject. */
+const CONTRACTED_VERBS = ['s', 're', 'll', 've', 'd', 'm']
+
+/** Pronouns that can only be the subject of a clause, never an item in a list. */
+const SUBJECT_PRONOUNS = ['i', 'we', 'you', 'he', 'she', 'they', 'it']
+
+/**
+ * Words that introduce a phrase, and so cannot be inside the one they precede.
+ *
+ * Prepositions and subordinators, both closed classes. Walking left from a verb
+ * to the head of its subject has to stop at one of these or it walks straight
+ * out of the clause: in *"not about money because fitness is the real goal"* the
+ * subject is `fitness`, and `because` is the whole of what says so.
+ */
+const PHRASE_INTRODUCERS = [
+  'about',
+  'of',
+  'for',
+  'with',
+  'in',
+  'on',
+  'at',
+  'to',
+  'from',
+  'by',
+  'into',
+  'over',
+  'under',
+  'between',
+  'among',
+  'against',
+  'within',
+  'without',
+  'upon',
+  'near',
+  'around',
+  'across',
+  'toward',
+  'towards',
+  'after',
+  'before',
+  'until',
+  'till',
+  'during',
+  'per',
+  'than',
+  'because',
+  'since',
+  'as',
+  'when',
+  'while',
+  'if',
+  'so',
+  'that',
+  'which',
+  'who',
+  'whereas',
+  'unless',
+  'whether',
+]
+
+/**
+ * Where a finite clause starts inside `rest`, or `-1` where none does.
+ *
+ * The verb is the evidence and the subject is the boundary: having found one,
+ * walk left to the head of the noun phrase in front of it, stopping at a comma,
+ * a coordinator or the beginning.
+ */
+function startOfClause(rest: string): number {
+  const words = [...rest.matchAll(/[^\s,;.!?]+/g)]
+
+  for (let index = 0; index < words.length; index += 1) {
+    const word = words[index]![0].toLowerCase()
+    // A contraction carries its verb attached: `it's` is a subject and a copula.
+    const [bare = '', contraction] = word.split("'")
+
+    // A subject pronoun is a clause on its own evidence — it cannot be an item.
+    const subject =
+      SUBJECT_PRONOUNS.includes(bare) ||
+      (contraction !== undefined && CONTRACTED_VERBS.includes(contraction))
+
+    let head = index
+    if (!subject) {
+      if (!FINITE_VERBS.includes(word)) continue
+      while (head > 0) {
+        const previous = words[head - 1]!
+        const before = previous[0].toLowerCase()
+        if (COORDINATORS.includes(before) || PHRASE_INTRODUCERS.includes(before)) break
+        // A comma between two words separates them; only unbroken text is a phrase.
+        if (rest.slice(previous.index + previous[0].length, words[head]!.index).includes(',')) break
+        head -= 1
+      }
+    }
+
+    // ...unless a relative pronoun ties the whole clause to the noun before it.
+    const introducer = head > 0 ? words[head - 1]![0].toLowerCase() : ''
+    if (RELATIVE_PRONOUNS.includes(introducer)) continue
+
+    return words[head]!.index
+  }
+
+  return -1
 }
 
-interface DenialReading {
-  readonly denied: ReadonlySet<Mention>
-  /**
-   * Mentions inside a denial whose place in it could not be established.
-   *
-   * Neither denied nor asserted: the instrument saw a list it could not follow
-   * and declines to say which side of the denial these fall on.
-   */
-  readonly unstructured: ReadonlySet<Mention>
-}
-
-function deniedMentions(haystack: string, all: readonly Mention[]): DenialReading {
+function deniedMentions(haystack: string, all: readonly Mention[]): ReadonlySet<Mention> {
   const denied = new Set<Mention>()
-  const unstructured = new Set<Mention>()
 
   for (const denier of DENIERS) {
     let from = 0
@@ -770,105 +891,73 @@ function deniedMentions(haystack: string, all: readonly Mention[]): DenialReadin
       const at = haystack.indexOf(denier, from)
       if (at === -1) break
       const after = at + denier.length
-      const until = after + reachOfDenial(haystack.slice(after))
+      const rest = haystack.slice(after)
+      const clause = startOfClause(rest.slice(0, reachOfDenial(rest)))
+      const until = after + (clause === -1 ? reachOfDenial(rest) : clause)
       from = after
 
-      const inside = all.filter((mention) => mention.at >= after && mention.at < until)
-      if (inside.length === 0) continue
-
-      // The run, and how far the coordination in it actually reaches.
-      const run: Mention[] = [inside[0]!]
-      let lastCoordinated = 0
-      for (let index = 1; index < inside.length; index += 1) {
-        const link = listLink(haystack.slice(inside[index - 1]!.to, inside[index]!.at))
-        if (!link.links) break
-        run.push(inside[index]!)
-        if (link.coordinates) lastCoordinated = run.length - 1
-      }
-
-      for (let index = 0; index <= lastCoordinated; index += 1) denied.add(run[index]!)
-
-      /*
-       * And where the run stopped short of a coordinator, say nothing.
-       *
-       * *"Not about money, physical fitness, or certification"* is plainly one
-       * list, and the run stops at `physical` because a modifier is not list
-       * material. The `or` past the end of the run is the evidence that the list
-       * did not stop where the instrument did.
-       *
-       * Reading those mentions as **asserted** would name two areas the owner
-       * has just denied, which is the worse of the two mistakes. So they are
-       * neither denied nor asserted: nothing is read from them at all, and a
-       * phrase with nothing left over names no area, offers nothing and writes
-       * no derived row — which is what abstaining looks like here.
-       *
-       * **And the bound, which is the price of it.** A clause that reaches a
-       * coordinated pair — *"not about money, my real goal is fitness or
-       * certification"* — breaks the run and carries an `or` past the break, so
-       * the two asserted areas are withheld rather than named. That is a
-       * reading lost, not a reading invented: the instrument goes quiet where it
-       * cannot follow the sentence, and it never contradicts the owner.
-       */
-      let unfollowable = -1
-      for (let index = run.length; index < inside.length; index += 1) {
-        const between = haystack.slice(inside[index - 1]!.to, inside[index]!.at)
-        if (introducedByCoordinator(between)) unfollowable = index
-      }
-      for (let index = run.length; index <= unfollowable; index += 1) {
-        unstructured.add(inside[index]!)
+      for (const mention of all) {
+        if (mention.at >= after && mention.at < until) denied.add(mention)
       }
     }
   }
 
-  return { denied, unstructured }
+  return denied
 }
 
 /**
- * What a number in the phrase is **for** — QA-91-013.
+ * What a number in the phrase is **for** — QA-91-015.
  *
- * ## Three versions of the same mistake
+ * ## Four versions, and what each one substituted for the role
  *
  * Round 2 deleted matched date shapes and asked whether a digit was left. Round
- * 3 added shapes. Round 4 kept the shapes, called membership of the list a
- * *role*, propagated it across range connectors and defaulted everything else to
- * an amount. QA broke the third from both sides at once: an unlisted date became
- * money — *"by week 3 of 2027"* — and a date-shaped sum became time — *"save
- * 2027 dollars"*. **Membership of a surface-form list is not a role.**
+ * 3 added shapes. Round 4 called membership of the shape list a *role*. Round 5
+ * replaced the shapes with **units**, which was the right kind of evidence, and
+ * then wrapped three proxies around it: a whitelist of the words a unit could
+ * reach across, a count of how many numbers were punctuated together, and a
+ * connector that carried a role from one span to another. QA broke all three:
  *
- * ## The evidence a role is actually read from
+ * - `week number 3` and `2027 US dollars` put an ordinary modifier between the
+ *   number and its unit, and governance vanished;
+ * - `31.12` and `03-15` are two-part written dates, and arity called both of
+ *   them amount ranges;
+ * - `save 3000 until 15 March` is a sum and a deadline, and `until` made them
+ *   the two ends of one date.
  *
- * A number's role is written next to it, in units:
+ * ## What replaced each of them
  *
- * - an **amount unit** — a currency symbol, *dollars*, *k*, *percent* — makes it
- *   an amount, whatever shape it has. `2027 dollars` is a sum.
- * - a **temporal unit** — *week*, *month*, *quarter*, a month's name or its
- *   abbreviation, an ordinal suffix — makes it a date, whether or not anybody
- *   listed the form. `week 3` and `15 Mar` are dates.
- * - a **partitive** — an ordinal or a fraction followed by *of* something that
- *   is not itself temporal — makes it a quantity. `a 3rd of my salary` is not
- *   the third of the month.
+ * **Governance is a phrase, not a whitelist.** A unit governs a number while
+ * they are still in the same phrase, and what ends a phrase is closed:
+ * {@link PHRASE_END}. `number`, `US` and `next` end nothing; `by` starts
+ * something. See {@link phraseWords}.
  *
- * Units have to be **adjacent** to count, across nothing but list punctuation
- * and a closed set of connectors (*the*, *of*, *next*, *this*, *last*). That is
- * what separates *"17 next month"*, where the unit governs the number, from
- * *"17 by March"*, where it does not.
+ * **Two numbers punctuated together are read for what they say.** A slash is
+ * never a range. For the ambiguous separators, three numbers are a written date,
+ * and for two the evidence is inside the digits: a **leading zero** is how a
+ * date field is written and not how a sum is, and a **descending** pair cannot
+ * be a range at all. So `03-15` and `31.12` are dates while `2000-3000` and
+ * `15-17` are ranges.
  *
- * ## Two weaker readings, and why they are marked as weaker
+ * **A connector joins two of a kind.** `until` means *up to the time of*; it
+ * relates a quantity to a deadline and can never join two sums, so it is not a
+ * range connector. An **inferred** role still never crosses a connector.
  *
- * A four-digit number in 1900–2199 **looks** like a year, and a number with no
- * unit at all is ordinarily a quantity. Both are read, and both are marked
- * `inferred`, because a guess may not be propagated: a connector carries a role
- * across a range only from a span whose role came from a unit. That is what
- * stops *"between 2027 and 3000"* becoming a date range on the strength of one
- * endpoint's shape.
+ * **An ordinal that modifies a noun is not a date.** `my 2nd salary payment`
+ * says which payment. An ordinal is a date when it stands alone, or before a
+ * unit, a month or a connector — not when a noun follows it that it modifies.
  *
- * ## The bound, said plainly
+ * ## The bound, which is now an abstention rather than a default
  *
- * A number with no unit near it and no date shape is read as a quantity. That is
- * a default and it is named as one — but it is the last step rather than the
- * first, and it is what a number is when nothing says otherwise. Where the
- * evidence is genuinely absent the app still says so: `unknowns` carries *how
- * much* or *by when*, and nothing derived is written.
+ * Round 5 defaulted every untyped number to a quantity, and QA was right that
+ * this is too broad: in *"more money by 17"* the number could be a day, a sum or
+ * an age. So a number with no unit, no date punctuation, no ordinal and no year
+ * shape is **{@link Role} `unknown`** — it settles neither *how much* nor *by
+ * when*, and both questions stay open.
+ *
+ * What still makes a bare number a quantity is the **verb that governs it**:
+ * *"save 3000"* has a money marker in front of it inside the same phrase, and no
+ * temporal preposition in between. *"more money by 17"* has the same marker and
+ * a `by`, which is exactly the difference.
  */
 const MONTH_NAMES = [
   'january',
@@ -900,6 +989,7 @@ const TEMPORAL_UNITS = [
   'quarters',
   'day',
   'days',
+  'time',
   'w',
   'q',
   ...MONTH_WORDS,
@@ -919,40 +1009,113 @@ const AMOUNT_UNITS = [
   'pc',
 ]
 
-/**
- * The words a unit may reach across, and nothing else.
- *
- * *"17 next month"* is governed by its unit and *"17 by March"* is not, and this
- * closed set is the whole of that difference. `by`, `to`, `for` and every other
- * preposition are deliberately absent: they introduce a separate phrase.
- */
-const UNIT_LINK = ['the', 'of', 'next', 'this', 'last', 'each', 'every']
+/** Currency, which is an amount unit written as a symbol on either side. */
+const CURRENCY = /[£$€]/
 
-const RANGE_JOIN = ['–', '—', '-', 'to', 'and', 'through', 'until', 'thru']
+/**
+ * What closes a phrase, and therefore ends one word's governance of another.
+ *
+ * Prepositions, subordinators, coordinators and finite verbs — every one a
+ * closed class. The modifiers a noun may carry are not a closed class, which is
+ * why this is the list that grew rather than the list of words a unit is allowed
+ * to reach across.
+ */
+const PHRASE_END = [...PHRASE_INTRODUCERS, ...COORDINATORS, ...FINITE_VERBS]
+
+/**
+ * The words that make a bare number the sum they are about.
+ *
+ * The money area's own marker table, reused rather than restated: *save*,
+ * *earn*, *salary*, *budget*. A number one of these governs is the quantity the
+ * sentence is about, which is why `save 3000` answers *how much* and a number
+ * with nothing in front of it does not.
+ */
+const AMOUNT_GOVERNORS: readonly string[] = MARKERS[DOMAIN.money] ?? []
+
+/** Prepositions that put what follows them in a time slot rather than a sum. */
+const TEMPORAL_PREPOSITIONS = ['by', 'before', 'after', 'until', 'till', 'on', 'at', 'during']
+
+/** `until` is absent by design: a temporal preposition never joins two sums. */
+const RANGE_JOIN = ['–', '—', '-', 'to', 'and', 'through', 'thru']
 
 function anyOf(words: readonly string[]): string {
   return words.map((word) => escape(word)).join('|')
 }
 
-const TOUCHES_BEFORE = new RegExp(
-  String.raw`\b(${anyOf(TEMPORAL_UNITS)})\b[\s,\-]*(?:(?:${anyOf(UNIT_LINK)})[\s,\-]*)*$`,
-)
-const TOUCHES_AFTER = new RegExp(
-  String.raw`^[\s,\-]*(?:(?:${anyOf(UNIT_LINK)})[\s,\-]*)*\b(${anyOf(TEMPORAL_UNITS)})\b`,
-)
-const AMOUNT_AFTER = new RegExp(String.raw`^[\s,\-]*\b(${anyOf(AMOUNT_UNITS)})\b`)
 /**
- * A share taken *of* something, reached across a fraction's other half.
+ * The words of one phrase, reading outward from a number until the phrase ends.
  *
- * `1/3 of my salary` has to be recognisable from the `1` as well as from the
- * `3`, or the first half of the fraction is left reading as a date.
+ * Punctuation closes the phrase at the edge it stands on, so *"March 15th, 2027"*
+ * does not let the month govern the year, and `2027 US dollars` does let the
+ * unit govern the sum.
  */
+function phraseWords(text: string, outward: 'left' | 'right'): readonly string[] {
+  const words: string[] = []
+  const found = [...text.matchAll(/\S+/g)]
+
+  for (const match of outward === 'left' ? [...found].reverse() : found) {
+    const token = match[0].toLowerCase()
+    const closes = outward === 'left' ? /[,;:]$/.test(token) : /[,;:]/.test(token)
+    const bare = token.replace(/[^a-z0-9'/-]+$/, '').replace(/^[^a-z0-9'/-]+/, '')
+    if (outward === 'left' && closes) break
+    if (PHRASE_END.includes(bare.split("'")[0] ?? bare)) break
+    words.push(bare)
+    if (outward === 'right' && closes) break
+  }
+
+  return words
+}
+
+/** Whether one of `words` governs the number from the given side. */
+function governs(text: string, outward: 'left' | 'right', words: readonly string[]): boolean {
+  return phraseWords(text, outward).some((word) => words.includes(word))
+}
+
+/** Articles that turn a following unit into a rate: *50,000 **a** year*. */
+const RATE_ARTICLES = ['a', 'an']
+
+/**
+ * Whether a temporal unit after the number is telling the time, or the rate.
+ *
+ * *"17 next month"* is a date and *"50000 a year"* is a wage, and the article is
+ * the whole of the difference. A rate says how often, which is not when.
+ */
+function datedByUnitAfter(after: string): boolean {
+  const words = phraseWords(after, 'right')
+  const unit = words.findIndex((word) => TEMPORAL_UNITS.includes(word))
+  if (unit === -1) return false
+  return unit === 0 || !RATE_ARTICLES.includes(words[unit - 1] ?? '')
+}
+
+/** A share taken *of* something, reached across the unit it is counted in. */
 const PARTITIVE = new RegExp(
   String.raw`^(?:[/.]\d{1,2})?(?:st|nd|rd|th)?(?:\s+(?:${anyOf(TEMPORAL_UNITS)}))?\s+of\b`,
 )
 
 /**
- * Whether what follows *of* is itself a period of time.
+ * A number that measures a noun through a unit — QA-91-015.
+ *
+ * *"2 months of salary"*, *"2 months' salary"* and *"2 months salary"* are one
+ * relationship in three spellings, and Round 5 read only the first. What says it
+ * is a measure rather than a date is the **noun after the unit**: a date ends at
+ * its unit, and a measure carries on into the thing being measured.
+ *
+ * So `2 months salary` is a quantity and `in 6 months` is a date, without either
+ * spelling being written down anywhere. A following number is not a noun —
+ * `15 Mar 2027` is still a date — and a following unit is not one either, which
+ * is what keeps *"6 months time"* temporal.
+ */
+function measuresANoun(after: string): boolean {
+  const words = phraseWords(after, 'right').map((word) => word.replace(/['’]s?$/, ''))
+  const unit = words.findIndex((word) => TEMPORAL_UNITS.includes(word))
+  if (unit === -1) return false
+  const measured = words[unit + 1]
+  if (measured === undefined || measured === '' || /^\d/.test(measured)) return false
+  return !TEMPORAL_UNITS.includes(measured) && !RATE_ARTICLES.includes(measured)
+}
+
+/**
+ * Whether what follows the genitive is itself a period of time.
  *
  * A share is only a quantity when it is a share of something untemporal. *A 3rd
  * of my salary* is a quantity; *the 3rd quarter of 2027* and *the 15th of March*
@@ -960,20 +1123,34 @@ const PARTITIVE = new RegExp(
  * the other, which is a shape rather than a word and so has to be read as one.
  */
 function temporal(rest: string): boolean {
-  return TOUCHES_AFTER.test(rest) || /^[\s,-]*(?:19|20|21)\d{2}\b/.test(rest)
+  return governs(rest, 'right', TEMPORAL_UNITS) || /^[\s,-]*(?:19|20|21)\d{2}\b/.test(rest)
 }
 
-type Role = 'date' | 'amount'
+/**
+ * What a span is doing in the phrase.
+ *
+ * `unknown` is not a failure to compute; it is the reading of a number that
+ * genuinely says neither how much nor when, and it leaves both facts open.
+ */
+type Role = 'date' | 'amount' | 'unknown'
 
 interface NumberSpan {
   readonly at: number
   readonly to: number
   role: Role
-  /** `established` came from a unit; `inferred` is a shape or the default. */
+  /** `established` came from a unit; `inferred` is a shape or a governing verb. */
   strength: 'established' | 'inferred'
 }
 
 const YEARISH = /^(?:19|20|21)\d{2}$/
+
+/** An ordinal that modifies a noun says which one, not when. */
+function ordinalModifies(after: string): boolean {
+  if (!/^(?:st|nd|rd|th)\b/.test(after)) return false
+  const next = phraseWords(after.replace(/^(?:st|nd|rd|th)/, ''), 'right')[0]
+  if (next === undefined || next === '') return false
+  return !TEMPORAL_UNITS.includes(next) && !RANGE_JOIN.includes(next) && !/^\d/.test(next)
+}
 
 /** Every number in the phrase, with the evidence for what it is doing there. */
 function numberSpans(text: string): readonly NumberSpan[] {
@@ -985,24 +1162,25 @@ function numberSpans(text: string): readonly NumberSpan[] {
     if (match === null) break
     const at = match.index
     const to = at + match[0].length
-    const before = text.slice(Math.max(0, at - 28), at)
-    const after = text.slice(to, to + 28)
+    const before = text.slice(0, at)
+    const after = text.slice(to)
 
     /*
-     * A fraction or an ordinal share taken *of* something untemporal is a
-     * quantity — the third of a salary is not the third of a month.
-     *
-     * It is asked only where no temporal unit governs the number already.
-     * `week 3 of 2027` is a date whose *of* introduces the year rather than a
-     * share of anything, and that ordering is the whole difference between the
-     * third of a salary and the third week of a year.
+     * A share of something untemporal is a quantity — the third of a salary is
+     * not the third of a month — and it is asked only where no temporal unit
+     * governs the number already, because `week 3 of the plan` is still a week.
      */
     const share = PARTITIVE.exec(after)
     const partitive =
-      share !== null && !TOUCHES_BEFORE.test(before) && !temporal(after.slice(share[0].length))
+      !governs(before, 'left', TEMPORAL_UNITS) &&
+      ((share !== null && !temporal(after.slice(share[0].length))) || measuresANoun(after))
 
     // A unit is evidence and a shape is not, so the units are asked first.
-    if (AMOUNT_AFTER.test(after) || /[£$€]\s*$/.test(before)) {
+    if (
+      governs(after, 'right', AMOUNT_UNITS) ||
+      CURRENCY.test(before.slice(-2)) ||
+      CURRENCY.test(after.slice(0, 2))
+    ) {
       spans.push({ at, to, role: 'amount', strength: 'established' })
       continue
     }
@@ -1010,18 +1188,37 @@ function numberSpans(text: string): readonly NumberSpan[] {
       spans.push({ at, to, role: 'amount', strength: 'established' })
       continue
     }
+    if (ordinalModifies(after)) {
+      spans.push({ at, to, role: 'unknown', strength: 'established' })
+      continue
+    }
     if (
-      TOUCHES_BEFORE.test(before) ||
-      TOUCHES_AFTER.test(after) ||
+      governs(before, 'left', TEMPORAL_UNITS) ||
+      datedByUnitAfter(after) ||
       /^(?:st|nd|rd|th)\b/.test(after)
     ) {
       spans.push({ at, to, role: 'date', strength: 'established' })
       continue
     }
+    if (YEARISH.test(match[0])) {
+      spans.push({ at, to, role: 'date', strength: 'inferred' })
+      continue
+    }
+
+    /*
+     * Nothing has said what this number is, so the verb governing it is asked
+     * last. A money marker in front of it, inside the same phrase and with no
+     * temporal preposition between, makes it the sum that verb is about; that is
+     * the whole difference between *"save 3000"* and *"more money by 17"*.
+     */
+    const reach = phraseWords(before, 'left')
+    const governed =
+      reach.some((word) => AMOUNT_GOVERNORS.includes(word)) &&
+      !reach.some((word) => TEMPORAL_PREPOSITIONS.includes(word))
     spans.push({
       at,
       to,
-      role: YEARISH.test(match[0]) ? 'date' : 'amount',
+      role: governed ? 'amount' : 'unknown',
       strength: 'inferred',
     })
   }
@@ -1037,16 +1234,14 @@ const DATE_PUNCTUATION = ['/', '-', '.']
 /**
  * Numbers punctuated together into one written date.
  *
- * `03/15`, `15-03-2027` and `2027.03.15` are dates because of how they are
- * **punctuated**, not because anyone wrote those three orderings down. Two
- * things are read: the separator has to be immediate — one character, no spaces
- * — and the whole chain has to use the same one.
+ * A slash is never a range, so a slashed chain is a date at any length. For the
+ * ambiguous separators the evidence is read from the numbers themselves:
  *
- * A slash is never a range, so a slashed chain is a date at any length. A hyphen
- * and a full stop are ambiguous — `2000-3000` is a range and `15-03-2027` is a
- * date — so for those the evidence is **arity**: two numbers are the ends of a
- * range, three punctuated together are a date. That is the difference itself,
- * rather than a rule about which numbers look like years.
+ * - **three** of them punctuated together is a written date, whatever they say;
+ * - a **leading zero** is how a date field is written and not how a sum is, so
+ *   `03-15` is a date;
+ * - a **descending** pair cannot be the two ends of a range, so `31.12` is a
+ *   date while `2000-3000` and `15-17` are ranges.
  *
  * A span whose role a unit already established is left alone, so `1/3 of my
  * salary` stays the quantity the partitive made it.
@@ -1064,7 +1259,17 @@ function writtenDates(text: string, spans: NumberSpan[]): void {
       end += 1
     }
 
-    if (separator === '/' || end - index >= 2) {
+    const parts = spans.slice(index, end + 1).map((span) => text.slice(span.at, span.to))
+    // Three parts, a slash, or a leading zero: each says "written date" alone.
+    const written =
+      separator === '/' ||
+      end - index >= 2 ||
+      parts.some((part) => part.length > 1 && part.startsWith('0'))
+
+    // And two parts that descend are not the two ends of a range.
+    const descending = parts.every((part, at) => at === 0 || Number(parts[at - 1]) > Number(part))
+
+    if (written || descending) {
       for (let part = index; part <= end; part += 1) {
         const span = spans[part]!
         if (span.strength === 'established') continue
@@ -1077,7 +1282,7 @@ function writtenDates(text: string, spans: NumberSpan[]): void {
 }
 
 const JOINED = new RegExp(
-  String.raw`^(?:st|nd|rd|th)?[\s]*(?:${anyOf(RANGE_JOIN)})[\s]*(?:(?:${anyOf(UNIT_LINK)})[\s]*)*$`,
+  String.raw`^(?:st|nd|rd|th)?[\s]*(?:${anyOf(RANGE_JOIN)})[\s]*(?:(?:the|of|next|this|last)[\s]*)*$`,
 )
 
 /**
@@ -1111,7 +1316,7 @@ function settleRanges(text: string, spans: NumberSpan[]): void {
       const bothCouldBeYears = [left, right].every((span) =>
         YEARISH.test(text.slice(span.at, span.to)),
       )
-      const role: Role = bothCouldBeYears ? left.role : 'amount'
+      const role: Role = bothCouldBeYears ? left.role : left.role === 'date' ? 'amount' : left.role
       for (const span of [left, right]) {
         if (span.role === role) continue
         span.role = role
@@ -1128,7 +1333,7 @@ function settleRanges(text: string, spans: NumberSpan[]): void {
  * number in the phrase was read as one.
  */
 function saysHowMuch(text: string): boolean {
-  if (/[£$€]/.test(text)) return true
+  if (CURRENCY.test(text)) return true
   return numberSpans(text).some((span) => span.role === 'amount')
 }
 
@@ -1224,8 +1429,8 @@ export function readAim(input: InterpreterInput): AimReading {
    * span*, which is the question four rounds of boundary repairs were stuck on.
    */
   const all = mentions(haystack, input.digest)
-  const { denied, unstructured } = deniedMentions(haystack, all)
-  const asserted = all.filter((mention) => !denied.has(mention) && !unstructured.has(mention))
+  const denied = deniedMentions(haystack, all)
+  const asserted = all.filter((mention) => !denied.has(mention))
 
   const byArea = new Map<LifeDomainId, { own: string[]; words: string[] }>()
   for (const mention of asserted) {

@@ -351,9 +351,54 @@ asked to. All three were repaired structurally rather than special-cased.
 guard that lets a unit in front of a number win failed nothing until _week 3 of
 **the plan**_ was added beside _week 3 of 2027_.
 
+## Independent QA round 6 — FAIL, and the round the question left the markers
+
+Round 6 confirmed the Round 5 repairs on their submitted phrases and then broke
+both instruments from both sides again, ruling the result **a fifth boundary in
+different clothes**. It was: Round 5 stopped reading proxies for the lexical
+evidence and then wrapped a new proxy around each.
+
+- **QA-91-014** — the text between two markers cannot separate _"and physical
+  fitness"_, which is an item with a modifier, from _"and fitness is the real
+  goal"_, which is a clause. One has extra words and is still a list; the other
+  has none and is not.
+- **QA-91-015** — a whitelist of crossable words, a count of punctuated parts and
+  a connector were still standing in for the role: `week number 3` lost its unit,
+  `31.12` became an amount range, and `until` turned a sum and a deadline into
+  one date.
+
+**The denial question left the markers altogether** (D-255). A denial runs until
+the sentence turns, and what turns a sentence is a **finite clause** — so reach
+ends there and everything inside it is denied, whatever its punctuation. The run
+walk, the last-coordinator rule and the abstention are deleted, and with them
+both of Round 5's declared bounds, which QA overturned and was right to.
+
+A clause is read from its **predicate**, not from a list of words a clause might
+begin with: the copula, the auxiliaries, the modals, the subject pronouns and the
+contractions are closed classes where subjects are not. A relative pronoun is the
+exception that proves it — _"money that I earn"_ is still one denial.
+
+**The number reads its phrase.** Governance runs to the end of the phrase and
+what ends one is closed; a two-part written date is read from its digits — a
+leading zero, or a descending pair — rather than from how many there are; and
+`until` is a temporal preposition that can never join two sums.
+
+**The amount default became an abstention**, which is the change that matters
+most. An untyped number settles neither question. What makes a bare number a
+quantity is the verb governing it.
+
+**Twenty-four reintroductions, eight of them reverse mutations**, seventeen
+earlier proofs retired onto named successors, and three that went green — each
+one a finding, one of them a real defect that produced the measure rule.
+
+**The instrument grew again**, 801 to 926 lines of code. The claim is only that
+every list which grew is a list of things that **end** a relationship, and those
+are closed classes. If that fails, this is the sixth boundary and should be
+called one.
+
 ## Decisions made
 
-**D-240 … D-254** in [`DECISION_LOG.md`](DECISION_LOG.md).
+**D-240 … D-255** in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Accommodation row B1 landed, and the list learned something from it
 

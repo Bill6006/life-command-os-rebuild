@@ -5586,3 +5586,48 @@ repaired structurally and all three have their own reintroductions.
 
 Full reproductions, repairs and verification:
 [`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).
+
+## QA-91-014, QA-91-015 — routing 91 independent QA round 6
+
+**Found:** independent Codex QA, round 6, 2026-09-02 · **Status:** Fixed (routing 91 round 6 repair) · **Owner:** routing 91
+
+The sixth round on the same two classes. Round 5 replaced the proxies for the
+lexical evidence and then wrapped new proxies around it; Round 6 broke both from
+both sides and ruled it a fifth boundary in different clothes, which it was
+(D-255).
+
+| ID        | Finding                                                                                                                                                                | Repair                                                                                                                            |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| QA-91-014 | The text **between** two markers cannot tell an item with a modifier from a marker that begins a clause — `and physical fitness` versus `and fitness is the real goal` | A denial reaches until a **finite clause** and denies everything inside it; the run walk and the abstention are deleted (D-255)   |
+| QA-91-015 | A whitelist, a punctuation count and a connector still stood in for the role — `week number 3`, `31.12`, `save 3000 until 15 March`                                    | Governance runs to the end of the **phrase**; two-part dates are read from their digits; `until` is not a range connector (D-255) |
+
+**Both of Round 5's declared bounds were overturned, and QA was right about
+both.** An asyndetic list denies all of its items, not only the first; and an
+abstention that erases a clause it could positively read is a second mistake
+rather than caution. Both are now asserted the other way round.
+
+**The amount default became an abstention.** An untyped number — _"more money by
+17"_ — is neither a sum nor a date, and both questions stay open. What still
+makes a bare number a quantity is the verb governing it, which is why _"save
+3000"_ answers _how much_ and _"more money by 17"_ does not.
+
+**Twenty-four reintroductions, eight of them reverse mutations.** Round 6 warned
+in as many words against swapping one unconditional direction for the other, so
+every rule that can be broken by concluding too much has a proof that does
+exactly that.
+
+**Seventeen Round 5 proofs were retired onto named successors**, and the mapping
+is written into the script that used to run them.
+
+**Three defects were found in the repair before any gate**, two of them by
+attacking the finished work the way Round 7 is being asked to: a relative clause
+ending a denial and asserting the area it denied, and a rate read as a date. The
+third, an incomplete preposition list, was caught by the shipped suite.
+
+**And three reintroductions went green, each of which was a finding.** Two were
+redundancy and now have a phrase where the rule is the only thing answering; the
+third turned up a real defect — _"2 months salary"_ without the apostrophe read
+as a date — which produced the measure rule.
+
+Full reproductions, repairs and verification:
+[`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).
