@@ -2619,5 +2619,318 @@ builder repair handoff at the end exactly as written. Keep Phase 91 YELLOW,
 preserve every passed contract and explicit deferral, and do not ask me to paste
 the file contents.
 ```
+---
+
+## Round 5 repair — the builder's record
+
+_Written by the Claude builder conversation. Round 5 above is QA's and is not
+edited. Round 6 belongs to QA._
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**Repaired checkpoint:** `3991fe6`
+**Deployed Preview:** `3991fe6` — they match exactly
+
+**The class judgement is accepted, and it was right again.** Round 5's diagnosis
+is one sentence long and it fits both classes: **each instrument was reading a
+proxy for its evidence instead of the evidence.** A comma was standing in for a
+coordinator, and membership of a form list was standing in for a role. Both
+proxies are deleted, and nothing was added to a list of forms.
+
+### Both reproduced first, with all fifteen controls
+
+All eighteen failures reproduced before any change, and all fifteen controls were
+captured in the same probe. QA-91-012's five phrases named the wrong areas in
+both directions; QA-91-013's five unlisted date-only phrases settled an amount
+nothing had said, and its eight date-shaped sums, shares and ranges were read as
+time. The controls — the same-area contrastive, multiple denials, sentence
+punctuation, ordinary negative goals, bare amount ranges, a sum beside a written
+date, and every repaired Round 3 and Round 4 date form — held throughout.
+
+### What changed
+
+One product file, `src/intelligence/interpret.ts`.
+
+**A list is made by coordinators, so that is what is read.** From the first
+marker after a denier, markers join one run while the text between them is
+nothing but list material — whitespace, commas, coordinators, determiners. The
+list ends at the item the **last coordinator introduces**: _"A, B, or C"_ denies
+three, _"A and B, C is the goal"_ denies two and leaves C asserted. The area rule
+and the comma test are both gone, because coordination read directly makes them
+redundant.
+
+**And where the instrument can see a list but cannot follow it, it says
+nothing.** _"Not about money, physical fitness, or certification"_ breaks the run
+at a modifier, and the `or` past the break is the evidence that the list did not
+stop where the run did. Reading the rest as **asserted** would name two areas the
+owner has just denied — the worse of the two mistakes — so they are neither
+denied nor asserted, and a phrase with nothing left over names no area, offers
+nothing and writes no derived row.
+
+**A number's role is written next to it, in units.** An amount unit — a currency
+symbol, _dollars_, _k_, _percent_ — makes it a quantity whatever shape it has. A
+temporal unit — _week_, _quarter_, a month's name or abbreviation, an ordinal
+suffix — makes it a date whether or not anyone listed the form. Three properties
+do the rest, and each is read rather than listed:
+
+- **adjacency** — a unit governs a number across nothing but list punctuation and
+  a closed set of connectors, which is the whole difference between _"17 next
+  month"_ and _"17 by March"_;
+- **arity** — a slash is never a range, so a slashed chain is a date at any
+  length; a hyphen is ambiguous, and what separates `15-03-2027` from `2000-3000`
+  is how many numbers are punctuated together;
+- **strength** — a year shape and a bare number are read as _inferred_, and an
+  inferred role never propagates, which is what keeps _"between 2027 and 3000"_ a
+  pair of sums.
+
+**And a share is a share of something.** An ordinal or fraction followed by _of_
+something untemporal is a quantity, reached across the unit it is counted in, so
+_two months of salary_ is a sum expressed in months. The complement decides: a
+unit makes it a date, and so does a **year**, which is a shape rather than a word.
+A unit in **front** of the number settles the question first, which is what keeps
+_week 3 of the plan_ the third week.
+
+**Two of those rules came from attacking the finished repair, not from the
+report, and they are flagged so this round can scrutinise them hardest.** With
+both blockers closed, the instruments were run against the kind of input Round 6
+was about to be asked for. That found _"not about money, physical fitness, or
+certification"_ naming two denied areas — the abstention rule above is the answer
+— and _"save 2 months of salary"_ read as a date, which is what sent the share
+rule across the unit it is counted in. Neither was submitted by QA. Both are new
+behaviour, and new behaviour is where a repair is most likely to be wrong.
+
+**Decision D-254.** Defect-ledger entry `QA-91-012, QA-91-013`.
+
+### The file got bigger, and that is worth saying
+
+Round 4's repair deleted machinery and said so. This one does not: the
+instrument's code goes from **671 lines to 801**. The denial half shrank — the
+area rule and the comma terminator are gone, and the abstention rule is nine
+lines — but the number half grew, because adjacency, arity, strength, the share
+rule and the written-date chain are five rules where there was one lookup.
+
+**The claim is not that the instrument is smaller. It is that what grew is rules
+rather than forms**, and that distinction is the one to attack:
+
+- `DATE_FORMS` is gone — a closed list of date **shapes**, each matching one way
+  of writing a date, and useless for the next way;
+- `TEMPORAL_UNITS` and `AMOUNT_UNITS` are lexicons of **units**. A unit is
+  evidence about the number beside it, and it works on a form nobody listed:
+  `week` reads `week 3`, `2027-W15` and `week 3 of the plan` alike.
+
+If that distinction does not hold — if a unit lexicon is a form list wearing a
+different coat — then this repair is the fifth boundary and should be called one.
+It is put here in those words because it is the load-bearing claim of the round.
+
+### The bounds, said out loud rather than left to be found
+
+Each is asserted by a test that names it:
+
+- an **asyndetic** list — _"not about money, fitness, certification"_, no
+  coordinator anywhere — denies only its first item;
+- coordination expressed without a coordinator — _"not about money as well as
+  fitness"_ — is not read as coordination;
+- abstention has a price, and it is named: a clause that reaches a coordinated
+  pair — _"not about money, my real goal is fitness or certification"_ — breaks
+  the run and carries an `or` past the break, so two asserted areas are
+  **withheld** rather than named. A reading lost, not a reading invented;
+- a **bare number** with no unit and no date punctuation is a quantity. That is a
+  default and it is the last step rather than the first.
+
+`neither money nor fitness` is deliberately **not** a denial of aboutness, for
+the same reason `no debt, no savings` is an ordinary money goal: this file negates
+topics, not things, and that rule is older than this round.
+
+### Reintroduction proofs — thirty-four live, seventeen of them this round
+
+**Seven of the seventeen are reverse mutations**, the direction a widening repair
+fails in:
+
+| Reintroduce                                              | And this fails                                              |
+| -------------------------------------------------------- | ------------------------------------------------------------- |
+| every run of markers in reach is one coordinated list    | _lets a clause with no comma in front of it assert its area_ |
+| coordination assumed rather than read from a coordinator | _names the bound it keeps_                                   |
+| the denied list runs to the end of the reach             | _stops that list at the item its last coordinator introduces_ |
+| the run ends the list even when a coordinator follows    | _abstains from a list it can see but cannot follow_          |
+| any coordinator past the run makes the list unfollowable | _still reads a clause a coordinator merely happens to precede_ |
+| a temporal unit before, then after, the number is unread | _reads an unlisted date form from the unit beside it_        |
+| an amount unit no longer beats a date shape              | _reads a date-shaped number as a sum when a unit governs it_ |
+| a unit reaches across a preposition                      | _keeps a unit from reaching across a preposition_            |
+| an inferred role propagates across a connector           | _does not carry a role across a connector_                   |
+| the written-date chain is unread, then its arity is      | _reads a written date from its punctuation, and a range from its arity_ |
+| the share rule is off, then fires over a governing unit  | _reads a share of something untemporal as a quantity_        |
+| a share counted in a unit is unread                      | _reads a share counted in a temporal unit as a quantity_     |
+| a year is not a temporal complement                      | _reads a share of a period as the date it is_                |
+| a quarter is not a date — successor to `QA-91-009c`      | _reads indirect day-and-month grammar and quarters as dates_ |
+
+**An eighteenth was retired rather than counted, and the reason is written down.**
+It mutated the comma out of the list material — exactly the Round 4 defect — and
+it stopped biting once the abstention rule landed: with the comma broken the run
+ends early, the coordinator past it is unfollowable, and the mentions are
+*withheld* rather than *denied*. Every phrase under test names the same areas
+either way. The comma rule is kept, because denying is the correct reading and
+withholding is a fallback, but it is **not claimed as proved**.
+
+**Eight earlier proofs were retired onto named successors.** The seven Round 4
+proofs mutate code that no longer exists, and Round 3's last survivor,
+`QA-91-009c`, mutated the `DATE_FORMS` quarter entries; its successor mutates `q`
+out of the temporal units and runs the same test.
+
+**And a reintroduction found a coverage gap, the fourth round running.** Removing
+the guard that lets a unit in front of a number win failed **nothing**, because
+the year rule already covered the only phrase under test — _week 3 of 2027_. The
+guard earns its place on _week 3 of **the plan**_, where the complement of _of_ is
+a thing rather than a period, and no test had that. One was added and the proof
+then bit.
+
+### Three defects in the repair itself, found before any gate
+
+Recorded rather than tidied away. The number instrument first tested for a slash
+**anywhere in the window** after a span, so `3000` in _"save 3000 between 03/15
+and 03/17/2027"_ saw a later date's punctuation and became one; it read no dashed
+date at all, so `15-03-2027` settled the amount it should have left open; and
+extending the share rule across a counting unit made _the 3rd quarter of 2027_ a
+quantity, because the complement test knew unit words and a year is a shape. The
+first two were caught by the shipped suite in the run after the change, the third
+by attacking the finished repair the way Round 6 is being asked to. All three
+were repaired structurally, and all three have their own reintroductions.
+
+### Verification on the repaired tree
+
+| Gate                                      | Result                                                       |
+| ----------------------------------------- | -------------------------------------------------------------- |
+| `npm run verify`, clean tree              | PASS                                                           |
+| Unit / contract / synthetic / adversarial | **2,014 passed** in 89 files (1,999 at `bba4eb7`)             |
+| Browser, 360 / 430 / 1,280, one worker    | **834 of 834**, one whole run, clean port, **19.0 minutes**    |
+| Privacy scan                              | clean, 310 tracked files                                       |
+| Rendered copy scan                        | clean — 8,550 shipped strings, 8,462 placed in a module        |
+| Adaptation-claim scan                     | clean                                                          |
+| Android-style gate                        | clean — **234 checks**, against the deployed Preview           |
+| Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`3991fe6`)   |
+| Checkpoint equivalence                    | **no files changed** between `3991fe6` and the deployed SHA    |
+| CI and deployed Preview                   | **success** — both jobs green (run `33601689520`)              |
+| CI's own browser matrix                   | **834 of 834**, 19.4 minutes, against `3991fe6` itself         |
+| Worktree                                  | clean                                                          |
+
+**One thing about the local matrix, stated precisely.** It ran against the build
+made by the `verify` before it, and three comment-only edits, one test and the
+documents landed after that build. Comments do not survive into the bundle — the
+new comment text appears nowhere in `dist/assets/index-*.js` — and tests and
+documents are not bundled, so the executed JavaScript is the same in both. The
+release-manifest digest still differs between the two builds, because the
+manifest covers `build-info.json`, which carries a build timestamp, and the source
+maps, which do embed the comments. **CI's own browser step is the run against the
+exact pushed commit** — 834 of 834 in 19.4 minutes on the runner — so the local
+run is corroboration rather than the load-bearing evidence.
+
+### Preserved, and checked rather than assumed
+
+Every prior PASS is still asserted by the shipped suite and all of it passed:
+QA-91-001 and QA-91-004; QA-91-005 and QA-91-006 with the set-aside
+confirmation, preserved aim, lifecycle history and the unstarted, started and
+part-done consequence states; QA-91-008 and QA-91-010; QA-91-009 and QA-91-011,
+including every repaired date form; all eight CASE A acceptance tests; byte
+identity, derived provenance, the privacy digest with both controls, the
+one-question budget, the null case, the second proving domain, three-day
+non-reproposal, B1, the no-score rule, the fixed clock, the preview-port override
+and the single `fetch`.
+
+The **nineteen D-210 instrument-hardening findings are untouched and still
+open**, and their backlog blob is still
+`58d5af071355d252c4a254fc685fcc9e8e88f417`. `docs/ROUTING_91_BRIEF.md` is
+present; routing 92 has not begun; CASE B remains out of scope.
+
+**What is still refused, said plainly.** This is not a parser, not a model and
+not a guess. Both instruments are deterministic, in-process and bounded, and both
+abstain: a list it cannot follow yields no area, a number it cannot place leaves
+`unknowns` carrying _how much_ or _by when_, and either way nothing derived is
+written.
+
+**The claim this round makes, stated so it can be attacked.** Nothing was added
+to a list of forms. `2027-W15`, `week 3 of 2027`, `15 Mar` and `15-03-2027` are
+read because of the unit or the punctuation standing beside them, and `2027` stops
+being a date the moment `dollars` follows it. A form nobody has thought of
+reaches the same questions — what unit governs this number, how many numbers are
+punctuated together, where did the coordination stop — rather than falling outside
+a list. **That is the claim. It is about the evidence, so attack the evidence.**
+
+---
+
+## Round 6 retest handoff
+
+**Model:** Codex.
+**Reasoning level:** **High** — a middle level. Never Max, which is Claude's.
+**Conversation:** **SAME** — the Codex conversation that ran Rounds 1 to 5.
+
+```text
+Routing Phase 91 retest after the builder's Round 5 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Your Round 1 to Round 5 reports are
+unchanged; the builder's Round 5 repair record and this block are appended below
+them. Keep the Phase field exactly 91.
+
+Round 5's class judgement was accepted: both instruments were reading a proxy
+for their evidence. The proxies are deleted and nothing was added to a list of
+forms. Attack the EVIDENCE the replacements read, not the eighteen phrases:
+
+1. Coordination is now read from coordinators. A run of markers joins while the
+   text between them is only list material — whitespace, commas, coordinators,
+   determiners — and the denied list ends at the item the last coordinator
+   introduces. Where the run stops short of a coordinator that introduces a
+   later mention, the instrument abstains and names no area from any of them.
+   Attack every joint: items carrying their own modifiers, coordination without
+   a coordinator, a coordinator followed by a clause rather than an item,
+   several denials in one sentence, denial and assertion across three areas,
+   and the abstention itself — find a phrase where withholding is the wrong
+   answer and asserting was right.
+2. Number roles are now read from the unit beside the span, with three further
+   properties: adjacency decides whether a unit governs a number, punctuation
+   arity separates a written date from a range, and an inferred role — a year
+   shape, or a bare number — never propagates across a connector. A share of
+   something untemporal is a quantity, reached across the unit it is counted
+   in, and the complement of "of" decides. Attack all of it: units that govern
+   at a distance, ambiguous punctuation, ranges whose ends disagree, shares and
+   fractions, ordinals used as quantities, and amounts and dates interleaved in
+   one phrase.
+3. Attack the declared bounds directly. An asyndetic list denies only its first
+   item; coordination without a coordinator is not read as coordination; a bare
+   number with no unit is a quantity. Each is deliberate and each is asserted by
+   a test. Say whether any of them is the wrong bound rather than merely a
+   bound.
+4. Confirm no regression in QA-91-001, QA-91-004, QA-91-005, QA-91-006,
+   QA-91-008, QA-91-009, QA-91-010 and QA-91-011, and in the eight CASE A
+   acceptance tests.
+5. Say plainly whether the instrument now closes the class or whether it is a
+   fifth boundary in different clothes. That judgement is the most useful thing
+   this round can produce, and it is worth more than another pair of phrases.
+
+One reintroduction was retired rather than counted this round, and the record
+says why: after the abstention rule landed, mutating the comma out of the list
+material stopped biting, because denying a mention and withholding it produce
+the same reading. Treat that as a claim to check, not as a note to accept.
+
+Preserve the nineteen D-210 deferrals, do not remove docs/ROUTING_91_BRIEF.md,
+and end with the complete next handoff under D-082 whichever way the retest
+goes. Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High. **Conversation:** SAME — the QA
+conversation that ran Rounds 1 to 5.
+
+```text
+Retest routing Phase 91 after the builder's Round 5 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the Round 6 retest
+handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
+retest says otherwise, and do not ask me to paste the file contents.
+```
 
 <!-- LCO_COMPLETE -->
