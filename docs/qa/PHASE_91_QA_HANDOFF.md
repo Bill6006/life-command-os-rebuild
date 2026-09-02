@@ -3232,5 +3232,278 @@ builder repair handoff at the end exactly as written. Keep Phase 91 YELLOW,
 preserve every passed contract and explicit deferral, and do not ask me to paste
 the file contents.
 ```
+---
+
+## Round 6 repair — the builder's record
+
+_Written by the Claude builder conversation. Round 6 above is QA's and is not
+edited. Round 7 belongs to QA._
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**Repaired checkpoint:** `4b02204`
+**Deployed Preview:** `4b02204` — they match exactly
+
+**The class judgement is accepted, and it was right.** Round 5 stopped reading
+proxies for the lexical evidence — a coordinator makes a list, a unit makes a
+number — and then wrapped a **new** proxy around each: the denial read the text
+between two markers, and the number read a whitelist, a punctuation count and a
+connector. Round 6 broke both from both sides. This round moves the denial
+question off the markers altogether and reads the number inside its phrase.
+
+### Both reproduced first, with forty-two controls beside them
+
+All fourteen failures reproduced before any change, and forty-two controls were
+captured in the same probe — the three from the report plus every shipped
+denial, date, share, range and interleaved-amount control. Every one held.
+
+Two of Round 5's declared bounds were among the things that had to change, and
+**QA was right about both**: an asyndetic list denies all of its items, and an
+abstention that erases a clause it could positively read is a second mistake
+rather than caution. The tests that asserted them are rewritten to assert the
+opposite, rather than deleted.
+
+### What changed
+
+One product file, `src/intelligence/interpret.ts`.
+
+**A denial stops at a clause.** Put the two failures side by side and there is
+nowhere for a rule about the text between two markers to stand: *"not about money
+and physical fitness"* has an extra word and is still a list, and *"not about
+money and fitness is the real goal"* has none and is not. So the question moved.
+A denial of aboutness runs until the sentence turns, what turns a sentence is a
+**finite clause**, and every marker inside the reach is denied — coordinated,
+comma-separated, modified or bare. `listLink`, the run walk, the last-coordinator
+rule and the abstention are deleted.
+
+**A clause is read from its predicate, which is why this is not Round 3.** Round
+3 listed words a clause might *begin* with and failed at the first noun, because
+subjects are an open class. The finite-verb system is not: the copula, the
+auxiliaries and the modals are closed, subject pronouns are closed, and a
+contraction carries both halves in one word. The clause then starts at the head
+of its subject. A **relative** pronoun is the exception that proves the rule —
+*"money that I earn"* has a subject and a verb and is still one denial.
+
+**A number is read inside its phrase.** Governance runs to the end of the phrase
+and what ends one is closed, so `week number 3` and `2027 US dollars` keep their
+units while `17 by March` still does not. A two-part written date is read from
+its **digits** — a leading zero, or a descending pair — rather than from how many
+parts there are, so `03-15` and `31.12` are dates while `2000-3000` and `15-17`
+are ranges. And `until` is a temporal preposition that can never join two sums,
+so a deadline no longer propagates backwards into an amount.
+
+**Three more followed from the same review.** An ordinal that **modifies a noun**
+says which one, not when. A **measure** is one relation in three spellings, and
+what says so is the noun after the unit — a date ends at its unit and a measure
+carries on into the thing measured. A **rate** is not a date: *"50000 a year"* is
+a wage, and the article is the whole difference.
+
+**The amount default became an abstention, and that is the change that matters
+most.** An untyped number is now `unknown` and settles neither question. What
+still makes a bare number a quantity is the **verb governing it**: *"save 3000"*
+has a money marker in front of it inside the same phrase with no temporal
+preposition between, and *"more money by 17"* has the same marker and a `by`.
+
+**Decision D-255.** Defect-ledger entry `QA-91-014, QA-91-015`.
+
+### The file got bigger again, and the claim is narrower than that
+
+Its code goes from **801 lines to 926**. The claim is not that this is smaller.
+It is that every list which grew is a list of things that **end a relationship** —
+prepositions, subordinators, coordinators, finite verbs, subject pronouns — and
+those are closed classes, where the modifiers a noun may carry and the verbs a
+clause may use are not.
+
+D-254 said something like this about units, and Round 6 held it against the
+whitelist that surrounded them. So it is worth being exact about what changed:
+the lists that were **removed** this round were lists of what may appear *inside*
+a relationship, and the lists that grew are lists of what *ends* one. If that
+distinction fails, this is the sixth boundary and should be called one. It is put
+here in those words because it is the load-bearing claim.
+
+### The bound, said plainly, and it is one bound rather than three
+
+A clause built on an ordinary lexical verb with a noun subject — *"not about
+money and fitness matters most"* — is not seen, so the denial reaches over it.
+The reading then names **fewer** areas than it should, never more, and it never
+contradicts the owner. Listing lexical verbs would move that boundary rather than
+close it, so it stops at the closed classes and says so, with its own test.
+
+### Reintroduction proofs — forty-one live, twenty-four of them this round
+
+**Eight of the twenty-four are reverse mutations.** Round 6 warned in as many
+words against swapping one unconditional direction for the other, so every rule
+that can be broken by concluding too much has a proof that does exactly that:
+
+| Reintroduce                                                | And this fails                                                     |
+| ---------------------------------------------------------- | -------------------------------------------------------------------- |
+| a denial does not stop at a clause                         | _stops the denial where a finite clause begins_                     |
+| a relative pronoun starts a clause like any other          | _keeps a relative clause inside the denial it describes_            |
+| a subject pronoun, then a contraction, is not read         | _lets a clause with no comma assert its area_ / _stops the denial…_  |
+| the subject walk crosses a phrase introducer               | _lets a clause with no comma in front of it assert its own area_    |
+| a denial covers its first marker only, as Round 5 declared | _denies an asyndetic list too_                                      |
+| the denial stops at the verb rather than at its subject    | _stops the denial where a finite clause begins_                     |
+| governance reaches one word, then crosses a preposition    | _governs across a modifier_ / _refuses to govern across a preposition_ |
+| a temporal preposition joins two range endpoints again     | _keeps a sum and a deadline apart_                                  |
+| arity alone decides, then every pair is a date             | _reads a two-part date from its digits_ / _reads the range it is_   |
+| currency counts only in front of the number                | _reads currency on either side of the number_                       |
+| a measure written without `of` is not read                 | _…and the genitive both ways_                                       |
+| an ordinal always, then never, establishes a date          | _an ordinal that modifies a noun_ / _a bare ordinal on its own_     |
+| an untyped number defaults to a quantity, as Round 5 did   | _leaves both facts open for a number nothing has typed_             |
+| a governing verb no longer makes a bare number a sum       | _still reads a bare number the verb governs as the sum it is_       |
+| a rate is read as a date                                   | _reads a rate as a rate rather than as a date_                      |
+| an inferred role propagates across a connector             | _does not carry a role across a connector_                          |
+| the written-date chain is unread; a quarter is not a date  | _written dates_ / _indirect day-and-month grammar and quarters_     |
+| a year is not a temporal complement                        | _reads a share of a period as the date it is_                       |
+
+**Seventeen Round 5 proofs were retired onto named successors**, and the mapping
+is written into the script that used to run them. The denial half has no target
+left at all; the number half kept its shape and changed its evidence, and four
+proofs carried over almost unchanged under new names.
+
+### Three proofs went green, and every one of them was a finding
+
+This is the fifth round running that a reintroduction has found something a green
+suite could not, and this time it found a defect rather than a gap:
+
+- the **contraction** rule and the **quarter** unit were each redundant for the
+  only phrase under test — the pronoun half and the year beside it were answering
+  instead. Both now have a phrase where the rule is the only thing that can
+  answer: _"the goal's fitness"_ and _"more money by Q3"_.
+- the **possessive** branch of the share rule was unnecessary because an
+  apostrophe already stopped the unit being recognised, so the number fell
+  through to the verb and became a sum by another route. Probing why turned up
+  `2 months salary` **without** the apostrophe being read as a date — a real
+  defect, and the reason the measure rule reads the noun after the unit rather
+  than the punctuation before it.
+
+### Three defects in the repair itself, found before any gate
+
+Two came from attacking the finished repair the way Round 7 is being asked to:
+a **relative clause** ended a denial and asserted the very area it denied, and a
+**rate** was read as a date, which was a regression the phrase model introduced
+against Round 5's behaviour. The third — an incomplete enumeration of the
+prepositions, missing `between` — was caught by the shipped suite in the run
+after the change. All three are repaired structurally and all three have proofs.
+
+### Verification on the repaired tree
+
+| Gate                                      | Result                                                       |
+| ----------------------------------------- | -------------------------------------------------------------- |
+| `npm run verify`, clean tree              | PASS                                                           |
+| Unit / contract / synthetic / adversarial | **2,028 passed** in 89 files (2,014 at `3991fe6`)             |
+| Browser, 360 / 430 / 1,280, one worker    | **834 of 834**, one whole run, clean port, **19.0 minutes**    |
+| Privacy scan                              | clean, 310 tracked files                                       |
+| Rendered copy scan                        | clean — 8,607 shipped strings, 8,519 placed in a module        |
+| Adaptation-claim scan                     | clean                                                          |
+| Android-style gate                        | clean — **234 checks**, against the deployed Preview           |
+| Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`4b02204`)   |
+| Checkpoint equivalence                    | **no files changed** between `4b02204` and the deployed SHA    |
+| CI and deployed Preview                   | **success** — both jobs green (run `33616000191`)              |
+| CI's own browser matrix                   | **834 of 834**, 19.3 minutes, against `4b02204` itself         |
+| Worktree                                  | clean                                                          |
+
+### Preserved, and checked rather than assumed
+
+Every prior PASS is still asserted by the shipped suite and all of it passed:
+QA-91-001 and QA-91-004; QA-91-005 and QA-91-006 with the set-aside
+confirmation, preserved aim, lifecycle history and the unstarted, started and
+part-done consequence states; QA-91-008, QA-91-010 and QA-91-012's controls;
+QA-91-009, QA-91-011 and QA-91-013's controls, including every repaired date
+form, share, fraction and range; all eight CASE A acceptance tests; byte
+identity, derived provenance, the privacy digest with both controls, the
+one-question budget, the null case, the second proving domain, three-day
+non-reproposal, B1, the no-score rule, the fixed clock, the preview-port override
+and the single `fetch`.
+
+The **nineteen D-210 instrument-hardening findings are untouched and still
+open**, and their backlog blob is still
+`58d5af071355d252c4a254fc685fcc9e8e88f417`. `docs/ROUTING_91_BRIEF.md` is
+present; routing 92 has not begun; CASE B remains out of scope.
+
+**What is still refused, said plainly.** This is not a parser, not a model and
+not a guess. Both instruments are deterministic, in-process and bounded, and both
+abstain: a clause the instrument cannot see makes the denial reach too far and
+name fewer areas, never more; a number nothing has typed settles neither
+question; and `unknowns` says what was not concluded while nothing derived is
+written.
+
+---
+
+## Round 7 retest handoff
+
+**Model:** Codex.
+**Reasoning level:** **High** — a middle level. Never Max, which is Claude's.
+**Conversation:** **SAME** — the Codex conversation that ran Rounds 1 to 6.
+
+```text
+Routing Phase 91 retest after the builder's Round 6 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Your Round 1 to Round 6 reports are
+unchanged; the builder's Round 6 repair record and this block are appended below
+them. Keep the Phase field exactly 91.
+
+Round 6's class judgement was accepted in full, and both of Round 5's declared
+bounds were overturned because your report was right about them. Attack the
+GRAMMATICAL EVIDENCE the replacements read, not the fourteen phrases:
+
+1. A denial now reaches until sentence punctuation, a contrastive, or the start
+   of a finite clause, and denies EVERY marker inside that reach. A clause is
+   found from a closed predicate — copula, auxiliaries, modals, subject
+   pronouns, contractions — and starts at the head of its subject, except that a
+   relative pronoun keeps the clause attached to the noun before it. Attack all
+   of that: clauses whose verb is lexical, subjects that are noun phrases,
+   relative and reduced relative clauses, coordinated clauses, questions,
+   imperatives, several denials in one sentence, and denial with assertion
+   across three areas. The declared bound is that a lexical-verb clause is not
+   seen and the denial reaches over it; say whether that bound is the wrong one
+   rather than merely a bound.
+2. A number's role is now read inside its phrase: governance runs to the end of
+   the phrase and what ends one is a closed class; a two-part written date is
+   read from a leading zero or a descending pair; `until` is not a range
+   connector; an ordinal that modifies a noun is not a date; a measure is read
+   from the noun after the unit in all three spellings; a rate is not a date;
+   and an untyped number is `unknown`, settling neither fact. Attack every one:
+   units separated by longer modifiers, phrases with no verb, ambiguous
+   two-part numbers that ascend, ordinals before nouns that are also units,
+   measures whose object is temporal, rates without articles, and untyped
+   numbers in positions where the grammar does establish a role.
+3. Attack the load-bearing claim directly. The lists that were removed are lists
+   of what may appear INSIDE a relationship; the lists that grew are lists of
+   what ENDS one, and those are closed classes. Say plainly whether that
+   distinction holds or whether a closed grammatical class is a form list in
+   another coat — in which case this is the sixth boundary and should be called
+   one.
+4. Confirm no regression in QA-91-001, QA-91-004, QA-91-005, QA-91-006,
+   QA-91-008 through QA-91-013 and their controls, and in the eight CASE A
+   acceptance tests.
+
+Three of this round's reintroductions went green before being retargeted, and
+the record says why each did. One of them uncovered a real defect. Treat those
+three as claims to check rather than notes to accept.
+
+Preserve the nineteen D-210 deferrals, do not remove docs/ROUTING_91_BRIEF.md,
+and end with the complete next handoff under D-082 whichever way the retest
+goes. Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High. **Conversation:** SAME — the QA
+conversation that ran Rounds 1 to 6.
+
+```text
+Retest routing Phase 91 after the builder's Round 6 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the Round 7 retest
+handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
+retest says otherwise, and do not ask me to paste the file contents.
+```
 
 <!-- LCO_COMPLETE -->
