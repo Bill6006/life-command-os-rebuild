@@ -3506,4 +3506,306 @@ handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
 retest says otherwise, and do not ask me to paste the file contents.
 ```
 
+---
+
+## Round 7 independent QA — FAIL
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**QA-tested product checkpoint:** `4b02204`
+
+**QA-tested deployed/report head:** `3bb5512`. The only change from `4b02204`
+is this handoff file, so the deployed build is bundle-equivalent to the product
+checkpoint. CI run `33618143701` is green, its own browser matrix is green, and
+its manifest matches all eight files served by Preview.
+
+**Verdict:** the Round 6 repair closes QA-91-014 and QA-91-015 on their submitted
+phrases, and every established Phase 91 contract remains green. It does **not**
+close either class. A closed set of words is not a closed set of grammatical
+roles: the denial instrument treats pronoun, auxiliary, modal and relative forms
+as their roles wherever they occur, while the numeric instrument treats words
+that can end phrases as phrase ends wherever they occur. Both lists therefore
+contain ordinary words that play the opposite role in context. Round 7 found 23
+failures around that distinction, including the builder's declared lexical-verb
+bound and an incomplete rate repair.
+
+### QA-91-016 — closed-class token membership is not grammatical role
+
+**BLOCKER.** `startOfClause` does not establish a clause. It finds a token in
+`SUBJECT_PRONOUNS` or `FINITE_VERBS`, walks left, and special-cases a preceding
+relative-pronoun token. Those forms are closed, but their uses are not fixed:
+
+- _"Not about money and fitness matters most"_ plainly asserts Health, but the
+  declared lexical-verb bound lets the denial reach across the whole clause and
+  names no area. _"Not about money and focus on fitness"_ does the same to an
+  imperative, as does _"Not about money and don't neglect fitness"_. The bound
+  removes positive evidence the owner actually supplied; “fewer areas” is not a
+  correct semantic-capture result.
+- _"Not about money or fitness being the issue"_ is a coordinated denial.
+  `being` is in the finite-token list even though it is non-finite here, so the
+  instrument stops early and incorrectly asserts Health.
+- _"Not about money or May certification goals"_ and _"Not about money or IT
+  certification"_ are coordinated denials. Lowercased `May` is read as a modal
+  and `IT` as the pronoun `it`; both incorrectly assert Career.
+- _"Not about money, you, or fitness"_ uses `you` as a list item, not a subject.
+  Its membership in the subject-pronoun list nevertheless stops the denial and
+  incorrectly asserts Health.
+- _"Not about the money I earn"_ has a contact relative clause. The pronoun is
+  treated as an independent subject because there is no relative-pronoun token
+  to trigger the exception, so Money is incorrectly asserted.
+- _"Not about money and that is why fitness matters"_ uses `that`
+  demonstratively, not as a relative pronoun. The form-level exception swallows
+  the positive Health clause.
+- _"Not about money and the fitness plan matters most, certification is the
+  goal"_ asserts Health and Career after denying Money. Career survives because
+  its copula is listed; Health disappears because its lexical verb is not.
+
+The ordinary 360px Insights path reproduced the lexical-clause omission, the
+non-finite `being` false stop and the contact-relative false stop without ever
+opening `#/qa`. It also reproduced the correct controls: _"Not about money and
+my physical fitness is the priority"_ asserted Health; _"Not about money that I
+earn"_ kept Money denied; and the punctuation-bounded imperative _"Not about
+money; focus on fitness"_ asserted Health.
+
+Six controls passed beside the failures: the finite noun-phrase subject,
+question, overt relative, reduced relative, punctuation-bounded imperative and
+pronoun-clause cases. The shipped multiple-denial, same-area contrastive,
+sentence-boundary and ordinary-negative-goal controls remain green.
+
+### QA-91-017 — a phrase-ending form is not necessarily a phrase end
+
+**BLOCKER.** `PHRASE_END` combines prepositions, subordinators, coordinators and
+finite-token forms, then stops numeric governance unconditionally at any of
+them. Those classes are closed as vocabularies, but their members also occur
+**inside** constructions that establish a number's role:
+
+- _"Save 2027 in US dollars"_ is an amount. `in` introduces its denomination,
+  but is treated as an unconditional boundary; the year-shaped digits become a
+  date and **how much** is incorrectly left open. _"Save 2027 United States
+  dollars by March"_ is the passing control.
+- _"Save up to 3000 by March"_ and _"Save at least 3000 by March"_ state amounts.
+  The prepositions are internal to scalar constructions, so both incorrectly
+  leave **how much** open.
+- _"Salary of 50000 by March"_ states an amount through a complement, and
+  _"Save 2027 and change dollars by March"_ states one through coordination.
+  `of` and `and` are internal here; both readings incorrectly leave **how much**
+  open.
+- _"Savings: 3000 by March"_ is ordinary no-verb note grammar. The colon severs
+  the heading from its value and the amount is missed.
+- _"More money by 3-15"_ and _"More money by 12.31"_ put ascending, unpadded
+  two-part dates in an explicitly temporal position. The digit-shape rule calls
+  them ranges and incorrectly leaves **by when** open.
+- _"Earn 50000 each year"_ and _"Earn 50000 every year"_ are rates. The article-
+  only special case misses them, so the amount is left open and the period is
+  treated as a deadline.
+- _"Earn 50000 a year"_, _"Earn 50000 per year"_ and _"Earn 50000/year"_ do
+  establish the amount, but all three also incorrectly answer **by when**.
+  `saysWhen` independently treats the horizon word `year` as a deadline after
+  the phrase-role logic has correctly called the expression a rate.
+
+The ordinary 360px UI reproduced the denomination, ascending-date, article-rate
+and scalar-construction failures. For _"Earn 50000 a year"_ it displayed no
+unknowns at all: the shipped rate fixture checks only that **how much** is known,
+so it does not detect the still-wrong deadline conclusion.
+
+Five controls passed beside the failures: the spelled-out denomination, an
+ordinal quarter, a month measure, an indirect temporal complement and a simple
+amount plus deadline. The shipped dates, shares, fractions, ranges and
+interleaved amount/date controls remain green.
+
+### The required class judgement
+
+**This is the sixth boundary in different clothes.** “Closed grammatical class”
+describes a finite vocabulary, not the role each occurrence plays. `you` can be
+an object or list item; `IT` an acronym; `May` a month modifier; `being` a
+non-finite verb; and `that` a demonstrative. Likewise `in`, `to`, `at`, `of` and
+`and` can participate inside a denomination, scalar, complement or coordinated
+amount. The builder's load-bearing distinction — a closed list of what **ends** a
+relationship rather than an open list of what appears **inside** one — therefore
+does not hold. Round 7 supplies ordinary counterexamples in which the listed
+forms are inside the relationship.
+
+The next repair must not add `matters`, `focus`, `May`, `IT`, `being`, `in US
+dollars`, `up to`, `at least`, `of`, `and change`, `each`, `every`, `per` or the
+submitted date spellings to another exception list. It has to establish the
+occurrence's grammatical relationship from structure and context, with local
+abstention only where the relationship is genuinely unresolved. Abstention
+cannot erase a positive clause the instrument otherwise needs to capture.
+
+### The three retargeted reintroduction claims
+
+All three claims were checked rather than accepted from the record. The
+retargeted contraction proof on _"the goal's fitness"_, the quarter proof on
+_"more money by Q3"_, and the no-apostrophe measure proof on _"2 months salary"_
+all bite for the structural reason claimed. They are not counted as defects.
+The separate rate-deadline failure above is a shipped-coverage gap: the existing
+rate test proves the amount half only.
+
+### Established contracts remain closed
+
+QA-91-001, QA-91-004, QA-91-005, QA-91-006 and QA-91-008 through QA-91-015
+remain green on their established cases. The complete interpretation synthetic
+file passed **124 of 124**, including all eight CASE A acceptance tests, every
+submitted Round 6 repair phrase, byte identity, derived provenance, the privacy
+digest with both controls, one-question budget, null case, second proving
+domain, three-day non-reproposal, no-score rule, fixed clock,
+preview-port override and the single `fetch`.
+
+All **48 of 48** Phase 91 ordinary-owner browser cases passed across 360, 430 and
+1,280. This includes the six focused set-aside consequence paths: preserved aim
+and lifecycle history, unstarted/started/part-done consequences, Now behavior
+and Timeline truthfulness. The new failures are semantic boundaries outside
+those fixtures; they did not regress the already closed owner journeys.
+
+### Probe accounting and required gates
+
+The temporary Round 7 probe held **34 cases**. Twenty-three were product failures
+in QA-91-016 or QA-91-017 and eleven paired controls passed. The temporary file
+was removed before the repository gates.
+
+| Gate | Round 7 result |
+| ---- | -------------- |
+| `npm run verify` | PASS |
+| Unit / contract / synthetic / adversarial | **2,028 passed** in 89 files |
+| Full browser matrix, 360 / 430 / 1,280, one worker, clean port 44113 | **834 of 834 passed** in one run, 20.6 minutes |
+| Phase 91 ordinary-owner browser retest | **48 of 48 passed**; all six consequence-state paths included |
+| Privacy scan | clean — 310 tracked files |
+| Rendered copy scan | clean — 8,607 shipped strings, 8,519 placed in a module |
+| Adaptation-claim scan | clean |
+| Android-style deployed gate | clean — **234 checks** against `3bb5512` |
+| Checkpoint equivalence | only this handoff differs from `4b02204`; bundle-equivalent |
+| CI / deploy before this report | success — run `33618143701`, full browser step green |
+| Release integrity | clean — 8 files served byte for byte from that run's own manifest |
+| Worktree before this report | clean |
+
+The nineteen D-210 instrument-hardening findings remain open and untouched;
+their backlog blob remains `58d5af071355d252c4a254fc685fcc9e8e88f417`.
+`docs/ROUTING_91_BRIEF.md` remains present; CASE B remains out of scope; routing
+92 has not begun.
+
+---
+
+## Round 7 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1, or the strongest current Opus-equivalent available.
+
+**Intelligence level:** **Max** — this is the seventh repair of two coupled
+semantic instruments, and the closed-class claim itself has now failed.
+
+**Conversation:** **CURRENT** — the original Phase 91 Claude builder
+conversation, which owns the implementation decisions and all seven repair
+rounds.
+
+```text
+Repair routing Phase 91 after independent QA Round 7. Keep the Phase field
+exactly 91 and keep the phase YELLOW.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Treat the Round 1 through Round 7
+QA reports as settled evidence. The current report is “Round 7 independent QA —
+FAIL” at the end, against product checkpoint 4b02204 and the bundle-equivalent
+deployed/report head 3bb5512.
+
+Reproduce all 23 failures and all eleven paired controls before changing code:
+
+1. QA-91-016 — closed token classes do not establish grammatical roles.
+   Reproduce the lexical-verb clause, both imperatives, non-finite `being`, the
+   May modifier, the IT acronym, `you` as a list item, the contact relative, the
+   demonstrative `that`, and the three-area denial plus two assertions. Keep the
+   finite noun-subject, question, overt relative, reduced relative,
+   punctuation-bounded imperative and pronoun-clause controls beside them, plus
+   every shipped multiple-denial, same-area contrastive, sentence-boundary and
+   ordinary-negative-goal control.
+2. QA-91-017 — phrase-ending forms can occur inside the relationship whose role
+   is being read. Reproduce `2027 in US dollars`, the no-verb savings note, both
+   ascending two-part dates, all five rate spellings, both scalar constructions,
+   the salary complement, and `2027 and change dollars`. Keep the spelled-out
+   denomination, ordinal-quarter, month-measure, indirect temporal and simple
+   amount-plus-deadline controls beside them, plus every shipped date, share,
+   fraction, range and interleaved amount/date control.
+
+Accept the Round 7 class judgement as an acceptance expectation: a closed
+vocabulary is still a form list when the same forms serve different roles. Do
+not repair the report by appending its lexical verbs, ambiguous closed-class
+forms, prepositions, coordinators, rate determiners, scalar phrases or date
+spellings to lists or special cases. Do not make an unconditional rule in the
+opposite direction. The paired controls require both readings.
+
+Build bounded deterministic instruments that establish the occurrence's actual
+relationship from structure and context. A denial must stop before ordinary
+positive lexical clauses and imperatives, while keeping overt, reduced and
+contact relative material attached to the denied item. A pronoun, modal,
+auxiliary or relative form may be evidence only when it occupies that role in
+the sentence; casing lost during tokenisation cannot turn a month or acronym
+into syntax. Several denials and assertions across three areas must all survive.
+
+A numeric phrase boundary must be contextual: prepositions and coordinators can
+introduce denominations, scalar bounds, complements and material within an
+amount. No-verb note grammar can still establish a value. Temporal position can
+establish an ordinary ascending two-part date where digit order alone cannot.
+Every rate form in the report must establish its amount and must **not** settle a
+deadline; repair the independent horizon-word path in `saysWhen`, not only the
+phrase-role path. A genuinely unresolved number may leave facts unknown, but a
+local abstention must not erase a role the surrounding construction establishes.
+
+This remains a defect-led local repair. Do not introduce a broad language model,
+probabilistic inference or silent guessing. Explain the new bound and why it is
+not an eighth surface proxy. Add class tests in both directions and biting
+reintroduction proofs for the structural properties and reverse mutations. A
+fixture that merely contains the submitted phrase is not proof of the class.
+
+Preserve every prior PASS, especially:
+
+- QA-91-001 and QA-91-004: reconsideration and the complete ordinary-owner
+  contract;
+- QA-91-005 and QA-91-006: the named set-aside consequence, preserved aim and
+  lifecycle history, and unstarted/started/part-done states;
+- QA-91-008, QA-91-010, QA-91-012, QA-91-014 and QA-91-016's passing controls:
+  coordinated denials, clauses, relatives, imperatives, same-area contrastives
+  and ordinary negative goals;
+- QA-91-009, QA-91-011, QA-91-013, QA-91-015 and QA-91-017's passing controls:
+  written and indirect dates, quarters, rates, ranges, shares, measures and
+  genuine sums beside dates;
+- all eight CASE A acceptance tests, the one-question budget, byte identity,
+  derived provenance, privacy digest, null case, second proving domain,
+  three-day non-reproposal, no-score rule, fixed clock, preview-port override
+  and the single fetch.
+
+Do not remove docs/ROUTING_91_BRIEF.md. Preserve all nineteen D-210
+instrument-hardening deferrals exactly as open. Do not begin routing 92 and do
+not pull CASE B into Phase 91.
+
+Update the governing decision and defect records for QA-91-016 and QA-91-017,
+including the failed load-bearing claim in D-255. Run npm run verify, one complete
+360/430/1280 browser matrix at one worker on a clean port, the Android-style
+deployed gate, privacy and copy scans, checkpoint equivalence, CI, and release
+integrity using that CI run's own manifest. Commit, push, deploy, and prove the
+repaired checkpoint is what Preview serves.
+
+Append the builder's Round 7 repair record and a complete Round 8 retest handoff
+to docs/qa/PHASE_91_QA_HANDOFF.md. Do not edit any QA report. Route Round 8 to
+the SAME Codex QA conversation that ran Rounds 1 through 7, at High reasoning,
+and require it to attack the structural evidence rather than replaying the 23
+submitted phrases. End this file with the required completion marker.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or strongest current Opus-equivalent. **Intelligence
+level:** Max. **Conversation:** CURRENT — the original Phase 91 builder.
+
+```text
+Repair routing Phase 91 after independent QA Round 7.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the complete Round 7
+builder repair handoff at the end exactly as written. Keep Phase 91 YELLOW,
+preserve every passed contract and explicit deferral, and do not ask me to paste
+the file contents.
+```
+
 <!-- LCO_COMPLETE -->
