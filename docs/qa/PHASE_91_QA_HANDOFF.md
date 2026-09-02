@@ -3807,5 +3807,286 @@ builder repair handoff at the end exactly as written. Keep Phase 91 YELLOW,
 preserve every passed contract and explicit deferral, and do not ask me to paste
 the file contents.
 ```
+---
+
+## Round 7 repair — the builder's record
+
+_Written by the Claude builder conversation. Round 7 above is QA's and is not
+edited. Round 8 belongs to QA._
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**Repaired checkpoint:** `a0c7d55` — and its commit subject says *Round 6*
+where it means Round 7. The subject is wrong and the body is right; it was
+noticed after the push, with CI already running against that SHA, so it is
+recorded here rather than rewritten under a build in flight.
+**Deployed Preview:** `a0c7d55` — they match exactly
+
+**The class judgement is accepted, and so is the withdrawal it forces.** D-255
+put a load-bearing claim in writing so it could be attacked — that a list of what
+**ends** a relationship is safe because such lists are closed classes. Round 7
+attacked it correctly, and the answer is one sentence:
+
+> A closed vocabulary is not a closed set of roles.
+
+`you` is a pronoun and a list item. `IT` is an acronym, `May` a month, `being` a
+non-finite form, `that` a demonstrative as often as a relative. And `in`, `to`,
+`at`, `of` and `and` all appear **inside** the constructions whose role was being
+read. **The claim is withdrawn**, and D-256 says so in those words.
+
+### Both reproduced first, with forty-seven controls beside them
+
+All twenty-three failures reproduced before any change, and forty-seven controls
+were captured in the same probe — the eleven from the report plus every shipped
+denial, date, share, measure, rate, range and interleaved-amount control. Every
+one held.
+
+### What changed
+
+One product file, `src/intelligence/interpret.ts`.
+
+**A form is evidence only where it does that form's job.** One rule, and it
+repairs six failures at once: a **modal** governs a bare verb, so `may
+certification goals` is a month and a plan — with or without the capital the
+owner may not have typed; a **subject pronoun** has a predicate after it, so
+`you,` in a list and `IT certification` are not subjects; a **finite** verb is
+finite, so `be`, `been` and `being` are in none of the lists at all; and
+**capitalisation** mid-sentence is evidence of a name rather than of syntax. The
+tokeniser was lowercasing that away, so the owner's own text is read instead.
+
+**A clause is introduced, or it belongs to the noun in front of it.** *"the money
+I earn"* and *"money that I earn"* both have a subject and a verb and are both
+still one denial. What separates them from *"and I want fitness"* is what stands
+in front: a coordinator, a comma or a subordinator introduces a clause, and
+nothing at all attaches one. A relative pronoun attaches too, but only after a
+noun — which is what makes *"and that is why…"* a demonstrative subject.
+
+**Two predicates the closed classes could not see.** Round 6 declared these a
+bound and QA overturned it, rightly, so both are read from structure: the
+**third-person inflection** in predicate position, after a word of subject and
+followed by something that is not a preposition — which reads *"fitness matters
+most"* while leaving *"savings goals for 2027"* a noun phrase; and an
+**imperative**, a clause-initial word taking the prepositional complement a verb
+takes.
+
+**The numeric boundary is contextual.** `PHRASE_END` is gone. Two things close a
+phrase: a **clause**, because a predicate cannot sit inside a noun phrase — the
+same evidence the denial instrument reads, reused — and a preposition that puts
+what follows it **in time**. `by`, `before` and `until` always do; `at`, `on` and
+`in` only when something temporal follows. A colon closes nothing: note grammar
+puts a heading on one side and its value on the other.
+
+**And the rate question was two questions.** Round 6 asked whether an article
+stood before the unit. The two are whether anything **points the unit at a
+moment**, and whether a **distributive determiner** spreads the amount over it.
+Neither implies the other, and *"3000 at the end of March"* proves it: the month
+is the complement of *end of*, so it is **neither** — which is what stops a real
+deadline being suppressed as though it were a wage.
+
+**One fact, one path.** `saysWhen` was answering *by when* from the horizon table
+even where the role logic had just called the expression a rate. It asks the role
+logic now.
+
+**Decision D-256.** Defect-ledger entry `QA-91-016, QA-91-017`.
+
+### The file got bigger again, and this time no claim is attached to it
+
+Its code goes from **926 lines to 1,034**. D-255 answered the same growth with a
+distinction that has now failed, so **no replacement distinction is offered
+here**. What can be said is narrower and checkable: no phrase from the report was
+added to any list, and the lists that grew — modals separated from auxiliaries,
+the distributive determiners, the point deictics — each carry a **requirement
+tested at the point of use** rather than a membership that is trusted.
+
+Whether that is a seventh boundary is Round 8's to judge. The honest position is
+that six rounds of bounded syntactic instruments have each been broken by
+ordinary English, and the shape of the failures is now the strongest evidence
+available about where this ends. That is put here rather than argued away.
+
+### The bound, said plainly, and it is one bound
+
+A predicate with neither an auxiliary, nor the third-person inflection, nor a
+prepositional complement — *"and fitness counts"* — is still invisible, and the
+denial reaches over it. Much narrower than Round 6's, which covered every lexical
+verb, and it has its own test.
+
+### Reintroduction proofs — forty-eight live, thirty-one of them this round
+
+**Nine of the thirty-one are reverse mutations**, because Round 7 warned that
+swapping one unconditional direction for the other is not a repair either:
+
+| Reintroduce                                                  | And this fails                                                   |
+| ------------------------------------------------------------ | ------------------------------------------------------------------ |
+| a modal counts with no bare verb after it                    | _reads a closed-class form only where it does that form's job_    |
+| the capital the owner typed is not read                      | _…the same_                                                       |
+| a subject pronoun counts with no predicate after it          | _…the same_                                                       |
+| a clause nothing introduces still starts one                 | _keeps a contact relative inside the denial_                      |
+| a relative pronoun attaches wherever it stands               | _…the same_                                                       |
+| the subject walk crosses a relative pronoun                  | _keeps a relative clause inside the denial it describes_          |
+| the third-person inflection is not read                      | _reads a predicate the closed classes cannot see_                 |
+| any word ending in `-s` is a predicate                       | _still reads a noun phrase that merely ends in an inflection_     |
+| an imperative is not read; then the denier's own complement is one | _reads a predicate…_ / _declines an area the owner says it is not about_ |
+| `don't` is not an auxiliary and a negation                   | _reads a predicate the closed classes cannot see_                 |
+| every preposition ends the numeric phrase; then none does    | _reads a preposition inside the amount_ / _still stops in time_   |
+| a contextual preposition is temporal wherever it stands      | _reads a preposition inside the amount it belongs to_             |
+| a colon severs the heading from its value                    | _…the same_                                                       |
+| a coordinator ends the numeric phrase                        | _…the same_                                                       |
+| the temporal slot establishes nothing; then it establishes everything | _reads an ascending two-part date…_ / _…still reads the range_ |
+| a distributive determiner does not make a rate               | _reads every spelling of a rate_                                  |
+| any unit not pointed at a moment is a rate                   | _still reads a unit pointed at a moment, or at neither_           |
+| a slash does not mark a rate                                 | _reads every spelling of a rate_                                  |
+| the horizon path answers `by when` without asking the role   | _…the same_                                                       |
+| a point deictic no longer points the unit                    | _still reads a unit pointed at a moment, or at neither_           |
+| …and eleven carried over: written dates, quarters, the year complement, inferred propagation, the measure, currency symmetry, the untyped abstention and its reverse | _their own tests_ |
+
+**Twenty-four Round 6 proofs were retired onto named successors**, and the
+one-for-one mapping is written into the script that used to run them.
+
+### Three proofs went green, and one of them was a real defect
+
+The sixth round running that a reintroduction has found what a green suite could
+not:
+
+- the **modal** guard was leaning on the capital in `May`, so it did nothing the
+  capitalisation rule was not already doing. Probing why turned up **`not about
+  money or may certification goals`**, all lowercase, naming Career from a word
+  inside the denial. A real defect. The guard now asks for the bare verb a modal
+  governs, and the phrase is in the test;
+- the guard against `be`/`been`/`being` **could never fire** — those forms are in
+  none of the lists that make a token finite — so the code went rather than the
+  proof;
+- the guard that stops an ordinal modifying a preposition is **correct but
+  unproven**: every phrase under test that puts an ordinal before *of* also
+  carries a month, and the month answers *by when* whichever way the ordinal is
+  read. Kept, and recorded as unproven — the shape QA checked and accepted at
+  Round 5.
+
+### Two more defects in the repair, found before any gate
+
+Both from attacking the finished work the way Round 8 is being asked to: an
+imperative rule that read the **denier's own complement** as a command, so *"not
+about money at all, and nothing to do with fitness"* denied nothing; and the rate
+rule suppressing the deadline in *"3000 at the end of March"*, which is what
+split the rate question into point, rate and neither.
+
+### Verification on the repaired tree
+
+| Gate                                      | Result                                                       |
+| ----------------------------------------- | -------------------------------------------------------------- |
+| `npm run verify`, clean tree              | PASS                                                           |
+| Unit / contract / synthetic / adversarial | **2,040 passed** in 89 files (2,028 at `4b02204`)             |
+| Browser, 360 / 430 / 1,280, one worker    | **834 of 834**, one whole run, clean port, **24.1 minutes**    |
+| Privacy scan                              | clean, 310 tracked files                                       |
+| Rendered copy scan                        | clean — 8,646 shipped strings, 8,558 placed in a module        |
+| Adaptation-claim scan                     | clean                                                          |
+| Android-style gate                        | clean — **234 checks**, against the deployed Preview           |
+| Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`a0c7d55`)   |
+| Checkpoint equivalence                    | **no files changed** between `a0c7d55` and the deployed SHA    |
+| CI and deployed Preview                   | **success** — both jobs green (run `33629390067`)              |
+| CI's own browser matrix                   | **834 of 834**, 18.8 minutes, against `a0c7d55` itself         |
+| Worktree                                  | clean                                                          |
+
+### Preserved, and checked rather than assumed
+
+Every prior PASS is still asserted by the shipped suite and all of it passed:
+QA-91-001 and QA-91-004; QA-91-005 and QA-91-006 with the set-aside
+confirmation, preserved aim, lifecycle history and the unstarted, started and
+part-done consequence states; QA-91-008, QA-91-010, QA-91-012, QA-91-014 and
+QA-91-016's controls; QA-91-009, QA-91-011, QA-91-013, QA-91-015 and
+QA-91-017's controls, including every repaired date form, share, measure, rate
+and range; all eight CASE A acceptance tests; byte identity, derived provenance,
+the privacy digest with both controls, the one-question budget, the null case,
+the second proving domain, three-day non-reproposal, B1, the no-score rule, the
+fixed clock, the preview-port override and the single `fetch`.
+
+The **nineteen D-210 instrument-hardening findings are untouched and still
+open**, and their backlog blob is still
+`58d5af071355d252c4a254fc685fcc9e8e88f417`. `docs/ROUTING_91_BRIEF.md` is
+present; routing 92 has not begun; CASE B remains out of scope.
+
+**What is still refused, said plainly.** This is not a parser, not a model and
+not a guess. Both instruments are deterministic, in-process and bounded, and both
+abstain: a predicate with no inflection and no complement is unseen and the
+denial reaches over it, naming one area fewer; a number nothing has typed settles
+neither question; and `unknowns` says what was not concluded while nothing
+derived is written.
+
+---
+
+## Round 8 retest handoff
+
+**Model:** Codex.
+**Reasoning level:** **High** — a middle level. Never Max, which is Claude's.
+**Conversation:** **SAME** — the Codex conversation that ran Rounds 1 to 7.
+
+```text
+Routing Phase 91 retest after the builder's Round 7 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Your Round 1 to Round 7 reports are
+unchanged; the builder's Round 7 repair record and this block are appended below
+them. Keep the Phase field exactly 91.
+
+Round 7's class judgement was accepted and D-255's load-bearing claim was
+WITHDRAWN in D-256. No replacement claim is offered this round. Attack the
+STRUCTURAL EVIDENCE the replacements read, not the twenty-three phrases:
+
+1. A closed-class form is now read only where it brings what its role requires:
+   a modal needs a bare verb, a pronoun needs a predicate, a capital
+   mid-sentence is a name. A clause is introduced by a coordinator, a comma or a
+   subordinator, or it belongs to the noun before it; a relative pronoun
+   attaches only after a noun. Attack every joint: forms whose required
+   complement is present but which still are not doing that job, capitals the
+   owner did or did not type, clauses introduced by things that are none of the
+   three, relatives with no determiner to hang on, and several denials with
+   assertions across three areas.
+2. Two predicates are read from structure: the third-person inflection in
+   predicate position, and an imperative taking a prepositional complement.
+   Attack both directions — plural nouns in predicate position, predicates whose
+   complement is a bare noun, imperatives with no preposition, and the declared
+   bound that "fitness counts" is invisible. Say whether that bound is the wrong
+   bound rather than merely a bound.
+3. A numeric phrase is closed only by a clause or by a temporally-used
+   preposition, and the rate question is split into point, rate and neither.
+   Attack all of it: prepositions used temporally and not, units that are the
+   complement of something else, distributive determiners in non-rate positions,
+   deictics, note grammar, and numbers whose role the surrounding construction
+   establishes in ways this does not read.
+4. Say plainly whether this is a seventh boundary. The record states without
+   argument that six bounded syntactic instruments have each been broken by
+   ordinary English, and offers no distinction to defend this one. That
+   judgement — including whether a bounded deterministic instrument is the right
+   shape for this at all, and what the alternative would be inside D-025 — is
+   the most useful thing this round can produce.
+5. Confirm no regression in QA-91-001, QA-91-004, QA-91-005, QA-91-006 and
+   QA-91-008 through QA-91-017 and their controls, and in the eight CASE A
+   acceptance tests.
+
+Three reintroductions went green this round. One was a real defect and is
+repaired; one removed dead code; one is recorded as correct but unproven. Treat
+all three as claims to check rather than notes to accept.
+
+Preserve the nineteen D-210 deferrals, do not remove docs/ROUTING_91_BRIEF.md,
+and end with the complete next handoff under D-082 whichever way the retest
+goes. Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High. **Conversation:** SAME — the QA
+conversation that ran Rounds 1 to 7.
+
+```text
+Retest routing Phase 91 after the builder's Round 7 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the Round 8 retest
+handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
+retest says otherwise, and do not ask me to paste the file contents.
+```
 
 <!-- LCO_COMPLETE -->
