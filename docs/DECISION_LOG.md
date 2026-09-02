@@ -9365,3 +9365,165 @@ touching them. **That is the claim, and Round 5 is asked to attack it rather
 than to replay the eleven phrases.**
 
 ---
+
+## D-254 — A coordinator makes a list, and a unit makes a number what it is
+
+**Phase:** 91 (QA round 5 repair) · **Status:** Active · **Refines** D-253
+
+D-253 replaced both instruments and claimed the replacements closed a _question_
+rather than a shape. Round 5 broke both, **from both sides in each class**, and
+the diagnosis is one sentence long and the same in both: each instrument read a
+**proxy** for its evidence instead of the evidence.
+
+### Denial: a comma was standing in for a coordinator
+
+D-253 decided how far a denial reached by asking whether a comma stood between
+two markers, and whether they named the same area. Neither is the thing that
+makes a list a list. QA broke it in one round from both directions — _"Not about
+money, or fitness"_ is one punctuated coordination and read as two, while _"Not
+about money because fitness is the real goal"_ is a denial followed by a clause
+and read as one. **A comma sits inside a list at least as often as it ends one,
+and a clause can begin without one.**
+
+What a coordinated list is actually made of is **coordinators** — _and_, _or_,
+_nor_ — with commas separating the items. So that is what is read:
+
+1. from the first marker after the denier, markers join one run while the text
+   between them is nothing but list material — whitespace, commas, coordinators
+   and determiners. A verb, a subordinator, a pronoun or any other noun ends the
+   run, because a run of list material is what a list is;
+2. the list ends at the item the **last coordinator introduces**. _"A, B, or C"_
+   denies all three; _"A and B, C is the goal"_ denies two and leaves C asserted;
+3. with no coordinator in the run at all, the denial covers its first marker;
+4. and where the run stops short of a coordinator that introduces a later
+   mention, the list is one the instrument **can see but cannot follow** — _"not
+   about money, physical fitness, or certification"_ breaks at a modifier — and
+   those mentions are neither denied nor asserted. Calling them asserted would
+   name two areas the owner has just denied, which is the worse of the two
+   mistakes, so nothing is read from them at all.
+
+**The area rule is gone, and so is the comma as a terminator.** D-253 needed the
+area rule only because it could not tell a list from a clause, and it read a
+comma as the end of one; with coordination read directly, both are redundant and
+both are deleted. A comma is still read — as what it is, a separator between the
+items of a list.
+
+### Number: membership of a form list was standing in for a role
+
+D-253 called a number a date when its shape appeared in a closed list of date
+forms, and an amount otherwise. QA broke that from both sides too: _"by week 3 of
+2027"_ is a date nobody had listed and became money, and _"save 2027 dollars"_ is
+a sum in the shape of a year and became time. **Membership of a surface-form list
+is not a role.**
+
+A number's role is written next to it, in **units**. An amount unit — a currency
+symbol, _dollars_, _k_, _percent_ — makes it a quantity whatever shape it has. A
+temporal unit — _week_, _quarter_, a month's name or abbreviation, an ordinal
+suffix — makes it a date whether or not anyone listed the form. A **partitive**,
+an ordinal or fraction followed by _of_ something untemporal, makes it a
+quantity, which is how _a 3rd of my salary_ differs from _the 3rd of March_.
+
+The share rule reads **what stands after _of_**, and it reaches across the unit
+the share is counted in, so _two months of salary_ is a sum expressed in months
+rather than a date. The complement decides: a temporal unit makes it a date, and
+so does a **year**, which is a shape rather than a word and has to be read as
+one — otherwise _the 3rd quarter of 2027_ becomes a quantity. A unit standing in
+**front** of the number settles the question before the share rule is asked at
+all, which is what keeps _week 3 of the plan_ the third week.
+
+Three properties do the rest of the work, and each is read rather than listed:
+
+- **adjacency.** A unit governs a number across nothing but list punctuation and
+  a closed set of connectors — _the_, _of_, _next_, _this_, _last_. That is the
+  whole difference between _"17 next month"_, which is a date, and _"17 by
+  March"_, which is a sum with a deadline.
+- **arity.** A slash is never a range, so a slashed chain is a date at any
+  length; a hyphen is ambiguous, and what separates `15-03-2027` from `2000-3000`
+  is how many numbers are punctuated together — three is a written date, two are
+  the ends of a range.
+- **strength.** A year-shaped number and a bare number are read, but as
+  _inferred_ rather than established, and **an inferred role never propagates**.
+  That is what keeps _"between 2027 and 3000"_ a pair of sums rather than a date
+  range on the strength of one endpoint's shape.
+
+### The two bounds, said out loud
+
+Both instruments now conclude less than a parser would, deliberately, and each
+bound is asserted by a test that names it:
+
+- an **asyndetic** list — _"not about money, fitness, certification"_, with no
+  coordinator anywhere — denies only its first item and reads the rest as
+  asserted. A comma is not promoted to a conjunction on suspicion;
+- coordination expressed without a coordinator — _"not about money as well as
+  fitness"_ — is not read as coordination;
+- and abstention has a price: a clause that reaches a coordinated pair — _"not
+  about money, my real goal is fitness or certification"_ — breaks the run and
+  carries an `or` past the break, so two asserted areas are **withheld** rather
+  than named. That is a reading lost rather than a reading invented, and it is
+  the shape the abstention rule takes when it is wrong;
+- a **bare number** with no unit beside it and no date punctuation is a quantity.
+  That is a default, and it is the last step rather than the first.
+
+Where the evidence is genuinely absent nothing changes about the refusal:
+`unknowns` carries _how much_ or _by when_, a phrase with nothing left over
+names no area and offers nothing, and nothing derived is written.
+
+### Why this is not a fifth increment in different clothes
+
+D-253 said as much about itself, so the claim has to be sharper than a promise.
+The test is what a **new** form costs. Nothing was added to a list of forms this
+round — no month spelling, no range spelling, no clause opener, no subject word.
+`2027-W15`, `week 3 of 2027` and `15 Mar` are read because of the unit standing
+beside them, and `2027` is *un*read as a date the moment a unit contradicts it.
+A form nobody has thought of reaches the same three questions: what unit governs
+this number, how many numbers are punctuated together, and where did the
+coordination stop.
+
+**And the instrument got bigger, which is worth saying against the round's own
+framing.** Its code goes from 671 lines to 801. The denial half shrank; the number
+half grew, because adjacency, arity, strength, the share rule and the written-date
+chain are five rules where there was one lookup. The claim is not that this is
+smaller. It is that what grew is **rules rather than forms** — `DATE_FORMS` was a
+list of shapes, each matching one way of writing a date and useless for the next,
+while `TEMPORAL_UNITS` and `AMOUNT_UNITS` are units, and a unit is evidence about
+the number beside it. If that distinction does not hold, this is the fifth
+boundary and should be called one.
+
+**Seventeen reintroductions hold it, seven of them reverse mutations** — the
+direction a widening repair fails in, and the direction four rounds kept missing.
+
+**An eighteenth was retired rather than counted, and the reason matters.** It
+mutated the comma out of the list material, which is exactly the Round 4 defect,
+and it stopped biting once the abstention rule landed: with the comma broken the
+run ends early, the coordinator past it is then unfollowable, and the mentions
+are _withheld_ instead of _denied_. Every phrase under test names the same areas
+either way, because a reading excludes both. The comma rule is kept — denying is
+the correct reading and withholding is a fallback — but it changes the reason the
+answer is right rather than the answer, and it is not claimed as proved.
+
+### And a reintroduction found a coverage gap, the fourth round running
+
+Removing the guard that lets a unit in front of the number win failed **nothing**,
+because the year rule had quietly grown to cover the only phrase under test —
+_week 3 of 2027_. The guard earns its place on _week 3 of **the plan**_, where the
+complement of _of_ is a thing rather than a period, and no test had that. One was
+added, and the proof then bit. This keeps happening, and it keeps being the
+reintroduction rather than the suite that finds it.
+
+### The repair found three defects of its own before any gate did
+
+Worth recording rather than tidying away. The first draft of the number
+instrument tested for a slash **anywhere in the window** after a span, so `3000`
+in _"save 3000 between 03/15 and 03/17/2027"_ saw a later date's punctuation and
+became one; and it read no dashed date at all, so `15-03-2027` settled the amount
+it should have left open. Both were caught by the shipped suite in the run that
+followed, both were repaired structurally rather than by special-casing, and both
+are now covered by the arity rule and by their own reintroductions.
+
+The third came from attacking the finished repair the way Round 6 will be asked
+to: extending the share rule across a counting unit made _the 3rd quarter of
+2027_ a quantity, because the complement test only knew unit **words** and a year
+is a shape. That is what the year clause in `temporal` is for, and it has its own
+reverse proof.
+
+---

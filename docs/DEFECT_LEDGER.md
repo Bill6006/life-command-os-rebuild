@@ -5528,3 +5528,61 @@ the marker table doing its job, not a fifth boundary widening.
 
 Full reproductions, repairs and verification:
 [`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).
+
+## QA-91-012, QA-91-013 — routing 91 independent QA round 5
+
+**Found:** independent Codex QA, round 5, 2026-09-02 · **Status:** Fixed (routing 91 round 5 repair) · **Owner:** routing 91
+
+The fifth round on the same two classes, and the first in which **each class was
+broken from both sides at once** — the instrument concluding too much and too
+little in the same round. Both were repaired by reading the evidence the
+construction actually carries instead of a proxy for it (D-254).
+
+| ID        | Finding                                                                                                                                                                                   | Repair                                                                                                                         |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| QA-91-012 | A comma ended a denial, so _"Not about money, or fitness"_ denied one item of a list; and only a comma could end one, so _"Not about money because fitness is the real goal"_ denied both | Coordination is read from **coordinators**: a run of list material, ending at the item the last coordinator introduces (D-254) |
+| QA-91-013 | Roles came from a closed list of date forms, so _"by week 3 of 2027"_ read as money and _"save 2027 dollars"_ read as time                                                                | A number's role comes from the **unit** beside it, with adjacency, punctuation arity and strength doing the rest (D-254)       |
+
+**Both repairs delete a proxy.** The comma test and the area rule are gone from
+the denial instrument; the closed date-form list is gone from the number
+instrument. Nothing was added to a list of forms — `2027-W15`, `week 3 of 2027`
+and `15 Mar` are read because of the unit beside them, and `2027` stops being a
+date the moment `dollars` follows it.
+
+**Seventeen reintroductions, seven of them reverse mutations.** Breaking the comma
+inside a list, assuming coordination, assuming it twice over, running the list to
+the end of the reach, deafening the instrument to a unit before and after the
+number, taking away an amount unit's precedence, letting a unit reach across a
+preposition, propagating an inferred role, dropping the written-date chain,
+ignoring its arity, dropping the partitive and letting it fire over a governing
+unit, ending the list where the run ends, and calling any following coordinator
+unfollowable. Each fails the test whose title names its property.
+
+**An eighteenth was retired rather than counted.** Mutating the comma out of the
+list material stopped biting once the abstention rule landed, because the two
+rules converge on the same owner-visible answer — one denies the mentions and the
+other withholds them, and a reading excludes both. Recorded rather than papered
+over.
+
+**And a reintroduction found a coverage gap, the fourth round running.** Removing
+the guard that lets a unit in front of the number win failed nothing, because the
+only phrase under test — _week 3 of 2027_ — was covered by the year rule as well.
+The guard earns its place on _week 3 of the plan_; that case had no test until
+the proof went green without it.
+
+**Eight earlier proofs were retired, and their coverage moved rather than
+lapsing.** The seven Round 4 proofs mutate code that no longer exists, and Round
+3's last surviving one — `QA-91-009c`, a quarter is not a date — mutated the
+`DATE_FORMS` quarter entries. Its successor is `QA-91-013j`, which mutates `q`
+out of the temporal units and runs the same test.
+
+**Three defects were found in the repair itself before any gate.** An unanchored
+slash test let one date's punctuation reach a sum four words away; no dashed date
+was read at all; and extending the share rule across a counting unit made _the
+3rd quarter of 2027_ a quantity, because the complement test knew unit words and
+a year is a shape. The first two were caught by the shipped suite, the third by
+attacking the finished repair the way Round 6 is being asked to. All three were
+repaired structurally and all three have their own reintroductions.
+
+Full reproductions, repairs and verification:
+[`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md).

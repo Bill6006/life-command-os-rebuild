@@ -676,14 +676,93 @@ function mentions(haystack: string, digest: readonly InterpreterSource[]): reado
 }
 
 /**
- * The mentions the owner denied, by the area each denial is about.
+ * The mentions the owner denied — QA-91-012.
  *
- * The three rules of the header, in the order they apply. Nothing here looks at
- * what a clause starts with, because nothing here needs to: what is cancelled is
- * an area, and an area the denial did not name survives whatever follows it.
+ * ## What the last two versions used instead of evidence
+ *
+ * Round 3 asked whether a comma stood between two markers. Round 4 asked whether
+ * a comma stood between them **and** whether they named the same area. Both are
+ * proxies for the thing that actually matters, and QA broke the second from both
+ * sides in one round: *"Not about money, or fitness"* is one punctuated
+ * coordination and was read as two, while *"Not about money because fitness is
+ * the real goal"* is a denial followed by a clause and was read as one. **A
+ * comma can sit inside a list, and a clause can begin without one.**
+ *
+ * ## What coordination actually looks like
+ *
+ * A coordinated list is joined by **coordinators** — *and*, *or*, *nor* — with
+ * commas as separators between the items. That is the evidence, and it is what
+ * is read here:
+ *
+ * 1. From the first marker after the denier, walk the markers in order. Two are
+ *    in the same run only when the text between them is nothing but list
+ *    material: whitespace, commas, coordinators and determiners. Anything else —
+ *    a verb, a subordinator, a pronoun, a noun — ends the run, because a run of
+ *    list material is what a list is made of.
+ * 2. The list ends with the item the **last coordinator introduces**. In
+ *    *"A, B, or C"* that is C, so all three are denied; in *"A and B, C is the
+ *    goal"* it is B, so C is outside and is asserted.
+ * 3. With no coordinator anywhere in the run, the denial covers its first marker
+ *    alone — which is what *"not about money"* means on its own.
+ *
+ * **Area is no longer consulted at all.** Round 4 needed it because it had no
+ * way to tell a list from a clause; with coordination read directly, the area
+ * rule is redundant and is gone. So is the comma test.
+ *
+ * ## The bound, said plainly
+ *
+ * An asyndetic list — *"not about money, debt, savings"* with no *and* or *or*
+ * anywhere — is read as denying only the first item, and the rest are asserted.
+ * That is the direction this file errs in everywhere: it declines to conclude
+ * from evidence it has not got, rather than treating a comma as though it were
+ * a conjunction.
  */
-function deniedMentions(haystack: string, all: readonly Mention[]): ReadonlySet<Mention> {
+const COORDINATORS = ['and', 'or', 'nor']
+
+/** What may stand in front of an item without being one. */
+const DETERMINERS = ['the', 'a', 'an', 'my', 'our', 'any', 'some']
+
+/** Words that can sit inside a list without ending it. */
+const LIST_FILLER = [...COORDINATORS, ...DETERMINERS]
+
+/**
+ * Whether the text between two markers is nothing but list material, and
+ * whether a coordinator was part of it.
+ */
+function listLink(between: string): { readonly links: boolean; readonly coordinates: boolean } {
+  const words = between.split(/[\s,]+/).filter((word) => word !== '')
+  const links = words.every((word) => LIST_FILLER.includes(word))
+  return { links, coordinates: links && words.some((word) => COORDINATORS.includes(word)) }
+}
+
+/**
+ * Whether a coordinator introduces what comes next, across determiners only.
+ *
+ * *", or certification"* is a coordinator introducing an item. *"and I want
+ * fitness"* is a coordinator followed by a clause, and the words in between are
+ * what say so.
+ */
+function introducedByCoordinator(between: string): boolean {
+  const words = between.split(/[\s,]+/).filter((word) => word !== '')
+  let end = words.length
+  while (end > 0 && DETERMINERS.includes(words[end - 1]!)) end -= 1
+  return end > 0 && COORDINATORS.includes(words[end - 1]!)
+}
+
+interface DenialReading {
+  readonly denied: ReadonlySet<Mention>
+  /**
+   * Mentions inside a denial whose place in it could not be established.
+   *
+   * Neither denied nor asserted: the instrument saw a list it could not follow
+   * and declines to say which side of the denial these fall on.
+   */
+  readonly unstructured: ReadonlySet<Mention>
+}
+
+function deniedMentions(haystack: string, all: readonly Mention[]): DenialReading {
   const denied = new Set<Mention>()
+  const unstructured = new Set<Mention>()
 
   for (const denier of DENIERS) {
     let from = 0
@@ -695,158 +774,358 @@ function deniedMentions(haystack: string, all: readonly Mention[]): ReadonlySet<
       from = after
 
       const inside = all.filter((mention) => mention.at >= after && mention.at < until)
-      const about = inside[0]?.domain
-      if (about === undefined) continue
+      if (inside.length === 0) continue
 
-      let last: Mention | undefined
-      for (const mention of inside) {
-        const sameArea = mention.domain === about
-        // A different area is denied too where it is coordinated straight on to
-        // the last thing denied — *not about money or fitness* — and not where a
-        // comma has ended the list the denial was reading.
-        const coordinated = last !== undefined && !haystack.slice(last.to, mention.at).includes(',')
-        if (!sameArea && !coordinated) continue
-        denied.add(mention)
-        last = mention
+      // The run, and how far the coordination in it actually reaches.
+      const run: Mention[] = [inside[0]!]
+      let lastCoordinated = 0
+      for (let index = 1; index < inside.length; index += 1) {
+        const link = listLink(haystack.slice(inside[index - 1]!.to, inside[index]!.at))
+        if (!link.links) break
+        run.push(inside[index]!)
+        if (link.coordinates) lastCoordinated = run.length - 1
+      }
+
+      for (let index = 0; index <= lastCoordinated; index += 1) denied.add(run[index]!)
+
+      /*
+       * And where the run stopped short of a coordinator, say nothing.
+       *
+       * *"Not about money, physical fitness, or certification"* is plainly one
+       * list, and the run stops at `physical` because a modifier is not list
+       * material. The `or` past the end of the run is the evidence that the list
+       * did not stop where the instrument did.
+       *
+       * Reading those mentions as **asserted** would name two areas the owner
+       * has just denied, which is the worse of the two mistakes. So they are
+       * neither denied nor asserted: nothing is read from them at all, and a
+       * phrase with nothing left over names no area, offers nothing and writes
+       * no derived row — which is what abstaining looks like here.
+       *
+       * **And the bound, which is the price of it.** A clause that reaches a
+       * coordinated pair — *"not about money, my real goal is fitness or
+       * certification"* — breaks the run and carries an `or` past the break, so
+       * the two asserted areas are withheld rather than named. That is a
+       * reading lost, not a reading invented: the instrument goes quiet where it
+       * cannot follow the sentence, and it never contradicts the owner.
+       */
+      let unfollowable = -1
+      for (let index = run.length; index < inside.length; index += 1) {
+        const between = haystack.slice(inside[index - 1]!.to, inside[index]!.at)
+        if (introducedByCoordinator(between)) unfollowable = index
+      }
+      for (let index = run.length; index <= unfollowable; index += 1) {
+        unstructured.add(inside[index]!)
       }
     }
   }
 
-  return denied
+  return { denied, unstructured }
 }
 
 /**
- * What a number in the phrase is **for** — QA-91-011.
+ * What a number in the phrase is **for** — QA-91-013.
  *
- * ## Why this replaces deleting shapes
+ * ## Three versions of the same mistake
  *
- * The previous three versions removed matched date patterns from the text and
- * then asked whether any digit was left. That works exactly as far as the list
- * of patterns reaches, and QA broke it twice: an **ordinal quarter** expresses a
- * date without spelling `Q3`, and a **range** has two endpoints of which only
- * one carries the date's own grammar. Adding a regex for each would have moved
- * the boundary a fifth time without answering the question underneath it, which
- * is *which number here is a horizon and which is a sum*.
+ * Round 2 deleted matched date shapes and asked whether a digit was left. Round
+ * 3 added shapes. Round 4 kept the shapes, called membership of the list a
+ * *role*, propagated it across range connectors and defaulted everything else to
+ * an amount. QA broke the third from both sides at once: an unlisted date became
+ * money — *"by week 3 of 2027"* — and a date-shaped sum became time — *"save
+ * 2027 dollars"*. **Membership of a surface-form list is not a role.**
  *
- * So numbers are found first and **classified**. Every digit run in the phrase
- * becomes a span with a role, and the roles are decided by structure:
+ * ## The evidence a role is actually read from
  *
- * - a number written inside a date form — slashed, month-adjacent, quarter,
- *   ordinal, or a plausible year — is a **date**;
- * - a number joined to a date **immediately** by a range connector is a date
- *   too, because that is what a range is;
- * - everything else is an **amount**, which is what a number ordinarily is.
+ * A number's role is written next to it, in units:
  *
- * ## What that buys over the old shape list
+ * - an **amount unit** — a currency symbol, *dollars*, *k*, *percent* — makes it
+ *   an amount, whatever shape it has. `2027 dollars` is a sum.
+ * - a **temporal unit** — *week*, *month*, *quarter*, a month's name or its
+ *   abbreviation, an ordinal suffix — makes it a date, whether or not anybody
+ *   listed the form. `week 3` and `15 Mar` are dates.
+ * - a **partitive** — an ordinal or a fraction followed by *of* something that
+ *   is not itself temporal — makes it a quantity. `a 3rd of my salary` is not
+ *   the third of the month.
  *
- * The range rule is *propagation between spans* rather than a pattern, so it
- * covers `15th and 17th`, `15th to the 17th` and `15–17` without knowing any of
- * them; and *"Save 3000 between March 15th and 17th"* keeps its amount, because
- * `3000` is not immediately joined to anything with a date role.
+ * Units have to be **adjacent** to count, across nothing but list punctuation
+ * and a closed set of connectors (*the*, *of*, *next*, *this*, *last*). That is
+ * what separates *"17 next month"*, where the unit governs the number, from
+ * *"17 by March"*, where it does not.
  *
- * ## The bound
+ * ## Two weaker readings, and why they are marked as weaker
  *
- * A number in a date form nobody has written down here reads as an amount, and
- * the app then says it does not know the horizon rather than inventing one.
- * That is the safe direction: `unknowns` names what was not concluded, and
- * nothing derived is written from it.
+ * A four-digit number in 1900–2199 **looks** like a year, and a number with no
+ * unit at all is ordinarily a quantity. Both are read, and both are marked
+ * `inferred`, because a guess may not be propagated: a connector carries a role
+ * across a range only from a span whose role came from a unit. That is what
+ * stops *"between 2027 and 3000"* becoming a date range on the strength of one
+ * endpoint's shape.
+ *
+ * ## The bound, said plainly
+ *
+ * A number with no unit near it and no date shape is read as a quantity. That is
+ * a default and it is named as one — but it is the last step rather than the
+ * first, and it is what a number is when nothing says otherwise. Where the
+ * evidence is genuinely absent the app still says so: `unknowns` carries *how
+ * much* or *by when*, and nothing derived is written.
  */
-const MONTH_WORDS =
-  'january|february|march|april|may|june|july|august|september|october|november|december'
+const MONTH_NAMES = [
+  'january',
+  'february',
+  'march',
+  'april',
+  'may',
+  'june',
+  'july',
+  'august',
+  'september',
+  'october',
+  'november',
+  'december',
+]
 
-/** The connectors that make two numbers the ends of one range. */
-const RANGE_JOIN = '–|—|-|to|and|through|until|thru'
+/** The same lexicon abbreviated, which is how a date is usually written short. */
+const MONTH_WORDS = [...MONTH_NAMES, ...MONTH_NAMES.map((month) => month.slice(0, 3)), 'sept']
+
+/** Units that make the number beside them a point or span of time. */
+const TEMPORAL_UNITS = [
+  'week',
+  'weeks',
+  'month',
+  'months',
+  'year',
+  'years',
+  'quarter',
+  'quarters',
+  'day',
+  'days',
+  'w',
+  'q',
+  ...MONTH_WORDS,
+]
+
+/** Units that make the number beside them a quantity, whatever shape it has. */
+const AMOUNT_UNITS = [
+  'dollar',
+  'dollars',
+  'pound',
+  'pounds',
+  'euro',
+  'euros',
+  'k',
+  'grand',
+  'percent',
+  'pc',
+]
 
 /**
- * Forms in which a number is written as part of a date, each a closed shape.
+ * The words a unit may reach across, and nothing else.
  *
- * These no longer have to be exhaustive over date grammar, because they only
- * have to catch **one** end of a range for the propagation below to carry the
- * other. That is the difference between a list that must cover a language and a
- * list that must cover a construction.
+ * *"17 next month"* is governed by its unit and *"17 by March"* is not, and this
+ * closed set is the whole of that difference. `by`, `to`, `for` and every other
+ * preposition are deliberately absent: they introduce a separate phrase.
  */
-const DATE_FORMS: readonly RegExp[] = [
-  // 03/15/2027, 15-03-2027, 2027-03-15, and the bare 03/15 of a range
-  /\b\d{1,2}[/.]\d{1,2}(?:[/.]\d{2,4})?\b/g,
-  /\b\d{4}[/.-]\d{1,2}[/.-]\d{1,2}\b/g,
-  /\b\d{1,2}-\d{1,2}-\d{2,4}\b/g,
-  // March 15, March the 15th, 15 March, the 15th of March
-  new RegExp(String.raw`\b(?:${MONTH_WORDS})\b\s+(?:the\s+)?\d{1,2}(?:st|nd|rd|th)?\b`, 'g'),
-  new RegExp(
-    String.raw`\b\d{1,2}(?:st|nd|rd|th)?\s+(?:of\s+)?(?:the\s+)?(?:${MONTH_WORDS})\b`,
-    'g',
-  ),
-  // Q3, quarter 3, and the 3rd quarter
-  /\bq[1-4]\b/g,
-  /\bquarters?\s+\d{1,2}\b/g,
-  /\b\d{1,2}(?:st|nd|rd|th)\s+quarter\b/g,
-  // An ordinal names a position rather than a quantity, wherever it stands.
-  /\b\d{1,2}(?:st|nd|rd|th)\b/g,
-  // A plausible year.
-  /\b(?:19|20|21)\d{2}\b/g,
-]
+const UNIT_LINK = ['the', 'of', 'next', 'this', 'last', 'each', 'every']
+
+const RANGE_JOIN = ['–', '—', '-', 'to', 'and', 'through', 'until', 'thru']
+
+function anyOf(words: readonly string[]): string {
+  return words.map((word) => escape(word)).join('|')
+}
+
+const TOUCHES_BEFORE = new RegExp(
+  String.raw`\b(${anyOf(TEMPORAL_UNITS)})\b[\s,\-]*(?:(?:${anyOf(UNIT_LINK)})[\s,\-]*)*$`,
+)
+const TOUCHES_AFTER = new RegExp(
+  String.raw`^[\s,\-]*(?:(?:${anyOf(UNIT_LINK)})[\s,\-]*)*\b(${anyOf(TEMPORAL_UNITS)})\b`,
+)
+const AMOUNT_AFTER = new RegExp(String.raw`^[\s,\-]*\b(${anyOf(AMOUNT_UNITS)})\b`)
+/**
+ * A share taken *of* something, reached across a fraction's other half.
+ *
+ * `1/3 of my salary` has to be recognisable from the `1` as well as from the
+ * `3`, or the first half of the fraction is left reading as a date.
+ */
+const PARTITIVE = new RegExp(
+  String.raw`^(?:[/.]\d{1,2})?(?:st|nd|rd|th)?(?:\s+(?:${anyOf(TEMPORAL_UNITS)}))?\s+of\b`,
+)
+
+/**
+ * Whether what follows *of* is itself a period of time.
+ *
+ * A share is only a quantity when it is a share of something untemporal. *A 3rd
+ * of my salary* is a quantity; *the 3rd quarter of 2027* and *the 15th of March*
+ * are dates, and the complement is what says so — a unit in one and a year in
+ * the other, which is a shape rather than a word and so has to be read as one.
+ */
+function temporal(rest: string): boolean {
+  return TOUCHES_AFTER.test(rest) || /^[\s,-]*(?:19|20|21)\d{2}\b/.test(rest)
+}
+
+type Role = 'date' | 'amount'
 
 interface NumberSpan {
   readonly at: number
   readonly to: number
-  role: 'date' | 'amount'
+  role: Role
+  /** `established` came from a unit; `inferred` is a shape or the default. */
+  strength: 'established' | 'inferred'
 }
 
-/**
- * Every number in the phrase, with what it is for.
- *
- * Ranges are settled after the forms rather than inside them: two spans joined
- * by nothing but a range connector are the ends of one thing, so if either is a
- * date both are. Run to a fixed point, so `15 to 17 to 19` settles all three.
- */
-function numberSpans(text: string): readonly NumberSpan[] {
-  const dated: [number, number][] = []
-  for (const form of DATE_FORMS) {
-    const pattern = new RegExp(form.source, 'g')
-    for (;;) {
-      const match = pattern.exec(text)
-      if (match === null) break
-      dated.push([match.index, match.index + match[0].length])
-    }
-  }
+const YEARISH = /^(?:19|20|21)\d{2}$/
 
+/** Every number in the phrase, with the evidence for what it is doing there. */
+function numberSpans(text: string): readonly NumberSpan[] {
   const spans: NumberSpan[] = []
   const digits = /\d+/g
+
   for (;;) {
     const match = digits.exec(text)
     if (match === null) break
     const at = match.index
     const to = at + match[0].length
-    const inside = dated.some(([from, until]) => at >= from && to <= until)
-    spans.push({ at, to, role: inside ? 'date' : 'amount' })
+    const before = text.slice(Math.max(0, at - 28), at)
+    const after = text.slice(to, to + 28)
+
+    /*
+     * A fraction or an ordinal share taken *of* something untemporal is a
+     * quantity — the third of a salary is not the third of a month.
+     *
+     * It is asked only where no temporal unit governs the number already.
+     * `week 3 of 2027` is a date whose *of* introduces the year rather than a
+     * share of anything, and that ordering is the whole difference between the
+     * third of a salary and the third week of a year.
+     */
+    const share = PARTITIVE.exec(after)
+    const partitive =
+      share !== null && !TOUCHES_BEFORE.test(before) && !temporal(after.slice(share[0].length))
+
+    // A unit is evidence and a shape is not, so the units are asked first.
+    if (AMOUNT_AFTER.test(after) || /[£$€]\s*$/.test(before)) {
+      spans.push({ at, to, role: 'amount', strength: 'established' })
+      continue
+    }
+    if (partitive) {
+      spans.push({ at, to, role: 'amount', strength: 'established' })
+      continue
+    }
+    if (
+      TOUCHES_BEFORE.test(before) ||
+      TOUCHES_AFTER.test(after) ||
+      /^(?:st|nd|rd|th)\b/.test(after)
+    ) {
+      spans.push({ at, to, role: 'date', strength: 'established' })
+      continue
+    }
+    spans.push({
+      at,
+      to,
+      role: YEARISH.test(match[0]) ? 'date' : 'amount',
+      strength: 'inferred',
+    })
   }
 
-  const joined = new RegExp(
-    String.raw`^\s*(?:st|nd|rd|th)?\s*(?:${RANGE_JOIN})\s*(?:the\s+)?$`,
-    'i',
-  )
+  writtenDates(text, spans)
+  settleRanges(text, spans)
+  return spans
+}
+
+/** The separators a written date is punctuated with, and nothing else. */
+const DATE_PUNCTUATION = ['/', '-', '.']
+
+/**
+ * Numbers punctuated together into one written date.
+ *
+ * `03/15`, `15-03-2027` and `2027.03.15` are dates because of how they are
+ * **punctuated**, not because anyone wrote those three orderings down. Two
+ * things are read: the separator has to be immediate — one character, no spaces
+ * — and the whole chain has to use the same one.
+ *
+ * A slash is never a range, so a slashed chain is a date at any length. A hyphen
+ * and a full stop are ambiguous — `2000-3000` is a range and `15-03-2027` is a
+ * date — so for those the evidence is **arity**: two numbers are the ends of a
+ * range, three punctuated together are a date. That is the difference itself,
+ * rather than a rule about which numbers look like years.
+ *
+ * A span whose role a unit already established is left alone, so `1/3 of my
+ * salary` stays the quantity the partitive made it.
+ */
+function writtenDates(text: string, spans: NumberSpan[]): void {
+  for (let index = 0; index < spans.length;) {
+    const separator = text.slice(spans[index]!.to, spans[index + 1]?.at)
+    if (!DATE_PUNCTUATION.includes(separator)) {
+      index += 1
+      continue
+    }
+
+    let end = index + 1
+    while (end + 1 < spans.length && text.slice(spans[end]!.to, spans[end + 1]!.at) === separator) {
+      end += 1
+    }
+
+    if (separator === '/' || end - index >= 2) {
+      for (let part = index; part <= end; part += 1) {
+        const span = spans[part]!
+        if (span.strength === 'established') continue
+        span.role = 'date'
+        span.strength = 'established'
+      }
+    }
+    index = end + 1
+  }
+}
+
+const JOINED = new RegExp(
+  String.raw`^(?:st|nd|rd|th)?[\s]*(?:${anyOf(RANGE_JOIN)})[\s]*(?:(?:${anyOf(UNIT_LINK)})[\s]*)*$`,
+)
+
+/**
+ * The two ends of a range hold the same kind of thing.
+ *
+ * **A guess is never propagated.** An established role crosses the connector; two
+ * inferred ones settle between themselves, and they settle as a quantity unless
+ * both ends could be years — which is what keeps *"between 2027 and 3000"* a
+ * pair of sums rather than a pair of dates.
+ */
+function settleRanges(text: string, spans: NumberSpan[]): void {
   for (let settled = false; !settled;) {
     settled = true
     for (let index = 1; index < spans.length; index += 1) {
       const left = spans[index - 1]!
       const right = spans[index]!
-      if (left.role === right.role) continue
-      if (!joined.test(text.slice(left.to, right.at))) continue
-      if (left.role === 'date') right.role = 'date'
-      else left.role = 'date'
-      settled = false
+      if (!JOINED.test(text.slice(left.to, right.at))) continue
+
+      const established = [left, right].filter((span) => span.strength === 'established')
+      if (established.length === 1) {
+        const known = established[0]!
+        const other = known === left ? right : left
+        if (other.role !== known.role) {
+          other.role = known.role
+          settled = false
+        }
+        continue
+      }
+      if (established.length > 0) continue
+
+      const bothCouldBeYears = [left, right].every((span) =>
+        YEARISH.test(text.slice(span.at, span.to)),
+      )
+      const role: Role = bothCouldBeYears ? left.role : 'amount'
+      for (const span of [left, right]) {
+        if (span.role === role) continue
+        span.role = role
+        settled = false
+      }
     }
   }
-
-  return spans
 }
 
 /**
- * Whether the words say **how much**, which no part of a date does.
+ * Whether the words say **how much**.
  *
- * A currency symbol is always an amount. Otherwise it is whether any number in
- * the phrase was classified as one — so a sum standing beside a horizon still
- * settles the amount, and a horizon standing alone still leaves it open.
+ * A currency symbol is an amount wherever it stands. Otherwise it is whether any
+ * number in the phrase was read as one.
  */
 function saysHowMuch(text: string): boolean {
   if (/[£$€]/.test(text)) return true
@@ -945,8 +1224,8 @@ export function readAim(input: InterpreterInput): AimReading {
    * span*, which is the question four rounds of boundary repairs were stuck on.
    */
   const all = mentions(haystack, input.digest)
-  const denied = deniedMentions(haystack, all)
-  const asserted = all.filter((mention) => !denied.has(mention))
+  const { denied, unstructured } = deniedMentions(haystack, all)
+  const asserted = all.filter((mention) => !denied.has(mention) && !unstructured.has(mention))
 
   const byArea = new Map<LifeDomainId, { own: string[]; words: string[] }>()
   for (const mention of asserted) {

@@ -1444,6 +1444,260 @@ describe('QA-91-003 — a token is read for its role, not for its presence', () 
     expect(only.unknowns).toContain('how much')
     expect(only.unknowns).not.toContain('by when')
   })
+
+  // -------------------------------------------------------------------------
+  // Round 5 — the two questions, asked of the structure rather than of a list
+
+  it('reads a punctuated coordination as one denied list — QA-91-012', () => {
+    /*
+     * Round 4 read a comma as the end of a denial, so the *"or fitness"* half of
+     * an ordinary list became a fresh claim about health. A comma separates the
+     * items of a list at least as often as it ends one; what says the list is
+     * still running is the coordinator.
+     */
+    for (const phrase of [
+      'Not about money, or fitness',
+      'Not about money, fitness, or certification',
+      'Not about money, debt, or savings',
+    ]) {
+      expect(read(phrase).names, phrase).toEqual([])
+    }
+  })
+
+  it('and stops that list at the item its last coordinator introduces', () => {
+    /*
+     * The other direction, which is what keeps the rule from swallowing the
+     * sentence: past the last *and* or *or* the list is over, and what follows
+     * is the owner saying what he does mean.
+     */
+    for (const phrase of [
+      'Not about money, or fitness; certification is the goal',
+      'Not about money and fitness, certification is the goal',
+      'Not about money, certification is the real goal',
+    ]) {
+      expect(
+        read(phrase).names.map((area) => area.domain),
+        phrase,
+      ).toEqual([DOMAIN.career])
+    }
+  })
+
+  it('and lets a clause with no comma in front of it assert its own area', () => {
+    /*
+     * The inverse failure in the same round: a denial ran on into the clause
+     * that corrected it, because nothing but a comma could stop it. A
+     * subordinator and a bare pronoun both begin a clause without one.
+     */
+    for (const phrase of [
+      'Not about money because fitness is the real goal',
+      'Not about money I want fitness',
+    ]) {
+      expect(
+        read(phrase).names.map((area) => area.domain),
+        phrase,
+      ).toEqual([DOMAIN.health])
+    }
+  })
+
+  it('names the bound it keeps: an unjoined list denies only its first item', () => {
+    /*
+     * Said out loud rather than left to be discovered. With no coordinator
+     * anywhere, *"not about money, fitness, certification"* denies money and
+     * reads the other two as asserted. That is this file erring the way it errs
+     * everywhere — declining to conclude from evidence it has not got, rather
+     * than treating a comma as though it were a conjunction.
+     */
+    expect(
+      read('Not about money, fitness, certification').names.map((area) => area.domain),
+    ).toEqual([DOMAIN.career, DOMAIN.health])
+  })
+
+  it('reads an unlisted date form from the unit beside it — QA-91-013', () => {
+    /*
+     * Round 4 called membership of a closed list of date shapes a *role*, so a
+     * date nobody had written down became money and the amount read as settled
+     * when nothing in the phrase said one. None of these five is in any list.
+     */
+    for (const phrase of [
+      'More money by week 3 of 2027',
+      'More money by 2027-W15',
+      'More money from 15 to 17 next month',
+      'More money between 15 and 17 this month',
+      'More money by 15 Mar 2027',
+    ]) {
+      const dated = read(phrase)
+      expect(dated.unknowns, `${phrase}: the amount is still unknown`).toContain('how much')
+      expect(dated.unknowns, `${phrase}: the date answered when`).not.toContain('by when')
+    }
+  })
+
+  it('and reads a date-shaped number as a sum when an amount unit governs it', () => {
+    /*
+     * The same instrument from the other side. A year is a shape; *dollars* and
+     * a currency symbol are evidence, and evidence wins. The horizon then stays
+     * honestly open, which is the part the old rule had backwards.
+     */
+    for (const phrase of ['Save $2027', 'Save 2027 dollars']) {
+      const sum = read(phrase)
+      expect(sum.unknowns, `${phrase}: the sum is settled`).not.toContain('how much')
+      expect(sum.unknowns, `${phrase}: and nothing said when`).toContain('by when')
+    }
+    expect(read('Save 2027 dollars by March').unknowns, 'and both, once a month is named').toEqual(
+      [],
+    )
+  })
+
+  it('does not carry a role across a connector unless a unit established it', () => {
+    /*
+     * A guess may not propagate. *2027* looks like a year and *3000* does not,
+     * and neither shape is evidence — so the pair settles as the sums they are
+     * rather than as a date range on the strength of one endpoint.
+     */
+    for (const phrase of [
+      'Save between 2027 and 3000 by March',
+      'Save 2000–3000 by March',
+      'Save 1900 to 2200 by March',
+      'Save 3000–5000 by March',
+    ]) {
+      expect(read(phrase).unknowns, phrase).toEqual([])
+    }
+  })
+
+  it('keeps a unit from reaching across a preposition to a number it does not govern', () => {
+    /*
+     * The pair that makes adjacency the rule rather than proximity. *"17 next
+     * month"* is a date because the unit governs the number; *"17 by March"* is
+     * a sum with a deadline, and the only difference is what stands between.
+     */
+    expect(read('More money from 15 to 17 next month').unknowns).toContain('how much')
+    expect(read('Save 15 to 17 by March').unknowns, 'a sum with a deadline').toEqual([])
+    expect(read('Save 17 by March 15').unknowns, 'a sum and a written day').toEqual([])
+  })
+
+  it('reads a share of something untemporal as a quantity, and of a year as a date', () => {
+    /*
+     * *of* is doing two different jobs. A third **of my salary** is a quantity;
+     * week three **of 2027** is a date whose *of* introduces the year. A unit in
+     * front of the number settles which, before the share rule is asked at all.
+     */
+    for (const phrase of [
+      'Save a 3rd of my salary by December',
+      'Save 1/3 of my salary by December',
+    ]) {
+      expect(read(phrase).unknowns, phrase).toEqual([])
+    }
+    /*
+     * Both directions of the guard that decides which rule is even asked. A unit
+     * in front of the number wins, and it has to win whether the complement of
+     * *of* is a period — `2027` — or a thing, because *week 3 of the plan* is
+     * still the third week. The second of these had no test until a
+     * reintroduction went green without it.
+     */
+    for (const phrase of ['More money by week 3 of 2027', 'More money by week 3 of the plan']) {
+      expect(read(phrase).unknowns, phrase).toContain('how much')
+    }
+  })
+
+  it('reads a written date from its punctuation, and a range from its arity', () => {
+    /*
+     * A slash is never a range, so a slashed chain is a date however long it is.
+     * A hyphen is ambiguous, and the evidence that separates the two readings is
+     * how many numbers are punctuated together: two are the ends of a range,
+     * three are a written date.
+     */
+    for (const phrase of [
+      'More money before 15-03-2027',
+      'More money by 2027/03/15',
+      'More money by 15/03',
+    ]) {
+      const dated = read(phrase)
+      expect(dated.unknowns, `${phrase}: the amount is still unknown`).toContain('how much')
+      expect(dated.unknowns, `${phrase}: the date answered when`).not.toContain('by when')
+    }
+    expect(read('Save 2000-3000 by March').unknowns, 'two, hyphenated, is a range').toEqual([])
+    expect(
+      read('Save 3000 between 03/15 and 03/17/2027').unknowns,
+      'a sum beside two dates',
+    ).toEqual([])
+  })
+
+  it('abstains from a list it can see but cannot follow', () => {
+    /*
+     * *"Not about money, physical fitness, or certification"* is plainly one
+     * list, and the run stops at `physical` because a modifier is not list
+     * material. The `or` past the end of the run says the list did not stop
+     * where the instrument did.
+     *
+     * Calling the rest **asserted** would name two areas the owner has just
+     * denied — the worse of the two mistakes — so nothing is read from them and
+     * the reading names no area at all.
+     */
+    expect(read('Not about money, physical fitness, or certification').names).toEqual([])
+  })
+
+  it('and still reads a clause a coordinator merely happens to precede', () => {
+    /*
+     * The other direction, and the reason the rule is about a coordinator
+     * *introducing an item* rather than a coordinator being present. In *"and I
+     * want fitness"* the coordinator is followed by a clause, and the words in
+     * between are what say so.
+     */
+    for (const phrase of [
+      'Not about money and I want fitness',
+      'Not about money because fitness is the real goal',
+    ]) {
+      expect(
+        read(phrase).names.map((area) => area.domain),
+        phrase,
+      ).toEqual([DOMAIN.health])
+    }
+  })
+
+  it('and names the price of abstaining, which is a reading lost', () => {
+    /*
+     * The bound, declared rather than left to be found. A clause that reaches a
+     * coordinated pair breaks the run and still carries an `or` past the break,
+     * so two areas the owner asserted are withheld instead of named.
+     *
+     * That is a reading **lost**, not a reading invented. Where it cannot follow
+     * the sentence the instrument goes quiet, and it never contradicts the owner
+     * — which is the direction this file errs in everywhere.
+     */
+    expect(read('Not about money, my real goal is fitness or certification').names).toEqual([])
+
+    // And the same sentence with a contrastive, which it can follow.
+    expect(
+      read('Not about money, but fitness or certification').names.map((area) => area.domain),
+    ).toEqual([DOMAIN.career, DOMAIN.health])
+  })
+
+  it('reads a share counted in a temporal unit as a quantity', () => {
+    /*
+     * *Two months of salary* is a sum expressed in months, and the evidence is
+     * the same evidence the fraction rule already reads: what stands after *of*.
+     * A unit between the number and the *of* does not change the question.
+     */
+    for (const phrase of ['Save 2 months of salary by March', 'Save 2 weeks of pay by March']) {
+      expect(read(phrase).unknowns, phrase).toEqual([])
+    }
+  })
+
+  it('and reads a share of a period as the date it is', () => {
+    /*
+     * The reverse, which is what keeps the rule above from swallowing ordinary
+     * dates. The complement of *of* says which reading it is — a unit in *"the
+     * 15th of March"*, and a year in *"the 3rd quarter of 2027"*, which is a
+     * shape rather than a word and has to be read as one.
+     */
+    for (const phrase of [
+      'More money by the 3rd quarter of 2027',
+      'More money by the 15th of March',
+    ]) {
+      const dated = read(phrase)
+      expect(dated.unknowns, `${phrase}: the amount is still unknown`).toContain('how much')
+      expect(dated.unknowns, `${phrase}: the date answered when`).not.toContain('by when')
+    }
+  })
 })
 
 // ---------------------------------------------------------------------------

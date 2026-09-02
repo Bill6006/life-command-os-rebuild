@@ -297,9 +297,63 @@ had no test until this round.
 nothing with no denial in the sentence at all — `certified` was simply missing
 beside `certification` and `qualified`. Recorded as what it is.
 
+## Independent QA round 5 — FAIL, and both classes broken from both sides
+
+Round 5 confirmed the Round 4 repairs closed what they were shown, and then broke
+both instruments **in both directions in the same round** — the first time that
+has happened in this phase, and the thing that made the diagnosis obvious.
+
+- **QA-91-012** — a comma ended a denial, so _"Not about money, or fitness"_
+  denied only the money; and nothing **but** a comma could end one, so _"Not
+  about money because fitness is the real goal"_ denied the fitness too.
+- **QA-91-013** — roles came from a closed list of date forms, so _"by week 3 of
+  2027"_ left a digit for the amount to read, and _"save 2027 dollars"_ read a
+  sum as a year.
+
+**Each instrument was reading a proxy for its evidence** (D-254). A comma was
+standing in for a coordinator, and membership of a form list was standing in for
+a role. Both proxies are deleted:
+
+- coordination is read from **coordinators**, as a run of list material ending at
+  the item the last _and_ or _or_ introduces — so the area rule and the comma
+  test are both gone;
+- a number's role is read from the **unit** beside it, with adjacency deciding
+  whether the unit governs it, punctuation arity separating a written date from a
+  range, and an inferred role never propagating across a connector.
+
+**And where the instrument can see a list but cannot follow it** — _"not about
+money, physical fitness, or certification"_, where the run breaks at a modifier
+and an `or` sits past the break — it now reads nothing from those mentions at
+all. Calling them asserted would name two areas the owner has just denied, which
+is the worse of the two mistakes.
+
+**Nothing was added to a list of forms.** A date nobody wrote down is read
+because of its unit, and a year-shaped number stops being a date the moment
+`dollars` follows it. That is the claim Round 6 is asked to attack.
+
+**Two bounds are now named in the code and asserted by their own tests**: an
+asyndetic list denies only its first item, and a bare number with no unit is a
+quantity. Both err toward concluding less.
+
+**Seventeen reintroductions, seven of them reverse mutations**, eight earlier
+proofs retired onto named successors, and one of this round's own retired with
+its reason written down: after the abstention rule landed, mutating the comma out
+of the list material stopped biting, because denying a mention and withholding it
+produce the same reading.
+
+**And the repair caught three of its own defects before any gate.** An unanchored
+slash test, an unread dashed date, and a share rule that swallowed _the 3rd
+quarter of 2027_. The first two were found by the shipped suite in the run after
+the change; the third by attacking the finished repair the way Round 6 is being
+asked to. All three were repaired structurally rather than special-cased.
+
+**A reintroduction found a coverage gap again**, the fourth round running: the
+guard that lets a unit in front of a number win failed nothing until _week 3 of
+**the plan**_ was added beside _week 3 of 2027_.
+
 ## Decisions made
 
-**D-240 … D-253** in [`DECISION_LOG.md`](DECISION_LOG.md).
+**D-240 … D-254** in [`DECISION_LOG.md`](DECISION_LOG.md).
 
 ## Accommodation row B1 landed, and the list learned something from it
 
