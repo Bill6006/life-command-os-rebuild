@@ -2133,4 +2133,202 @@ preserve every passed contract and explicit deferral, and do not ask me to paste
 the file contents.
 ```
 
+---
+
+## Round 4 repair — the builder's record
+
+_Written by the Claude builder conversation. Round 4 above is QA's and is not
+edited. Round 5 belongs to QA._
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**Repaired checkpoint:** `bba4eb7`
+**Deployed Preview:** `bba4eb7` — they match exactly.
+
+**The class judgement is accepted, and it was right.** A fifth increment of the
+same instrument was not attempted. Both classes are repaired by replacing the
+mechanism, and **both replacements delete machinery rather than adding it**:
+`CLAUSE_OPENERS` and the span-boundary walk are gone, and so is the
+delete-matched-date-shapes step.
+
+### Both reproduced first, with all fourteen controls
+
+**QA-91-010.** All six phrases reproduced: each named nothing. All nine controls
+were captured in the same probe *before* any change — coordinated denied lists,
+`and`/`or` coordination, contrastive turns, the pronoun clause, ordinary negative
+goals, and _"Not about money or fitness"_, which must stay wholly denied.
+
+**QA-91-011.** All six date-only phrases reproduced, and all eight amount
+controls already settled correctly — which is what showed the repair had to be
+about **roles**, not about removing digits near date words.
+
+**And reproduction separated one finding from the instrument.** _"Getting
+certified is the real goal"_ named nothing **with no denial in the sentence at
+all**, and so did the bare _"Get certified"_. That is a gap in the marker table,
+not in scope: `certified` was missing beside the `certification`, `certificate`
+and `qualified` already there. It is recorded separately, because adding a word
+an area is plainly about is what that table is for and is not what four rounds of
+boundary-widening were.
+
+### What changed
+
+One product file, `src/intelligence/interpret.ts`, and it is smaller than it was.
+
+**A denial cancels an area, not a span.** The construction is _"not **about**
+X"_, and aboutness is a claim about a topic; here a topic is an area. So: a
+denial names the area of the first marker after it, cancels markers **of that
+area** within its reach, cancels a marker of a different area only where it is
+coordinated straight on with no comma between, and its reach ends at a
+contrastive or sentence-ending punctuation. Markers are now found **with their
+positions** (`mentions`) so the instrument can ask *which of these did he deny*
+rather than *is this word inside a span*.
+
+**A noun, a gerund, a colon, a question mark and an exclamation now all work for
+the same reason: none of them is Money.** There is no list of subject words left
+to extend.
+
+**Numbers are classified, not deleted.** Every digit run becomes a span with a
+role: a date form makes it a date, **a range connector immediately between two
+spans carries the date role across** — which is what a range is, and covers
+`15th and 17th`, `15th to the 17th` and `15–17` without knowing any of them — and
+everything else is an amount. A sum beside a horizon keeps its own role because
+roles are per span.
+
+**Decision D-253.** Defect-ledger entry `QA-91-010, QA-91-011`.
+
+### Reintroduction proofs — twenty-five live across five rounds, all biting
+
+Seven for this round, **three of them reverse mutations**:
+
+| Reintroduce                                                     | And this fails                                                          |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| a denial cancels every area in reach                              | *cancels the area it denies, whatever the next clause begins with*        |
+| a denial cancels **only** its own area, never a coordinated one   | *still denies a different area that is coordinated straight on to it*     |
+| a contrastive no longer ends a denial                             | *lets a contrastive assert an area it has just denied*                    |
+| range connectors no longer carry a date role across               | *reads a range and an ordinal quarter as dates*                           |
+| the quarter and ordinal forms are not dates                       | *reads a range and an ordinal quarter as dates*                           |
+| month adjacency is not a date form                                | *reads the day and month of a written date as date parts*                 |
+| **every** number near a date treated as a date                    | *still settles the amount for a sum standing beside every one of them*    |
+
+**Nine proofs from earlier rounds were retired, and their coverage moved rather
+than lapsing.** They targeted `deniedSpans`, `endOfDenial`, `withoutDates` and
+`saysADate` — all replaced this round — and the properties they held are now
+proved against the replacements by the seven above. Each retired entry is named
+in the script that used to run it.
+
+**And the reintroductions found a coverage gap again — the third round running.**
+Dropping the contrastive terminator failed **nothing**: once a denial cancels by
+area, a contrast that turns to a *different* area needs no help, because Career
+was never Money. The terminator earns its place only on a **same-area** contrast
+— _"not about the salary, but about the pension"_ — and no test covered that. One
+was added, and the proof then bit.
+
+### Verification on the repaired tree
+
+| Gate                                      | Result                                                                 |
+| ----------------------------------------- | ------------------------------------------------------------------------ |
+| `npm run verify`, clean tree              | PASS                                                                     |
+| Unit / contract / synthetic / adversarial | **1,999 passed** in 89 files (1,994 at `0db6aec`)                       |
+| Browser, 360 / 430 / 1,280, one worker    | **834 of 834**, one whole run, clean port, **20.7 minutes**             |
+| Privacy scan                              | clean, 310 tracked files                                                 |
+| Rendered copy scan                        | clean — 8,493 shipped strings, 8,405 placed in a module                 |
+| Android-style gate                        | clean — **234 checks**, against the deployed Preview                     |
+| Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`bba4eb7`)            |
+| Checkpoint equivalence                    | **no files changed** between `bba4eb7` and the deployed SHA             |
+| CI and deployed Preview                   | **success** — Verify and Deploy preview both green (run `33591064600`)  |
+| Worktree                                  | clean                                                                    |
+
+**The browser matrix ran whole and clean this time**, with zero connection
+errors — the first local whole-matrix of this phase to survive. Three earlier
+attempts died mid-run on three different ports; nothing was changed to achieve
+this and no conclusion is drawn from it.
+
+### Preserved, and checked rather than assumed
+
+Round 4 confirmed QA-91-005 and QA-91-006 closed, and this round touched neither:
+the set-aside confirmation, the preserved aim and lifecycle history, and the
+unstarted, started and part-done consequence states are all still asserted by the
+shipped suite and all passed. So are QA-91-001 and QA-91-004, all eight CASE A
+acceptance tests, byte identity, derived provenance, the privacy digest with both
+controls, the one-question budget, the null case, the second proving domain,
+three-day non-reproposal, B1, the no-score rule, the fixed clock, the
+preview-port override and the single `fetch`.
+
+The **nineteen D-210 instrument-hardening findings are untouched and still
+open**; `docs/ROUTING_91_BRIEF.md` is present; routing 92 has not begun; CASE B
+remains out of scope.
+
+**What is still refused, said plainly.** This is not a parser, not a model and
+not a guess. Both instruments are deterministic, in-process and bounded, and both
+abstain exactly as before: an area the interpreter cannot read names nothing, a
+number in an unwritten date form reads as an amount and the horizon stays
+unknown, and either way `unknowns` says what was not concluded and nothing
+derived is written.
+
+**The claim this round makes, stated so it can be attacked.** The earlier repairs
+each closed the shape they were shown; these two close a **question** — *which
+area did he deny*, and *what is this number for*. A new grammar form should reach
+the same question rather than fall outside a list. That is a claim about the
+instrument, not about eleven phrases, and Round 5 is asked to attack it as one.
+
+---
+
+## Round 5 retest handoff
+
+**Model:** Codex.
+**Reasoning level:** **High** — a middle level. Never Max, which is Claude's.
+**Conversation:** **SAME** — the Codex conversation that ran Rounds 1 to 4.
+
+```text
+Routing Phase 91 retest after the builder's Round 4 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Your Round 1 to Round 4 reports are
+unchanged; the builder's Round 4 repair record and this block are appended below
+them. Keep the Phase field exactly 91.
+
+The repair replaced both instruments rather than widening them, so attack the
+instrument rather than replaying the eleven phrases:
+
+1. Denial scope is now by AREA, not by span. A denial names the area of the
+   first marker after it and cancels that area within its reach; a different
+   area is cancelled only where coordinated with no comma between; the reach
+   ends at a contrastive or sentence punctuation. Attack every joint of that:
+   denials whose first marker is not the intended topic, denials of one area
+   followed by assertions of the same area, multiple denials in one phrase,
+   coordination and punctuation in combination, and phrases where the owner
+   denies and asserts across three areas.
+2. Number roles are now classified per span, with the date role propagating
+   across range connectors. Attack that: date forms not in the list, ranges
+   whose ends are both bare, a range connector between a sum and a date, sums
+   and dates interleaved, and ordinals used as quantities.
+3. Confirm no regression in QA-91-001, QA-91-004, QA-91-005, QA-91-006,
+   QA-91-008 and QA-91-009, and in the eight CASE A acceptance tests.
+4. Say plainly whether the instrument now closes the class or whether it is a
+   fourth boundary in different clothes. That judgement is the most useful thing
+   this round can produce, and it is worth more than another pair of phrases.
+
+Preserve the nineteen D-210 deferrals, do not remove docs/ROUTING_91_BRIEF.md,
+and end with the complete next handoff under D-082 whichever way the retest
+goes. Do not ask the owner to paste file contents.
+```
+
+### Short launcher
+
+**Model:** Codex. **Reasoning level:** High. **Conversation:** SAME — the QA
+conversation that ran Rounds 1 to 4.
+
+```text
+Retest routing Phase 91 after the builder's Round 4 repair.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the Round 5 retest
+handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
+retest says otherwise, and do not ask me to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->
