@@ -2331,4 +2331,293 @@ handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
 retest says otherwise, and do not ask me to paste the file contents.
 ```
 
+---
+
+## Round 5 independent QA — FAIL
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**QA-tested product checkpoint:** `bba4eb7`
+
+**QA-tested deployed/report head:** `cfaf8b0`. The only change from `bba4eb7`
+is this handoff file, so the deployed build is bundle-equivalent to the product
+checkpoint. CI run `33593096397` is green for both **Verify** and **Deploy
+preview**, and its own manifest matches all eight files served by Preview.
+
+**Verdict:** the Round 4 repair closes QA-91-010 and QA-91-011 on their submitted
+phrases, and the established product contracts remain green. It does **not**
+close either class. The replacement denial instrument uses comma absence as a
+proxy for coordination, while the replacement number instrument treats a
+closed collection of date forms as dates and every other numeric span as an
+amount. Those are the same two boundaries in different clothes. Round 5 found
+ordinary inputs on both sides of both boundaries, including opposite failures
+produced by the same rule.
+
+### QA-91-012 — comma absence is not coordination
+
+**BLOCKER.** `deniedMentions` correctly chooses the first mentioned area after
+the denial and cancels later mentions of that same area. For a different area,
+however, it cancels whenever there is **no comma** between the preceding marker
+and the next one. It never establishes that the two markers are coordinated.
+
+That causes both false positives and false negatives:
+
+- _"Not about money, or fitness"_ is one punctuated coordinated denial. The
+  interpreter names Health from `fitness` because the comma prevents the
+  cross-area cancellation.
+- _"Not about money, fitness, or certification"_ is a three-area coordinated
+  list. The interpreter names both Health and Career instead of denying all
+  three.
+- _"Not about money, or fitness; certification is the goal"_ should deny Money
+  and Health, then assert Career. It names both Health and Career.
+- _"Not about money because fitness is the real goal"_ should deny Money and
+  assert Health. It names no area because the lack of a comma is taken as proof
+  that `fitness` is coordinated into the denial.
+- _"Not about money I want fitness"_ produces the same false cancellation on a
+  terse, punctuation-free owner sentence.
+
+The first and fourth were reproduced at 360px through the ordinary Insights
+discovery path from a fresh store that never opened `#/qa`. The first displayed
+_"These words sound like they are about Health & Physical Capacity, from
+‘fitness’"_ and offered **File it in Health** even though Health was coordinated
+inside the denial. The fourth offered no Health reading at all and proposed
+keeping the whole sentence in Career even though its positive clause names
+fitness as the real goal.
+
+Controls held beside the failures:
+
+- _"Not about money and fitness, certification is the goal"_ denies the first
+  two areas and asserts Career;
+- _"Not about money; fitness is the real goal"_ asserts Health after sentence
+  punctuation;
+- _"Not about salary, but pension is the goal"_ preserves a same-area
+  contrastive assertion;
+- multiple explicit denials in one phrase stay separate;
+- ordinary negative goals such as _"No debt, no savings, no salary"_ and
+  _"Stop wasting money and clear the debt"_ remain Money goals.
+
+This attacks the Round 5 joints directly: punctuation plus coordination, a
+same-area assertion, multiple denials, and denial/assertion across three areas.
+The result is structural, not a missed phrase. A comma may occur inside a
+coordinated list, and a new clause may begin without one. The current test is
+therefore not a coordination instrument.
+
+### QA-91-013 — a remembered date form is not a numeric role
+
+**BLOCKER.** `numberRoles` marks spans inside one of `DATE_FORMS` as dates,
+propagates that role across a connector, and defaults every remaining numeric
+span to an amount. The role still comes from a closed surface-form list rather
+than from what the number is doing in its phrase.
+
+Date-only expressions outside that list are counted as amounts, so **how much**
+incorrectly disappears from `unknowns`:
+
+- _"More money by week 3 of 2027"_
+- _"More money by 2027-W15"_
+- _"More money from 15 to 17 next month"_
+- _"More money between 15 and 17 this month"_
+- _"More money by 15 Mar 2027"_
+
+The reverse fails too. An amount whose surface happens to look like a listed
+date is classified as a horizon:
+
+- _"Save $2027"_ recognises an amount only because of `$`, but also treats 2027
+  as a date and incorrectly omits **by when**;
+- _"Save 2027 dollars"_ treats 2027 as a date despite the explicit amount unit,
+  so it says **how much** is unknown and **by when** is known;
+- _"Save 2027 dollars by March"_ still says **how much** is unknown;
+- _"Save a 3rd of my salary by December"_ and _"Save 1/3 of my salary by
+  December"_ treat ordinary quantities as dates;
+- _"Save between 2027 and 3000 by March"_, _"Save 2000–3000 by March"_, and
+  _"Save 1900 to 2200 by March"_ let a plausible-year endpoint seed the date
+  role and carry it across an amount range.
+
+The 360px ordinary Insights path reproduced both directions. _"Save 2027
+dollars by March"_ showed **how much** under _"These words do not say"_. _"More
+money by week 3 of 2027"_ did not show **how much**, because `3` was taken as the
+amount.
+
+Controls held beside the failures: `3000–5000` and `15 to 17` remain amount
+ranges beside March; a sum and written date stay distinct in _"Save 17 by March
+15"_; and the repaired date forms _"between the 15th and 17th"_, _"March 15th
+through 17th"_, and `Q3 2027` remain dates.
+
+The range propagation is not role classification: it carries whichever role a
+remembered endpoint happened to receive. The default-to-amount rule is the
+other half of the same closed boundary. Temporal units and amount units around
+the span are ignored, so an unlisted date becomes money and a date-shaped sum
+becomes time.
+
+### The required class judgement
+
+**This is a fourth boundary in different clothes, not a closed class.** Round 4
+replaced the functions, but not the underlying evidence. Denial scope is still
+decided from punctuation — now the absence of one punctuation mark — rather
+than actual coordination. Number roles are still decided from remembered date
+shapes, with a default role for everything outside them.
+
+The failures are paired counterexamples, not requests to append more cases:
+comma-bearing coordination versus a comma-free clause; a date outside the list
+versus an amount inside it. Adding `week`, `W15`, month abbreviations, currency
+years, fractions, or comma-plus-conjunction exceptions would only move the
+boundary again.
+
+The next repair must represent the evidence for the role it assigns. For denial,
+that means establishing coordination or a clause boundary rather than equating
+either with comma presence. For numbers, that means using bounded temporal and
+amount context around each span and range, without letting one endpoint's
+guessed role flood the other. Where the bounded instrument cannot establish a
+role, it must abstain and leave the corresponding fact in `unknowns`.
+
+### Established contracts remain closed
+
+QA-91-001, QA-91-004, QA-91-005, QA-91-006, QA-91-008 and QA-91-009 remain
+green. The complete interpretation synthetic file passed **95 of 95**, including
+all eight CASE A acceptance tests, the privacy digest and both controls, byte
+identity, derived provenance, one-question budget, null case, second proving
+domain, three-day non-reproposal, denial controls and repaired date controls.
+
+The whole ordinary-owner withdrawal journey and the started-action branch
+passed at 360, 430 and 1,280 — **6 of 6** focused cases — and again inside the
+whole browser matrix. The set-aside confirmation, aim and lifecycle history,
+unstarted/started/part-done consequences, Now behavior and Timeline truthfulness
+therefore remain closed rather than merely assumed.
+
+### Probe accounting and required gates
+
+The temporary Round 5 probe held **34 cases**. Eighteen were product failures in
+QA-91-012 or QA-91-013, and fifteen controls passed. One expectation was
+discarded: _"Save 2.5k by March"_ did not name any of the interpreter's bounded
+areas, so expecting no unknowns tested a domain precondition rather than the
+number role. The temporary file was removed before the repository gates.
+
+| Gate | Round 5 result |
+| ---- | -------------- |
+| `npm run verify` | PASS |
+| Unit / contract / synthetic / adversarial | **1,999 passed** in 89 files |
+| Full browser matrix, 360 / 430 / 1,280, one worker, clean port 44106 | **834 of 834 passed** in one run, 19.4 minutes |
+| Focused consequence-state browser retest | **6 of 6 passed** |
+| Privacy scan | clean — 310 tracked files |
+| Rendered copy scan | clean — 8,493 shipped strings, 8,405 placed in a module |
+| Android-style deployed gate | clean — **234 checks** against `cfaf8b0` |
+| Checkpoint equivalence | only this handoff differs from `bba4eb7`; bundle-equivalent |
+| CI / deploy | success — run `33593096397`, both jobs green, full browser step green |
+| Release integrity | clean — 8 files served byte for byte from that run's own manifest |
+| Worktree before this report | clean |
+
+The nineteen D-210 instrument-hardening findings remain open and untouched;
+their backlog blob remains `58d5af071355d252c4a254fc685fcc9e8e88f417`.
+`docs/ROUTING_91_BRIEF.md` remains present; CASE B remains out of scope; routing
+92 has not begun.
+
+---
+
+## Round 5 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1, or the strongest current Opus-equivalent available.
+
+**Intelligence level:** **Max** — this is a paired false-positive/false-negative
+instrument repair after the replacement structures reproduced the old
+boundaries.
+
+**Conversation:** **CURRENT** — the original Phase 91 Claude builder
+conversation, which owns the implementation decisions and all five repair
+rounds.
+
+```text
+Repair routing Phase 91 after independent QA Round 5. Keep the Phase field
+exactly 91 and keep the phase YELLOW.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Treat the Round 1 through Round 5
+QA reports as settled evidence. The current report is “Round 5 independent QA —
+FAIL” at the end, against product checkpoint bba4eb7 and the bundle-equivalent
+deployed/report head cfaf8b0.
+
+Reproduce both new blockers before changing code:
+
+1. QA-91-012 — the denial instrument uses comma absence as coordination. Run all
+   five exact failing phrases in the report, including the comma-plus-`or`
+   denial, the three-area list, the list followed by an asserted third area, and
+   the comma-free positive clauses. Keep the same-area contrastive, multiple-
+   denial, sentence-punctuation and ordinary-negative-goal controls beside them.
+2. QA-91-013 — the number instrument assigns roles from a closed date-form list
+   and defaults every other span to amount. Run all five unlisted date-only
+   phrases and all eight date-shaped amount/quantity/range phrases in the
+   report. Keep bare amount ranges, a sum beside a written date, and every
+   repaired Round 3/Round 4 date form beside them.
+
+Do not repair this round by appending punctuation exceptions, conjunction
+phrases, date regexes, amount regexes or special cases for the submitted words.
+Round 5's class judgement is part of the acceptance expectation: comma presence
+does not establish or disprove coordination, and membership in DATE_FORMS does
+not establish the role of a numeric span.
+
+Build a bounded deterministic instrument that represents the evidence for its
+decision. Denial scope must distinguish coordination from a following clause in
+both directions, including punctuated coordination and punctuation-free clauses.
+Number roles must use the bounded temporal or amount context of each span and
+range, so a temporal unit can make an unlisted date temporal, an amount unit can
+make a date-shaped number an amount, and a connector cannot propagate an
+unestablished role. When the instrument cannot establish the structure or role,
+abstain, name the corresponding unknown, and write nothing derived.
+
+This remains a defect-led local repair. Do not introduce a broad language model,
+probabilistic inference or silent guessing. Explain the bound. Add class tests in
+both directions and biting reintroduction proofs for the actual structural
+properties and reverse mutations; do not count an exact-phrase fixture as proof
+of the class.
+
+Preserve every prior PASS, especially:
+
+- QA-91-001 and QA-91-004: reconsideration and the complete ordinary-owner
+  contract;
+- QA-91-005 and QA-91-006: the named set-aside consequence, preserved aim and
+  lifecycle history, and unstarted/started/part-done states;
+- QA-91-008 and QA-91-010: coordinated denials, real clause turns, same-area
+  contrastives and ordinary negative goals;
+- QA-91-009 and QA-91-011: written dates, indirect dates, quarters and ranges,
+  while real sums beside each remain amounts;
+- all eight CASE A acceptance tests, the one-question budget, byte identity,
+  derived provenance, privacy digest, null case, second proving domain,
+  three-day non-reproposal, no-score rule, fixed clock, preview-port override
+  and the single fetch.
+
+Do not remove docs/ROUTING_91_BRIEF.md. Preserve all nineteen D-210
+instrument-hardening deferrals exactly as open. Do not begin routing 92 and do
+not pull CASE B into Phase 91.
+
+Update the governing decision and defect records for QA-91-012 and QA-91-013.
+Run npm run verify, one complete 360/430/1280 browser matrix at one worker on a
+clean port, the Android-style deployed gate, privacy and copy scans, checkpoint
+equivalence, CI, and release integrity using that CI run's own manifest. Commit,
+push, deploy, and prove the repaired checkpoint is what Preview serves.
+
+Append the builder's Round 5 repair record and a complete Round 6 retest handoff
+to docs/qa/PHASE_91_QA_HANDOFF.md. Do not edit any QA report. Route Round 6 to
+the SAME Codex QA conversation that ran Rounds 1 through 5, at High reasoning,
+and require it to attack the evidence used by the new instruments rather than
+replaying the submitted phrases. End this file with the required completion
+marker.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or strongest current Opus-equivalent. **Intelligence
+level:** Max. **Conversation:** CURRENT — the original Phase 91 builder.
+
+```text
+Repair routing Phase 91 after independent QA Round 5.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the complete Round 5
+builder repair handoff at the end exactly as written. Keep Phase 91 YELLOW,
+preserve every passed contract and explicit deferral, and do not ask me to paste
+the file contents.
+```
+
 <!-- LCO_COMPLETE -->
