@@ -2933,4 +2933,304 @@ handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
 retest says otherwise, and do not ask me to paste the file contents.
 ```
 
+---
+
+## Round 6 independent QA — FAIL
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**QA-tested product checkpoint:** `3991fe6`
+
+**QA-tested deployed/report head:** `6e2361d`. The only change from `3991fe6`
+is this handoff file, so the deployed build is bundle-equivalent to the product
+checkpoint. CI run `33603758138` is green, its own 834-case browser matrix is
+green, and its manifest matches all eight files served by Preview.
+
+**Verdict:** the Round 5 repair closes QA-91-012 and QA-91-013 on their submitted
+phrases, and every established Phase 91 contract remains green. It does **not**
+close either class. The denial instrument reads only the material between area
+markers, so modifiers hide coordination and a coordinator immediately before a
+marker is taken as proof that the marker is an item rather than the subject of a
+new clause. The number instrument has the same problem in another grammar: a
+closed adjacency window, punctuation arity and connector propagation are still
+proxies for the role a number plays. Round 6 found ordinary failures on both
+sides, including the exact place where the declared abstention is wrong.
+
+### QA-91-014 — a coordinator between markers does not establish what it coordinates
+
+**BLOCKER.** `listLink` asks only whether the text **between** two area markers is
+made from `and`, `or`, `nor`, seven determiners, commas and whitespace. It does
+not read an item's own modifier, or what follows the marker. That loses both
+directions of the distinction the repair claims to make:
+
+- _"Not about money and physical fitness"_ is a two-item coordinated denial.
+  `physical` breaks the run before `fitness`, there is no later marker to trigger
+  abstention, and the interpreter incorrectly names Health.
+- _"Not about money or professional certification"_ does the same thing to
+  Career: the modifier hides the coordinated item and Career is asserted.
+- _"Not about money and fitness is the real goal"_ uses `and` between two
+  clauses. Because `fitness` itself begins the second clause, there are no
+  intervening clause words for `listLink` to see; Health is incorrectly denied.
+- _"Not about money, my real goal is fitness or certification"_ plainly asserts
+  Health and Career after denying Money. The declared abstention withholds both
+  correct readings. This is the required case where withholding is wrong and
+  asserting was right.
+- _"Not about money, fitness, certification"_ is an ordinary asyndetic list in
+  terse owner prose. Treating absence of a spoken coordinator as absence of
+  coordination denies only Money and incorrectly asserts Health and Career. The
+  declared bound is wrong; punctuation and the lack of a following predicate are
+  evidence here, even though punctuation alone cannot settle every phrase.
+
+The first four were reproduced through the ordinary 360px Insights discovery
+path from an empty store that never opened `#/qa`. The first offered **File it in
+Health** for a denied item. The third and fourth offered no Health reading even
+though the owner explicitly called fitness the real goal. The same path also
+showed the paired control _"Not about money, physical fitness, or
+certification"_ naming no area, exactly as the instrument intends.
+
+Controls held beside the failures: the three-item modifier-bearing denial above;
+_"Not about money and I want fitness"_ correctly asserts Health because the
+pronoun makes the clause visible between markers; and _"Not about money and
+fitness, certification is the goal"_ denies Money and Health and asserts Career.
+The shipped multiple-denial, same-area contrastive, sentence-boundary and
+ordinary-negative-goal controls also remain green.
+
+The retired comma reintroduction claim is correct and is **not counted**. Removing
+the comma from the modifier-bearing three-item phrase still breaks the run on
+`physical`, and the later `or` still puts the remaining mentions in
+`unstructured`; the externally visible reading is unchanged. That proves why the
+old mutation stopped biting. It does not rescue the instrument: the two-item
+modifier case has no later marker, and the clause-subject case has no intervening
+words, so the same rule fails on either side of that non-biting mutation.
+
+### QA-91-015 — adjacency, arity and propagation still do not establish a numeric role
+
+**BLOCKER.** The replacement asks amount and temporal units only inside fixed
+adjacency patterns, labels two-part dot and hyphen chains as amount ranges, and
+lets one established endpoint propagate across every token in `RANGE_JOIN`.
+Those properties can be useful evidence, but none is the role itself:
+
+- _"Save 3000 until 15 March"_ contains an explicit amount followed by a
+  deadline. `15` is established as a date by `March`; `until` makes the two spans
+  a `JOINED` pair, so the date role propagates backward into `3000`. The ordinary
+  UI consequently says **how much** was not stated.
+- _"More money by week number 3 of 2027"_ is date-only. The word `number` puts
+  the temporal unit just outside the adjacency pattern, so `3` defaults to an
+  amount and **how much** incorrectly disappears.
+- _"Save 2027 US dollars"_ states an amount and no deadline. `US` separates the
+  amount unit from the digits, so the year-shaped number becomes a date and the
+  UI says **how much** is unknown.
+- _"Save 2 months' salary by March"_ expresses a quantity in months. The
+  partitive rule only reaches `of`, so the possessive form leaves `2` temporal
+  and says the amount is unknown.
+- _"Save 2027€"_ answers how much, not when. `saysHowMuch` notices a currency
+  symbol anywhere, but `numberSpans` recognises it only before the number; the
+  same digits therefore answer both questions and **by when** incorrectly
+  disappears.
+- `31.12` and `03-15` are ordinary two-part written dates. Arity alone labels
+  both as two-ended amount ranges; the 360px UI for _"More money by 31.12"_
+  omitted **how much** and asked **by when**.
+- _"Save my 2nd salary payment"_ uses an ordinal for which payment, not for a
+  date. The ordinal suffix establishes a date anyway and incorrectly answers
+  **by when**.
+
+The declared bare-number bound is also too broad. _"More money by 17"_ gives the
+untyped number a deadline position but not enough evidence to decide whether it
+means an amount, a day or an age. The bounded answer is to leave both questions
+open. The instrument instead defaults `17` to amount, removes **how much**, and
+only leaves **by when** open. _"Save 3000"_ remains a valid positive control in
+its amount-governing verb context; it does not prove that every untyped number in
+every grammatical position is a quantity.
+
+Controls held beside the failures: _"Save 2.5 by March"_, _"Save 3000 until
+March 15"_, _"Save $2027"_, _"More money by week 3 of 2027"_ and _"Save 2
+months of salary by March"_ all returned the expected roles. The shipped shares,
+fractions, reverse temporal complements, written three-part dates, amount ranges
+and interleaved amount/date controls remain green. That positive side matters:
+the probe could distinguish a failure from a success and did so consistently.
+
+### The required class judgement
+
+**This is a fifth boundary in different clothes, not a closed class.** The repair
+now names coordination and grammatical role, but still infers each from a narrow
+surface proxy. The denial rule sees only the words between markers, so it cannot
+tell an item with a modifier from a marker that begins a clause. The number rule
+sees local units, punctuation count and a connector, so a harmless modifier
+breaks governance, an ordinal becomes time in every use, and `until` turns an
+amount plus deadline into one date range.
+
+The paired failures are not requests to add `physical`, `professional`, `number`,
+`US`, apostrophe-s, euro suffixes or two-part dates to more lists. Nor should the
+next repair swap one unconditional direction for the other: the controls prove
+that modifiers, coordinators, punctuation and connectors each appear in valid
+readings on both sides. The repair has to establish what is coordinated and what
+each numeric span is doing in the phrase, or make a **local** abstention that
+does not suppress a separate clause it can positively read.
+
+### Established contracts remain closed
+
+QA-91-001, QA-91-004, QA-91-005, QA-91-006, QA-91-008, QA-91-009, QA-91-010 and
+QA-91-011 remain green. The complete interpretation synthetic file passed **110
+of 110**, including all eight CASE A acceptance tests, every Round 5 submitted
+repair phrase, byte identity, derived provenance, the privacy digest with both
+controls, one-question budget, null case, second proving domain, three-day
+non-reproposal, no-score rule, fixed clock, preview-port override and the single
+`fetch`.
+
+All **48 of 48** Phase 91 ordinary-owner cases passed across 360, 430 and 1,280.
+That includes the six focused set-aside consequence paths: preserved aim and
+lifecycle history, unstarted/started/part-done consequences, Now behavior and
+Timeline truthfulness. The failures above are new semantic boundaries; they did
+not regress the already closed owner journeys.
+
+### Probe accounting and required gates
+
+The temporary Round 6 probes held **22 cases**. Fourteen were product failures in
+QA-91-014 or QA-91-015 and eight paired controls passed. Both temporary files
+were removed before the repository gates.
+
+| Gate | Round 6 result |
+| ---- | -------------- |
+| `npm run verify` | PASS |
+| Unit / contract / synthetic / adversarial | **2,014 passed** in 89 files |
+| Full browser matrix, 360 / 430 / 1,280, one worker, clean port 44110 | **834 of 834 passed** in one run, 19.5 minutes |
+| Phase 91 ordinary-owner browser retest | **48 of 48 passed**; all six consequence-state paths included |
+| Privacy scan | clean — 310 tracked files |
+| Rendered copy scan | clean — 8,550 shipped strings, 8,462 placed in a module |
+| Adaptation-claim scan | clean |
+| Android-style deployed gate | clean — **234 checks** against `6e2361d` |
+| Checkpoint equivalence | only this handoff differs from `3991fe6`; bundle-equivalent |
+| CI / deploy | success — run `33603758138`, full 834-case browser step green |
+| Release integrity | clean — 8 files served byte for byte from that run's own manifest |
+| Worktree before this report | clean |
+
+The nineteen D-210 instrument-hardening findings remain open and untouched;
+their backlog blob remains `58d5af071355d252c4a254fc685fcc9e8e88f417`.
+`docs/ROUTING_91_BRIEF.md` remains present; CASE B remains out of scope; routing
+92 has not begun.
+
+---
+
+## Round 6 FAIL — complete builder repair handoff
+
+**Model:** Claude Opus 4.1, or the strongest current Opus-equivalent available.
+
+**Intelligence level:** **Max** — this is the sixth repair of two coupled
+semantic instruments, with false positives, false negatives and a declared
+abstention that now suppresses positive evidence.
+
+**Conversation:** **CURRENT** — the original Phase 91 Claude builder
+conversation, which owns the implementation decisions and all six repair rounds.
+
+```text
+Repair routing Phase 91 after independent QA Round 6. Keep the Phase field
+exactly 91 and keep the phase YELLOW.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Treat the Round 1 through Round 6
+QA reports as settled evidence. The current report is “Round 6 independent QA —
+FAIL” at the end, against product checkpoint 3991fe6 and the bundle-equivalent
+deployed/report head 6e2361d.
+
+Reproduce both new blockers and all paired controls before changing code:
+
+1. QA-91-014 — the denial instrument sees only the text between area markers,
+   so item modifiers hide coordination and a marker that begins a clause looks
+   exactly like a coordinated item. Reproduce the two modifier-bearing two-item
+   denials, the coordinator followed immediately by the asserted Health clause,
+   the explicit Health-or-Career assertion the current abstention withholds, and
+   the asyndetic denial whose declared bound is wrong. Keep the three passing
+   controls from the report beside them, plus the shipped multiple-denial,
+   same-area contrastive, sentence-boundary and ordinary-negative-goal controls.
+2. QA-91-015 — adjacency, punctuation arity and connector propagation still act
+   as proxies for numeric role. Reproduce the amount followed by `until 15
+   March`, the distant temporal and amount units, the possessive month quantity,
+   suffix currency, both two-part written dates, the ordinal quantity/use and the
+   bare number in deadline position. Keep every paired control in the report and
+   the shipped shares, fractions, reverse complements, dates, ranges and
+   interleaved amount/date controls.
+
+Do not repair this round by appending modifiers, clause words, currency forms,
+date formats, punctuation exceptions or submitted phrases to closed lists. Do
+not make an unconditional coordinator, comma, ordinal, separator or connector
+rule in the opposite direction. Round 6's class judgement is part of the
+acceptance expectation: the current instruments still read a surface proxy for
+the evidence they name.
+
+Build bounded deterministic instruments that represent the grammatical
+relationship they assert. Denial scope must distinguish an item with its own
+modifier from a marker that is the subject of a following clause, including when
+there are no words between the coordinator and marker. An asyndetic list must
+not become positive assertions merely because its conjunction is omitted. An
+abstention may cover only the locally unreadable relationship; it may not erase
+a separate clause whose assertion is positively established.
+
+Numeric roles must keep an amount and a deadline separate when a connector such
+as `until` relates them without making them range endpoints. Governance must not
+vanish solely because an ordinary modifier or possessive stands beside the unit,
+currency direction must be symmetric, and punctuation or an ordinal suffix must
+not establish time in every grammatical use. A genuinely untyped ambiguous
+number may leave both corresponding facts unknown; do not silently default it to
+amount merely because it is not year-shaped.
+
+This remains a defect-led local repair. Do not introduce a broad language model,
+probabilistic inference or silent guessing. Explain the bound and why it does
+not reproduce the six prior boundaries. Add class tests in both directions and
+biting reintroduction proofs for the structural properties and reverse
+mutations; do not count an exact-phrase fixture as proof of the class. Recheck
+the retired comma mutation without counting it unless its externally visible
+reading can actually differ.
+
+Preserve every prior PASS, especially:
+
+- QA-91-001 and QA-91-004: reconsideration and the complete ordinary-owner
+  contract;
+- QA-91-005 and QA-91-006: the named set-aside consequence, preserved aim and
+  lifecycle history, and unstarted/started/part-done states;
+- QA-91-008, QA-91-010, QA-91-012 and QA-91-014's passing controls: coordinated
+  denials, clauses, same-area contrastives and ordinary negative goals;
+- QA-91-009, QA-91-011, QA-91-013 and QA-91-015's passing controls: written and
+  indirect dates, quarters, ranges, shares and genuine sums beside dates;
+- all eight CASE A acceptance tests, the one-question budget, byte identity,
+  derived provenance, privacy digest, null case, second proving domain,
+  three-day non-reproposal, no-score rule, fixed clock, preview-port override
+  and the single fetch.
+
+Do not remove docs/ROUTING_91_BRIEF.md. Preserve all nineteen D-210
+instrument-hardening deferrals exactly as open. Do not begin routing 92 and do
+not pull CASE B into Phase 91.
+
+Update the governing decision and defect records for QA-91-014 and QA-91-015.
+Run npm run verify, one complete 360/430/1280 browser matrix at one worker on a
+clean port, the Android-style deployed gate, privacy and copy scans, checkpoint
+equivalence, CI, and release integrity using that CI run's own manifest. Commit,
+push, deploy, and prove the repaired checkpoint is what Preview serves.
+
+Append the builder's Round 6 repair record and a complete Round 7 retest handoff
+to docs/qa/PHASE_91_QA_HANDOFF.md. Do not edit any QA report. Route Round 7 to
+the SAME Codex QA conversation that ran Rounds 1 through 6, at High reasoning,
+and require it to attack the grammatical evidence used by the new instruments
+rather than replaying the submitted phrases. End this file with the required
+completion marker.
+```
+
+### Short launcher
+
+**Model:** Claude Opus 4.1 or strongest current Opus-equivalent. **Intelligence
+level:** Max. **Conversation:** CURRENT — the original Phase 91 builder.
+
+```text
+Repair routing Phase 91 after independent QA Round 6.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the complete Round 6
+builder repair handoff at the end exactly as written. Keep Phase 91 YELLOW,
+preserve every passed contract and explicit deferral, and do not ask me to paste
+the file contents.
+```
+
 <!-- LCO_COMPLETE -->
