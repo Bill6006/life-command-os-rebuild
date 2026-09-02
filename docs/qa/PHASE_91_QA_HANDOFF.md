@@ -4089,4 +4089,208 @@ handoff at the end exactly as written. Keep Phase 91 YELLOW unless your own
 retest says otherwise, and do not ask me to paste the file contents.
 ```
 
+---
+
+## Round 8 independent QA — FAIL
+
+**Phase:** 91 — semantic capture and clarification. **Still YELLOW.**
+
+**QA-tested product checkpoint:** `a0c7d55`
+
+**QA-tested deployed/report head:** `36d65a5`. Only this handoff differs, so the
+deployed build is bundle-equivalent to the product checkpoint. CI run
+`33631698378` is green and its own manifest matches all eight files served by
+Preview.
+
+**Verdict:** every established Phase 91 contract and every submitted Round 7
+phrase remains green, but the replacement is a **seventh boundary**. Requiring a
+nearby complement does not establish the role of a word; it moves the proxy from
+token membership to token membership plus one neighbouring shape. The declared
+`fitness counts` bound is the same wrong bound already rejected in Round 7, and
+the numeric point/rate split still assigns one number the role of a nearby time
+expression. Eleven ordinary failures held against eight controls.
+
+### QA-91-018 — the required complement can still belong to another role
+
+**BLOCKER.** The denial instrument now asks whether a form has the complement its
+claimed role requires, but it does not establish what that complement is:
+
+- _"Not about money and fitness counts"_ and the bare-object imperatives _"and
+  prioritize fitness"_ / _"and choose fitness"_ assert Health. All three are
+  swallowed by the denial. The declared `counts` bound is wrong for exactly the
+  reason the Round 6 lexical-verb bound was wrong: it discards positive evidence
+  the owner supplied.
+- _"Not about money and fitness classes weekly"_ is a coordinated noun phrase.
+  The `-s` shape plus a following adverb is taken as a predicate and Health is
+  incorrectly asserted.
+- _"Not about money or may professional certification"_ is a coordinated denial
+  with a lowercase month modifier. `professional` is accepted as the bare verb a
+  modal requires, so Career is incorrectly asserted. The modal guard therefore
+  still depends on a lexical guess about its neighbour.
+- _"Not about money or it support certification"_ uses lowercase `it` as the
+  name of a field. Any following non-comma word satisfies the predicate check,
+  so Career is incorrectly asserted.
+- _"Not about money I earn"_ is a determiner-free contact relative. Requiring a
+  determiner to attach it turns Money into a positive assertion.
+
+The ordinary 360px Insights path accepted _"Not about money and fitness
+counts"_ without producing the Health interpretation the positive clause
+requires. The submitted `matters`, prepositional-imperative, determined contact
+relative and overt-relative controls all remained correct; a colon-introduced
+positive clause also remained correct.
+
+### QA-91-019 — a nearby pointed unit is not the role of the number
+
+**BLOCKER.** `unitAfter` labels the numeric span itself `point` when a deictic
+points a later temporal unit. That collapses an amount and its time expression:
+
+- _"Earn 50000 next year"_ and _"Save 3000 this March"_ each state an amount and
+  a time. Both incorrectly leave **how much** open because `50000` / `3000` is
+  assigned the date role.
+- _"Save 2 months salary"_ and _"Save 3 years rent"_ are temporal measures of an
+  amount, not deadlines. The measure path establishes **how much**, but the
+  independent horizon occurrence still answers **by when**, so neither unknown
+  is shown.
+
+The paired controls with an explicit `by` deadline all passed. These failures
+are not requests for `next year`, `this March`, `months salary` or `years rent`
+exceptions. The role belongs to the construction, and one phrase can contain a
+quantity plus a separate temporal expression.
+
+### The required architectural judgement
+
+**This is a seventh boundary, and another bounded surface instrument is no
+longer the right repair shape.** Six successive implementations have each been
+broken by ordinary English on both sides of their declared distinction. The
+new implementation grows from 926 to 1,034 lines and still cannot distinguish a
+noun from a verb, a modifier from a modal complement, a contact relative from a
+new clause, or a measured duration from a deadline without adding another local
+shape.
+
+D-025 does not authorize a network model and explicitly reserves that change to
+the owner. It does, however, describe a local advisor for text the rules cannot
+parse. The safe in-scope alternative is to stop auto-concluding open-English
+scope and numeric roles at the uncertain boundary: keep only demonstrably closed
+high-confidence readings, and use the existing confirmation seam to ask the
+owner which candidate area or fact the words mean before writing derived
+evidence. If the product instead wants broad automatic free-text interpretation,
+that is the owner decision D-025 names and Phase 91 must stop for it; an eighth
+hand-built parser is not a neutral continuation.
+
+### Reintroduction claims and preserved contracts
+
+The lowercase modal claim is not closed: _"may professional certification"_
+breaks it without capitalization. Removing dead `be` / `been` / `being` guard
+code is accurately reported and is not a defect. The ordinal/preposition branch
+remains explicitly unproven; Round 8 found no independent proof and does not
+count it.
+
+QA-91-001, QA-91-004, QA-91-005, QA-91-006 and QA-91-008 through QA-91-017
+remain green on their established cases. The interpretation suite passed **136
+of 136**, and all **48 of 48** Phase 91 ordinary-owner cases passed across 360,
+430 and 1,280, including all eight CASE A acceptance tests and all six set-aside
+consequence paths.
+
+The temporary Round 8 probe held **19 cases**: eleven product failures and eight
+paired controls. It was removed before repository gates.
+
+| Gate | Round 8 result |
+| ---- | -------------- |
+| `npm run verify` | PASS |
+| Unit / contract / synthetic / adversarial | **2,040 passed** in 89 files |
+| Full browser matrix, 360 / 430 / 1,280, one worker, clean port 44116 | **834 of 834 passed** in one run, 19.9 minutes |
+| Phase 91 ordinary-owner browser retest | **48 of 48 passed** |
+| Privacy scan | clean — 310 tracked files |
+| Rendered copy scan | clean — 8,646 shipped strings, 8,558 placed in a module |
+| Adaptation-claim scan | clean |
+| Android-style deployed gate | clean — **234 checks** against `36d65a5` |
+| Checkpoint equivalence | only this handoff differs from `a0c7d55`; bundle-equivalent |
+| CI / deploy before this report | success — run `33631698378` |
+| Release integrity | clean — 8 files served byte for byte from that run's own manifest |
+
+The nineteen D-210 instrument-hardening findings remain open and untouched;
+their backlog blob remains `58d5af071355d252c4a254fc685fcc9e8e88f417`.
+`docs/ROUTING_91_BRIEF.md` remains present; CASE B remains out of scope; routing
+92 has not begun.
+
+---
+
+## Round 8 FAIL — complete builder architecture handoff
+
+**Model:** strongest current Claude Opus-equivalent. **Intelligence level:**
+**Max**. **Conversation:** **CURRENT** — the original Phase 91 builder.
+
+```text
+Resolve routing Phase 91 after independent QA Round 8. Keep the Phase field
+exactly 91 and keep the phase YELLOW.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full. Treat all eight QA reports as
+settled evidence. The current report is “Round 8 independent QA — FAIL” against
+product checkpoint a0c7d55 and bundle-equivalent deployed/report head 36d65a5.
+
+Reproduce QA-91-018 and QA-91-019 with all eight controls before changing code:
+the uninflected predicate, both bare-object imperatives, the plural noun phrase,
+lowercase modal lookalike, lowercase field-name lookalike, determiner-free
+contact relative, both amount-plus-deictic-time phrases, and both temporal
+measures without deadlines.
+
+Do not make an eighth surface parser. Do not append verbs, nouns, modifiers,
+determiners, deictics, measure objects or submitted phrases to lists, and do not
+replace the failed neighbour check with a wider window. Accept the Round 8
+judgement that repeated ordinary-English failures have exhausted this repair
+shape.
+
+Perform the architecture adjudication the builder record invited. Inside the
+authority that already exists, prefer a confirmation-first deterministic design:
+retain only readings whose role is demonstrably closed, and route unresolved
+marker scope or numeric role through the existing ordinary-owner confirmation
+seam so the owner selects the candidate area/fact before derived evidence is
+written. Investigate and use the local advisor D-025 says already exists where
+appropriate, without a network call, secret, server, probabilistic inference or
+silent guess. Preserve CASE A's one-question budget and do not turn the surface
+into a questionnaire.
+
+If broad automatic interpretation cannot be delivered without live inference,
+stop and write the concrete owner decision D-025 requires: smallest secure
+service, digest-only request, structured validated response, privacy boundary,
+cost and failure fallback. Do not create that service or choose for the owner.
+
+Record the architectural decision and QA-91-018 / QA-91-019. Preserve every
+prior PASS, all eight CASE A tests, all six consequence paths, byte identity,
+provenance, privacy, one-question budget, null case, second domain,
+non-reproposal, no-score, clock, port override and single fetch. Preserve all
+nineteen D-210 deferrals, docs/ROUTING_91_BRIEF.md and CASE B's scope; do not
+begin routing 92.
+
+Add class tests and reintroduction proofs for the architecture, not fixtures for
+these eleven phrases. Run npm run verify, one full 360/430/1280 browser matrix,
+privacy/copy/adaptation scans, Android, checkpoint equivalence, CI and release
+integrity. Commit, push, deploy and prove Preview.
+
+Append the builder's Round 8 architecture record and a complete Round 9 retest
+handoff to docs/qa/PHASE_91_QA_HANDOFF.md. Do not edit any QA report. Route Round
+9 to the SAME Codex QA conversation at High reasoning. End this file with the
+required completion marker.
+```
+
+### Short launcher
+
+**Model:** strongest current Claude Opus-equivalent. **Intelligence level:** Max.
+**Conversation:** CURRENT — the original Phase 91 builder.
+
+```text
+Resolve routing Phase 91 after independent QA Round 8.
+
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Read docs/qa/PHASE_91_QA_HANDOFF.md in full and execute the complete Round 8
+builder architecture handoff at the end exactly as written. Keep Phase 91
+YELLOW, preserve every passed contract and explicit deferral, and do not ask me
+to paste the file contents.
+```
+
 <!-- LCO_COMPLETE -->
