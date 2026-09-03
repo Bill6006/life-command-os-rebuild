@@ -301,6 +301,7 @@ describe('QA-82-007 — a private-off document says nothing about the private ar
       freshness: { unit: 'durable' },
       privacy: 'private',
       ask: { materialToDecision: false, askWhenStale: false },
+      purpose: 'a concept invented by a fixture',
     }
     const text = composeText(
       snapshot,
@@ -335,6 +336,7 @@ describe('QA-82-007 — a private-off document says nothing about the private ar
           freshness: { unit: 'durable' },
           privacy: 'private',
           ask: { materialToDecision: false, askWhenStale: false },
+          purpose: 'a concept invented by a fixture',
         },
       ]),
     )
@@ -584,6 +586,7 @@ describe('QA-82-008 — the document says why it does not know', () => {
         privacy: 'normal',
         standing: true,
         ask: { materialToDecision: false, askWhenStale: true },
+        purpose: 'a concept invented by a fixture',
       },
     ])
 

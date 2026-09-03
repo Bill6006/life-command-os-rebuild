@@ -334,7 +334,7 @@ function overviewSection(request: ExportRequest, header: ExportHeader): readonly
   return lines
 }
 
-function nowSection(request: ExportRequest): readonly string[] {
+function nowSection(request: ExportRequest, header: ExportHeader): readonly string[] {
   const { decision, situation } = request
   const lines: string[] = []
 
@@ -365,9 +365,21 @@ function nowSection(request: ExportRequest): readonly string[] {
     bullet(`Part of day: ${situation.block}${situation.isWeekend ? ', weekend' : ''}`),
   )
 
-  if (situation.considered.length > 0) {
+  /*
+   * Under the document's own scope, like every other section — AUD-0040.
+   *
+   * The fact list was nine hand-written reads and none of them was private or
+   * outside a named area, so it never needed the rule the rest of this file
+   * uses. A registry-driven situation reads everything, so it does: a document
+   * the owner scoped to two areas must not describe a third in the section that
+   * says what the app read.
+   */
+  const read = situation.considered.filter((fact) =>
+    mayDescribeConcept(situation.concepts.definitionFor(fact.concept), header),
+  )
+  if (read.length > 0) {
     lines.push('', 'What it read to decide that:')
-    for (const fact of situation.considered) {
+    for (const fact of read) {
       lines.push(
         bullet(
           fromSources(

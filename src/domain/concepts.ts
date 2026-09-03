@@ -77,6 +77,27 @@ export interface ConceptDefinition {
   readonly privacy: PrivacyClass
   readonly ask: AskPolicy
   /**
+   * What a reading of this is used *for*, in the words the owner reads —
+   * AUD-0040.
+   *
+   * The fact ledger prints "… — for whether she is here today" under each row,
+   * and until this field existed the sentence lived in `assembleSituation`
+   * beside a hand-written read. That is the asymmetry AUD-0040 is about: adding
+   * a concept to this registry was cheap and giving it a *read* was a code
+   * change, so eleven domains had pages and seven had brains. Moving the
+   * purpose here is what lets the situation walk the registry instead of a
+   * list, and it is why a new concept is now visible to the brain the moment it
+   * is registered rather than when somebody remembers to add a line.
+   *
+   * **`{when}` is substituted with the stretch of day being decided.** A
+   * purpose that names an hour has to name the right one — AUD-0002's rule
+   * about owner-facing strings, arriving in the one place that was exempt from
+   * it because it was not a string anybody thought of as owner-facing.
+   * `tests/unit/registries.test.ts` fails the build on an unsubstituted
+   * placeholder, and on a purpose that reads as a label rather than as a use.
+   */
+  readonly purpose: string
+  /**
    * Whether losing this reading means the area is less understood (section 8).
    *
    * The coverage engine tracks "meaningful sub-areas", and most of what the
@@ -255,6 +276,7 @@ export const CONCEPT = {
 export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   {
     id: CONCEPT.sleepHours,
+    purpose: 'how much sleep last night',
     label: 'Hours slept last night',
     domain: DOMAIN.sleep,
     /*
@@ -294,6 +316,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.sleepQuality,
+    purpose: 'how the night actually went',
     label: 'Sleep quality last night',
     domain: DOMAIN.sleep,
     // The same night, and therefore the same window as the hours it describes.
@@ -308,6 +331,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.energy,
+    purpose: 'how much is left today',
     label: 'Current energy',
     domain: DOMAIN.health,
     freshness: elapsedHours(6),
@@ -321,6 +345,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.soreness,
+    purpose: 'whether the body is asking for a break',
     label: 'Soreness or pain',
     domain: DOMAIN.health,
     freshness: elapsedHours(12),
@@ -336,6 +361,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.childPresent,
+    purpose: 'whether she is in your care {when}',
     /*
      * What the record stores, said in the words it stores it in — QA-82-001.
      *
@@ -364,6 +390,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.childHere,
+    purpose: 'whether she is in the room {when}',
     /*
      * The other half of the same question, and the reason it is a second row
      * rather than a better sentence on the first — QA-82-001.
@@ -389,6 +416,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.custodyArrangement,
+    purpose: 'whose days are whose',
     label: 'Custody arrangement',
     domain: DOMAIN.fatherhood,
     freshness: DURABLE,
@@ -400,6 +428,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.learningTopic,
+    purpose: 'what is being studied',
     label: 'Current learning topic',
     domain: DOMAIN.career,
     freshness: localDays(14),
@@ -410,6 +439,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.usableTimeTonight,
+    purpose: 'how much time there is',
     /*
      * The label, and only the label — AUD-0002.
      *
@@ -435,6 +465,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.cashBuffer,
+    purpose: 'how much room there is if something goes wrong',
     label: 'Cash buffer',
     domain: DOMAIN.money,
     freshness: localDays(30),
@@ -449,6 +480,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.socialEnergy,
+    purpose: 'whether company sounds good',
     label: 'Social energy',
     domain: DOMAIN.social,
     freshness: elapsedHours(8),
@@ -459,6 +491,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.homeFriction,
+    purpose: 'what is getting in the way at home',
     label: 'Home friction',
     domain: DOMAIN.home,
     /*
@@ -490,6 +523,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.privatePattern,
+    purpose: 'what has been going on here lately',
     label: 'Recent private pattern',
     domain: DOMAIN.privateHealth,
     freshness: localDays(7),
@@ -504,6 +538,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.weeklyFocus,
+    purpose: 'what this week is pointed at',
     label: 'Weekly direction',
     domain: DOMAIN.direction,
     freshness: localDays(7),
@@ -515,6 +550,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.emotionalState,
+    purpose: 'how you have been feeling',
     label: 'Current emotional state',
     domain: DOMAIN.emotional,
     freshness: elapsedHours(8),
@@ -542,6 +578,7 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
   },
   {
     id: CONCEPT.faithPractice,
+    purpose: 'how this part of life has been going',
     label: 'Recent faith practice',
     domain: DOMAIN.faith,
     freshness: localDays(7),
@@ -585,6 +622,10 @@ export function fallbackConcept(concept: ConceptId): ConceptDefinition {
     freshness: elapsedHours(24),
     privacy: 'sensitive',
     ask: { materialToDecision: false, askWhenStale: false },
+    // Honest about the whole of it: nobody registered this, so nobody has said
+    // what it is for either. The fact ledger prints the sentence, so it says
+    // that rather than inventing a use for a concept the app does not know.
+    purpose: 'something recorded that this version does not have a use for',
   }
 }
 

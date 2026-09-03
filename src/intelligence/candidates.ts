@@ -781,7 +781,18 @@ const moneyCandidates: Generator = (situation) => {
   if (goal === undefined) return []
 
   const ref: EntityRef = { id: goal.id, kind: goal.kind }
-  const cash = situation.view.facts.knowledgeFor(CONCEPT.cashBuffer)
+  /*
+   * Through the situation rather than around it — AUD-0040.
+   *
+   * This read `view.facts` directly, which is the shortcut the audit names: the
+   * money generator could decide on a fact the trace did not list, so the QA
+   * laboratory reported nine facts considered against fifteen believed and the
+   * one that may have decided it was among the six missing. Reaching around the
+   * situation was invisible to the architecture guard because it is not a
+   * directory violation — it is a shortcut inside one. There is now a guard for
+   * exactly this shape.
+   */
+  const cash = situation.readings.get(CONCEPT.cashBuffer)
   const known = isUsable(cash)
   return [
     candidate(

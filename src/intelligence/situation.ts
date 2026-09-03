@@ -1,4 +1,9 @@
-import { CONCEPT, coreConcepts, type ConceptRegistry } from '../domain/concepts'
+import {
+  CONCEPT,
+  coreConcepts,
+  type ConceptDefinition,
+  type ConceptRegistry,
+} from '../domain/concepts'
 import { coreDomains, DOMAIN, type DomainRegistry, type LifeDomainId } from '../domain/domains'
 import type { EntityIndex, EntityRef, SemanticEntity } from '../domain/entities'
 import type { RecordId } from '../domain/ids'
@@ -14,20 +19,13 @@ import {
 } from '../domain/knowledge'
 import {
   bearsConcept,
-  describeFactValue,
+  discreetly,
   type CommitmentWindowSource,
   type DecisionContext,
   type FactValue,
 } from '../domain/records'
 import { occursOn } from '../domain/schedule'
-import {
-  discreetPlaceholder,
-  mayReasonFrom,
-  mayShowDetail,
-  DISCREET_PRIMARY,
-  type PermissionState,
-  type PrivacyClass,
-} from '../domain/privacy'
+import { mayReasonFrom, type PermissionState, type PrivacyClass } from '../domain/privacy'
 import type { RecommendationSemantics } from '../domain/recommendation'
 import {
   addLocalDays,
@@ -431,6 +429,14 @@ export interface Situation {
   /** What this owner's own outcomes have taught the engine (section 20). */
   readonly learning: LearningIndex
   readonly considered: readonly ConsideredFact[]
+  /**
+   * Every registered concept, as this decision read it — AUD-0040.
+   *
+   * The named fields above are narrowed views of rows in here. Anything in the
+   * decision layer that wants a reading takes it from this map, and the
+   * architecture guard makes that the only way to get one.
+   */
+  readonly readings: ConceptReadings
   readonly entities: EntityIndex
   readonly domains: DomainRegistry
   readonly concepts: ConceptRegistry
@@ -462,6 +468,58 @@ export interface ShownMove {
   readonly at: Instant
   /** How many separate moments it has been put there. */
   readonly count: number
+}
+
+/**
+ * Every concept the registry knows, as the decision read it — AUD-0040.
+ *
+ * ## The asymmetry this closes
+ *
+ * `assembleSituation` was a hand-written list of nine reads. Adding a concept
+ * to the registry, giving it a domain page and giving it a coverage entry were
+ * all registry-driven and cheap; giving it a **read** was a code change in this
+ * file plus `Situation`'s interface plus every consumer. So the cheap half
+ * tracked eleven domains and the expensive half stopped at seven, and the QA
+ * laboratory reported *"Facts considered: 9"* against *"What the system
+ * believes: 15"* — six beliefs the app held, absent from its own account of
+ * what the decision rested on, and one of them (`cashBuffer`) had decided it.
+ *
+ * ## What it is, and what it is not
+ *
+ * It is the true set: one entry per registered concept, in registry order, read
+ * once, through the same reader that records what each was used for. A concept
+ * cannot be added to the registry now without being visible to the brain and to
+ * the trace, which is what makes *"one brain, whole life"* structural rather
+ * than dependent on somebody remembering to add a line.
+ *
+ * It is **not** a replacement for the named fields. `usableMinutes`,
+ * `childPresent`, `capacity` and the rest are strongly typed, already narrowed,
+ * and read on every hot path; they stay exactly what they were and are now
+ * *derived from this map* rather than read separately. The audit asked for the
+ * addition to be pure and for behaviour to change in a different commit, and
+ * that is what this is.
+ *
+ * ## Reading it is how the decision layer reads a fact
+ *
+ * `tests/unit/architecture-guards.test.ts` fails the build if anything in
+ * `src/intelligence/` other than this file resolves a concept from
+ * `view.facts`. That single guard is what would have stopped the `cashBuffer`
+ * shortcut, and it is what keeps the trace complete by construction: a
+ * generator cannot decide from a fact the trace does not list, because the only
+ * place it can get one is here.
+ */
+export interface ConceptReadings {
+  /**
+   * What is known about this concept, for the decision being made.
+   *
+   * An unregistered concept resolves through {@link ConceptRegistry.definitionFor}'s
+   * cautious fallback rather than throwing, and is read on demand — synthetic
+   * fixtures invent concepts on purpose and a legacy import will eventually
+   * bring in ones this version has never heard of.
+   */
+  get(concept: ConceptId): Knowledge<FactValue>
+  /** Every concept read, in registry order. */
+  readonly concepts: readonly ConceptId[]
 }
 
 export interface SituationMoment {
@@ -529,6 +587,30 @@ function createFactReader(
         ? view.facts.knowledgeFor(concept)
         : unknown('withheld', 'the owner has not allowed this to influence recommendations')
 
+      /*
+       * A reading the decision could not see is not a fact it considered —
+       * AUD-0040's own exposure, caught by the export's honesty test.
+       *
+       * The audit says plainly that making the situation registry-driven is
+       * **what creates the private-data exposure**: the moment every concept is
+       * read, the private area's own reading lands in every decision's fact
+       * list, and the list is printed by the QA ledger and by the export.
+       * `export-honesty` failed the instant the sweep landed, with a
+       * private-off document naming the private area in a line the owner never
+       * asked for.
+       *
+       * The fix is not a filter at each of the surfaces that print it. It is
+       * that the claim was false: while the permission is off the decision is
+       * **structurally unable** to read this (D-167), so listing it among the
+       * things the decision rested on is the app saying it weighed something it
+       * could not see. Nothing is hidden by this — there was nothing there.
+       *
+       * Granting the permission puts the row back, discreetly: the reading
+       * renders as `discreetPlaceholder` at the single site below, so the row
+       * says the app read something here and never says what.
+       */
+      if (!readable) return knowledge
+
       const existing = seen.get(concept)
       if (existing !== undefined) {
         if (!existing.usedFor.includes(usedFor)) existing.usedFor.push(usedFor)
@@ -557,9 +639,7 @@ function createFactReader(
           reading:
             knowledge.state === 'unknown'
               ? `not known — ${knowledge.reason}`
-              : !mayShowDetail(definition.privacy, DISCREET_PRIMARY)
-                ? discreetPlaceholder(definition.privacy)
-                : describeFactValue(knowledge.value, (ref) => entities.labelFor(ref)),
+              : discreetly(definition.privacy, knowledge.value, (ref) => entities.labelFor(ref)),
           usedFor: usedForList,
           sources: basisOf(knowledge),
         },
@@ -583,6 +663,60 @@ function createFactReader(
       })
     },
     considered: () => [...seen.values()].map((held) => held.entry),
+  }
+}
+
+/**
+ * Every registered concept, read once, in registry order — AUD-0040.
+ *
+ * The whole of what replaced the hand-written list of nine reads. A `derived`
+ * concept is skipped here on purpose: no record carries one, so reading it
+ * would resolve `unknown` forever and put a permanently-blank row in the
+ * decision's own account of itself. Those are worked out further down and
+ * written back through {@link FactReader.derive}, which is why the map is
+ * mutable while the situation is being assembled and readonly afterwards.
+ *
+ * `{when}` in a purpose is substituted with the stretch of day being decided,
+ * so *"whether she is in your care tonight"* says tonight at eight and this
+ * morning at eight.
+ */
+function readRegistry(
+  concepts: ConceptRegistry,
+  reader: FactReader,
+  block: DayBlock,
+): Map<ConceptId, Knowledge<FactValue>> {
+  const readings = new Map<ConceptId, Knowledge<FactValue>>()
+  for (const definition of concepts.all()) {
+    if (definition.derived === true) continue
+    readings.set(definition.id, reader.read(definition.id, purposeOf(definition, block)))
+  }
+  return readings
+}
+
+/** A concept's stated use, with the stretch of day filled in. */
+function purposeOf(definition: ConceptDefinition, block: DayBlock): string {
+  return definition.purpose.replace('{when}', horizonWord(block))
+}
+
+/**
+ * The map the situation carries, over the readings taken while assembling it.
+ *
+ * A concept nobody registered still resolves — through the registry's own
+ * cautious fallback — because a synthetic fixture inventing a concept is
+ * ordinary and a decision layer that threw on one would turn an inspectable
+ * oddity into a crash.
+ */
+function conceptReadings(
+  taken: ReadonlyMap<ConceptId, Knowledge<FactValue>>,
+  fallback: (concept: ConceptId) => Knowledge<FactValue>,
+): ConceptReadings {
+  return {
+    get: (concept) => taken.get(concept) ?? fallback(concept),
+    // Lazily, because the derived readings are written back after this is
+    // built and a list snapshotted here would be missing them.
+    get concepts() {
+      return [...taken.keys()]
+    },
   }
 }
 
@@ -619,16 +753,17 @@ function nightsWithin(view: MemoryView, from: Instant, to: Instant): readonly Ni
   return nights
 }
 
-function assembleCapacity(view: MemoryView, moment: SituationMoment, reader: FactReader): Capacity {
-  const lastNightHours = narrowKnowledge(
-    reader.read(CONCEPT.sleepHours, 'how much sleep last night'),
-    hoursValue,
-  )
-  const energy = narrowKnowledge(reader.read(CONCEPT.energy, 'how much is left today'), ratioValue)
-  const soreness = narrowKnowledge(
-    reader.read(CONCEPT.soreness, 'whether the body is asking for a break'),
-    ratioValue,
-  )
+function assembleCapacity(
+  view: MemoryView,
+  moment: SituationMoment,
+  readings: ConceptReadings,
+): Capacity {
+  // From the registry sweep rather than from three reads of its own — AUD-0040.
+  // The purposes these used to carry are now on the concepts themselves, which
+  // is what let the read move.
+  const lastNightHours = narrowKnowledge(readings.get(CONCEPT.sleepHours), hoursValue)
+  const energy = narrowKnowledge(readings.get(CONCEPT.energy), ratioValue)
+  const soreness = narrowKnowledge(readings.get(CONCEPT.soreness), ratioValue)
 
   const from = addLocalDays(moment.now, -SLEEP_DEBT_DAYS, moment.zone)
   const nights = nightsWithin(view, from, moment.now)
@@ -1247,11 +1382,27 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
   // block was assembled after the limiter that needed it.
   const block = blockOf(moment.now, moment.zone)
 
-  const capacity = assembleCapacity(view, moment, reader)
-  const usableMinutes = narrowKnowledge(
-    reader.read(CONCEPT.usableTimeTonight, 'how much time there is'),
-    minutesValue,
+  /*
+   * Every concept the registry knows, read once — AUD-0040.
+   *
+   * This was nine hand-written reads and it is the whole finding: the registry
+   * grew and the one list that was not registry-driven did not grow with it.
+   * The named fields below are now narrowed views of rows in here rather than
+   * separate reads, so *"Facts considered"* is the true set by construction and
+   * a concept added to the registry is visible to the brain the moment it is
+   * registered.
+   *
+   * The purposes that used to be written here travel on the concepts, which is
+   * what let the read move. The one that named an hour — *"whether she is in
+   * your care tonight"* — carries `{when}` and is filled in from the block.
+   */
+  const taken = readRegistry(concepts, reader, block)
+  const readings = conceptReadings(taken, (concept) =>
+    reader.read(concept, purposeOf(concepts.definitionFor(concept), block)),
   )
+
+  const capacity = assembleCapacity(view, moment, readings)
+  const usableMinutes = narrowKnowledge(readings.get(CONCEPT.usableTimeTonight), minutesValue)
   /*
    * The arrangement, read as the arrangement — QA-82-001.
    *
@@ -1259,19 +1410,13 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
    * whether she is here today" under each row. It used to say exactly that
    * about this record, which is how a durable custody answer went on being
    * presented as a claim about the room after the decision path had stopped
-   * treating it as one. What this record answers is whose day it is.
+   * treating it as one. What this record answers is whose day it is, and the
+   * sentence saying so now lives on the concept.
    */
-  const childPresent = narrowKnowledge(
-    reader.read(CONCEPT.childPresent, `whether she is in your care ${horizonWord(block)}`),
-    booleanValue,
-  )
-  const socialEnergy = narrowKnowledge(
-    reader.read(CONCEPT.socialEnergy, 'whether company sounds good'),
-    ratioValue,
-  )
-  const homeFriction = reader.read(CONCEPT.homeFriction, 'what is getting in the way at home')
-  const learningTopic = reader.read(CONCEPT.learningTopic, 'what is being studied')
-  reader.read(CONCEPT.weeklyFocus, 'what this week is pointed at')
+  const childPresent = narrowKnowledge(readings.get(CONCEPT.childPresent), booleanValue)
+  const socialEnergy = narrowKnowledge(readings.get(CONCEPT.socialEnergy), ratioValue)
+  const homeFriction = readings.get(CONCEPT.homeFriction)
+  const learningTopic = readings.get(CONCEPT.learningTopic)
 
   const local = localDateTimeAt(moment.now, moment.zone)
 
@@ -1307,12 +1452,17 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
    * surfaces right without any of them having to know about school days.
    */
   if (child !== undefined) {
+    const asFact = mapKnowledge(childHere, (value): FactValue => ({ type: 'boolean', value }))
     reader.derive(
       CONCEPT.childHere,
-      mapKnowledge(childHere, (value): FactValue => ({ type: 'boolean', value })),
+      asFact,
       presenceReading(childHere, child, elsewhere.because, moment.zone),
-      `whether she is in the room ${horizonWord(block)}`,
+      purposeOf(concepts.definitionFor(CONCEPT.childHere), block),
     )
+    // And into the map, so a consumer asking the registry what is known about
+    // her presence gets the app's actual reading rather than the permanent
+    // `unknown` a concept no record carries would otherwise resolve to.
+    taken.set(CONCEPT.childHere, asFact)
   }
 
   // One pass over history for both: the duplication check reads the recent end
@@ -1348,7 +1498,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     socialEnergy,
     homeFriction,
     learningTopic,
-    direction: resolveDirection(view, moment, domains),
+    direction: resolveDirection(view, moment, domains, readings.get(CONCEPT.weeklyFocus)),
     coverage,
     laterToday: collectLaterToday(commitments, moment),
     threads: activeThreads(view, episodes, { now: moment.now, zone: moment.zone }),
@@ -1374,6 +1524,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
       entities,
     }),
     considered: reader.considered(),
+    readings,
     entities,
     domains,
     concepts,

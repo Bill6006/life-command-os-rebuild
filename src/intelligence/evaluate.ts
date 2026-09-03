@@ -1062,7 +1062,7 @@ function uncertainty(candidate: Candidate, situation: Situation): Dimension {
     }
   }
 
-  const missing = leaned.filter((concept) => !isUsable(situation.view.facts.knowledgeFor(concept)))
+  const missing = leaned.filter((concept) => !isUsable(situation.readings.get(concept)))
   if (missing.length === 0) {
     return { name: 'uncertainty', value: 0.4, weight, note: 'everything this rests on is known' }
   }
@@ -1148,7 +1148,18 @@ export function evaluateCandidate(candidate: Candidate, situation: Situation): E
         totalWeight
 
   const leaned = candidate.leansOn
-  const known = leaned.filter((concept) => isUsable(situation.view.facts.knowledgeFor(concept)))
+  /*
+   * The reading the decision actually had, not the one the store holds —
+   * AUD-0040.
+   *
+   * These two lines are why the guard matters rather than being tidiness. A
+   * concept the owner has not allowed the app to reason from resolves to
+   * `withheld` in the situation and to its real value in `view.facts`, so
+   * scoring confidence off the store would have counted a fact the decision was
+   * structurally unable to see. Nothing leans on a private concept today; the
+   * point is that nothing can start to without this being right.
+   */
+  const known = leaned.filter((concept) => isUsable(situation.readings.get(concept)))
   const share = leaned.length === 0 ? 0.5 : known.length / leaned.length
 
   return {

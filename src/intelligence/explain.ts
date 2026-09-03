@@ -1,6 +1,6 @@
 import type { EntityIndex } from '../domain/entities'
 import { isUsable, type Confidence } from '../domain/knowledge'
-import { describeFactValue, type OutcomeRecord } from '../domain/records'
+import { discreetly, type OutcomeRecord } from '../domain/records'
 import {
   renderRecommendation,
   verbLabel,
@@ -576,7 +576,15 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
         // with the date and quoted the note, which read well and never once
         // said what it was about — the failure in section 3, arriving through
         // composed prose rather than through a template.
-        const detail = describeFactValue(outcome.observation, (ref) => entities.labelFor(ref))
+        /*
+         * Through the one renderer that consults the class — AUD-0040's
+         * discretion guard. An outcome carries its own privacy, and a rough
+         * evening in the private area is exactly the sentence section 11 says
+         * must not turn up on Now.
+         */
+        const detail = discreetly(outcome.privacy, outcome.observation, (ref) =>
+          entities.labelFor(ref),
+        )
         return `${capitalise(subject)} went badly ${whenPhrase(outcome.occurredAt, situation)} — ${lowerFirst(detail)}.`
       }
       return `${capitalise(subject)} did not go well last time.`
@@ -634,7 +642,11 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
          * whole sentence, so it stands on its own rather than being run into a
          * clause neither of you said.
          */
-        const detail = describeFactValue(friction.value, (ref) => entities.labelFor(ref))
+        const detail = discreetly(
+          situation.concepts.definitionFor(CONCEPT.homeFriction).privacy,
+          friction.value,
+          (ref) => entities.labelFor(ref),
+        )
         return `${capitalise(detail)}.`
       }
       return `${capitalise(object)} is the small friction making the rest harder.`

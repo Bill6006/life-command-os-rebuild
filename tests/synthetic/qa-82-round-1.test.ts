@@ -453,6 +453,7 @@ describe('QA-82-005 \u2014 a worked-out fact is never something nobody answered'
         freshness: { unit: 'durable' },
         privacy: 'normal',
         ask: { materialToDecision: false, askWhenStale: false },
+        purpose: 'a concept invented by a fixture',
       },
     ])
 
@@ -480,6 +481,7 @@ describe('QA-82-005 \u2014 a worked-out fact is never something nobody answered'
         freshness: { unit: 'durable' },
         privacy: 'normal',
         ask: { materialToDecision: false, askWhenStale: false },
+        purpose: 'a concept invented by a fixture',
       },
     ])
     const alsoView = buildView(loaded.snapshot, { ...moment, concepts: alsoRegistry })

@@ -146,6 +146,40 @@ describe('concepts', () => {
     })
   })
 
+  it('says what every concept is read for, and says it as a use — AUD-0040', () => {
+    /*
+     * The purpose used to live in `assembleSituation`, beside a hand-written
+     * read, and that is the asymmetry AUD-0040 is about: giving a concept a
+     * *read* was a code change while everything else about it was registry
+     * work. Moving it here is what let the situation walk the registry — so
+     * the field has to be as checkable as the rest of the registry is.
+     *
+     * The sentence reaches the owner. The QA fact ledger and the export both
+     * print "<label> — <reading> … for <purpose>", so a purpose that repeats
+     * the label produces "Current energy — 3 of 5 … for current energy", which
+     * is the schema talking to itself.
+     */
+    for (const definition of coreConcepts.all()) {
+      expect(definition.purpose.trim().length, `${definition.id}: no stated use`).toBeGreaterThan(0)
+      expect(
+        definition.purpose.toLowerCase(),
+        `${definition.id}: the use is the label again`,
+      ).not.toBe(definition.label.toLowerCase())
+      // The only placeholder there is. A second one would be substituted
+      // nowhere and would reach the owner as a brace.
+      const braces = definition.purpose.match(/\{[^}]*\}/g) ?? []
+      for (const placeholder of braces) {
+        expect(placeholder, `${definition.id}: a placeholder nothing fills in`).toBe('{when}')
+      }
+      // It is a use, not a heading: "for whether she is here today" reads;
+      // "for Child in the owner's care today" does not.
+      expect(
+        /^[a-z]/.test(definition.purpose),
+        `${definition.id}: a use is not a title, so it does not start capitalised`,
+      ).toBe(true)
+    }
+  })
+
   it('does not spend a question on the private domain unprompted', () => {
     expect(coreConcepts.definitionFor(CONCEPT.privatePattern).ask).toEqual({
       materialToDecision: false,
@@ -179,6 +213,7 @@ describe('concepts', () => {
         freshness: { unit: 'durable' },
         privacy: 'normal',
         ask: { materialToDecision: false, askWhenStale: false },
+        purpose: 'a concept invented by a fixture',
       },
     ])
     expect(extended.get(invented)?.label).toBe('Made up')

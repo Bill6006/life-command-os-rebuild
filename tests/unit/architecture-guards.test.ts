@@ -466,6 +466,108 @@ describe('the meaning layer stands on its own', () => {
   })
 })
 
+/**
+ * The situation is the only door onto a fact — AUD-0040.
+ *
+ * ## The finding, and why no existing guard could see it
+ *
+ * `assembleSituation` was a hand-written list of nine reads, so anything that
+ * needed a tenth reached round it: `candidates.ts` resolved `cashBuffer` from
+ * `view.facts` itself, and the QA laboratory therefore reported *"Facts
+ * considered: 9"* against *"What the system believes: 15"* — the decision
+ * resting on a fact its own trace did not list, and possibly deciding on it.
+ * The audit is explicit that the architecture guard could not catch this
+ * because **reaching around the situation is not a boundary violation — it is a
+ * shortcut inside one.** So here is the guard for the shortcut.
+ *
+ * ## Two things it makes true rather than hoped for
+ *
+ * **The trace is complete by construction.** The only place a decision can
+ * obtain a reading is `situation.readings`, and everything in there was read
+ * through `createFactReader`, which records what it was used for. A generator
+ * cannot decide from a fact the trace does not list because it cannot get one.
+ *
+ * **The permission is not optional.** `createFactReader` is where
+ * `mayReasonFrom` is applied (D-167). A module reading `view.facts` for itself
+ * would see a private value the rest of the decision layer is structurally
+ * unable to see — which is precisely how a promise about privacy becomes a
+ * promise about six lines. Two of those existed, in `evaluate.ts`, scoring
+ * confidence and uncertainty off the store rather than off the decision.
+ */
+describe('nothing in the decision layer reads a fact around the situation — AUD-0040', () => {
+  /** Resolving a concept's value. Not the entry, not the ask policy: the value. */
+  const RESOLVES_A_VALUE = /\bknowledgeFor\s*\(/
+
+  it('lets only the situation resolve a concept from the store', () => {
+    const offenders: string[] = []
+    for (const file of sourceFiles('src/intelligence')) {
+      if (repoPath(file).endsWith('src/intelligence/situation.ts')) continue
+      if (RESOLVES_A_VALUE.test(readCode(file))) offenders.push(repoPath(file))
+    }
+    expect(
+      offenders,
+      'a decision was made from a fact the situation never read, so the trace cannot list it',
+    ).toEqual([])
+  })
+
+  it('is looking at a real rule rather than a pattern nothing matches', () => {
+    // The reintroduction proof, in place: the shape it bans is the shape the
+    // one permitted file still uses, so a guard that had stopped matching
+    // anything would fail here rather than passing quietly forever.
+    const door = sourceFiles('src/intelligence').find((file) =>
+      repoPath(file).endsWith('src/intelligence/situation.ts'),
+    )
+    expect(door, 'the situation is not where it was').toBeDefined()
+    expect(RESOLVES_A_VALUE.test(readCode(door!))).toBe(true)
+  })
+
+  it('carries every registered concept rather than a list somebody maintains', () => {
+    // The other half of the finding: a guard that only banned the shortcut
+    // would be satisfied by a situation that still read nine concepts and
+    // refused everyone else. What makes the trace true is that the read walks
+    // the registry, so this asserts the walk exists rather than trusting it.
+    const text = readCode(join(ROOT, 'src', 'intelligence', 'situation.ts'))
+    expect(/for \(const definition of concepts\.all\(\)\)/.test(text)).toBe(true)
+  })
+})
+
+/**
+ * A reading is rendered in one place, and that place knows the privacy class —
+ * AUD-0040's structural discretion guard.
+ *
+ * The audit names this as AUD-0040's **precondition**, not AUD-0011's: making
+ * the situation registry-driven is what puts a private reading within one call
+ * of an explanation. D-167 requires that it stay *structurally impossible —
+ * not merely conventional —* for an explanation or an evidence panel to render
+ * an explicit private reading, and a convention is exactly what a second call
+ * site would be.
+ *
+ * So `describeFactValue` is unreachable from the decision layer, and
+ * `discreetly` — the same renderer with the class consulted first — is the way
+ * through. A new explanation clause that wants to name a reading has to come
+ * through the function that decides whether it may.
+ */
+describe('an explanation cannot render a reading without the class deciding — D-167', () => {
+  it('keeps the undiscreet renderer out of the decision layer', () => {
+    const offenders: string[] = []
+    for (const file of sourceFiles('src/intelligence')) {
+      if (/\bdescribeFactValue\s*\(/.test(readCode(file))) offenders.push(repoPath(file))
+    }
+    expect(offenders, 'a reading was rendered without the privacy class being consulted').toEqual(
+      [],
+    )
+  })
+
+  it('is a rule with something on the other side of it', () => {
+    // `discreetly` is the permitted route and it has callers; a guard whose
+    // alternative nobody uses is a guard about nothing.
+    const users = sourceFiles('src/intelligence').filter((file) =>
+      /\bdiscreetly\s*\(/.test(readCode(file)),
+    )
+    expect(users.length, 'nothing renders a reading discreetly').toBeGreaterThan(0)
+  })
+})
+
 describe('there is exactly one arbitration path', () => {
   /**
    * Canonical plan section 17.2.

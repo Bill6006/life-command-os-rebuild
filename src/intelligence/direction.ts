@@ -1,5 +1,4 @@
-import { CONCEPT } from '../domain/concepts'
-import { coreDomains, type DomainRegistry, type LifeDomainId } from '../domain/domains'
+import type { DomainRegistry, LifeDomainId } from '../domain/domains'
 import type { EntityIndex, EntityRef } from '../domain/entities'
 import type { RecordId } from '../domain/ids'
 import { basisOf, type Knowledge } from '../domain/knowledge'
@@ -293,12 +292,23 @@ function categoryOf(
   return { category: undefined, wording: '' }
 }
 
+/**
+ * The week's direction, from the reading the decision already took — AUD-0040.
+ *
+ * The reading arrives as an argument rather than being fetched, and the reason
+ * is the finding rather than style: `assembleSituation` read `weeklyFocus` and
+ * this function read it again a few lines later, from the same store, through a
+ * different door. Two reads of one fact is two answers waiting to disagree —
+ * and the second one would not have gone through the permission check, so a
+ * concept the owner had not allowed the app to reason from would have been
+ * legible here and withheld everywhere else.
+ */
 export function resolveWeeklyDirection(
   view: MemoryView,
   moment: DirectionMoment,
-  domains: DomainRegistry = coreDomains,
+  domains: DomainRegistry,
+  knowledge: Knowledge<FactValue>,
 ): WeeklyDirection {
-  const knowledge: Knowledge<FactValue> = view.facts.knowledgeFor(CONCEPT.weeklyFocus)
   // Stale is still a direction that was set; whether it is in force is a week
   // question, answered below. Only "we never had one" ends here.
   if (knowledge.state === 'unknown') return { state: 'none' }
@@ -396,9 +406,10 @@ export function activeGoals(view: MemoryView, moment: DirectionMoment): readonly
 export function resolveDirection(
   view: MemoryView,
   moment: DirectionMoment,
-  domains: DomainRegistry = coreDomains,
+  domains: DomainRegistry,
+  weeklyFocus: Knowledge<FactValue>,
 ): DirectionState {
-  const weekly = resolveWeeklyDirection(view, moment, domains)
+  const weekly = resolveWeeklyDirection(view, moment, domains, weeklyFocus)
   const everyGoal = allGoals(view, moment)
   const goals = everyGoal.filter((goal) => goal.status === 'active')
   const destinations = resolveDestinations(view, moment, everyGoal)

@@ -2,7 +2,7 @@ import type { LifeDomainId } from './domains'
 import type { EntityRef } from './entities'
 import { describeDuration } from './horizon'
 import type { RecordId } from './ids'
-import type { PrivacyClass } from './privacy'
+import { discreetPlaceholder, mayShowDetail, DISCREET_PRIMARY, type PrivacyClass } from './privacy'
 import type { ActionVerb, RecommendationSemantics } from './recommendation'
 import type { DayBlock, Instant, IsoWeekday, LocalDayId, TimeZoneId } from './time'
 import type { ConceptId, DueWindow, ObservationWindow } from './windows'
@@ -1030,6 +1030,44 @@ export function describeFactValue(
       return labelFor(value.value) ?? `${value.value.id} (missing)`
     }
   }
+}
+
+/**
+ * The same renderer, with the discretion attached — AUD-0040's precondition.
+ *
+ * ## What this closes
+ *
+ * AUD-0040 makes `assembleSituation` read every concept in the registry rather
+ * than nine named ones, and the audit is explicit that **this change is what
+ * creates the private-data exposure**: the moment the private pattern is read,
+ * its rendered value is one call to {@link describeFactValue} away from an
+ * explanation or an evidence panel. The audit asks for a guard that makes that
+ * *structurally impossible rather than conventional* — not six call sites each
+ * remembering to check.
+ *
+ * So there is one renderer that knows about privacy, and
+ * `tests/unit/architecture-guards.test.ts` fails the build if anything under
+ * `src/intelligence/` calls {@link describeFactValue} outside this function. A
+ * new explanation clause cannot render a reading without coming through here,
+ * and coming through here means the class decides.
+ *
+ * **It is not a filter.** A withheld value still produces a row and a sentence
+ * — {@link discreetPlaceholder} — because a surface that dropped the line would
+ * tell the owner his history is thinner than it is (D-175). Concealing the
+ * words is not concealing the entry.
+ *
+ * `DISCREET_PRIMARY` is the policy every decision-layer surface is under: Now,
+ * the evidence panel, the explanation, Insights and Timeline are all primary
+ * surfaces, and the two places that are not — the Private page itself and the
+ * full export — read the store directly and state their own policy.
+ */
+export function discreetly(
+  privacy: PrivacyClass,
+  value: FactValue,
+  labelFor?: (ref: EntityRef) => string | undefined,
+): string {
+  if (!mayShowDetail(privacy, DISCREET_PRIMARY)) return discreetPlaceholder(privacy)
+  return describeFactValue(value, labelFor)
 }
 
 export function factValuesEqual(a: FactValue, b: FactValue): boolean {

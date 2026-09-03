@@ -3,7 +3,7 @@ import type { RecordId } from '../domain/ids'
 import { patternNameFor, type ActionVerb } from '../domain/recommendation'
 import {
   bearsConcept,
-  describeFactValue,
+  discreetly,
   evidenceSourceOf,
   type DecisionContext,
   type FactValue,
@@ -2181,7 +2181,7 @@ function lifeSeasonCards(situation: Situation): readonly Built[] {
     // custody has been standing since 1 May" is a sentence about his life;
     // "Custody arrangement has been settled since 1 May" is a sentence about
     // the app's schema, which is what section 61 asks copy to stay out of.
-    const what = describeFactValue(record.value, (ref) => situation.entities.labelFor(ref))
+    const what = discreetly(record.privacy, record.value, (ref) => situation.entities.labelFor(ref))
 
     out.push({
       rank: 50,

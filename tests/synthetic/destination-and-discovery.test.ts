@@ -1110,10 +1110,16 @@ describe('routing 84 item 6 — the private guarantee is structural, not convent
      * itself would walk round both. So this asks which files name the concept
      * at all, and the answer has to stay one — the fixture that writes it.
      *
-     * `direction.ts` does read `view.facts.knowledgeFor` directly, for the
-     * weekly focus, and that is fine and is why this guard is about the private
-     * concept rather than about the fact layer: a general rule would fail on
-     * something true.
+     * **What AUD-0040 changed, and why this guard survives it.** The situation
+     * now reads *every* registered concept rather than nine named ones, so the
+     * private one is read on every decision. It is still not *named* anywhere
+     * outside the fixture, because the sweep walks the registry — which is the
+     * whole point of the finding, and is why a guard about the concept rather
+     * than about the fact layer is the one that keeps holding. The general rule
+     * about the fact layer now exists too, separately, in
+     * `tests/unit/architecture-guards.test.ts`; it could not be written before
+     * because `direction.ts` read `view.facts.knowledgeFor` for the weekly
+     * focus, which AUD-0040 removed.
      */
     const named: string[] = []
     const walk = (dir: string): void => {
