@@ -462,8 +462,8 @@ export function Discovery({ situation }: { situation: Situation }) {
              * survive it, because the question it pointed at stops existing.
              */
             <p className="note" data-testid="discovery-prior">
-              Why this one: {prompt.prior.claim} ({prompt.prior.citation}) — nothing here is a
-              finding about you, and your answer is what the app will go on.
+              Why this one: {prompt.prior.claim} ({prompt.prior.citation}) — that is about people in
+              general, not about you. Your own answer is the only thing kept here.
             </p>
           )}
           {prompt.shape !== 'milestone' ? null : (
