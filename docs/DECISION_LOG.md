@@ -1,5 +1,80 @@
 # Decision log
 
+## D-277 — A cue names a moment the record holds, or there is no cue
+
+**Phase:** 93 · **Status:** Active
+
+AUD-0051. Every action template named a verb, an object and sometimes a
+duration, and nothing named a moment — which the audit calls _"the best-evidenced
+single lever available to the product"_ and the concrete version of the brief's
+_"not concrete enough to start"_: the sentence is unambiguous about the action,
+silent about the moment, **and the moment is where the plan fails**.
+
+**The research is why a cue is worth having, and it is in a comment.** Gollwitzer
+& Sheeran's _d_ = 0.65 across 94 studies is the argument for building this; what
+reaches the owner is a fact from his own record. §13C is untouched.
+
+**The one rule: an invented or wrong cue is worse than none.** _"When Adaya's in
+bed"_ on an evening she is not there would be a serious error and is exactly the
+confident wrongness the audit is full of. So a cue is composed from a known fact
+with a label the owner supplied, or there is none — and the uncued sentence is
+byte-identical to what the catalogue writes, which is the acceptance item and is
+what happens on more than three quarters of the moments in the library.
+
+**Two sources, both already in the record.** A commitment window later today
+where the move fits with room to spare, and a move he finished within the last
+three hours that is not this one. The day block is deliberately not a third:
+every sentence already carries the hour through `horizon.ts`, and a cue repeating
+it would be the app saying the same thing twice in a line.
+
+**Appended rather than prepended.** The contingent format is _"when X, then Y"_,
+and prepending needs the action lower-cased — every template today opens with an
+imperative verb and a sixteenth might not, so that is one entry away from
+mangling a proper noun.
+
+**And nothing changes the case of a label.** The first draft lower-cased the cue
+because it reads mid-sentence, and turned _"Adaya's school day"_ — his own words
+— into _"adaya's school day"_ on the screen he reads every morning. D-018's rule
+about never paraphrasing a rendered thing covers its capitals.
+
+**A held move gets no cue.** _"The morning suits this better than the early
+morning"_ and _"— before the school run"_ is the app deferring a move and naming
+a deadline for it in the same breath. Found by the deferral suite rather than by
+reading.
+
+---
+
+## D-278 — C14's bands are built and proved at each one; calibration stays deferred
+
+**Phase:** 93 · **Status:** Active
+
+C14's disposition is **BUILD bands; DEFER calibration**, and its build item is
+_"for QA to test across bands today, histories that land at each band —
+buildable now."_ The bands already existed; what did not exist was a history at
+each one.
+
+`tests/synthetic/cue-and-bands.test.ts` builds four runs of the same move — two,
+six, twelve, and twelve with one that went the other way — differing only in how
+many occasions they hold, and asserts:
+
+- **Now's ladder** is three rungs in ordinary words (_once_, _a few times_,
+  _several times_) and says something visibly different at two occasions and at
+  twelve, which is the ordinary-owner item.
+- **Insights' ladder** is four (_too early to say_, _worth noticing_, _fairly
+  consistent_, _very consistent_), reached at the thresholds it declares.
+- **A counterexample costs a step** and never falls off the bottom — an exception
+  is the news rather than a reason to discard everything around it.
+- **No figure ever reaches Now**, at any band. Section 61's ban on confidence
+  arithmetic, and C14's own named risk is _"a band word read as a
+  probability"_ — so the word is on Now and the count is on Insights, beside the
+  evidence it rests on.
+
+**Nothing about calibration is built and nothing pretends to be.** These measure
+evidence sufficiency, not calibrated probability, exactly as the matrix says.
+True calibration needs forecasts to score against, which is S3's and routing 96's.
+
+---
+
 ## D-276 — Two moves that are one outing, and the half of the nine identical evenings that could not be closed
 
 **Phase:** 93 · **Status:** Active

@@ -1148,7 +1148,7 @@ export function decide(
      * either, so a row saying it was chosen over something would be describing
      * a contest that did not happen. The trace still carries the whole ranking.
      */
-    const result = explain(held.evaluation, undefined, situation, undefined)
+    const result = explain(held.evaluation, undefined, situation, undefined, [], true)
     if (result.ok) {
       const base = held.evaluation.candidate.semantics
       /*

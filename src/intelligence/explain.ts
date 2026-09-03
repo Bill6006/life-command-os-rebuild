@@ -24,6 +24,7 @@ import { CLOSE_ENOUGH_TO_MENTION } from './arbitrate'
 import { describeGoalTrajectory } from './direction'
 import { daysSincePractice, growthStandingFor } from './growth'
 import { alongsideOf } from './alongside'
+import { cueFor } from './cue'
 import { WORTH_DOING } from './arbitrate'
 import { describeThreadPosition, threadFor } from './threads'
 import type { DimensionName, Evaluation } from './evaluate'
@@ -1021,6 +1022,17 @@ export interface Explanation {
    * nothing new is rendered.
    */
   readonly alongside: string | undefined
+  /**
+   * The moment named in the sentence, where one was — AUD-0051.
+   *
+   * Carried beside the sentence it is already inside, so a guard can ask *which
+   * fact this came from* without reading the sentence back with a regex. The
+   * copy scan and the block sweep both need that: a cue is the one part of a
+   * rendered move that comes from the situation rather than from the catalogue,
+   * and the rule about it — **known facts only, never invented** — is about
+   * where it came from rather than about how it reads.
+   */
+  readonly cue: { readonly clause: string; readonly from: string } | undefined
 }
 
 /** The dimension the winner most out-scored the runner-up on, as a phrase. */
@@ -1129,6 +1141,16 @@ export function explain(
    * as it did.
    */
   ranked: readonly Evaluation[] = [],
+  /**
+   * Whether this move is being held for a later part of today — AUD-0024.
+   *
+   * It suppresses the cue, and the reason is that the two sentences contradict
+   * each other. *"The morning suits this better than the early morning"* and
+   * *"— before the school run"* are the app deferring a move and naming a
+   * deadline for it in the same breath, which is the confident wrongness
+   * AUD-0051 is careful about arriving through the one door AUD-0024 opened.
+   */
+  held = false,
 ): ExplanationResult {
   const entities = situation.entities
   const base = chosen.candidate.semantics
@@ -1137,7 +1159,17 @@ export function explain(
     whyNow: { ...base.whyNow, summary: composeReason(chosen, situation, entities) },
   }
 
-  const rendered = renderRecommendation(semantics, entities, situation.block)
+  /*
+   * And when, where the record honestly holds a moment — AUD-0051.
+   *
+   * Composed from the situation here rather than reached for by a template: a
+   * template has no situation to read and would have to guess, and *"when
+   * Adaya's in bed"* on an evening she is not there is the exact error the
+   * finding names. `cueFor` returns nothing far more often than it returns
+   * something.
+   */
+  const cue = held ? undefined : cueFor(situation, semantics)
+  const rendered = renderRecommendation(semantics, entities, situation.block, cue?.clause)
   if (!rendered.ok) {
     return { ok: false, problems: rendered.issues.map((issue) => issue.problem) }
   }
@@ -1215,6 +1247,7 @@ export function explain(
       restsOnNamed: learned.summary === undefined ? undefined : learned.named,
       partOf: partOfThread(situation, semantics),
       alongside: alongsideClause(chosen, ranked, situation),
+      cue,
     },
   }
 }

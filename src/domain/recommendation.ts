@@ -348,6 +348,25 @@ export function renderRecommendation(
   semantics: RecommendationSemantics,
   index: EntityIndex,
   block?: DayBlock,
+  /**
+   * When, appended — AUD-0051, and it is never composed here.
+   *
+   * The templates name a verb, an object and sometimes a duration, and are
+   * silent about the moment — which is where a plan fails. Adding an if-then
+   * cue is the best-evidenced single lever the product has, and the one rule
+   * about it is that **an invented or wrong cue is worse than none**: *"when
+   * Adaya's in bed"* on an evening she is not there is exactly the confident
+   * wrongness the audit is full of.
+   *
+   * So this arrives from the caller, already composed from a known fact by
+   * `intelligence/cue.ts`, and this layer appends it and nothing else. A
+   * template cannot reach for one, because a template has no situation to read
+   * and would have to guess.
+   *
+   * **Absent leaves the sentence byte-identical**, which is the acceptance item
+   * — and it is absent almost everywhere.
+   */
+  cue?: string,
 ): RenderResult {
   const issues: RenderIssue[] = []
 
@@ -399,10 +418,21 @@ export function renderRecommendation(
   }
 
   const summary = semantics.whyNow.summary.trim()
+  const said = template.action(parts)
   return {
     ok: true,
     rendered: {
-      sentence: template.action(parts),
+      /*
+       * Appended rather than prepended — AUD-0051.
+       *
+       * Gollwitzer's contingent format is *"when X, then Y"*, and prepending
+       * would need the action sentence lower-cased. Every template today opens
+       * with an imperative verb and a sixteenth might not, so lower-casing a
+       * rendered sentence is one entry away from mangling a proper noun. The
+       * moment is named either way, and this way nothing touches the words the
+       * catalogue wrote.
+       */
+      sentence: cue === undefined ? said : `${said.replace(/\.$/, '')} — ${cue}.`,
       reason: summary === '' ? TRIGGER_REASONS[semantics.whyNow.trigger](parts) : summary,
       followUp: template.followUp(parts),
       subjectLabel: subject,
