@@ -448,6 +448,24 @@ export function Discovery({ situation }: { situation: Situation }) {
             {prompt.prompt}
           </label>
           <p className="note">{prompt.note}</p>
+          {prompt.prior === undefined ? null : (
+            /*
+             * Why it asked, when research is part of the reason — §13C.
+             *
+             * The permission's own condition: *"provenance must support
+             * answering 'why did you ask me this?'"* So the claim is on the
+             * card beside the question, in the words the prior is written in —
+             * about people, with a citation — rather than as a fact about him.
+             *
+             * **Nothing here is a belief.** Skipping produces no inferred fact,
+             * and his answer becomes the personal evidence; the prior does not
+             * survive it, because the question it pointed at stops existing.
+             */
+            <p className="note" data-testid="discovery-prior">
+              Why this one: {prompt.prior.claim} ({prompt.prior.citation}) — nothing here is a
+              finding about you, and your answer is what the app will go on.
+            </p>
+          )}
           {prompt.shape !== 'milestone' ? null : (
             /*
              * What making this the next step will mean — F04, QA-84-005.

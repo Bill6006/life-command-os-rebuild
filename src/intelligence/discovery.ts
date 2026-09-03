@@ -7,6 +7,7 @@ import { buildView, type MemoryView } from '../memory/view'
 import { milestoneQuestion, PROVING_DOMAINS } from './authoring'
 import type { ActiveDestination } from './destinations'
 import { readingFor } from './interpret'
+import { priorFor, type ResearchPrior } from './priors'
 import { decide, type DecideOptions, type DecisionMoment } from './engine'
 import type { Situation } from './situation'
 
@@ -103,6 +104,23 @@ export interface DiscoveryPrompt {
   readonly note: string
   /** Why it is worth asking, in the agenda's own terms. QA copy. */
   readonly because: string
+  /**
+   * A research claim that makes this worth one of two slots a week — §13C,
+   * option B.
+   *
+   * Present only where one applies, and it is the answer to *"why did you ask
+   * me this?"* — which §13C names as a condition on the permission rather than
+   * a nicety. What it carries is a statement about **people**, with its
+   * citation, and never a statement about him: *"adults who…"* is a prior,
+   * *"you probably…"* is a finding, and the second is the first thing option B
+   * forbids.
+   *
+   * **It changes the order of the agenda and nothing else.** A prior never
+   * creates a prompt, never removes one, never becomes a record, and never
+   * reaches a recommendation. Where it applies, the question it points at goes
+   * first among the ones that were already going to be asked.
+   */
+  readonly prior: ResearchPrior | undefined
   /** The destination it is about, where it is about one. */
   readonly destination: ActiveDestination | undefined
 }
@@ -181,6 +199,7 @@ export function outstandingPrompts(situation: Situation): readonly DiscoveryProm
         prompt: `What are you hoping ${area} eventually looks like?`,
         note: 'This is kept as what you are aiming at. It is described in your words and never scored, and you can change it whenever it changes.',
         because: `nothing in the record says what ${area} is for`,
+        prior: priorFor('aspiration', domain),
         destination: undefined,
       })
       continue
@@ -240,6 +259,7 @@ export function outstandingPrompts(situation: Situation): readonly DiscoveryProm
           because: read
             ? `the words were read as being about ${situation.domains.labelFor(domain)} and nothing names one`
             : 'there is an aim here with nothing named on the way to it',
+          prior: priorFor('next-step', domain),
           destination,
         })
       }
@@ -253,6 +273,7 @@ export function outstandingPrompts(situation: Situation): readonly DiscoveryProm
           prompt: `Where would you say you are with “${destination.aim}” right now?`,
           note: 'This is kept as your starting point, in your words. Nothing is measured against it.',
           because: 'there is nothing to read progress against',
+          prior: priorFor('baseline', domain),
           destination,
         })
       }
@@ -266,6 +287,7 @@ export function outstandingPrompts(situation: Situation): readonly DiscoveryProm
           prompt: `What would tell you that “${destination.aim}” was actually happening?`,
           note: 'This is kept as what would count. The app will never decide you have got there — it holds what you said would show it.',
           because: 'nothing says what would count as getting somewhere',
+          prior: priorFor('evidence', domain),
           destination,
         })
       }
@@ -292,10 +314,35 @@ export function outstandingPrompts(situation: Situation): readonly DiscoveryProm
       prompt: 'Is there something that takes a regular chunk of your week?',
       note: 'This is kept as a part of every week that is already spoken for, so the app stops suggesting things into it. It changes nothing about today unless today is that day.',
       because: 'nothing in the record says what an ordinary week looks like',
+      prior: priorFor('commitment', DOMAIN.direction),
       destination: undefined,
     })
   }
 
+  /*
+   * And research annotates the agenda without reordering it — §13C, option B.
+   *
+   * ## What was built first, and why it was pulled back
+   *
+   * The first version put a question a prior speaks to in front of one it does
+   * not, on the strength of *"spend the bounded discovery agenda more
+   * intelligently"*. It worked, and what it did was move the **opening
+   * question** of a brand-new owner's life from Career to Health on the
+   * strength of a WHO exercise guideline. That is not more intelligent; it is a
+   * research claim deciding the app's first sentence, and the proving order —
+   * Career, Health, Money — is a product decision routing 84 made rather than a
+   * gap in the app's knowledge.
+   *
+   * So the order is untouched, and what a prior does is the other two approved
+   * uses: **identify potentially useful questions**, and **help the system know
+   * where caution or missing evidence matters**. It says why the app thinks
+   * this one is worth one of two slots a week, in a claim about people with a
+   * citation attached, and the owner reads that beside the question.
+   *
+   * `tests/synthetic/reach-priors.test.ts` asserts the order is identical with
+   * the priors and without them, which is the property that makes this option B
+   * rather than something further along the alphabet.
+   */
   return [...first, ...out]
 }
 
@@ -374,7 +421,21 @@ export function discoveryAgenda(situation: Situation, moment: AgendaMoment): Dis
     }
   }
 
-  return { ...common, prompt: outstanding[0], because: outstanding[0]!.because }
+  const next = outstanding[0]
+  if (next === undefined) throw new RangeError('an outstanding list with nothing in it')
+  /*
+   * And research is named where research is part of the reason — §13C.
+   *
+   * *"Provenance must support answering 'why did you ask me this?'"* The
+   * agenda's own `because` is what the QA laboratory prints and what the card
+   * shows, so the claim goes there rather than into a second field nothing
+   * reads. It is a statement about people, not about him.
+   */
+  return {
+    ...common,
+    prompt: next,
+    because: next.prior === undefined ? next.because : `${next.because}, and ${next.prior.claim}`,
+  }
 }
 
 export const DISCOVERY_PROVENANCE: Provenance = { source: 'owner', writtenBy: 'discovery' }
