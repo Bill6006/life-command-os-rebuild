@@ -17,6 +17,7 @@ import {
   addLocalDaysToDayId,
   civilDateFromDayId,
   endOfLocalDay,
+  startOfLocalDay,
   instantAtLocal,
   localDateTimeAt,
   type Instant,
@@ -25,7 +26,7 @@ import {
 import type { ConceptId, DueWindow } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
 import { collectEpisodes, type Episode } from './lifecycle'
-import { profileFor } from './moves'
+import { profileFor, type OutcomeTiming } from './moves'
 
 /**
  * Outcome windows and outcome capture (canonical plan section 20).
@@ -99,13 +100,42 @@ function atLocalHour(at: Instant, zone: TimeZoneId, addDays: number, hour: numbe
  * lifecycle question — Now already has the buttons for it, so asking a second
  * time in a different shape would be nagging.
  */
+/** A week, in days, so `weekly` says seven in one place. */
+const DAYS_IN_A_WEEK = 7
+
+/**
+ * How long a deferred outcome question stays open.
+ *
+ * The same seven days a course reflection stays open for, from the same
+ * argument: a phone picked up a few evenings later still catches it, and after
+ * that the answer is a reconstruction rather than a memory. Held here beside
+ * the window it shapes; `progress.ts` holds the reflections' own copy of it,
+ * and `tests/synthetic/reach-horizon.test.ts` asserts the two agree.
+ */
+const REFLECTION_OPEN_FOR_DAYS = 7
+
 export function outcomeWindowFor(episode: Episode, zone: TimeZoneId): DueWindow | undefined {
   if (episode.state !== 'completed') return undefined
   const settled = episode.settledAt
   if (settled === undefined) return undefined
+  return windowForTiming(settled, profileFor(episode.semantics.target.verb).outcome, zone)
+}
 
-  const timing = profileFor(episode.semantics.target.verb).outcome
-
+/**
+ * The window itself, from a moment and a horizon — S1a.
+ *
+ * Separated from {@link outcomeWindowFor} so that the horizon can be tested at
+ * every value the union holds rather than only at the two the shipped
+ * catalogue happens to declare. `multi-day` and `weekly` have no profile yet —
+ * their consumer is AUD-0009 at routing 93 — and a widened enum whose new
+ * values nothing can exercise is exactly the inert declaration this phase
+ * exists to stop shipping.
+ */
+export function windowForTiming(
+  settled: Instant,
+  timing: OutcomeTiming,
+  zone: TimeZoneId,
+): DueWindow {
   if (timing.when === 'next-morning') {
     const local = localDateTimeAt(settled, zone)
     // Finishing at half past midnight is finishing last night, so the morning
@@ -116,6 +146,31 @@ export function outcomeWindowFor(episode: Episode, zone: TimeZoneId): DueWindow 
       kind: 'due',
       earliest,
       latest: endOfLocalDay(localDateTimeAt(earliest, zone).dayId, zone),
+    }
+  }
+
+  /*
+   * The longer horizons, built on the shape that already works — S1a.
+   *
+   * `CourseReflection` opens a question three days after a course ends and
+   * another at ten, keyed on an owner-local day and open for seven. That is a
+   * proven multi-day deferred-question mechanism with owner-facing copy that
+   * has been through QA, and D-178's rule — *one name for a thing, in the layer
+   * every surface can reach* — says to generalise it rather than to build a
+   * second one. So these open on a day rather than at an instant, and stay open
+   * for the same week a reflection does.
+   *
+   * `weekly` is `multi-day` with the count fixed at seven, and it is a separate
+   * value rather than `afterDays: 7` because *"judge this after a week"* is a
+   * claim about the kind of thing the move is, and a number is not.
+   */
+  if (timing.when === 'multi-day' || timing.when === 'weekly') {
+    const days = timing.when === 'weekly' ? DAYS_IN_A_WEEK : (timing.afterDays ?? DAYS_IN_A_WEEK)
+    const opensOn = addLocalDaysToDayId(localDateTimeAt(settled, zone).dayId, days)
+    return {
+      kind: 'due',
+      earliest: atLocalHour(startOfLocalDay(opensOn, zone), zone, 0, MORNING_HOUR),
+      latest: endOfLocalDay(addLocalDaysToDayId(opensOn, REFLECTION_OPEN_FOR_DAYS), zone),
     }
   }
 

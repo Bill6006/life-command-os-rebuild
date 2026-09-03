@@ -761,7 +761,16 @@ export function buildLearning(
       // asked, not by preference: a move judged twenty minutes later says
       // something about that evening, and a move judged the next morning says
       // something about the morning. Neither answers for the other.
-      const speaksTo = profile.outcome.when === 'next-morning' ? 'tomorrow' : 'now'
+      /*
+       * Which belief an outcome moves — S1a, and the widening is one word.
+       *
+       * `now` is what the move was worth in the block it happened in;
+       * `tomorrow` is what it was worth afterwards. A judgement made the next
+       * morning is about afterwards, and so is one made in three days or in a
+       * week — the horizons differ in *when the answer exists*, not in which
+       * question it answers. Only `same-block` speaks to the block itself.
+       */
+      const speaksTo = profile.outcome.when === 'same-block' ? 'now' : 'tomorrow'
       const moved = shrink(speaksTo === 'now' ? profile.now : profile.tomorrow, observed, n)
 
       return {

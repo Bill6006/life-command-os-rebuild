@@ -43,13 +43,80 @@ export type Demand = 'restorative' | 'light' | 'effortful'
  * instead, because that is when the answer exists.
  */
 export interface OutcomeTiming {
-  readonly when: 'same-block' | 'next-morning'
+  readonly when: OutcomeHorizon
   /** Minutes after the move is finished, for a same-block judgement. */
   readonly after: number
+  /**
+   * How many owner-local days later a `multi-day` judgement opens.
+   *
+   * Required for `multi-day` and meaningless for the rest — the horizon carries
+   * its own count so that *"judge this in three days"* and *"judge this in ten"*
+   * are one enum value with a number rather than two enum values, which is how
+   * an enum turns into a calendar.
+   */
+  readonly afterDays?: number
 }
+
+/**
+ * When the effect of a move can honestly be judged — S1a.
+ *
+ * ## What was there, and why two values were not enough
+ *
+ * `same-block | next-morning`, read by eight call sites. It is genuinely
+ * absent, genuinely unowned and small: a widened union, a migration rule, and
+ * the consumers taught to read it. C8 — sleep and recovery over longer horizons
+ * — is the acceptance case, and it is the one horizon-dependent capability with
+ * existing evidence behind it.
+ *
+ * ## And why it stops at weekly
+ *
+ * `monthly` and `seasonal` are **refused as outcome-judgement horizons**, and
+ * the refusal is the whole of the bound. A move whose effect can only be judged
+ * in a month cannot be settled by a lifecycle keyed to a day — `openEpisode`
+ * keys on `(target, dayId)` — and there is no evidence supply that would ever
+ * score it: at six tracked concepts and one derived path, a monthly outcome is
+ * a question asked into silence.
+ *
+ * Monthly and seasonal belong to **reading the record** — S1b, AUD-0029 — not
+ * to **judging a move**. That distinction is why this type is named for the
+ * judgement rather than for the span, and `tests/synthetic/reach-horizon.test.ts`
+ * fails the build if a value that names one of them is ever added here.
+ *
+ * ## The migration rule, which is the actual risk
+ *
+ * **No existing value is reinterpreted, and no existing derivation changes.**
+ * Widening an enum is trivial; the danger is that a wider horizon silently
+ * invalidates conclusions drawn at the narrow one. So `same-block` and
+ * `next-morning` mean exactly what they meant, every profile that had one still
+ * has it, and D-064's four conditions for the morning reading produce
+ * byte-identical output before and after — proved by replaying the whole
+ * shipped scenario library under both enums rather than argued.
+ */
+export const OUTCOME_HORIZONS = ['same-block', 'next-morning', 'multi-day', 'weekly'] as const
+
+export type OutcomeHorizon = (typeof OUTCOME_HORIZONS)[number]
 
 const SOON: OutcomeTiming = { when: 'same-block', after: 20 }
 const IN_THE_MORNING: OutcomeTiming = { when: 'next-morning', after: 0 }
+
+/**
+ * The horizons no profile uses yet, and the reason that is not a gap.
+ *
+ * S1a is vocabulary work: the union, the window, the migration rule and the
+ * consumers. What *uses* `multi-day` and `weekly` is AUD-0009 — recovery is
+ * always judged as one night when the evidence says several — and that is
+ * routing 93's, deliberately, because it is a conclusion drawn from evidence
+ * rather than a horizon to draw it over.
+ *
+ * Shipping the vocabulary without a consumer would normally be the
+ * inert-declaration defect this phase exists to remove. It is not one here for
+ * a reason that is checkable rather than asserted: the horizon is **not a
+ * concept**, it declares nothing about the owner, it creates no question and it
+ * cannot go stale. What it has to be is *readable* — and
+ * `tests/synthetic/reach-horizon.test.ts` proves every consumer handles all
+ * four by running a profile at each horizon through every one of them.
+ */
+export const DEFERRED_HORIZONS: readonly OutcomeHorizon[] = ['multi-day', 'weekly']
 
 /**
  * Which kinds of evidence this move can actually produce, in the order asked.
