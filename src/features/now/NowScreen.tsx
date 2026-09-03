@@ -222,9 +222,21 @@ export function ResumePanel({
         {rendered.rendered.sentence}
       </p>
       <p className="note" data-testid="resume-state">
+        {/*
+          Three states now, and the third is F09's.
+
+          A move he pressed Start on and never marked finished is a carried
+          intention with an open fate, and it used to fall off Now the moment
+          something else was chosen. The `else` arm said "you said this did not
+          fit at the time", which about a move he was in the middle of is
+          simply false — so it gets its own sentence rather than the nearest
+          one.
+        */}
         {resumable.state === 'part-done'
           ? 'You got part of this done.'
-          : 'You said this did not fit at the time.'}
+          : resumable.state === 'started'
+            ? 'You started this and did not mark it finished.'
+            : 'You said this did not fit at the time.'}
         {resumable.blocker === undefined ? '' : ` ${resumable.blocker}`}
       </p>
       <div className="now-actions">

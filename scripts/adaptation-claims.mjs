@@ -506,7 +506,31 @@ export const APPROVED_FROM_SURFACES = [
   'You said this did not fit at the time. {statement}',
   'You got part of this done.',
   'You got part of this done. {statement}',
+  /*
+   * The third resume state — F09, routing 93.
+   *
+   * A move he pressed Start on and never marked finished is a carried intention
+   * with an open fate. The `else` arm said *"you said this did not fit at the
+   * time"*, which about a move he was in the middle of is false, so the state
+   * gets its own sentence. It promises nothing: what it says is what the record
+   * holds.
+   */
+  'You {state} this and did not mark it finished.',
   'Nothing here is a nudge. It is on the screen because you started it, and it goes when the day does — {state} is a real place to leave something.',
+  /*
+   * The same sentence with **both** occurrences substituted — routing 93, F09.
+   *
+   * The normaliser replaces the rendered state word with `{state}` so one
+   * catalogue entry can stand for three panels, and the note happens to contain
+   * the literal word *started*. On the state that is literally `started`, both
+   * are replaced and the line no longer matches the entry above.
+   *
+   * It is one string in the product either way; two entries is the price of a
+   * normaliser that cannot tell an interpolated word from a written one, and it
+   * is cheaper than rewording a sentence that has been through QA to dodge its
+   * own placeholder.
+   */
+  'Nothing here is a nudge. It is on the screen because you {state} it, and it goes when the day does — {state} is a real place to leave something.',
 
   // The lifecycle controls that panel offers, which are on the path too.
   'Start it',

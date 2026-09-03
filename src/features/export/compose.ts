@@ -20,6 +20,7 @@ import {
 import { decide, type Decision } from '../../intelligence/engine'
 import { insightsFor, type InsightsReport } from '../../intelligence/insights'
 import { assembleSituation, type Situation } from '../../intelligence/situation'
+import { burdenOver, describeBurden } from '../../intelligence/review'
 import type { RecordId } from '../../domain/ids'
 import { evidenceSourceOf, type ProvenanceSource } from '../../domain/records'
 import { describeRecord, tagOf, type DescribeContext } from '../history/describe'
@@ -950,10 +951,27 @@ function diagnosticsSection(request: ExportRequest, header: ExportHeader): reado
     )
   }
 
+  /*
+   * What the app has cost him, and what he did — F44's measurable half, D-279.
+   *
+   * Three counts side by side and **no arithmetic between them**. §6.5 scopes
+   * F44 to the measurable half only, and F44's own warning is why: a ratio of
+   * taps to actions is an engagement metric with a humane name, and a single
+   * number for all three is the Life Score it refuses outright.
+   *
+   * Here rather than on a card, because a standing count that does not change
+   * from one day to the next is not news, and an app that reports on its own use
+   * every morning is the system optimising compliance with itself. Whether the
+   * burden is falling is a question he can answer by reading them; the app
+   * asserting it is the thing F44 warns against.
+   */
+  const burden = burdenOver(situation)
+
   lines.push(
     bullet(
       `Store: ${countOf(stored.length, 'record', 'records')}, ${countOf(entities.length, 'entity', 'entities')}, ${countOf(unreadable.length, 'unreadable row', 'unreadable rows')}, schema ${snapshot.schemaVersion}`,
     ),
+    bullet(describeBurden(burden)),
     bullet(`Records still standing after corrections: ${standing.length}`),
     bullet(`Replaced or withdrawn: ${displaced.length}`),
     bullet(`Local days covered: ${days.size}; local weeks: ${weeks.size}`),

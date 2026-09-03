@@ -746,6 +746,15 @@ describe('there is exactly one arbitration path', () => {
     'blockers',
     'discovery',
     'interpret',
+    /*
+     * What the record says about how it is going — routing 93, F03/F08/F44.
+     *
+     * It reads and never decides: `stalledStrategies`, `recurringBlockers` and
+     * `burdenOver` count rows and return counts. Nothing in it proposes a move,
+     * ranks one, or reaches the pipeline — which is why it belongs on the open
+     * side of this list rather than beside the evaluator.
+     */
+    'review',
   ]
   const DECIDES = [
     'candidates',

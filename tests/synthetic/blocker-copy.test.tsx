@@ -252,8 +252,44 @@ async function everyRenderedString(): Promise<
     'unable-now-unsaid',
     'part-done',
     'part-done-after-blocker',
+    /*
+     * And the third resume state — F09, routing 93.
+     *
+     * A move he pressed **Start** on and never marked finished. The catalogue
+     * gained a sentence for it because the `else` arm said *"you said this did
+     * not fit at the time"*, which about a move he was in the middle of is
+     * false — and a catalogued string nothing renders is a check guarding
+     * nothing, which is what this walk is here to stop.
+     */
+    'started',
   ] as const) {
     const walked = await eveningIn()
+    if (state === 'started') {
+      expect((await walked.act('start')).done, 'the move could not be started').toBe(true)
+      const started = walked.resumable()
+      if (started !== undefined) {
+        const entities = walked.situation().entities
+        const rendered = renderRecommendation(started.semantics, entities)
+        add(
+          'ResumePanel (started)',
+          render(
+            <ResumePanel
+              resumable={started}
+              entities={entities}
+              disabled={false}
+              onAct={() => undefined}
+            />,
+          ),
+          {
+            ...(rendered.ok ? { recommendation: rendered.rendered.sentence } : {}),
+            ...(started.blocker === undefined ? {} : { statement: started.blocker }),
+            state: readable(started.state),
+            move: 'a walk',
+          },
+        )
+      }
+      continue
+    }
     if (state === 'part-done') await walked.act('start')
     if (state === 'part-done-after-blocker') {
       await walked.act('unable-now')
@@ -334,6 +370,7 @@ describe('QA-84-012 — the catalogue is closed over what the owner receives', (
       'BlockersPanel',
       'ResumePanel (part-done)',
       'ResumePanel (part-done-after-blocker)',
+      'ResumePanel (started)',
       'ResumePanel (unable-now)',
       'ResumePanel (unable-now-unsaid)',
     ])

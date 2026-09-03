@@ -1,5 +1,104 @@
 # Decision log
 
+## D-279 — The owner-use review: what was built, where it lives, and what was not
+
+**Phase:** 93 · **Status:** Active
+
+§6.5's owner-use scope, taken one finding at a time. All of it lives on
+**Insights and the relevant domain pages** (D-169) — no navigation tab, and no
+weekly ritual, because a review the owner must perform is life administration
+and sections 4.5 and 65 both forbid it.
+
+**One rule governs the lot: it reports and never grades.** _"Nothing has moved on
+this in twenty-one days"_ is the record. _"You are falling behind"_ is a verdict
+on a man, and section 4.4 forbids it. Every reading is a count of rows he can
+check against his own Timeline.
+
+### F03 — a strategy that can fail — BUILT, bounded
+
+A destination whose next step has had nothing recorded against it for a
+fortnight says so, counting from the last thing that happened or from the day
+the step was named where nothing has. Two facts on the card and no verdict: how
+long, and how many occasions the record does hold.
+
+**It proposes no replacement.** F03's later half — continue, adapt, replace or
+retire — needs a strategy model and is routing 95's; offering one on a
+fortnight's silence would be the app changing his plan for him.
+
+### F08 — blocker aggregation — BUILT, the half C21 cannot see
+
+C21's enforcement removes a move a standing blocker is _about_. This is the same
+cause beating **different** moves, which no per-move rule can notice: three or
+more in four weeks, across at least two things. One move blocked repeatedly is
+already `blockerQuestionFor`'s case and saying it twice would be the app making
+one observation in two places.
+
+It says what happened and nothing about him — D-045 keeps inability separate from
+decline and from character — and it proposes no changed setup, which is a
+strategy revision and routing 95's.
+
+### F31 — reorientation — BUILT as the constraint list, and it asks nothing
+
+F31 asks the app to _"show which intentions and constraints may need revision"_,
+and routing 93 is the phase that makes it matter: until C21's enforcement landed
+a standing constraint was shown and never acted on, so a stale one cost nothing.
+**It costs a move now**, which makes this C21's own safety net.
+
+**No reorientation question.** F31 also asks for _"one useful reorientation
+question"_, and a question is a tap on a three-a-day budget for something already
+actionable from the area's own page, where _"Not true any more"_ has lived since
+routing 84.
+
+### F34 — the review loop — BUILT as placement, per D-169
+
+There is no review screen and no tab. What F34 asks for — _"what changed, what
+did I achieve, what mattered, what should change next"_ — is answered by the
+cards above sitting where the evidence already is, and by the export, which is
+the document version of the same question.
+
+### F44 — usefulness — BUILT as the measurable half only, and not as a card
+
+Three counts over four weeks: questions answered, things corrected, moves acted
+on. **No arithmetic between them, ever.** A ratio of taps to actions is an
+engagement metric with a humane name, and one number for all three is the Life
+Score F44 refuses outright.
+
+**It is not a card.** A first draft put it on Insights and it fired on nine
+histories at every hour — **forty-seven more times the app opens its mouth** for
+a reading that does not change from one day to the next. An app that reports on
+its own use every morning is the system optimising compliance with itself, which
+is the whole of what F44 warns about. It lives in the export's diagnostics
+section instead: read on demand, beside the other measurements the app makes of
+itself.
+
+### F09 — a carried intention — BUILT in half, and the other half is stated
+
+**Built.** A move he pressed **Start** on and never marked finished is now
+offered back. It is a carried intention with an open fate, and it fell off Now
+the moment something else was chosen: `resumableToday` knew about a move he could
+not do and one he half-did, and not about one he was in the middle of. It has its
+own sentence, because the branch it used to fall into said _"you said this did
+not fit at the time"_ — which about a move he was in the middle of is false.
+
+**Not built: the held intention.** _"Later"_ names a block and writes **no
+record**, deliberately — D-134 bounds `hold` to the next block today with no
+buttons. Saying what became of a held intention needs a record of the holding,
+which is a new record kind and a new owner-facing lifecycle. That is not a
+half-hour's work hiding behind a bound; it is the shape routing 95 and 96 are
+for, and building it here would put a new record kind into a phase already
+carrying thirteen packages.
+
+### None of the four fires on a shipped history
+
+Stated here and asserted in `tests/synthetic/review.test.ts`. Every acceptance
+case is a history built by hand, and the sweep that keeps it honest goes red the
+day one starts firing on a fixture nobody meant it to. **This is the fourth time
+this phase has had to say that sentence** — after `trajectory-fit`, `spacing-fit`
+and AUD-0019's opening — and it is worth the owner knowing that the shipped
+library is thinner than the product's reach.
+
+---
+
 ## D-277 — A cue names a moment the record holds, or there is no cue
 
 **Phase:** 93 · **Status:** Active

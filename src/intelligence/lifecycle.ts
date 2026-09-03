@@ -563,7 +563,28 @@ export function resumableToday(view: MemoryView, situation: Situation): readonly
   const out: ResumableMove[] = []
   for (const episode of collectEpisodes(view, situation.zone)) {
     if (episode.dayId !== situation.dayId) continue
-    if (episode.state !== 'unable-now' && episode.state !== 'part-done') continue
+    /*
+     * And one he started and never settled — F09.
+     *
+     * *"'Later' is useful only if it refers to a plausible opportunity and the
+     * intention is not silently lost."* A move he pressed **Start** on at ten in
+     * the morning and never marked finished is exactly a carried intention, and
+     * it fell off Now the moment something else was chosen: `resumableToday`
+     * knew about a move he could not do and a move he half-did, and not about
+     * one he was in the middle of.
+     *
+     * It is the same shape as the other two — an episode of today with a fate
+     * still open — and it needs no new record, which is what keeps D-134's bound
+     * intact. The **held** case genuinely does need one, writes nothing today,
+     * and stays out of this phase; D-280 records why.
+     */
+    if (
+      episode.state !== 'unable-now' &&
+      episode.state !== 'part-done' &&
+      episode.state !== 'started'
+    ) {
+      continue
+    }
     if (episode.shownAt > situation.at) continue
     if (goalSetAside(view, episode.semantics.target.object)) continue
     out.push({

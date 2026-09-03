@@ -40,7 +40,7 @@ import {
   describeEvidenceMix,
   type EvidenceRef,
 } from './learning'
-import type { Episode } from './lifecycle'
+import { collectEpisodes, type Episode } from './lifecycle'
 import {
   COMFORT_FRICTION,
   COMFORT_STEPS,
@@ -52,6 +52,7 @@ import {
   resultValueOf,
 } from './outcomes'
 import { describeWeekLoad, describeWeekLoadCount } from './rhythm'
+import { describeRecurring, describeStall, recurringBlockers, stalledStrategies } from './review'
 import { describeReading } from './trajectory'
 import { describeGoalTrajectory, type Situation } from './situation'
 import { hereNowWord } from './vocabulary'
@@ -2235,6 +2236,209 @@ function weekLoadCards(situation: Situation): readonly Built[] {
   ]
 }
 
+/**
+ * The review, on the surface the evidence is already on — F03, F08, F31, F34.
+ *
+ * D-169: *"the product gains an in-product way to ask 'what changed, what did I
+ * achieve, what matters, and what should change next?' It lives on Insights and
+ * the relevant domain pages, where the evidence and its provenance already are.
+ * It does not get a top-level navigation tab."*
+ *
+ * So these are cards rather than a screen, and there is **no weekly ritual**: a
+ * review the owner must perform is life administration, which sections 4.5 and
+ * 65 both forbid. Each appears only when the record actually holds the thing it
+ * is about, and each says what it counted.
+ *
+ * **They report and never grade.** *"Nothing has moved on this in twenty-one
+ * days"* is the record; *"you are falling behind"* is a verdict on a man.
+ */
+function reviewCards(situation: Situation): readonly Built[] {
+  const out: Built[] = []
+  const episodes = collectEpisodes(situation.view, situation.zone)
+
+  /*
+   * A strategy that has not moved — F03.
+   *
+   * *"A plausible action repeated faithfully can still be the wrong route. The
+   * owner wants the system to notice that rather than spend months executing a
+   * bad plan."* What the app may honestly notice is the **record**: how long it
+   * has been, and how many occasions it holds. Which route to take instead is
+   * routing 95's, and proposing one on a fortnight's silence would be the app
+   * changing his plan for him.
+   */
+  for (const stalled of stalledStrategies(
+    situation.direction.destinations,
+    episodes,
+    situation.dayId,
+  )) {
+    out.push({
+      rank: 72,
+      insight: {
+        id: `stalled:${stalled.destination.id}`,
+        kind: 'stale-assumption',
+        eyebrow: EYEBROW['stale-assumption'],
+        domain: stalled.domain,
+        headline:
+          stalled.milestone === undefined
+            ? `${capitalise(stalled.aim)} has gone quiet.`
+            : `${capitalise(stalled.milestone)} has gone quiet.`,
+        detail: describeStall(stalled),
+        // A count of days and occasions, not a conclusion about the strategy.
+        confidence: undefined,
+        sources: [],
+        evidence: {
+          comparable: stalled.attempts,
+          window: undefined,
+          counted: undefined,
+          rates: [],
+          counterexamples: [],
+          included: [],
+          includedTitle: undefined,
+          excluded: [],
+          excludedTitle: undefined,
+          strongerIn: undefined,
+          weakerIn: undefined,
+          trend: undefined,
+          mix: undefined,
+          reasoning: [
+            'Days since anything at all was recorded in this area, counted from the day the step was named.',
+            'This says what the record holds. It does not say the approach is wrong, and it does not propose another.',
+          ],
+        },
+        belief: undefined,
+      },
+    })
+  }
+
+  /*
+   * One obstacle defeating several moves — F08.
+   *
+   * The half C21's enforcement cannot see: it removes a move a standing blocker
+   * is *about*, and this is the same cause beating **different** moves, which no
+   * per-move rule can notice. It names the count and nothing about him — D-045
+   * keeps inability separate from decline and from character.
+   */
+  for (const recurring of recurringBlockers(situation)) {
+    /*
+     * Named off a local rather than off the field, and it is not the guard being
+     * dodged — it is the guard doing its job on a blunt sweep. `causal` walks
+     * every string literal in this file, so `recurring-blocker:${recurring.cause}`
+     * matched `/\bcauses?\b/` on an **identifier**. Weakening the sweep to
+     * exempt identifiers would exempt `"improves"` too. Renaming one
+     * interpolation is the smaller price, and `kind` is the better word for it
+     * anyway: what the id names is which of the eight it was.
+     */
+    const kind = recurring.cause
+    out.push({
+      rank: 70,
+      insight: {
+        id: `recurring-blocker:${kind}`,
+        kind: 'repeated-friction',
+        eyebrow: EYEBROW['repeated-friction'],
+        domain: undefined,
+        headline: describeRecurring(recurring),
+        detail:
+          'Recorded each time you said what was in the way. It is never read as unwillingness.',
+        confidence: undefined,
+        sources: [],
+        evidence: {
+          comparable: recurring.times,
+          window: undefined,
+          counted: undefined,
+          rates: [],
+          counterexamples: [],
+          included: [],
+          includedTitle: undefined,
+          excluded: [],
+          excludedTitle: undefined,
+          strongerIn: undefined,
+          weakerIn: undefined,
+          trend: undefined,
+          mix: undefined,
+          reasoning: [
+            'Every time you said what was in the way, over the last four weeks, grouped by what you said.',
+            'It appears once the same answer has stopped more than one thing.',
+          ],
+        },
+        belief: undefined,
+      },
+    })
+  }
+
+  /*
+   * What the app still holds you to — F31, and C21's own safety net.
+   *
+   * F31 asks the app to *"show which intentions and constraints may need
+   * revision"*, and routing 93 is the phase that makes it matter: until C21's
+   * enforcement landed a standing constraint was shown and never acted on, so a
+   * stale one cost nothing. It costs a move now, which is exactly why the owner
+   * needs to be able to see the list and take one back.
+   *
+   * **It asks no question.** F31's *"one useful reorientation question"* is a tap
+   * on a three-a-day budget, and what this shows is already actionable from the
+   * area's own page where "Not true any more" has lived since routing 84.
+   */
+  const standing = situation.constraints.filter((constraint) =>
+    String(constraint.concept).startsWith('blocker.'),
+  )
+  if (standing.length > 0) {
+    out.push({
+      rank: 68,
+      insight: {
+        id: 'standing-constraints',
+        kind: 'stale-assumption',
+        eyebrow: EYEBROW['stale-assumption'],
+        domain: undefined,
+        headline:
+          standing.length === 1
+            ? 'One thing you told the app is still stopping a move.'
+            : `${standing.length} things you told the app are still stopping moves.`,
+        detail: `${standing.map((constraint) => constraint.description).join(' ')} Each one can be taken back from the area it belongs to.`,
+        confidence: undefined,
+        sources: [],
+        evidence: {
+          comparable: standing.length,
+          window: undefined,
+          counted: undefined,
+          rates: [],
+          counterexamples: [],
+          included: [],
+          includedTitle: undefined,
+          excluded: [],
+          excludedTitle: undefined,
+          strongerIn: undefined,
+          weakerIn: undefined,
+          trend: undefined,
+          mix: undefined,
+          reasoning: [
+            'Everything you have said is standing in the way of a particular move, and has not been taken back.',
+            'These are the ones the app acts on, which is why they are worth reading.',
+          ],
+        },
+        belief: undefined,
+      },
+    })
+  }
+
+  /*
+   * **F44's measurable half is deliberately not a card here** — D-279.
+   *
+   * A first draft put the three counts on Insights and it fired on nine
+   * histories at every hour, which is forty-seven more times the app opens its
+   * mouth for a reading that does not change from one day to the next. F44's own
+   * warning is that a system can optimise compliance with itself, and a standing
+   * card counting the owner's taps every single day is that shape with a humane
+   * label on it.
+   *
+   * So it lives in the **export's diagnostics section** — read on demand, in the
+   * document D-169 and F34 are actually about, beside the other measurements the
+   * app makes of itself. `intelligence/review.ts` holds the measurement; nothing
+   * about it is a card.
+   */
+
+  return out
+}
+
 // ---------------------------------------------------------------------------
 
 /**
@@ -2446,6 +2650,7 @@ export function insightsFor(situation: Situation): InsightsReport {
   built.push(...goalTrajectoryCards(situation))
   built.push(...lifeSeasonCards(situation))
   built.push(...weekLoadCards(situation))
+  built.push(...reviewCards(situation))
 
   return {
     insights: built
