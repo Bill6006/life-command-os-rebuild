@@ -234,19 +234,19 @@ measured and pulled back; what ships says why the app is asking. D-266.
 Filled in from results rather than in advance. A row that says PENDING has not
 run at the time of writing and is not a claim.
 
-| Gate                                                           | Result                                             |
-| -------------------------------------------------------------- | -------------------------------------------------- |
-| `npm run verify` — format, lint, typecheck, tests, build, copy | PASS                                               |
-| Unit, contract, synthetic and adversarial tests                | PASS — 2,150 across 98 files                       |
-| Privacy scan                                                   | PASS — 324 tracked files                           |
-| Rendered copy scan                                             | PASS — 8,809 shipped strings                       |
-| Adaptation-claim scan                                          | PASS                                               |
-| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PASS — 849 of 849 in CI; see the note below        |
-| CI, including its own matrix run                               | PASS — run 33784183228, 849 of 849                 |
-| Checkpoint equivalence                                         | PASS — deployed `2618abe` serves `b850dfc`'s bytes |
-| Release integrity, from CI's own manifest artifact             | PASS — 8 files served byte for byte                |
-| Android-style deployed gate                                    | PASS — 234 checks, against the deployed Preview    |
-| Independent QA (required from Phase 5 on, D-077)               | **DEFERRED by the owner — zero rounds have run**   |
+| Gate                                                           | Result                                            |
+| -------------------------------------------------------------- | ------------------------------------------------- |
+| `npm run verify` — format, lint, typecheck, tests, build, copy | PASS                                              |
+| Unit, contract, synthetic and adversarial tests                | PASS — 2,150 across 98 files                      |
+| Privacy scan                                                   | PASS — 324 tracked files                          |
+| Rendered copy scan                                             | PASS — 8,809 shipped strings                      |
+| Adaptation-claim scan                                          | PASS                                              |
+| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PASS — 849 of 849 in CI; see the note below       |
+| CI, including its own matrix run                               | PASS — runs 33784183228 and 33787629107, 849 each |
+| Checkpoint equivalence                                         | PASS — read live twice; see _Checkpoint_ below    |
+| Release integrity, from CI's own manifest artifact             | PASS — 8 files byte for byte, at both checkpoints |
+| Android-style deployed gate                                    | PASS — 234 checks, against the deployed Preview   |
+| Independent QA (required from Phase 5 on, D-077)               | **DEFERRED by the owner — zero rounds have run**  |
 
 **The local matrix is reported through CI's run rather than through a local one,
 and that is a finding rather than a convenience — DEF-0165.** A local run at the
@@ -258,10 +258,18 @@ assertion ran — which the same spec passing 39 of 39 in isolation, and CI pass
 all 849 twice on a clean machine, identify as loopback contention on the build
 machine rather than anything in the product.
 
-**Checkpoint:** `b850dfc` — the commit every product gate was run on, and the
-last one to change anything the browser downloads. The gates were re-run in full
-at the deferral, on `2618abe`; the six files between them are documents and the
-phone-gate script.
+**Checkpoint:** `b850dfc` — the commit every product gate was run on, and **the
+last one to change anything the browser downloads.** Everything committed after
+it is documents plus the phone-gate script, which is why the equivalence holds
+rather than merely happening to.
+
+Equivalence was proved by reading the deployed `build-info.json` live, twice: at
+`2618abe`, and again at `6486718` after the gate results were recorded. Both came
+back bundle-equivalent to `b850dfc`, and release integrity was re-run at each
+against that CI run's own manifest artifact. A later documents-only commit moves
+the deployed SHA again without moving a byte the browser downloads, so the
+property to check is that the diff from `b850dfc` is documents — not that the
+deployed SHA equals any particular value.
 **Documentation head:** `e3ae91d`, which is what Preview serves. Four files
 changed between them and none is bundle-relevant, so the deployed build serves
 the same bytes as the checkpoint: `checkpoint-equivalence.mjs` says so, and

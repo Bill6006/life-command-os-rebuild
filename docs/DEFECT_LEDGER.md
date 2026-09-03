@@ -237,9 +237,20 @@ and a second Playwright process for the same machine, and this repository
 already records loopback drops under Playwright load here. It is contention on
 the build machine, not the product.
 
+**A second one nearly went the same way.** Re-running release integrity at the
+next checkpoint, the shell variable holding the CI run id came out **empty** —
+the workflow had been looked up under a name that does not exist — and the
+download printed nothing. The gate still reported `clean`. It had in fact read a
+real manifest that genuinely declared the right commit, so the result was
+correct; but nothing in the output established that at the time, and it was only
+confirmed by re-downloading the artifact under an explicit run id and reading the
+commit out of it. Two different `/tmp` roots — Git Bash's and the Windows Python
+binary's — had obscured which file was even being read.
+
 **What changed as a result.** Nothing in `src/`. The matrix is reported through
 CI's run — a clean machine, a known count — and any local run is read by its
-count before its exit code. A gate is what it measured, not what it returned.
+count before its exit code. **A gate is what it measured, not what it returned**,
+and a gate that cannot say which input it read has not been run.
 
 ---
 
