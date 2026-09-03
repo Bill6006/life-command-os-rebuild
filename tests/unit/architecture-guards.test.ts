@@ -1522,11 +1522,48 @@ describe('the shown-ledger is not history — AUD-0025, D-043', () => {
     for (const file of [...sourceFiles('src/memory'), ...FEATURES]) {
       const path = repoPath(file)
       if (!path.startsWith('src/memory/') && !path.includes('/export/')) continue
-      if (/\bShownMove\b|\bshownLedger\b/.test(readCode(file))) {
+      if (/\bShownMove\b|\bshownLedger\b|\bShownStore\b/.test(readCode(file))) {
         offenders.push(`${path} knows what has been on screen`)
       }
     }
     expect(offenders, 'a session note reached the owner’s own records').toEqual([])
+  })
+
+  it('lives in its own database, opened from exactly one place — AUD-0025', () => {
+    /*
+     * The durable half, and the reason it is a **separate database** rather than
+     * a fourth object store beside the records.
+     *
+     * Every claim above — never a canonical record, never in a backup, never in
+     * a fingerprint, never restored — is a property of where it lives rather
+     * than a rule somebody has to remember. `replaceAll` and `clear` on the
+     * canonical store name their object stores explicitly; a fifth one in the
+     * same database would eventually be added to one of those lists by somebody
+     * being tidy, and the count would start travelling with the history.
+     *
+     * So: one module owns it, one component opens it, and nothing that writes a
+     * backup, composes an export or implements the canonical store may import it
+     * at all.
+     */
+    const IMPORTS_IT = /from '[^']*shownStore'/
+    const openers: string[] = []
+    for (const file of sourceFiles('src')) {
+      const path = repoPath(file)
+      if (path.endsWith('src/features/memory/shownStore.ts')) continue
+      if (IMPORTS_IT.test(readCode(file))) openers.push(path)
+    }
+    expect(
+      [...new Set(openers)].sort(),
+      'the shown ledger is opened somewhere other than the component that owns the clock',
+    ).toEqual(['src/features/memory/MemoryProvider.tsx'])
+  })
+
+  it('opens a database of its own rather than a store beside the records', () => {
+    // The positive half: the name really is a separate database, and the module
+    // that implements the canonical store knows nothing about it.
+    expect(readCode(join(ROOT, 'src/features/memory/MemoryProvider.tsx'))).toContain('SHOWN_DB')
+    expect(readCode(join(ROOT, 'src/memory/indexedDbStore.ts'))).not.toMatch(/shown/i)
+    expect(readCode(join(ROOT, 'src/memory/backup.ts'))).not.toMatch(/shown/i)
   })
 })
 

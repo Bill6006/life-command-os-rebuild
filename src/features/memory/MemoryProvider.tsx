@@ -14,6 +14,7 @@ import type { ValidationIssue } from '../../domain/validation'
 import type { AuthoringResult } from '../../intelligence/authoring'
 import { derivedOutcomeRecords } from '../../intelligence/derived'
 import type { ShownMove } from '../../intelligence/situation'
+import { forgetfulShownStore, openShownStore, type ShownStore } from './shownStore'
 import { nextOutcomeDueAt } from '../../intelligence/outcomes'
 import { indexedDbAvailable, openIndexedDbStore } from '../../memory/indexedDbStore'
 import { createMemoryStore } from '../../memory/memoryStore'
@@ -80,6 +81,16 @@ const EMPTY: StoreSnapshot = { schemaVersion: 1, records: [], entities: [], malf
  */
 const OWNER_DB = `life-command-os:${runningBuild.target}`
 const LABORATORY_DB = `${OWNER_DB}:laboratory`
+/**
+ * A third database, and the separation is the design — AUD-0025.
+ *
+ * The shown ledger is a fact about *screens*, not about the owner's life. Keeping
+ * it in its own database is what makes *"it never reaches a backup, a
+ * fingerprint or an export"* a property of where it lives rather than a rule
+ * somebody has to remember: nothing that walks the record log can see it,
+ * `replaceAll` cannot touch it, and a restore cannot bring it back.
+ */
+const SHOWN_DB = `${OWNER_DB}:shown`
 
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
@@ -176,9 +187,24 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
    */
   const shownLedger = useRef(new Map<string, ShownMove>())
   const [shown, setShown] = useState<readonly ShownMove[]>([])
+  /**
+   * The durable half — AUD-0025, D-275.
+   *
+   * The map above is the session's own copy and stays: reading it is
+   * synchronous, and a decision is recomputed on every clock tick. This is what
+   * makes the same count survive the app being closed, which is the case an
+   * owner actually lives — **a phone picked up at half past six and again at
+   * seven in the evening is two sessions**, and the second one had never heard
+   * of the first.
+   */
+  const shownStore = useRef<ShownStore>(forgetfulShownStore())
 
   /** Forget what has been on screen, because it was about a different history. */
   const forgetShown = useCallback(() => {
+    // The store is cleared whether or not the session's copy holds anything: a
+    // reload with a fixture loaded would otherwise inherit yesterday's owner
+    // session through a map that happened to be empty.
+    void shownStore.current.clear()
     if (shownLedger.current.size === 0) return
     shownLedger.current = new Map()
     setShown([])
@@ -197,14 +223,33 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
     void (async () => {
       const owner = await openStore(OWNER_DB)
       const laboratory = await openStore(LABORATORY_DB)
+      const seen = await openShownStore({ name: SHOWN_DB })
       if (!live) {
         owner.close()
         laboratory.close()
+        seen.close()
         return
       }
       stores.current = { owner, laboratory }
+      shownStore.current = seen
       setBackend(owner.backend)
       setDurable(owner.durable)
+
+      /*
+       * What was already put in front of him today — AUD-0025.
+       *
+       * Read once, on open, into the session's own map. The store keeps only the
+       * current owner-local day and drops anything else as it reads, so this is
+       * bounded by the number of moves the app can propose in a day and cannot
+       * carry a stale count into a decision.
+       */
+      const already = await seen.read(localDayIdAt(clock.now(), clock.zone()))
+      if (live && already.length > 0) {
+        shownLedger.current = new Map(
+          already.map((entry) => [`${entry.move}|${entry.dayId}`, entry]),
+        )
+        setShown(already)
+      }
 
       try {
         // Whatever was left here last time is still here. That is the point of
@@ -227,11 +272,19 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
 
     return () => {
       live = false
+      shownStore.current.close()
       stores.current.owner?.close()
       stores.current.laboratory?.close()
       stores.current = {}
     }
-  }, [projection])
+    /*
+     * `clock` is a memo with no inputs, so it is the same object for the life of
+     * the provider and listing it changes nothing — but listing it is what makes
+     * that a fact the linter checks rather than one a reader has to verify. The
+     * open effect reads it once, for the owner-local day the shown ledger is
+     * about (AUD-0025).
+     */
+  }, [projection, clock])
 
   /*
    * A loaded document always lands in the laboratory, never in the owner's
@@ -651,13 +704,18 @@ export function MemoryProvider({ children }: { children: ReactNode }) {
       const key = `${move}|${dayId}`
       const held = shownLedger.current.get(key)
       if (held !== undefined && held.at === now) return
-      shownLedger.current.set(key, {
-        move,
-        dayId,
-        at: now,
-        count: (held?.count ?? 0) + 1,
-      })
+      const entry: ShownMove = { move, dayId, at: now, count: (held?.count ?? 0) + 1 }
+      shownLedger.current.set(key, entry)
       setShown([...shownLedger.current.values()])
+      /*
+       * And the same row, upserted — AUD-0025.
+       *
+       * A `put` on a fixed key rather than an append, which is the audit's own
+       * condition: *"an upsert per render is fine, an append is not."* Not
+       * awaited, because noting a render must not make the render wait, and a
+       * write that fails leaves the session's own count exactly as it was.
+       */
+      void shownStore.current.note(entry)
     },
     [now, zone],
   )
