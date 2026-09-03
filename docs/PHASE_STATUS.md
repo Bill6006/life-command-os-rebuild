@@ -97,21 +97,21 @@ re-scope), and no canonical phase is renumbered.
 82 GREEN ─▶ adjudication ─▶ 83 ─▶ 84 ─▶ 90 ─▶ 91 ─▶ 92 ─▶ 93 ─▶ 94 ─▶ 95 ─▶ 96 ─▶ 97 ─▶ 101 ─▶ 102 ─▶ 103
 ```
 
-| Routing | Product / canonical name                                 | State, or what it waits on        |
-| ------- | -------------------------------------------------------- | --------------------------------- |
-| **83**  | The instrument, and the things that are untrue           | **GREEN — closed, round 2**       |
-| **84**  | What the owner is trying to become                       | **GREEN — bounded retest passed** |
-| **90**  | **Canonical Phase 9** — visual coherence, motion, mobile | **GREEN — closed, round 3**       |
-| **91**  | Semantic capture and clarification                       | **BUILT / QA DEFERRED**           |
-| **92**  | Reach — what the brain can see                           | **Next — dispatched**             |
-| **93**  | Validity — what it concludes from what it sees           | 92                                |
-| **94**  | Domains and progression                                  | 93                                |
-| **95**  | Advancement and revision                                 | 94                                |
-| **96**  | Expectation and reconciliation                           | 95                                |
-| **97**  | Longitudinal inference — D-172's mechanism               | 96                                |
-| **101** | **Canonical Phase 10** — performance, PWA, reliability   | 97                                |
-| **102** | **Canonical Phase 11** — adversarial hardening           | 101                               |
-| **103** | **Canonical Phase 12** — release                         | 102                               |
+| Routing | Product / canonical name                                 | State, or what it waits on            |
+| ------- | -------------------------------------------------------- | ------------------------------------- |
+| **83**  | The instrument, and the things that are untrue           | **GREEN — closed, round 2**           |
+| **84**  | What the owner is trying to become                       | **GREEN — bounded retest passed**     |
+| **90**  | **Canonical Phase 9** — visual coherence, motion, mobile | **GREEN — closed, round 3**           |
+| **91**  | Semantic capture and clarification                       | **BUILT / QA DEFERRED**               |
+| **92**  | Reach — what the brain can see                           | **YELLOW — READY FOR INDEPENDENT QA** |
+| **93**  | Validity — what it concludes from what it sees           | 92                                    |
+| **94**  | Domains and progression                                  | 93                                    |
+| **95**  | Advancement and revision                                 | 94                                    |
+| **96**  | Expectation and reconciliation                           | 95                                    |
+| **97**  | Longitudinal inference — D-172's mechanism               | 96                                    |
+| **101** | **Canonical Phase 10** — performance, PWA, reliability   | 97                                    |
+| **102** | **Canonical Phase 11** — adversarial hardening           | 101                                   |
+| **103** | **Canonical Phase 12** — release                         | 102                                   |
 
 Product phase names and routing integers are different things; plan section 43A
 is the only place they are reconciled, and the `**Phase:**` field carries the
@@ -132,6 +132,112 @@ what it covers).
 the orchestrator, no `PHASE_83_QA_HANDOFF.md` exists, and the owner ran it
 directly. Routing 83 belongs to the build phase, and the held handoff's scope is
 superseded rather than reused.
+
+---
+
+# Routing Phase 92 — Reach: what the brain can see
+
+**Status: YELLOW — READY FOR INDEPENDENT QA.**
+
+Not GREEN. D-077 is unchanged: a builder conversation may not approve its own
+phase, and nothing in this record does. Every mechanical gate this phase
+required has been run and is reported below; what has not happened is a person
+outside this conversation reading the deployed build.
+
+**One item is open on purpose and independent QA is the right place for it.**
+The audit's no-added-noise gate asks that making dormant concepts live must not
+increase how often the app speaks. Measured across the twenty-seven histories
+that existed before this phase, at five hours each, the app **spoke 216 times
+before and speaks 218 now** — two questions, both `emotional.mental-load`, on
+`three-days-since` and `observed-evenings`. It was not suppressed, the reasoning
+is D-267, and it is the builder's judgement rather than the owner's rule, which
+is exactly the kind of thing a builder may not sign off on his own work.
+
+## The finding this phase answers, in one sentence
+
+_"Adding a domain is cheap and wiring one is not."_ `assembleSituation` was a
+hand-written list of nine reads while everything else about a concept — its page,
+its coverage entry, its privacy class, its freshness — was registry-driven. So
+eleven domains had pages and seven had brains, the QA laboratory reported
+_"Facts considered: 9"_ against _"What the system believes: 15"_, and the six
+beliefs missing from the app's own account of its decision included the one that
+may have made it.
+
+## What it built
+
+**92.1 — the situation reads the registry (AUD-0040).** The read walks
+`concepts.all()`; the purposes travel on the concepts; every named field on
+`Situation` is a narrowed view of a row in the new map. Two guards ship with it,
+because reaching around the situation is not a boundary violation and the
+existing guard could not see it: nothing in `src/intelligence/` but
+`situation.ts` may resolve a concept from the store, and `describeFactValue` is
+unreachable from the decision layer — `discreetly` is the same renderer with the
+privacy class consulted first. D-259.
+
+**92.2 — what decides is measured (AUD-0041).** `materialToDecision` is no
+longer a bare boolean nobody checks. The audit found four wrong declarations by
+hand; the measurement found five. D-260, DEF-0156.
+
+**92.3 — the vocabulary, each concept with its consumer.** S2 Tier 1 and Tier 2,
+and D-166's six emotional dimensions — six scales, never composited, two asked
+and four readable-and-silent with the reason on each definition. AUD-0013's
+three-state social gate over AUD-0047's graph, with quality suppressing and
+never ranking. D-261.
+
+**92.4 — the supervision pair, and a second movement (C21, AUD-0045).** D-187's
+capture reaches something for the first time, and the Health domain can produce
+a second sentence at all. D-262, D-263, DEF-0158, DEF-0159.
+
+**92.5 — the outcome horizon (S1a).** `multi-day` and `weekly` added, `monthly`
+and `seasonal` refused, and the migration rule proved by a pinned digest rather
+than argued. D-264.
+
+**92.6 — money reaches a decision, and time stops being career (AUD-0012,
+AUD-0006, correction 3.11).** D-265, DEF-0155, DEF-0157, DEF-0160.
+
+**92.7 — both gates.** The privacy guarantee proved on the hard case with the
+permission **on**, and the no-added-noise figures measured against a worktree at
+the phase's own starting commit. D-267.
+
+**92.8 — research priors, option B (§13C).** The ordering form was built,
+measured and pulled back; what ships says why the app is asking. D-266.
+
+**92.9 — the owner-use findings**, each with an acceptance rather than a claim.
+
+## Gates at YELLOW
+
+| Gate                                                           | Result                                                 |
+| -------------------------------------------------------------- | ------------------------------------------------------ |
+| `npm run verify` — format, lint, typecheck, tests, build, copy | PASS                                                   |
+| Unit, contract, synthetic and adversarial tests                | PASS                                                   |
+| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PASS                                                   |
+| Privacy scan                                                   | PASS                                                   |
+| Rendered copy scan                                             | PASS                                                   |
+| Adaptation-claim scan                                          | PASS                                                   |
+| Checkpoint equivalence                                         | PASS                                                   |
+| CI                                                             | PASS                                                   |
+| Release integrity, from CI's own manifest                      | PASS                                                   |
+| Android-style deployed gate                                    | PASS                                                   |
+| Independent QA (required from Phase 5 on, D-077)               | **Outstanding — this phase is YELLOW until it passes** |
+
+## What independent QA is walking into
+
+Three things worth knowing before Round 1.
+
+**The one open gate item is named above and in D-267.** It is a judgement about
+whether two questions constitute the app speaking more, and the builder made it
+rather than deferring it — which is precisely the shape D-077 exists to check.
+
+**Five shipped tests were inverted, and each inversion is the phase.** Two held
+routing 84's deferral of AUD-0045 honestly — _"this phase builds the route;
+Reach walks it"_ — and this phase is Reach walking it. Two held declarations the
+audit found wrong. One held a promise about Social that was false because the
+registry said so. Each is worth reading as a diff rather than accepted: an
+inverted assertion is the easiest place in a phase to hide a regression.
+
+**Routing 91 is still BUILT / QA DEFERRED.** Its Round 10 brief is untouched in
+`qa/PHASE_91_QA_HANDOFF.md` and has not been edited by this run. Nothing in this
+phase approves any part of it.
 
 ---
 

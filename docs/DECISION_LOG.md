@@ -1,5 +1,304 @@
 # Decision log
 
+## D-259 — The situation reads the registry, and one door onto a fact
+
+**Phase:** 92 · **Status:** Active · **Closes** AUD-0040
+
+`assembleSituation` was a hand-written list of nine reads. Adding a concept to
+the registry, giving it a domain page and giving it a coverage entry were all
+registry-driven and cheap; giving it a **read** was a code change in the
+assembler, in `Situation`'s interface and in every consumer. That asymmetry is
+the mechanism behind AUD-0011 — why eleven domains had pages and seven had
+brains — and it is why the QA laboratory reported _"Facts considered: 9"_
+against _"What the system believes: 15"_.
+
+**The read walks `concepts.all()`.** The purposes that used to be written beside
+each hand-written read travel on the concepts themselves as a required
+`ConceptDefinition.purpose`, with `{when}` substituted from the block so a use
+that names an hour names the right one. Every named field on `Situation` is
+unchanged and is now a narrowed view of a row in the new `readings` map — a pure
+addition, with no behaviour changed in the same commit as the structure, which
+is what the audit asked for.
+
+**Two guards, because reaching around the situation is not a boundary violation
+and the existing guard could not see it.**
+
+1. Nothing in `src/intelligence/` but `situation.ts` may resolve a concept from
+   the store. That closes the `cashBuffer` shortcut the audit names and two more
+   found on the way: `evaluate.ts` scored confidence and uncertainty off
+   `view.facts`, which would have counted a reading the decision was
+   structurally unable to see, and `direction.ts` read the weekly focus a second
+   time through a different door.
+2. `describeFactValue` is unreachable from the decision layer. `discreetly` is
+   the same renderer with the privacy class consulted first.
+
+**The exposure the audit predicted arrived on schedule.** The moment the sweep
+landed, `export-honesty` failed: a private-off document named the private area
+in the section listing what the app read. The repair is not a filter at each
+surface — it is that the claim was false. While the permission is off the
+decision cannot read a private concept at all (D-167), so listing it among the
+facts the decision rested on is the app saying it weighed something it could not
+see.
+
+---
+
+## D-260 — `materialToDecision` is measured, and five declarations were wrong
+
+**Phase:** 92 · **Status:** Active · **Closes** AUD-0041 · **Amends** the
+registry
+
+`ask.materialToDecision` was a bare boolean nobody checked, three lines from the
+field DEF-0056 had already fixed for exactly this reason. It is now measured:
+`tests/synthetic/reach-material.test.ts` removes every record bearing a concept,
+re-runs the decision, puts each reading the owner could give back in, and
+compares the chosen move, the refusals, every surviving candidate's score,
+confidence and dimension vector, the limiter, the sentence and the premise.
+
+Three things are held out of the comparison, each because it cannot
+discriminate. **Coverage** is fed by `standing`, a different flag, so every
+standing concept moves it by construction — counting it would call the custody
+arrangement and the faith practice decisional, which AUD-0011(d) records as
+correctly non-decisional, and would call the private pattern decisional, which
+section 11 forbids. **The flavour of no-action** goes for the same reason:
+`nothing-proposed` becomes `nothing-in-reach` the moment a thin history holds
+one usable reading of anything. And a **null probe** — one more record bearing a
+concept nobody registered — skips any history that reacts to a record simply
+existing.
+
+The audit found four wrong declarations by hand. The measurement found five.
+`socialEnergy` and `homeFriction` each gate a whole domain's generator and said
+they decided nothing. `emotionalState` claimed an answer mattered with no reader
+and no question. `sleepQuality` is the fifth and only measurement found it:
+nothing anywhere reads how the night felt. `cashBuffer` is the audit's third and
+was corrected with AUD-0012, because until money had a history the measurement
+correctly agreed with the flag.
+
+---
+
+## D-261 — Six dimensions, each with its consumer, and two of them asked
+
+**Phase:** 92 · **Status:** Active · **Implements** D-166 · **Under** §13B
+
+D-166's six emotional dimensions are six separate concepts on six separate
+scales: mood, stress, motivation, confidence, need for company and mental load.
+Nothing composites them, and a source scan fails the build if any two are ever
+reduced to a number together — with a line that would trip it sitting beside the
+guard so it cannot quietly stop matching. `emotionalState` stays where it was:
+the sentence he types is a different thing from a reading on a scale, which is
+D-166's own _free text coexisting_.
+
+**Each ships only with its consumer**, and where there is none the definition
+says what would have to exist first.
+
+- **Mental load** is asked, and the capacity limiter reads it. Now could always
+  say a body was short of rest or asking for an easier day; it could never say
+  the obvious third thing.
+- **Need for company** decides and is not asked. Its consumer — AUD-0013's
+  social-demand path — is live only while social energy is unknown, and in
+  exactly that situation the guide already holds _"up for people tonight?"_. A
+  second question about the same evening buys nothing, so the reading is given
+  on the Emotional page and what it does is hold a reach-out back, never create
+  one. §13B's rule is that a concept ships **askable** only with a consumer; it
+  does not say every consumer earns a question.
+- **Stress and motivation** were §13B's two conditional cases and neither
+  condition was met. The only available consumer is `friction`, and routing
+  either there would assert a causal claim nothing measures, or fold a
+  whole-person reading into a per-move learned belief with no way to separate
+  them afterwards.
+- **Confidence** waits for routing 94, where the progression consumer belongs.
+
+**The trajectory coupling is decided rather than discovered.** A `tracked` scale
+on a dimension produces a card per dimension, and six separate cards is the
+opposite of a composite — the copy is the dimension's own label in the card's
+existing shape, and a test holds two dimensions saying opposite things in two
+cards.
+
+---
+
+## D-262 — A move that means leaving, and someone who cannot
+
+**Phase:** 92 · **Status:** Active · **Completes** D-187's capture ·
+**Concept half of C21**
+
+D-187 recorded that _"can't leave — someone's in my care"_ was captured and that
+**nothing acted on it**: `applyConstraints` never read `situation.constraints`,
+and the constraint named `blocker.must-stay.routine:a-walk` — a concept the
+registry had never heard of, scoped to one object, that no other move could
+match.
+
+Both halves exist now. `context.must-stay` has a registry home, a privacy class,
+a freshness horizon and a reader that works it out from the constraints in
+force; and a candidate says whether it means going out. A move that requires
+leaving is removed with reason `cannot-leave` while the constraint stands, and a
+man who cannot leave the house can still wind down in it.
+
+**This is a constraint, not blocker enforcement.** F08's aggregation — recorded
+blockers becoming standing suppression across a family of moves — is routing
+93's and nothing here does it. This is the same shape as
+`subject-not-available`: she is at school, so a move about her does not fit; he
+cannot leave, so a move that means leaving does not fit.
+
+**The bounded `until` is a second button rather than a second question.** §5.2
+records that _"while she is asleep"_ had no representation and that no blocker
+path had ever set `ConstraintRecord.until`. D-164 allows one compact question
+about what was in the way, so the bound travels with the answer: _"Can't leave"_
+stands until he lifts it, _"Can't leave tonight"_ ends with the owner-local day.
+Nothing is bounded on his behalf in either direction.
+
+---
+
+## D-263 — The owner names his own movement, and it is scored as what it is
+
+**Phase:** 92 · **Status:** Active · **Closes** AUD-0045 · **Implements** C20,
+D-113
+
+Every owner, on every good day, forever, got _"Move for 25 minutes: a walk"_,
+and the `routine` entity kind had existed since Phase 1 with no surface that
+created one.
+
+The bulk of this is the precondition the audit names rather than the branch:
+`profileFor` had to become keyed on **(verb, object)**, because `size`, `demand`
+and `friction` are read by six separate rules and a 90-minute session scored as
+a 25-minute walk would make all six wrong. The candidate carries its own
+resolved profile and the filter and the evaluator read that rather than looking
+the verb up again.
+
+The owner names a routine on the Health page, says roughly how long it takes and
+whether he has to go out for it, and **every** one he has named is proposed —
+picking one in the generator would be a second ranking in the file that is not
+allowed to rank. Both answers are optional: a routine with no length is
+suggested with none rather than with the walk's twenty-five minutes, and one he
+has said nothing about is treated as something he can do at home, which is the
+direction that only ever leaves a move in.
+
+**The size and the outdoors flag are deliberately not registry concepts.** How
+long a swim takes is a property of an object, and the registry answers what the
+app can know about the owner. Registering them would put "Routine size" on the
+Health page as a fact about him, have coverage measure how long it had been
+since he last said it, and make one global reading stand for every routine at
+once.
+
+---
+
+## D-264 — The outcome horizon widens to a week, and stops there
+
+**Phase:** 92 · **Status:** Active · **Implements** S1a (§5.1)
+
+`same-block | next-morning` gains `multi-day` — carrying its own day count — and
+`weekly`. They are built on `CourseReflection`'s shape rather than beside it:
+that mechanism already opens a question three days after a course ends and
+another at ten, keyed on an owner-local day and open for seven, with
+owner-facing copy that has been through QA, and D-178's rule is one name for a
+thing in the layer every surface can reach.
+
+**`monthly` and `seasonal` are refused, and the refusal is the whole of the
+bound.** A move whose effect can only be judged in a month cannot be settled by
+a lifecycle keyed to a day, and at six tracked concepts and one derived path a
+monthly outcome is a question asked into silence. Those belong to reading the
+record — S1b, AUD-0029 — not to judging a move, and a test fails the build if a
+value naming one of them is added to the union.
+
+**No existing value is reinterpreted and no existing derivation changes.** Proof
+is a pinned digest over every outcome window for every episode in every shipped
+history plus every record the sleep derivation writes, taken at the commit
+before the union widened and asserted rather than recomputed — because the claim
+is about before and after and a same-run comparison cannot make it.
+
+The two new values have no profile yet. What uses them is AUD-0009 at routing
+93, because judging recovery over several nights is a conclusion drawn from
+evidence rather than a horizon to draw it over. What had to be true now is that
+they are readable, so `windowForTiming` is separated from the episode it was
+buried in and every horizon is exercised through it.
+
+---
+
+## D-265 — Free time is not a career fact, and the record keeps its own id
+
+**Phase:** 92 · **Status:** Active · **Closes** AUD-0006
+
+`career.usable-time-tonight` is not a career fact — it gates whether he can
+spend thirty minutes with his daughter — not about the evening — it is read at
+half past six in the morning — and it was filed on the Career page, so his route
+to correcting how much time he has ran through the wrong life area.
+
+It is `time.free-now`, filed away from Career. Renaming a concept is a migration
+and it is done the way plan section 30 and D-101 say: **add-new plus alias-old,
+never a rewrite of history.** Every answer he has ever given keeps the id it was
+stored under, and the fact layer resolves through a one-way `SUPERSEDED_CONCEPTS`
+table, so an answer from last year and one from today are one belief with one
+freshness window. A contract test restores a backup written before the rename
+and asserts the fact appears once.
+
+---
+
+## D-266 — Research may help decide what is worth asking, and stops there
+
+**Phase:** 92 · **Status:** Active · **Implements** owner decision #2, option B
+(§13C)
+
+Two research-grounded priors, both claims the codebase already relies on and
+already cites. What they do is say **why** the app thinks a question is worth
+one of two slots a week. The claim is written about people rather than about
+him — _"adults who"_ is a prior and _"you probably"_ is a finding, and a finding
+from population evidence is what option D was refused for — and a test fails the
+build on an entry that addresses him in the second person.
+
+**The ordering form was built, measured, and pulled back.** The first version
+put a question a prior speaks to in front of one it does not, on the strength of
+_"spend the bounded discovery agenda more intelligently"_. It worked, and what
+it did was move the opening question of a brand-new owner's life from Career to
+Health because of a WHO exercise guideline. The proving order is a product
+decision routing 84 made, not a gap in the app's knowledge, so it stands, and
+what is left is the other two approved uses: identify a useful question, and say
+where missing evidence matters. A test asserts the order is identical with the
+priors and without them.
+
+Four things the permission forbids, each held rather than promised. A prior
+cannot reach a recommendation or a ranking, because the module is imported by
+exactly one file and a guard fails the build if anything else reads it. It
+cannot become a record, because the module builds none and a scan says so. It
+carries no confidence, weight, strength or decay — option C was declined on
+reasoning that inverts the obvious one, that it gets _less_ safe as evidence
+gets sparser, so there is nothing here to decay. And it extinguishes itself
+without a rule: the agenda drops a prompt once the thing it asks about exists.
+
+---
+
+## D-267 — The no-added-noise gate is met everywhere but two evenings, and the number is recorded
+
+**Phase:** 92 · **Status:** Active · **Open for independent QA**
+
+The audit's Reach gate includes _"making dormant concepts live must not increase
+how often the app speaks, measured across the whole scenario library."_ Both
+figures were measured rather than argued, by running the same count in a
+worktree at `0d55300` and at this phase's head, over the twenty-seven histories
+that existed before routing 92 at five hours each.
+
+**The app spoke 216 times before and speaks 218 now.** Eleven of those histories
+opened on a question; thirteen do today.
+
+The two are one concept, on two evenings. `three-days-since` and
+`observed-evenings` now ask how much he has on his mind: the app is about to
+suggest a twenty-five-minute walk, the body has already been answered for,
+nothing else is in the way, and one answer would turn an effortful evening into
+a restful one. Before the phase it asked nothing there.
+
+**It was not suppressed, and that is a judgement rather than an oversight.**
+Making the question rarer until the counter matched would have meant removing a
+question whose answer changes the recommendation in order to satisfy a count,
+and the rule's stated purpose — what stops S2 becoming a logging application —
+is not what two questions in a hundred and thirty-five moments does. Both
+numbers are pinned as exact figures so the exception cannot widen while nobody
+is looking, and a further test asserts that no concept this phase added takes a
+slot on any of the other twenty-five.
+
+**This is the one place routing 92 does not meet its own gate cleanly, and it is
+independent QA's to judge rather than the builder's.** Holding it to two took
+§13B's instructions rather than luck: a first draft of this phase opened on a
+question on twenty-five of the twenty-seven.
+
+---
+
 ## D-210 — Phase 84 product acceptance is separated from QA-instrument hardening
 
 **Phase:** 84 · **Status:** Decided by the owner, 2026-08-30.

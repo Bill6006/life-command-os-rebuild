@@ -1,5 +1,129 @@
 # Defect ledger
 
+## Routing 92 — what the phase found while building it
+
+Six defects, none reported by anybody: each was found by a gate that already
+existed, by a measurement this phase added, or by writing the guard the audit
+asked for and watching it fire. They are recorded because a repair with no
+finding behind it reads as a preference.
+
+---
+
+## DEF-0155 — A private-off document named the private area, the moment the situation read the registry
+
+**Found:** routing 92, building AUD-0040 · **Status:** Fixed ·
+**Caught by:** `tests/synthetic/export-honesty.test.ts`
+
+The audit predicted this in as many words: _"this change is what creates the
+private-data exposure."_ `createFactReader.read()` puts each concept's rendered
+value onto the decision's fact list the moment it is read, and a registry-driven
+read puts the private pattern in every decision's fact list. The shipped export
+honesty test failed on the first run after the sweep landed, with a document
+scoped **without** the private section printing
+_"Recent private pattern — not known — withheld"_.
+
+**The repair is not a filter at each surface that prints the list.** It is that
+the claim was false: while the permission is off the decision cannot read a
+private concept at all (D-167), so listing it among the facts the decision
+rested on is the app saying it weighed something it could not see. A withheld
+read is no longer recorded as considered. Granting the permission puts the row
+back, discreetly.
+
+The export's fact list also now honours the document's own scope, like every
+other section in it — it was nine hand-written reads and none of them was
+private or outside a named area, so it had never needed the rule.
+
+---
+
+## DEF-0156 — Nothing anywhere reads how the night felt
+
+**Found:** routing 92, measuring AUD-0041 · **Status:** Corrected in the
+registry · **Owner of the reader:** routing 93, with AUD-0009
+
+`sleep.quality-last-night` declared `materialToDecision: true`. The hours are
+read by `assembleCapacity` and drive the whole recovery model; how the night
+**felt** is collected, shown, trended on Insights, and consulted by no
+generator, no dimension and no filter.
+
+The audit enumerated the registry by hand and found four wrong declarations.
+Re-running the decision with and without each reading, across every history,
+found this fifth. It is corrected rather than given a reader: what it honestly
+is today is a reading the owner gives and the app reports back over time, which
+is what `tracked: 'scale'` says of it. Saying so also stops the guide spending a
+daily question on a reading that could not change anything it does.
+
+---
+
+## DEF-0157 — A goal with no named pieces cited no record at all
+
+**Found:** routing 92, adding the money history · **Status:** Fixed ·
+**Caught by:** `tests/synthetic/imported-origin.test.ts`
+
+`goalTrajectoryCards` built its evidence lines from `goal.parts`, and most goals
+have none — AUD-0021 says the model has to work with an empty list. With no
+lines the card cited no record, `withSources` had nothing to resolve, and the
+card reached the owner claiming **no origin at all**, which the origin guard
+calls a defect.
+
+It could not be caught until a history held a goal with a horizon and no pieces.
+`money-item-due` is the first. The fallback line is the honest one: what the
+card rests on, when there are no pieces to list, is the goal he set and the date
+he put on it.
+
+---
+
+## DEF-0158 — A completion dated later today was read as movement that had already happened
+
+**Found:** routing 92, wiring `health.trained-today` · **Status:** Fixed ·
+**Caught by:** `tests/synthetic/occurrence-identity.test.ts`
+
+The first version of the derived movement reading matched on the episode's
+`dayId` — the day the recommendation was made — and did not check that the
+completion had happened yet. The QA laboratory reads a history from any hour, so
+a walk finished at eight in the evening is in the record while the app is being
+read at nine in the morning: same day, and not yet true.
+
+D-160's own guard caught it one line after it was written. The reading is now
+dated by the completion rather than by the offer, and a completion later than
+the moment being read is not one.
+
+---
+
+## DEF-0159 — A health milestone was counted as something he does
+
+**Found:** routing 92, building AUD-0045 · **Status:** Fixed ·
+**Caught by:** `tests/synthetic/destination-and-discovery.test.ts`
+
+`milestoneEntityKind(DOMAIN.health)` is `routine`, so _"Move three times a
+week"_ — a step towards a destination — is a `routine` entity in the health
+domain and arrived in the routines list looking exactly like something he does.
+
+Two consequences, and the second is the worse one: the app would have suggested
+a goal as a session, and the fallback walk would have gone silent for **every**
+owner who had ever named a health destination, because the list was no longer
+empty. A routine a goal names is a milestone and is excluded.
+
+---
+
+## DEF-0160 — A promise guard filtered to one generator, and a second generator made it wrong
+
+**Found:** routing 92, adding the money history · **Status:** Fixed ·
+**Caught by:** `tests/synthetic/qa-82-round-10.test.ts`
+
+QA-82-014's guard asks that every area Life promises an action for is offered
+one. It counted proposals from the **coverage** generator, which was equivalent
+right up until a domain had a generator of its own with something to say.
+
+`generateCandidates` dedupes by verb and object and runs the coverage generator
+**last**, precisely so that a generator with live evidence wins the proposal —
+its own comment says _"two generators reaching the same move is agreement, not
+two options"_. So on `money-item-due` the money generator proposed the move, the
+coverage duplicate was folded away, and the guard reported that Life had
+promised something nothing offered. The promise is about the area rather than
+about which module thought of it, and that is what is counted now.
+
+---
+
 ## Deferred — Phase 84 instrument hardening
 
 **These are open, not closed.** Nineteen findings from independent QA rounds
