@@ -9,6 +9,7 @@ import {
   addLocalDaysToDayId,
   instant,
   localDayIdAt,
+  localDaysBetween,
   systemClock,
   timeZone,
 } from '../../src/domain/time'
@@ -19,6 +20,7 @@ import {
   type AuthorableKind,
 } from '../../src/intelligence/authoring'
 import { BLOCKER_CAUSES, BLOCKER_OPTIONS, LEAVE_IT } from '../../src/intelligence/blockers'
+import { DAYS_BEFORE_ASKING_WHAT_STUCK } from '../../src/intelligence/progress'
 import {
   CORRECTION_GESTURES,
   correctionConsequence,
@@ -1053,6 +1055,17 @@ describe('routing 84 item 2 — the two course-scale questions can actually be r
      */
     const app = await openJourney('the-first-evening')
     await app.answerGuide('empty')
+    /*
+     * A night short enough to be worth a plan — AUD-0009, and the reason this
+     * step is here now.
+     *
+     * A recovery run's span comes from the owner's own shortfall, so a run is
+     * only offered where there is one: a single low-energy evening with a full
+     * night behind it is not a two-night plan, and offering one would be the app
+     * making a course out of a Tuesday. The correction is the ordinary
+     * control — the same one the domain page's own row calls.
+     */
+    await app.correctFact(CONCEPT.sleepHours, { type: 'number', value: 4, unit: 'hours' })
     expect((await app.startCourse()).done, 'no course was offered').toBe(true)
 
     const thread = app.situation().threads[0]
@@ -1096,18 +1109,103 @@ describe('routing 84 item 2 — the two course-scale questions can actually be r
     // Nothing is asked while the plan is still running its course.
     expect(app.courseQuestion(), 'asked before the course was behind him').toBeUndefined()
 
-    // And days after its own end date, it is.
-    app.travelDays(8)
+    /*
+     * And days after its own end date, it is.
+     *
+     * Counted from the plan's own `expiresOn` rather than travelled a fixed
+     * number of days — AUD-0009. A run is now as long as the owner's shortfall
+     * says, so a fixed jump was really a jump sized for a three-night run and it
+     * landed a day short of the question the moment a two-night one existed.
+     * `DAYS_BEFORE_ASKING_WHAT_STUCK` is the app's own number and this reads it
+     * rather than a copy of it.
+     */
+    const run = app.situation().threads[0]
+    expect(run, 'the run is gone').toBeDefined()
+    app.travelDays(
+      localDaysBetween(app.dayId(), run!.expiresOn) + DAYS_BEFORE_ASKING_WHAT_STUCK + 1,
+    )
+    const asked = app.courseQuestion()
+    expect(asked, 'a finished course is never asked anything at all').toBeDefined()
+    /*
+     * And it is asked about **the run**, not about a night — AUD-0009.
+     *
+     * This asserted `retained` and *"how much of winding down is still there?"*,
+     * which is retention language about a thing nobody retains: the two course
+     * questions were written for a study schedule and were asked of every
+     * finished course, whatever it was a course of. A run of quiet nights has no
+     * capability to keep and nothing to transfer. What it has is a stretch of
+     * days he has just lived through, and the honest question is how the rest
+     * has been since.
+     *
+     * The two learning aspects are still reachable and still proved — by a study
+     * schedule, in the test immediately below, which is what they were written
+     * for.
+     */
+    expect(asked?.aspect).toBe('effect')
+    expect(asked?.prompt).toContain('how has the rest been')
+    expect(asked?.prompt, 'a run was asked a retention question').not.toContain('still there')
+
+    const answered = await app.answerCourse(asked!.answers[1]!, DOMAIN.sleep)
+    expect(answered.done, answered.note).toBe(true)
+
+    // It lands on the rung an effect answer lands on — above the sessions and
+    // separate from them, and not the retained-capability rung, which is a claim
+    // about something kept.
+    const progress = app.progress([DOMAIN.sleep, DOMAIN.health])
+    expect(progress.rungs.some((rung) => rung.kind === 'completion')).toBe(true)
+    expect(progress.courses.length, 'the finished run never appeared as a course').toBe(1)
+    expect(
+      progress.rungs.some((rung) => rung.kind === 'retained-capability'),
+      'a run of nights claimed a retained capability',
+    ).toBe(false)
+  })
+
+  it('asks a finished study course what is left of it, which is what retention is for', async () => {
+    /*
+     * The other half of the anti-vacuity check, and the reason it is now its own
+     * test — AUD-0009.
+     *
+     * `retained` and `transfer` are aspects an owner has to be able to produce,
+     * or they are the dead plumbing routing 83 found in `blocker`. Until this
+     * phase the only journey that reached them was a recovery run, which was
+     * being asked a question written for a study schedule — so the aspect was
+     * reachable and the sentence was wrong, which is the worse of the two
+     * failures because it passes.
+     *
+     * This reaches it the way it is meant to be reached: a study schedule
+     * already two sessions in, finished through the ordinary controls, and asked
+     * days after its own end date.
+     */
+    const app = await openJourney('study-thread')
+    const course = app.situation().threads[0]
+    expect(course?.kind, 'the study fixture no longer holds a course').toBe('study-schedule')
+
+    for (let attempt = 0; attempt < 6 && !app.situation().threads[0]?.finished; attempt += 1) {
+      for (let asked = 0; asked < 3 && app.decision().kind !== 'move'; asked += 1) {
+        const step = app.guide()
+        if (step.kind !== 'question' || step.question === undefined) break
+        await app.answerGuide(step.question.spec.concept === CONCEPT.energy ? 'good' : undefined)
+      }
+      if ((await app.act('start')).done) await app.act('complete')
+      app.travelDays(2)
+    }
+    expect(app.situation().threads[0]?.finished, 'the course never finished').toBe(true)
+
+    const ended = app.situation().threads[0]
+    app.travelDays(
+      localDaysBetween(app.dayId(), ended!.expiresOn) + DAYS_BEFORE_ASKING_WHAT_STUCK + 1,
+    )
+
     const asked = app.courseQuestion()
     expect(asked, 'a finished course is never asked what is left of it').toBeDefined()
     expect(asked?.aspect).toBe('retained')
     expect(asked?.prompt).toContain('still there')
 
-    const answered = await app.answerCourse(asked!.answers[1]!, DOMAIN.sleep)
+    const answered = await app.answerCourse(asked!.answers[1]!, DOMAIN.career)
     expect(answered.done, answered.note).toBe(true)
 
     // It lands on its own rung, above the sessions and separate from them.
-    const progress = app.progress([DOMAIN.sleep, DOMAIN.health])
+    const progress = app.progress([DOMAIN.career])
     expect(progress.rungs.some((rung) => rung.kind === 'retained-capability')).toBe(true)
     expect(progress.strongest).toBe('retained-capability')
   })
@@ -1316,6 +1414,8 @@ describe('QA-84 round 1 — the repairs', () => {
      */
     const app = await openJourney('the-first-evening')
     await app.answerGuide('empty')
+    // A shortfall worth a plan, for AUD-0009's reason — see the test above.
+    await app.correctFact(CONCEPT.sleepHours, { type: 'number', value: 4, unit: 'hours' })
     expect((await app.startCourse()).done, 'no course was offered').toBe(true)
     const steps = app.situation().threads[0]?.steps ?? 0
     expect(steps).toBeGreaterThan(0)

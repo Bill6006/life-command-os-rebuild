@@ -14,6 +14,7 @@ import {
 } from '../domain/time'
 import type { MemoryView } from '../memory/view'
 import type { Episode } from './lifecycle'
+import { describeNights, describeRecoveryOffer } from './recovery'
 
 /**
  * Threads — the smallest structure that lets one day know about the last
@@ -85,7 +86,13 @@ export interface ThreadShape {
    * how studying works that this app has no evidence for.
    */
   readonly moves: readonly ActionVerb[]
-  /** How many occasions the plan expects. */
+  /**
+   * How many occasions the plan expects, where the kind fixes it.
+   *
+   * A recovery run does not: AUD-0009's span comes from the owner's own
+   * shortfall, so `ThreadOffer.steps` carries the number and this is the
+   * fallback for a kind that has one of its own. See {@link ThreadOffer.steps}.
+   */
   readonly steps: number
   /** How long it has before it stops applying, whatever has happened. */
   readonly lastsDays: number
@@ -93,6 +100,26 @@ export interface ThreadShape {
   readonly offer: string
   /** What it is for, written onto the record and read back on Life. */
   intent(subject: string): string
+  /**
+   * Whether an occasion has to be about the course's own subject — DEF-0166.
+   *
+   * True for two of the three, and the difference is what the course is *of*. A
+   * study schedule is three sessions **on subnetting**, and a session on
+   * something else is not one of them; a growth ladder is three goes **at
+   * ordering her own food**. A recovery run is three quiet **nights**, and which
+   * noun the app attached to the evening is its own business rather than his:
+   * DEF-0016 and AUD-0003 between them give the morning, the afternoon and the
+   * evening different recovery verbs with different objects, so a run pinned to
+   * the object of its first evening cannot be advanced by the second.
+   *
+   * That was not a hypothesis. A run started on *"take tonight as recovery — no
+   * subnetting session"* takes `learning-topic:subnetting` as its subject, and
+   * two evenings later the right recovery move is `protect-sleep` on
+   * `routine:winding-down` — which counted for nothing, so the run stalled at
+   * two of three and was never finished, never asked about, and never expired
+   * as anything but abandoned. DEF-0166.
+   */
+  readonly aboutTheSubject: boolean
 }
 
 export const THREAD_SHAPES: readonly ThreadShape[] = [
@@ -115,8 +142,20 @@ export const THREAD_SHAPES: readonly ThreadShape[] = [
      */
     steps: 3,
     lastsDays: 10,
+    /*
+     * Both replaced when the offer is made — AUD-0009.
+     *
+     * *"Make this a run of recovery nights?"* is a course of unstated length,
+     * which is the one thing a plan may not be if the owner is meant to agree to
+     * it knowing what he agreed to. The span comes from his own shortfall, and
+     * `threadOfferFor` fills both of these in from it. These stay as the honest
+     * fallback for a run offered where no shortfall can be read — which is a
+     * case `threadOfferFor` declines rather than reaches.
+     */
     offer: 'Make this a run of recovery nights?',
     intent: () => 'Three recovery nights in a row',
+    // A run is three quiet nights, not three quiet nights *about* anything.
+    aboutTheSubject: false,
   },
   {
     kind: 'study-schedule',
@@ -126,6 +165,8 @@ export const THREAD_SHAPES: readonly ThreadShape[] = [
     lastsDays: 28,
     offer: 'Put this on a schedule?',
     intent: (subject) => `Three sessions on ${subject}`,
+    // Three sessions **on subnetting**. A session on something else is not one.
+    aboutTheSubject: true,
   },
   {
     kind: 'growth-ladder',
@@ -140,6 +181,12 @@ export const THREAD_SHAPES: readonly ThreadShape[] = [
     lastsDays: 42,
     offer: 'Work up to this over the next few weeks?',
     intent: (subject) => `Three goes at ${subject}`,
+    /*
+     * Three goes **at that one skill**, and §13E.1's bound rests on it: at most
+     * one growth-ladder thread per `development-skill` for that skill's
+     * lifetime. Nothing here loosens it, and the probe regression asserts it.
+     */
+    aboutTheSubject: true,
   },
 ]
 
@@ -214,12 +261,20 @@ function occasionsDone(
   episodes: readonly Episode[],
   at: Instant,
 ): number {
+  /*
+   * Whether the occasion has to be about the course's own subject — DEF-0166.
+   *
+   * Read off the kind rather than assumed, because it is false for exactly one
+   * of the three and the consequence of assuming it was a run that could not
+   * advance past its first object. See {@link ThreadShape.aboutTheSubject}.
+   */
+  const aboutSubject = shapeFor(record.thread).aboutTheSubject
   let count = 0
   for (const episode of episodes) {
     if (episode.state !== 'completed') continue
     if (episode.shownAt > at) continue
     if (localDaysBetween(startedOn, episode.dayId) < 0) continue
-    if (episode.semantics.target.object.id !== record.subject.id) continue
+    if (aboutSubject && episode.semantics.target.object.id !== record.subject.id) continue
     if (!record.moves.includes(episode.semantics.target.verb)) continue
     count += 1
   }
@@ -283,7 +338,11 @@ export function threadFor(
 ): ActiveThread | undefined {
   return threads.find(
     (thread) =>
-      thread.live && thread.subject.id === target.object.id && thread.moves.includes(target.verb),
+      thread.live &&
+      thread.moves.includes(target.verb) &&
+      // DEF-0166: a run is about its nights and not about the noun the app
+      // happened to attach to the first of them. See `ThreadShape`.
+      (!shapeFor(thread.kind).aboutTheSubject || thread.subject.id === target.object.id),
   )
 }
 
@@ -366,6 +425,21 @@ export interface StartThreadInput {
   /** The subject's own label, for the intent sentence. Never a paraphrase. */
   readonly subjectLabel: string
   readonly domain: LifeDomainId
+  /**
+   * How many occasions this particular course expects — AUD-0009.
+   *
+   * Absent means the kind's own number. Present only where the span is a
+   * reading of the owner's record rather than a property of the kind, which is
+   * true of exactly one kind: a recovery run is as long as his shortfall says,
+   * and a study schedule is three sessions because three sessions is what a
+   * study schedule is.
+   *
+   * It is written onto the record, so a course the owner agreed to keeps the
+   * length he agreed to even if the reading behind it moves the next evening.
+   */
+  readonly steps?: number
+  /** The same, for the sentence Life reads back. Absent means the kind's own. */
+  readonly intent?: string
 }
 
 export interface ThreadWriteMoment {
@@ -394,8 +468,8 @@ export function startThreadRecord(
     {
       thread: input.kind,
       subject: input.subject,
-      intent: shape.intent(input.subjectLabel),
-      steps: shape.steps,
+      intent: input.intent ?? shape.intent(input.subjectLabel),
+      steps: input.steps ?? shape.steps,
       moves: shape.moves,
       state: 'running',
       // Set once, here, and never extended. See `ThreadRecord.expiresOn`.
@@ -455,6 +529,15 @@ export interface ThreadOffer {
   readonly offer: string
   /** What would be written down if he says yes. */
   readonly intent: string
+  /**
+   * How many occasions this offer is for — AUD-0009.
+   *
+   * On the offer rather than only on the shape, because the owner is agreeing
+   * to a length and has to be able to read it before he taps. For every kind but
+   * a recovery run it is the shape's own number; for a recovery run it is what
+   * his own shortfall implies.
+   */
+  readonly steps: number
 }
 
 /**
@@ -479,25 +562,64 @@ export function threadOfferFor(
   threads: readonly ActiveThread[],
   target: { readonly verb: ActionVerb; readonly object: EntityRef },
   subjectLabel: string,
+  /**
+   * How many quiet nights the record implies — AUD-0009, and only for a run.
+   *
+   * `undefined` means the app cannot read a shortfall worth a plan, and a
+   * recovery run is then **not offered at all**. That is the honest arm rather
+   * than the missing one: a course of unstated length, offered because a
+   * recovery move happened to be on screen, is a plan the owner would be
+   * agreeing to without knowing what it was.
+   */
+  recoveryNights?: number,
 ): ThreadOffer | undefined {
   if (threadFor(threads, target) !== undefined) return undefined
 
   const shape = THREAD_SHAPES.find((entry) => entry.moves.includes(target.verb))
   if (shape === undefined) return undefined
 
-  // A course that has been stopped, finished or run out is not offered again on
-  // the strength of the same subject. He has already answered this.
-  const answered = threads.some(
-    (thread) => thread.kind === shape.kind && thread.subject.id === target.object.id,
-  )
+  /*
+   * A course that has been stopped, finished or run out is not offered again on
+   * the strength of the same subject. He has already answered this.
+   *
+   * **For a recovery run the bound is its own expiry instead** — DEF-0166.
+   * A run is not about a subject, so there is no subject to have answered about;
+   * and recovery genuinely recurs, so a rule that blocked one forever would mean
+   * a man who took three quiet nights in March could never be offered them again
+   * in July. What it must not do is ask again while the last answer still
+   * stands, so an unexpired run of any state — running, paused, finished or
+   * abandoned — blocks a new offer, and once its own date has passed a fresh
+   * shortfall may be offered a fresh run.
+   *
+   * Nothing here loosens §13E.1's growth-ladder bound: `aboutTheSubject` is true
+   * for a ladder, so its re-offer is still blocked permanently on the same
+   * `development-skill`, which is what the probe regression asserts.
+   */
+  const answered = shape.aboutTheSubject
+    ? threads.some((thread) => thread.kind === shape.kind && thread.subject.id === target.object.id)
+    : threads.some((thread) => thread.kind === shape.kind && !thread.expired)
   if (answered) return undefined
 
+  if (shape.kind !== 'recovery-run') {
+    return {
+      kind: shape.kind,
+      subject: target.object,
+      subjectLabel,
+      domain: shape.domain,
+      offer: shape.offer,
+      intent: shape.intent(subjectLabel),
+      steps: shape.steps,
+    }
+  }
+
+  if (recoveryNights === undefined) return undefined
   return {
     kind: shape.kind,
     subject: target.object,
     subjectLabel,
     domain: shape.domain,
-    offer: shape.offer,
-    intent: shape.intent(subjectLabel),
+    offer: describeRecoveryOffer(recoveryNights),
+    intent: `${capitalise(describeNights(recoveryNights))} in a row`,
+    steps: recoveryNights,
   }
 }

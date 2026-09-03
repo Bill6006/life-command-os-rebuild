@@ -330,6 +330,24 @@ describe('D-161 — the ordinary-use journey from a near-empty store', () => {
     const app = await openJourney('the-first-evening')
     expect((await app.answerGuide('empty')).done).toBe(true)
 
+    /*
+     * And a night short enough to be worth a plan — AUD-0009.
+     *
+     * The claim this test pins is unchanged: a course is reachable from
+     * observations alone, which is what the route table says `thread-start`
+     * needs. What changed is which observation. A recovery run's span is read
+     * off the owner's own shortfall, so a run is offered where there is one to
+     * repay and not merely where a recovery move happens to be on screen — a
+     * plan of unstated length, offered for one low-energy evening, is a course
+     * the owner would be agreeing to without knowing what it was.
+     *
+     * Both gestures here write an `observation`, which is exactly what the
+     * route table requires, so the reachability claim is the same claim.
+     */
+    expect(
+      (await app.correctFact(CONCEPT.sleepHours, { type: 'number', value: 4, unit: 'hours' })).done,
+    ).toBe(true)
+
     const decision = app.decision()
     const target = decision.explanation?.semantics.target
     expect(target, 'a recovery move should be on screen').toBeDefined()
@@ -338,9 +356,40 @@ describe('D-161 — the ordinary-use journey from a near-empty store', () => {
       decision.situation.threads,
       target!,
       decision.situation.entities.labelFor(target!.object) ?? '',
+      decision.situation.capacity.recoveryNights,
     )
     expect(offer?.kind).toBe('recovery-run')
+    // And it names the span it is for, rather than asking him to agree to a
+    // course of unstated length.
+    expect(offer?.steps, 'the run has no length').toBeGreaterThan(1)
+    expect(offer?.offer).toContain('quiet nights')
     expect(reachableRecordKinds().has('thread')).toBe(true)
+  })
+
+  it('offers no course at all where there is no shortfall to repay — AUD-0009', async () => {
+    /*
+     * The other arm, and the one that makes the arm above mean something. The
+     * same evening and the same recovery move, and no plan — because a single
+     * low-energy evening with a full night behind it is not two nights of
+     * anything, and the app declines rather than inventing a length.
+     */
+    const app = await openJourney('the-first-evening')
+    expect((await app.answerGuide('empty')).done).toBe(true)
+
+    const decision = app.decision()
+    const target = decision.explanation?.semantics.target
+    expect(target, 'a recovery move should still be on screen').toBeDefined()
+    expect(decision.situation.capacity.recoveryNights, 'a full night implied a run').toBeUndefined()
+
+    expect(
+      threadOfferFor(
+        decision.situation.threads,
+        target!,
+        decision.situation.entities.labelFor(target!.object) ?? '',
+        decision.situation.capacity.recoveryNights,
+      ),
+      'a course was offered with no shortfall behind it',
+    ).toBeUndefined()
   })
 })
 

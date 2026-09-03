@@ -1,5 +1,76 @@
 # Decision log
 
+## D-271 — Recovery is a run whose length comes from his own record, and `multi-day` gets its consumer there
+
+**Phase:** 93 · **Status:** Active
+
+AUD-0009, C8, and S1a's acceptance case. Four decisions in one, because they are
+one design.
+
+**1. The span comes from the owner's shortfall, never from the research.** The
+audit frames it as combining _"what the owner's own record says"_ with _"what the
+research says in general"_. §13C is explicit that a research prior **may not
+determine recommendations**, so the split here is: the research is why a run is
+the right shape at all — it is in the code comment and in this entry, which is
+where this codebase has always kept it — and his own hours are what decide how
+long one is. Nothing on any screen cites a study.
+
+Two nights above one night's worth of shortfall, three above a deep one, and
+nothing at all below it. Bounded at three: a shortfall of thirty hours does not
+imply a ten-night plan, it implies a man in trouble, and a ten-night plan is the
+nagging AUD-0020 names as its own biggest risk.
+
+**2. A run is not offered where there is nothing to repay.** `threadOfferFor`
+returns nothing for a recovery run with no readable shortfall, rather than
+offering a course of unstated length because a recovery move happened to be on
+screen. A plan the owner agrees to has to be one he can read the length of first,
+so the offer names it: _"Make this three quiet nights in a row?"_
+
+**3. `sleep.quality-last-night` has its reader, and the flag moves back.**
+DEF-0156 recorded that nothing anywhere read it, set `materialToDecision: false`,
+and wrote that _"the reader belongs with AUD-0009's recovery work, which is
+routing 93's, and this flag is what will have to change back when it lands."_
+`assessStrain` now reads it as the fourth signal under the rule energy and work
+strain already follow — it raises the assessment from `none` and never on its own
+makes it severe — and it lengthens a shallow run where the nights were also bad.
+Eight hours of broken sleep is not eight hours of rest. The flag is true again
+because `reach-material.test.ts` measures it, not because this entry says so.
+
+**4. `multi-day` gets its consumer at the run, not at the night — and the pinned
+digest did not move.** The dispatch predicted
+`tests/synthetic/reach-horizon.test.ts` would fail, on the reading that a
+recovery verb would move to `multi-day`. **It did not fail, and that is the
+finding rather than a lucky escape.**
+
+Moving `recover` to `multi-day` would have stopped the nightly derivation for it:
+`derived.ts` requires `next-morning`, so D-064's four conditions would have gone
+on existing in the source while producing nothing for the one verb a deficit
+generates — and §6.5 asks for the opposite, _"D-064's four conditions for the
+morning reading survive intact"_. Judging a **night** the morning after is right;
+what was missing was a question about the **run**.
+
+So `dueCourseReflections` computes a finished run's window with `windowForTiming`
+at `multi-day`, which is the same function every episode's window comes from. The
+horizon decides a real question, the nightly reading is untouched, and the digest
+is untouched. Read, and said, rather than updated.
+
+**`weekly` still has no consumer**, and that is stated here rather than left to
+be discovered. Routing 92's argument for shipping it stands unchanged: a horizon
+is not a concept, declares nothing about the owner, creates no question and
+cannot go stale, and `reach-horizon.test.ts` proves every consumer handles all
+four.
+
+**5. And the run's question is the run's own.** The two course reflections were
+written for a study schedule and asked of every finished course, so a run of
+quiet nights was asked _"how much of winding down is still there?"_ — retention
+language about a thing nobody retains. A run has no capability to keep and
+nothing to transfer; it has a stretch of days he has just lived through. It is
+asked once, about the run, at the `effect` aspect and on the effect scale every
+other answer uses. The two learning aspects keep their own copy and are proved
+reachable by a study schedule, which is what they were written for.
+
+---
+
 ## D-270 — `trajectory-fit`, the twentieth dimension, and the explicit decision §6.5 requires
 
 **Phase:** 93 · **Status:** Active

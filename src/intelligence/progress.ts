@@ -13,13 +13,14 @@ import {
 import { createRecordFactory } from '../domain/build'
 import type { CanonicalRecord, OutcomeAspect, OutcomeRecord, Provenance } from '../domain/records'
 import {
-  addLocalDaysToDayId,
+  localDayIdAt,
   localDaysBetween,
+  startOfLocalDay,
   type Instant,
   type LocalDayId,
   type TimeZoneId,
 } from '../domain/time'
-import type { OutcomeAnswer } from './outcomes'
+import { EFFECT_STEPS, windowForTiming, type OutcomeAnswer } from './outcomes'
 import type { Situation } from './situation'
 import type { ActiveThread } from './threads'
 
@@ -276,8 +277,14 @@ export const DAYS_BEFORE_ASKING_WHAT_STUCK = 3
 /** And how long before asking whether it has been used anywhere real. */
 export const DAYS_BEFORE_ASKING_ABOUT_USE = 10
 
-/** How long each question stays open once it opens. */
-const OPEN_FOR_DAYS = 7
+/*
+ * How long each question stays open once it opens.
+ *
+ * Not a constant here any more — AUD-0009. `REFLECTION_OPEN_FOR_DAYS` in
+ * `outcomes.ts` is the same seven days and is what `windowForTiming` uses for
+ * every `multi-day` window, so the reflection and the horizon now read one
+ * number rather than two that happened to agree. D-178, applied to a week.
+ */
 
 /**
  * A question about a course rather than about a session.
@@ -289,7 +296,16 @@ const OPEN_FOR_DAYS = 7
  */
 export interface CourseReflection {
   readonly thread: ActiveThread
-  readonly aspect: Extract<OutcomeAspect, 'retained' | 'transfer'>
+  /**
+   * What the answer is about.
+   *
+   * `effect` joined the two learning aspects with AUD-0009: a run of recovery
+   * nights has no capability to retain and nothing to transfer, and the honest
+   * question about it is how the rest has been since. The union is narrowed
+   * rather than opened to every aspect, because `result` and `comfort` are
+   * judgements about one occasion and this object exists to be about several.
+   */
+  readonly aspect: Extract<OutcomeAspect, 'retained' | 'transfer' | 'effect'>
   readonly prompt: string
   /** What the app will do with the answer, in view while he answers — D-176. */
   readonly note: string
@@ -308,6 +324,121 @@ const WHERE_USED: readonly OutcomeAnswer[] = [
   { id: 'practice', label: 'Only in practice', observation: { type: 'scale', value: 1, of: 2 } },
   { id: 'not-yet', label: 'Not yet', observation: { type: 'scale', value: 0, of: 2 } },
 ]
+
+/**
+ * What a run of quiet nights left behind — AUD-0009, and `multi-day`'s consumer.
+ *
+ * Four steps rather than three, because this is an `effect` answer and the
+ * effect scale has four: `EFFECT_STEPS` is 3, so the values run 0 to 3 and mean
+ * what they mean everywhere else in the product. A run-scoped answer that
+ * invented its own scale would be a second meaning for one word.
+ */
+const HOW_THE_REST_SAT: readonly OutcomeAnswer[] = [
+  {
+    id: 'back',
+    label: 'Back to normal',
+    observation: { type: 'scale', value: 3, of: EFFECT_STEPS },
+  },
+  {
+    id: 'better',
+    label: 'Better than it was',
+    observation: { type: 'scale', value: 2, of: EFFECT_STEPS },
+  },
+  {
+    id: 'little',
+    label: 'Not much different',
+    observation: { type: 'scale', value: 1, of: EFFECT_STEPS },
+  },
+  {
+    id: 'worse',
+    label: 'Worse, if anything',
+    observation: { type: 'scale', value: 0, of: EFFECT_STEPS },
+  },
+]
+
+/**
+ * What a course of this kind is asked, and in what order — AUD-0009.
+ *
+ * ## Why this is a table now
+ *
+ * The two questions were written for a study schedule and asked of **every**
+ * finished course, so a run of recovery nights was asked *"how much of winding
+ * down is still there?"* — retention language about a thing nobody retains. That
+ * is DEF-0020's shape in a new place: one word doing service for two different
+ * facts, and the copy sounding plausible enough that nothing noticed.
+ *
+ * So each kind names its own questions. A study schedule and a growth ladder
+ * keep exactly the two they had; a recovery run gets the one the audit asks
+ * for — **about the run, rather than about a night**.
+ *
+ * ## And this is where `multi-day` earns its place
+ *
+ * S1a widened the outcome horizon to `multi-day` and `weekly` in routing 92 and
+ * left them without a consumer, deliberately: *"what uses them is AUD-0009 —
+ * recovery is always judged as one night when the evidence says several — and
+ * that is routing 93's."* This is that consumer. The run's window is computed by
+ * `windowForTiming` at `multi-day`, which is the same function every episode's
+ * window comes from, so the horizon decides a real question rather than being a
+ * value the enum happens to hold.
+ *
+ * The **nightly** derivation is untouched. D-064's four conditions still read
+ * `next-morning` off the profile, `recover`, `wind-down` and `protect-sleep` are
+ * all still judged the morning after, and the sleep matcher still writes what it
+ * always wrote. This is a question **about the run**, at the run's own scale,
+ * beside them — which is the distinction AUD-0009 is making.
+ */
+interface ReflectionShape {
+  readonly aspect: Extract<OutcomeAspect, 'retained' | 'transfer' | 'effect'>
+  /** How many owner-local days after the plan's end this opens. */
+  readonly afterDays: number
+  prompt(subject: string): string
+  readonly note: string
+  readonly answers: readonly OutcomeAnswer[]
+}
+
+const LEARNING_REFLECTIONS: readonly ReflectionShape[] = [
+  {
+    aspect: 'retained',
+    afterDays: DAYS_BEFORE_ASKING_WHAT_STUCK,
+    prompt: (subject) => `A few days on — how much of ${subject} is still there?`,
+    note: 'This is kept as what stayed with you, separately from the sessions themselves.',
+    answers: WHAT_STUCK,
+  },
+  {
+    aspect: 'transfer',
+    afterDays: DAYS_BEFORE_ASKING_ABOUT_USE,
+    prompt: (subject) => `Have you used ${subject} for anything real yet?`,
+    note: 'This is kept as where it has actually been used — the app never assumes it from a finished course.',
+    answers: WHERE_USED,
+  },
+]
+
+/**
+ * The recovery run's own question, and there is one.
+ *
+ * **A run has no second rung.** *"Have you used winding down for anything
+ * real?"* is a question about a capability, and rest is not one — so the
+ * transfer question is not asked of a run at all, rather than reworded into
+ * something that would collect an answer about nothing.
+ *
+ * It asks how the rest has been **since**, which is a reading of a stretch of
+ * days he has just lived through. It does not ask whether the run worked, which
+ * is the causal question D-089 says the system exists to answer rather than to
+ * put to him.
+ */
+const RECOVERY_REFLECTIONS: readonly ReflectionShape[] = [
+  {
+    aspect: 'effect',
+    afterDays: DAYS_BEFORE_ASKING_WHAT_STUCK,
+    prompt: () => 'Those nights are behind you — how has the rest been since?',
+    note: 'This is kept about the run of nights rather than about any one of them.',
+    answers: HOW_THE_REST_SAT,
+  },
+]
+
+function reflectionsFor(kind: ActiveThread['kind']): readonly ReflectionShape[] {
+  return kind === 'recovery-run' ? RECOVERY_REFLECTIONS : LEARNING_REFLECTIONS
+}
 
 /**
  * The course questions that are open right now, oldest course first.
@@ -350,23 +481,8 @@ export function dueCourseReflections(situation: Situation): readonly CourseRefle
     if (subject === undefined) continue
     const already = answered.get(thread.source) ?? new Set<OutcomeAspect>()
 
-    for (const [aspect, after, prompt, note, answers] of [
-      [
-        'retained',
-        DAYS_BEFORE_ASKING_WHAT_STUCK,
-        `A few days on — how much of ${subject} is still there?`,
-        'This is kept as what stayed with you, separately from the sessions themselves.',
-        WHAT_STUCK,
-      ],
-      [
-        'transfer',
-        DAYS_BEFORE_ASKING_ABOUT_USE,
-        `Have you used ${subject} for anything real yet?`,
-        'This is kept as where it has actually been used — the app never assumes it from a finished course.',
-        WHERE_USED,
-      ],
-    ] as const) {
-      if (already.has(aspect)) continue
+    for (const shape of reflectionsFor(thread.kind)) {
+      if (already.has(shape.aspect)) continue
       /*
        * Counted from the plan's own end date rather than from the day the last
        * occasion happened.
@@ -376,13 +492,32 @@ export function dueCourseReflections(situation: Situation): readonly CourseRefle
        * the run is genuinely behind him, never in the middle of a week he is
        * still finishing it in. A course finished early waits a few days longer,
        * which is the right way round for a question about what stayed.
+       *
+       * The window itself comes from `windowForTiming` at the `multi-day`
+       * horizon — AUD-0009, S1a. That is the same function every episode's
+       * window comes from, so a course question and a move question are two
+       * horizons of one mechanism rather than two mechanisms. The day the plan
+       * ends is the moment it is judged from, and `afterDays` is the horizon's
+       * own count.
        */
-      const opensOn = addLocalDaysToDayId(thread.expiresOn, after)
-      const closesOn = addLocalDaysToDayId(opensOn, OPEN_FOR_DAYS)
+      const window = windowForTiming(
+        startOfLocalDay(thread.expiresOn, situation.zone),
+        { when: 'multi-day', after: 0, afterDays: shape.afterDays },
+        situation.zone,
+      )
+      const opensOn = localDayIdAt(window.earliest, situation.zone)
+      const closesOn = localDayIdAt(window.latest, situation.zone)
       const today = situation.dayId
       if (localDaysBetween(opensOn, today) < 0) continue
       if (localDaysBetween(today, closesOn) < 0) continue
-      out.push({ thread, aspect, prompt, note, answers, opensOn })
+      out.push({
+        thread,
+        aspect: shape.aspect,
+        prompt: shape.prompt(subject),
+        note: shape.note,
+        answers: shape.answers,
+        opensOn,
+      })
       break
     }
   }

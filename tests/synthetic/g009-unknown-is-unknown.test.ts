@@ -120,6 +120,18 @@ describe('G-009 — a question only when it would change something', () => {
     const asked = view.facts.questions.map((entry) => entry.concept)
     expect(asked).toContain(CONCEPT.energy)
     expect(asked).toContain(CONCEPT.freeNow)
+    /*
+     * And how the night went — DEF-0156's reader, arriving where the registry
+     * said it would (AUD-0009, D-271).
+     *
+     * It sat on the other list for a phase, with a note saying its reader
+     * belonged with routing 93's recovery work and that the flag would have to
+     * change back when it landed. `assessStrain` now reads it as the fourth
+     * signal under the rule energy and work strain already follow, so an answer
+     * changes what the app believes is in the way — which is the whole of what
+     * this list means.
+     */
+    expect(asked).toContain(CONCEPT.sleepQuality)
   })
 
   it('does not ask about the unknowns that do not', () => {
@@ -141,13 +153,26 @@ describe('G-009 — a question only when it would change something', () => {
      * nothing an answer about it could change and the measurement said so. Now
      * there is, and the measurement says that instead.
      *
-     * What is left are the two that genuinely change nothing: a free-text
-     * emotional reading nothing reads, and how a night felt, which is collected
-     * and trended and consulted by no generator, dimension or filter.
+     * `sleepQuality` moved as well, and it moved **onto the other list** — the
+     * one above. The note beside it in the registry said in as many words that
+     * its reader belonged with AUD-0009's recovery work and that the flag would
+     * have to change back when that landed. It has landed (D-271), so the claim
+     * this test was making about it is no longer true and is not asserted here
+     * any more.
+     *
+     * What is left is the one that genuinely changes nothing: a free-text
+     * emotional reading nothing reads, kept exactly as the owner types it and
+     * shown back to him on his own page. Held on its own rather than deleted,
+     * because a list with nothing on it proves nothing — this is the assertion
+     * that the guide can still decline to ask.
      */
     const asked = view.facts.questions.map((entry) => entry.concept)
     expect(asked).not.toContain(CONCEPT.emotionalState)
-    expect(asked).not.toContain(CONCEPT.sleepQuality)
+    // And the list is not empty of things it could have asked about, or the
+    // assertion above would pass on a history where nothing is asked at all.
+    expect(asked.length, 'nothing is asked here, so declining to ask says nothing').toBeGreaterThan(
+      2,
+    )
   })
 
   it('never opens with an unsolicited private question', () => {

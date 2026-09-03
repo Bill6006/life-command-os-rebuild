@@ -312,6 +312,36 @@ function observedClause(evaluation: Evaluation): string | undefined {
 }
 
 /**
+ * That the shortfall is more than one night's, where it is — AUD-0009.
+ *
+ * ## What this says, and what it deliberately does not
+ *
+ * The finding's own proposed sentence is *"Two quiet nights would clear most of
+ * this. Tonight is the first."* The second half is already on the screen and the
+ * first half is a **forecast about a body**: it predicts what a run of nights
+ * will do for him, which D-038 refuses outright and which §6.5 puts outside this
+ * phase entirely. What is left, and what is worth saying, is the arithmetic over
+ * his own record that the offer beneath rests on — *"the shortfall is more than
+ * one night's worth"*. It is a statement about a number he supplied, and it
+ * names its own subject rather than reaching for a demonstrative, which is
+ * G-001's rule and the reason it is not the audit's word-for-word sentence.
+ *
+ * ## And it goes quiet once a run is under way
+ *
+ * `Explanation.partOf` already renders *"Three quiet nights in a row — second of
+ * three. One to go."* as its own row above the limiter, and has since routing
+ * 84. Saying the span twice on one screen is DEF-0022's class — two true
+ * sentences about one thing, in one place, that a reader has to reconcile — so
+ * this speaks only while there is no live run to speak for it.
+ */
+function moreThanOneNightClause(evaluation: Evaluation, situation: Situation): string {
+  if (situation.capacity.recoveryNights === undefined) return ''
+  const thread = threadFor(situation.threads, evaluation.candidate.semantics.target)
+  if (thread !== undefined && thread.kind === 'recovery-run') return ''
+  return " The shortfall is more than one night's worth."
+}
+
+/**
  * What the owner's own outcomes say about this move, when they disagree with it.
  *
  * AUD-0028(b). The learned band was rendered as a separate advisory line and
@@ -543,9 +573,25 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
 
       if (leanedOn(evaluation, CONCEPT.sleepHours) && isUsable(debt) && debt.value >= 1) {
         const span = nights <= 1 ? 'last night' : `the last ${nights} nights`
+        /*
+         * And where this sits in the run — AUD-0009.
+         *
+         * The finding is that *"the following evening the app has no memory
+         * that last night was supposed to be a recovery night, and re-derives
+         * the same sentence"*. This is the memory: a live recovery run puts its
+         * own position into the sentence the owner reads, so the second night
+         * says something the first one did not.
+         *
+         * **It says where he is and never what will happen.** The audit's own
+         * proposed wording — *"Two quiet nights would clear most of this"* — is
+         * a forecast about a body, and §6.5 puts forecasting outside this phase
+         * while D-038 refuses the claim outright. *"Second of three quiet
+         * nights"* is a count of what he agreed to and what the record holds.
+         */
+        const run = moreThanOneNightClause(evaluation, situation)
         return semantics.target.verb === 'recover'
-          ? `You are ${describeHours(debt.value)} down over ${span}. ${capitalise(object)} will still be there tomorrow.`
-          : `You are ${describeHours(debt.value)} down over ${span}.${instead}`
+          ? `You are ${describeHours(debt.value)} down over ${span}.${run} ${capitalise(object)} will still be there tomorrow.`
+          : `You are ${describeHours(debt.value)} down over ${span}.${run}${instead}`
       }
 
       /*

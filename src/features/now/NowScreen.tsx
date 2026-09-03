@@ -632,6 +632,10 @@ export function NowScreen() {
           subject: offer.subject,
           subjectLabel: offer.subjectLabel,
           domain: offer.domain,
+          // The length he was shown, so the record says what he agreed to
+          // rather than what the kind usually means — AUD-0009.
+          steps: offer.steps,
+          intent: offer.intent,
         },
         { now: memory.now, zone: memory.zone, recordedAt: systemClock().now() },
       ),
@@ -727,6 +731,7 @@ export function NowScreen() {
           decision.situation.threads,
           explanation.semantics.target,
           explanation.rendered.subjectLabel,
+          decision.situation.capacity.recoveryNights,
         )
 
   return (

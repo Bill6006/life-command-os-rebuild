@@ -454,8 +454,16 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
      *
      * The reader belongs with AUD-0009's recovery work, which is routing 93's,
      * and this flag is what will have to change back when it lands.
+     *
+     * **It has landed, and the flag has moved back — routing 93, D-271.**
+     * `assessStrain` reads it as the fourth signal under the rule energy and
+     * work strain already follow: eight hours of broken sleep is not eight
+     * hours of rest, the hours alone cannot say so, and it raises the assessment
+     * from `none` while never on its own making it severe.
+     * `tests/synthetic/reach-material.test.ts` is what says the flag is right
+     * again; nothing here is trusted on its own word.
      */
-    ask: { materialToDecision: false, askWhenStale: true },
+    ask: { materialToDecision: true, askWhenStale: true },
     // How a night *felt* is the owner's to report. A watch scoring it is
     // inferring an experience from movement, which is the weaker claim — the
     // opposite ordering to hours slept, on the same device, in the same domain.

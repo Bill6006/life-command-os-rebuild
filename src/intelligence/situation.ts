@@ -50,6 +50,7 @@ import type { ConceptId } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
 import { assembleCoverage, type CoverageState } from './coverage'
 import { collectRoutines, type RoutineShape } from './routines'
+import { nightsToRepay } from './recovery'
 import { LOAD_WINDOW_DAYS, readWeekLoad, type LoadEvidence, type WeekLoad } from './rhythm'
 import { readTrajectories, type Trajectory } from './trajectory'
 import {
@@ -328,7 +329,27 @@ export interface Capacity {
    * anything is ranked by.
    */
   readonly overwhelm: Knowledge<number>
+  /**
+   * How the last night actually went — DEF-0156's reader, AUD-0009.
+   *
+   * Carried beside the hours rather than folded into them, because they are two
+   * facts: eight hours of broken sleep is not eight hours of rest, and only one
+   * of the two is a duration. {@link Capacity.strain} is where they meet.
+   */
+  readonly sleepQuality: Knowledge<number>
   readonly strain: Knowledge<Strain>
+  /**
+   * How many quiet nights the shortfall implies, or nothing — AUD-0009, C8.
+   *
+   * `undefined` where one night is the honest answer, and where the app cannot
+   * read a shortfall at all. Two or three otherwise, from his own hours and his
+   * own answers about how the nights went — never from a study, which §13C
+   * forbids from determining a recommendation.
+   *
+   * It is a **span**, not a forecast. Nothing here says what the run will do
+   * for him.
+   */
+  readonly recoveryNights: number | undefined
 }
 
 export interface OwnerPreference {
@@ -911,6 +932,16 @@ function assembleCapacity(
   const soreness = narrowKnowledge(readings.get(CONCEPT.soreness), ratioValue)
   const workStrain = narrowKnowledge(readings.get(CONCEPT.workStrain), ratioValue)
   const overwhelm = narrowKnowledge(readings.get(CONCEPT.overwhelm), ratioValue)
+  /*
+   * How the night actually went — DEF-0156's reader, and AUD-0009's.
+   *
+   * Nothing read this. The hours drove the whole recovery model and how the
+   * night *felt* was collected, shown, trended on Insights, and consulted by no
+   * generator, no dimension and no filter — so `materialToDecision` was set
+   * false with a note saying its reader belonged with this phase's recovery
+   * work. This is that reader.
+   */
+  const sleepQuality = narrowKnowledge(readings.get(CONCEPT.sleepQuality), ratioValue)
 
   const from = addLocalDays(moment.now, -SLEEP_DEBT_DAYS, moment.zone)
   const nights = nightsWithin(view, from, moment.now)
@@ -942,7 +973,9 @@ function assembleCapacity(
     soreness,
     workStrain,
     overwhelm,
-    strain: assessStrain(sleepDebtHours, energy, workStrain, nights.length),
+    sleepQuality,
+    strain: assessStrain(sleepDebtHours, energy, workStrain, sleepQuality, nights.length),
+    recoveryNights: nightsToRepay(sleepDebtHours, sleepQuality),
   }
 }
 
@@ -959,24 +992,33 @@ function assessStrain(
   debt: Knowledge<number>,
   energy: Knowledge<number>,
   work: Knowledge<number>,
+  quality: Knowledge<number>,
   nightsSeen: number,
 ): Knowledge<Strain> {
   const debtHours = isUsable(debt) ? debt.value : undefined
   const energyLevel = isUsable(energy) ? energy.value : undefined
   const workLevel = isUsable(work) ? work.value : undefined
+  const qualityLevel = isUsable(quality) ? quality.value : undefined
 
-  if (debtHours === undefined && energyLevel === undefined && workLevel === undefined) {
+  if (
+    debtHours === undefined &&
+    energyLevel === undefined &&
+    workLevel === undefined &&
+    qualityLevel === undefined
+  ) {
     return unknown('never-observed', 'nothing recent about sleep, energy or work')
   }
 
-  const basis = [...basisOf(debt), ...basisOf(energy), ...basisOf(work)]
+  const basis = [...basisOf(debt), ...basisOf(energy), ...basisOf(work), ...basisOf(quality)]
   const observedAt = isUsable(debt)
     ? debt.observedAt
     : isUsable(energy)
       ? energy.observedAt
       : isUsable(work)
         ? work.observedAt
-        : undefined
+        : isUsable(quality)
+          ? quality.observedAt
+          : undefined
   if (observedAt === undefined) return unknown('never-observed')
 
   let level: Strain = 'none'
@@ -998,11 +1040,28 @@ function assessStrain(
    * as heavy.
    */
   if (workLevel !== undefined && workLevel >= 0.7 && level === 'none') level = 'moderate'
+  /*
+   * And a night that was short **and** poor — DEF-0156, AUD-0009.
+   *
+   * The fourth reading to arrive under the rule the paragraph above sets, and
+   * the one the registry has been waiting for: *"the hours are read by
+   * `assembleCapacity` and drive the whole recovery model; how the night felt is
+   * collected, shown, trended on Insights, and consulted by no generator, no
+   * dimension and no filter."*
+   *
+   * Eight hours of broken sleep is not eight hours of rest, and the hours alone
+   * cannot say so. Same threshold as energy read from the same end — 0 or 1 of
+   * 5 is a night he would call bad — and the same ceiling: it raises the
+   * assessment from `none` and never on its own makes it severe, because one tap
+   * on a scale is not enough to claim that much about anybody.
+   */
+  if (qualityLevel !== undefined && qualityLevel <= 0.3 && level === 'none') level = 'moderate'
 
   const signals =
     (debtHours === undefined ? 0 : 1) +
     (energyLevel === undefined ? 0 : 1) +
-    (workLevel === undefined ? 0 : 1)
+    (workLevel === undefined ? 0 : 1) +
+    (qualityLevel === undefined ? 0 : 1)
   const howSure = confidence(0.3 + 0.15 * signals + Math.min(0.25, 0.08 * nightsSeen))
   return inferred(level, observedAt, howSure, basis)
 }

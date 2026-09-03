@@ -1,5 +1,47 @@
 # Defect ledger
 
+## DEF-0166 — a recovery run could not advance past the object of its first evening
+
+**Phase:** 93 · **Found by:** the acceptance test AUD-0009 asks for · **Status:** FIXED
+
+`occasionsDone` counted an occasion only where
+`episode.semantics.target.object.id === record.subject.id`, and `threadFor`
+matched a live thread the same way. That is right for two of the three thread
+kinds and wrong for the third.
+
+**What it broke.** A recovery run started beside _"take tonight as recovery — no
+subnetting session"_ takes `learning-topic:subnetting` as its subject, because
+that is the object the `recover` move carries. Two evenings later the right
+recovery move is `protect-sleep` on `routine:winding-down` — DEF-0016 and
+AUD-0003 between them give the morning, the afternoon and the evening different
+recovery verbs with different objects — and it counted for nothing. On
+`running-on-empty` the run stalled at **two of three**, so it never finished,
+never became a course on the progress ladder, was never asked about, and expired
+looking abandoned.
+
+**Why nothing caught it.** Every shipped test that finished a course finished it
+on one object: the study fixture is three sessions on subnetting, and the only
+recovery run any test started was finished by a loop that happened to be offered
+the same verb each time. The four-evening sweep AUD-0009 asks for is what put a
+different hour in the middle of a run.
+
+**The repair.** `ThreadShape` gains `aboutTheSubject`. It is true for a study
+schedule (three sessions **on subnetting**) and for a growth ladder (three goes
+**at ordering her own food**), and false for a recovery run, which is three quiet
+**nights** — the noun the app attached to the first of them is its own business
+rather than the owner's. `occasionsDone`, `threadFor` and `threadOfferFor` all
+read it.
+
+**§13E.1's growth bound is untouched.** `aboutTheSubject` is true for a ladder,
+so _"at most one growth-ladder thread per `development-skill` for that skill's
+lifetime"_ still holds by exactly the mechanism §13E.1 verified. What changed for
+a recovery run is that its re-offer is bounded by its own `expiresOn` instead of
+by a subject it does not have — because recovery recurs, and a rule that blocked
+it forever would mean a man who took three quiet nights in March could never be
+offered them again in July.
+
+---
+
 ## Routing 92 — what the phase found while building it
 
 Eleven defects, none reported by anybody: each was found by a gate that already

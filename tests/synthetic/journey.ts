@@ -1462,6 +1462,10 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
         current.situation.threads,
         target,
         current.situation.entities.labelFor(target.object) ?? '',
+        // The span the offer is for — AUD-0009. `NowScreen` passes the same
+        // reading, and a recovery run with nothing behind it is not offered at
+        // all rather than offered at a length nobody decided.
+        current.situation.capacity.recoveryNights,
       )
       if (offer === undefined) return { done: false, note: 'no course is offered', written: 0 }
       return write(
@@ -1472,6 +1476,8 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
               subject: offer.subject,
               subjectLabel: offer.subjectLabel,
               domain: offer.domain,
+              steps: offer.steps,
+              intent: offer.intent,
             },
             { now: at, zone, recordedAt: systemClock().now() },
           ),
