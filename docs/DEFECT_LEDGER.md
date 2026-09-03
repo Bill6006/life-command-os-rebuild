@@ -2,7 +2,7 @@
 
 ## Routing 92 — what the phase found while building it
 
-Ten defects, none reported by anybody: each was found by a gate that already
+Eleven defects, none reported by anybody: each was found by a gate that already
 existed, by a measurement this phase added, or by writing the guard the audit
 asked for and watching it fire. They are recorded because a repair with no
 finding behind it reads as a preference.
@@ -206,6 +206,40 @@ would be invisible to a looser check.
 **Not a product defect.** Nine controls still fit, still clear 44px of thumb,
 and the screen does not overflow — all three are separate checks in the same
 gate and all three passed.
+
+---
+
+## DEF-0165 — A browser matrix reported success having run 507 of 849 tests
+
+**Found:** routing 92, at the QA deferral · **Status:** Understood; the gate is
+read through its count · **Caught by:** the summary line, and nothing else
+
+Re-running every mechanical gate at the deferral, a local matrix run printed
+`507 passed` and **exited 0 with no failures reported**. Three hundred and
+forty-two of the 849 tests never ran. Nothing in the output said so: there was
+no error, no interruption notice, and no artefact in `test-results/`. The only
+signal was that 507 is not 849.
+
+**Why it is in the ledger rather than in a commit message.** This is the exact
+shape the campaign keeps finding — a green that does not mean what it looks
+like. D-238 is that failure inside a test, where the title claimed more than the
+assertion read; this is the same failure one level out, in the runner that
+reports the suite. A phase record that had
+copied "passed, exit 0" into a table would have reported a clean matrix over a
+run that skipped 40% of it. The builder had already described that run as clean
+before reading the number.
+
+**What it actually was.** A second local run reached 849 with one failure —
+`phase83.spec.ts:72`, desktop only, `page.goto: net::ERR_ABORTED` before the
+assertion ran. The same spec passes 39 of 39 in isolation, and CI ran the full
+849 twice on a clean machine without it. Both runs were competing with a CI job
+and a second Playwright process for the same machine, and this repository
+already records loopback drops under Playwright load here. It is contention on
+the build machine, not the product.
+
+**What changed as a result.** Nothing in `src/`. The matrix is reported through
+CI's run — a clean machine, a known count — and any local run is read by its
+count before its exit code. A gate is what it measured, not what it returned.
 
 ---
 
