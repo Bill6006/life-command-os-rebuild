@@ -428,7 +428,28 @@ export function standingBlockerFor(
       continue
     }
     const concept = blockerConcept(cause, semantics)
-    const found = situation.constraints.find((constraint) => constraint.concept === concept)
+    const found = situation.constraints.find(
+      (constraint) =>
+        constraint.concept === concept &&
+        /*
+         * And the area it was recorded about — DEF-0168.
+         *
+         * The concept is scoped to the **object** and not to the move, and one
+         * object can be the subject of moves in two areas. *"Take tonight as
+         * recovery — no subnetting session"* is a **sleep** move whose object is
+         * a career topic, so *"I haven't got what I need"* about reviewing
+         * subnetting was removing the move that says not to review subnetting —
+         * the app refusing to let him rest because he could not study.
+         *
+         * Supervision is exempt and has to be: *"I could not leave"* is a fact
+         * about his evening rather than about an area, and it is matched by
+         * `requiresLeaving` above rather than by a noun.
+         */
+        (cause === 'must-stay' ||
+          cause === 'must-stay-tonight' ||
+          constraint.domains.length === 0 ||
+          constraint.domains.includes(semantics.domain)),
+    )
     if (found !== undefined) return { description: found.description, source: found.source }
   }
   return undefined

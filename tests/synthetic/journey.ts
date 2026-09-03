@@ -52,7 +52,7 @@ import {
   type PendingOutcome,
 } from '../../src/intelligence/outcomes'
 import { answerRecord, questionFor } from '../../src/intelligence/questions'
-import { assembleSituation, type Situation } from '../../src/intelligence/situation'
+import { assembleSituation, type ShownMove, type Situation } from '../../src/intelligence/situation'
 import { startThreadRecord, threadOfferFor } from '../../src/intelligence/threads'
 import {
   assembleDomainPageData,
@@ -718,6 +718,10 @@ export interface JourneyApp {
   readonly zone: TimeZoneId
   now(): Instant
   dayId(): LocalDayId
+  /** Look at Now and count what was on it, the way a surface does — AUD-0025. */
+  visit(): Decision
+  /** What has been put in front of him today, as the engine will read it. */
+  shown(): readonly ShownMove[]
   records(): number
   snapshot(): StoreSnapshot
   view(): MemoryView
@@ -892,10 +896,53 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
   let at = scenario.now
   const zone = scenario.zone
 
-  const moment = () => ({ now: at, zone, weekStartsOn: 1 as const })
+  /**
+   * What has already been put in front of him today — AUD-0025.
+   *
+   * The ledger is the **surface's**, and it reaches the engine as an argument
+   * (D-043): `src/intelligence/` is pure and clock-free, so a runner that wants
+   * to reproduce four visits to one day has to keep one the way
+   * `MemoryProvider` does. Without it every visit looked like the first, and the
+   * one owner-contract item about repeating itself could not be walked at all.
+   *
+   * A count per (move, owner-local day), incremented once per **distinct
+   * moment** — the same rule `noteShown` follows, and the reason the contract
+   * says to advance the clock between visits.
+   */
+  const shownLedger = new Map<string, ShownMove>()
+
+  /**
+   * Today's rows and no others, which is what a reader actually gets.
+   *
+   * `openShownStore` drops every other day when it is read, so the provider hands
+   * the engine one day's counts however long the phone sat closed. A runner that
+   * kept them all would be reasoning from a ledger no surface can produce, and
+   * the one contract item about repeating itself would be walked against the
+   * wrong shape.
+   */
+  const todaysShown = (): readonly ShownMove[] => {
+    const dayId = localDayIdAt(at, zone)
+    return [...shownLedger.values()].filter((entry) => entry.dayId === dayId)
+  }
+
+  const moment = () => ({
+    now: at,
+    zone,
+    weekStartsOn: 1 as const,
+    shown: todaysShown(),
+  })
   const view = () => buildView(held, moment())
   const situation = () => assembleSituation(view(), moment())
   const decision = () => decide(view(), moment())
+
+  /** What `NowScreen` does the moment a move is rendered — AUD-0025. */
+  const noteShown = (move: string): void => {
+    const dayId = localDayIdAt(at, zone)
+    const key = `${move}|${dayId}`
+    const held = shownLedger.get(key)
+    if (held !== undefined && held.at === at) return
+    shownLedger.set(key, { move, dayId, at, count: (held?.count ?? 0) + 1 })
+  }
 
   /*
    * The real clock, not the moment being reasoned about — D-037.
@@ -944,6 +991,21 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
     zone,
     now: () => at,
     dayId: () => localDayIdAt(at, zone),
+    /**
+     * Look at Now, and count what was on it — AUD-0025.
+     *
+     * A visit rather than a read: `decision()` alone leaves no trace, and the
+     * repetition rule is about how many separate times a move has been **put in
+     * front of him**. Advancing the clock between visits is what makes two of
+     * them two.
+     */
+    visit() {
+      const current = decide(view(), moment())
+      const shown = current.evaluation?.candidate.id
+      if (shown !== undefined) noteShown(shown)
+      return current
+    },
+    shown: () => todaysShown(),
     records: () => held.records.length,
     snapshot: () => held,
     view,

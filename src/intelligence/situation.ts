@@ -398,6 +398,17 @@ export interface ContactRecency {
 
 export interface ActiveConstraint {
   readonly concept: ConceptId
+  /**
+   * The areas the constraint was recorded about — DEF-0168.
+   *
+   * Carried because C21's enforcement needs it. A standing blocker's concept is
+   * `blocker.<cause>.<objectId>`, scoped to the **object** and not to the move,
+   * and one object can be the subject of moves in two areas: *"take tonight as
+   * recovery — no subnetting session"* is a **sleep** move whose object is a
+   * career topic. Without the area, saying *"I haven't got what I need"* about
+   * reviewing subnetting removed the move that says not to review subnetting.
+   */
+  readonly domains: readonly LifeDomainId[]
   readonly description: string
   /** When it was said. A derived reading of it has to be able to cite a moment. */
   readonly at: Instant
@@ -1834,6 +1845,7 @@ function collectConstraints(view: MemoryView, now: Instant): readonly ActiveCons
     if (record.occurredAt > now) continue
     constraints.push({
       concept: record.concept,
+      domains: record.domains,
       description: record.description,
       at: record.occurredAt,
       source: record.id,

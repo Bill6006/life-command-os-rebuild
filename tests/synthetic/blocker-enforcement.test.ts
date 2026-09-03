@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CONCEPT } from '../../src/domain/concepts'
-import { DOMAIN } from '../../src/domain/domains'
+import { DOMAIN, type LifeDomainId } from '../../src/domain/domains'
 import { entityId } from '../../src/domain/ids'
 import type { CanonicalRecord } from '../../src/domain/records'
 import type { RecommendationSemantics } from '../../src/domain/recommendation'
@@ -54,6 +54,8 @@ function anEvening(options: {
   readonly blocked?: (typeof BLOCKER_CAUSES)[number]
   readonly about?: typeof A_WALK | typeof KITCHEN
   readonly until?: string
+  /** Which area he was answering about — DEF-0168. The walk's own, by default. */
+  readonly recordedIn?: LifeDomainId
 }) {
   const kit = createKit('C21', 'Europe/London', '2026-01-01T00:00:00Z')
   const walk = kit.entity({
@@ -126,7 +128,7 @@ function anEvening(options: {
         'constraint',
         {
           occurredAt: kit.local('2026-05-11', '20:00'),
-          domains: [DOMAIN.health],
+          domains: [options.recordedIn ?? DOMAIN.health],
           entities: [about],
         },
         {
@@ -316,5 +318,60 @@ describe('the app no longer knows something and offers it anyway — D-164', () 
     // The statement the question path would have shown as "already known" is the
     // statement the filter cites. One reader, two consumers.
     expect(rejection?.explanation).toContain('needs something I have not got')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// And the bound the walk through the surfaces found — DEF-0168
+// ---------------------------------------------------------------------------
+
+describe('a standing blocker stays in the area he answered about — DEF-0168', () => {
+  /*
+   * ## What the contract walk hit
+   *
+   * `blockerConcept` is `blocker.<cause>.<objectId>` — scoped to the **object**,
+   * deliberately, because *"I haven't got what I need for subnetting"* is about
+   * subnetting rather than about the one move he happened to be looking at. That
+   * is right, and enforcement inherits it, so one answer removes every move on
+   * that object. Also right: he said he cannot study it tonight.
+   *
+   * What the object alone cannot tell apart is **which side of the object a move
+   * is on**. *"Take tonight as recovery — no subnetting session"* is a sleep move
+   * whose object is the career topic, and object-scoped enforcement removed it:
+   * the app refusing to let him rest on the grounds that he could not study.
+   *
+   * The area the constraint was recorded in separates them, and it is already on
+   * the record. Nothing about capture changes.
+   *
+   * ## Why supervision is exempt
+   *
+   * *"I can't leave — someone's in my care"* is a fact about his evening and not
+   * about an area, and it is matched by `requiresLeaving` rather than by the
+   * object at all. Scoping it to the area it was first said in would let the app
+   * propose leaving the house from a different domain.
+   */
+
+  it('does not remove a move in another area, however sure it is about the object', () => {
+    const elsewhere = anEvening({ blocked: 'no-kit', recordedIn: DOMAIN.career })
+    expect(kept(elsewhere), 'an answer about one area removed a move in another').toContain(
+      THE_WALK,
+    )
+  })
+
+  it('still removes the move in the area he was answering about', () => {
+    // The narrowing is a bound and not a retreat: the case C21 exists for is
+    // unchanged, and this is what says so.
+    expect(kept(anEvening({ blocked: 'no-kit' }))).not.toContain(THE_WALK)
+  })
+
+  it('keeps supervision working across every area', () => {
+    /*
+     * `must-stay` is recorded in whichever area he was looking at when he said
+     * it, which could be any of them. If it were scoped, the app would answer
+     * *"I can't leave the house"* by proposing he leave the house for something
+     * else — which is the failure the cause exists to prevent.
+     */
+    const supervising = anEvening({ blocked: 'must-stay', recordedIn: DOMAIN.career })
+    expect(kept(supervising), 'supervision stopped travelling').not.toContain(THE_WALK)
   })
 })
