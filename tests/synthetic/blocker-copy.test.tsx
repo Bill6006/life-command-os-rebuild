@@ -258,18 +258,23 @@ async function everyRenderedString(): Promise<
     if (state === 'part-done-after-blocker') {
       await walked.act('unable-now')
       /*
-       * `no-kit` rather than `must-stay` — routing 92, and the change is the
-       * enforcement rather than the fixture.
+       * `too-tired` now, and the change is the enforcement rather than the
+       * fixture — for the second time.
        *
-       * C21's other half now exists: a candidate says whether it means going
-       * out, and a supervision constraint says whether he can. So saying *"I
-       * could not leave"* about a walk takes the walk off Now, which is the
-       * whole point of the phase — and leaves nothing to pick up later, which
-       * is what this branch is about. Not having the kit is the same shape of
-       * answer — standing, with a stored statement — and does not remove the
-       * move, so the combination this catalogues is still reachable.
+       * Routing 92 moved this from `must-stay` to `no-kit`, because C21's
+       * concept half took a walk off Now the moment he said he could not leave,
+       * leaving nothing to pick up later. Routing 93 is C21's **enforcement**
+       * half, and it covers the whole closed list of standing causes: not having
+       * the kit and not being where the thing happens now remove the move too.
+       *
+       * So the combination this branch catalogues — a stored cause **and** a
+       * move that comes back — is only reachable through a cause that is about
+       * the evening rather than about the world. That is exactly right, and it
+       * is the distinction `BLOCKER_OPTIONS.standing` has always drawn: a tired
+       * evening is not a standing fact about a man, it writes no constraint, and
+       * the move is still his to pick up an hour later.
        */
-      await walked.sayWhatBlocked('no-kit')
+      await walked.sayWhatBlocked('too-tired')
       await walked.resume('start')
     }
     if (state === 'unable-now' || state === 'unable-now-unsaid') await walked.act('unable-now')

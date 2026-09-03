@@ -1416,6 +1416,53 @@ describe('the owner is not asked to do the app’s thinking — D-089', () => {
   })
 })
 
+describe('nothing in the product turns off a blocker he told it about — C21', () => {
+  /*
+   * `FilterOptions.enforceStandingBlockers` exists for one reason: §6.5's
+   * completion condition asks for C21's enforcement to be *"proved by
+   * reintroduction — put the non-enforcement back and watch the test fail"*, and
+   * a proof needs a way to put the old rule back against the same history.
+   *
+   * A seam that lets a safety rule be switched off is worth exactly one guard:
+   * that nothing but a test ever switches it. The default is the safe answer, so
+   * a caller who forgets the option gets enforcement; this is about a caller who
+   * remembers it.
+   *
+   * The shape is `DecideOptions.probe`'s, and so is the discipline.
+   */
+  const SWITCH = /enforceStandingBlockers/
+
+  it('names the seam in exactly one source file', () => {
+    const offenders: string[] = []
+    for (const file of [...INTELLIGENCE, ...FEATURES]) {
+      if (repoPath(file).endsWith('src/intelligence/constraints.ts')) continue
+      if (SWITCH.test(readCode(file))) offenders.push(repoPath(file))
+    }
+    expect(offenders, 'a surface can turn off a blocker the owner told the app about').toEqual([])
+  })
+
+  it('is looking at a rule that is really there', () => {
+    // The reintroduction proof of the guard itself: the shape it bans is the
+    // shape the one permitted file still uses, so a guard that had stopped
+    // matching anything fails here rather than passing quietly forever.
+    expect(SWITCH.test(readCode(join(ROOT, 'src/intelligence/constraints.ts')))).toBe(true)
+  })
+
+  it('reads the same standing-blocker function the question path reads', () => {
+    /*
+     * D-164's extension: *"asked when the answer has a use"* becomes *"and the
+     * use is delivered"* once enforcement lands. What makes that structural is
+     * that one function answers *"is this move blocked?"* — so the app cannot
+     * decline to ask because it knows and then offer the move anyway because
+     * nothing read what it knew.
+     */
+    const filter = readCode(join(ROOT, 'src/intelligence/constraints.ts'))
+    const asking = readCode(join(ROOT, 'src/intelligence/blockers.ts'))
+    expect(filter).toContain('standingBlockerFor')
+    expect(asking).toContain('standingBlockerFor')
+  })
+})
+
 describe('the shown-ledger is not history — AUD-0025, D-043', () => {
   /*
    * D-043 settled that nothing is written when a screen renders, and every

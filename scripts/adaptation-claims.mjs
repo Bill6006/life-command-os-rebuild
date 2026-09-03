@@ -442,11 +442,22 @@ export const APPROVED_FROM_BLOCKERS_MODULE = [
   'Something came up',
   'Something came up.',
 
-  // The two questions, and the notes under them.
+  /*
+   * The two questions, and the notes under them.
+   *
+   * **Both notes gained a clause in routing 93, and it is the one D-187 forbade
+   * until C21's enforcement existed.** The old promise was *"so the app can
+   * offer something that fits next time"* — a claim about a future
+   * recommendation that nothing makes, and nothing makes it now either. What
+   * these say is that the blocked move **stays off**, which `applyConstraints`
+   * does, for the closed list of standing causes, until he takes it back from
+   * the area's own page. D-164's reconciliation is explicit that once something
+   * acts on a blocker, saying nothing about it becomes its own defect.
+   */
   'What got in the way?',
-  'This is kept on the area it belongs to, where you can take it back. It is never read as you not wanting to.',
+  'This is kept on the area it belongs to, where you can take it back. It is never read as you not wanting to. An answer about the world rather than about tonight also keeps this move off until you take it back.',
   '{move} has not fitted more than once. What is getting in the way?',
-  'This is kept with the evening it happened on, and shown on the area it belongs to.',
+  'This is kept with the evening it happened on, and shown on the area it belongs to. An answer about the world rather than about tonight also keeps this move off until you take it back.',
   'Just leave it',
 
   // And the three silences, each of which says why it is silent.
@@ -990,6 +1001,16 @@ export const MUST_BE_CAUGHT = [
 export const MUST_BE_ALLOWED = [
   'This is kept with the evening it happened on, and shown on the area it belongs to.',
   'This is kept on the area it belongs to, where you can take it back. It is never read as you not wanting to.',
+  /*
+   * And the clause C21's enforcement earned — routing 93, D-274.
+   *
+   * It survives the classifier because it is not a claim about a **future
+   * recommendation**: the subject is this move, the tense is present, and what
+   * it describes is a filter that runs now. That is the distinction the whole
+   * guard is drawn around, and it is worth one entry here so that a future
+   * rewrite of the classifier has to keep it.
+   */
+  'An answer about the world rather than about tonight also keeps this move off until you take it back.',
   'A walk means leaving, and I could not — someone was in my care.',
   'Recorded on your Health & Recovery page, where you can take it back.',
   'You have already said what was in the way today.',

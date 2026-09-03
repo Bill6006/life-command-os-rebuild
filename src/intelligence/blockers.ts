@@ -222,6 +222,28 @@ export function blockerConcept(cause: BlockerCause, semantics: RecommendationSem
   return conceptId(`blocker.${cause}.${semantics.target.object.id}`)
 }
 
+/**
+ * What the app does with an answer about the world — D-164's extension, D-274.
+ *
+ * One clause, appended to both notes rather than written twice, because two
+ * copies of a promise are two things to keep true. It says the **condition**
+ * — an answer about the world rather than about tonight — instead of naming a
+ * button, because the owner has not pressed one yet and five of the eight
+ * causes are about the evening and change nothing.
+ *
+ * *"Keeps this move off"* rather than *"the app will offer something that fits"*:
+ * the first is what `applyConstraints` does and the second is a claim about a
+ * future recommendation that nothing makes.
+ */
+const STANDING_ANSWERS_KEEP_IT_OFF =
+  'An answer about the world rather than about tonight also keeps this move off until you take it back.'
+
+const REPEATED_NOTE =
+  'This is kept with the evening it happened on, and shown on the area it belongs to.'
+
+const ADAPTABLE_NOTE =
+  'This is kept on the area it belongs to, where you can take it back. It is never read as you not wanting to.'
+
 export type BlockerAskReason =
   /** Knowing which of these it was would change what the app offers instead. */
   | 'adaptable'
@@ -315,14 +337,27 @@ export function blockerQuestionFor(
       because: 'repeatedly-blocked',
       prompt: `${moveName} has not fitted more than once. What is getting in the way?`,
       /*
-       * What is recorded, and where — QA-84-010, D-192.
+       * What is recorded, where, and — since routing 93 — what follows from it.
        *
        * This said *"so the app can stop putting it in front of you at the wrong
-       * moment"*, which is a promise nothing keeps: no reader anywhere consults
-       * a blocker constraint. D-187 said not to write sentences like this one
-       * and the sentence was already in the tree when D-187 was written.
+       * moment"*, which was a promise nothing kept: no reader anywhere consulted
+       * a blocker constraint (QA-84-010, D-192). The sentence was removed and
+       * the promise with it.
+       *
+       * **C21's enforcement half has landed (D-274), so the second half is true
+       * now and saying nothing about it has become the defect.** D-164's own
+       * reconciliation says so in as many words: it extends from *"asked when
+       * the answer has a use"* to *"and the use is delivered"*, and *"when
+       * something does act on a blocker, silence about it becomes a different
+       * defect."*
+       *
+       * The clause names the condition rather than the button, because the owner
+       * has not picked one yet and five of the eight causes are about the
+       * evening rather than about the world. Those still write nothing standing
+       * and still change nothing about what is offered, which is exactly what
+       * the sentence says.
        */
-      note: 'This is kept with the evening it happened on, and shown on the area it belongs to.',
+      note: `${REPEATED_NOTE} ${STANDING_ANSWERS_KEEP_IT_OFF}`,
       options: Object.values(BLOCKER_OPTIONS),
     }
   }
@@ -351,14 +386,21 @@ export function blockerQuestionFor(
     because: 'adaptable',
     prompt: 'What got in the way?',
     /*
-     * The string QA read off the deployed build — QA-84-010.
+     * The string QA read off the deployed build — QA-84-010 — and the clause
+     * routing 93 was allowed to put back.
      *
-     * *"so the app can offer something that fits next time"*: the exact future
-     * adaptation D-187 forbids, promised on the screen D-187 is about. The
-     * second sentence is kept because it is true and is the point — an inability
-     * is not a preference (D-045).
+     * What was removed was *"so the app can offer something that fits next
+     * time"*: the exact future adaptation D-187 forbids, promised on the screen
+     * D-187 is about. The second sentence stayed because it is true and is the
+     * point — an inability is not a preference (D-045).
+     *
+     * The third is new and is the one C21's enforcement earns (D-274). It is not
+     * the old promise wearing better words: the old one said the app would offer
+     * *something else*, which nothing does; this says the blocked move **stays
+     * off**, which `applyConstraints` now does, on the closed list of standing
+     * causes, until he takes it back from the area's own page.
      */
-    note: 'This is kept on the area it belongs to, where you can take it back. It is never read as you not wanting to.',
+    note: `${ADAPTABLE_NOTE} ${STANDING_ANSWERS_KEEP_IT_OFF}`,
     options: Object.values(BLOCKER_OPTIONS),
   }
 }

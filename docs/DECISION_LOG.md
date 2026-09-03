@@ -1,5 +1,76 @@
 # Decision log
 
+## D-274 — C21's enforcement half: the app's own blocker records are enforced, and free text still is not
+
+**Phase:** 93 · **Status:** Active
+
+§6.5's completion condition names this by itself: _"reverse `constraints.ts`'s
+shown-never-enforced rule for registered blocker concepts only"_, with the
+reversal _"proved by reintroduction — put the non-enforcement back and watch the
+test fail."_
+
+**The rule that stands.** A constraint the owner **wrote** is free text — _"no
+gym until the shoulder settles"_ — and guessing which candidates it forbids
+would be inventing a rule he did not state. Those are still cautions, still
+shown, still not enforced.
+
+**The rule that is reversed.** Some constraint records are not free text at all.
+The app wrote them itself, from the **closed list** in `BLOCKER_CAUSES`, at the
+moment the owner tapped one, and each carries a structured cause and the object
+it is about. _"A walk needs something I have not got"_ needs no interpretation.
+Not enforcing those was the app capturing an answer honestly and throwing it
+away — the state D-187 called honest **until** something could act on it.
+
+So `applyConstraints` now rejects a move a standing blocker is about, with reason
+`blocked-before` and the owner's own statement as the explanation.
+
+**Four bounds, each of them a property rather than a promise.**
+
+1. **Scoped to the move.** He said a _walk_ needs something he has not got; the
+   kitchen, the study session and everything else are untouched.
+2. **Standing causes only, and the declaration decides.** What is enforced is
+   exactly what `BLOCKER_OPTIONS.standing` marks, so a ninth cause added next
+   year is enforced or not by the same declaration that decides whether it writes
+   a record at all. A tired evening writes nothing and blocks nothing.
+3. **It expires with its own bound.** `ConstraintRecord.until` is read, so
+   _"can't leave tonight"_ stops enforcing at the end of the owner-local day. An
+   enforcement outliving its own date would hold him to something he said was for
+   one evening.
+4. **One reader.** `standingBlockerFor` is the function `blockerQuestionFor` uses
+   to stay silent about a move it already knows the answer for, and it is the
+   function the filter uses to remove it. The app cannot decline to ask because
+   it knows and then offer the move anyway because nothing read what it knew.
+
+**The reintroduction proof, and why it needed a seam.**
+`FilterOptions.enforceStandingBlockers` exists so the **old rule** can be put back
+against the **same** history. A test that deleted the constraint and watched the
+move return would prove that a rule needs evidence, which was never in doubt.
+The default is enforcement, production never passes the option, and
+`architecture-guards.test.ts` fails the build if any file but `constraints.ts`
+names it. It is `DecideOptions.probe`'s shape and carries its discipline.
+
+**D-164's extension, delivered.** Its reconciliation reads: _"extends from 'asked
+when the answer has a use' to 'and the use is delivered' once C21's enforcement
+lands in 93. D-187 is honest today because nothing acts on a blocker. When
+something does, silence about it becomes a different defect."_ Both blocker notes
+gain one clause: **"An answer about the world rather than about tonight also
+keeps this move off until you take it back."**
+
+It is not the old promise in better words. The old one — _"so the app can offer
+something that fits next time"_ — was a claim about a **future recommendation**,
+and nothing makes one now either. This says the blocked move stays off, which is
+a filter that runs in the present, and it names the condition rather than a
+button because the owner has not pressed one yet and five of the eight causes are
+about the evening.
+
+**One thing became unreachable, and it is the right thing.** Routing 92 moved the
+`part-done-after-blocker` copy walk from `must-stay` to `no-kit` because the
+supervision case had started removing the move. Every standing cause removes it
+now, so that combination is only reachable through a cause about the evening —
+`too-tired` — which is exactly the distinction `BLOCKER_OPTIONS.standing` draws.
+
+---
+
 ## D-273 — `spacing-fit`, the twenty-first dimension, and the rule that the app's timing never out-argues his plan
 
 **Phase:** 93 · **Status:** Active

@@ -6,6 +6,7 @@ import { renderRecommendation } from '../domain/recommendation'
 import { addLocalDays, blockOf, localDayIdAt, type Instant } from '../domain/time'
 import { blockNoun, horizonWord } from './vocabulary'
 import type { Candidate } from './candidates'
+import { standingBlockerFor } from './blockers'
 import { answersLimiter, endsAtClock, type PriorMove, type Situation } from './situation'
 
 /**
@@ -22,10 +23,28 @@ import { answersLimiter, endsAtClock, type PriorMove, type Situation } from './s
  * question. Filtering on an unknown would be exactly the false-zero failure
  * G-009 exists to prevent, wearing a different hat.
  *
- * Constraint *records* are handled differently from these hard filters. A
- * constraint the owner wrote is free text — "no gym until the shoulder settles"
- * — and guessing which candidates it forbids would be inventing a rule the
- * owner did not state. They are attached as cautions and shown, not enforced.
+ * ## Constraint records — and the half of that rule this phase reverses (C21)
+ *
+ * The rule here used to be **shown, never enforced**, for every constraint
+ * record without exception. Half of it stands and half of it was too wide.
+ *
+ * **What stands.** A constraint the owner wrote is free text — *"no gym until
+ * the shoulder settles"* — and guessing which candidates it forbids would be
+ * inventing a rule he did not state. Those are still attached as cautions and
+ * shown.
+ *
+ * **What is reversed — C21, §6.5, D-274.** Some constraint records are not free
+ * text at all: the app wrote them itself, from a **closed list of causes**, at
+ * the moment the owner tapped one, and each carries a structured cause and the
+ * object it is about. *"A walk needs somewhere I was not"* is not a sentence
+ * anybody has to interpret. Not enforcing those was the app capturing an answer
+ * honestly and then throwing it away — D-187 named that as the honest state
+ * *until* something could act on it, and this is that something.
+ *
+ * So the filter now removes a move a **structured** standing blocker is about,
+ * and leaves every free-text constraint exactly where it was. `blockers.ts`
+ * owns the vocabulary and `standingBlockerFor` is the single reader, so the
+ * question *"is this move blocked?"* has one answer wherever it is asked.
  */
 
 export type RejectionReason =
@@ -57,6 +76,15 @@ export type RejectionReason =
   | 'cannot-leave'
   /** Offered and settled recently enough that offering it again is noise. */
   | 'just-covered'
+  /**
+   * He has already said what stops this one, and it has not been lifted — C21.
+   *
+   * The enforcement half of the blocker capture. Distinct from `cannot-leave`,
+   * which is one concrete pairing about supervision and egress: this is the
+   * general rule for every standing cause on the closed list, scoped to the
+   * object each one was recorded about.
+   */
+  | 'blocked-before'
   /**
    * It would have taken the place of the one move that answers the
    * limiter — QA-81-006.
@@ -212,9 +240,31 @@ export function lastRefusalInBlock(situation: Situation): Instant | undefined {
   return latest
 }
 
+/**
+ * The one thing about this filter a caller may turn off, and why it exists.
+ *
+ * §6.5's completion condition for C21 is *"enforcement proved by reintroduction
+ * — put the non-enforcement back and watch the test fail"*. A test that could
+ * only delete the constraint from the history would be proving something else:
+ * that a rule needs evidence. This is the seam that lets the **old rule** be put
+ * back against the **same** history, which is the proof the condition asks for.
+ *
+ * It is the shape `DecideOptions.probe` already establishes, and it carries the
+ * same discipline: production never passes it,
+ * `tests/unit/architecture-guards.test.ts` fails the build if anything outside a
+ * test does, and the default is the safe answer rather than the convenient one.
+ */
+export interface FilterOptions {
+  /** Default true. False reproduces the shown-never-enforced rule C21 reversed. */
+  readonly enforceStandingBlockers?: boolean
+}
+
+const ENFORCING: Required<FilterOptions> = { enforceStandingBlockers: true }
+
 export function applyConstraints(
   candidates: readonly Candidate[],
   situation: Situation,
+  options: FilterOptions = ENFORCING,
 ): FilterResult {
   const kept: Candidate[] = []
   const rejected: Rejection[] = []
@@ -230,6 +280,7 @@ export function applyConstraints(
 
   const strain = situation.capacity.strain
   const usable = situation.usableMinutes
+  const enforcing = options.enforceStandingBlockers ?? true
   /** Which candidates went for having been read already, rather than settled. */
   const repetition: Candidate[] = []
 
@@ -331,6 +382,28 @@ export function applyConstraints(
         said?.description ?? 'you said you could not leave',
         basisOf(mustStay),
       )
+      continue
+    }
+
+    /*
+     * And what he has already said stops this one — C21, D-274.
+     *
+     * `standingBlockerFor` is the same function `blockerQuestionFor` uses to
+     * stay silent about a move it already knows the answer for, so the app
+     * cannot be in the position of declining to ask because it knows, and then
+     * offering the move anyway because nothing read what it knew. One reader,
+     * two consumers.
+     *
+     * It runs **after** `cannot-leave`, which is the supervision case's own more
+     * specific rejection with its own sentence about somebody being in his care.
+     * A move removed for a reason the owner would recognise beats one removed
+     * for a general one.
+     */
+    const blocked = enforcing
+      ? standingBlockerFor(situation, proposed.semantics, profile)
+      : undefined
+    if (blocked !== undefined) {
+      reject(proposed, 'blocked-before', blocked.description, [blocked.source])
       continue
     }
 
