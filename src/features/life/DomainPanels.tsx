@@ -874,6 +874,8 @@ export function AuthoringPanel({
   const [dayId, setDayId] = useState('')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
+  const [minutes, setMinutes] = useState<number | undefined>(undefined)
+  const [outdoors, setOutdoors] = useState<boolean | undefined>(undefined)
 
   const on = dayFromInput(dayId)
   const startsAt = minutesFromClock(from)
@@ -889,6 +891,8 @@ export function AuthoringPanel({
           ...(on === undefined ? {} : { dayId: on }),
           ...(startsAt === undefined ? {} : { startsAt }),
           ...(endsAt === undefined ? {} : { endsAt }),
+          ...(kind === 'routine' && minutes !== undefined ? { minutes } : {}),
+          ...(kind === 'routine' && outdoors !== undefined ? { requiresLeaving: outdoors } : {}),
         }
   const proposal = draft === undefined ? undefined : proposeAuthoring(draft, situation)
 
@@ -988,6 +992,80 @@ export function AuthoringPanel({
                 data-testid="authoring-obligation-day"
                 onChange={(event) => setDayId(event.target.value)}
               />
+            </>
+          ) : null}
+
+          {/*
+            The two things a movement routine has to say about itself —
+            AUD-0045, and C21's other half.
+
+            Both optional, like everything else on this form. A routine with no
+            size is suggested without a duration rather than with an invented
+            one, and a routine he has not said anything about is treated as one
+            he can do at home — the safe direction, because that answer only
+            ever removes a move.
+
+            They are here rather than inferred from the name because inferring
+            them is precisely what F36 forbids: "a swim" tells the app nothing
+            about how long his swim is, and guessing would put a number he never
+            gave into a sentence he reads.
+          */}
+          {kind === 'routine' ? (
+            <>
+              <label className="domain-correction__prompt" htmlFor="authoring-minutes">
+                Roughly how long does it take?
+              </label>
+              <p className="note">
+                Leave it empty and the app suggests it without a length rather than inventing one.
+              </p>
+              <div className="domain-options" data-testid="authoring-routine-size">
+                {[15, 30, 45, 60, 90].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className="domain-option"
+                    disabled={disabled}
+                    aria-pressed={minutes === option}
+                    data-testid={`authoring-minutes-${option}`}
+                    onClick={() => setMinutes(minutes === option ? undefined : option)}
+                  >
+                    {`${option} minutes`}
+                  </button>
+                ))}
+              </div>
+              <p className="domain-correction__prompt" id="authoring-outdoors">
+                Do you have to go out for it?
+              </p>
+              <p className="note">
+                If you do, the app leaves it out on an evening you have said you cannot leave.
+              </p>
+              <div
+                className="domain-options"
+                role="group"
+                aria-labelledby="authoring-outdoors"
+                data-testid="authoring-routine-outdoors"
+              >
+                <button
+                  type="button"
+                  className="domain-option"
+                  disabled={disabled}
+                  aria-pressed={outdoors === true}
+                  data-testid="authoring-outdoors-yes"
+                  onClick={() => setOutdoors(outdoors === true ? undefined : true)}
+                >
+                  Yes, I go out
+                </button>
+                <button
+                  type="button"
+                  className="domain-option"
+                  disabled={disabled}
+                  aria-pressed={outdoors === false}
+                  data-testid="authoring-outdoors-no"
+                  onClick={() => setOutdoors(outdoors === false ? undefined : false)}
+                >
+                  No, I can do it here
+                </button>
+              </div>
             </>
           ) : null}
 

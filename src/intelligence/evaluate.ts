@@ -4,7 +4,7 @@ import { addLocalDays } from '../domain/time'
 import { applicableAssociation } from './association'
 import type { Candidate } from './candidates'
 import type { LearnedEffect } from './learning'
-import { profileFor, type MoveProfile } from './moves'
+import type { MoveProfile } from './moves'
 import { blockNoun, hereNowWord, horizonWord } from './vocabulary'
 import type { GoalHorizon } from './direction'
 import { answersLimiter, type Situation } from './situation'
@@ -1112,7 +1112,10 @@ function cautionsFor(candidate: Candidate, situation: Situation): readonly strin
 }
 
 export function evaluateCandidate(candidate: Candidate, situation: Situation): Evaluation {
-  const profile = profileFor(candidate.semantics.target.verb)
+  // The candidate's own profile — AUD-0045, and the reason the audit calls
+  // this a scoring-model change: `friction`, `time-fit`, `opportunity-cost`
+  // and `capacity-fit` all read it.
+  const profile = candidate.profile
 
   const dimensions: readonly Dimension[] = [
     bottleneckFit(

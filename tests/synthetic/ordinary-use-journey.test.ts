@@ -481,15 +481,22 @@ describe('what an ordinary journey still cannot do', () => {
     expect(backfill, 'a backfill control arrived without D-165 being amended').toEqual([])
   })
 
-  it('cannot be told a routine and then be offered it', async () => {
+  it('can be told a routine and then be offered it — Reach walked the route', async () => {
     /*
-     * AUD-0045 stays in the later Reach package, and the adjudication says so
-     * in as many words: *"No owner routines library. This phase builds the
-     * route; Reach walks it."*
+     * **This test's name and its assertion both flipped, and that is the
+     * finding rather than a regression.** It was written at routing 84 to hold
+     * a deferral honestly: *"No owner routines library. This phase builds the
+     * route; Reach walks it."* A route with nothing walking it is exactly the
+     * shape that reads as finished from the outside, so the limitation was
+     * asserted rather than left to a comment.
      *
-     * So this asserts the half that is built and the half that is not, together
-     * — because a route with nothing walking it is exactly the shape that reads
-     * as finished from the outside.
+     * Routing 92 is Reach. AUD-0045's precondition — `profileFor` keyed on
+     * (verb, object) — is built, so a second routine can participate without
+     * being scored as a 25-minute walk, and the health generator prefers what
+     * the owner named.
+     *
+     * D-021 is untouched and is what the last assertion is about: the engine
+     * still invents no subjects. What is on the screen is his sentence.
      */
     const app = await openJourney('the-first-evening')
     const made = await app.introduce({
@@ -511,8 +518,11 @@ describe('what an ordinary journey still cannot do', () => {
     const object = decision.explanation?.semantics.target.object.id ?? ''
     expect(
       object.startsWith('routine:lifting'),
-      'the engine names only its own routines — D-021, and Reach is where this changes',
-    ).toBe(false)
+      'the routine he named is not what the app offered',
+    ).toBe(true)
+    // And the app still invents nothing: the subject on the screen is an entity
+    // he created, exactly as a learning topic or a place is (D-021).
+    expect(decision.explanation?.rendered.sentence).toContain('Lifting on a Tuesday')
   })
 
   it('has no verdict on whether a strategy is working', () => {

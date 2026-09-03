@@ -30,6 +30,7 @@ import {
 } from '../domain/time'
 import { dueWindow } from '../domain/windows'
 import { goalCorrectionRecord } from './corrections'
+import { ROUTINE_OUTDOORS, ROUTINE_SIZE } from './routines'
 import type { Situation } from './situation'
 
 /**
@@ -135,6 +136,30 @@ export interface AuthoringDraft {
   readonly milestoneOf?: EntityRef
   /** Who or what it is about — a skill belongs to a person, a routine to a place. */
   readonly about?: EntityRef
+  /**
+   * How long a routine takes, where he said — AUD-0045.
+   *
+   * The audit offers two ways to make a second movement routine safe and this
+   * is the safer: *"restrict the first version to routines the owner sizes
+   * himself."* The precondition it names is that `profileFor` becomes keyed on
+   * (verb, object), because `size`, `demand` and `friction` are read by six
+   * different rules and a 25-minute walk and a 90-minute gym session sharing
+   * one profile would make all six wrong.
+   *
+   * Optional, like everything else on a draft. A routine with no size behaves
+   * exactly as an unsized move already does — the sentence names no duration,
+   * because `ActionTarget.minutes` has been optional since Phase 1 so that an
+   * absent one is a real state rather than a zero (G-009, F36).
+   */
+  readonly minutes?: number
+  /**
+   * Whether doing it means going out — C21's candidate attribute.
+   *
+   * The other half of the supervision pair. `A_WALK` was an undifferentiated
+   * routine and nothing distinguished an indoor move from an outdoor one, so a
+   * constraint saying *"I could not leave"* had nothing to bite on.
+   */
+  readonly requiresLeaving?: boolean
 }
 
 /**
@@ -440,6 +465,41 @@ export function authoringRecords(
    * standing concept: nothing here claims to know how often, how long, or how
    * it is going, and {@link proposeAuthoring} said so before he agreed.
    */
+  /*
+   * And a routine's own shape, where he gave one — AUD-0045.
+   *
+   * Two `explicit-fact` rows with the routine attached, carrying the size and
+   * whether it means going out. They are deliberately **not** registry
+   * concepts: the registry answers what the app can know about the *owner*, and
+   * how long a swim takes is a property of an object. Registering them would
+   * put "Routine size" on the Health page as a fact about him, have coverage
+   * measure how long it had been since he last said it, and make one global
+   * reading stand for every routine at once — the last of which is simply
+   * wrong. `routines.ts` reads them per object, from the records, which is the
+   * same shape a sleep shortfall is read in and for the same reason.
+   */
+  const shape =
+    draft.kind !== 'routine'
+      ? []
+      : [
+          ...(draft.minutes === undefined
+            ? []
+            : [
+                build('explicit-fact', envelope([ref]), {
+                  concept: ROUTINE_SIZE,
+                  value: { type: 'duration' as const, minutes: draft.minutes },
+                }),
+              ]),
+          ...(draft.requiresLeaving === undefined
+            ? []
+            : [
+                build('explicit-fact', envelope([ref]), {
+                  concept: ROUTINE_OUTDOORS,
+                  value: { type: 'boolean' as const, value: draft.requiresLeaving },
+                }),
+              ]),
+        ]
+
   return {
     entities: [entity],
     records: [
@@ -447,6 +507,7 @@ export function authoringRecords(
         domain: draft.domain,
         summary: INTRODUCED_SENTENCE[draft.kind](name),
       }),
+      ...shape,
     ],
     created: ref,
   }

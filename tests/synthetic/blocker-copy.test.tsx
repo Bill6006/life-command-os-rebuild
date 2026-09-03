@@ -257,7 +257,19 @@ async function everyRenderedString(): Promise<
     if (state === 'part-done') await walked.act('start')
     if (state === 'part-done-after-blocker') {
       await walked.act('unable-now')
-      await walked.sayWhatBlocked('must-stay')
+      /*
+       * `no-kit` rather than `must-stay` — routing 92, and the change is the
+       * enforcement rather than the fixture.
+       *
+       * C21's other half now exists: a candidate says whether it means going
+       * out, and a supervision constraint says whether he can. So saying *"I
+       * could not leave"* about a walk takes the walk off Now, which is the
+       * whole point of the phase — and leaves nothing to pick up later, which
+       * is what this branch is about. Not having the kit is the same shape of
+       * answer — standing, with a stored statement — and does not remove the
+       * move, so the combination this catalogues is still reachable.
+       */
+      await walked.sayWhatBlocked('no-kit')
       await walked.resume('start')
     }
     if (state === 'unable-now' || state === 'unable-now-unsaid') await walked.act('unable-now')

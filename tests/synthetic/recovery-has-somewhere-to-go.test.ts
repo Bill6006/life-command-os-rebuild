@@ -378,6 +378,7 @@ describe('the filter keeps its backstop', () => {
       generator: 'career',
       leansOn: [],
       resolves: [],
+      profile: profileFor('hands-on-lab'),
       proposedBecause: 'a move from an hour that does not suit it',
       semantics: {
         subject: walk,

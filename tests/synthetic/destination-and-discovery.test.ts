@@ -715,9 +715,18 @@ describe('routing 84 item 5 — inability, and the silence beside it', () => {
       expect(option.label.length, `${cause} has no label`).toBeGreaterThan(0)
       expect(option.statement('a walk').length, `${cause} stores nothing`).toBeGreaterThan(0)
     }
-    // Three of the eight are about the world, and those are the durable ones.
+    /*
+     * Four of the nine are about the world, and those are the durable ones.
+     *
+     * The fourth is routing 92's, and it is the same fact as the third with a
+     * bound on it: S2 Tier 1 asks for a bounded `until` on a constraint, and
+     * §5.2 records that *"While she is asleep"* had no representation at all
+     * because **no blocker path set `ConstraintRecord.until`**. A second button
+     * is how the bound travels with the answer rather than following it as a
+     * second question, which D-164 does not allow.
+     */
     const standing = BLOCKER_CAUSES.filter((cause) => BLOCKER_OPTIONS[cause].standing)
-    expect([...standing].sort()).toEqual(['must-stay', 'no-kit', 'not-here'])
+    expect([...standing].sort()).toEqual(['must-stay', 'must-stay-tonight', 'no-kit', 'not-here'])
   })
 
   it('never infers anything about him from an inability', () => {
@@ -1226,22 +1235,42 @@ describe('QA-84 round 1 — the repairs', () => {
     expect(target?.minutes, 'the app invented a duration for the owner’s own step').toBeUndefined()
   })
 
-  it('QA-84-001 — an owner routine that is nobody’s next step is still never suggested', async () => {
+  it('QA-84-001 — an owner routine is suggested now, and Reach is where that changed', async () => {
     /*
-     * The deferral, held from the other end. AUD-0045 stays in Reach: what this
-     * phase added is a route to **a destination's next step**, not a library
-     * the engine ranks over. A routine introduced on its own must change
-     * nothing at all.
+     * **This assertion was inverted deliberately, and the inversion is the
+     * phase.** Routing 84 held the deferral from the other end: it built a
+     * route to a destination's *next step* and nothing else, and this test's
+     * job was to prove that a routine introduced on its own changed nothing —
+     * *"this phase builds the route; Reach walks it."*
+     *
+     * Routing 92 is Reach and this is it walking. AUD-0045 is the audit's
+     * purest example of section 64's failure — a domain structurally incapable
+     * of producing a second sentence — and the precondition it named,
+     * `profileFor` keyed on (verb, object), is what this phase built first.
+     *
+     * The rule the old assertion was really protecting is untouched and is
+     * asserted below: **the engine still names only its own routines**. What
+     * changed is that the owner can now name one, and when he does it is his
+     * words on the screen rather than the app's.
      */
     const app = await eveningIn()
     const before = sentenceOf(app)
+    expect(before, 'the fixture should be offering the engine’s own routine').toContain('a walk')
+
     const made = await app.introduce({
       kind: 'routine',
       name: 'Lifting on a Tuesday',
       domain: DOMAIN.health,
     })
     expect(made.done, made.note).toBe(true)
-    expect(sentenceOf(app), 'an owner routine reached a recommendation').toBe(before)
+
+    const after = sentenceOf(app)
+    expect(after, 'the routine he named did not reach a recommendation').toContain(
+      'Lifting on a Tuesday',
+    )
+    // He gave no length, so none is invented — F36, and `ActionTarget.minutes`
+    // has been optional since Phase 1 so that an absent one is a real state.
+    expect(after, 'a duration was invented for it').not.toMatch(/\d+ minutes/)
   })
 
   it('QA-84-002 — partial work is never counted or worded as a session done', async () => {
@@ -1533,7 +1562,10 @@ describe('owner addendum — "I cannot leave her" is capturable and promises not
   })
 
   it('is offered beside the other seven, and takes none of their places', () => {
-    expect(BLOCKER_CAUSES.length).toBe(8)
+    // Nine now: routing 92 added the bounded form of this same answer, and it
+    // took none of their places either.
+    expect(BLOCKER_CAUSES.length).toBe(9)
+    expect(BLOCKER_CAUSES).toContain('must-stay-tonight')
     for (const cause of [
       'no-time',
       'not-here',

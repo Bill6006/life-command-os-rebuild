@@ -417,7 +417,7 @@ export function claimingStrings(strings) {
  * rather than once per move.
  */
 export const APPROVED_FROM_BLOCKERS_MODULE = [
-  // The eight causes he can choose between.
+  // The nine causes he can choose between.
   'No time',
   'There was not enough time.',
   'Not where I can do it',
@@ -428,6 +428,13 @@ export const APPROVED_FROM_BLOCKERS_MODULE = [
   'Somebody else needed the time.',
   'Can’t leave — someone’s in my care',
   '{move} means leaving, and I could not — someone was in my care.',
+  /*
+   * The same fact with the bound in it — S2 Tier 1's bounded `until`, routing
+   * 92. It is a second button rather than a second question, and both sentences
+   * say what was recorded and nothing about what follows from it (D-187).
+   */
+  'Can’t leave tonight — someone’s in my care',
+  '{move} means leaving, and I could not tonight — someone was in my care.',
   'Sore',
   'The body was not up to it.',
   "Haven't got what I need",

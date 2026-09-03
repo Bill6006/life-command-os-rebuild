@@ -97,6 +97,23 @@ export interface MoveProfile {
   /** Which kinds of evidence it can produce, in the order they are asked. */
   readonly aspects: MoveAspects
   /**
+   * Whether doing this means going out — C21's candidate attribute, AUD-0045.
+   *
+   * A property of the **object** rather than of the verb, which is why it is
+   * optional here and filled in by `routines.ts`: `move` covers a walk in the
+   * park and a set of press-ups on the bedroom floor, and nothing in the model
+   * could tell them apart. Until it could, a supervision constraint —
+   * *"can't leave, someone's in my care"* — had nothing to bite on, which is
+   * exactly what D-187 records as the reason the capture was inert.
+   *
+   * Absent means the app has not been told, and that is read as *no* rather
+   * than as unknown for one narrow reason: this only ever removes a move, and
+   * treating silence as "might mean going out" would suppress indoor moves the
+   * owner never said anything about. The failure direction matters and this is
+   * the safe one.
+   */
+  readonly requiresLeaving?: boolean
+  /**
    * What an outcome about this move is a reading *of* (D-059).
    *
    * Reliability is a property of a source and a concept together, so learning

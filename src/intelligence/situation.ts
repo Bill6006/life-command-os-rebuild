@@ -48,6 +48,7 @@ import {
 import type { ConceptId } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
 import { assembleCoverage, type CoverageState } from './coverage'
+import { collectRoutines, type RoutineShape } from './routines'
 import {
   describeGoalTrajectory,
   resolveDirection,
@@ -499,6 +500,17 @@ export interface Situation {
    * evidence of contact with, and when it last happened.
    */
   readonly peoplePresent: readonly ContactRecency[]
+  /**
+   * The movement routines the owner has named, with the shapes he gave them —
+   * AUD-0045.
+   *
+   * On the situation because the candidate's profile is resolved from it, and
+   * the audit's precondition is that the profile becomes keyed on (verb,
+   * object) before a second routine can safely participate. Empty on every
+   * history that has never named one, which is every history that shipped
+   * before this phase — so nothing already in the library moves.
+   */
+  readonly routines: readonly RoutineShape[]
   readonly homeFriction: Knowledge<FactValue>
   readonly learningTopic: Knowledge<FactValue>
   readonly direction: DirectionState
@@ -1771,6 +1783,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
    * {@link FactReader.derive} so the fact ledger, the domain page and the
    * export show the app's own reading rather than a permanently blank row.
    */
+  const routines = collectRoutines(view, DOMAIN.health, moment.now)
   const constraints = collectConstraints(view, moment.now)
   const mustStay = readMustStay(constraints)
   const trained = readTrainedToday(episodes, moment, local.dayId)
@@ -1860,6 +1873,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     mustStay,
     trainedToday: trained.knowledge,
     peoplePresent,
+    routines,
     homeFriction,
     learningTopic,
     direction: resolveDirection(view, moment, domains, readings.get(CONCEPT.weeklyFocus)),

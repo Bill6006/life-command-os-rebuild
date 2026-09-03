@@ -13,7 +13,8 @@ import type {
 import type { ConceptId } from '../domain/windows'
 import { goalIsBehind, type ActiveGoal } from './direction'
 import { growthStandingFor, maintenanceProbeDue, practiceEvidenceHasAged } from './growth'
-import { profileFor } from './moves'
+import { profileFor, type MoveProfile } from './moves'
+import { shapeProfile } from './routines'
 import { refreshingMoveFor } from './refreshing'
 import { SORE_ENOUGH_TO_EASE_OFF, type ContactRecency, type Situation } from './situation'
 import { entityValue } from './values'
@@ -79,6 +80,21 @@ export interface Candidate {
   readonly resolves: readonly ConceptId[]
   /** One line for the trace: why this was proposed at all. */
   readonly proposedBecause: string
+  /**
+   * The verb's profile with the object's own shape laid over it — AUD-0045.
+   *
+   * Resolved once, here, because the audit's precondition is that the profile
+   * becomes keyed on **(verb, object)** before a second routine can safely
+   * participate: `size`, `demand` and `friction` are read by the constraint
+   * filter for `no-time` and `too-strained` and by the evaluator for
+   * `friction`, `time-fit`, `opportunity-cost` and `capacity-fit`, and a
+   * 25-minute walk and a 90-minute gym session sharing one profile would make
+   * all six wrong.
+   *
+   * Carried on the candidate rather than looked up again downstream, so the
+   * filter and the evaluator cannot disagree about how big a move is.
+   */
+  readonly profile: MoveProfile
 }
 
 export const SLEEP_SUBJECT: EntityRef = entityRef('life-domain', 'sleep')
@@ -92,8 +108,8 @@ function target(verb: ActionVerb, object: EntityRef, minutes: number | undefined
 }
 
 /** A move's own length, trimmed to fit the evening when the evening is known. */
-function sizeFor(verb: ActionVerb, situation: Situation): number | undefined {
-  const natural = profileFor(verb).size
+function sizeFor(profile: MoveProfile, situation: Situation): number | undefined {
+  const natural = profile.size
   if (natural === undefined) return undefined
   // Trimmed to what is actually left rather than to what the owner said —
   // AUD-0004. "Spend 45 minutes on a lab" twenty minutes before the school run
@@ -133,13 +149,14 @@ interface CandidateInput {
 }
 
 function candidate(input: CandidateInput, situation: Situation): Candidate {
+  const profile = shapeProfile(profileFor(input.verb), input.object, situation.routines)
   const semantics: RecommendationSemantics = {
     subject: input.subject,
     domain: input.domain,
     target: target(
       input.verb,
       input.object,
-      input.durationUnknown === true ? undefined : sizeFor(input.verb, situation),
+      input.durationUnknown === true ? undefined : sizeFor(profile, situation),
     ),
     // The summary is left empty here. The explanation generator writes it from
     // the facts that were actually used, which is what stops every profile
@@ -158,6 +175,7 @@ function candidate(input: CandidateInput, situation: Situation): Candidate {
     // to settle something it never touches.
     resolves: (input.resolves ?? []).filter((concept) => input.leansOn.includes(concept)),
     proposedBecause: input.proposedBecause,
+    profile,
   }
 }
 
@@ -814,22 +832,64 @@ const healthCandidates: Generator = (situation) => {
   const trained = situation.trainedToday
   if (isUsable(trained) && trained.value) return []
 
-  const out: Candidate[] = [
+  /*
+   * His own movement, where he has named one — AUD-0045, C20, F12.
+   *
+   * The finding in one sentence: *"a walk"* was the only movement the app could
+   * ever suggest, and there was no route by which the owner could add another.
+   * Every owner, on every good day, forever, got the same sentence — which
+   * section 64 calls the purest available form of its failure, because the
+   * domain was structurally incapable of producing a second one.
+   *
+   * The branch is the same shape every other generator already has: prefer the
+   * thing the owner named, fall back to the engine's own routine when he has
+   * named nothing. What made it wait until this phase is the precondition
+   * rather than the branch — the profile had to become keyed on (verb, object)
+   * first, or a 90-minute session would have been scored as a 25-minute walk by
+   * `no-time`, `too-strained`, `friction`, `time-fit`, `opportunity-cost` and
+   * `capacity-fit` alike.
+   *
+   * **All of them, and no ranking among them.** Every routine he has named is
+   * proposed and the arbiter decides, which is section 17.2's own division of
+   * labour — *"domain modules contribute candidates, and one arbitration path
+   * decides"*. Picking one here would be a second ranking, in the file that is
+   * not allowed to rank, over objects there is no evidence to order yet.
+   *
+   * The list is short by construction: it is the things he typed. And it is
+   * genuinely separate objects rather than one pooled family — AUD-0045 is
+   * explicit that `ACTION_FAMILIES` must not be widened to make lifting and
+   * walking interchangeable, so two routines produce two separately-scoped
+   * learned beliefs and two separately-scoped associations.
+   */
+  const named = situation.routines
+  const subjects: readonly { ref: EntityRef; minutes?: number; sources: readonly RecordId[] }[] =
+    named.length === 0
+      ? [{ ref: A_WALK, sources: [] }]
+      : named.map((routine) => ({
+          ref: routine.ref,
+          ...(routine.minutes === undefined ? {} : { minutes: routine.minutes }),
+          sources: routine.sources,
+        }))
+
+  const out: Candidate[] = subjects.map((subject) =>
     candidate(
       {
         generator: 'health',
-        subject: A_WALK,
+        subject: subject.ref,
         domain: DOMAIN.health,
         verb: 'move',
-        object: A_WALK,
+        object: subject.ref,
         trigger: 'good-conditions',
-        evidence: basisOf(strain),
+        evidence: [...basisOf(strain), ...subject.sources],
         leansOn: [CONCEPT.energy, CONCEPT.soreness],
+        // A routine he sized carries its own duration; one he did not is
+        // proposed with none rather than with the walk's twenty-five minutes.
+        ...(named.length > 0 && subject.minutes === undefined ? { durationUnknown: true } : {}),
         proposedBecause: 'there is capacity for it and it pays back tomorrow',
       },
       situation,
     ),
-  ]
+  )
 
   /*
    * And the next step he named himself, where he has named one — QA-84-001.

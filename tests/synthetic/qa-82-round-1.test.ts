@@ -19,6 +19,7 @@ import { composeExport } from '../../src/features/export/compose'
 import { SELECT_ALL } from '../../src/features/export/sections'
 import { assembleTimeline } from '../../src/features/timeline/timelineEntries'
 import { evidenceForDecision, insightsFor } from '../../src/intelligence/insights'
+import { profileFor } from '../../src/intelligence/moves'
 import { assembleSituation } from '../../src/intelligence/situation'
 import { TEST_APP } from './exportHarness'
 import { isUsable } from '../../src/domain/knowledge'
@@ -951,6 +952,7 @@ describe('QA-82-001 — the filter refuses a move about someone who is out', () 
       generator: 'fatherhood',
       leansOn: [],
       resolves: [],
+      profile: profileFor('time-with'),
       proposedBecause: 'a move about her, arriving while she is at school',
       semantics: {
         subject: her,

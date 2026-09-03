@@ -3,9 +3,10 @@ import type { LifeDomainId } from '../domain/domains'
 import { newRecordId, type RecordId } from '../domain/ids'
 import type { RecommendationSemantics } from '../domain/recommendation'
 import type { CanonicalRecord, ConstraintRecord, Provenance } from '../domain/records'
-import { localDayIdAt, type Instant, type TimeZoneId } from '../domain/time'
+import { endOfLocalDay, localDayIdAt, type Instant, type TimeZoneId } from '../domain/time'
+import { CONCEPT } from '../domain/concepts'
 import { conceptId, type ConceptId } from '../domain/windows'
-import { profileFor } from './moves'
+import { profileFor, type MoveProfile } from './moves'
 import type { Situation } from './situation'
 
 /**
@@ -81,6 +82,21 @@ export const BLOCKER_CAUSES = [
    * either, and nothing does: it reaches `owner-preference` through no path.
    */
   'must-stay',
+  /**
+   * The same fact, bounded — S2 Tier 1's *"a bounded `until` on a constraint"*.
+   *
+   * §5.2 records the gap precisely: *"While she is asleep"* has no
+   * representation, and **no blocker path sets `ConstraintRecord.until`**. The
+   * field has existed since Phase 1 and nothing has ever written it.
+   *
+   * It is a second button rather than a second question. D-164 allows **one**
+   * compact question about what was in the way, so the bound travels with the
+   * answer instead of following it: he says he cannot leave, and says in the
+   * same tap whether that is tonight or until he says otherwise. One is a fact
+   * about an evening and the other is a fact about his life, and the app has no
+   * business guessing which he meant.
+   */
+  'must-stay-tonight',
   'sore',
   'no-kit',
   'interrupted',
@@ -151,6 +167,16 @@ export const BLOCKER_OPTIONS: Record<BlockerCause, BlockerOption> = {
     statement: (move) => `${move} means leaving, and I could not — someone was in my care.`,
     standing: true,
   },
+  'must-stay-tonight': {
+    id: 'must-stay-tonight',
+    label: 'Can’t leave tonight — someone’s in my care',
+    /*
+     * The same sentence with the bound in it, and nothing about what follows —
+     * D-187. What is recorded is what he said; the app does not promise here.
+     */
+    statement: (move) => `${move} means leaving, and I could not tonight — someone was in my care.`,
+    standing: true,
+  },
   sore: {
     id: 'sore',
     label: 'Sore',
@@ -171,8 +197,28 @@ export const BLOCKER_OPTIONS: Record<BlockerCause, BlockerOption> = {
   },
 }
 
-/** The concept a standing blocker constrains, so a later one can match it. */
+/**
+ * The concept a standing blocker constrains, so a later one can match it.
+ *
+ * **Supervision is the exception, and it is the whole of C21's concept half.**
+ * Every other cause is about one move — not having the kit for *this*, not
+ * being where *this* happens — so it is scoped to the object and says nothing
+ * about anything else. *"I could not leave"* is not about the walk. It is a
+ * fact about the owner's evening that applies to every move that means going
+ * out, and scoping it to the object was what left it unable to reach anything:
+ * the constraint named `blocker.must-stay.routine:a-walk`, which is a concept
+ * the registry had never heard of and no other move could ever match.
+ *
+ * So it resolves to {@link CONCEPT.mustStay}, which has a registry home, a
+ * privacy class, a freshness horizon and a reader. That is the difference
+ * between a record and a concept, and it is the difference D-187 was waiting
+ * for.
+ */
 export function blockerConcept(cause: BlockerCause, semantics: RecommendationSemantics): ConceptId {
+  // Both supervision answers are the same fact and resolve to the same concept.
+  // What differs between them is how long it stands, which is the record's
+  // `until` rather than a second thing to be known about the owner.
+  if (cause === 'must-stay' || cause === 'must-stay-tonight') return CONCEPT.mustStay
   return conceptId(`blocker.${cause}.${semantics.target.object.id}`)
 }
 
@@ -317,13 +363,28 @@ export function blockerQuestionFor(
   }
 }
 
-/** A standing constraint about this move that is still in force. */
+/**
+ * A standing constraint about this move that is still in force.
+ *
+ * Supervision is matched only against a move that means going out — the same
+ * asymmetry `blockerConcept` creates one function up. A man who cannot leave
+ * the house can still wind down in it, and telling him the app already knows
+ * what is in the way of an indoor move would be answering a question nobody
+ * asked.
+ */
 export function standingBlockerFor(
   situation: Situation,
   semantics: RecommendationSemantics,
+  profile: MoveProfile = profileFor(semantics.target.verb),
 ): { readonly description: string; readonly source: RecordId } | undefined {
   for (const cause of BLOCKER_CAUSES) {
     if (!BLOCKER_OPTIONS[cause].standing) continue
+    if (
+      (cause === 'must-stay' || cause === 'must-stay-tonight') &&
+      profile.requiresLeaving !== true
+    ) {
+      continue
+    }
     const concept = blockerConcept(cause, semantics)
     const found = situation.constraints.find((constraint) => constraint.concept === concept)
     if (found !== undefined) return { description: found.description, source: found.source }
@@ -392,6 +453,40 @@ export function standingBlockerRecords(
     provenance: BLOCKER_PROVENANCE,
     ...(moment.nextId === undefined ? {} : { nextId: moment.nextId }),
   })
+  /*
+   * And supervision is bounded to the day it was said on — S2 Tier 1's
+   * *"a bounded `until` on a constraint"*, and the half §5.2 records as having
+   * no representation at all: *"While she is asleep"* had nowhere to live, and
+   * **no blocker path set `ConstraintRecord.until`**.
+   *
+   * The bound is the end of the owner-local day, and it is not a guess about
+   * how long she sleeps. It is the honest ceiling on what one tap may claim:
+   * *"someone is in my care"* is a fact about tonight, and turning it into a
+   * standing fact about his life from one press would be the thing D-164
+   * forbids inferring. He can still take it back sooner — the domain page
+   * carries "Not true any more" for every standing blocker — and if it is true
+   * again tomorrow the app will be told again, which costs one tap and claims
+   * nothing it was not told.
+   *
+   * The other two standing causes keep no bound. Not having the kit and not
+   * being where the thing happens are facts about the world that do not end at
+   * midnight, and giving them one would quietly delete something the owner said
+   * without him asking.
+   */
+  /*
+   * The bound the owner chose, and only where he chose one.
+   *
+   * `must-stay` stands until he lifts it, exactly as it did before this phase;
+   * `must-stay-tonight` ends with the owner-local day. Nothing is bounded on
+   * his behalf: turning *"someone is in my care"* into a standing fact about
+   * his life from one press, or quietly deleting it at midnight, are both the
+   * app deciding something he did not say.
+   */
+  const until =
+    cause === 'must-stay-tonight'
+      ? endOfLocalDay(localDayIdAt(moment.now, moment.zone), moment.zone)
+      : undefined
+
   const record: ConstraintRecord = build(
     'constraint',
     {
@@ -404,6 +499,7 @@ export function standingBlockerRecords(
     {
       concept: blockerConcept(cause, semantics),
       description: option.statement(moveName),
+      ...(until === undefined ? {} : { until }),
     },
   )
   return [record]

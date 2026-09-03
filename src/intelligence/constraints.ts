@@ -1,3 +1,4 @@
+import { CONCEPT } from '../domain/concepts'
 import type { EntityRef } from '../domain/entities'
 import type { RecordId } from '../domain/ids'
 import { basisOf, isUsable } from '../domain/knowledge'
@@ -5,7 +6,6 @@ import { renderRecommendation } from '../domain/recommendation'
 import { addLocalDays, blockOf, localDayIdAt, type Instant } from '../domain/time'
 import { blockNoun, horizonWord } from './vocabulary'
 import type { Candidate } from './candidates'
-import { profileFor } from './moves'
 import { answersLimiter, endsAtClock, type PriorMove, type Situation } from './situation'
 
 /**
@@ -41,6 +41,20 @@ export type RejectionReason =
   | 'too-strained'
   /** The subject is not here to do it with. */
   | 'subject-not-available'
+  /**
+   * It means going out and somebody is in his care — C21, D-187's other half.
+   *
+   * **Not blocker enforcement, and the distinction is the phase boundary.**
+   * F08's aggregation — recorded blockers becoming standing suppression rules
+   * across a family of moves — is routing 93's, and nothing here does it. This
+   * is one concrete pairing of two facts the app now holds: a candidate that
+   * says it requires leaving, and a supervision constraint that says he cannot.
+   * A move that does not fit current reality is exactly what this filter is
+   * for, and it is the same shape as `subject-not-available` — she is at
+   * school, so a move about her does not fit; he cannot leave, so a move that
+   * means leaving does not fit.
+   */
+  | 'cannot-leave'
   /** Offered and settled recently enough that offering it again is noise. */
   | 'just-covered'
   /**
@@ -220,7 +234,11 @@ export function applyConstraints(
   const repetition: Candidate[] = []
 
   for (const proposed of candidates) {
-    const profile = profileFor(proposed.semantics.target.verb)
+    // The candidate's own profile — AUD-0045. Looking the verb up again here
+    // would give a 90-minute session the size of a 25-minute walk, and this is
+    // the filter that reads `size` for `no-time` and `demand` for
+    // `too-strained`.
+    const profile = proposed.profile
 
     const rendered = renderRecommendation(proposed.semantics, situation.entities, situation.block)
     if (!rendered.ok) {
@@ -289,6 +307,33 @@ export function applyConstraints(
       continue
     }
 
+    /*
+     * And he cannot leave — C21, and the first thing D-187's capture reaches.
+     *
+     * Both halves had to exist before this could be written: a concept with a
+     * registry home for *"someone's in my care"*, and something on the
+     * candidate distinguishing an indoor move from an outdoor one. Until this
+     * phase there was neither, and `blockers.ts` said so in as many words —
+     * *"nothing acts on this, deliberately"*.
+     *
+     * It bites on a **known** constraint only. Not having been told he must
+     * stay is not being told he may leave (G-009), and the constraint expires
+     * with the day it was said on unless he lifts it sooner.
+     */
+    const mustStay = situation.mustStay
+    if (profile.requiresLeaving === true && isUsable(mustStay) && mustStay.value) {
+      const said = situation.constraints.find(
+        (constraint) => constraint.concept === CONCEPT.mustStay,
+      )
+      reject(
+        proposed,
+        'cannot-leave',
+        said?.description ?? 'you said you could not leave',
+        basisOf(mustStay),
+      )
+      continue
+    }
+
     const settled = settledRecently(proposed, situation)
     if (settled !== undefined) {
       reject(proposed, 'just-covered', 'this one was already settled today', [settled])
@@ -331,7 +376,7 @@ export function applyConstraints(
    * move is the invariant's business (QA-81-001), not this rule's.
    */
   const answered = (candidate: Candidate): boolean =>
-    answersLimiter(situation.limiter, profileFor(candidate.semantics.target.verb))
+    answersLimiter(situation.limiter, candidate.profile)
 
   if (repetition.some(answered) && !kept.some(answered)) {
     const displaced = [...kept]
