@@ -19,7 +19,7 @@ import {
 } from '../domain/time'
 import type { Decision } from './engine'
 import { describeDays } from './coverage'
-import { describeUnknown } from '../domain/knowledge'
+import { describeUnknown, isUsable } from '../domain/knowledge'
 import {
   discreetPlaceholder,
   mayRaiseUnasked,
@@ -52,6 +52,7 @@ import {
   RESULT_VALUE,
   resultValueOf,
 } from './outcomes'
+import { describeWeekLoad, describeWeekLoadCount } from './rhythm'
 import { describeGoalTrajectory, type Situation } from './situation'
 import { hereNowWord } from './vocabulary'
 import { approximateHorizonMs, type ConceptId, type FreshnessHorizon } from '../domain/windows'
@@ -2254,6 +2255,103 @@ function lifeSeasonCards(situation: Situation): readonly Built[] {
   return out
 }
 
+/**
+ * How heavy the week itself has been — AUD-0007.
+ *
+ * ## The sentence the app could not say
+ *
+ * The audit's own framing: the app *"gains the ability to say the single most
+ * humane thing it currently cannot: that this week has been hard and that is why
+ * it is asking for less."* Everything needed for it was already in the record —
+ * nights against the working baseline, effortful things actually finished, times
+ * he said he could not — and nothing put the three next to each other.
+ *
+ * ## Why it is a reading rather than a conclusion
+ *
+ * No confidence word and no belief to disagree with, for the same reason a
+ * trajectory card carries neither: this is a count of what the record holds over
+ * seven days, not a claim about him. **"The week has been a heavy one"** is a
+ * description; *"you are burning out"* would be a diagnosis, and section 4.4
+ * forbids it. The detail line names every figure the level rests on, so the
+ * owner can disagree with the arithmetic rather than with the app's opinion of
+ * him.
+ *
+ * ## And an ordinary or light week produces nothing
+ *
+ * `describeWeekLoad` speaks only for `heavy`, so most weeks put no card on the
+ * screen at all. A card that appears every seven days saying the week was
+ * ordinary is the life-administration noise section 65 exists to prevent, and it
+ * would teach the owner to stop reading this part of the screen. The light
+ * reading still does its work in `similarity`, silently — which is the same
+ * separation D-187 draws between a reading the app holds and a reading it
+ * announces.
+ */
+function weekLoadCards(situation: Situation): readonly Built[] {
+  const load = situation.weekLoad
+  if (!isUsable(load)) return []
+  const headline = describeWeekLoad(load.value, situation.weekLoadEvidence)
+  if (headline === undefined) return []
+
+  const evidence = situation.weekLoadEvidence
+  /*
+   * Set here rather than left to `withSources`, for `lifeSeasonCards`' reason:
+   * this card cites no evidence *lines*, so the derivation would find nothing to
+   * resolve and a card drawn entirely from imported history would read as though
+   * the owner had told this app himself.
+   */
+  const cited = new Set(evidence.basis)
+  const sources = [
+    ...new Set(
+      situation.view.history.effective
+        .filter((record) => cited.has(record.id))
+        .map(evidenceSourceOf),
+    ),
+  ].sort()
+
+  return [
+    {
+      rank: 45,
+      insight: {
+        id: 'week-load',
+        kind: 'life-season',
+        eyebrow: EYEBROW['life-season'],
+        // No area: a week is not an area of his life, and filing it under one
+        // would put it on a domain page it is not about.
+        domain: undefined,
+        headline,
+        detail: describeWeekLoadCount(evidence),
+        // A count of what the record holds, not a conclusion drawn from it.
+        confidence: undefined,
+        sources,
+        evidence: {
+          comparable: evidence.basis.length,
+          window: undefined,
+          // Said on the card itself, and they are entries rather than occasions
+          // — nothing here was compared to anything.
+          counted: undefined,
+          // No rate: three counts of different things share no denominator, and
+          // dividing one by another would be a figure measuring nothing.
+          rates: [],
+          counterexamples: [],
+          included: [],
+          includedTitle: undefined,
+          excluded: [],
+          excludedTitle: undefined,
+          strongerIn: undefined,
+          weakerIn: undefined,
+          trend: undefined,
+          mix: undefined,
+          reasoning: [
+            'Rest against the working baseline, demanding moves finished, and times you said you could not — over the last seven days.',
+            'This says what the record holds. It is not a statement about how you are.',
+          ],
+        },
+        belief: undefined,
+      },
+    },
+  ]
+}
+
 // ---------------------------------------------------------------------------
 
 /**
@@ -2464,6 +2562,7 @@ export function insightsFor(situation: Situation): InsightsReport {
   built.push(...trajectoryCards(situation))
   built.push(...goalTrajectoryCards(situation))
   built.push(...lifeSeasonCards(situation))
+  built.push(...weekLoadCards(situation))
 
   return {
     insights: built

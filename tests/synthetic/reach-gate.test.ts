@@ -323,12 +323,44 @@ describe('making dormant concepts live did not make the app speak more', () => {
      * commit rather than a silent drift.
      */
     expect(spoken, 'how often the app speaks has drifted from the measured figure').toBe(
-      SPOKE_AFTER,
+      SPOKE_AFTER + ADDED_BY_93,
     )
     expect(
-      spoken - SPOKE_BEFORE,
+      SPOKE_AFTER - SPOKE_BEFORE,
       'the app speaks more often than the two questions this phase accounted for',
     ).toBe(2)
+  })
+
+  it('accounts for every one of routing 93’s additions by name', () => {
+    /*
+     * The other half of not re-baselining: a delta is only a delta if somebody
+     * can say what is in it. This walks the same library and asserts that
+     * `spoken - SPOKE_AFTER` is *entirely* the week-load card — so a future
+     * phase that quietly adds a second thing fails here rather than hiding
+     * inside a number that already moved once.
+     */
+    let weekLoad = 0
+    const histories = new Set<string>()
+    for (const id of BEFORE_ROUTING_92) {
+      const scenario = SCENARIOS.find((entry) => entry.id === id)
+      if (scenario === undefined) throw new Error(`no scenario called ${id}`)
+      const loaded = loadScenario(id)
+      for (const offset of [-9, -3, 0, 4, 8]) {
+        const now = (scenario.now + offset * HOUR) as Instant
+        const at = { now, zone: scenario.zone, weekStartsOn: scenario.weekStartsOn ?? (1 as const) }
+        const decision = decide(loaded.viewAt(now, at.zone, at.weekStartsOn), at, { probe: false })
+        for (const insight of insightsFor(decision.situation).insights) {
+          if (insight.id !== 'week-load') continue
+          weekLoad += 1
+          histories.add(id)
+        }
+      }
+    }
+
+    expect(weekLoad, 'the delta is not what the comment says it is').toBe(ADDED_BY_93)
+    expect([...histories].sort(), 'a different set of histories now says a week was heavy').toEqual(
+      ['morning-after-bad-nights', 'quiet-fortnight', 'running-on-empty'],
+    )
   })
 
   it('adds nothing on the other twenty-five histories', () => {
@@ -368,6 +400,37 @@ describe('making dormant concepts live did not make the app speak more', () => {
  */
 const SPOKE_BEFORE = 216
 const SPOKE_AFTER = 218
+
+/**
+ * And what routing 93 added on top, counted the same way — AUD-0007.
+ *
+ * **Routing 92's two figures above are not re-baselined and must not be.** They
+ * are a before-and-after about one change, and the whole value of the pair is
+ * that neither moves. A later phase that legitimately puts something new on a
+ * screen does not make 92's measurement wrong; it makes it incomplete, and the
+ * repair is another number rather than a bigger one.
+ *
+ * So this is 93's own delta, pinned and enumerated. Every one of the fifteen is
+ * the **week-load card** (`insights.ts`, `weekLoadCards`) on three histories at
+ * five hours each:
+ *
+ * | history                    | what it says                     |
+ * | -------------------------- | -------------------------------- |
+ * | `running-on-empty`         | about 9 hours short over 3 nights |
+ * | `quiet-fortnight`          | about 6 hours short over 6 nights |
+ * | `morning-after-bad-nights` | about 6 hours short over 2 nights |
+ *
+ * **Three cards, and the fifteen is the measurement rather than the noise.** The
+ * count walks five hours of one owner-local day, and a card that stands all day
+ * is counted once per hour — the owner sees one card on one day, three times
+ * across the whole library. That is the honest reading of the figure and it is
+ * why the enumeration is here rather than a bare number.
+ *
+ * It is also the sentence AUD-0007 exists to make sayable, on exactly the
+ * histories where it is true: every one of the three is a real sleep shortfall
+ * the app was already computing and had nowhere to say.
+ */
+const ADDED_BY_93 = 15
 
 /** And the same pair for the narrower count: how many histories open on a question. */
 const OPENED_ON_A_QUESTION_BEFORE = 11

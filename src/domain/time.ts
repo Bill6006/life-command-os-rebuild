@@ -33,6 +33,13 @@ export type LocalTimeOfDay = Branded<string, 'LocalTimeOfDay'>
 export type IsoWeekday = 1 | 2 | 3 | 4 | 5 | 6 | 7
 export type WeekStartDay = IsoWeekday
 
+/** The seven, as values, so a reader can check one came off the wire intact. */
+export const ISO_WEEKDAYS: readonly IsoWeekday[] = [1, 2, 3, 4, 5, 6, 7]
+
+export function isIsoWeekday(value: unknown): value is IsoWeekday {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 7
+}
+
 /** ISO-8601 weeks start on Monday. The owner may prefer otherwise. */
 export const DEFAULT_WEEK_START: WeekStartDay = 1
 

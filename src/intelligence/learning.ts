@@ -8,12 +8,14 @@ import {
   type FactValue,
   type OutcomeRecord,
   type ProvenanceSource,
+  type WeekLoad,
 } from '../domain/records'
 import {
   localDaysBetween,
   localDayIdAt,
   type DayBlock,
   type Instant,
+  type IsoWeekday,
   type TimeZoneId,
 } from '../domain/time'
 import type { ConceptId } from '../domain/windows'
@@ -169,21 +171,72 @@ function minutesMatch(a: number | undefined, b: number | undefined): number {
   return Math.max(0, 1 - Math.abs(a - b) / 90)
 }
 
+/**
+ * How much load resembles load — AUD-0007.
+ *
+ * Ordinal rather than nominal, because the three levels are ordered: a heavy
+ * week is more like an ordinary one than it is like a light one, and treating
+ * all three as equally different would make the feature noisier than the thing
+ * it measures. Adjacent levels half-match, which is `strainMatch`'s shape on a
+ * scale that happens to have the same number of rungs.
+ */
+const LOAD_ORDER: Record<WeekLoad, number> = { light: 0, ordinary: 1, heavy: 2 }
+
+function loadMatch(a: WeekLoad | undefined, b: WeekLoad | undefined): number {
+  if (a === undefined || b === undefined) return 0.5
+  if (a === b) return 1
+  return Math.abs(LOAD_ORDER[a] - LOAD_ORDER[b]) === 1 ? 0.5 : 0
+}
+
+/**
+ * How much one weekday resembles another — AUD-0007.
+ *
+ * A Tuesday is a Tuesday. What it is *not* is a scale: Monday and Sunday are
+ * one day apart on a calendar and are not alike, so nothing here reaches for
+ * distance. Two weekdays that are not the same day still share the shape of a
+ * working evening, which is the half-match — and `weekend` above is left doing
+ * exactly the job it always did rather than being replaced by this.
+ */
+function weekdayMatch(a: IsoWeekday | undefined, b: IsoWeekday | undefined): number {
+  if (a === undefined || b === undefined) return 0.5
+  if (a === b) return 1
+  const working = (day: IsoWeekday): boolean => day <= 5
+  return working(a) === working(b) ? 0.25 : 0
+}
+
+/**
+ * How the five features are weighed, and why the two new ones are light.
+ *
+ * AUD-0007's own stated risk: *"every added feature narrows the comparable set,
+ * and the set is already often empty."* At the weight of `block`, a weekday
+ * would make "evenings like this one" mean *this evening*, and the app would go
+ * back to reporting nothing comparable — the failure the finding exists to
+ * repair, arriving from the other side. Half a unit each, against `block` and
+ * `strain` at two, is enough to break a tie between a Tuesday and a Saturday and
+ * not enough to decide anything on its own.
+ */
 const SIMILARITY_WEIGHTS = {
   block: 2,
   strain: 2,
   weekend: 1,
   child: 1,
   minutes: 1,
+  weekday: 0.5,
+  load: 0.5,
 } as const
 
 /**
  * How much one evening resembles another, 0–1.
  *
- * Deliberately five coarse features rather than everything the situation knows.
- * A fingerprint fine enough to be unique matches nothing, and section 22
- * forbids inventing precision — a similarity of 0.6 here means "quite like it",
- * not a measurement.
+ * Deliberately a handful of coarse features rather than everything the
+ * situation knows. A fingerprint fine enough to be unique matches nothing, and
+ * section 22 forbids inventing precision — a similarity of 0.6 here means
+ * "quite like it", not a measurement.
+ *
+ * **A record written before a feature existed compares as unknown on it**, which
+ * is G-009 applied to comparison: not a mismatch, and not a match either. That
+ * is what lets a feature be added without re-scoping every belief the app
+ * already holds.
  */
 export function similarity(a: DecisionContext, b: DecisionContext): number {
   const parts = [
@@ -192,6 +245,8 @@ export function similarity(a: DecisionContext, b: DecisionContext): number {
     [a.weekend === b.weekend ? 1 : 0, SIMILARITY_WEIGHTS.weekend],
     [knownMatch(a.childPresent, b.childPresent), SIMILARITY_WEIGHTS.child],
     [minutesMatch(a.usableMinutes, b.usableMinutes), SIMILARITY_WEIGHTS.minutes],
+    [weekdayMatch(a.dayOfWeek, b.dayOfWeek), SIMILARITY_WEIGHTS.weekday],
+    [loadMatch(a.load, b.load), SIMILARITY_WEIGHTS.load],
   ] as const
 
   const total = parts.reduce((sum, [, weight]) => sum + weight, 0)

@@ -581,6 +581,20 @@ export type DecisionRecord = Record_<
 >
 
 /**
+ * How heavy a week has been, in the resolution a person speaks in — AUD-0007.
+ *
+ * The vocabulary lives here, with the record shape that stores it, rather than
+ * with the reading that produces it. A record written this month and read next
+ * year has to still mean what it meant, and `intelligence/rhythm.ts` — which
+ * decides *which* of the three a week was — is free to be re-cut without
+ * re-scoping every decision the owner already acted on. It is the same
+ * reasoning `ThreadRecord` gives for storing its own `moves` list.
+ */
+export type WeekLoad = 'light' | 'ordinary' | 'heavy'
+
+export const WEEK_LOADS = ['light', 'ordinary', 'heavy'] as const
+
+/**
  * What the system could see when it made a recommendation.
  *
  * Section 16 asks that historical comparison consider relevant context rather
@@ -600,6 +614,32 @@ export interface DecisionContext {
   /** Undefined means nobody knew, which is not the same as "no". */
   readonly childPresent?: boolean
   readonly usableMinutes?: number
+  /**
+   * Which day of the week it was, 1 for Monday — AUD-0007.
+   *
+   * `weekend` above collapses five working evenings into one another, so a
+   * Tuesday resembled a Thursday exactly as much as it resembled another
+   * Tuesday. The audit's reproduction is three evenings six days apart — one
+   * working, two weekend — answered with the identical sentence three times.
+   *
+   * **Absent on every record written before routing 93**, and that absence is
+   * load-bearing: `similarity` treats a missing weekday as unknown rather than
+   * as agreement, so nothing in the existing history quietly starts resembling
+   * a Tuesday (G-009).
+   */
+  readonly dayOfWeek?: IsoWeekday
+  /**
+   * How heavy the last seven days had been — AUD-0007.
+   *
+   * Three levels, derived from what the record already held: rest against the
+   * working baseline, effortful moves actually completed, and times he said he
+   * could not. No new question, and no number about a man.
+   *
+   * Written down at the moment of the decision like everything else here, and
+   * never re-derived: re-reading "was that a heavy week?" from today's history
+   * would answer with everything written since.
+   */
+  readonly load?: WeekLoad
 }
 
 export type ActionRecommendationRecord = Record_<

@@ -523,10 +523,28 @@ describe('context similarity matters more than date proximity', () => {
    * average. "What worked in situations like this one" is a different question
    * from "what worked recently", and when they disagree the first one wins.
    */
+  /*
+   * The two comparisons below carry a weekday and a week's load because every
+   * context the app writes now carries them — AUD-0007. The claims are the ones
+   * this file has always made; what changed is that the fixture is a picture of
+   * a real record again. `evening()` without them is history from before this
+   * phase, and the comparison it gets is asserted in
+   * `tests/synthetic/rhythm-and-load.test.ts`, which is where the new features
+   * are the subject rather than the backdrop.
+   */
+  const RECORDED = { dayOfWeek: 3, load: 'ordinary' } as const
+
   it('scores a like evening above an unlike one', () => {
-    const tonight = evening()
-    const alike = evening()
-    const different = evening({ block: 'morning', strain: 'severe', usableMinutes: 15 })
+    const tonight = evening(RECORDED)
+    const alike = evening(RECORDED)
+    const different = evening({
+      block: 'morning',
+      strain: 'severe',
+      usableMinutes: 15,
+      weekend: true,
+      dayOfWeek: 6,
+      load: 'heavy',
+    })
 
     expect(similarity(tonight, alike)).toBeGreaterThan(0.9)
     expect(similarity(tonight, different)).toBeLessThan(RECOGNISABLE)
@@ -536,8 +554,11 @@ describe('context similarity matters more than date proximity', () => {
     // Neither of these recorded whether she was there. That is not a match, and
     // it is not a mismatch either — G-009's rule, applied to comparison rather
     // than to values. Two evenings that actually agree score higher.
-    const neitherKnows = similarity(evening(), evening())
-    const bothKnow = similarity(evening({ childPresent: true }), evening({ childPresent: true }))
+    const neitherKnows = similarity(evening(RECORDED), evening(RECORDED))
+    const bothKnow = similarity(
+      evening({ ...RECORDED, childPresent: true }),
+      evening({ ...RECORDED, childPresent: true }),
+    )
 
     expect(neitherKnows).toBeLessThan(1)
     expect(bothKnow).toBe(1)

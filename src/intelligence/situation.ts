@@ -40,6 +40,7 @@ import {
   localWeekIdAt,
   type DayBlock,
   type Instant,
+  type IsoWeekday,
   type LocalDayId,
   type LocalWeekId,
   type TimeZoneId,
@@ -49,6 +50,7 @@ import type { ConceptId } from '../domain/windows'
 import type { MemoryView } from '../memory/view'
 import { assembleCoverage, type CoverageState } from './coverage'
 import { collectRoutines, type RoutineShape } from './routines'
+import { LOAD_WINDOW_DAYS, readWeekLoad, type LoadEvidence, type WeekLoad } from './rhythm'
 import {
   describeGoalTrajectory,
   resolveDirection,
@@ -392,6 +394,23 @@ export interface Situation {
   /** The comparable shape of this moment, for learning and for the record. */
   readonly context: DecisionContext
   readonly capacity: Capacity
+  /**
+   * How heavy the last seven days have been — AUD-0007.
+   *
+   * A reading of the record rather than a question, and the app's answer to the
+   * brief's *"does anything model 'this is a bad week'?"*, which was no. It goes
+   * onto {@link Situation.context}, so an evening is compared to evenings in
+   * weeks that were like it — and it produces at most one plain sentence, which
+   * is the most humane thing the app could not previously say.
+   *
+   * **Nothing is ranked by it.** It is a comparison feature and a sentence; no
+   * dimension reads it, and a heavy week does not make a move score higher or
+   * lower. Turning "he has had a hard week" into a number that moves a
+   * recommendation is the wellness score section 22 forbids.
+   */
+  readonly weekLoad: Knowledge<WeekLoad>
+  /** What the week's reading counted, so a sentence can cite it. */
+  readonly weekLoadEvidence: LoadEvidence
   /** What the owner said he has. Unchanged, and no longer the whole story. */
   readonly usableMinutes: Knowledge<number>
   /** Everything spoken for on the owner-local day being decided, in order. */
@@ -1410,6 +1429,14 @@ function findLimiter(
 function contextFor(
   block: DayBlock,
   isWeekend: boolean,
+  // Which day it actually was — AUD-0007. `isWeekend` above collapses five
+  // working evenings into each other, so a Tuesday resembled a Thursday exactly
+  // as much as it resembled another Tuesday.
+  isoWeekday: IsoWeekday,
+  // How heavy the week around it had been — AUD-0007. Unknown stays out of the
+  // record entirely rather than being written as "ordinary": a week nothing was
+  // recorded in is not an ordinary week (G-009).
+  weekLoad: Knowledge<WeekLoad>,
   strain: Knowledge<Strain>,
   // Whether she was actually there, not whose week it was — QA-82-001. Two
   // evenings resemble each other by who was in the house, and a standing
@@ -1430,6 +1457,8 @@ function contextFor(
     strain: isUsable(strain) ? strain.value : 'unknown',
     ...(isUsable(childPresent) ? { childPresent: childPresent.value } : {}),
     ...(isUsable(usableMinutes) ? { usableMinutes: Math.round(usableMinutes.value) } : {}),
+    dayOfWeek: isoWeekday,
+    ...(isUsable(weekLoad) ? { load: weekLoad.value } : {}),
   }
 }
 
@@ -1774,6 +1803,33 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
   const isWeekend = local.isoWeekday >= 6
 
   /*
+   * How the week itself has gone — AUD-0007.
+   *
+   * The rest half is measured here rather than in `rhythm.ts` because what
+   * counts as a full night is `SLEEP_BASELINE_HOURS`, and a second copy of that
+   * number in another file is exactly how two parts of one app come to disagree
+   * about the same evening. `nightsWithin` is the same reader the sleep debt
+   * uses, over a seven-day window instead of a three-day one.
+   */
+  const weekNights = nightsWithin(
+    view,
+    addLocalDays(moment.now, -LOAD_WINDOW_DAYS, moment.zone),
+    moment.now,
+  )
+  const week = readWeekLoad(
+    {
+      shortfallHours: weekNights.reduce(
+        (total, night) => total + Math.max(0, SLEEP_BASELINE_HOURS - night.hours),
+        0,
+      ),
+      nightsSeen: weekNights.length,
+      basis: weekNights.map((night) => night.source),
+    },
+    episodes,
+    moment,
+  )
+
+  /*
    * The three readings the app works out for itself — S2 Tier 1 and Tier 2.
    *
    * Each one is *reach* rather than capture, which is what this phase is: the
@@ -1858,8 +1914,18 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     weekStartsOn: moment.weekStartsOn,
     block,
     isWeekend,
-    context: contextFor(block, isWeekend, capacity.strain, childHere, inHand.minutes),
+    context: contextFor(
+      block,
+      isWeekend,
+      local.isoWeekday,
+      week.load,
+      capacity.strain,
+      childHere,
+      inHand.minutes,
+    ),
     capacity,
+    weekLoad: week.load,
+    weekLoadEvidence: week.evidence,
     usableMinutes,
     commitments,
     nextObligation: until.next,

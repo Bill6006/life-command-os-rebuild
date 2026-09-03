@@ -22,6 +22,7 @@ import {
   COMMITMENT_WINDOW_SOURCES,
   DESTINATION_STATES,
   DISCOVERY_DISPOSITIONS,
+  WEEK_LOADS,
   GROWTH_STAGES,
   HELP_LEVELS,
   OUTCOME_ASPECTS,
@@ -42,6 +43,7 @@ import {
 import {
   DAY_BLOCKS,
   instantToIso,
+  isIsoWeekday,
   parseLocalDayId,
   parseTimeZone,
   type Instant,
@@ -448,6 +450,25 @@ function readRecommendation(reader: Reader, key: string): RecommendationSemantic
 }
 
 /**
+ * An ISO weekday off the wire, or nothing.
+ *
+ * Numeric rather than a string enum, so `readOptionalEnum` cannot be reused: it
+ * is `T extends string` by construction. A value present and out of range is a
+ * malformed row rather than a silently dropped field — a `9` in this slot means
+ * something wrote a weekday nobody can read, and pretending it was absent would
+ * turn a corrupt record into a plausible one.
+ */
+function readWeekday(reader: Reader, key: string): IsoWeekday | undefined {
+  if (reader.value[key] === undefined) return undefined
+  const value = readOptionalNumber(reader, key)
+  if (value === undefined) return undefined
+  if (!isIsoWeekday(value)) {
+    return note(reader, key, `expected an ISO weekday, 1 (Monday) to 7 (Sunday), got ${value}`)
+  }
+  return value
+}
+
+/**
  * The context a recommendation was made in.
  *
  * Optional, because history written before this existed is still history. An
@@ -464,6 +485,14 @@ function readDecisionContext(reader: Reader, key: string): DecisionContext | und
   const strain = readEnum(nested, 'strain', ['severe', 'moderate', 'none', 'unknown'] as const)
   const childPresent = readOptionalBoolean(nested, 'childPresent')
   const usableMinutes = readOptionalNumber(nested, 'usableMinutes')
+  /*
+   * Both optional, and both absent on every record written before routing 93 —
+   * AUD-0007. A reader that required them would turn the whole existing history
+   * into malformed rows, which is the one thing a widened record shape may
+   * never do.
+   */
+  const dayOfWeek = readWeekday(nested, 'dayOfWeek')
+  const load = readOptionalEnum(nested, 'load', WEEK_LOADS)
   rejectExtras(nested, 'a decision context')
   absorb(reader, nested)
 
@@ -474,6 +503,8 @@ function readDecisionContext(reader: Reader, key: string): DecisionContext | und
     strain,
     ...(childPresent === undefined ? {} : { childPresent }),
     ...(usableMinutes === undefined ? {} : { usableMinutes }),
+    ...(dayOfWeek === undefined ? {} : { dayOfWeek }),
+    ...(load === undefined ? {} : { load }),
   }
 }
 
@@ -484,6 +515,8 @@ function decisionContextOut(context: DecisionContext): Record<string, unknown> {
     strain: context.strain,
     ...(context.childPresent === undefined ? {} : { childPresent: context.childPresent }),
     ...(context.usableMinutes === undefined ? {} : { usableMinutes: context.usableMinutes }),
+    ...(context.dayOfWeek === undefined ? {} : { dayOfWeek: context.dayOfWeek }),
+    ...(context.load === undefined ? {} : { load: context.load }),
   }
 }
 
