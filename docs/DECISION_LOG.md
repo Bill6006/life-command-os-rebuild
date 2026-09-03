@@ -1,5 +1,114 @@
 # Decision log
 
+## D-270 — `trajectory-fit`, the twentieth dimension, and the explicit decision §6.5 requires
+
+**Phase:** 93 · **Status:** Active
+
+§6.5's completion condition says **"no scoring dimension added and no weight
+moved without an explicit decision."** This is that decision, and it covers one
+dimension: **`trajectory-fit`**, at weight **1**. Any further dimension this
+phase adds gets its own decision beside this one rather than being folded into
+it, so that each is a judgement somebody made rather than a line in a list.
+
+**What it does.** It reads `situation.trajectories` — the same computation the
+trajectory card prints — and raises a candidate whose life area has been drifting
+the wrong way over the record's own span. It is the app's first reasoning horizon
+longer than a night, and it is AUD-0029's whole purpose: `insights.ts` had
+computed exactly this since Phase 6 and no decision could read it.
+
+**Why weight 1, and why not more.** Level with `goal-fit` and `thread-fit`, below
+`bottleneck-fit` at 2.5. A six-week drift is a claim about a season; what is
+actually in the way tonight is a claim about tonight. A man nine hours short of
+rest is nine hours short of rest whether or not his mood has been sliding since
+June, and a dimension that could out-argue the recovery limiter would be the app
+reading a trend at a body. That is AUD-0020's own mitigation applied to a second
+long-horizon dimension, and `architecture-guards.test.ts` already asserts the
+ordering for `thread-fit`.
+
+**Positive only.** It raises a sliding area and never marks a steady one down.
+_"This has been going well, so spend the evening elsewhere"_ is a stronger claim
+than the audit makes and has an obvious failure mode: the thing that was working
+stops being offered and the gain is given back. The audit's wording is _"a domain
+whose state has been drifting down for weeks gains urgency, and one that has been
+steady loses it"_ — and in a weighted mean, gaining nothing while a rival gains
+**is** losing it.
+
+**It abstains at zero weight in every other case**, which is nearly always: no
+readings, too few of them, too short a span, a steady run, a drift the good way,
+or a concept with no good direction to have. D-048's rule, and it is what makes a
+twentieth dimension safe to add in a phase that must leave D-137's re-cut
+instrument undisturbed. `instrument-recut.test.ts` proves it: the dimension
+appears in no `ALLOWED` entry because it never scores zero at full weight.
+
+**No weight moved.** Every existing weight is byte-identical.
+
+**And no history in the shipped library reaches it**, which is stated here rather
+than left to be found. Three trajectories exist across the twenty-seven
+histories and all three are going the good way — sleep rising, soreness falling.
+So the dimension's acceptance case is a purpose-built counterfactual in
+`tests/synthetic/trajectory-reaches-a-decision.test.ts`: one Tuesday morning
+built twice, identical in every reading about _now_, differing only in what the
+fortnight behind it did. A dimension nothing exercises is a dimension nobody has
+checked.
+
+---
+
+## D-269 — A weekday and a week's load join the comparison, and only the heavy week speaks
+
+**Phase:** 93 · **Status:** Active
+
+AUD-0007. `similarity()` compared five coarse features, one of which was a
+**weekend boolean**, so five working evenings collapsed into each other and
+nothing anywhere modelled a heavy week. The audit's reproduction is three
+evenings six days apart — one working, two weekend — answered with the identical
+sentence and the identical explanation three times.
+
+**Two features, and neither costs a tap.**
+
+- **`dayOfWeek`** on `DecisionContext`, so a Tuesday resembles a Tuesday.
+- **`load`** — `light | ordinary | heavy` over the last seven days, derived from
+  rest against the working baseline, effortful moves actually completed, and
+  times he said he could not.
+
+**Both at weight 0.5**, against `block` and `strain` at 2. That is the finding's
+own stated risk held rather than hoped: _"every added feature narrows the
+comparable set, and the set is already often empty."_ At the weight of `block` a
+weekday would make _"evenings like this one"_ mean _this evening_, and the app
+would go back to reporting nothing comparable — the failure it is repairing,
+arriving from the other side.
+
+**A record written before this phase compares as unknown on both**, never as
+agreement. G-009 applied to comparison, and the reason a feature can be added to
+a shipped history at all.
+
+**Only `heavy` says anything, and only on Insights.** The audit asks for one
+sentence — _"the single most humane thing it currently cannot [say]: that this
+week has been hard"_ — so `ordinary` and `light` produce no card. A light week is
+a comparison feature, not news, and a card appearing every seven days to say the
+week was ordinary is the noise section 65 exists to prevent. That is D-187's
+separation applied to a reading rather than to a blocker: what the app holds and
+what the app announces are two decisions.
+
+**"The week has been a heavy one" rather than "This has been a heavy week."**
+G-001 bars a bare demonstrative in a headline; the audit wrote the sentence as
+prose in a paragraph where the week was already the subject, and a card is read
+on its own.
+
+**Nothing is ranked by it.** No dimension reads `load`. Turning _"he has had a
+hard week"_ into a number that moves a recommendation is the wellness score
+section 22 forbids.
+
+**Routing 92's speaking figures are not re-baselined.** 216 before and 218 after
+stand exactly as measured; routing 93's own delta is pinned separately at **15**
+— the week-load card on `running-on-empty`, `quiet-fortnight` and
+`morning-after-bad-nights` at five hours each — and enumerated by name, so a
+later phase's addition cannot hide inside a number that has already moved once.
+**Three cards, and the fifteen is the measurement rather than the noise**: the
+count walks five hours of one owner-local day and a card that stands all day is
+counted once per hour.
+
+---
+
 ## D-268 — Routing 92's independent QA is deferred, and the phase is BUILT rather than GREEN
 
 **Phase:** 92 · **Status:** Active · **Deferred by the owner, 2026-09-03**

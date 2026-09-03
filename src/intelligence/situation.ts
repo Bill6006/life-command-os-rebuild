@@ -51,6 +51,7 @@ import type { MemoryView } from '../memory/view'
 import { assembleCoverage, type CoverageState } from './coverage'
 import { collectRoutines, type RoutineShape } from './routines'
 import { LOAD_WINDOW_DAYS, readWeekLoad, type LoadEvidence, type WeekLoad } from './rhythm'
+import { readTrajectories, type Trajectory } from './trajectory'
 import {
   describeGoalTrajectory,
   resolveDirection,
@@ -411,6 +412,18 @@ export interface Situation {
   readonly weekLoad: Knowledge<WeekLoad>
   /** What the week's reading counted, so a sentence can cite it. */
   readonly weekLoadEvidence: LoadEvidence
+  /**
+   * What each tracked reading has been doing over months — AUD-0029, S1b.
+   *
+   * The app's longest reasoning horizon was one night. `insights.ts` computed
+   * exactly this and no decision could read it, which is the audit's own
+   * summary: *"already produce exactly that, unconnected to any decision."*
+   *
+   * Keyed by concept, computed once, and read by two things that must not
+   * disagree — the trajectory card, and `trajectory-fit` in the evaluator. It is
+   * a **reading**, not a judgement: what the numbers did, never why.
+   */
+  readonly trajectories: ReadonlyMap<ConceptId, Trajectory>
   /** What the owner said he has. Unchanged, and no longer the whole story. */
   readonly usableMinutes: Knowledge<number>
   /** Everything spoken for on the owner-local day being decided, in order. */
@@ -1926,6 +1939,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     capacity,
     weekLoad: week.load,
     weekLoadEvidence: week.evidence,
+    trajectories: readTrajectories(view, concepts, permissions, moment),
     usableMinutes,
     commitments,
     nextObligation: until.next,

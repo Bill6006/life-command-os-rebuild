@@ -18,6 +18,7 @@ import {
   coreConcepts,
   createConceptRegistry,
   currentConcept,
+  READING_SENSES,
   type TrackedReading,
 } from '../../src/domain/concepts'
 import {
@@ -364,6 +365,51 @@ describe('a tracked dimension is one thing, on one scale', () => {
       'it claims an answer would decide something, and nothing reads it',
     ).toBe(false)
     expect(emotional.privacy).toBe('sensitive')
+  })
+
+  it('says which way is the good way for its readings to move — AUD-0029', () => {
+    /*
+     * The declaration `trajectory-fit` rests on, held as something that can
+     * fail. A direction is not a valence: six weeks of falling readings is a
+     * fall whichever concept it is about, and falling sleep is a man getting
+     * worse while falling soreness is a shoulder getting better.
+     *
+     * **Required rather than defaulted, and DEF-0156 is why.** A boolean on a
+     * concept that nothing verifies was wrong in four cases of fifteen and
+     * nobody noticed for a phase. So a concept that declares `tracked` and no
+     * sense fails the build here rather than quietly reading as one of the
+     * three.
+     */
+    for (const concept of tracked) {
+      expect(
+        concept.sense,
+        `${concept.id}: tracked, and nothing says which way is the good way`,
+      ).toBeDefined()
+      expect(READING_SENSES, `${concept.id}: ${String(concept.sense)}`).toContain(concept.sense)
+    }
+  })
+
+  it('leaves the sense off every concept that is not tracked', () => {
+    // The reverse, so the field cannot become decoration. A series that cannot
+    // be read as a number has no direction, so it can have no sense either.
+    for (const concept of coreConcepts.all()) {
+      if (concept.tracked !== undefined) continue
+      expect(
+        concept.sense,
+        `${concept.id}: a sense on a concept with no series to have one about`,
+      ).toBeUndefined()
+    }
+  })
+
+  it('keeps a want from being read as a state going wrong', () => {
+    /*
+     * `neither` is a real answer and this is the concept it exists for.
+     * Wanting company more is not a man doing worse and it is not him doing
+     * better; a drift here is a fact about what would help. Named rather than
+     * swept, because the whole point of the third value is that somebody
+     * decided about this one.
+     */
+    expect(coreConcepts.definitionFor(CONCEPT.needForCompany).sense).toBe('neither')
   })
 
   it('expects to change, so it is never durable', () => {

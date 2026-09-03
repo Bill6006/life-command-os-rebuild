@@ -820,6 +820,10 @@ export const AHEAD_BECAUSE: Record<DimensionName, (block: DayBlock) => string> =
   'direction-fit': () => 'Closer to what the week is about.',
   'goal-fit': () => 'Serves the goal you set.',
   'thread-fit': () => 'The next step of something already under way.',
+  // A reading of the record over weeks, said as a reading — AUD-0029. Not
+  // "would turn it around", which is a claim about what the move will do and
+  // one a run of numbers cannot support (section 68).
+  'trajectory-fit': () => 'In the area the record says has been sliding.',
   urgency: () => 'The more pressing of the two.',
   'immediate-benefit': (block) => `Worth more ${horizonWord(block)}.`,
   'next-day-effect': () => 'Pays back more tomorrow.',

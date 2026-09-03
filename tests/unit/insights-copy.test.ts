@@ -226,7 +226,14 @@ describe('a run of numbers describes itself and explains nothing', () => {
       SOURCE.indexOf('function trajectoryCards'),
       SOURCE.indexOf('function lifeSeasonCards'),
     )
-    const headlines = [...trajectory.matchAll(/`\$\{held\.label\}: [^`]+`/g)].map(
+    /*
+     * Matched on the *shape* of the sentence rather than on the name of the
+     * binding it interpolates — AUD-0029 renamed that binding when the
+     * arithmetic moved to `trajectory.ts`, and a guard keyed on `held.label`
+     * would have gone quietly to zero matches. The `expect` below is what
+     * caught it; the pattern is what stops the next rename doing the same.
+     */
+    const headlines = [...trajectory.matchAll(/`\$\{[A-Za-z][\w.]*\.label\}: [^`]+`/g)].map(
       (match) => match[0],
     )
     expect(headlines.length).toBeGreaterThan(0)

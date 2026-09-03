@@ -9,6 +9,7 @@ import { blockNoun, hereNowWord, horizonWord } from './vocabulary'
 import type { GoalHorizon } from './direction'
 import { answersLimiter, type Situation } from './situation'
 import { describeThreadPosition, threadFor } from './threads'
+import type { Trajectory } from './trajectory'
 
 /**
  * The candidate evaluator (canonical plan sections 17.1 step 7, and 19).
@@ -46,6 +47,21 @@ export type DimensionName =
    * with no plan in it ranks exactly as it did before threads existed.
    */
   | 'thread-fit'
+  /**
+   * Whether this area's own readings have been drifting the wrong way for
+   * weeks — AUD-0029, S1b.
+   *
+   * The twentieth dimension, and the app's first reasoning horizon longer than
+   * a night. `insights.ts` has computed exactly this since Phase 6 and no
+   * decision could read it; the audit's summary is that the trajectory cards
+   * *"already produce exactly that, unconnected to any decision."*
+   *
+   * It abstains — zero value at zero weight — wherever the record does not
+   * support a direction, wherever the direction is the good one, and wherever
+   * the concept has no good direction to have. That is nearly always, so a
+   * history with nothing to trend ranks exactly as it did before.
+   */
+  | 'trajectory-fit'
   | 'urgency'
   | 'immediate-benefit'
   | 'next-day-effect'
@@ -131,6 +147,19 @@ const WEIGHTS: Record<DimensionName, number> = {
    * neither is a reading of tonight.
    */
   'thread-fit': 1,
+  /*
+   * Level with `goal-fit` and `thread-fit`, and below `bottleneck-fit` for the
+   * same reason both of those are — AUD-0029, D-270.
+   *
+   * A six-week drift is a claim about a season, and what is actually in the way
+   * tonight is a claim about tonight. A man nine hours short of rest is nine
+   * hours short of rest whether or not his mood has been sliding since June, and
+   * a dimension that could out-argue the recovery limiter would be the app
+   * reading a trend at a body. It is a **positive-only** dimension, so this
+   * weight is a ceiling on how much it can raise something and never a floor it
+   * can drag anything to.
+   */
+  'trajectory-fit': 1,
   urgency: 1,
   'immediate-benefit': 1,
   'next-day-effect': 0.8,
@@ -464,6 +493,93 @@ function threadFit(candidate: Candidate, situation: Situation): Dimension {
     value: 1,
     weight: WEIGHTS['thread-fit'],
     note: `${lowerFirst(thread.intent)} — ${lowerFirst(describeThreadPosition(thread))}`,
+  }
+}
+
+/**
+ * Whether this area has been drifting the wrong way — AUD-0029, S1b.
+ *
+ * ## What it reads
+ *
+ * `situation.trajectories`, which is the same computation the trajectory card
+ * prints. One reading, two consumers, and no way for the screen and the ranking
+ * to disagree about what the record has been doing.
+ *
+ * ## Why a direction is not enough, and this is the whole of the care
+ *
+ * Six weeks of falling readings is a fall whichever concept it is about, and
+ * what it means is opposite for two concepts in the same registry: falling
+ * sleep is a man getting worse and falling soreness is a shoulder getting
+ * better. So the concept's own `sense` decides, it is required rather than
+ * defaulted, and `registries.test.ts` fails the build for a tracked concept that
+ * does not declare one. A concept whose readings have no good direction —
+ * *"how much would company help"* — never speaks here at all.
+ *
+ * ## Positive only, and abstaining is the common case
+ *
+ * It raises an area the record says is sliding and it never marks one down.
+ * *"This has been going well, so spend the evening elsewhere"* is a stronger
+ * claim than the audit makes and has an obvious failure: the thing that was
+ * working stops being offered and the gain is given back. The audit's own
+ * wording is *"a domain whose state has been drifting down for weeks gains
+ * urgency, and one that has been steady loses it"* — and in a weighted mean,
+ * gaining nothing while a rival gains **is** losing it.
+ *
+ * Everything else abstains at zero weight: no readings, not enough of them, too
+ * short a span, a steady run, a drift the good way, or a concept with no sense
+ * to read. D-048's rule, and it is what makes a twentieth dimension safe to add
+ * without re-cutting the instrument (AUD-0035, D-137).
+ *
+ * ## And it says nothing causal
+ *
+ * The note names what drifted and by how much. Nothing here claims the move
+ * would reverse it — the app cannot know that, section 68 forbids saying it, and
+ * the dimension is named for the *fit* between a move's area and a reading
+ * rather than for a remedy.
+ */
+function trajectoryFit(candidate: Candidate, situation: Situation): Dimension {
+  const abstain: Dimension = {
+    name: 'trajectory-fit',
+    value: 0,
+    weight: 0,
+    note: 'nothing in this area has been moving one way for long enough',
+  }
+
+  let worst: Trajectory | undefined
+  for (const trajectory of situation.trajectories.values()) {
+    if (trajectory.domain !== candidate.semantics.domain) continue
+    const sense = situation.concepts.definitionFor(trajectory.concept).sense
+    if (sense === undefined || sense === 'neither') continue
+    if (trajectory.direction === 'steady') continue
+    const wrongWay =
+      sense === 'higher-is-better' ? trajectory.direction === 'down' : trajectory.direction === 'up'
+    if (!wrongWay) continue
+    if (worst === undefined || Math.abs(trajectory.shift) > Math.abs(worst.shift)) {
+      worst = trajectory
+    }
+  }
+
+  if (worst === undefined) return abstain
+
+  /*
+   * How far it has moved, capped, and coarse on purpose.
+   *
+   * A drift of a fifth is the smallest one the trajectory reading will call a
+   * direction at all (`TRAJECTORY_SHIFT`), and one of a half is as much as this
+   * is allowed to make of it. Section 22 forbids inventing precision, and a
+   * proportional change read to three places would be exactly that — what is
+   * being said is *"this has been going the wrong way for weeks"*, and the size
+   * only decides how loudly.
+   */
+  const value = Math.min(1, Math.abs(worst.shift) / 0.5)
+
+  return {
+    name: 'trajectory-fit',
+    value,
+    weight: WEIGHTS['trajectory-fit'],
+    note: `${lowerFirst(worst.label)} has been going the other way across ${worst.readings.length} readings`,
+    phrase: `${lowerFirst(worst.label)} has been going the other way for a while`,
+    restsOn: worst.concept,
   }
 }
 
@@ -1126,6 +1242,7 @@ export function evaluateCandidate(candidate: Candidate, situation: Situation): E
     directionFit(candidate, situation),
     goalFit(candidate, situation),
     threadFit(candidate, situation),
+    trajectoryFit(candidate, situation),
     urgency(candidate),
     immediateBenefit(candidate, situation),
     nextDayEffect(candidate, situation),

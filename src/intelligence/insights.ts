@@ -2,7 +2,6 @@ import type { LifeDomainId } from '../domain/domains'
 import type { RecordId } from '../domain/ids'
 import { patternNameFor, type ActionVerb } from '../domain/recommendation'
 import {
-  bearsConcept,
   discreetly,
   evidenceSourceOf,
   type DecisionContext,
@@ -53,9 +52,10 @@ import {
   resultValueOf,
 } from './outcomes'
 import { describeWeekLoad, describeWeekLoadCount } from './rhythm'
+import { describeReading } from './trajectory'
 import { describeGoalTrajectory, type Situation } from './situation'
 import { hereNowWord } from './vocabulary'
-import { approximateHorizonMs, type ConceptId, type FreshnessHorizon } from '../domain/windows'
+import type { ConceptId } from '../domain/windows'
 
 /**
  * What the system has learned, said out loud (canonical plan sections 27 and 51).
@@ -150,21 +150,11 @@ export const MATERIAL_DIFFERENCE = 0.34
 /** Evidence older than this, with nothing since, is an assumption rather than a finding. */
 export const STALE_BELIEF_DAYS = 60
 
-/** Readings a trajectory needs before it will describe a direction. */
-const TRAJECTORY_READINGS = 6
-/**
- * How long a run of readings has to cover, in the concept's own windows.
- *
- * Concept-relative for the same reason freshness and neglect already are
- * (section 8, D-061): six days of nightly sleep readings is a fortnight's worth
- * of evidence about sleep, and six days of readings about a cash buffer is one
- * afternoon's worth of evidence about money. A fixed number of days would be
- * right for one of them and wrong for the other.
+/*
+ * The trajectory constants moved to `trajectory.ts` with the arithmetic —
+ * AUD-0029. What is left here is the sentence, which is all this file ever
+ * should have owned.
  */
-const TRAJECTORY_SPAN_WINDOWS = 6
-const TRAJECTORY_SPAN_FLOOR_DAYS = 7
-/** How far the two halves must differ before a trajectory claims a direction. */
-const TRAJECTORY_SHIFT = 0.15
 
 /**
  * One rate, and everything needed to read it honestly.
@@ -1872,64 +1862,6 @@ function coverageCards(situation: Situation): readonly Built[] {
   ]
 }
 
-/** Six of this concept's own freshness windows, never under a week. */
-function spanNeededFor(horizon: FreshnessHorizon): number {
-  const ms = approximateHorizonMs(horizon)
-  if (ms === undefined) return Number.POSITIVE_INFINITY
-  return Math.max(TRAJECTORY_SPAN_FLOOR_DAYS, (ms / 86_400_000) * TRAJECTORY_SPAN_WINDOWS)
-}
-
-interface Reading {
-  readonly at: Instant
-  readonly dayId: LocalDayId
-  readonly value: number
-  readonly record: RecordId
-}
-
-function numericValue(value: FactValue): number | undefined {
-  switch (value.type) {
-    case 'number':
-      return value.value
-    case 'scale':
-      return value.of === 0 ? undefined : value.value / value.of
-    case 'duration':
-      return value.minutes
-    default:
-      return undefined
-  }
-}
-
-/**
- * How to print a reading of this concept in the terms it was given in.
- *
- * `numericValue` turns a scale into a ratio so two readings can be compared —
- * 4-of-5 and 8-of-10 are the same reading. That is right for the arithmetic and
- * wrong for the screen: once state dimensions became trackable (D-089), the
- * trajectory card started reading **"Current energy: steady around 0.5"**, which
- * is a number the owner has never seen and could not act on. He answered
- * "Enough" and the app showed him a ratio.
- *
- * So the scale's own top travels with the series, and the reading is rendered
- * back onto it.
- */
-interface ReadingScale {
-  readonly of: number | undefined
-  readonly unit: string
-}
-
-function scaleOf(value: FactValue): ReadingScale {
-  if (value.type === 'scale') return { of: value.of, unit: '' }
-  if (value.type === 'number' && value.unit !== undefined)
-    return { of: undefined, unit: ` ${value.unit}` }
-  if (value.type === 'duration') return { of: undefined, unit: ' min' }
-  return { of: undefined, unit: '' }
-}
-
-function describeReading(value: number, scale: ReadingScale): string {
-  if (scale.of === undefined) return `${Math.round(value * 10) / 10}${scale.unit}`
-  return `${Math.round(value * scale.of * 10) / 10} of ${scale.of}`
-}
-
 /**
  * A measured quantity, moving or holding, over the record's own span.
  *
@@ -1937,74 +1869,25 @@ function describeReading(value: number, scale: ReadingScale): string {
  * section 68's rule about association is why it stops there. "You have been
  * sleeping about an hour less" is a description. "Because of X" would be an
  * assertion the app cannot support from a run of numbers.
+ *
+ * **The arithmetic moved and the sentence did not** — AUD-0029. The audit asks
+ * for the trajectory computation to become a reading a decision can consult,
+ * *"as an extraction with the card output byte-identical"*, so every figure this
+ * card prints now comes off `situation.trajectories` and every word of it is
+ * still written here. `tests/synthetic/trajectory-reaches-a-decision.test.ts`
+ * pins the whole library's cards against the digest taken before the move.
+ *
+ * The reading is gated on whether the app may *reason* from a concept, and the
+ * card on whether it may *raise* one unprompted — two different questions, and
+ * this is the one place the second is asked.
  */
 function trajectoryCards(situation: Situation): readonly Built[] {
-  const byConcept = new Map<
-    ConceptId,
-    { readings: Reading[]; scale: ReadingScale; label: string; spanNeeded: number }
-  >()
-
-  for (const record of situation.view.history.effective) {
-    if (!bearsConcept(record)) continue
-    if (record.occurredAt > situation.at) continue
-    const definition = situation.concepts.definitionFor(record.concept)
-    /*
-     * `tracked`, not `standing` — D-089.
-     *
-     * This gated on `standing`, and `standing` is false for every dimension the
-     * owner reports about how he is right now, deliberately and for a good
-     * reason of its own (D-061). The effect was that energy, soreness, mood,
-     * social energy and sleep quality could never appear here: the app
-     * collected them, used them to decide which past evenings resembled
-     * tonight, and never once reported what they had done over time.
-     */
-    if (definition.tracked === undefined) continue
-    if (!mayRaiseUnasked(definition.privacy)) continue
-    const value = numericValue(record.value)
-    if (value === undefined) continue
-
-    const held = byConcept.get(record.concept)
-    const reading: Reading = {
-      at: record.occurredAt,
-      dayId: localDayIdAt(record.occurredAt, situation.zone),
-      value,
-      record: record.id,
-    }
-    if (held === undefined) {
-      byConcept.set(record.concept, {
-        readings: [reading],
-        scale: scaleOf(record.value),
-        label: definition.label,
-        spanNeeded: spanNeededFor(definition.freshness),
-      })
-    } else {
-      held.readings.push(reading)
-    }
-  }
-
   const out: Built[] = []
 
-  for (const [concept, held] of byConcept) {
-    if (held.readings.length < TRAJECTORY_READINGS) continue
-    const ordered = [...held.readings].sort((a, b) => a.at - b.at)
-    const first = ordered[0]
-    const last = ordered[ordered.length - 1]
-    if (first === undefined || last === undefined) continue
-    const span = localDaysBetween(first.dayId, last.dayId)
-    if (span < held.spanNeeded) continue
-
-    const cut = Math.floor(ordered.length / 2)
-    const earlier = ordered.slice(0, cut)
-    const later = ordered.slice(cut)
-    const mean = (rows: readonly Reading[]): number =>
-      rows.reduce((sum, row) => sum + row.value, 0) / rows.length
-    const before = mean(earlier)
-    const after = mean(later)
-    const shift = before === 0 ? 0 : (after - before) / Math.abs(before)
-
-    const round = (value: number): string => describeReading(value, held.scale)
-    const direction: 'up' | 'down' | 'steady' =
-      Math.abs(shift) < TRAJECTORY_SHIFT ? 'steady' : after > before ? 'up' : 'down'
+  for (const [concept, trajectory] of situation.trajectories) {
+    if (!trajectory.mayRaise) continue
+    const { readings: ordered, first, last, before, after, direction } = trajectory
+    const round = (value: number): string => describeReading(value, trajectory.scale)
 
     /*
      * "Label: reading", the same shape a domain page's "Recently" already uses.
@@ -2016,8 +1899,8 @@ function trajectoryCards(situation: Situation): readonly Built[] {
      */
     const headline =
       direction === 'steady'
-        ? `${held.label}: steady around ${round(after)}.`
-        : `${held.label}: about ${round(after)} lately, against ${round(before)} earlier.`
+        ? `${trajectory.label}: steady around ${round(after)}.`
+        : `${trajectory.label}: about ${round(after)} lately, against ${round(before)} earlier.`
 
     out.push({
       rank: 30 + Math.min(10, ordered.length),
@@ -2057,7 +1940,7 @@ function trajectoryCards(situation: Situation): readonly Built[] {
           excludedTitle: undefined,
           strongerIn: undefined,
           weakerIn: undefined,
-          trend: `${round(before)} across the first ${earlier.length}, ${round(after)} across the last ${later.length}.`,
+          trend: `${round(before)} across the first ${trajectory.earlier}, ${round(after)} across the last ${trajectory.later}.`,
           mix: undefined,
           reasoning: [
             'Every reading of this in the record, oldest first, split in half by date.',

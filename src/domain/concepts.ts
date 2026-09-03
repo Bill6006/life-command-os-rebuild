@@ -150,6 +150,14 @@ export interface ConceptDefinition {
    */
   readonly tracked?: TrackedReading
   /**
+   * Which way is the good way for a reading of this to move — AUD-0029.
+   *
+   * Required wherever `tracked` is set and meaningless without it: a series that
+   * cannot be read as a number has no direction, so it can have no sense either.
+   * See {@link ReadingSense} for why there is no default.
+   */
+  readonly sense?: ReadingSense
+  /**
    * Whether being wrong about this is worse than asking about it — D-111.
    *
    * The share rule in `guide.ts` measures the fraction of a question's answers
@@ -223,6 +231,32 @@ export interface ConceptDefinition {
  * is something the owner says, which is a different and equally real thing.
  */
 export type TrackedReading = 'scale' | 'number' | 'duration'
+
+/**
+ * Which way is the good way for a reading of this to move — AUD-0029.
+ *
+ * ## Why a direction is not a valence
+ *
+ * A trajectory says what a run of numbers did. Six weeks of falling readings is
+ * a fall whichever concept it is about, and what it *means* is opposite for two
+ * concepts sitting next to each other in the same registry: falling sleep is a
+ * man getting worse, and falling soreness is a shoulder getting better. A
+ * dimension that read the direction and not the sense would have raised the
+ * urgency of every area where the owner was recovering.
+ *
+ * ## And why it may not have a default
+ *
+ * DEF-0156's class, and it is the freshest lesson in the campaign: a boolean on
+ * a concept that nothing verifies is wrong in four cases of fifteen and nobody
+ * notices for a phase. So this has **no default**. Every concept that declares
+ * `tracked` must declare a sense, `tests/unit/registries.test.ts` fails the
+ * build where one does not, and `neither` is a real answer rather than an
+ * absence — *"how much company would help"* is a want, and wanting company more
+ * is not a man doing worse.
+ */
+export const READING_SENSES = ['higher-is-better', 'higher-is-worse', 'neither'] as const
+
+export type ReadingSense = (typeof READING_SENSES)[number]
 
 const HOURS = 3_600_000
 
@@ -365,6 +399,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     freshness: THIS_LOCAL_DAY,
     standing: true,
     tracked: 'number',
+    // More sleep is more rest. The whole recovery model rests on it.
+    sense: 'higher-is-better',
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
     // Recommending effort to someone severely short of rest — D-111.
@@ -394,6 +430,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     // The same night, and therefore the same window as the hours it describes.
     freshness: THIS_LOCAL_DAY,
     tracked: 'scale',
+    // A better night is a better night.
+    sense: 'higher-is-better',
     privacy: 'normal',
     /*
      * A fifth wrong declaration, found by measuring rather than by reading —
@@ -430,6 +468,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     domain: DOMAIN.health,
     freshness: elapsedHours(6),
     tracked: 'scale',
+    // More in the tank is more in the tank.
+    sense: 'higher-is-better',
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
     // "A model's inference about how he feels should generally be weaker than
@@ -444,6 +484,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     domain: DOMAIN.health,
     freshness: elapsedHours(12),
     tracked: 'scale',
+    // A shoulder hurting more is a shoulder doing worse — and this is the arm that makes a bare direction unusable, because falling soreness is a man recovering.
+    sense: 'higher-is-worse',
     privacy: 'normal',
     ask: { materialToDecision: true, askWhenStale: true },
     // Recommending exertion to a body in pain — D-111, and the case it is
@@ -575,6 +617,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     freshness: localDays(30),
     standing: true,
     tracked: 'number',
+    // More months of runway is more room.
+    sense: 'higher-is-better',
     privacy: 'sensitive',
     /*
      * The audit's third wrong declaration, and the one that could not be
@@ -609,6 +653,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     domain: DOMAIN.social,
     freshness: elapsedHours(8),
     tracked: 'scale',
+    // Feeling more like people is a better week than feeling less like them.
+    sense: 'higher-is-better',
     privacy: 'normal',
     /*
      * It gates the social generator outright, and said it decided nothing —
@@ -784,6 +830,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     domain: DOMAIN.emotional,
     freshness: elapsedHours(8),
     tracked: 'scale',
+    // Plainly.
+    sense: 'higher-is-better',
     privacy: 'sensitive',
     /*
      * **Not askable in routing 92** — §13B, in as many words.
@@ -807,6 +855,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     domain: DOMAIN.emotional,
     freshness: elapsedHours(8),
     tracked: 'scale',
+    // Plainly, and it is one of the four scales D-166 keeps apart rather than summing.
+    sense: 'higher-is-worse',
     privacy: 'sensitive',
     /*
      * **Routing 92 only if an honest friction / opportunity-cost consumer is
@@ -835,6 +885,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     domain: DOMAIN.emotional,
     freshness: elapsedHours(8),
     tracked: 'scale',
+    // Wanting to is better than not wanting to.
+    sense: 'higher-is-better',
     privacy: 'sensitive',
     /*
      * **Routing 92 only if an honest capacity / friction consumer is
@@ -862,6 +914,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     domain: DOMAIN.emotional,
     freshness: localDays(7),
     tracked: 'scale',
+    // Plainly.
+    sense: 'higher-is-better',
     privacy: 'sensitive',
     /*
      * **Deferred to routing 94 / F25** — §13B. The consumer belongs with the
@@ -890,6 +944,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
      */
     freshness: localDays(3),
     tracked: 'scale',
+    // **The reason `neither` exists.** This is a want rather than a state: wanting company more is not a man doing worse, and it is not him doing better either. A drift here is a fact about what would help, and nothing about how he is.
+    sense: 'neither',
     privacy: 'sensitive',
     /*
      * It decides, and it is not asked — and both halves are deliberate.
@@ -924,6 +980,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     domain: DOMAIN.emotional,
     freshness: elapsedHours(8),
     tracked: 'scale',
+    // More on his mind is more in the way.
+    sense: 'higher-is-worse',
     privacy: 'sensitive',
     /*
      * Askable, and its consumer is the capacity limiter — §13B names it.
@@ -1004,6 +1062,8 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     // One scale, once a day. The day it is about is the day it is good for.
     freshness: THIS_LOCAL_DAY,
     tracked: 'scale',
+    // A day pulling harder is a day pulling harder.
+    sense: 'higher-is-worse',
     privacy: 'normal',
     /*
      * Wired to the consumer that already exists — §13B, and that is the whole of
