@@ -454,6 +454,57 @@ function ImportReport({ plan, preview }: { plan: ImportPlan; preview: LegacyPrev
         </p>
       )}
 
+      {/*
+        What the archive costs, said before he decides — AUD-0030(a).
+
+        The report counted the four dispositions and never said that the counted
+        rows can never think. Fifteen families are archived, and they are every
+        family that records what he did, what happened afterwards, what he
+        answered, and his daughter's entire recorded developmental history. The
+        design decision is right (D-101); what was missing is that he is deciding
+        whether to bring twenty years across and was not told what it buys.
+
+        Above the detail rather than inside it, because a cost he has to open a
+        disclosure to find is a cost the screen has not stated.
+      */}
+      {plan.inventory.archivedCost === undefined ? null : (
+        <p className="note" data-testid="import-archived-cost">
+          {plan.inventory.archivedCost}
+        </p>
+      )}
+
+      {/*
+        Two entries that say the same thing — AUD-0038(c).
+
+        Grouped and asked about, never merged. The audit is explicit — "do not
+        merge automatically, and do not change the entity-identity rule" — so
+        this is presentational: it changes nothing about what the import writes,
+        and declining writes exactly what today's import writes.
+
+        There is no control on it, and that is the bound rather than an
+        omission: a merge needs a supersede record and a route back, which is
+        more than a display defect is worth. What he gets is the fact, before he
+        finds two identical goals on his Career page and has to work out why.
+      */}
+      {plan.inventory.sameStatement.length === 0 ? null : (
+        <div className="data-detail" data-testid="import-same-statement">
+          <p className="note">
+            {plan.inventory.sameStatement.length === 1
+              ? 'One thing in that file is written down twice.'
+              : `${plan.inventory.sameStatement.length} things in that file are written down more than once.`}{' '}
+            They came from different kinds of entry, so they arrive as separate goals. Nothing is
+            merged: if two of them are one goal, the goal’s own page is where you can say so.
+          </p>
+          <ul>
+            {plan.inventory.sameStatement.map((entry) => (
+              <li key={entry.statement}>
+                “{entry.statement}” — {countOf(entry.rows, 'entry', 'entries')}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {plan.inventory.refusals.length === 0 ? null : (
         <details className="data-detail" data-testid="import-refusal-detail">
           <summary>Why some entries were kept rather than translated</summary>

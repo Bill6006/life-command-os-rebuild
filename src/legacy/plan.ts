@@ -69,6 +69,44 @@ export interface UnkeptStance {
   readonly move: string
 }
 
+/**
+ * Two entries that say the same thing, from two different families — AUD-0038(c).
+ *
+ * ## The finding
+ *
+ * The deployed preview's Career page listed *"Finish a meaningful certification"*
+ * **twice**, both badged Imported, twenty-three minutes apart, as two entities.
+ * `north-star` and `goal` are separate `FAMILY_RULES` entries that each build a
+ * `goal` record, and `legacyGoalEntity` keys identity on the **old record id**
+ * — correctly, and for a stated reason: *"two goals worded identically a year
+ * apart are two goals."*
+ *
+ * That reasoning is sound and is not replaced. What it does not cover is two
+ * records of **different families** carrying the same statement, and there was
+ * no pass afterwards that looked across families for one.
+ *
+ * ## What this is, and what it is not
+ *
+ * **Presentational.** It groups, it does not merge, and it changes nothing about
+ * what the import writes. The audit is explicit: *"do not merge automatically,
+ * and do not change the entity-identity rule"* — and the import review has been
+ * through four QA rounds, so a grouping that altered a byte of what is written
+ * would be the riskiest possible way to fix a display defect.
+ *
+ * **Exact statements only, after trimming and case.** Text-slugging two
+ * differently worded goals into one is precisely the identity rule this refuses
+ * to touch; what is grouped is the case the owner actually hit, which is the
+ * same sentence twice.
+ */
+export interface DuplicateStatement {
+  /** The statement, exactly as the first of them writes it. */
+  readonly statement: string
+  /** Which legacy families produced it, in the order they appear. */
+  readonly families: readonly string[]
+  /** How many entries carry it. Two or more, or it is not here. */
+  readonly rows: number
+}
+
 export interface ImportInventory {
   readonly rows: number
   /** Rows that could not even be identified as records. Counted, never dropped. */
@@ -79,6 +117,27 @@ export interface ImportInventory {
   readonly unrecognisedFamilies: readonly string[]
   readonly firstDay: LocalDayId | undefined
   readonly lastDay: LocalDayId | undefined
+  /**
+   * The same statement arriving twice from two families — AUD-0038(c).
+   *
+   * Empty on every file that does not hold one, which is most. Read by the
+   * review panel and by nothing that writes.
+   */
+  readonly sameStatement: readonly DuplicateStatement[]
+  /**
+   * What the archived families can and cannot do, in the owner's words —
+   * AUD-0030(a).
+   *
+   * The report counted the archive and never said that the counted rows can
+   * never think. *"Your outcome and skill history came across and will not
+   * influence any recommendation"* is the sentence that was missing, and it is
+   * section 65 and D-105 applied to the one screen where he is deciding whether
+   * to bring twenty years across.
+   *
+   * Undefined where nothing was archived, because there is then no cost to
+   * state and a sentence about an empty set is noise.
+   */
+  readonly archivedCost: string | undefined
 }
 
 export interface ImportPlan {
@@ -367,6 +426,9 @@ export function planImport(
     .map(({ rule, rows, mapped }) => ({ ...rule, rows, mapped }))
     .sort((a, b) => (a.legacyType < b.legacyType ? -1 : 1))
 
+  const sameStatement = duplicateStatements(toAppend)
+  const archivedCost = costOfArchiving(families, archived)
+
   return {
     inventory: {
       rows: rows.length,
@@ -383,6 +445,8 @@ export function planImport(
       unrecognisedFamilies: [...unrecognisedFamilies].sort(),
       firstDay,
       lastDay,
+      sameStatement,
+      archivedCost,
     },
     toAppend,
     entities: [...entities.values()],
@@ -395,6 +459,84 @@ export function planImport(
     undecided,
     note: MOVE_PREFERENCE_NOTE,
   }
+}
+
+/**
+ * Goals that say the same thing, from more than one family — AUD-0038(c).
+ *
+ * Read off the records this import would **write**, after translation, because
+ * that is where the two entities actually come from: `north-star` and `goal`
+ * each build a `goal` record, and the entity identity is keyed on the old record
+ * id by design.
+ *
+ * **It groups and never merges.** Nothing here changes `toAppend`, `entities` or
+ * any id. The review panel shows the grouping and asks once; declining writes
+ * exactly what today's import writes, byte for byte, which is the acceptance
+ * item and the reason a display defect is repaired without touching a path that
+ * has been through four QA rounds.
+ */
+function duplicateStatements(records: readonly CanonicalRecord[]): readonly DuplicateStatement[] {
+  const byStatement = new Map<string, { statement: string; families: string[]; rows: number }>()
+
+  for (const record of records) {
+    if (record.kind !== 'goal') continue
+    const statement = record.statement.trim()
+    if (statement === '') continue
+    const key = statement.toLocaleLowerCase()
+    const held = byStatement.get(key) ?? { statement, families: [], rows: 0 }
+    held.rows += 1
+    /*
+     * Which family it came from, read off the record's own provenance note
+     * rather than re-derived. `translateRecord` stamps it, so the grouping cites
+     * the same words the family list on the same screen does.
+     */
+    const from = record.provenance.note
+    if (from !== undefined && !held.families.includes(from)) held.families.push(from)
+    byStatement.set(key, held)
+  }
+
+  return [...byStatement.values()]
+    .filter((entry) => entry.rows > 1)
+    .map((entry) => ({ statement: entry.statement, families: entry.families, rows: entry.rows }))
+    .sort((a, b) => (a.statement < b.statement ? -1 : 1))
+}
+
+/**
+ * What the archived families cost him, in his own words — AUD-0030(a).
+ *
+ * ## The finding
+ *
+ * *"The import screen reports the four dispositions and their counts. Nothing on
+ * it says: 'your outcome and skill history came across and will not influence
+ * any recommendation.'"* Fifteen families are archived, and they are **every**
+ * family that records what he did, what happened afterwards, what he answered,
+ * what he preferred, and his daughter's entire recorded developmental history.
+ *
+ * The design decision is correct — D-101 is right that a concept with no honest
+ * home must not be forced into a near-fit — and the audit's point is not that it
+ * should change. It is that **the owner should be told what it costs**, because
+ * he is deciding whether to bring twenty years across and the report counts the
+ * archive without saying that the counted rows can never think.
+ *
+ * ## What this says, and what it does not
+ *
+ * It names the families and states the consequence in one sentence. It does not
+ * apologise, it does not offer to do it differently, and it does not hint at
+ * AUD-0030(b) — admitting closed historical episodes to `learning.ts` is a
+ * separate decision (§13F declined it), and dangling it here would be the
+ * screen promising something no decision supports.
+ */
+function costOfArchiving(families: readonly FamilyTally[], archived: number): string | undefined {
+  if (archived === 0) return undefined
+  const kept = families
+    .filter((family) => family.disposition === 'archive' && family.rows > 0)
+    .map((family) => family.legacyType)
+    .sort()
+  if (kept.length === 0) return undefined
+
+  const named =
+    kept.length === 1 ? kept[0] : `${kept.slice(0, -1).join(', ')} and ${kept[kept.length - 1]}`
+  return `${named} came across whole and readable, and none of it will influence a recommendation. This app cannot tell what an entry from the old one meant well enough to reason from it, so those entries are kept as history and nothing else.`
 }
 
 /**

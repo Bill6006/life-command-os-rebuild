@@ -78,6 +78,19 @@ const ROWS: readonly Record<string, unknown>[] = [
     state: 'active',
     privacy: 'workplace',
   }),
+  /*
+   * The same statement from a different family — AUD-0038(c).
+   *
+   * `north-star` and `goal` are separate `FAMILY_RULES` entries that each build
+   * a `goal` record, and entity identity is keyed on the old record id by design
+   * — correctly, because two goals worded identically a year apart are two
+   * goals. What that reasoning does not cover is one statement arriving from two
+   * **families**, which is what the deployed preview's Career page showed twice.
+   */
+  legacyEnvelope('north-star-1', 'north-star', '2026-01-15T12:00:00.000Z', {
+    statement: 'Pass the CCNA',
+    category: 'career-work-learning',
+  }),
   // A state this app has no word for.
   legacyEnvelope('goal-expired', 'goal', '2026-01-01T12:00:00.000Z', {
     statement: 'Finish the loft',
@@ -135,6 +148,74 @@ beforeAll(async () => {
   plan = planImport(opened.rows, EMPTY_SNAPSHOT, {
     zone: ZONE,
     legacyFormat: legacyFormatLabel(),
+  })
+})
+
+describe('the report says what the import costs — AUD-0030(a), AUD-0038(c)', () => {
+  it('names the archived families and states that none of it will decide anything', () => {
+    /*
+     * The finding, in the audit's own words: *"the import screen reports the
+     * four dispositions and their counts. Nothing on it says: 'your outcome and
+     * skill history came across and will not influence any recommendation.'"*
+     *
+     * Fifteen families are archived, and they are every family that records what
+     * he did, what happened afterwards, what he answered, what he preferred, and
+     * his daughter's entire recorded developmental history. The design decision
+     * is right (D-101); what was missing is that he is deciding whether to bring
+     * twenty years across and was never told what it buys.
+     */
+    const cost = plan.inventory.archivedCost
+    expect(cost, 'the archive is counted and its cost is not stated').toBeDefined()
+    expect(cost).toContain('will influence a recommendation')
+
+    // Every archived family in this file is named, so the sentence is a list
+    // rather than a gesture at one.
+    const archived = plan.inventory.families
+      .filter((family) => family.disposition === 'archive' && family.rows > 0)
+      .map((family) => family.legacyType)
+    expect(archived.length, 'nothing in the fixture is archived').toBeGreaterThan(0)
+    for (const family of archived) expect(cost, family).toContain(family)
+  })
+
+  it('says nothing about a cost there is not one of', () => {
+    // A sentence about an empty set is noise. With nothing archived there is
+    // nothing to state, and the screen says nothing rather than reassuring him.
+    const nothing = planImport([], EMPTY_SNAPSHOT, {
+      zone: ZONE,
+      legacyFormat: legacyFormatLabel(),
+    })
+    expect(nothing.inventory.archivedCost).toBeUndefined()
+  })
+
+  it('groups two entries that say the same thing, from two families', () => {
+    /*
+     * AUD-0038(c). The deployed preview's Career page listed *"Finish a
+     * meaningful certification"* twice, both badged Imported, twenty-three
+     * minutes apart, as two entities.
+     */
+    const duplicated = plan.inventory.sameStatement
+    expect(duplicated.length, 'the same statement twice went unnoticed').toBe(1)
+    expect(duplicated[0]?.statement).toBe('Pass the CCNA')
+    expect(duplicated[0]?.rows).toBe(2)
+  })
+
+  it('groups and never merges — the import writes exactly what it wrote before', () => {
+    /*
+     * The audit's own condition: *"do not merge automatically, and do not change
+     * the entity-identity rule."* The grouping is presentational, so both goals
+     * are still written, still separate entities, and the ids are still keyed on
+     * the old record ids.
+     */
+    const goals = plan.toAppend.filter(
+      (record): record is Extract<typeof record, { kind: 'goal' }> => record.kind === 'goal',
+    )
+    const ccna = goals.filter((goal) => goal.statement === 'Pass the CCNA')
+    expect(ccna.length, 'the two were merged').toBe(2)
+    expect(new Set(ccna.map((goal) => goal.id)).size, 'two goals share one id').toBe(2)
+    expect(
+      new Set(ccna.map((goal) => goal.goal.id)).size,
+      'the entity identity rule was changed',
+    ).toBe(2)
   })
 })
 

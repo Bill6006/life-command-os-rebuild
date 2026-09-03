@@ -1,5 +1,82 @@
 # Decision log
 
+## D-280 — AUD-0030(a) and AUD-0038(c): the import says what it costs, and groups without merging
+
+**Phase:** 93 · **Status:** Active
+
+**AUD-0030(a).** The import screen reported four dispositions and their counts
+and never said that the counted rows can never think. Fifteen families are
+archived, and they are **every** family recording what he did, what happened
+afterwards, what he answered, what he preferred, and his daughter's entire
+recorded developmental history. D-101 is right that a concept with no honest home
+must not be forced into a near-fit; what was missing is that he is deciding
+whether to bring twenty years across and was not told what it buys.
+
+The report now names the archived families and states the consequence in one
+sentence, **above** the disclosure rather than inside it — a cost he has to open
+something to find is a cost the screen has not stated. It does not apologise, and
+it does not hint at AUD-0030(b): admitting closed historical episodes to
+`learning.ts` is a separate decision, §13F declined it, and dangling it here
+would be the screen promising something no decision supports.
+
+**AUD-0038(c).** `north-star` and `goal` each build a `goal` record and entity
+identity is keyed on the **old record id** — correctly, and for the stated reason
+that two goals worded identically a year apart are two goals. What that does not
+cover is one statement arriving from two **families**, which is what the deployed
+preview's Career page showed twice, twenty-three minutes apart.
+
+The review now groups exact same-statement goals and says so. **It groups and
+never merges**: nothing about `toAppend`, the entities or any id changes, and
+declining writes byte for byte what today's import writes. There is no merge
+control, and that is the bound rather than an omission — a merge needs a
+supersede record and a route back, which is more than a display defect is worth
+and more than a path with four QA rounds behind it should absorb.
+
+---
+
+## D-281 — §13E.1's five-arm probe regression, and no product change behind it
+
+**Phase:** 93 · **Status:** Active
+
+The owner-decision sequence classified the maintenance-probe result **B —
+calibration / regression QA**, and named what must not be built: _"do not create
+a routing 93 scoring package, a new scoring dimension, probe-specific urgency
+escalation, a global `stale-evidence` urgency change, or a separate written
+scoring decision. Routing 93 carries the regression coverage only."_
+
+**Nothing in the product changed for this.** `tests/synthetic/maintenance-probe.test.ts`
+pins the five mechanics the classification rests on, so the day one of them moves
+the classification is re-opened deliberately rather than discovered.
+
+- **Arm A, ignore path.** One settled probe long overdue, three practising skills,
+  each visit advancing the clock so `noteShown` actually counts, everything
+  ignored — the probe is **chosen and shown** within the verified distinct-visit
+  bound. Not merely in arbitration: a candidate that ranks and never wins is one
+  the owner never sees.
+- **Arm B, response path.** The same house, responded to rather than ignored, so
+  competing skills accumulate `sameThing` at −0.5 while the probe carries only
+  `sameShape` at −0.2. **Three hours between responses, not a day** — and that is
+  a fact about the mechanism rather than about the test: `recentMoves` is a
+  three-day window, so responding once a day ages the first answer out before the
+  fourth arrives and the cycle repeats forever. A first draft did exactly that.
+- **Loop close.** Acting on the shown probe writes an episode and the probe stops
+  being due the moment after it happens, which is the expanding interval doing
+  its job.
+- **Null arm.** A skill that settled yesterday is not proposed at all, at any
+  hour — section 62's rule that the app stops reasserting a belief he corrected.
+- **Thread-fit bound.** `steps: 3`, `lastsDays: 42`, the expiry set from the day
+  it starts and carried on the record; a second ladder on the same
+  `development-skill` permanently refused; a **different** skill still allowed
+  one; and an expired ladder pulling nothing.
+
+**The last of those is load-bearing this phase.** DEF-0166 changed the re-offer
+rule for **recovery runs only**, because a run is about its nights rather than
+about a subject. §13E.1's growth bound rests on the rule this phase touched, so
+the assertion that the ladder's half was not loosened is the point of that arm
+rather than a formality.
+
+---
+
 ## D-279 — The owner-use review: what was built, where it lives, and what was not
 
 **Phase:** 93 · **Status:** Active
