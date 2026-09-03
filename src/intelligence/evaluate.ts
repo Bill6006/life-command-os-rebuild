@@ -71,6 +71,19 @@ export type DimensionName =
   | 'capacity-fit'
   | 'context-fit'
   | 'recent-duplication'
+  /**
+   * Whether going over this again is too soon — AUD-0010, D-273.
+   *
+   * The twenty-first dimension, and it refines what `recent-duplication` could
+   * only do bluntly: a flat three-day penalty over recorded moves is not a
+   * spacing model, and spacing is the best-evidenced lever the product has.
+   *
+   * **Penalty only, and it abstains in every case but the one it is about.** It
+   * says nothing when there is no topic, nothing when the topic has never been
+   * gone over, and nothing once the gap has passed. "It has been long enough" is
+   * not a reason to do something; the other dimensions decide that.
+   */
+  | 'spacing-fit'
   | 'owner-preference'
   /** Whether this can actually be done in situations like this one (section 20). */
   | 'follow-through'
@@ -169,6 +182,22 @@ const WEIGHTS: Record<DimensionName, number> = {
   'capacity-fit': 1.2,
   'context-fit': 0.8,
   'recent-duplication': 0.8,
+  /*
+   * Level with `recent-duplication`, which is the dimension it refines — D-273.
+   *
+   * AUD-0010's complaint about that one is that it is *"a blunt three-day
+   * penalty over recorded moves, which is not a spacing model"*. This is the
+   * same kind of claim about the same kind of fact, measured properly, so it
+   * carries the same weight rather than a larger one. It is penalty-only, so the
+   * weight is a ceiling on how far it can hold a move back and never a floor it
+   * can lift one to.
+   *
+   * Deliberately **below** `thread-fit` at 1. A course the owner agreed to has to
+   * be able to advance: if spacing could out-argue a live plan, a study schedule
+   * would stall on its own second session and the app would be enforcing a gap
+   * against a commitment he made.
+   */
+  'spacing-fit': 0.8,
   'owner-preference': 1,
   'follow-through': 0.9,
   'direct-result': 0.9,
@@ -1103,6 +1132,93 @@ function recentDuplication(candidate: Candidate, situation: Situation): Dimensio
  * A stated preference still wins outright. Something the owner wrote down beats
  * something inferred from a run of taps.
  */
+/**
+ * Whether going over this again is too soon — AUD-0010, D-273.
+ *
+ * ## What it reads
+ *
+ * `situation.studySpacing`: an interval that is a share of the days until the
+ * goal the owner set, a gap counted from his own last completed session on this
+ * topic, and whether the two say it is due. The interval widens after sessions
+ * that went well and comes back after one that did not, which is the expanding
+ * half of the spacing evidence.
+ *
+ * ## Where it speaks, and where it says nothing
+ *
+ * It speaks on exactly one case: **this move is one of the study moves, on the
+ * topic the spacing is about, and the gap has not passed.** Everything else
+ * abstains at zero weight —
+ *
+ * - a move in another area, which is nearly every move;
+ * - a topic the record has never held a session on, which is where every topic
+ *   starts and where there is no gap to be inside;
+ * - a gap that has passed, because *"it has been long enough"* is not a reason
+ *   to do something and pretending otherwise would let spacing **promote** a
+ *   move rather than hold one back.
+ *
+ * That last one is what makes it penalty-only, and it is the same shape
+ * `direct-result` has for the same reason (D-048).
+ *
+ * ## And it never enforces a gap against a plan he agreed to
+ *
+ * Weighted below `thread-fit`. A live study schedule is precisely the case where
+ * the next session is the point, and a spacing rule that could out-argue a
+ * course the owner started would stall it on its own second occasion. Holding a
+ * move back is not the same as refusing it.
+ */
+function spacingFit(candidate: Candidate, situation: Situation): Dimension {
+  const abstain: Dimension = {
+    name: 'spacing-fit',
+    value: 0,
+    weight: 0,
+    note: 'nothing about when this was last gone over',
+  }
+
+  const spacing = situation.studySpacing
+  if (spacing === undefined) return abstain
+  if (spacing.daysSince === undefined) return abstain
+  if (spacing.due) return abstain
+  if (candidate.semantics.target.verb !== 'recall-practice') return abstain
+  /*
+   * And never against a course he agreed to — D-273.
+   *
+   * `thread-fit` is weighted above this so that a plan can advance, and that is
+   * a weight rather than a rule. This is the rule: while a live course counts
+   * this move toward itself, the app's opinion about timing does not get to
+   * argue with the owner's own commitment at all.
+   *
+   * It is the mirror of AUD-0020's own mitigation. A plan may not out-argue what
+   * is in the way tonight; and the app's preference about which day is best may
+   * not out-argue a plan. Both are the same principle — what the owner said
+   * outranks what the app worked out — applied from the two directions.
+   *
+   * It also settles a measurable cost. With this dimension arguing against a
+   * live thread, `study-thread`'s field tightened enough that the guide found a
+   * soreness question worth a tap where it had previously settled — a whole
+   * extra question on the daily budget, spent because the app disagreed with a
+   * course the owner had started.
+   */
+  if (threadFor(situation.threads, candidate.semantics.target) !== undefined) return abstain
+
+  /*
+   * How much of the gap is left, as the size of the mark-down.
+   *
+   * A session yesterday against a week's gap is most of the gap left and reads
+   * as a real objection; a session six days into a week's gap is barely one.
+   * Coarse on purpose — section 22 — and the note says both numbers so the
+   * inspector can argue with the arithmetic rather than with the verdict.
+   */
+  const left = 1 - spacing.daysSince / spacing.intervalDays
+  return {
+    name: 'spacing-fit',
+    value: -Math.min(1, Math.max(0, left)),
+    weight: WEIGHTS['spacing-fit'],
+    note: `${spacing.daysSince} of ${spacing.intervalDays} days since the last one${
+      spacing.fromGoal ? ', on the goal’s own horizon' : ', with no date set to work back from'
+    }`,
+  }
+}
+
 function ownerPreference(candidate: Candidate, situation: Situation): Dimension {
   const weight = WEIGHTS['owner-preference']
   const refs = [candidate.semantics.subject.id, candidate.semantics.target.object.id]
@@ -1252,6 +1368,7 @@ export function evaluateCandidate(candidate: Candidate, situation: Situation): E
     capacityFit(situation, profile),
     contextFit(situation, profile),
     recentDuplication(candidate, situation),
+    spacingFit(candidate, situation),
     ownerPreference(candidate, situation),
     followThrough(candidate, situation),
     directResult(candidate, situation),

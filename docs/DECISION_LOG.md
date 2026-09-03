@@ -1,5 +1,71 @@
 # Decision log
 
+## D-273 — `spacing-fit`, the twenty-first dimension, and the rule that the app's timing never out-argues his plan
+
+**Phase:** 93 · **Status:** Active
+
+AUD-0010, and the second dimension this phase adds. §6.5 requires an explicit
+decision for each; this is it, beside D-270 rather than folded into it.
+
+**The finding.** `careerCandidates` proposed recall practice whenever a current
+topic existed. Nothing read when the topic was last practised and nothing read
+when the exam was, so the identical sentence came up on a Tuesday, a Saturday and
+a Sunday. The audit calls spacing _"the best-evidenced lever in the whole app"_
+and it was unused while everything needed for it — a stated goal with a horizon
+the owner set — was already in the record.
+
+**Where the interval comes from.** A share of the days until the goal **he** set,
+or a conservative default that carries a flag saying it is one. The share itself
+— roughly a seventh, inside the 10–20% band the distributed-practice synthesis
+reports — is a design choice with a citation, which is exactly the standing this
+codebase gives `SLEEP_BASELINE_HOURS`. §13C is untouched: nothing renders a
+prior, nothing lets a prior decide, and no population claim becomes a finding
+about him.
+
+**It widens by half the base for each session that went well**, and comes back
+to the base after one that did not. Half rather than a whole, because doubling on
+a single answer is a long way to move on one tap — the same discipline
+`assessStrain` follows when it refuses to let one scale reading reach `severe`.
+
+**Weight 0.8, level with `recent-duplication`**, which is the dimension it
+refines: AUD-0010's complaint about that one is that a flat three-day penalty
+over recorded moves _"is not a spacing model"_. Same kind of claim about the same
+kind of fact, measured properly, so the same weight rather than a larger one.
+
+**Penalty only, and abstaining is the common case.** It says nothing for a move
+in another area, nothing for a topic the record has never held a session on, and
+nothing once the gap has passed. _"It has been long enough"_ is not a reason to do
+something, and a dimension that scored positively there would be spacing
+**promoting** a move rather than holding one back. No weight moved.
+
+**And it never argues with a course he agreed to — this is a rule, not a
+weight.** While a live thread counts the move toward itself, `spacing-fit`
+abstains outright. The mirror of AUD-0020's own mitigation: a plan may not
+out-argue what is in the way tonight, and the app's preference about which day is
+best may not out-argue a plan. Both are _what the owner said outranks what the
+app worked out_, from the two directions.
+
+It also settled a measured cost. A first draft let it argue with a live thread,
+and `study-thread`'s field tightened enough that the guide found a soreness
+question worth a tap where it had previously settled — **a whole extra question
+on a three-a-day budget, spent because the app disagreed with a course the owner
+had started.** With the rule in place the shipped library is byte-identical.
+
+**An earlier draft suppressed the candidate in the generator instead, and it was
+wrong.** A live study schedule is precisely the case where the next session is
+the point, and a generator that withheld the move stopped a course from ever
+advancing — twelve tests said so. Spacing is a judgement about a move, so it
+belongs where judgements about moves are made.
+
+**No history in the shipped library reaches it**, which is stated here rather
+than left to be discovered: every history with a current topic either has no
+completed session on it or has a live course covering the move. Its acceptance
+case is a purpose-built study week in
+`tests/synthetic/study-spacing.test.ts`, and that is the second dimension in this
+phase in that position — the other is `trajectory-fit` (D-270).
+
+---
+
 ## D-272 — Observe-first is separated from judged-in-the-morning, and it reaches three more verbs rather than four
 
 **Phase:** 93 · **Status:** Active

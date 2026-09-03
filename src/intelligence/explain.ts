@@ -879,6 +879,9 @@ export const AHEAD_BECAUSE: Record<DimensionName, (block: DayBlock) => string> =
   'capacity-fit': (block) => `Fits what the body has ${horizonWord(block)}.`,
   'context-fit': () => 'Better suited to the hour.',
   'recent-duplication': () => 'The other one came up recently.',
+  // A fact about the record and never an instruction — AUD-0010. "Leave it a
+  // few days" is the app telling a man what to do with his own week.
+  'spacing-fit': () => 'The other one was gone over more recently.',
   'owner-preference': () => 'Closer to what you have said you want.',
   'follow-through': () => 'More likely to actually happen.',
   'direct-result': () => 'More likely to get all the way there.',

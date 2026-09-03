@@ -27,7 +27,7 @@ import {
 } from '../domain/records'
 import { occursOn } from '../domain/schedule'
 import { mayReasonFrom, type PermissionState, type PrivacyClass } from '../domain/privacy'
-import type { RecommendationSemantics } from '../domain/recommendation'
+import type { ActionVerb, RecommendationSemantics } from '../domain/recommendation'
 import {
   addLocalDays,
   blockOf,
@@ -51,6 +51,7 @@ import type { MemoryView } from '../memory/view'
 import { assembleCoverage, type CoverageState } from './coverage'
 import { collectRoutines, type RoutineShape } from './routines'
 import { nightsToRepay } from './recovery'
+import { spacingFor, type Spacing } from './spacing'
 import { LOAD_WINDOW_DAYS, readWeekLoad, type LoadEvidence, type WeekLoad } from './rhythm'
 import { readTrajectories, type Trajectory } from './trajectory'
 import {
@@ -65,7 +66,14 @@ import { buildLearning, type LearningIndex } from './learning'
 import { activeThreads, type ActiveThread } from './threads'
 import { collectEpisodes, type Episode, type MoveState } from './lifecycle'
 import type { MoveProfile } from './moves'
-import { booleanValue, hoursValue, minutesValue, narrowKnowledge, ratioValue } from './values'
+import {
+  booleanValue,
+  entityValue,
+  hoursValue,
+  minutesValue,
+  narrowKnowledge,
+  ratioValue,
+} from './values'
 import { decisionEntities, horizonWord, withinPhrase } from './vocabulary'
 
 /**
@@ -566,6 +574,20 @@ export interface Situation {
   readonly routines: readonly RoutineShape[]
   readonly homeFriction: Knowledge<FactValue>
   readonly learningTopic: Knowledge<FactValue>
+  /**
+   * When the current topic was last gone over, and whether it is due — AUD-0010.
+   *
+   * `undefined` where there is no current topic to be about. The interval is a
+   * share of the days until the goal he set, or a conservative default where he
+   * has not said when — his own figures either way, never a population claim
+   * (§13C).
+   *
+   * A reading on the situation rather than a lookup inside the generator, for
+   * AUD-0040's reason: the trace lists what the decision read, and a generator
+   * reaching round the situation for a fact is exactly the shortcut that made
+   * *"Facts considered: 9"* stand against fifteen beliefs.
+   */
+  readonly studySpacing: Spacing | undefined
   readonly direction: DirectionState
   /** How well each life area is currently understood (section 8). */
   readonly coverage: CoverageState
@@ -1490,6 +1512,40 @@ function findLimiter(
 }
 
 /**
+ * When the current topic was last gone over, and whether it is due — AUD-0010.
+ *
+ * Undefined where there is no current topic, which is most histories. The
+ * horizon comes from the career goal the owner set, and where he has not set a
+ * date the interval falls back to a conservative default and says so — the
+ * `fromGoal` flag on the reading, so nothing downstream can present a default as
+ * a number derived from his own deadline.
+ *
+ * The moves that count are the three study verbs. A lab and a review are both
+ * going over the topic; a walk is not, whatever else it did for him.
+ */
+const STUDY_MOVES: readonly ActionVerb[] = ['recall-practice', 'review-weak-topic', 'hands-on-lab']
+
+function studySpacingFor(
+  episodes: readonly Episode[],
+  learningTopic: Knowledge<FactValue>,
+  direction: DirectionState,
+  entities: EntityIndex,
+  today: LocalDayId,
+): Spacing | undefined {
+  const topic = isUsable(learningTopic) ? entityValue(learningTopic.value) : undefined
+  if (topic === undefined) return undefined
+  if (entities.resolve(topic) === undefined) return undefined
+  const career = direction.goals.find((goal) => goal.domain === DOMAIN.career)
+  return spacingFor({
+    episodes,
+    topic,
+    today,
+    horizon: career?.horizon,
+    moves: STUDY_MOVES,
+  })
+}
+
+/**
  * The situation, reduced to the few things worth comparing evenings on.
  *
  * Written onto a recommendation when the owner acts on it, and never revised —
@@ -1978,6 +2034,14 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     concepts,
   })
 
+  /*
+   * Resolved before the situation is assembled rather than inside the literal,
+   * because the spacing reading needs the goal's own horizon — AUD-0010. Two
+   * calls to `resolveDirection` would be two answers to one question, which is
+   * the shape this whole file exists to avoid.
+   */
+  const direction = resolveDirection(view, moment, domains, readings.get(CONCEPT.weeklyFocus))
+
   return {
     at: moment.now,
     zone: moment.zone,
@@ -2015,7 +2079,8 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     routines,
     homeFriction,
     learningTopic,
-    direction: resolveDirection(view, moment, domains, readings.get(CONCEPT.weeklyFocus)),
+    studySpacing: studySpacingFor(episodes, learningTopic, direction, entities, local.dayId),
+    direction,
     coverage,
     laterToday: collectLaterToday(commitments, moment),
     threads: activeThreads(view, episodes, { now: moment.now, zone: moment.zone }),

@@ -472,13 +472,34 @@ const careerCandidates: Generator = (situation) => {
     )
   }
 
+  /*
+   * Recall practice, and what the app now knows about when it would work —
+   * AUD-0010.
+   *
+   * The finding: nothing read when the topic was last practised, so the
+   * identical sentence came up on a Tuesday, a Saturday and a Sunday.
+   * `situation.studySpacing` is the reading — an interval that is a share of the
+   * days until the goal **he** set, and a gap counted from his own last session.
+   *
+   * **It is still proposed, and it is marked down while it is too soon.**
+   * Suppressing it here was the first draft and it was wrong: a live study
+   * schedule is precisely the case where the next session is the point, and a
+   * generator that withheld the move would have stopped a course the owner
+   * agreed to from ever advancing. Spacing is a judgement about a move, so it
+   * belongs where judgements about moves are made — `spacing-fit` in the
+   * evaluator, D-273 — and this only carries the fact into the trace.
+   */
+  const spacing = situation.studySpacing
   out.push(
     candidate(
       {
         ...base,
         verb: 'recall-practice',
         trigger: rough.length > 0 ? 'recent-struggle' : behind ? 'goal-behind' : 'nothing-better',
-        proposedBecause: 'retrieval is what moves a topic, and this is the current one',
+        proposedBecause:
+          spacing?.daysSince === undefined
+            ? 'retrieval is what moves a topic, and this is the current one'
+            : `retrieval is what moves a topic, and the last one was ${spacing.daysSince} days ago`,
       },
       situation,
     ),
