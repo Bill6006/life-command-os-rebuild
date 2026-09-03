@@ -2,7 +2,7 @@
 
 ## Routing 92 — what the phase found while building it
 
-Nine defects, none reported by anybody: each was found by a gate that already
+Ten defects, none reported by anybody: each was found by a gate that already
 existed, by a measurement this phase added, or by writing the guard the audit
 asked for and watching it fire. They are recorded because a repair with no
 finding behind it reads as a preference.
@@ -183,6 +183,29 @@ catalogue is for: _"there were things worth doing and none of them suit where
 you actually are"_ is a description of this evening and says nothing about what
 the app will do next. Every word of it was true before the blocker path could
 reach it.
+
+---
+
+## DEF-0164 — A ninth blocker cause, and a gate that counted eight
+
+**Found:** routing 92, Android-style deployed gate · **Status:** Fixed in the
+gate · **Caught by:** `scripts/android-gate.mjs`
+
+S2 Tier 1 asks for a bounded `until` on a constraint, and §5.2 records that
+_"while she is asleep"_ had no representation because no blocker path ever set
+`ConstraintRecord.until`. D-164 allows **one** compact question about what was
+in the way, so the bound travels with the answer as a second button rather than
+following it as a second question — nine causes, one question.
+
+The phone gate asserts that **every** cause is reachable on one screen without
+scrolling, and it asserted the count exactly. It moved to nine, the check
+failed, and the count is asserted rather than bounded because that is the whole
+point of it: a tenth cause that pushed one off the bottom of a phone screen
+would be invisible to a looser check.
+
+**Not a product defect.** Nine controls still fit, still clear 44px of thumb,
+and the screen does not overflow — all three are separate checks in the same
+gate and all three passed.
 
 ---
 

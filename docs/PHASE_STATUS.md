@@ -213,20 +213,28 @@ run at the time of writing and is not a claim.
 | -------------------------------------------------------------- | ------------------------------------------------------ |
 | `npm run verify` — format, lint, typecheck, tests, build, copy | PASS                                                   |
 | Unit, contract, synthetic and adversarial tests                | PASS — 2,150                                           |
-| Rendered copy scan                                             | PASS                                                   |
+| Privacy scan                                                   | PASS — 324 tracked files                               |
+| Rendered copy scan                                             | PASS — 8,809 shipped strings                           |
 | Adaptation-claim scan                                          | PASS                                                   |
-| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PENDING — re-running after DEF-0161…0163               |
-| Checkpoint equivalence                                         | PENDING — needs the push                               |
-| CI                                                             | PENDING — needs the push                               |
-| Release integrity, from CI's own manifest                      | PENDING — needs the deploy                             |
-| Android-style deployed gate                                    | PENDING — needs the deploy                             |
+| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PASS — 849 of 849, locally                             |
+| CI, including its own matrix run                               | PASS — run 33757795409, 849 of 849                     |
+| Checkpoint equivalence                                         | PASS — deployed `b850dfc` serves the same bytes        |
+| Release integrity, from CI's own manifest artifact             | PASS — 8 files served byte for byte                    |
+| Android-style deployed gate                                    | PASS — 234 checks, against the deployed Preview        |
 | Independent QA (required from Phase 5 on, D-077)               | **Outstanding — this phase is YELLOW until it passes** |
+
+**Checkpoint:** `b850dfc`. The Android gate found one thing on its first run and
+it is DEF-0164 below.
 
 **The first matrix run of this phase failed nine of 849**, three tests across
 three widths, and all three are recorded as DEF-0161, DEF-0162 and DEF-0163
 rather than quietly repaired. They share a cause: AUD-0040 made the fact list
 the true one, and three things that had been counting it were counting something
 that no longer meant what they thought.
+
+**The Android gate found a tenth on its own first run** — DEF-0164 — which is
+the pattern this campaign keeps rediscovering: a gate that counts something
+exactly is the gate that notices when the count moves.
 
 ## What independent QA is walking into
 

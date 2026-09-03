@@ -1501,7 +1501,21 @@ async function main() {
     .getByTestId('blocker-question')
     .locator('.domain-options .domain-option')
     .count()
-  check('all eight causes are offered on one screen', r84Causes === 8, `${r84Causes} controls`)
+  /*
+   * Nine now — routing 92 added the bounded form of the supervision answer.
+   *
+   * S2 Tier 1 asks for a bounded `until` on a constraint, and §5.2 records that
+   * *"while she is asleep"* had no representation because no blocker path ever
+   * set `ConstraintRecord.until`. D-164 allows **one** compact question about
+   * what was in the way, so the bound travels with the answer as a second
+   * button rather than following it as a second question — which is why this
+   * count moved and the number of questions did not.
+   *
+   * The count is asserted rather than bounded because it is the whole point of
+   * the check: every cause the app knows about has to be reachable in one
+   * screen, on a phone, without scrolling past it.
+   */
+  check('all nine causes are offered on one screen', r84Causes === 9, `${r84Causes} controls`)
   const r84MustStay = page.getByTestId('blocker-must-stay')
   check(
     'including the one for being the only person who can watch somebody',

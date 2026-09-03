@@ -60,7 +60,7 @@ repair is a narrower `applies` predicate on `emotional.overwhelm` in
 
 | Fact                    | Value                                                                       |
 | ----------------------- | --------------------------------------------------------------------------- |
-| Product checkpoint      | see `docs/PHASE_STATUS.md` — the commit the gate was run on (D-147)         |
+| Product checkpoint      | `b850dfc` — the commit every gate below was run on (D-147)                  |
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                 |
 | Owner-visible behaviour | **changed** — Now, the Emotional, Health, Career, Money and Direction pages |
 | Owner phone check       | **required before GREEN**                                                   |
@@ -69,7 +69,7 @@ repair is a narrower `applies` predicate on `emotional.overwhelm` in
 Confirm the deployed SHA against the checkpoint before testing:
 
 ```bash
-node scripts/checkpoint-equivalence.mjs HEAD --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
+node scripts/checkpoint-equivalence.mjs b850dfc --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
 ```
 
 `node scripts/release-integrity.mjs` verifies the served bytes against the
@@ -86,8 +86,9 @@ reading is *supposed* to mean and will read the screen as confirming it.
 1. `docs/PRODUCT_ADJUDICATION_2.md` **§6.4** (the phase contract), **§5.1** (S1a),
    **§5.2** (S2), **§13B** (owner decision #3), **§13C** (owner decision #2)
 2. `docs/DECISION_LOG.md` **D-259 … D-267** — this phase's decisions
-3. `docs/DEFECT_LEDGER.md` **DEF-0155 … DEF-0163** — what the phase found while
-   building it, including the three the browser matrix found on its first run
+3. `docs/DEFECT_LEDGER.md` **DEF-0155 … DEF-0164** — what the phase found while
+   building it, including the three the browser matrix found on its first run and
+   the one the phone gate found on its own
 4. `docs/WHOLE_APP_INTELLIGENCE_AUDIT.md` rows **AUD-0040, 0041, 0011, 0006,
    0012, 0013, 0045, 0047, 0050**
 5. `docs/CANONICAL_REBUILD_PLAN.md` section **43A** (the routing map)
@@ -159,8 +160,9 @@ the flavour of no-action, and anything a null probe also moves. Each exclusion
 has an argument written beside it. If one of them is wrong, the flag it excused
 is wrong.
 
-**The browser matrix found three regressions on its first run, and they are
-worth reading as a group.** All three are AUD-0040's blast radius: the fact list
+**Four of the ten defects were found by a gate rather than by the builder, and
+that is worth reading as a group.** Three came from the browser matrix's first
+run and one from the phone gate's. All three are AUD-0040's blast radius: the fact list
 became the true one, and three things that had been counting it were counting
 something that no longer meant what they thought. The most instructive is
 DEF-0161 — Now saying *"the picture is current"* while the guide underneath it
