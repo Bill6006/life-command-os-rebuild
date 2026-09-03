@@ -552,6 +552,38 @@ reintroductions that went green.
 **The owner-decision document was completed** on every point QA named, and still
 builds nothing: no service, no secret, no adapter, and one `fetch` in `src/`.
 
+## Gates at the deferral
+
+Run against `b55ba4f`, which is what Preview serves. **Deferring independent QA
+deferred none of these.**
+
+| Gate                                      | Result                                                       |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| `npm run verify`, clean tree              | PASS                                                         |
+| Unit / contract / synthetic / adversarial | **2,037 passed** in 89 files                                 |
+| Browser, 360 / 430 / 1,280, one worker    | **848 of 849** locally — see the note below                  |
+| CI's own browser matrix                   | **849 of 849**, 19.5 minutes, against `b55ba4f` itself       |
+| Privacy scan                              | clean, 311 tracked files                                     |
+| Rendered copy scan                        | clean — 8,569 shipped strings, 8,479 placed in a module      |
+| Adaptation-claim scan                     | clean                                                        |
+| Android-style deployed gate               | clean — **234 checks**, against the deployed Preview         |
+| Checkpoint equivalence                    | **no files changed** between `b55ba4f` and the deployed SHA  |
+| Release integrity against the manifest    | clean — 8 files served byte for byte as verified (`b55ba4f`) |
+| CI and deployed Preview                   | **success** — both jobs green (run `33708444066`)            |
+| Worktree                                  | clean                                                        |
+
+**The one local browser failure, reported rather than rounded away.** Every
+local run of the whole matrix on this machine loses exactly one case to
+`net::ERR_ABORTED; maybe frame was detached?` on a `page.goto`, and **it is a
+different case each time** — three runs gave `phase84.spec.ts:855`, then `:836`,
+then `:454`, at different widths and different URLs. A defect does not move; a
+preview server dropping one navigation per run does. The same instability has
+been recorded against this machine through the whole campaign.
+
+**It is not being written off on that reasoning alone.** CI runs the same matrix
+on a clean runner against the exact pushed commit, and that run is the row above.
+Where the two disagree, CI is the evidence.
+
 ## Decisions made
 
 **D-240 … D-258** in [`DECISION_LOG.md`](DECISION_LOG.md).
