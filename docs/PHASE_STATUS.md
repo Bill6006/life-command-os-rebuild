@@ -206,19 +206,27 @@ measured and pulled back; what ships says why the app is asking. D-266.
 
 ## Gates at YELLOW
 
+Filled in from results rather than in advance. A row that says PENDING has not
+run at the time of writing and is not a claim.
+
 | Gate                                                           | Result                                                 |
 | -------------------------------------------------------------- | ------------------------------------------------------ |
 | `npm run verify` — format, lint, typecheck, tests, build, copy | PASS                                                   |
-| Unit, contract, synthetic and adversarial tests                | PASS                                                   |
-| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PASS                                                   |
-| Privacy scan                                                   | PASS                                                   |
+| Unit, contract, synthetic and adversarial tests                | PASS — 2,150                                           |
 | Rendered copy scan                                             | PASS                                                   |
 | Adaptation-claim scan                                          | PASS                                                   |
-| Checkpoint equivalence                                         | PASS                                                   |
-| CI                                                             | PASS                                                   |
-| Release integrity, from CI's own manifest                      | PASS                                                   |
-| Android-style deployed gate                                    | PASS                                                   |
+| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PENDING — re-running after DEF-0161…0163               |
+| Checkpoint equivalence                                         | PENDING — needs the push                               |
+| CI                                                             | PENDING — needs the push                               |
+| Release integrity, from CI's own manifest                      | PENDING — needs the deploy                             |
+| Android-style deployed gate                                    | PENDING — needs the deploy                             |
 | Independent QA (required from Phase 5 on, D-077)               | **Outstanding — this phase is YELLOW until it passes** |
+
+**The first matrix run of this phase failed nine of 849**, three tests across
+three widths, and all three are recorded as DEF-0161, DEF-0162 and DEF-0163
+rather than quietly repaired. They share a cause: AUD-0040 made the fact list
+the true one, and three things that had been counting it were counting something
+that no longer meant what they thought.
 
 ## What independent QA is walking into
 
