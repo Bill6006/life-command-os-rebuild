@@ -2,7 +2,7 @@
 
 ## Routing 92 — what the phase found while building it
 
-Six defects, none reported by anybody: each was found by a gate that already
+Nine defects, none reported by anybody: each was found by a gate that already
 existed, by a measurement this phase added, or by writing the guard the audit
 asked for and watching it fire. They are recorded because a repair with no
 finding behind it reads as a preference.
@@ -121,6 +121,68 @@ two options"_. So on `money-item-due` the money generator proposed the move, the
 coverage duplicate was folded away, and the guard reported that Life had
 promised something nothing offered. The promise is about the area rather than
 about which module thought of it, and that is what is counted now.
+
+---
+
+## DEF-0161 — Now said the picture was current while the guide was asking for the reading
+
+**Found:** routing 92, browser matrix · **Status:** Fixed ·
+**Caught by:** `tests/browser/now.spec.ts`
+
+`currentPictureExists` decides between two no-action sentences: _"There is
+history here, and none of it says how tonight is going"_ and _"The picture is
+current. None of the areas this app can act in has anything in it right now."_
+It counted every known row in the decision's fact list, and that was the same
+set right up until AUD-0040 made the fact list the true one.
+
+On a fortnight of sleep readings and nothing about how he feels, a settled
+custody arrangement and a handful of standing facts now push the count past the
+threshold. So Now said **the picture is current** while the guide underneath it
+was asking **how much energy have you got left** — one screen, one moment, two
+claims that cannot both be true. That is QA-82-015's class arriving from a new
+direction, and the browser matrix is what saw it.
+
+It counts the concepts a decision actually turns on. `materialToDecision` has
+been measured rather than declared since AUD-0041, which is what makes that set
+meaningful: a custody arrangement and a faith practice are correctly
+non-decisional, and knowing them is not the same as being able to see tonight.
+
+---
+
+## DEF-0162 — A control named once became a control named seven times
+
+**Found:** routing 92, browser matrix · **Status:** Fixed in the gate ·
+**Caught by:** `tests/browser/phase83.spec.ts`
+
+The Emotional page carries seven correction controls now — the free-text reading
+he types, and D-166's six dimensions, four of which are readable and never
+asked. The naming gate located its target by role and name and got a
+strict-mode violation.
+
+**Not a product defect**: seven rows is the ordinary-owner contract's own
+expectation, which asks that four of the six read as unknown on that page. The
+gate is about whether the control is named and says what it is for, so it takes
+the first of them and says why there are seven.
+
+---
+
+## DEF-0163 — The state a supervision blocker reaches was outside the approved catalogue
+
+**Found:** routing 92, browser matrix · **Status:** Fixed ·
+**Caught by:** `tests/browser/phase84.spec.ts`
+
+QA-84-016/018's gate is that no screen promises an adaptation before or after a
+block, enforced by an allowlist over a finite set rather than by recognising a
+promise. Saying _"I could not leave"_ about a walk now removes the walk (D-262),
+so on a history whose only move means going out the screen falls to a real
+no-action state — and its two sentences had never been reachable from the
+blocker path before.
+
+Approved in `APPROVED_WHEN_A_MOVE_IS_BLOCKED` with the reason, which is what the
+catalogue is for: _"there were things worth doing and none of them suit where
+you actually are"_ is a description of this evening and says nothing about what
+the app will do next. Every word of it was true before the blocker path could
+reach it.
 
 ---
 

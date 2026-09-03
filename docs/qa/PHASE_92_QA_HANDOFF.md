@@ -86,8 +86,8 @@ reading is *supposed* to mean and will read the screen as confirming it.
 1. `docs/PRODUCT_ADJUDICATION_2.md` **§6.4** (the phase contract), **§5.1** (S1a),
    **§5.2** (S2), **§13B** (owner decision #3), **§13C** (owner decision #2)
 2. `docs/DECISION_LOG.md` **D-259 … D-267** — this phase's decisions
-3. `docs/DEFECT_LEDGER.md` **DEF-0155 … DEF-0160** — what the phase found while
-   building it
+3. `docs/DEFECT_LEDGER.md` **DEF-0155 … DEF-0163** — what the phase found while
+   building it, including the three the browser matrix found on its first run
 4. `docs/WHOLE_APP_INTELLIGENCE_AUDIT.md` rows **AUD-0040, 0041, 0011, 0006,
    0012, 0013, 0045, 0047, 0050**
 5. `docs/CANONICAL_REBUILD_PLAN.md` section **43A** (the routing map)
@@ -158,6 +158,14 @@ is a hole in a gate unless its test really constructs the circumstance.
 the flavour of no-action, and anything a null probe also moves. Each exclusion
 has an argument written beside it. If one of them is wrong, the flag it excused
 is wrong.
+
+**The browser matrix found three regressions on its first run, and they are
+worth reading as a group.** All three are AUD-0040's blast radius: the fact list
+became the true one, and three things that had been counting it were counting
+something that no longer meant what they thought. The most instructive is
+DEF-0161 — Now saying *"the picture is current"* while the guide underneath it
+asked how much energy he had left. Nothing in the unit or synthetic suites saw
+any of them.
 
 **Two new histories entered the library.** `friendship-gone-quiet` and
 `money-item-due`. Both are load-bearing for gates in this phase, which means a

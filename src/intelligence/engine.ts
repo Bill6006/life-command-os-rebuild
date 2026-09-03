@@ -1005,15 +1005,37 @@ export function noActionCopy(
  *
  * The split AUD-0034 asks for. "There is history here, and none of it says how
  * today is going" is true and useful when the readings have all aged out; it is
- * simply false when three of them came in this morning. Counted over the facts
- * the situation actually assembled, so it moves with what the engine read
- * rather than with how many rows are in the store — which is also why the
- * sentence it guards no longer says how many rows there are (F39).
+ * simply false when three of them came in this morning.
+ *
+ * ## Counted over the readings that decide — routing 92
+ *
+ * It counted every known row in the fact list, and that was the same set right
+ * up until AUD-0040 made the fact list the true one. The situation used to
+ * assemble nine hand-written reads; it now reads every registered concept, so a
+ * fortnight of sleep readings and a settled custody arrangement could push the
+ * count past the threshold with nothing whatever known about the hour being
+ * decided.
+ *
+ * The browser gate caught it exactly where it shows: on a fortnight of sleep
+ * readings and nothing about how he feels, Now said *"the picture is current"*
+ * **while the guide underneath it was asking how much energy he had left.** One
+ * screen, one moment, two claims that cannot both be true — QA-82-015's class,
+ * arriving from a new direction.
+ *
+ * So it counts the concepts a decision actually turns on. `materialToDecision`
+ * is measured rather than declared since AUD-0041, which is what makes that set
+ * meaningful: a custody arrangement and a faith practice are correctly
+ * non-decisional, and knowing them is not the same as being able to see
+ * tonight.
  */
 const ENOUGH_TO_SEE_BY = 3
 
 function currentPictureExists(situation: Situation): boolean {
-  const known = situation.considered.filter((fact) => fact.state !== 'unknown').length
+  const known = situation.considered.filter(
+    (fact) =>
+      fact.state !== 'unknown' &&
+      situation.concepts.definitionFor(fact.concept).ask.materialToDecision,
+  ).length
   return known >= ENOUGH_TO_SEE_BY
 }
 

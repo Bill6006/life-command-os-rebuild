@@ -179,7 +179,17 @@ test.describe('every owner-facing control has a name', () => {
     await loadInQa(page, 'Two ordinary weeks')
     await page.goto(`${APP}#/life/emotional`)
 
-    await page.getByRole('button', { name: /Not right\?|Add this/ }).click()
+    /*
+     * The first of them — routing 92. The Emotional page carries seven of these
+     * now: the free-text reading he types, and D-166's six dimensions, four of
+     * which are readable and never asked. That is the ordinary-owner contract's
+     * own expectation rather than a change to this control, and what this test
+     * is about is whether the control is named and says what it is for.
+     */
+    await page
+      .getByRole('button', { name: /Not right\?|Add this/ })
+      .first()
+      .click()
 
     const field = page.getByRole('textbox', { name: /in your own words/i })
     await expect(field).toBeVisible()

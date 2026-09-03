@@ -601,6 +601,23 @@ export const APPROVED_WHEN_A_MOVE_IS_BLOCKED = [
   'Nothing else worth asking right now.',
   'Everything this history has to suggest has already been in front of you today, and tomorrow starts again.',
 
+  /*
+   * And the state a supervision blocker now reaches — routing 92, C21.
+   *
+   * Saying *"I could not leave"* about a walk removes the walk, because a
+   * candidate that requires leaving does not fit a situation where he cannot
+   * (D-262). On a history whose only move means going out, what is left is a
+   * real no-action state, and this is the sentence the catalogue already has
+   * for it.
+   *
+   * **It says nothing about what the app will do next**, which is the rule this
+   * scan exists to enforce (D-187): "there were things worth doing and none of
+   * them suit where you actually are" is a description of this evening, and
+   * every word of it was true before the blocker path could reach it.
+   */
+  'Nothing fits tonight.',
+  'There were things worth doing and none of them suit where you actually are.',
+
   // Timeline, which has more rows and says so.
   '— replaced an earlier entry',
   'That is the whole record — {n} entries.',
