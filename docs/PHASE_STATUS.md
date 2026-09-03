@@ -97,21 +97,21 @@ re-scope), and no canonical phase is renumbered.
 82 GREEN ─▶ adjudication ─▶ 83 ─▶ 84 ─▶ 90 ─▶ 91 ─▶ 92 ─▶ 93 ─▶ 94 ─▶ 95 ─▶ 96 ─▶ 97 ─▶ 101 ─▶ 102 ─▶ 103
 ```
 
-| Routing | Product / canonical name                                 | State, or what it waits on            |
-| ------- | -------------------------------------------------------- | ------------------------------------- |
-| **83**  | The instrument, and the things that are untrue           | **GREEN — closed, round 2**           |
-| **84**  | What the owner is trying to become                       | **GREEN — bounded retest passed**     |
-| **90**  | **Canonical Phase 9** — visual coherence, motion, mobile | **GREEN — closed, round 3**           |
-| **91**  | Semantic capture and clarification                       | **BUILT / QA DEFERRED**               |
-| **92**  | Reach — what the brain can see                           | **YELLOW — READY FOR INDEPENDENT QA** |
-| **93**  | Validity — what it concludes from what it sees           | 92                                    |
-| **94**  | Domains and progression                                  | 93                                    |
-| **95**  | Advancement and revision                                 | 94                                    |
-| **96**  | Expectation and reconciliation                           | 95                                    |
-| **97**  | Longitudinal inference — D-172's mechanism               | 96                                    |
-| **101** | **Canonical Phase 10** — performance, PWA, reliability   | 97                                    |
-| **102** | **Canonical Phase 11** — adversarial hardening           | 101                                   |
-| **103** | **Canonical Phase 12** — release                         | 102                                   |
+| Routing | Product / canonical name                                 | State, or what it waits on        |
+| ------- | -------------------------------------------------------- | --------------------------------- |
+| **83**  | The instrument, and the things that are untrue           | **GREEN — closed, round 2**       |
+| **84**  | What the owner is trying to become                       | **GREEN — bounded retest passed** |
+| **90**  | **Canonical Phase 9** — visual coherence, motion, mobile | **GREEN — closed, round 3**       |
+| **91**  | Semantic capture and clarification                       | **BUILT / QA DEFERRED**           |
+| **92**  | Reach — what the brain can see                           | **BUILT / QA DEFERRED**           |
+| **93**  | Validity — what it concludes from what it sees           | 92                                |
+| **94**  | Domains and progression                                  | 93                                |
+| **95**  | Advancement and revision                                 | 94                                |
+| **96**  | Expectation and reconciliation                           | 95                                |
+| **97**  | Longitudinal inference — D-172's mechanism               | 96                                |
+| **101** | **Canonical Phase 10** — performance, PWA, reliability   | 97                                |
+| **102** | **Canonical Phase 11** — adversarial hardening           | 101                               |
+| **103** | **Canonical Phase 12** — release                         | 102                               |
 
 Product phase names and routing integers are different things; plan section 43A
 is the only place they are reconciled, and the `**Phase:**` field carries the
@@ -137,21 +137,46 @@ superseded rather than reused.
 
 # Routing Phase 92 — Reach: what the brain can see
 
-**Status: YELLOW — READY FOR INDEPENDENT QA.**
+**Status: BUILT / QA DEFERRED.**
 
-Not GREEN. D-077 is unchanged: a builder conversation may not approve its own
-phase, and nothing in this record does. Every mechanical gate this phase
-required has been run and is reported below; what has not happened is a person
-outside this conversation reading the deployed build.
+**This is not GREEN, and it is not a pass.** Independent QA has been **deferred
+by the owner** for this run — not skipped, not waived, and not passed. No
+independent eye has read this phase at all: it has had zero QA rounds, where
+routing 91 had nine. D-077 is unchanged, and **only independent QA may pass a
+phase**. Nothing in this record does.
 
-**One item is open on purpose and independent QA is the right place for it.**
-The audit's no-added-noise gate asks that making dormant concepts live must not
-increase how often the app speaks. Measured across the twenty-seven histories
-that existed before this phase, at five hours each, the app **spoke 216 times
-before and speaks 218 now** — two questions, both `emotional.mental-load`, on
-`three-days-since` and `observed-evenings`. It was not suppressed, the reasoning
-is D-267, and it is the builder's judgement rather than the owner's rule, which
-is exactly the kind of thing a builder may not sign off on his own work.
+**What deferring did not defer: any mechanical gate.** Every gate this phase
+required has been run against the checkpoint below and is reported in _Gates at
+the deferral_ — build, unit, contract, synthetic and adversarial tests, the
+guards, the privacy and copy scans, the whole browser matrix at three widths,
+checkpoint equivalence, CI, release integrity and the Android-style deployed
+gate. Deferring the human judgement does not lower the mechanical bar.
+
+**The brief for the deferred round is untouched.**
+[`qa/PHASE_92_QA_HANDOFF.md`](qa/PHASE_92_QA_HANDOFF.md) is Round 0 exactly as
+the builder wrote it — no line added, nothing rewritten to look better than it
+is, and its own header still says YELLOW because that is what it said when it
+was written and it is not this record's to edit. Whenever independent QA
+resumes, it starts from that file as it stands.
+
+**What that round would be walking into, stated plainly.** This phase touched
+the layer every decision reads: `assembleSituation` now walks the registry, five
+registry declarations were corrected, the fact layer resolves a renamed concept
+through an alias, and five shipped assertions were inverted. Four of its ten
+defects were found by a gate rather than by the builder — three by the browser
+matrix's first run and one by the phone gate's — which is the clearest available
+evidence that a builder reading his own work misses things. **It is the phase in
+the campaign with the widest blast radius and the least independent scrutiny.**
+
+**And one gate item is open by the builder's own judgement.** The audit's
+no-added-noise rule asks that making dormant concepts live must not increase how
+often the app speaks. Measured across the twenty-seven histories that existed
+before this phase, at five hours each, the app **spoke 216 times before and
+speaks 218 now** — two questions, both `emotional.overwhelm`, on
+`three-days-since` and `observed-evenings`. It was not suppressed; the reasoning
+is D-267. **Deferring QA does not settle it.** It is exactly the kind of
+judgement D-077 exists to have somebody else check, and it is now carried
+unchecked.
 
 ## The finding this phase answers, in one sentence
 
@@ -204,24 +229,24 @@ measured and pulled back; what ships says why the app is asking. D-266.
 
 **92.9 — the owner-use findings**, each with an acceptance rather than a claim.
 
-## Gates at YELLOW
+## Gates at the deferral
 
 Filled in from results rather than in advance. A row that says PENDING has not
 run at the time of writing and is not a claim.
 
-| Gate                                                           | Result                                                 |
-| -------------------------------------------------------------- | ------------------------------------------------------ |
-| `npm run verify` — format, lint, typecheck, tests, build, copy | PASS                                                   |
-| Unit, contract, synthetic and adversarial tests                | PASS — 2,150                                           |
-| Privacy scan                                                   | PASS — 324 tracked files                               |
-| Rendered copy scan                                             | PASS — 8,809 shipped strings                           |
-| Adaptation-claim scan                                          | PASS                                                   |
-| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PASS — 849 of 849, locally                             |
-| CI, including its own matrix run                               | PASS — run 33757795409, 849 of 849                     |
-| Checkpoint equivalence                                         | PASS — deployed `b850dfc` serves the same bytes        |
-| Release integrity, from CI's own manifest artifact             | PASS — 8 files served byte for byte                    |
-| Android-style deployed gate                                    | PASS — 234 checks, against the deployed Preview        |
-| Independent QA (required from Phase 5 on, D-077)               | **Outstanding — this phase is YELLOW until it passes** |
+| Gate                                                           | Result                                           |
+| -------------------------------------------------------------- | ------------------------------------------------ |
+| `npm run verify` — format, lint, typecheck, tests, build, copy | PASS                                             |
+| Unit, contract, synthetic and adversarial tests                | PASS — 2,150                                     |
+| Privacy scan                                                   | PASS — 324 tracked files                         |
+| Rendered copy scan                                             | PASS — 8,809 shipped strings                     |
+| Adaptation-claim scan                                          | PASS                                             |
+| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PASS — 849 of 849, locally                       |
+| CI, including its own matrix run                               | PASS — run 33757795409, 849 of 849               |
+| Checkpoint equivalence                                         | PASS — deployed `b850dfc` serves the same bytes  |
+| Release integrity, from CI's own manifest artifact             | PASS — 8 files served byte for byte              |
+| Android-style deployed gate                                    | PASS — 234 checks, against the deployed Preview  |
+| Independent QA (required from Phase 5 on, D-077)               | **DEFERRED by the owner — zero rounds have run** |
 
 **Checkpoint:** `b850dfc` — the commit every product gate was run on.
 **Documentation head:** `e3ae91d`, which is what Preview serves. Four files
@@ -243,9 +268,10 @@ that no longer meant what they thought.
 the pattern this campaign keeps rediscovering: a gate that counts something
 exactly is the gate that notices when the count moves.
 
-## What independent QA is walking into
+## What independent QA is walking into, whenever it runs
 
-Three things worth knowing before Round 1.
+Three things worth knowing before Round 1, written while they were fresh rather
+than reconstructed later.
 
 **The one open gate item is named above and in D-267.** It is a judgement about
 whether two questions constitute the app speaking more, and the builder made it

@@ -1,5 +1,46 @@
 # Decision log
 
+## D-268 — Routing 92's independent QA is deferred, and the phase is BUILT rather than GREEN
+
+**Phase:** 92 · **Status:** Active · **Deferred by the owner, 2026-09-03**
+
+Independent QA is off for this run. Routing 92 is recorded as **BUILT / QA
+DEFERRED** — not skipped, not waived, and not passed.
+
+**Three things this does not mean.**
+
+1. **It is not GREEN.** D-077 is unchanged: a builder conversation may not
+   approve its own phase, and only independent QA may pass one. Zero rounds
+   have run against this phase, where routing 91 had nine before its own
+   deferral.
+2. **No mechanical gate is deferred with it.** Build, the full unit, contract,
+   synthetic and adversarial suite, the guards, the privacy and copy scans, the
+   browser matrix at three widths on one worker, checkpoint equivalence, CI,
+   release integrity from CI's own manifest artifact and the Android-style
+   deployed gate all ran against the checkpoint and all passed. Deferring a
+   human judgement does not lower a mechanical bar.
+3. **The open gate item is not settled by it.** D-267 records that the
+   no-added-noise rule came out at 218 against 216, that the two questions were
+   not suppressed, and that the judgement was the builder's. Deferring QA means
+   that judgement is now carried unchecked rather than resolved.
+
+**What makes this the riskiest deferral in the campaign so far.** Routing 92
+touched the layer every decision reads. `assembleSituation` walks the registry;
+five registry declarations were corrected; the fact layer resolves a renamed
+concept through an alias; five shipped assertions were inverted; and the
+concept registry grew by ten. **Four of its ten defects were found by a gate
+rather than by the builder** — three by the browser matrix's first run and one
+by the phone gate's — which is the clearest evidence available that a builder
+reading his own work misses things, recorded here rather than in a commit
+message nobody will search for.
+
+**`docs/qa/PHASE_92_QA_HANDOFF.md` is Round 0 and survives unedited**, including
+its own header, which still reads YELLOW because that is what it said when it
+was written. It is the brief the deferred round starts from and it is not this
+decision's to tidy.
+
+---
+
 ## D-259 — The situation reads the registry, and one door onto a fact
 
 **Phase:** 92 · **Status:** Active · **Closes** AUD-0040
