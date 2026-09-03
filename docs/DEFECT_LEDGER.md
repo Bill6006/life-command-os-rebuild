@@ -1,5 +1,47 @@
 # Defect ledger
 
+## DEF-0167 — the S1a digest was hashing an empty derivation
+
+**Phase:** 93 · **Found by:** AUD-0042, while narrowing the pin · **Status:** REPAIRED
+
+`tests/synthetic/reach-horizon.test.ts` pins a digest whose stated purpose is
+§5.1's acceptance for S1a: _"D-064's four conditions for the morning reading must
+produce byte-identical output before and after."_ It hashed two things — every
+episode's outcome window, and everything `derivedOutcomeRecords` returned.
+
+**The second half has always been empty.** Across the twenty-seven shipped
+histories, at every hour the sweep visits and four more besides,
+`deriveOutcomes` returns **nothing**: no scenario holds a completed
+`next-morning` sleep episode with a morning reading inside its window. So the
+half of the digest carrying the claim was the hash of an empty list, and routing
+92's S1a acceptance was verified against zero rows.
+
+**It is not a vacuous digest overall** — the windows half is real and covers
+every episode in the library, and the phase's other horizon assertions are
+independent of this. What it is is a guard quietly covering less than it claims,
+which this repository's own `stringLiterals` comment names as worse than no
+guard because the passing result is read as evidence.
+
+**The repair, in two parts.**
+
+1. The digest now hashes the **sleep derivation specifically** rather than
+   whatever `derivedOutcomeRecords` happens to return, so it means the claim it
+   was written for. **The pinned value is unchanged**, because before routing 93
+   every derived row was a sleep row — the narrowing removes nothing that was
+   ever there. `reach-horizon.test.ts` asserts the emptiness out loud, so the day
+   a history reaches the sleep path the pin has to be re-taken deliberately.
+2. `tests/synthetic/observed-first.test.ts` builds the history that reaches it —
+   a completed wind-down and the morning that judges it — and proves D-064's
+   four conditions **fire**, at three levels, and produce nothing at all from an
+   episode that was started and never finished. That is the assertion §5.1
+   wanted, on rows rather than on spelling.
+
+**Not a product defect.** Nothing an owner can see was wrong; what was wrong was
+the strength of a claim in the test suite. It is recorded because the next phase
+inheriting this pin deserves to know what it does and does not cover.
+
+---
+
 ## DEF-0166 — a recovery run could not advance past the object of its first evening
 
 **Phase:** 93 · **Found by:** the acceptance test AUD-0009 asks for · **Status:** FIXED

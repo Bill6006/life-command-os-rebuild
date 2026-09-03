@@ -655,7 +655,19 @@ export function readingAwaitedBy(
   const profile = profileFor(episode.semantics.target.verb)
   const measures = profile.measures
   if (measures === undefined) return undefined
-  if (profile.outcome.when !== 'next-morning') return undefined
+  /*
+   * The `next-morning` condition is gone — AUD-0042.
+   *
+   * It was doing two jobs. *"This outcome is judged in the morning"* and *"this
+   * outcome can be observed rather than asked"* became one condition, and they
+   * are not the same: a same-block outcome can be observed too, and what it
+   * needs is a reading taken afterwards **inside its own window** rather than a
+   * horizon that happens to be tomorrow's.
+   *
+   * The window check below is what replaces it, and it always was the real
+   * condition: `outcomeWindowFor` already knows when this move can be judged, at
+   * whichever horizon it declares.
+   */
   if (!profile.aspects.includes('effect')) return undefined
 
   const window = outcomeWindowFor(episode, zone)

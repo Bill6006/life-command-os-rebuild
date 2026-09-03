@@ -1,5 +1,5 @@
 import { createRecordFactory } from '../domain/build'
-import { CONCEPT } from '../domain/concepts'
+import { CONCEPT, coreConcepts, type ConceptRegistry } from '../domain/concepts'
 import { derivedRecordId, type RecordId } from '../domain/ids'
 import { bearsConcept, type OutcomeRecord, type Provenance } from '../domain/records'
 import type { Instant, TimeZoneId } from '../domain/time'
@@ -9,7 +9,7 @@ import { collectEpisodes, type Episode } from './lifecycle'
 import { profileFor } from './moves'
 import { answeredAspects, outcomeWindowFor, readingAwaitedBy, EFFECT_STEPS } from './outcomes'
 import { SLEEP_BASELINE_HOURS } from './situation'
-import { hoursValue } from './values'
+import { hoursValue, ratioValue } from './values'
 
 /**
  * Evidence normal life already produces (canonical plan section 8).
@@ -67,6 +67,57 @@ export const DERIVED_SLEEP_PROVENANCE: Provenance = {
   source: 'derived',
   writtenBy: 'sleep-outcome',
   note: 'read off the next morning’s sleep reading rather than asked for',
+}
+
+/**
+ * The same idea one block later — AUD-0042.
+ *
+ * ## The finding
+ *
+ * `derived.ts` was gated by three conditions and one of them was doing two jobs.
+ * *"This outcome is judged in the morning"* and *"this outcome can be observed
+ * rather than asked"* became the same condition, and they are not: **a
+ * same-block outcome can be observed too; it just needs a reading taken
+ * afterwards in the same block.**
+ *
+ * So the observe-first path reached three verbs of fifteen, and for the
+ * remaining twelve the `effect` belief could only be built from answers the
+ * owner tapped — which is the opposite of D-089, his own decision that the
+ * *system* performs the causal inference. The audit's worked example is a
+ * history with fourteen observed pairs where Insights says *"current energy has
+ * more often been higher after a walk than without one"* while the walk's
+ * learned `Worth tonight` reads **0.50 → 0.50 (unchanged)**, *"Comparable
+ * results: none"*.
+ *
+ * ## What separates the two, now that they are separate
+ *
+ * D-064's four conditions are **untouched**: the sleep case still requires
+ * `next-morning`, still reads `sleepHours`, still writes the same rows. This is
+ * a sibling beside it, not a widening of it, and
+ * `tests/synthetic/reach-horizon.test.ts` proves the first by digesting the
+ * sleep derivation on its own.
+ *
+ * ## Why it is worth less, and where that is said
+ *
+ * The audit's real risk: *"a same-block reading is closer in time to the move
+ * and therefore more likely to be confounded by it — he may report higher energy
+ * **because** he just did the thing, which is mood rather than effect."*
+ *
+ * That is an argument for a lower weight, and the weight already exists.
+ * Reliability is a property of **a source and a concept together** (D-059), so a
+ * derived reading of sleep hours is worth 0.8 and a derived reading of current
+ * energy is worth 0.4 — the registry says so on the concepts themselves, in as
+ * many words: *"the same source is worth half as much"*. Nothing new is invented
+ * here, and nothing here may raise it.
+ *
+ * The stronger claims stay where they were: `association.ts` keeps the
+ * comparison-group discipline, and this only closes the loop the owner would
+ * otherwise be asked to close by grading himself.
+ */
+export const DERIVED_READING_PROVENANCE: Provenance = {
+  source: 'derived',
+  writtenBy: 'reading-outcome',
+  note: 'read off a reading taken after the move rather than asked for',
 }
 
 /**
@@ -214,12 +265,198 @@ export function deriveOutcomes(view: MemoryView, moment: DeriveMoment): readonly
   return out
 }
 
-/** Just the records, for a surface that only wants to append them. */
+/**
+ * A reading of what the move speaks to, taken after it, in the same block.
+ *
+ * The mirror of {@link morningReadingFor}, and the difference is the whole of
+ * AUD-0042: that one wants the morning after, this one wants **later in the same
+ * stretch of the day**. `outcomeWindowFor` supplies the window either way, so
+ * the two do not each carry an opinion about when a move can be judged.
+ *
+ * **Strictly after the move settled**, which is the condition that makes it an
+ * after rather than a before. A reading taken at six about an evening that
+ * happened at eight is a different fact, and the outcome window's own start is
+ * already `settled + timing.after`, so this is belt and braces on the one thing
+ * that would silently invert the meaning.
+ */
+function readingAfter(
+  episode: Episode,
+  view: MemoryView,
+  concept: ConceptId,
+  moment: DeriveMoment,
+): { readonly level: number; readonly record: RecordId; readonly at: Instant } | undefined {
+  const window = outcomeWindowFor(episode, moment.zone)
+  if (window === undefined) return undefined
+  const settled = episode.settledAt
+  if (settled === undefined) return undefined
+
+  let best: { level: number; record: RecordId; at: Instant } | undefined
+  for (const record of view.history.effective) {
+    if (!bearsConcept(record)) continue
+    if (record.concept !== concept) continue
+    // Nothing is derived from a reading that has not happened yet — time travel
+    // makes that reachable, and it would be an answer about an hour nobody has
+    // lived through.
+    if (record.occurredAt > moment.now) continue
+    if (record.occurredAt <= settled) continue
+    if (record.occurredAt < window.earliest || record.occurredAt > window.latest) continue
+    const level = ratioValue(record.value)
+    if (level === undefined) continue
+    if (best === undefined || record.occurredAt < best.at) {
+      best = { level, record: record.id, at: record.occurredAt }
+    }
+  }
+  return best
+}
+
+/**
+ * What a reading is worth as an answer to "how much did this do?" — AUD-0042.
+ *
+ * Absolute rather than compared to his usual, which is the same reading of D-056
+ * the sleep matcher takes: effect answers are absolute levels, and the delta
+ * model was worked through and withdrawn because a move that consistently does
+ * nothing would keep its prior forever.
+ *
+ * A scale carries its own top, so this is in the units the owner answered in:
+ * three of five and six of ten are the same reading, and the thresholds are the
+ * upper, middle and lower thirds of whatever scale he was given.
+ *
+ * **It may never conclude harm**, exactly as the sleep matcher may not. A low
+ * reading after a walk is a low reading; it is not evidence that the walk
+ * **backfired**, which is a claim about causation that a single level cannot
+ * support and only the owner can make (D-038).
+ */
+const REAL_EFFECT_AT = 0.6
+const SOME_EFFECT_AT = 0.35
+
+function effectStepForLevel(level: number): 3 | 2 | 1 {
+  if (level >= REAL_EFFECT_AT) return 3
+  if (level >= SOME_EFFECT_AT) return 2
+  return 1
+}
+
+/**
+ * Outcomes a reading taken after a move already implies — AUD-0042.
+ *
+ * ## The four conditions, and how they differ from D-064's
+ *
+ * 1. the profile says what an outcome about this move is a reading **of**;
+ * 2. that reading is not a night's sleep, which is D-064's alone;
+ * 3. the profile can produce an `effect` at all;
+ * 4. that concept is one the registry says can be read as a **scale**;
+ * 5. the effect has not already been answered.
+ *
+ * **There is no condition on the horizon**, and its absence is the finding. The
+ * old gate asked for `next-morning` and thereby asked two questions at once;
+ * asking for `same-block` instead would have been the same mistake facing the
+ * other way, and it would have left `lighten-the-day` — judged in the morning,
+ * measuring energy — reached by neither path. The window comes from
+ * `outcomeWindowFor`, which already knows when each move can be judged.
+ *
+ * Condition 4 is the one that is not in the audit's own list, and it is the
+ * honest bound. An absolute level only means something on a scale that carries
+ * its own top: *"three of five"* is a third of the way up and *"£400"* is not
+ * anything of the way up anything.
+ *
+ * **So the audit's own list of what this reaches is not quite right, and the
+ * difference is written down rather than quietly absorbed.** It names `move`,
+ * `reset-space`, `reach-out` and `start-conversation`. What is actually reached
+ * is `move`, `ease-off` and `lighten-the-day` — three verbs, taking the
+ * observe-first path from **three of fifteen to six**. The other three are out
+ * for reasons the audit could not see from the registry alone: `reset-space`
+ * measures home friction, which is free text; and `reach-out` and
+ * `start-conversation` produce `result` and `comfort` and no `effect` at all, so
+ * there is no belief here for a reading to close.
+ *
+ * Pure, idempotent and re-runnable, exactly like the sleep sibling: the id is
+ * derived from the episode and the aspect, so running this twice produces
+ * byte-identical records and the store's existing idempotency skips the second
+ * (D-015).
+ */
+export function deriveReadingOutcomes(
+  view: MemoryView,
+  moment: DeriveMoment,
+  concepts: ConceptRegistry,
+): readonly DerivedOutcome[] {
+  const out: DerivedOutcome[] = []
+  const build = createRecordFactory({
+    zone: moment.zone,
+    provenance: DERIVED_READING_PROVENANCE,
+  })
+
+  for (const episode of collectEpisodes(view, moment.zone)) {
+    const profile = profileFor(episode.semantics.target.verb)
+    const measures = profile.measures
+    if (measures === undefined) continue
+    /*
+     * Sleep hours are the morning matcher's, and only its.
+     *
+     * The two paths are disjoint by the concept rather than by the horizon,
+     * which is the whole of AUD-0042's separation: *"this outcome is judged in
+     * the morning"* and *"this outcome can be observed rather than asked"* are
+     * different conditions, and the first is D-064's business alone. A night is
+     * read against a working baseline in hours; everything here is read as a
+     * level on a scale that carries its own top.
+     */
+    if (measures === CONCEPT.sleepHours) continue
+    if (!profile.aspects.includes('effect')) continue
+    if (concepts.definitionFor(measures).tracked !== 'scale') continue
+    if (answeredAspects(episode).has('effect')) continue
+
+    const reading = readingAfter(episode, view, measures, moment)
+    if (reading === undefined) continue
+
+    const step = effectStepForLevel(reading.level)
+    const record = build(
+      'outcome',
+      {
+        // The moment the reading is about, not the moment it was worked out —
+        // the same argument the sleep sibling makes, and the same consequence:
+        // deriving twice produces the identical row and the second append is a
+        // no-op, whichever hour it happens in.
+        occurredAt: reading.at,
+        id: derivedRecordId('derived-reading-outcome', episode.recommendation, 'effect'),
+        domains: [episode.semantics.domain],
+        entities: [episode.semantics.subject, episode.semantics.target.object],
+      },
+      {
+        about: episode.recommendation,
+        aspect: 'effect',
+        observation: { type: 'scale', value: step, of: EFFECT_STEPS },
+        sentiment: SENTIMENT[step],
+      },
+    )
+
+    out.push({
+      record,
+      episode,
+      from: reading.record,
+      hours: reading.level,
+      because: `read off a ${concepts.definitionFor(measures).label.toLowerCase()} reading taken afterwards rather than asked for`,
+    })
+  }
+
+  return out
+}
+
+/**
+ * Just the records, for a surface that only wants to append them.
+ *
+ * Both derivations, because a surface appending outcomes wants the outcomes —
+ * and separating them here would make which ones a caller gets depend on which
+ * function it happened to know about. `tests/synthetic/reach-horizon.test.ts`
+ * digests the sleep half on its own, which is what keeps D-064's byte-identical
+ * claim provable now that there are two.
+ */
 export function derivedOutcomeRecords(
   view: MemoryView,
   moment: DeriveMoment,
+  concepts: ConceptRegistry = coreConcepts,
 ): readonly OutcomeRecord[] {
-  return deriveOutcomes(view, moment).map((derived) => derived.record)
+  return [
+    ...deriveOutcomes(view, moment).map((derived) => derived.record),
+    ...deriveReadingOutcomes(view, moment, concepts).map((derived) => derived.record),
+  ]
 }
 
 /**

@@ -1,5 +1,60 @@
 # Decision log
 
+## D-272 — Observe-first is separated from judged-in-the-morning, and it reaches three more verbs rather than four
+
+**Phase:** 93 · **Status:** Active
+
+AUD-0042. `derived.ts` was gated on `outcome.when === 'next-morning'`, and that
+one condition was answering two questions: _"this outcome is judged in the
+morning"_ and _"this outcome can be observed rather than asked"_. They are not
+the same question, and conflating them left twelve verbs of fifteen with an
+`effect` belief that could only be built from answers the owner tapped — the
+opposite of D-089, which is his own decision that the **system** performs the
+causal inference.
+
+**The two paths are now disjoint by concept, not by horizon.** `deriveOutcomes`
+keeps D-064's four conditions exactly: sleep hours, judged in the morning, read
+against the working baseline. `deriveReadingOutcomes` takes everything else that
+declares what it is a reading of, reads the reading taken inside the move's own
+window afterwards, and maps it onto the effect scale as an absolute level (D-056).
+
+**There is no horizon condition on the new path, and that is the point.** Asking
+for `same-block` would have been the old mistake facing the other way, and would
+have left `lighten-the-day` — judged in the morning, measuring energy — reached
+by neither path. The window comes from `outcomeWindowFor`, which already knows
+when each move can be judged.
+
+**The audit's own list of what this reaches is wrong, and the corrected one is
+smaller.** It names `move`, `reset-space`, `reach-out` and `start-conversation`.
+What is actually reachable is **`move`, `ease-off` and `lighten-the-day`** — so
+the observe-first path goes from three verbs of fifteen to **six**, not seven.
+The three that drop out do so for reasons the registry answers:
+
+- `reset-space` measures home friction, which is **free text**. An absolute level
+  needs a scale that carries its own top; _"three of five"_ is a third of the way
+  up and _"the kitchen table is buried"_ is not anything of the way up anything.
+- `reach-out` and `start-conversation` measure social energy, which **is** a
+  scale — and neither produces an `effect` at all. They answer `result` and
+  `comfort`, so there is no belief here for a reading to close, and giving them
+  one would be adding a question rather than removing one.
+
+**Nothing new was invented for the reliability discount.** The audit's real risk
+is that a same-block reading is more likely to be confounded by the move — _"he
+may report higher energy because he just did the thing, which is mood rather than
+effect"_ — and that argues for a lower weight. Reliability is already a property
+of a source and a concept **together** (D-059): a derived reading of sleep hours
+is worth 0.8 and a derived reading of current energy is worth 0.4, and the
+registry says so on the concepts themselves, in the words _"the same source is
+worth half as much"_. The strong claims stay in `association.ts`, with its
+comparison groups.
+
+**The two derivations stay legible as two.** `writtenBy` is `sleep-outcome` and
+`reading-outcome`, and both are `source: 'derived'` — so no surface can present
+either as something the owner said, and a reader can still tell which assumption
+is being made.
+
+---
+
 ## D-271 — Recovery is a run whose length comes from his own record, and `multi-day` gets its consumer there
 
 **Phase:** 93 · **Status:** Active

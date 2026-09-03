@@ -13,7 +13,12 @@ import {
 } from '../../src/intelligence/moves'
 import { collectEpisodes } from '../../src/intelligence/lifecycle'
 import { dueOutcomes, outcomeWindowFor, windowForTiming } from '../../src/intelligence/outcomes'
-import { derivedOutcomeRecords } from '../../src/intelligence/derived'
+import {
+  deriveOutcomes,
+  deriveReadingOutcomes,
+  derivedOutcomeRecords,
+} from '../../src/intelligence/derived'
+import { coreConcepts } from '../../src/domain/concepts'
 import { SCENARIOS } from '../../src/synthetic/scenarios'
 import { loadScenario } from './harness'
 
@@ -76,11 +81,28 @@ describe('a wider horizon changes nothing that was decided at the narrow one —
           )}`,
         )
       }
-      for (const record of derivedOutcomeRecords(view, {
+      /*
+       * **The sleep derivation on its own** — AUD-0042, routing 93.
+       *
+       * §5.1's claim is about D-064's four conditions for the *morning* reading
+       * producing byte-identical output, and this digested everything
+       * `derivedOutcomeRecords` returned because for one phase that was the same
+       * set. Routing 93 gave the observe-first path a same-block sibling
+       * (`deriveReadingOutcomes`), and a digest over both would have moved for a
+       * reason that has nothing to do with a horizon — which would have made the
+       * pin either a false alarm or, worse, a number somebody updated.
+       *
+       * So this digests what the claim is actually about. The value below is
+       * therefore **unchanged**: before routing 93 every derived row was a sleep
+       * row, so the filtered list is the same list, and the pin still proves the
+       * thing it was written to prove. The new rows are counted in the test
+       * below, so nothing is hidden by the narrowing.
+       */
+      for (const derived of deriveOutcomes(view, {
         now: scenario.now,
         zone: scenario.zone,
       })) {
-        rows.push(`${scenario.id}|derived|${JSON.stringify(record)}`)
+        rows.push(`${scenario.id}|derived|${JSON.stringify(derived.record)}`)
       }
     }
     return createHash('sha256').update(rows.sort().join('\n')).digest('hex')
@@ -112,6 +134,45 @@ describe('a wider horizon changes nothing that was decided at the narrow one —
       collectEpisodes(loadScenario(scenario.id).viewAt(scenario.now, scenario.zone), scenario.zone),
     )
     expect(rows.length, 'the sweep found no episodes at all').toBeGreaterThan(20)
+  })
+
+  it('digests a derivation that no history in the library reaches — DEF-0167', () => {
+    /*
+     * **The pin above has two halves and one of them has always been empty.**
+     *
+     * §5.1's acceptance for S1a is that *"D-064's four conditions for the
+     * morning reading produce byte-identical output before and after"*, and this
+     * file digested `derivedOutcomeRecords` to prove it. Across the whole
+     * shipped library, at every hour, that function returned **nothing** from
+     * the sleep path: no scenario holds a completed `next-morning` sleep episode
+     * with a morning reading after it, so the half of the digest that carries
+     * the claim was a hash of an empty list.
+     *
+     * The digest is not vacuous — the windows half is real and covers every
+     * episode in the library — but a guard that quietly covers less than it
+     * claims is worse than no guard, because the passing result is read as
+     * evidence. That is this repository's own words about
+     * `stringLiterals`, arriving in a second place.
+     *
+     * So the emptiness is asserted rather than left to be discovered, and
+     * `tests/synthetic/observed-first.test.ts` builds the history that reaches
+     * the sleep path — which is where D-064's conditions are actually proved to
+     * fire rather than merely to be spelled the same.
+     */
+    let sleep = 0
+    let reading = 0
+    let both = 0
+    for (const scenario of SCENARIOS) {
+      const moment = { now: scenario.now, zone: scenario.zone }
+      const view = loadScenario(scenario.id).viewAt(moment.now, moment.zone)
+      sleep += deriveOutcomes(view, moment).length
+      reading += deriveReadingOutcomes(view, moment, coreConcepts).length
+      both += derivedOutcomeRecords(view, moment).length
+    }
+
+    expect(sleep, 'the library now reaches the sleep derivation — re-pin the digest').toBe(0)
+    expect(reading, 'the same-block derivation reaches nothing in the library').toBeGreaterThan(0)
+    expect(both, 'the two paths and their sum disagree').toBe(sleep + reading)
   })
 
   it('leaves every shipped move at the horizon it already declared', () => {
