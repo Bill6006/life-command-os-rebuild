@@ -123,10 +123,28 @@ describe('G-009 — a question only when it would change something', () => {
   })
 
   it('does not ask about the unknowns that do not', () => {
+    /*
+     * Two of the three this used to name have moved, and the move is AUD-0041
+     * rather than a relaxation.
+     *
+     * `socialEnergy` gates the social generator outright and `homeFriction`
+     * gates the home generator and writes the sentence a home move is explained
+     * with — so not knowing either silences a whole area, which is the
+     * definition of a reading that changes something. Both were declared
+     * `materialToDecision: false`, which is the registry saying the opposite of
+     * what the code does, and this test was reading the declaration back.
+     * `tests/synthetic/reach-material.test.ts` now measures it instead.
+     *
+     * The cash buffer stays, and it stays for a reason that is itself a
+     * finding: `moneyCandidates` needs a financial goal to exist and **no
+     * shipped history holds one** (AUD-0012), so today there is genuinely
+     * nothing an answer about it could change. When money has an entry route
+     * that line will have to move too, and the measurement is what will say so.
+     */
     const asked = view.facts.questions.map((entry) => entry.concept)
-    expect(asked).not.toContain(CONCEPT.socialEnergy)
-    expect(asked).not.toContain(CONCEPT.homeFriction)
     expect(asked).not.toContain(CONCEPT.cashBuffer)
+    expect(asked).not.toContain(CONCEPT.emotionalState)
+    expect(asked).not.toContain(CONCEPT.sleepQuality)
   })
 
   it('never opens with an unsolicited private question', () => {

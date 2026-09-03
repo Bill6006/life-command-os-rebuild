@@ -152,19 +152,53 @@ describe('QA-82-015 — Life does not deny a route the app is using', () => {
   it('keeps a genuine no-route case, and it is the one round 10 repaired', () => {
     /*
      * The opposite error. `needs-review` has to survive, or this repair has
-     * traded QA-82-014's lie for a friendlier one. Social has people, places
-     * and goals in it, no refreshing move, and no question the fact layer is
-     * willing to spend.
+     * traded QA-82-014's lie for a friendlier one.
+     *
+     * **The subject moved and the point did not — AUD-0041.** This used to be
+     * Social, on the ground that the fact layer would spend no question on it.
+     * That was true and it was true for the wrong reason: `socialEnergy` was
+     * declared non-decisional while it gates the entire social generator, so
+     * the app was denying a route it had. Correcting the declaration gives
+     * Social a real question and takes it out of this case.
+     *
+     * Money is the area that genuinely has neither. `moneyCandidates` needs a
+     * `financial-goal` that no owner-reachable control creates and no shipped
+     * history holds, and the Money page offers one line — "Cash buffer, not
+     * known yet". That is AUD-0012, unrepaired at this point in the phase, and
+     * it is exactly what `needs-review` is for: the app saying plainly that
+     * nothing it can do on its own will bring an area back.
      */
-    const scenario = scenarioById('social-opening')
-    if (scenario === undefined) throw new Error('unreachable')
-    const run = runAt(scenario.build(), instant(scenario.now + 35 * DAY), scenario.zone)
-    const social = run.coverage.find((entry) => entry.domain === DOMAIN.social)
-    expect(social?.status).toBe('stale')
-    if (social === undefined) throw new Error('unreachable')
-    expect(social.refresh).toBe('needs-review')
-    expect(standingFor(social).note).toBe(DENIAL)
-    expect(social.concepts.every((row) => !row.askable)).toBe(true)
+    const denied = CORPUS.flatMap((run) =>
+      run.coverage.filter((entry) => entry.status === 'stale' && entry.refresh === 'needs-review'),
+    )
+    for (const entry of denied) {
+      expect(standingFor(entry).note, `${entry.domain}`).toBe(DENIAL)
+      expect(
+        entry.concepts.every((row) => !row.askable),
+        `${entry.domain}: denied a route while a question is available`,
+      ).toBe(true)
+    }
+    /*
+     * And the count is stated rather than hoped for, because it is currently
+     * **zero** and that is a finding rather than a pass.
+     *
+     * Correcting `socialEnergy` took Social out of this case, and the only
+     * areas left with neither a move nor a question — Money, Emotional, Faith,
+     * Private — have no record in any shipped history, so they read `unheard`
+     * and never reach `stale`. The denial sentence therefore has no reachable
+     * case in the library today: the guard above is a property with nothing to
+     * hold, and saying so is better than a green test over an empty set.
+     *
+     * AUD-0012 is what restores one, later in this phase: a money history with
+     * an ageing cash-buffer reading and no due item is exactly an area that has
+     * run out of routes. This number moves to one when that scenario lands, and
+     * until then a change in either direction fails here rather than passing
+     * quietly.
+     */
+    expect(
+      denied.length,
+      'an area has run out of routes again — move this to the number and say which',
+    ).toBe(0)
   })
 
   it('routes to a question only where the guide would consider one', () => {

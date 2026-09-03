@@ -337,12 +337,22 @@ describe('a tracked dimension is one thing, on one scale', () => {
      * D-091 invariant 6, as a standing decision rather than as today's state.
      * The repair for R3-B3 is *not* giving emotional state a scale — mood,
      * stress, confidence and motivation are four things, and one number for all
-     * four is the wellness score the owner rules out. It stays what it is until
-     * he says otherwise, and it stays asked for.
+     * four is the wellness score the owner rules out.
+     *
+     * **What changed, and what did not — AUD-0041, correction 3.15.** The scale
+     * is still not invented and the class is still discreet. What went is the
+     * claim that an answer to it changes a decision: nothing anywhere reads it,
+     * there is no question in the catalogue that could produce an answer, and
+     * the flag said an answer mattered. That is the app holding three positions
+     * on one concept and showing the owner the two that contradict. The words
+     * he types are still kept as he typed them and still shown on his page.
      */
     const emotional = coreConcepts.definitionFor(CONCEPT.emotionalState)
     expect(emotional.tracked, 'a scale was invented for how he feels').toBeUndefined()
-    expect(emotional.ask.materialToDecision, 'it still matters to a decision').toBe(true)
+    expect(
+      emotional.ask.materialToDecision,
+      'it claims an answer would decide something, and nothing reads it',
+    ).toBe(false)
     expect(emotional.privacy).toBe('sensitive')
   })
 

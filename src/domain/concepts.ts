@@ -323,7 +323,29 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     freshness: THIS_LOCAL_DAY,
     tracked: 'scale',
     privacy: 'normal',
-    ask: { materialToDecision: true, askWhenStale: true },
+    /*
+     * A fifth wrong declaration, found by measuring rather than by reading —
+     * AUD-0041.
+     *
+     * The audit enumerated the registry by hand and found four. Re-running the
+     * decision with and without each reading, on every history in the library,
+     * found this one too: **nothing anywhere reads sleep quality.** The hours
+     * are read by `assembleCapacity` and drive the whole recovery model; how
+     * the night *felt* is collected, shown, trended on Insights, and consulted
+     * by no generator, no dimension and no filter.
+     *
+     * It is not corrected by inventing a reader. What it honestly is today is a
+     * reading the owner gives and the app reports back to him over time, which
+     * is a real thing for a concept to be — `tracked: 'scale'` is the claim
+     * that is true of it — and this flag is the claim that was not. Saying so
+     * also stops the app spending a daily question on it: `shouldAsk` gates on
+     * this field, so the guide was entitled to ask about a reading that could
+     * not change anything it does.
+     *
+     * The reader belongs with AUD-0009's recovery work, which is routing 93's,
+     * and this flag is what will have to change back when it lands.
+     */
+    ask: { materialToDecision: false, askWhenStale: true },
     // How a night *felt* is the owner's to report. A watch scoring it is
     // inferring an experience from movement, which is the weaker claim — the
     // opposite ordering to hours slept, on the same device, in the same domain.
@@ -486,7 +508,20 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     freshness: elapsedHours(8),
     tracked: 'scale',
     privacy: 'normal',
-    ask: { materialToDecision: false, askWhenStale: true },
+    /*
+     * It gates the social generator outright, and said it decided nothing —
+     * AUD-0041.
+     *
+     * `socialCandidates` returns `[]` unless this reads 0.6 or better, so the
+     * whole social domain is silent without it. The declaration was `false`,
+     * which is the flag saying the exact opposite of what the code does, and
+     * because `materialToDecision` is what `shouldAsk` gates on, the app was
+     * also declining to spend a question on the one reading that unlocks an
+     * entire area. Measured now rather than declared:
+     * `tests/synthetic/reach-material.test.ts` re-runs the decision without
+     * this reading and with it, on every history in the library.
+     */
+    ask: { materialToDecision: true, askWhenStale: true },
     reliability: { owner: 1, device: 0.35, derived: 0.3, model: 0.2 },
   },
   {
@@ -518,7 +553,17 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     freshness: localDays(3),
     standing: true,
     privacy: 'normal',
-    ask: { materialToDecision: false, askWhenStale: true },
+    /*
+     * It gates the home generator and supplies the `constraint-active`
+     * explanation, and said it decided nothing — AUD-0041.
+     *
+     * The same shape as `socialEnergy` immediately above: `homeCandidates`
+     * returns nothing while this is unknown, and the sentence the owner reads
+     * when a home move wins is this reading, rendered. Two of the four
+     * declarations the audit found wrong, both wrong in the direction that
+     * suppresses a question about something that decides an area.
+     */
+    ask: { materialToDecision: true, askWhenStale: true },
     reliability: { owner: 1, derived: 0.45, device: 0.3, model: 0.25 },
   },
   {
@@ -563,17 +608,39 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
      * give it those; it only made the app claim a participation the machinery
      * discarded one line later, in `numericValue`.
      *
-     * The answer is not to invent a scale for it. Mood, stress, confidence and
-     * motivation are four different things, and one number standing in for all
-     * four is the wellness score the owner rules out. Which dimensions exist
-     * here is his to say, and until he says, this stays what it actually is: a
-     * sensitive thing he tells the app, asked for when it matters, shown as he
-     * said it, and not pretended to be a trend.
+     * The answer was never to invent a scale for it. Mood, stress, confidence
+     * and motivation are four different things, and one number standing in for
+     * all four is the wellness score the owner rules out.
      *
-     * Open question for the owner. Nothing else about this concept changes.
+     * ## The open question is closed — correction 3.15
+     *
+     * This paragraph used to end *"which dimensions exist here is his to say,
+     * and until he says… Open question for the owner."* **D-166 answered it on
+     * 2026-08-27**, and the comment went on describing a live question in the
+     * exact place a later reader would come to find out whether it was still
+     * one. The six dimensions the owner named are separate concepts in this
+     * registry, each independently unknown, and **nothing anywhere composites
+     * them** — that is the whole point of six rather than one.
+     *
+     * ## What this concept still is
+     *
+     * The words he types, kept as he typed them. It coexists with the six
+     * (D-166 requires that), it is shown on its page as he said it, and it is
+     * not pretended to be a trend.
+     *
+     * ## And what it stopped claiming — AUD-0041, AUD-0011(c)
+     *
+     * `materialToDecision: true` with **no question in the catalogue and no
+     * reader anywhere** is the failure §13B names by name: the app held three
+     * positions on one concept and showed the owner the two that contradict —
+     * the Emotional page inviting him to add it, the registry saying an answer
+     * matters, and the Life screen saying nothing is asking him to. Measured
+     * against the decision path, no reading of this moves anything, so the flag
+     * now says so. It is the honest half of AUD-0011(c) rather than the half
+     * that wires free text into a score.
      */
     privacy: 'sensitive',
-    ask: { materialToDecision: true, askWhenStale: true },
+    ask: { materialToDecision: false, askWhenStale: false },
     reliability: { owner: 1, device: 0.4, derived: 0.35, model: 0.2 },
   },
   {

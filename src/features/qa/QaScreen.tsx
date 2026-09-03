@@ -34,9 +34,16 @@ import {
 } from '../../intelligence/engine'
 import { REBUILD_PHASE } from '../../platform/buildInfo'
 import { nextGuideStep } from '../../intelligence/guide'
+import { questionFor } from '../../intelligence/questions'
+import type { ConceptId } from '../../domain/windows'
 import { SCENARIOS } from '../../synthetic/scenarios'
 import { useMemory } from '../memory/memoryContext'
 import './QaScreen.css'
+
+/** Whether the guide has a question that could actually produce this answer. */
+function isAskable(entry: { readonly concept: ConceptId }): boolean {
+  return questionFor(entry.concept) !== undefined
+}
 
 /**
  * The QA laboratory (canonical plan sections 31 and 35).
@@ -626,18 +633,53 @@ export function QaScreen() {
         })}
       </Collapsible>
 
-      <Collapsible title="What it would ask" count={facts.questions.length}>
-        {facts.questions.length === 0 ? (
+      {/*
+        Two lists, because they were one and the one said something untrue —
+        AUD-0041.
+
+        `facts.questions` is every concept the app would like an answer to. The
+        guide can only ask what the `QUESTIONS` catalogue holds, so a concept
+        that is material and has no entry there was being reported as something
+        the app would ask about while nothing could ever put it on screen. That
+        is the third of the app's three positions on `emotionalState` — the
+        registry saying an answer matters, the page inviting one, and the guide
+        never asking — and it is not fixed by hiding the row. The rest are real
+        and are supplied by naming the thing on its own page: a learning topic
+        and a week's direction are not multiple-choice answers.
+      */}
+      <Collapsible title="What it would ask" count={facts.questions.filter(isAskable).length}>
+        {facts.questions.filter(isAskable).length === 0 ? (
           <p className="note">Nothing worth asking right now.</p>
         ) : (
           <Rows>
-            {facts.questions.map((entry) => (
+            {facts.questions.filter(isAskable).map((entry) => (
               <Row
                 key={entry.concept}
                 label={entry.definition.label}
                 value={coreDomains.labelFor(entry.definition.domain)}
               />
             ))}
+          </Rows>
+        )}
+      </Collapsible>
+
+      <Collapsible
+        title="Wanted, and named rather than asked"
+        count={facts.questions.filter((entry) => !isAskable(entry)).length}
+      >
+        {facts.questions.filter((entry) => !isAskable(entry)).length === 0 ? (
+          <p className="note">Nothing outstanding that has to be typed.</p>
+        ) : (
+          <Rows>
+            {facts.questions
+              .filter((entry) => !isAskable(entry))
+              .map((entry) => (
+                <Row
+                  key={entry.concept}
+                  label={entry.definition.label}
+                  value={`${coreDomains.labelFor(entry.definition.domain)} — on its own page`}
+                />
+              ))}
           </Rows>
         )}
       </Collapsible>

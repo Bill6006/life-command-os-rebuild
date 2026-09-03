@@ -162,10 +162,29 @@ describe('QA-82-014 — the reported reproduction, and its siblings', () => {
     expect(social.refresh).not.toBe('an-action')
     expect(lifeLine(social)).not.toContain(PROMISE)
     expect(run.proposals.filter((move) => move.domain === DOMAIN.social)).toEqual([])
-    // And it says the one true thing instead of the false one.
-    expect(standingFor(social).note).toBe(
-      'Nothing the app can do on its own will bring these back.',
-    )
+    /*
+     * And it says a true thing instead of the false one — but not the same true
+     * thing it used to, and the change is AUD-0041.
+     *
+     * QA-82-014's defect was a promise that *"something worth doing here may
+     * come up on Now"* in an area with no move behind it. Every clause above is
+     * that finding and every one still holds: Social has no refreshing move, is
+     * not routed to an action, and proposes nothing.
+     *
+     * What moved is the *other* route. This used to read "Nothing the app can
+     * do on its own will bring these back", and that was false for a reason
+     * nobody had noticed: the way back is a question about social energy, the
+     * guide has had that question since Phase 2, and the only thing stopping it
+     * was `socialEnergy` declaring `materialToDecision: false` — a declaration
+     * the audit found wrong and this phase measures rather than believes. The
+     * denial was the registry's mistake reaching the owner as a statement about
+     * his life.
+     *
+     * `qa-82-round-11.test.ts` keeps the genuine no-route case, on Money, which
+     * is the area that really has neither a move nor a question (AUD-0012).
+     */
+    expect(standingFor(social).note).toBe('The app will try to bring these back on its own.')
+    expect(social.refresh).toBe('a-question')
   })
 
   for (const [domain, cases] of [
