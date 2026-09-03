@@ -263,6 +263,30 @@ export const CONCEPT = {
   childHere: conceptId('family.child-here-now'),
   custodyArrangement: conceptId('family.custody-arrangement'),
   learningTopic: conceptId('career.current-learning-topic'),
+  /**
+   * How much of *this part of the day* is actually free — AUD-0006.
+   *
+   * The concept the audit calls the worst naming seam in the model. It was
+   * `career.usable-time-tonight`: not a career fact — it gates whether he can
+   * spend thirty minutes with his daughter — not about the evening — it is read
+   * at half past six in the morning — and filed on the Career page, so his route
+   * to correcting how much time he has ran through the wrong life area.
+   *
+   * `time.` is a namespace of its own because the quantity belongs to no domain,
+   * and AUD-0004 has already made *time before the next obligation* a second,
+   * distinct quantity that will want the same namespace.
+   */
+  freeNow: conceptId('time.free-now'),
+  /**
+   * The id it was stored under, kept readable — AUD-0006's migration rule.
+   *
+   * **Add-new plus alias-old, never a rewrite of history** (plan section 30,
+   * D-101). Every observation the owner has ever given about his free time
+   * carries this id, and a rename in place would either orphan them or edit
+   * what he said. {@link SUPERSEDED_CONCEPTS} is the alias table and
+   * `resolveFacts` reads through it, so an old record and a new one answer the
+   * same question and there is exactly one belief behind them.
+   */
   usableTimeTonight: conceptId('career.usable-time-tonight'),
   cashBuffer: conceptId('money.cash-buffer-state'),
   socialEnergy: conceptId('social.energy'),
@@ -508,18 +532,28 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     reliability: { owner: 1, derived: 0.7, device: 0.5, model: 0.45 },
   },
   {
-    id: CONCEPT.usableTimeTonight,
+    id: CONCEPT.freeNow,
     purpose: 'how much time there is',
     /*
-     * The label, and only the label — AUD-0002.
+     * The label was corrected first, and now the rest of it — AUD-0002, then
+     * AUD-0006.
      *
-     * The stored id stays `career.usable-time-tonight`, because renaming a
-     * concept id is a migration and belongs with AUD-0006 rather than in a copy
-     * pass. What was owner-visible was the label, on the evidence panel and on
-     * the Career page, and it named an evening at every hour of the day.
+     * The copy pass fixed what was owner-visible: it named an evening at every
+     * hour of the day. What it deliberately left was the id and the filing,
+     * because renaming a concept is a migration rather than a copy change. This
+     * is that migration: the id says what the quantity is, the domain is no
+     * longer Career, and the old id still resolves through
+     * {@link SUPERSEDED_CONCEPTS}.
+     *
+     * Filed under Direction because the audit's own suggestion is *"the
+     * Now/Direction surface, or a small 'How your day is set up' group"*, and
+     * Direction is the page that already carries how the day is shaped. It is
+     * not a claim that free time is an identity question; it is the least wrong
+     * home the eleven-domain registry has, and it is a great deal less wrong
+     * than filing it under what he is studying.
      */
     label: 'Usable time now',
-    domain: DOMAIN.career,
+    domain: DOMAIN.direction,
     /*
      * Free minutes in *this* part of the day, so it expires with the part of
      * the day rather than four hours after it was said — AUD-0005. An answer
@@ -542,7 +576,27 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     standing: true,
     tracked: 'number',
     privacy: 'sensitive',
-    ask: { materialToDecision: false, askWhenStale: true },
+    /*
+     * The audit's third wrong declaration, and the one that could not be
+     * corrected until money had a history — AUD-0041, AUD-0012.
+     *
+     * It gates the money generator, and the generator's caution is right in
+     * principle: *"needs a goal that exists, never a generic check your
+     * budget."* What was wrong is that the precondition was unreachable — **no
+     * shipped history held a financial goal at all** — so the measurement in
+     * `reach-material.test.ts` correctly said no reading of this changed
+     * anything, and the flag correctly said so too. `money-item-due` is the
+     * history that makes it false, and this is the flag following the
+     * measurement rather than the other way round.
+     *
+     * **Material and not askable, deliberately.** AUD-0012 suggests a question
+     * when a due date is near; §13B's lock is that daily push burden must not
+     * increase, and this phase measured what a new question costs. The cash
+     * buffer is corrected on the Money page, the way a learning topic is named
+     * on Career and a week's direction is set on Life — and the domain reaches
+     * a decision without it, which is what AUD-0012 was actually about.
+     */
+    ask: { materialToDecision: true, askWhenStale: true },
     // The second case D-059 names: a financial record of a balance beats an
     // estimate of it, and this is the only concept in the registry where the
     // owner sits below three other sources.
@@ -1008,6 +1062,29 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     ask: { materialToDecision: false, askWhenStale: false },
   },
 ]
+
+/**
+ * Concept ids that have been renamed, and what they resolve to now — AUD-0006.
+ *
+ * The whole of the migration rule in one table. A stored record keeps the id it
+ * was written with — nothing rewrites history (plan section 30, D-101) — and
+ * `resolveFacts` reads through this so that an answer given last year and one
+ * given today are the same belief rather than two half-empty ones.
+ *
+ * **It is one-way and it is not a synonym list.** A record may carry a
+ * superseded id; nothing may write one. `tests/unit/registries.test.ts` fails
+ * the build if a superseded id ever appears in the registry as a concept in its
+ * own right, and `tests/contract/round-trip.test.ts` restores a backup written
+ * before the rename and asserts one belief comes out.
+ */
+export const SUPERSEDED_CONCEPTS: ReadonlyMap<ConceptId, ConceptId> = new Map([
+  [CONCEPT.usableTimeTonight, CONCEPT.freeNow],
+])
+
+/** The id this record's concept resolves to today. */
+export function currentConcept(concept: ConceptId): ConceptId {
+  return SUPERSEDED_CONCEPTS.get(concept) ?? concept
+}
 
 export interface ConceptRegistry {
   all(): readonly ConceptDefinition[]

@@ -11,6 +11,9 @@ import {
 import { evidenceSourceOf, isOwnerStated } from '../../src/domain/records'
 import { milestoneEntityKind, milestoneQuestion } from '../../src/intelligence/authoring'
 import { generateCandidates } from '../../src/intelligence/candidates'
+import { assembleSituation } from '../../src/intelligence/situation'
+import { snapshotFromWire } from '../../src/memory/snapshot'
+import { buildView } from '../../src/memory/view'
 import { describeDestination, missingParts } from '../../src/intelligence/destinations'
 import { outstandingPrompts } from '../../src/intelligence/discovery'
 import {
@@ -1049,15 +1052,44 @@ describe('QA-91-002 — taking a reading back takes back what it caused', () => 
     ).toEqual([])
   })
 
-  it('narrows the money generator over a library that holds no financial goal at all', () => {
-    const found: string[] = []
-    for (const scenario of SCENARIOS) {
+  it('narrows the money generator without changing the one history that has a goal', () => {
+    /*
+     * **This asserted an emptiness and the emptiness was the finding.** The
+     * claim was that no shipped history holds a `financial-goal` at all, which
+     * was true and was exactly AUD-0012: money existed only as a page, the
+     * generator's precondition was unreachable, and the QA laboratory could not
+     * even show that it could not. Routing 92 added `money-item-due`, so the
+     * emptiness is gone and the property it was standing in for has to be
+     * asserted directly.
+     *
+     * The property is that the narrowing — an **active goal** naming the entity,
+     * rather than any record referring to it — does not remove a money move
+     * from a history where the goal is genuinely open. That is what the
+     * tournament instrument could not tolerate being moved (D-137, D-138) and
+     * it is now measurable rather than vacuous.
+     */
+    const withGoal = SCENARIOS.filter((scenario) => {
       const entities = scenario.build().entities as readonly ({ kind?: string } | null)[]
-      if (entities.some((entity) => entity !== null && entity.kind === 'financial-goal')) {
-        found.push(scenario.id)
-      }
+      return entities.some((entity) => entity !== null && entity.kind === 'financial-goal')
+    })
+    expect(
+      withGoal.map((scenario) => scenario.id),
+      'money is dormant in the library again — AUD-0012 undone',
+    ).toEqual(['money-item-due'])
+
+    for (const scenario of withGoal) {
+      const loaded = snapshotFromWire(scenario.build())
+      expect(loaded.loaded).toBe(true)
+      if (!loaded.loaded) throw new Error('unreachable')
+      const moment = { now: scenario.now, zone: scenario.zone, weekStartsOn: 1 as const }
+      const situation = assembleSituation(buildView(loaded.snapshot, moment), moment)
+      expect(
+        generateCandidates(situation)
+          .filter((candidate) => candidate.semantics.domain === DOMAIN.money)
+          .map((candidate) => candidate.semantics.target.verb),
+        `${scenario.id}: the open goal reaches no money move`,
+      ).toContain('handle-money-item')
     }
-    expect(found, 'the narrowing is equivalent on everything that ships').toEqual([])
   })
 })
 

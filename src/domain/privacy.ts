@@ -249,3 +249,44 @@ export function permissionDefinition(id: PermissionId): (typeof PERMISSIONS)[num
 export function mayRaiseUnasked(privacy: PrivacyClass): boolean {
   return privacy !== 'private'
 }
+
+/**
+ * Whether a document the owner scoped may describe material of this class —
+ * correction 3.11, the last of the sites.
+ *
+ * ## The fourth question, and why it is a fourth function
+ *
+ * There are four separate questions about a privacy class and each has its own
+ * answer in this file:
+ *
+ * - **May the engine know this?** — {@link mayReasonFrom}, and the owner's
+ *   permission answers it (D-167).
+ * - **May the app bring it up unasked?** — {@link mayRaiseUnasked}, and the
+ *   answer is no whatever the permission says.
+ * - **May the owner see the detail here?** — {@link mayShowDetail}, which is
+ *   about the surface he is looking at.
+ * - **May a document he is composing describe it?** — this. It is the one
+ *   question where the answer depends on something the owner *chose for this
+ *   document* rather than on a standing setting, which is why it takes the
+ *   choice as an argument and nothing else does.
+ *
+ * ## What it closes
+ *
+ * Correction 3.11 counted the sites that decided the private class in place and
+ * found five. Routing 91's package 91.3 closed the four in `coverage.ts` and
+ * `insights.ts` by making {@link mayRaiseUnasked} the chokepoint. The three
+ * left were in the export composer, and they were left because they are a
+ * different question — which is a reason to name the question, not a reason to
+ * keep answering it in three places.
+ *
+ * `tests/unit/architecture-guards.test.ts` now fails the build if the string
+ * `'private'` is compared to a privacy class anywhere but this file.
+ */
+export function mayDescribeInDocument(privacy: PrivacyClass, includesPrivate: boolean): boolean {
+  return includesPrivate || privacy !== 'private'
+}
+
+/** Whether this belongs to the private section specifically. */
+export function belongsToPrivateSection(privacy: PrivacyClass): boolean {
+  return privacy === 'private'
+}

@@ -119,7 +119,7 @@ describe('G-009 — a question only when it would change something', () => {
   it('asks about the unknowns that matter', () => {
     const asked = view.facts.questions.map((entry) => entry.concept)
     expect(asked).toContain(CONCEPT.energy)
-    expect(asked).toContain(CONCEPT.usableTimeTonight)
+    expect(asked).toContain(CONCEPT.freeNow)
   })
 
   it('does not ask about the unknowns that do not', () => {
@@ -135,14 +135,17 @@ describe('G-009 — a question only when it would change something', () => {
      * what the code does, and this test was reading the declaration back.
      * `tests/synthetic/reach-material.test.ts` now measures it instead.
      *
-     * The cash buffer stays, and it stays for a reason that is itself a
-     * finding: `moneyCandidates` needs a financial goal to exist and **no
-     * shipped history holds one** (AUD-0012), so today there is genuinely
-     * nothing an answer about it could change. When money has an entry route
-     * that line will have to move too, and the measurement is what will say so.
+     * The cash buffer moved too, in the same commit that gave money a history.
+     * It gates the money generator, the generator needs a goal, and **no
+     * shipped history held one** — so until AUD-0012 there was genuinely
+     * nothing an answer about it could change and the measurement said so. Now
+     * there is, and the measurement says that instead.
+     *
+     * What is left are the two that genuinely change nothing: a free-text
+     * emotional reading nothing reads, and how a night felt, which is collected
+     * and trended and consulted by no generator, dimension or filter.
      */
     const asked = view.facts.questions.map((entry) => entry.concept)
-    expect(asked).not.toContain(CONCEPT.cashBuffer)
     expect(asked).not.toContain(CONCEPT.emotionalState)
     expect(asked).not.toContain(CONCEPT.sleepQuality)
   })

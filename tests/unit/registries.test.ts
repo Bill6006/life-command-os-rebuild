@@ -17,6 +17,7 @@ import {
   CONCEPT,
   coreConcepts,
   createConceptRegistry,
+  currentConcept,
   type TrackedReading,
 } from '../../src/domain/concepts'
 import {
@@ -135,11 +136,20 @@ describe('concepts', () => {
     expect(coreConcepts.definitionFor(CONCEPT.sleepQuality).freshness).toEqual({
       unit: 'this-local-day',
     })
-    // How much time there is is a fact about this part of the day, and it goes
-    // when the part of the day does.
-    expect(coreConcepts.definitionFor(CONCEPT.usableTimeTonight).freshness).toEqual({
+    /*
+     * How much time there is is a fact about this part of the day, and it goes
+     * when the part of the day does. Under its own id now — AUD-0006 renamed
+     * `career.usable-time-tonight` to `time.free-now`, and the old id resolves
+     * through `SUPERSEDED_CONCEPTS` rather than being registered twice.
+     */
+    expect(coreConcepts.definitionFor(CONCEPT.freeNow).freshness).toEqual({
       unit: 'this-block',
     })
+    expect(
+      coreConcepts.get(CONCEPT.usableTimeTonight),
+      'the superseded id is registered as a concept in its own right',
+    ).toBeUndefined()
+    expect(currentConcept(CONCEPT.usableTimeTonight)).toBe(CONCEPT.freeNow)
     expect(coreConcepts.definitionFor(CONCEPT.energy).freshness).toEqual({
       unit: 'elapsed',
       ms: 6 * 3_600_000,

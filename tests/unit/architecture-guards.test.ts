@@ -547,6 +547,50 @@ describe('nothing in the decision layer reads a fact around the situation — AU
  * through. A new explanation clause that wants to name a reading has to come
  * through the function that decides whether it may.
  */
+/**
+ * The private class is compared in exactly one file — correction 3.11.
+ *
+ * The correction counted the sites that decided the private class in place and
+ * found five: two in `coverage.ts`, three in `insights.ts`. Every one of them
+ * was correct, and that was the problem — *"private material is never raised
+ * unasked"* was a claim about five lines rather than a property of the code, and
+ * a sixth site would have been written the same way with nothing noticing.
+ *
+ * Routing 91's package 91.3 closed those five behind `mayRaiseUnasked`. Routing
+ * 92 closes the last three, in the export composer, which were left because they
+ * ask a different question — *may a document the owner scoped describe this?* —
+ * and the answer to that is now a named function beside the other three rather
+ * than a comparison repeated in three places.
+ *
+ * The guard is the shape rather than the count: the string `'private'` may be
+ * compared to a privacy class only in the file where the four questions are
+ * answered.
+ */
+describe('the private class is decided in one file — correction 3.11', () => {
+  /** Comparing something to the class, rather than naming an export section. */
+  const COMPARES_THE_CLASS = /(privacy|class)\w*\s*(===|!==)\s*'private'|'private'\s*(===|!==)/
+
+  it('compares it nowhere else', () => {
+    const offenders: string[] = []
+    for (const dir of ['src/domain', 'src/memory', 'src/intelligence', 'src/features']) {
+      for (const file of sourceFiles(dir)) {
+        if (repoPath(file).endsWith('src/domain/privacy.ts')) continue
+        if (COMPARES_THE_CLASS.test(readCode(file))) offenders.push(repoPath(file))
+      }
+    }
+    expect(
+      offenders,
+      'the private class was decided somewhere other than where the rules live',
+    ).toEqual([])
+  })
+
+  it('is a rule with the permitted case still in it', () => {
+    // The one file that may compare it still does, so a guard that had stopped
+    // matching anything fails here rather than passing quietly.
+    expect(COMPARES_THE_CLASS.test(readCode(join(ROOT, 'src', 'domain', 'privacy.ts')))).toBe(true)
+  })
+})
+
 describe('an explanation cannot render a reading without the class deciding — D-167', () => {
   it('keeps the undiscreet renderer out of the decision layer', () => {
     const offenders: string[] = []

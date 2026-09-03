@@ -3,6 +3,7 @@ import type { CanonicalRecord } from '../../domain/records'
 import type { SemanticEntity } from '../../domain/entities'
 import { isPlainObject, type MalformedRow } from '../../domain/validation'
 import type { StoreSnapshot } from '../../memory/store'
+import { belongsToPrivateSection } from '../../domain/privacy'
 
 /**
  * The record a document is allowed to be composed from (D-150, QA-82-007).
@@ -53,12 +54,12 @@ import type { StoreSnapshot } from '../../memory/store'
 
 /** Whether this record belongs to the area a private-off document withholds. */
 export function isWithheldRecord(record: CanonicalRecord): boolean {
-  return record.privacy === 'private' || record.domains.includes(DOMAIN.privateHealth)
+  return belongsToPrivateSection(record.privacy) || record.domains.includes(DOMAIN.privateHealth)
 }
 
 /** The same question of an entity, which carries the same two facts. */
 export function isWithheldEntity(entity: SemanticEntity): boolean {
-  return entity.privacy === 'private' || entity.domain === DOMAIN.privateHealth
+  return belongsToPrivateSection(entity.privacy) || entity.domain === DOMAIN.privateHealth
 }
 
 /**

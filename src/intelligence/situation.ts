@@ -1704,7 +1704,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
   )
 
   const capacity = assembleCapacity(view, moment, readings)
-  const usableMinutes = narrowKnowledge(readings.get(CONCEPT.usableTimeTonight), minutesValue)
+  const usableMinutes = narrowKnowledge(readings.get(CONCEPT.freeNow), minutesValue)
   /*
    * The arrangement, read as the arrangement — QA-82-001.
    *

@@ -51,7 +51,10 @@ interface Run {
   readonly scenario: string
   readonly days: number
   readonly coverage: readonly DomainCoverage[]
+  /** Everything proposed in the area, whichever generator thought of it. */
   readonly proposals: readonly { readonly domain: LifeDomainId; readonly verb: string }[]
+  /** Only what the coverage generator itself produced. */
+  readonly refreshes: readonly { readonly domain: LifeDomainId; readonly verb: string }[]
 }
 
 function runAt(
@@ -74,7 +77,29 @@ function runAt(
   const decision = decide(view, moment)
   return {
     coverage: situation.coverage.domains,
-    proposals: decision.trace.proposed
+    /*
+     * Every proposal in the area, whichever generator thought of it — routing
+     * 92.
+     *
+     * This filtered to the coverage generator, and that was equivalent right up
+     * until a domain had a generator of its own with something to say.
+     * `generateCandidates` dedupes by `verb/object` and runs the coverage
+     * generator **last** precisely so that a generator with live evidence wins
+     * the proposal — its own comment says *"two generators reaching the same
+     * move is agreement, not two options"*. So on `money-item-due` the money
+     * generator proposes the move, the coverage duplicate is folded away, and a
+     * filter on the coverage generator reported that Life had promised
+     * something nothing offered.
+     *
+     * The promise Life makes is *"something worth doing here may come up on
+     * Now"*, which is about the area rather than about which module thought of
+     * it. That is what is counted.
+     */
+    proposals: decision.trace.proposed.map((move) => ({
+      domain: move.domain,
+      verb: String(move.verb),
+    })),
+    refreshes: decision.trace.proposed
       .filter((move) => move.generator === 'coverage')
       .map((move) => ({ domain: move.domain, verb: String(move.verb) })),
   }
@@ -240,7 +265,7 @@ describe('QA-82-014 — the opposite errors are refused too', () => {
     const supported = new Set<LifeDomainId>(domainsWithRefreshingMove())
     expect([...supported].sort()).toEqual([DOMAIN.career, DOMAIN.home, DOMAIN.money].sort())
     for (const run of CORPUS) {
-      for (const move of run.proposals) {
+      for (const move of run.refreshes) {
         expect(supported.has(move.domain), `${run.scenario} +${run.days}d: ${move.domain}`).toBe(
           true,
         )
@@ -252,7 +277,7 @@ describe('QA-82-014 — the opposite errors are refused too', () => {
     // No route was quietly deleted to make the invariant above pass.
     const reached = new Map<LifeDomainId, Set<string>>()
     for (const run of CORPUS) {
-      for (const move of run.proposals) {
+      for (const move of run.refreshes) {
         const verbs = reached.get(move.domain) ?? new Set<string>()
         verbs.add(move.verb)
         reached.set(move.domain, verbs)
@@ -308,7 +333,7 @@ describe('QA-82-014 — the opposite errors are refused too', () => {
     if (home === undefined) throw new Error('unreachable')
     expect(home.refresh).not.toBe('an-action')
     expect(lifeLine(home)).not.toContain(PROMISE)
-    expect(asPrivate.proposals.filter((move) => move.domain === DOMAIN.home)).toEqual([])
+    expect(asPrivate.refreshes.filter((move) => move.domain === DOMAIN.home)).toEqual([])
   })
 })
 
@@ -343,7 +368,7 @@ describe('QA-82-014 — a subject of the wrong kind is not a subject', () => {
     if (home === undefined) throw new Error('unreachable')
     expect(home.refresh).not.toBe('an-action')
     expect(lifeLine(home)).not.toContain(PROMISE)
-    expect(run.proposals.filter((move) => move.domain === DOMAIN.home)).toEqual([])
+    expect(run.refreshes.filter((move) => move.domain === DOMAIN.home)).toEqual([])
   })
 
   it('still promises Home a move while the place is there', () => {
@@ -356,6 +381,6 @@ describe('QA-82-014 — a subject of the wrong kind is not a subject', () => {
     expect(home?.refresh).toBe('an-action')
     if (home === undefined) throw new Error('unreachable')
     expect(lifeLine(home)).toContain(PROMISE)
-    expect(run.proposals.some((move) => move.domain === DOMAIN.home)).toBe(true)
+    expect(run.refreshes.some((move) => move.domain === DOMAIN.home)).toBe(true)
   })
 })

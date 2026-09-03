@@ -1,4 +1,4 @@
-import type { ConceptDefinition, ConceptRegistry } from '../domain/concepts'
+import { currentConcept, type ConceptDefinition, type ConceptRegistry } from '../domain/concepts'
 import type { RecordId } from '../domain/ids'
 import {
   applyFreshness,
@@ -174,7 +174,16 @@ export function resolveFacts(input: FactResolutionInput): FactState {
 
   for (const record of history.effective) {
     if (!bearsConcept(record)) continue
-    const bucket = bucketFor(record.concept)
+    /*
+     * Through the alias table — AUD-0006's migration rule.
+     *
+     * A record keeps the id it was written with, because nothing rewrites
+     * history. What resolves is the concept it is *about*, so an answer given
+     * under `career.usable-time-tonight` and one given under `time.free-now` are
+     * one belief with one freshness window rather than two half-empty ones.
+     */
+    const concept = currentConcept(record.concept)
+    const bucket = bucketFor(concept)
     bucket.considered.push(record.id)
 
     if (record.occurredAt > now) {
@@ -188,7 +197,7 @@ export function resolveFacts(input: FactResolutionInput): FactState {
       continue
     }
 
-    const window = concepts.freshnessFor(record.concept)
+    const window = concepts.freshnessFor(concept)
     const aged = applyFreshness(knowledgeFromRecord(record, concepts), now, window, zone)
     if (aged.state === 'stale') bucket.staleOnes.push(record)
     else bucket.applicable.push(record)

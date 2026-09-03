@@ -2,7 +2,12 @@ import type { ConceptDefinition } from '../../domain/concepts'
 import { countOf } from '../../domain/counts'
 import { DOMAIN, type LifeDomainId } from '../../domain/domains'
 import { describeUnknown } from '../../domain/knowledge'
-import { FULL_EXPORT, type DisplayPolicy } from '../../domain/privacy'
+import {
+  belongsToPrivateSection,
+  FULL_EXPORT,
+  mayDescribeInDocument,
+  type DisplayPolicy,
+} from '../../domain/privacy'
 import type { CanonicalRecord, CommitmentWindowRecord } from '../../domain/records'
 import { describeCommitmentWindow } from '../../domain/schedule'
 import {
@@ -206,7 +211,7 @@ export function recordsInScope(
   const all = request.situation.view.history.effective
   const includesPrivate = chosen.includes('private')
   const allowed = (record: CanonicalRecord): boolean =>
-    includesPrivate || record.privacy !== 'private'
+    mayDescribeInDocument(record.privacy, includesPrivate)
 
   if (chosen.length === 0) return []
   if (chosen.some((id) => SUMMARISES_EVERYTHING.includes(id))) return all.filter(allowed)
@@ -238,7 +243,7 @@ export function recordsInScope(
       wanted.add(record)
       continue
     }
-    if (chosen.includes('private') && record.privacy === 'private') {
+    if (chosen.includes('private') && belongsToPrivateSection(record.privacy)) {
       wanted.add(record)
       continue
     }
@@ -282,8 +287,8 @@ function mayName(domain: LifeDomainId, header: ExportHeader): boolean {
  */
 function mayDescribeConcept(definition: ConceptDefinition, header: ExportHeader): boolean {
   return (
-    header.privateIncluded ||
-    (definition.privacy !== 'private' && mayName(definition.domain, header))
+    mayDescribeInDocument(definition.privacy, header.privateIncluded) &&
+    (header.privateIncluded || mayName(definition.domain, header))
   )
 }
 
@@ -859,7 +864,9 @@ function correctionsSection(request: ExportRequest): readonly string[] {
 function privateSection(request: ExportRequest): readonly string[] {
   const { situation } = request
   const context = describeContext(situation, FULL_EXPORT)
-  const records = situation.view.history.effective.filter((record) => record.privacy === 'private')
+  const records = situation.view.history.effective.filter((record) =>
+    belongsToPrivateSection(record.privacy),
+  )
 
   if (records.length === 0) {
     return [

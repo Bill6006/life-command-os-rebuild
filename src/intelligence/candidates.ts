@@ -445,7 +445,7 @@ const careerCandidates: Generator = (situation) => {
   const behind = behindOn(situation, DOMAIN.career)
   const rough = roughOutcomesFor(situation, ref)
   const evidence = [...basisOf(situation.learningTopic), ...rough]
-  const leansOn: readonly ConceptId[] = [CONCEPT.learningTopic, CONCEPT.usableTimeTonight]
+  const leansOn: readonly ConceptId[] = [CONCEPT.learningTopic, CONCEPT.freeNow]
   const out: Candidate[] = []
 
   const base = {
@@ -529,7 +529,7 @@ const fatherhoodCandidates: Generator = (situation) => {
         object: childRef,
         trigger: 'opportunity-window',
         evidence,
-        leansOn: [CONCEPT.childPresent, CONCEPT.usableTimeTonight],
+        leansOn: [CONCEPT.childPresent, CONCEPT.freeNow],
         proposedBecause: 'she is here and the evening has room in it',
       },
       situation,
@@ -612,7 +612,7 @@ const homeCandidates: Generator = (situation) => {
         object: ref,
         trigger: 'constraint-active',
         evidence: basisOf(situation.homeFriction),
-        leansOn: [CONCEPT.homeFriction, CONCEPT.usableTimeTonight],
+        leansOn: [CONCEPT.homeFriction, CONCEPT.freeNow],
         proposedBecause: 'a small friction here costs the next few evenings',
       },
       situation,

@@ -29,6 +29,7 @@ import { ImportPanel } from './ImportPanel'
 import { readRemembered, writeRemembered } from './rememberedSelection'
 import { copyText, downloadText, readFile } from './transfer'
 import './DataScreen.css'
+import { belongsToPrivateSection } from '../../domain/privacy'
 
 /**
  * Data — exports, backup and restore (canonical plan sections 29 and 52).
@@ -274,7 +275,7 @@ export function DataScreen() {
               <li key={section.id}>
                 <label
                   className={
-                    section.privacy === 'private'
+                    belongsToPrivateSection(section.privacy)
                       ? 'data-section data-section--private'
                       : 'data-section'
                   }

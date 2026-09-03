@@ -90,7 +90,7 @@ export const QUESTIONS: readonly QuestionSpec[] = [
     ],
   },
   {
-    concept: CONCEPT.usableTimeTonight,
+    concept: CONCEPT.freeNow,
     prompt: () => 'How much time have you got?',
     options: (situation) => [
       { id: 'sliver', label: '15 minutes', value: { type: 'duration', minutes: 15 } },

@@ -2098,13 +2098,30 @@ function goalTrajectoryCards(situation: Situation): readonly Built[] {
     const trajectory = describeGoalTrajectory(goal)
     if (trajectory === undefined) continue
 
-    const included: EvidenceLine[] = goal.parts.map((part) => ({
-      record: goal.source,
-      when: situation.dayId,
-      text: `${situation.entities.labelFor(part.ref) ?? part.ref.id} — ${
-        part.covered ? 'has had a session' : 'no session yet'
-      }`,
-    }))
+    /*
+     * A goal with no named pieces still cites the goal — routing 92.
+     *
+     * The lines were built from `goal.parts`, and most goals have none: the
+     * model has to work with an empty list (AUD-0021 says so in as many words).
+     * With no lines the card cited no record, `withSources` had nothing to
+     * resolve, and the card reached the owner claiming no origin at all — which
+     * `imported-origin.test.ts` calls a defect and could not catch until a
+     * history held a goal with a horizon and no pieces. `money-item-due` is
+     * that history.
+     *
+     * The fallback line is the honest one: what this card rests on, when there
+     * are no pieces to list, is the goal he set and the date he put on it.
+     */
+    const included: EvidenceLine[] =
+      goal.parts.length > 0
+        ? goal.parts.map((part) => ({
+            record: goal.source,
+            when: situation.dayId,
+            text: `${situation.entities.labelFor(part.ref) ?? part.ref.id} — ${
+              part.covered ? 'has had a session' : 'no session yet'
+            }`,
+          }))
+        : [{ record: goal.source, when: situation.dayId, text: goal.statement }]
 
     out.push({
       // Below a contradiction and a coverage gap, above a stable pattern: a

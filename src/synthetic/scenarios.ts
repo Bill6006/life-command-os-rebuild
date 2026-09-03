@@ -654,7 +654,7 @@ function nightsOfSleep(rested: boolean): Pick<Scenario, 'zone' | 'now' | 'build'
         'observation',
         { occurredAt: kit.local('2026-09-15', '21:30'), domains: [DOMAIN.career] },
         {
-          concept: CONCEPT.usableTimeTonight,
+          concept: CONCEPT.freeNow,
           value: { type: 'duration', minutes: 60 },
           method: 'self-report',
         },
@@ -892,7 +892,7 @@ export function weekPointedAt(options: WeekDirectionOptions = {}): SnapshotWire 
     'observation',
     { occurredAt: kit.local('2026-09-15', '19:00'), domains: [DOMAIN.direction] },
     {
-      concept: CONCEPT.usableTimeTonight,
+      concept: CONCEPT.freeNow,
       value: { type: 'duration', minutes: 60 },
       method: 'self-report',
     },
@@ -1269,7 +1269,7 @@ function socialOpportunity(): Scenario {
         'observation',
         { occurredAt: kit.local('2026-07-11', '15:00'), domains: [DOMAIN.direction] },
         {
-          concept: CONCEPT.usableTimeTonight,
+          concept: CONCEPT.freeNow,
           value: { type: 'duration', minutes: 120 },
           method: 'self-report',
         },
@@ -1378,7 +1378,7 @@ function settledEvening(): Scenario {
         'observation',
         { occurredAt: kit.local('2026-03-19', '20:15'), domains: [DOMAIN.direction] },
         {
-          concept: CONCEPT.usableTimeTonight,
+          concept: CONCEPT.freeNow,
           value: { type: 'duration', minutes: 15 },
           method: 'self-report',
         },
@@ -1533,7 +1533,7 @@ function whatWorked(): Scenario {
         'observation',
         { occurredAt: kit.local('2026-02-19', '19:00'), domains: [DOMAIN.direction] },
         {
-          concept: CONCEPT.usableTimeTonight,
+          concept: CONCEPT.freeNow,
           value: { type: 'duration', minutes: 60 },
           method: 'self-report',
         },
@@ -1707,7 +1707,7 @@ function growthEvidence(): Scenario {
         'observation',
         { occurredAt: kit.local('2026-07-11', '16:00'), domains: [DOMAIN.direction] },
         {
-          concept: CONCEPT.usableTimeTonight,
+          concept: CONCEPT.freeNow,
           value: { type: 'duration', minutes: 120 },
           method: 'self-report',
         },
@@ -1875,7 +1875,7 @@ function careerGoneQuiet(): Scenario {
         'observation',
         { occurredAt: kit.local('2026-07-14', '19:00'), domains: [DOMAIN.direction] },
         {
-          concept: CONCEPT.usableTimeTonight,
+          concept: CONCEPT.freeNow,
           value: { type: 'duration', minutes: 60 },
           method: 'self-report',
         },
@@ -2095,7 +2095,7 @@ function aLongRun(): Scenario {
         'observation',
         { occurredAt: kit.local('2026-11-14', '19:00'), domains: [DOMAIN.direction] },
         {
-          concept: CONCEPT.usableTimeTonight,
+          concept: CONCEPT.freeNow,
           value: { type: 'duration', minutes: 60 },
           method: 'self-report',
         },
@@ -2476,7 +2476,7 @@ function observedEvenings(): Scenario {
         'observation',
         { occurredAt: kit.local('2026-05-02', '18:00'), domains: [DOMAIN.direction] },
         {
-          concept: CONCEPT.usableTimeTonight,
+          concept: CONCEPT.freeNow,
           value: { type: 'duration', minutes: 60 },
           method: 'self-report',
         },
@@ -2692,7 +2692,7 @@ function morningAfterBadNights(): Scenario {
         'observation',
         { occurredAt: kit.local('2026-09-15', '09:40'), domains: [DOMAIN.direction] },
         {
-          concept: CONCEPT.usableTimeTonight,
+          concept: CONCEPT.freeNow,
           value: { type: 'duration', minutes: 60 },
           method: 'self-report',
         },
@@ -2828,7 +2828,7 @@ function saturdayMorningOpen(): Scenario {
         'observation',
         { occurredAt: kit.local('2026-09-19', '06:35'), domains: [DOMAIN.direction] },
         {
-          concept: CONCEPT.usableTimeTonight,
+          concept: CONCEPT.freeNow,
           value: { type: 'duration', minutes: 120 },
           method: 'self-report',
         },
@@ -2945,7 +2945,7 @@ function growthMixedEvidence(): Scenario {
         'observation',
         { occurredAt: kit.local('2026-06-25', '18:00'), domains: [DOMAIN.direction] },
         {
-          concept: CONCEPT.usableTimeTonight,
+          concept: CONCEPT.freeNow,
           value: { type: 'duration', minutes: 90 },
           method: 'self-report',
         },
@@ -3293,7 +3293,7 @@ export function runningThread(options: ThreadScenarioOptions = {}): SnapshotWire
     'observation',
     { occurredAt: kit.local('2026-09-16', '19:30'), domains: [DOMAIN.direction] },
     {
-      concept: CONCEPT.usableTimeTonight,
+      concept: CONCEPT.freeNow,
       value: { type: 'duration', minutes: 60 },
       method: 'self-report',
     },
@@ -3474,7 +3474,7 @@ function friendshipGoneQuiet(): Scenario {
         'observation',
         { occurredAt: kit.local('2026-06-13', '15:45'), domains: [DOMAIN.career] },
         {
-          concept: CONCEPT.usableTimeTonight,
+          concept: CONCEPT.freeNow,
           value: { type: 'duration', minutes: 120 },
           method: 'self-report',
         },
@@ -3527,6 +3527,168 @@ function friendshipGoneQuiet(): Scenario {
   }
 }
 
+// ---------------------------------------------------------------------------
+// AUD-0012 — the domain that existed only as a page
+// ---------------------------------------------------------------------------
+
+/**
+ * An open money item, and an area that has genuinely run out of routes.
+ *
+ * ## What this history is for
+ *
+ * The audit's finding is that money is *effectively dormant and no scenario
+ * exercises it*. `moneyCandidates` needs a `financial-goal` to exist, no guide
+ * question touched money, and **no history in the library held a financial goal
+ * at all** — so the Money page said *"Cash buffer — Not known yet — Add this"*
+ * and that was the entire product surface for financial resilience. The QA
+ * laboratory could not even show that it could not.
+ *
+ * So this is the history where money is live: an item he is carrying — the car
+ * insurance — with a date on it, and a cash-buffer reading old enough to be
+ * worth re-asking. Both halves matter: the goal is what lets the generator
+ * speak, and the ageing reading is what makes the question worth a tap.
+ *
+ * ## And the second thing it carries, which is a different finding
+ *
+ * A faith reading from months ago. Faith has no refreshing move and no question
+ * — both correct, and D-170 records its passivity as interim — so it is the one
+ * area in the library that can go stale with nothing the app can do about it.
+ * That is what `needs-review` is for, and the sentence *"Nothing the app can do
+ * on its own will bring these back"* had no reachable case after AUD-0041
+ * corrected the social declaration. Shipped copy with no history behind it is
+ * copy nobody has read.
+ */
+function moneyItemDue(): Scenario {
+  const kit = createKit('MN', 'Europe/London', '2026-02-01T09:00:00Z')
+  const now = kit.local('2026-04-14', '10:30')
+  const item = entityRef('financial-goal', 'the car insurance')
+
+  return {
+    id: 'money-item-due',
+    title: 'The car insurance, still not dealt with',
+    summary:
+      'A Tuesday morning with one money item carried forward, a cash-buffer reading two months old, and a faith practice nothing can bring back.',
+    proves:
+      'AUD-0012 — money can reach a decision at all: an item that exists, a question the answer to which changes something, and a recommendation that names the item rather than a generic "check your budget".',
+    zone: kit.zone,
+    now,
+    build() {
+      const insurance = kit.entity({
+        kind: 'financial-goal',
+        label: 'the car insurance',
+        domain: DOMAIN.money,
+        privacy: 'sensitive',
+      })
+
+      const goal = kit.record(
+        'goal',
+        {
+          occurredAt: kit.local('2026-03-02', '20:00'),
+          domains: [DOMAIN.money],
+          entities: [item],
+        },
+        {
+          goal: item,
+          statement: 'Sort out the car insurance',
+          status: 'active',
+          targetWindow: {
+            kind: 'due',
+            earliest: kit.local('2026-04-18', '00:00'),
+            latest: kit.local('2026-04-18', '23:59'),
+          },
+        },
+      )
+
+      // Two months old, which is past the concept's own thirty-day horizon.
+      const buffer = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-02-10', '19:00'), domains: [DOMAIN.money] },
+        {
+          concept: CONCEPT.cashBuffer,
+          value: { type: 'number', value: 400, unit: 'pounds' },
+          method: 'self-report',
+        },
+      )
+
+      const nights = [7.5, 7.25, 8].map((value, offset) =>
+        kit.record(
+          'observation',
+          {
+            occurredAt: kit.local(`2026-04-${String(12 + offset).padStart(2, '0')}`, '07:00'),
+            domains: [DOMAIN.sleep],
+          },
+          {
+            concept: CONCEPT.sleepHours,
+            value: { type: 'number', value, unit: 'hours' },
+            method: 'self-report',
+          },
+        ),
+      )
+
+      const energy = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-04-14', '09:00'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.energy,
+          value: { type: 'scale', value: 3, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      /*
+       * Answered, because this history is about money.
+       *
+       * Without it the app opens on *"anything sore?"* — D-111's exception,
+       * correctly, because it is about to suggest something effortful — and the
+       * fixture demonstrates the exception rather than the domain it was built
+       * for. A morning where he has already said how he is is the ordinary
+       * case, and it is the one that leaves money on the screen.
+       */
+      const sore = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-04-14', '09:00'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.soreness,
+          value: { type: 'scale', value: 0, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      const time = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-04-14', '09:00'), domains: [DOMAIN.career] },
+        {
+          concept: CONCEPT.freeNow,
+          value: { type: 'duration', minutes: 60 },
+          method: 'self-report',
+        },
+      )
+
+      /*
+       * And the area with no way back. Faith's own freshness is a week, so a
+       * reading from February is long stale here — and there is no refreshing
+       * move for the domain and no question in the catalogue, which together
+       * are exactly what `needs-review` means.
+       */
+      const faith = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-02-08', '11:00'), domains: [DOMAIN.faith] },
+        {
+          concept: CONCEPT.faithPractice,
+          value: { type: 'text', value: 'went most Sundays over the winter' },
+          method: 'self-report',
+        },
+      )
+
+      return kit.document({
+        entities: [insurance],
+        records: [goal, buffer, ...nights, energy, sore, time, faith],
+        exportedAt: now,
+      })
+    },
+  }
+}
+
 export const SCENARIOS: readonly Scenario[] = [
   /*
    * The near-empty histories first, because that is the order D-161 puts them
@@ -3560,6 +3722,7 @@ export const SCENARIOS: readonly Scenario[] = [
   saturdayMorningOpen(),
   growthMixedEvidence(),
   friendshipGoneQuiet(),
+  moneyItemDue(),
 ]
 
 export function scenarioById(id: string): Scenario | undefined {

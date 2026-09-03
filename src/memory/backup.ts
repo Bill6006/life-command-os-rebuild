@@ -17,6 +17,7 @@ import {
   type SnapshotWire,
 } from './snapshot'
 import { stableStringify, type StoreSnapshot } from './store'
+import { belongsToPrivateSection } from '../domain/privacy'
 
 /**
  * A full backup, and the reading of one (canonical plan section 29).
@@ -265,7 +266,7 @@ function domainsOf(snapshot: StoreSnapshot): readonly LifeDomainId[] {
 }
 
 function holdsPrivate(snapshot: StoreSnapshot): boolean {
-  return snapshot.records.some((record) => record.privacy === 'private')
+  return snapshot.records.some((record) => belongsToPrivateSection(record.privacy))
 }
 
 export function summaryOf(

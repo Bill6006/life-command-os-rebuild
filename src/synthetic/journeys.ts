@@ -262,7 +262,7 @@ function threeDaysSinceThatWalk(): Scenario {
         'observation',
         { occurredAt: kit.local('2026-05-25', '18:22'), domains: [DOMAIN.career] },
         {
-          concept: CONCEPT.usableTimeTonight,
+          concept: CONCEPT.freeNow,
           value: { type: 'duration', minutes: 60 },
           method: 'self-report',
         },
