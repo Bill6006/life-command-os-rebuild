@@ -94,22 +94,37 @@ re-scope), and no canonical phase is renumbered.
 ## The campaign from here
 
 ```
-82 GREEN ─▶ adjudication ─▶ 83 ─▶ 84 ─▶ 90 ─▶ 91 ─▶ 92 ─▶ 93 ─▶ 94
+82 GREEN ─▶ adjudication ─▶ 83 ─▶ 84 ─▶ 90 ─▶ 91 ─▶ 92 ─▶ 93 ─▶ 94 ─▶ 95 ─▶ 96 ─▶ 97 ─▶ 101 ─▶ 102 ─▶ 103
 ```
 
 | Routing | Product / canonical name                                 | State, or what it waits on        |
 | ------- | -------------------------------------------------------- | --------------------------------- |
 | **83**  | The instrument, and the things that are untrue           | **GREEN — closed, round 2**       |
 | **84**  | What the owner is trying to become                       | **GREEN — bounded retest passed** |
-| **90**  | **Canonical Phase 9** — visual coherence, motion, mobile | **Not started — 84 is GREEN**     |
-| **91**  | Later intelligence — Reach, then Validity                | 90, and Q6's adjudication (D-172) |
-| **92**  | **Canonical Phase 10** — performance, PWA, reliability   | 91                                |
-| **93**  | **Canonical Phase 11** — adversarial hardening           | 92                                |
-| **94**  | **Canonical Phase 12** — release                         | 93                                |
+| **90**  | **Canonical Phase 9** — visual coherence, motion, mobile | **GREEN — closed, round 3**       |
+| **91**  | Semantic capture and clarification                       | **BUILT / QA DEFERRED**           |
+| **92**  | Reach — what the brain can see                           | **Next — dispatched**             |
+| **93**  | Validity — what it concludes from what it sees           | 92                                |
+| **94**  | Domains and progression                                  | 93                                |
+| **95**  | Advancement and revision                                 | 94                                |
+| **96**  | Expectation and reconciliation                           | 95                                |
+| **97**  | Longitudinal inference — D-172's mechanism               | 96                                |
+| **101** | **Canonical Phase 10** — performance, PWA, reliability   | 97                                |
+| **102** | **Canonical Phase 11** — adversarial hardening           | 101                               |
+| **103** | **Canonical Phase 12** — release                         | 102                               |
 
 Product phase names and routing integers are different things; plan section 43A
 is the only place they are reconciled, and the `**Phase:**` field carries the
 routing integer.
+
+**This table had drifted and was corrected here.** It still carried the map as it
+stood before the adjudication inserted Reach, Validity, progression, advancement,
+reconciliation and longitudinal inference between 91 and the canonical tail — so
+it named 92 as canonical Phase 10, which has been routing **101** since section
+43A was rewritten, and named 91 by a title that belongs to 92. The plan is
+authoritative; this is now what it says. Nothing is re-scoped by the correction
+(the plan's own rule: giving canonical Phase 10 the integer 101 does not change
+what it covers).
 
 **Routing 83 was briefly claimed by the adjudication round itself** — the held
 `NEXT_PROMPT.md` written at the Phase 82 closeout carried
@@ -122,8 +137,35 @@ superseded rather than reused.
 
 # Routing Phase 91 — Semantic capture and clarification
 
-**Status: YELLOW — READY FOR INDEPENDENT QA.** A builder conversation may not
-approve its own phase (D-077).
+**Status: BUILT / QA DEFERRED.**
+
+**This is not GREEN, and it is not a pass.** Independent QA has been **deferred
+by the owner** for this run — not skipped, not waived, and not passed. Nine
+rounds of independent Codex QA have read this phase and the tenth was written and
+dispatched; it has not run. D-077 is unchanged: a builder conversation may not
+approve its own phase, and **only independent QA may pass one**. Nothing in this
+record does.
+
+**What deferring did not defer: any mechanical gate.** Every gate this phase
+already required has been run against the checkpoint below and is reported in
+_Gates at the deferral_ — build, unit, contract, synthetic and adversarial tests,
+the guards, the privacy and copy scans, the whole browser matrix at three widths,
+checkpoint equivalence, CI, release integrity and the Android-style deployed
+gate. Deferring the human judgement does not lower the mechanical bar.
+
+**The brief for the deferred round is untouched.**
+[`qa/PHASE_91_QA_HANDOFF.md`](qa/PHASE_91_QA_HANDOFF.md) ends with the complete
+Round 10 retest handoff and has not been edited by this run — no report altered,
+no line added, nothing rewritten to look better than it is. Whenever independent
+QA resumes, it starts from that file exactly as Round 9 left it.
+
+**What that round would be walking into, stated plainly.** Nine rounds found
+defects in this phase and every one of them was in the same two instruments. The
+last round accepted the architecture and faulted its delivery; the round after it
+would be attacking a seam and a numeric boundary that have each been rebuilt
+once since anyone independent looked at them. This is the phase in the campaign
+with the most open surface, and deferring QA on it is the decision with the most
+riding on it.
 
 ## The finding this phase answers, in one sentence
 
