@@ -3347,6 +3347,186 @@ function beforeTheHouseIsUp(): Scenario {
   }
 }
 
+// ---------------------------------------------------------------------------
+// AUD-0013 + AUD-0047 — a friendship the record has stopped hearing about
+// ---------------------------------------------------------------------------
+
+/**
+ * Five months since anyone heard from him, and nobody has said he feels
+ * sociable.
+ *
+ * This is the history the social domain could not read. `socialCandidates`
+ * returned nothing unless social energy already read high, and social energy is
+ * only ever set by *"Up for people tonight?"* — so the one genuinely useful
+ * thing the domain could do, noticing a friendship going quiet, was
+ * unreachable. AUD-0013 calls that **unknown means no**, which is G-009's error
+ * living inside a generator.
+ *
+ * Two people are in it and only one of them is a candidate, which is the point.
+ * Both have gone quiet by the same amount. The last recorded contact with one
+ * of them went badly, and AUD-0047's rule is that quality **suppresses and
+ * never ranks** — so he is passed over in silence, is not ordered below the
+ * other, is not labelled, and appears in no sentence. Without the field the app
+ * would nudge a man toward somebody he has deliberately stepped back from.
+ *
+ * `emotional.need-for-company` is answered here and `social.energy` is not, and
+ * that gap is the whole of what D-166's dimension buys: a person can want
+ * company about without feeling like it.
+ */
+function friendshipGoneQuiet(): Scenario {
+  const kit = createKit('FQ', 'Europe/London', '2026-01-05T09:00:00Z')
+  const now = kit.local('2026-06-13', '16:00')
+
+  return {
+    id: 'friendship-gone-quiet',
+    title: 'Nobody has heard from him since January',
+    summary:
+      'A Saturday afternoon, nothing pressing, and two friendships the record has not heard about in five months.',
+    proves:
+      'AUD-0013 and AUD-0047 — unknown social energy is unknown rather than no, the reach-out names a real person with a real contact record behind them, and the relationship whose last contact went badly is passed over silently. Nothing about how he feels is pre-answered, so the whole path is visible: the app asks whether company would help, and the answer is what puts a person on the screen.',
+    zone: kit.zone,
+    now,
+    build() {
+      const sister = kit.entity({
+        kind: 'person',
+        label: 'Rachel',
+        domain: DOMAIN.social,
+        privacy: 'normal',
+      })
+      const oldFriend = kit.entity({
+        kind: 'person',
+        label: 'Dan',
+        domain: DOMAIN.social,
+        privacy: 'normal',
+      })
+      /*
+       * And somewhere he goes, so the history holds both halves of the social
+       * domain rather than only the new one. It is what makes *"up for people
+       * this afternoon?"* a question worth a tap here: one answer opens a
+       * conversation somewhere he actually goes, another leaves the quiet
+       * friendship as the only thing on offer, and a third closes the domain
+       * altogether. Without it the library had no history where that question
+       * could earn its place, which is a gap in the library rather than a fact
+       * about the concept.
+       */
+      const gym = kit.entity({
+        kind: 'place',
+        label: 'the climbing gym',
+        domain: DOMAIN.social,
+        privacy: 'normal',
+      })
+
+      const sisterRef = entityRef('person', 'Rachel')
+      const danRef = entityRef('person', 'Dan')
+
+      // Both quiet since January, and by the same amount.
+      const lastWithSister = kit.record(
+        'relationship-event',
+        {
+          occurredAt: kit.local('2026-01-11', '15:00'),
+          domains: [DOMAIN.social],
+          entities: [sisterRef],
+        },
+        { withEntity: sisterRef, nature: 'A long walk and a coffee', quality: 'positive' },
+      )
+      const lastWithDan = kit.record(
+        'relationship-event',
+        {
+          occurredAt: kit.local('2026-01-11', '19:00'),
+          domains: [DOMAIN.social],
+          entities: [danRef],
+        },
+        /*
+         * The one thing `quality` is for. Recency alone would put this
+         * friendship at the top of the list beside the other; what the record
+         * actually holds is that the last time went badly, and the app's answer
+         * to that is silence rather than a smaller number.
+         */
+        { withEntity: danRef, nature: 'An argument neither of us wanted', quality: 'strained' },
+      )
+
+      const nights = [7.5, 7.75, 8].map((value, offset) =>
+        kit.record(
+          'observation',
+          {
+            occurredAt: kit.local(`2026-06-${String(11 + offset).padStart(2, '0')}`, '07:00'),
+            domains: [DOMAIN.sleep],
+          },
+          {
+            concept: CONCEPT.sleepHours,
+            value: { type: 'number', value, unit: 'hours' },
+            method: 'self-report',
+          },
+        ),
+      )
+
+      const energy = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-06-13', '15:30'), domains: [DOMAIN.health] },
+        {
+          concept: CONCEPT.energy,
+          value: { type: 'scale', value: 3, of: 5 },
+          method: 'self-report',
+        },
+      )
+
+      const time = kit.record(
+        'observation',
+        { occurredAt: kit.local('2026-06-13', '15:45'), domains: [DOMAIN.career] },
+        {
+          concept: CONCEPT.usableTimeTonight,
+          value: { type: 'duration', minutes: 120 },
+          method: 'self-report',
+        },
+      )
+
+      /*
+       * And he has already been out once today — S2 Tier 2's
+       * `health.trained-today`, observed rather than asked.
+       *
+       * It is in this history because it is what makes the afternoon honest.
+       * With a walk already finished, the app has no business proposing another
+       * one, and what is left is the thing it has never been able to say: that
+       * nobody has heard from his sister since January. The reading costs him
+       * no tap — the app watched him finish it.
+       */
+      const walk = entityRef('routine', 'a walk')
+      const offered = kit.record(
+        'action-recommendation',
+        {
+          occurredAt: kit.local('2026-06-13', '10:00'),
+          domains: [DOMAIN.health],
+          entities: [walk],
+        },
+        {
+          recommendation: {
+            subject: walk,
+            domain: DOMAIN.health,
+            target: { verb: 'move', object: walk, minutes: 25 },
+            whyNow: { trigger: 'good-conditions', summary: '', evidence: [] },
+            evidence: [],
+          },
+        },
+      )
+      const went = kit.record(
+        'action-completion',
+        {
+          occurredAt: kit.local('2026-06-13', '10:40'),
+          domains: [DOMAIN.health],
+          entities: [walk],
+        },
+        { recommendation: offered.id },
+      )
+
+      return kit.document({
+        entities: [sister, oldFriend, gym],
+        records: [lastWithSister, lastWithDan, ...nights, energy, time, offered, went],
+        exportedAt: now,
+      })
+    },
+  }
+}
+
 export const SCENARIOS: readonly Scenario[] = [
   /*
    * The near-empty histories first, because that is the order D-161 puts them
@@ -3379,6 +3559,7 @@ export const SCENARIOS: readonly Scenario[] = [
   morningAfterBadNights(),
   saturdayMorningOpen(),
   growthMixedEvidence(),
+  friendshipGoneQuiet(),
 ]
 
 export function scenarioById(id: string): Scenario | undefined {

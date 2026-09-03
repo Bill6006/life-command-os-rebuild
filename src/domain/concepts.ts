@@ -271,6 +271,54 @@ export const CONCEPT = {
   weeklyFocus: conceptId('direction.weekly-focus'),
   emotionalState: conceptId('emotional.current-state'),
   faithPractice: conceptId('faith.practice-recent'),
+
+  // -------------------------------------------------------------------------
+  // D-166's six emotional dimensions — routing 92, S2 Tier 1
+  // -------------------------------------------------------------------------
+  /**
+   * Six, and never one — D-166, approved 2026-08-27.
+   *
+   * The owner's rule, in his words: distinct, independently unknown, **never
+   * composited**, not all asked on any day, with free text coexisting. That is
+   * why {@link CONCEPT.emotionalState} is still here beside them: the sentence
+   * he types is a different thing from a reading on a scale, and neither
+   * replaces the other.
+   *
+   * **They land in different routing packages, and approval of the vocabulary
+   * was not approval to create unreachable questions** (§13B). Each one ships
+   * askable only where a consumer exists that some possible answer could move —
+   * so two are asked here and four are readable, correctable and silent. The
+   * roadmap for the other four is written on each definition rather than in a
+   * plan somebody has to find.
+   */
+  mood: conceptId('emotional.mood'),
+  stress: conceptId('emotional.stress'),
+  motivation: conceptId('emotional.motivation'),
+  confidence: conceptId('emotional.confidence'),
+  /** Loneliness / social-connection need. Asked here, via AUD-0013. */
+  needForCompany: conceptId('emotional.need-for-company'),
+  /** Mental overload. Asked here, via the capacity limiter. */
+  overwhelm: conceptId('emotional.overwhelm'),
+
+  // -------------------------------------------------------------------------
+  // S2 Tier 1 and Tier 2 — the rest of routing 92's vocabulary
+  // -------------------------------------------------------------------------
+  /**
+   * Whether the owner is free to leave — the audit's supervision / egress
+   * concept, and the owner's own CASE B.
+   *
+   * D-187 already captures *"can't leave — someone's in my care"* as a blocker
+   * cause, and it had no registry home, so the constraint it wrote named a
+   * concept the registry had never heard of and nothing could match it against
+   * a move. This is the home it needed.
+   */
+  mustStay: conceptId('context.must-stay'),
+  /** Whether movement has already happened today. Worked out, never asked. */
+  trainedToday: conceptId('health.trained-today'),
+  /** How hard work has been pulling. One scale, once a day. */
+  workStrain: conceptId('work.strain'),
+  /** Who is around, read from the relationship graph rather than asked. */
+  peoplePresent: conceptId('context.people-present'),
 }
 
 export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
@@ -653,6 +701,311 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
     privacy: 'sensitive',
     ask: { materialToDecision: false, askWhenStale: true },
     reliability: { owner: 1, derived: 0.5, device: 0.35, model: 0.2 },
+  },
+
+  // ---------------------------------------------------------------------------
+  // D-166's six emotional dimensions — routing 92
+  //
+  // Distinct, independently unknown, never composited, not all asked on any
+  // day, free text coexisting. Two are askable here because two have consumers;
+  // the other four are readable, correctable and silent, and each says on its
+  // own definition what would have to exist before it could be asked.
+  //
+  // **Every one of them carries `tracked: 'scale'`, and that was a decision
+  // rather than a default.** `trajectoryCards` gates on `tracked`, so a scale
+  // here produces a trajectory card *per dimension* once a dimension has enough
+  // readings of its own — six possible cards where there was one untrackable
+  // free-text field. That is not a violation: six separate cards is the
+  // opposite of a composite and is the whole value of making the dimensions
+  // distinct. It is a new owner-facing claim per dimension arriving as a side
+  // effect of a schema choice, so it is written down here, the copy is the
+  // dimension's own label in the card's existing "Label: reading" shape, and
+  // `tests/synthetic/reach-dimensions.test.ts` proves that no path anywhere
+  // sums or averages across the six.
+  // ---------------------------------------------------------------------------
+  {
+    id: CONCEPT.mood,
+    purpose: 'how you have been feeling in yourself',
+    label: 'Mood',
+    domain: DOMAIN.emotional,
+    freshness: elapsedHours(8),
+    tracked: 'scale',
+    privacy: 'sensitive',
+    /*
+     * **Not askable in routing 92** — §13B, in as many words.
+     *
+     * Nothing decides differently for a mood reading, and a question whose
+     * answer changes nothing is a tap the owner pays for forever. The dimension
+     * exists so the Emotional page can show it as unknown and he can record one
+     * if he wants to; what it does not have is a consumer, and §13B's rule is
+     * that a concept ships askable only when one exists.
+     *
+     * What would change this: a consumer some possible answer could move. Not a
+     * mood-based ranking — that is the wellness score by another route.
+     */
+    ask: { materialToDecision: false, askWhenStale: false },
+    reliability: { owner: 1, device: 0.3, derived: 0.3, model: 0.15 },
+  },
+  {
+    id: CONCEPT.stress,
+    purpose: 'how much pressure you have been under',
+    label: 'Stress',
+    domain: DOMAIN.emotional,
+    freshness: elapsedHours(8),
+    tracked: 'scale',
+    privacy: 'sensitive',
+    /*
+     * **Routing 92 only if an honest friction / opportunity-cost consumer is
+     * demonstrated** — §13B. None was, and this records why rather than
+     * shipping the question and hoping.
+     *
+     * The available consumer is the `friction` dimension, and the claim it
+     * would rest on — *stress makes getting started harder* — is a causal
+     * statement about this owner that nothing in the record measures. Section
+     * 68 forbids exactly that where only association exists, and there is not
+     * even association here yet. The other candidate, `opportunity-cost`, reads
+     * time, and stress is not time.
+     *
+     * There is a second reason and it is the sharper one: `work.strain` is
+     * wired to `capacity.strain` in this phase, and routing stress there too
+     * would be two readings of pressure feeding one number — a composite by
+     * accident, which is the thing D-166 exists to prevent.
+     */
+    ask: { materialToDecision: false, askWhenStale: false },
+    reliability: { owner: 1, device: 0.3, derived: 0.3, model: 0.15 },
+  },
+  {
+    id: CONCEPT.motivation,
+    purpose: 'how much you have felt like getting going',
+    label: 'Motivation',
+    domain: DOMAIN.emotional,
+    freshness: elapsedHours(8),
+    tracked: 'scale',
+    privacy: 'sensitive',
+    /*
+     * **Routing 92 only if an honest capacity / friction consumer is
+     * demonstrated** — §13B. The same answer as stress, for a related reason.
+     *
+     * The tempting consumer is `friction`, and the argument for it is better
+     * than stress's: how hard it feels to get started is not a causal claim
+     * about him, it is the same quantity that dimension already estimates, from
+     * his own mouth — D-089's *ask for the reading, not the verdict*. What stops
+     * it here is that `friction` is also where the **learned** friction of a
+     * verb lives, and folding a whole-person reading into a per-move belief
+     * would make every learned friction figure partly a mood reading with no way
+     * to tell the two apart afterwards.
+     *
+     * That is a real consumer waiting for a place to put it rather than a
+     * refusal, and the place is the capacity work at routing 94.
+     */
+    ask: { materialToDecision: false, askWhenStale: false },
+    reliability: { owner: 1, device: 0.3, derived: 0.3, model: 0.15 },
+  },
+  {
+    id: CONCEPT.confidence,
+    purpose: 'how sure of yourself you have been feeling',
+    label: 'Confidence',
+    domain: DOMAIN.emotional,
+    freshness: localDays(7),
+    tracked: 'scale',
+    privacy: 'sensitive',
+    /*
+     * **Deferred to routing 94 / F25** — §13B. The consumer belongs with the
+     * progression work: confidence is a reading about how somebody is doing at
+     * something over months, and the machinery that could act on it is the
+     * domain-progression model that does not exist yet.
+     *
+     * It is here rather than absent because D-166 approved six distinct
+     * dimensions and the Emotional page has to be able to show all six as
+     * independently unknown. A dimension that exists and says nothing is
+     * honest; a dimension the owner is told about and cannot see is not.
+     */
+    ask: { materialToDecision: false, askWhenStale: false },
+    reliability: { owner: 1, device: 0.3, derived: 0.3, model: 0.15 },
+  },
+  {
+    id: CONCEPT.needForCompany,
+    purpose: 'whether being around people would help {when}',
+    label: 'Need for company',
+    domain: DOMAIN.emotional,
+    /*
+     * Slower than the rest, and deliberately. Mood and mental load are about
+     * this part of today; wanting people about is a thing that holds for days,
+     * and re-asking it every eight hours would be the questionnaire section 4.5
+     * forbids, wearing a caring expression.
+     */
+    freshness: localDays(3),
+    tracked: 'scale',
+    privacy: 'sensitive',
+    /*
+     * It decides, and it is not asked — and both halves are deliberate.
+     *
+     * **What it decides.** AUD-0013's social-demand path proposes a reach-out
+     * to somebody the record has not heard about in months, and a standing
+     * reading that company would not help is what holds that back. Suppress
+     * only: it can never create the move, never order people, and never reach a
+     * sentence — the same discipline AUD-0047 puts on the relationship graph's
+     * quality signal, for the same reason.
+     *
+     * **Why there is no question.** Its consumer is live only while social
+     * energy is unknown, and in exactly that situation the guide already holds
+     * *"up for people tonight?"* — the more direct question about the same
+     * evening. Adding a second one there is the tap section 4.5 forbids. So the
+     * reading is given on the Emotional page, the way a learning topic is given
+     * on Career and a week's direction is set on Life. §13B's rule is that a
+     * concept ships **askable** only with a consumer; it does not say every
+     * consumer earns a question.
+     *
+     * **Loneliness is not diagnosed and is not named.** The label is what he
+     * would say about it, the reading is a scale he sets, and nothing anywhere
+     * turns it into a statement about him.
+     */
+    ask: { materialToDecision: true, askWhenStale: true },
+    reliability: { owner: 1, device: 0.2, derived: 0.3, model: 0.15 },
+  },
+  {
+    id: CONCEPT.overwhelm,
+    purpose: 'how much is on your mind {when}',
+    label: 'Mental load',
+    domain: DOMAIN.emotional,
+    freshness: elapsedHours(8),
+    tracked: 'scale',
+    privacy: 'sensitive',
+    /*
+     * Askable, and its consumer is the capacity limiter — §13B names it.
+     *
+     * The limiter is what Now renders as *"What is in the way"*, and it has
+     * always been able to say a body is short of rest or asking for an easier
+     * day. It has never been able to say the obvious third thing: that there is
+     * too much in his head to start something effortful. That is a limiter in
+     * exactly the sense the other three are — it obstructs an evening — and it
+     * is the one an owner would notice missing.
+     *
+     * **It is a limiter, not a score.** It answers *what is in the way*; it does
+     * not rank moves, does not sum with strain, and does not become a finding
+     * about him.
+     */
+    ask: { materialToDecision: true, askWhenStale: true },
+    reliability: { owner: 1, device: 0.2, derived: 0.3, model: 0.15 },
+  },
+
+  // ---------------------------------------------------------------------------
+  // S2 Tier 1 and Tier 2 — the rest of routing 92's vocabulary
+  // ---------------------------------------------------------------------------
+  {
+    id: CONCEPT.mustStay,
+    purpose: 'whether you are free to leave {when}',
+    label: 'Free to leave',
+    /*
+     * Filed under Home rather than Fatherhood, and the reason is that it is not
+     * always about a child. *"Someone's in my care"* is the owner's own wording
+     * and it covers a sleeping daughter, a parent, anyone. Filing it under
+     * Fatherhood would put a fact about his evening on a page about her, and
+     * would give it a child-sensitive class it does not always deserve.
+     */
+    domain: DOMAIN.home,
+    /*
+     * True of the day it was said on, and lifted by hand rather than by a clock.
+     * The record underneath is a `constraint` with an optional `until`, so a
+     * bounded one — *"while she is asleep"* — expires on its own and an
+     * unbounded one stands until *"Not true any more"*.
+     */
+    freshness: THIS_LOCAL_DAY,
+    privacy: 'normal',
+    /*
+     * Worked out from the constraints in force, never asked and never stored as
+     * an observation — see {@link ConceptDefinition.derived}. The owner says it
+     * once, in the words D-187 already captures, when a move he could not do
+     * asks him what was in the way.
+     */
+    derived: true,
+    ask: { materialToDecision: false, askWhenStale: false },
+  },
+  {
+    id: CONCEPT.trainedToday,
+    purpose: 'whether movement has already happened {when}',
+    label: 'Movement today',
+    domain: DOMAIN.health,
+    freshness: THIS_LOCAL_DAY,
+    privacy: 'normal',
+    /*
+     * **Derived, not asked** — §5.2's own words, and the cheapest observe-first
+     * path in the product. A completed movement episode today *is* the answer;
+     * asking a man whether he went for the walk the app watched him finish is
+     * the failure section 4.5 names.
+     */
+    derived: true,
+    ask: { materialToDecision: false, askWhenStale: false },
+  },
+  {
+    id: CONCEPT.workStrain,
+    purpose: 'how hard work has been pulling {when}',
+    label: 'How work has been',
+    /*
+     * Career, because that is where the owner would look for it and there is no
+     * separate work domain — and AUD-0006 is the standing warning about
+     * inventing one namespace for a reading and filing it under another.
+     */
+    domain: DOMAIN.career,
+    // One scale, once a day. The day it is about is the day it is good for.
+    freshness: THIS_LOCAL_DAY,
+    tracked: 'scale',
+    privacy: 'normal',
+    /*
+     * Wired to the consumer that already exists — §13B, and that is the whole of
+     * why it needs no selector redesign. `capacity.strain` is read by
+     * `applyConstraints` and by the capacity limiter, and it is currently worked
+     * out from sleep shortfall and energy alone. A day that took everything out
+     * of him is the largest unmodelled driver of an evening, and it arrives
+     * nowhere.
+     */
+    ask: { materialToDecision: true, askWhenStale: true },
+    /*
+     * D-111's narrow exception, and this is the third concept to earn it.
+     *
+     * The rule is *being wrong about this is worse than asking about it*, and
+     * it is bounded three ways in `guide.ts`: only a concept marked here, only
+     * where an answer would flip the recommendation toward **less** action, and
+     * only where the standing move is effortful. Both existing members qualify
+     * because the app cannot infer them from how he seems — nothing measures
+     * whether a shoulder hurts.
+     *
+     * Nothing measures a day either. Proposing a forty-five-minute lab to a man
+     * who has just been through a day that took everything out of him is the
+     * same harm as proposing exertion to a body in pain, and it is the harm the
+     * whole of AUD-0003 is about. Without this the question can never be asked:
+     * one of three answers moves the assessment, D-036's share rule wants half,
+     * and a concept that is material and unaskable is the `emotionalState`
+     * failure arriving from the other side.
+     *
+     * The bound is what makes it narrow. It is asked only where the app was
+     * about to ask something effortful of him.
+     */
+    consequential: true,
+    // A calendar knows how full a day was and not how hard it was.
+    reliability: { owner: 1, device: 0.3, derived: 0.35, model: 0.15 },
+  },
+  {
+    id: CONCEPT.peoplePresent,
+    purpose: 'who has been around lately',
+    label: 'People around',
+    domain: DOMAIN.social,
+    freshness: localDays(7),
+    /*
+     * The social domain's default, and worth stating: this is reach over a graph
+     * the app already builds, and the graph carries a quality signal on every
+     * interaction. **Quality may only ever suppress and never rank**
+     * (AUD-0047), and nothing about a named person is evaluated on any screen.
+     */
+    privacy: 'normal',
+    /*
+     * Not new capture. AUD-0047 records that `memory/projections.ts` folds every
+     * relationship event into a graph and **only the QA laboratory reads it** —
+     * so this is a reading of something the record already holds, which is what
+     * Reach means.
+     */
+    derived: true,
+    ask: { materialToDecision: false, askWhenStale: false },
   },
 ]
 

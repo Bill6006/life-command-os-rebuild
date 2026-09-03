@@ -462,9 +462,24 @@ describe('a two-option question can still be asked — DEF-0009', () => {
     const { scenario, snapshot } = open('rested-and-behind')
     const at = moment(scenario)
 
-    const ordinary = coreConcepts.extendedWith([
-      { ...coreConcepts.definitionFor(CONCEPT.soreness), consequential: false },
-    ])
+    /*
+     * Every exception off, not just this concept's — routing 92.
+     *
+     * This turned the flag off on soreness alone, which was the whole of the
+     * exception while two concepts carried it. `work.strain` is the third
+     * (S2 Tier 2), so a run with soreness demoted still had an exception in it
+     * and the guide went on asking — the test would have read as "the share
+     * rule has stopped biting" when what had actually happened is that a
+     * different consequential concept stepped into the slot. What the run is
+     * meant to be is *the guide with no exception at all*, so that is what it
+     * now is.
+     */
+    const ordinary = coreConcepts.extendedWith(
+      coreConcepts
+        .all()
+        .filter((definition) => definition.consequential === true)
+        .map((definition) => ({ ...definition, consequential: false })),
+    )
 
     const asked = nextGuideStep(buildView(snapshot, at), at)
     expect(asked.kind, 'the exception is not reaching this history').toBe('question')

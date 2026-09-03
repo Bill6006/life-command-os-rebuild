@@ -38,6 +38,7 @@ import { openEpisode, type MoveState } from './lifecycle'
 import { profileFor } from './moves'
 import { outcomeWindowFor } from './outcomes'
 import { answerRecord, GUIDE_PROVENANCE, QUESTIONS } from './questions'
+import { couldMatterNow } from './reach'
 import {
   assembleSituation,
   type ShownMove,
@@ -305,6 +306,33 @@ export function probeSwings(
   for (const question of QUESTIONS) {
     const entry = view.facts.get(question.concept)
     if (entry === undefined || !entry.worthAsking) continue
+    /*
+     * And only where a consumer of it could fire in this situation — §13B.
+     *
+     * Two things at once, and `reach.ts` says which is which. For every concept
+     * that shipped before routing 92 this is always true, so the probe set is
+     * exactly what it was and the pre-filter cannot change a selection. For the
+     * concepts routing 92 added it is the consumer precondition: a question is
+     * worth a tap only where the thing that would read the answer can act, and
+     * *"a concept may ship as askable only when an actual consumer exists that
+     * makes at least one possible answer capable of materially changing a
+     * decision"* is the rule it implements.
+     *
+     * It is also the performance half. The verified cost is about 21 full
+     * `buildView + decide` evaluations per guide render, and a naive Tier 1 +
+     * Tier 2 expansion takes it to about 50 — with the worst case as the common
+     * case, because a reading that is unknown is always worth asking about and
+     * an emotional reading is unknown almost always by design.
+     */
+    if (
+      !couldMatterNow(
+        entry.definition,
+        actual.situation,
+        actual.evaluation?.candidate.semantics.target.verb,
+      )
+    ) {
+      continue
+    }
 
     const outcomes: { answer: string; wouldChoose: string; easier: boolean }[] = []
     for (const option of question.options(actual.situation)) {

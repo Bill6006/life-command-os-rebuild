@@ -10,6 +10,7 @@ import type { RecordId } from '../domain/ids'
 import {
   basisOf,
   confidence,
+  explicit,
   inferred,
   isUsable,
   mapKnowledge,
@@ -35,6 +36,7 @@ import {
   instantAtLocal,
   localDateTimeAt,
   localDayIdAt,
+  localDaysBetween,
   localWeekIdAt,
   type DayBlock,
   type Instant,
@@ -115,6 +117,21 @@ export const SLEEP_BASELINE_HOURS = 7.5
  * without anybody deciding it (AUD-0003).
  */
 export const SORE_ENOUGH_TO_EASE_OFF = 0.7
+
+/**
+ * How much has to be on his mind before it is what is in the way — D-166.
+ *
+ * The same shape and the same height as `SORE_ENOUGH_TO_EASE_OFF`, and for the
+ * same reason: 4 of 5 is where a man stops describing a thing as background and
+ * starts describing it as the problem. Set lower it would fire on an ordinary
+ * Tuesday and the limiter would stop meaning anything; set higher it would only
+ * ever catch the evenings he was not going to start anything on anyway.
+ *
+ * **It is a threshold on one reading, not a score.** Nothing sums it with
+ * strain, nothing ranks by it, and it produces a sentence about what is in the
+ * way rather than a number about him.
+ */
+export const LOADED_ENOUGH_TO_LIMIT = 0.7
 
 export const SLEEP_DEBT_DAYS = 3
 
@@ -286,6 +303,27 @@ export interface Capacity {
   readonly nightsSeen: number
   readonly energy: Knowledge<number>
   readonly soreness: Knowledge<number>
+  /**
+   * How hard the day itself has been pulling — S2 Tier 2, `work.strain`.
+   *
+   * Carried beside the others rather than folded into one number, for the same
+   * reason `soreness` is: they are different facts about the same person and
+   * the surfaces have to be able to tell the owner which one is in the way.
+   * {@link Capacity.strain} is where they meet, and it is one reading with a
+   * confidence rather than a total.
+   */
+  readonly workStrain: Knowledge<number>
+  /**
+   * How much is on his mind — D-166's mental-overload dimension.
+   *
+   * Deliberately **not** an input to {@link Capacity.strain}. Strain is a claim
+   * about a body's capacity to spend effort, built on sleep shortfall and how
+   * much is left in the tank; mental load is a different thing, and summing
+   * them would be the wellness score D-166 exists to prevent. It is read by the
+   * limiter, which is a statement about what is in the way rather than a number
+   * anything is ranked by.
+   */
+  readonly overwhelm: Knowledge<number>
   readonly strain: Knowledge<Strain>
 }
 
@@ -303,9 +341,33 @@ export interface OwnerPreference {
   readonly domains: readonly LifeDomainId[]
 }
 
+/**
+ * When a named person was last actually in the record — AUD-0047.
+ *
+ * Built from `relationship-event` records, which carry an entity, a nature and
+ * an optional `quality`. **Quality is carried and may only ever suppress.** It
+ * may hold a suggestion back and it may never order people, label anyone as
+ * good or bad for the owner, or reach an owner-visible sentence about a named
+ * person. One strained interaction is not a strained relationship, so what is
+ * carried is whether the **most recent** contact went badly rather than any
+ * summary over the history of it.
+ */
+export interface ContactRecency {
+  readonly entity: EntityRef
+  readonly label: string
+  readonly lastAt: Instant
+  readonly daysSince: number
+  readonly occasions: number
+  /** Whether the last contact recorded went badly. Suppresses; never ranks. */
+  readonly lastWasStrained: boolean
+  readonly source: RecordId
+}
+
 export interface ActiveConstraint {
   readonly concept: ConceptId
   readonly description: string
+  /** When it was said. A derived reading of it has to be able to cite a moment. */
+  readonly at: Instant
   readonly source: RecordId
 }
 
@@ -398,6 +460,45 @@ export interface Situation {
    */
   readonly threads: readonly ActiveThread[]
   readonly socialEnergy: Knowledge<number>
+  /**
+   * Whether being around people would help — D-166, via AUD-0013.
+   *
+   * A different question from {@link Situation.socialEnergy}, and keeping them
+   * apart is the finding. Social energy is *do I feel like people right now*,
+   * and the generator has only ever fired when he had already said yes — so the
+   * domain could confirm an appetite he reported and never notice one he had
+   * not. This is *would company help*, which is a thing a person can want
+   * without feeling like it, and it is the only reading that lets the social
+   * domain say something he did not already know.
+   */
+  readonly needForCompany: Knowledge<number>
+  /**
+   * Whether he is free to leave — S2 Tier 1's supervision concept, C21's half.
+   *
+   * Worked out from the constraints in force rather than asked. D-187 already
+   * captures *"can't leave — someone's in my care"*; what it had nowhere to put
+   * the answer was a concept, so the constraint it wrote named something the
+   * registry had never heard of and no move could be matched against it.
+   *
+   * **Unknown is unknown** (G-009): no constraint means the app has not been
+   * told he must stay, which is not the same as being told he may leave.
+   */
+  readonly mustStay: Knowledge<boolean>
+  /**
+   * Whether movement has already happened today — S2 Tier 2, and observed.
+   *
+   * From a completed movement episode on this owner-local day. Nothing is asked
+   * and nothing new is stored: the app watched him finish it.
+   */
+  readonly trainedToday: Knowledge<boolean>
+  /**
+   * People the record has seen him with lately — AUD-0047, reach not capture.
+   *
+   * The relationship graph already exists and only the QA laboratory reads it.
+   * This carries the part a decision can honestly use: who there is real
+   * evidence of contact with, and when it last happened.
+   */
+  readonly peoplePresent: readonly ContactRecency[]
   readonly homeFriction: Knowledge<FactValue>
   readonly learningTopic: Knowledge<FactValue>
   readonly direction: DirectionState
@@ -764,6 +865,8 @@ function assembleCapacity(
   const lastNightHours = narrowKnowledge(readings.get(CONCEPT.sleepHours), hoursValue)
   const energy = narrowKnowledge(readings.get(CONCEPT.energy), ratioValue)
   const soreness = narrowKnowledge(readings.get(CONCEPT.soreness), ratioValue)
+  const workStrain = narrowKnowledge(readings.get(CONCEPT.workStrain), ratioValue)
+  const overwhelm = narrowKnowledge(readings.get(CONCEPT.overwhelm), ratioValue)
 
   const from = addLocalDays(moment.now, -SLEEP_DEBT_DAYS, moment.zone)
   const nights = nightsWithin(view, from, moment.now)
@@ -793,7 +896,9 @@ function assembleCapacity(
     nightsSeen: nights.length,
     energy,
     soreness,
-    strain: assessStrain(sleepDebtHours, energy, nights.length),
+    workStrain,
+    overwhelm,
+    strain: assessStrain(sleepDebtHours, energy, workStrain, nights.length),
   }
 }
 
@@ -809,21 +914,25 @@ function assembleCapacity(
 function assessStrain(
   debt: Knowledge<number>,
   energy: Knowledge<number>,
+  work: Knowledge<number>,
   nightsSeen: number,
 ): Knowledge<Strain> {
   const debtHours = isUsable(debt) ? debt.value : undefined
   const energyLevel = isUsable(energy) ? energy.value : undefined
+  const workLevel = isUsable(work) ? work.value : undefined
 
-  if (debtHours === undefined && energyLevel === undefined) {
-    return unknown('never-observed', 'nothing recent about sleep or energy')
+  if (debtHours === undefined && energyLevel === undefined && workLevel === undefined) {
+    return unknown('never-observed', 'nothing recent about sleep, energy or work')
   }
 
-  const basis = [...basisOf(debt), ...basisOf(energy)]
+  const basis = [...basisOf(debt), ...basisOf(energy), ...basisOf(work)]
   const observedAt = isUsable(debt)
     ? debt.observedAt
     : isUsable(energy)
       ? energy.observedAt
-      : undefined
+      : isUsable(work)
+        ? work.observedAt
+        : undefined
   if (observedAt === undefined) return unknown('never-observed')
 
   let level: Strain = 'none'
@@ -832,8 +941,24 @@ function assessStrain(
     else if (debtHours >= 2.5) level = 'moderate'
   }
   if (energyLevel !== undefined && energyLevel <= 0.3 && level === 'none') level = 'moderate'
+  /*
+   * A hard day raises the assessment and never on its own makes it severe —
+   * S2 Tier 2, `work.strain`, under the rule the paragraph above already set
+   * for energy.
+   *
+   * Sleep shortfall leads because it is the signal with a real evidence base
+   * behind it. One tap on a scale is not enough to claim that much about
+   * anybody, whichever scale it is, and this is the third reading to arrive
+   * under that rule rather than an exception to it. The threshold is the same
+   * as energy's read from the other end: 4 or 5 of 5 is a day he would describe
+   * as heavy.
+   */
+  if (workLevel !== undefined && workLevel >= 0.7 && level === 'none') level = 'moderate'
 
-  const signals = (debtHours === undefined ? 0 : 1) + (energyLevel === undefined ? 0 : 1)
+  const signals =
+    (debtHours === undefined ? 0 : 1) +
+    (energyLevel === undefined ? 0 : 1) +
+    (workLevel === undefined ? 0 : 1)
   const howSure = confidence(0.3 + 0.15 * signals + Math.min(0.25, 0.08 * nightsSeen))
   return inferred(level, observedAt, howSure, basis)
 }
@@ -1176,6 +1301,34 @@ function findLimiter(
     }
   }
 
+  /*
+   * And the third thing that can be in the way — D-166's mental-overload
+   * dimension, wired to the consumer §13B names for it.
+   *
+   * It sits below the body and above the clock, which is the honest order.
+   * Nine hours short of rest is a harder fact than a full head, and a full head
+   * is a harder fact than twenty minutes: a man with too much on his mind and
+   * two free hours cannot start the lab either, and the app had no way to say
+   * so. Every other limiter answers *what is in the way* and this is the one an
+   * owner would notice missing.
+   */
+  const overwhelm = capacity.overwhelm
+  if (isUsable(overwhelm) && overwhelm.value >= LOADED_ENOUGH_TO_LIMIT) {
+    return {
+      kind: 'capacity',
+      label: LIMITER_LABEL.capacity,
+      domain: DOMAIN.emotional,
+      /*
+       * What he said, said back. Not "you are overwhelmed" — that is a claim
+       * about him, and section 4.4 forbids the failure framing. There is a lot
+       * on his mind is a description of the reading he gave.
+       */
+      summary: `There is a lot on your mind ${withinPhrase(block)}.`,
+      evidence: basisOf(overwhelm),
+      certainty: confidence(0.55),
+    }
+  }
+
   const minutes = inHand.minutes
   if (isUsable(minutes) && minutes.value < SHORT_ENOUGH_TO_LIMIT) {
     /*
@@ -1315,6 +1468,142 @@ export function resolvePermissions(view: MemoryView, now: Instant): PermissionSt
   return { granted: (permission) => latest.get(permission)?.granted === true }
 }
 
+/**
+ * Whether a constraint in force says he cannot leave — S2 Tier 1, C21.
+ *
+ * D-187 captures the answer already; what it lacked was somewhere to put it.
+ * The blocker writes a `constraint` record bearing {@link CONCEPT.mustStay},
+ * and `collectConstraints` has always dropped one whose `until` has passed — so
+ * a bounded supervision — *"while she is asleep"* — lifts itself and an
+ * unbounded one stands until the owner says otherwise.
+ *
+ * **Unknown is unknown.** No constraint means nobody has said he must stay,
+ * which G-009 forbids reading as being free to go.
+ */
+function readMustStay(constraints: readonly ActiveConstraint[]): Knowledge<boolean> {
+  const found = constraints.find((constraint) => constraint.concept === CONCEPT.mustStay)
+  if (found === undefined) {
+    return unknown('never-observed', 'nothing says you cannot leave')
+  }
+  return explicit(true, found.at, found.source)
+}
+
+/**
+ * Whether movement happened today, dated by when it happened.
+ *
+ * **By the completion, not by the day the move was offered** — D-160's rule,
+ * which is about exactly this distinction one layer up. An episode's `dayId` is
+ * the day the recommendation was made; a walk offered on Tuesday and finished
+ * on Wednesday is Wednesday's movement, and reading the offer's day would make
+ * it Tuesday's and would suppress a walk on the wrong day.
+ */
+function readTrainedToday(
+  episodes: readonly Episode[],
+  moment: SituationMoment,
+  dayId: LocalDayId,
+): { readonly knowledge: Knowledge<boolean>; readonly what: EntityRef | undefined } {
+  for (const episode of episodes) {
+    if (episode.state !== 'completed') continue
+    if (episode.semantics.target.verb !== 'move') continue
+    const finishedAt = episode.settledAt
+    if (finishedAt === undefined) continue
+    /*
+     * And it has to have happened already — D-160, whose own guard caught this
+     * one line after it was written.
+     *
+     * The QA laboratory reads a history from any hour, so a walk finished at
+     * eight in the evening is in the record while the app is being read at nine
+     * in the morning. Same day, and not yet true. A reading of *today* taken
+     * from a record dated later today is the app telling the owner about
+     * something he has not done.
+     */
+    if (finishedAt > moment.now) continue
+    if (localDayIdAt(finishedAt, moment.zone) !== dayId) continue
+    return {
+      knowledge: explicit(true, finishedAt, episode.recommendation),
+      what: episode.semantics.target.object,
+    }
+  }
+  /*
+   * And nothing else is claimed. An owner who cycled to work and never told the
+   * app has still moved, so the honest reading is that the record does not
+   * know rather than that he did not — G-009, on a concept where the tempting
+   * default is obviously false.
+   */
+  return {
+    knowledge: unknown('never-observed', 'nothing finished today says movement happened'),
+    what: undefined,
+  }
+}
+
+/**
+ * How long ago each named person was actually in the record — AUD-0047.
+ *
+ * The projection exists and only the QA laboratory reads it. Everything here is
+ * a fold of `relationship-event` records that already ship: no inference, no
+ * summary judgement, and no person named who has no event behind them.
+ *
+ * `quality` travels because leaving it out would be worse, not better. Recency
+ * alone would have the app nudge him toward somebody he has deliberately
+ * stepped back from, and this field is the only thing that can prevent that.
+ * It is carried as *"the last contact went badly"* rather than as a verdict on
+ * the relationship, because one strained interaction is not a strained
+ * relationship and the record does not support the wider claim.
+ */
+function collectContacts(
+  view: MemoryView,
+  entities: EntityIndex,
+  moment: SituationMoment,
+): readonly ContactRecency[] {
+  const today = localDayIdAt(moment.now, moment.zone)
+  const byEntity = new Map<
+    string,
+    { ref: EntityRef; lastAt: Instant; occasions: number; strained: boolean; source: RecordId }
+  >()
+
+  for (const event of view.relationships.events) {
+    if (event.at > moment.now) continue
+    const entity = view.entities.get(event.entity)
+    if (entity === undefined) continue
+    const ref: EntityRef = { id: entity.id, kind: entity.kind }
+    const held = byEntity.get(entity.id)
+    if (held === undefined) {
+      byEntity.set(entity.id, {
+        ref,
+        lastAt: event.at,
+        occasions: 1,
+        strained: event.quality === 'strained',
+        source: event.source,
+      })
+      continue
+    }
+    held.occasions += 1
+    if (event.at > held.lastAt) {
+      held.lastAt = event.at
+      held.strained = event.quality === 'strained'
+      held.source = event.source
+    }
+  }
+
+  const out: ContactRecency[] = []
+  for (const held of byEntity.values()) {
+    const label = entities.labelFor(held.ref) ?? view.entities.get(held.ref.id)?.label
+    // A person the index cannot name is one no sentence could mention, so it is
+    // left out rather than carried as an identifier — D-018.
+    if (label === undefined) continue
+    out.push({
+      entity: held.ref,
+      label,
+      lastAt: held.lastAt,
+      daysSince: Math.max(0, localDaysBetween(localDayIdAt(held.lastAt, moment.zone), today)),
+      occasions: held.occasions,
+      lastWasStrained: held.strained,
+      source: held.source,
+    })
+  }
+  return out.sort((a, b) => b.lastAt - a.lastAt)
+}
+
 function collectConstraints(view: MemoryView, now: Instant): readonly ActiveConstraint[] {
   const constraints: ActiveConstraint[] = []
   for (const record of view.history.effective) {
@@ -1324,6 +1613,7 @@ function collectConstraints(view: MemoryView, now: Instant): readonly ActiveCons
     constraints.push({
       concept: record.concept,
       description: record.description,
+      at: record.occurredAt,
       source: record.id,
     })
   }
@@ -1415,6 +1705,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
    */
   const childPresent = narrowKnowledge(readings.get(CONCEPT.childPresent), booleanValue)
   const socialEnergy = narrowKnowledge(readings.get(CONCEPT.socialEnergy), ratioValue)
+  const needForCompany = narrowKnowledge(readings.get(CONCEPT.needForCompany), ratioValue)
   const homeFriction = readings.get(CONCEPT.homeFriction)
   const learningTopic = readings.get(CONCEPT.learningTopic)
 
@@ -1470,6 +1761,75 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
   const episodes = collectEpisodes(view, moment.zone)
   const isWeekend = local.isoWeekday >= 6
 
+  /*
+   * The three readings the app works out for itself — S2 Tier 1 and Tier 2.
+   *
+   * Each one is *reach* rather than capture, which is what this phase is: the
+   * supervision constraint is already written, the completed movement episode
+   * is already recorded, and the relationship graph is already built. None of
+   * them costs the owner a tap, and each is written back through
+   * {@link FactReader.derive} so the fact ledger, the domain page and the
+   * export show the app's own reading rather than a permanently blank row.
+   */
+  const constraints = collectConstraints(view, moment.now)
+  const mustStay = readMustStay(constraints)
+  const trained = readTrainedToday(episodes, moment, local.dayId)
+  const peoplePresent = collectContacts(view, entities, moment)
+
+  reader.derive(
+    CONCEPT.mustStay,
+    mapKnowledge(mustStay, (value): FactValue => ({ type: 'boolean', value })),
+    isUsable(mustStay)
+      ? (constraints.find((entry) => entry.concept === CONCEPT.mustStay)?.description ??
+          'You said you could not leave.')
+      : 'not known — nothing says you cannot leave',
+    purposeOf(concepts.definitionFor(CONCEPT.mustStay), block),
+  )
+  taken.set(
+    CONCEPT.mustStay,
+    mapKnowledge(mustStay, (value): FactValue => ({ type: 'boolean', value })),
+  )
+
+  reader.derive(
+    CONCEPT.trainedToday,
+    mapKnowledge(trained.knowledge, (value): FactValue => ({ type: 'boolean', value })),
+    trained.what === undefined
+      ? 'not known — nothing finished today says movement happened'
+      : `yes — ${entities.labelFor(trained.what) ?? trained.what.id}`,
+    purposeOf(concepts.definitionFor(CONCEPT.trainedToday), block),
+  )
+  taken.set(
+    CONCEPT.trainedToday,
+    mapKnowledge(trained.knowledge, (value): FactValue => ({ type: 'boolean', value })),
+  )
+
+  /*
+   * And who has been around, as a count rather than as a list of names.
+   *
+   * The reading the fact ledger prints must not become a roll-call: section 11's
+   * discretion argument is about a private area and AUD-0047's is about naming
+   * a real person on a screen, and both point the same way here. The graph
+   * itself is on the situation for the generator that needs it; what is
+   * *rendered* is how many people the record has real contact evidence for.
+   */
+  const contactsKnowledge: Knowledge<FactValue> =
+    peoplePresent.length === 0
+      ? unknown('never-observed', 'no contact with anyone is recorded')
+      : explicit(
+          { type: 'number', value: peoplePresent.length },
+          peoplePresent[0]!.lastAt,
+          peoplePresent[0]!.source,
+        )
+  reader.derive(
+    CONCEPT.peoplePresent,
+    contactsKnowledge,
+    peoplePresent.length === 0
+      ? 'not known — no contact with anyone is recorded'
+      : `${peoplePresent.length} ${peoplePresent.length === 1 ? 'person' : 'people'} with contact in the record`,
+    purposeOf(concepts.definitionFor(CONCEPT.peoplePresent), block),
+  )
+  taken.set(CONCEPT.peoplePresent, contactsKnowledge)
+
   const coverage = assembleCoverage(view, entities, {
     now: moment.now,
     zone: moment.zone,
@@ -1496,6 +1856,10 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     childHere,
     childElsewhere: elsewhere.because,
     socialEnergy,
+    needForCompany,
+    mustStay,
+    trainedToday: trained.knowledge,
+    peoplePresent,
     homeFriction,
     learningTopic,
     direction: resolveDirection(view, moment, domains, readings.get(CONCEPT.weeklyFocus)),
@@ -1504,7 +1868,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     threads: activeThreads(view, episodes, { now: moment.now, zone: moment.zone }),
     limiter: findLimiter(capacity, inHand, coverage, block),
     preferences: collectPreferences(view),
-    constraints: collectConstraints(view, moment.now),
+    constraints,
     permissions,
     shown: (moment.shown ?? []).filter(
       (entry) => entry.dayId === local.dayId && entry.at < moment.now,

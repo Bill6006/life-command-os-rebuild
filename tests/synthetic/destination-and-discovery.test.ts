@@ -102,18 +102,30 @@ function agendaPromptOf(app: JourneyApp, topic: string) {
 // ---------------------------------------------------------------------------
 
 /** Open the first evening, answer the guide, and state how much time there is. */
+/**
+ * The answers this fixture cares about, and a default for everything else.
+ *
+ * It used to name three concepts and hand `'open'` to anything else, which
+ * worked while the catalogue held six questions and stopped working the moment
+ * routing 92 added one whose options are not called that: an unmatched id
+ * answers nothing, the tap is spent, and the evening ends up in a state the
+ * test was not describing. Falling through to the question's own first option
+ * is what a person tapping the top answer would do.
+ */
 async function firstEvening(energy: string, minutes: number): Promise<JourneyApp> {
   const app = await openJourney('the-first-evening')
   for (let taps = 0; taps < 3; taps += 1) {
     const step = app.guide()
     if (step.kind !== 'question' || step.question === undefined) break
-    await app.answerGuide(
+    const named =
       step.question.spec.concept === CONCEPT.energy
         ? energy
         : step.question.spec.concept === CONCEPT.soreness
           ? 'none'
-          : 'open',
-    )
+          : step.question.spec.concept === CONCEPT.usableTimeTonight
+            ? 'open'
+            : undefined
+    await app.answerGuide(named)
   }
   await app.correctFact(CONCEPT.usableTimeTonight, { type: 'duration', minutes })
   return app

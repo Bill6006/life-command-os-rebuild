@@ -1,4 +1,7 @@
-import type { ConceptDefinition } from '../domain/concepts'
+import { CONCEPT, type ConceptDefinition } from '../domain/concepts'
+import { isUsable } from '../domain/knowledge'
+import type { ActionVerb } from '../domain/recommendation'
+import { profileFor } from './moves'
 import type { Situation } from './situation'
 import type { ConceptId } from '../domain/windows'
 import { QUESTIONS } from './questions'
@@ -58,12 +61,21 @@ export interface ConceptConsumer {
    * Deliberately generous: `true` means *maybe*, and the only cost of a false
    * `true` is a probe that was going to happen anyway. A false `false` skips a
    * probe that mattered, which is why the equivalence test exists.
+   *
+   * `standing` is what the app is about to suggest, where it is suggesting
+   * anything. It is a verb rather than the whole decision so that this file
+   * stays below the engine that calls it.
    */
-  applies(situation: Situation): boolean
+  applies(situation: Situation, standing: ActionVerb | undefined): boolean
 }
 
 /** Always live. The reading is consulted wherever the decision is made. */
 const ALWAYS: ConceptConsumer['applies'] = () => true
+
+/** Whether what the app is about to suggest is something he has to start. */
+function asksSomethingOfHim(standing: ActionVerb | undefined): boolean {
+  return standing !== undefined && profileFor(standing).demand === 'effortful'
+}
 
 export interface ConceptReach {
   readonly concept: ConceptId
@@ -73,11 +85,105 @@ export interface ConceptReach {
 /**
  * Concepts whose consumers are situational, and what makes each live.
  *
- * Absent from this table means *"assume a consumer could fire"*, which is the
- * safe direction: a concept nobody has thought about is probed exactly as it
- * was before this file existed.
+ * ## Two roles, and they are worth telling apart
+ *
+ * For a concept that shipped before routing 92 there is **no entry here**, and
+ * that absence is the equivalence proof: `couldMatterNow` returns true for it in
+ * every situation, so the pre-filter cannot change what the guide would have
+ * selected. That is §13B's requirement on the performance work — *"these
+ * optimizations must not alter selection semantics"* — held structurally rather
+ * than measured after the fact, and
+ * `tests/synthetic/reach-questions.test.ts` proves it by running the guide with
+ * the filter off across the library and comparing.
+ *
+ * For a concept **added by routing 92** the entry is not an optimisation. It is
+ * the consumer precondition §13B requires: *"a concept may ship as askable only
+ * when an actual consumer exists that makes at least one possible answer capable
+ * of materially changing a decision."* Where the consumer cannot fire, the
+ * question is not worth a tap, and skipping it is the rule rather than a
+ * shortcut past it.
+ *
+ * Both roles are the same predicate because they are the same question. What
+ * differs is whether an entry exists, and the entries are here rather than
+ * scattered so the whole of what routing 92 narrowed can be read in one place.
  */
-const SITUATIONAL: ReadonlyMap<string, readonly ConceptConsumer[]> = new Map()
+const SITUATIONAL: ReadonlyMap<string, readonly ConceptConsumer[]> = new Map([
+  [
+    CONCEPT.overwhelm,
+    [
+      {
+        site: 'findLimiter',
+        what: 'says that a full head is what is in the way',
+        /*
+         * Two conditions, and each is a way the answer could buy nothing.
+         *
+         * **Nothing already in the way.** The limiter is ordered — a body nine
+         * hours short of rest outranks a full head, which outranks twenty
+         * minutes — so when a harder limiter already stands, the answer cannot
+         * change what the app says is in the way or what it offers instead.
+         * Coverage does not count: it is the app's own blind spot rather than
+         * an obstacle (D-063), and an evening with a full head is still an
+         * evening with a full head.
+         *
+         * **Something effortful on offer.** What a limiter does is turn an
+         * evening toward something restorative, so where the app is already
+         * proposing something light or restful there is nothing for the answer
+         * to move. This is the bound D-111 puts on its own exception, applied
+         * to a consumer instead of to a share rule — and it is what stops a new
+         * question displacing the more concrete ones the guide already holds.
+         * A question about what is on his mind is worth a tap when the app is
+         * about to ask him to start something, and is a tap spent on nothing
+         * when it is not.
+         */
+        applies: (situation, standing) =>
+          (situation.limiter === undefined || situation.limiter.kind === 'coverage') &&
+          asksSomethingOfHim(standing) &&
+          /*
+           * And the concrete question first. A tap spent on what is on his mind
+           * is a tap not spent on whether anything hurts, and *"anything sore?"*
+           * is the more useful of the two while the answer is unknown: it is
+           * about a thing that can be pointed at, and D-111 already marks it as
+           * one the app cannot infer and must not get wrong. Once the body has
+           * been answered for, the subtler obstacle is worth asking about.
+           *
+           * Without this the new question displaced the old one on an ordinary
+           * first evening — three taps a day is the whole budget, and a
+           * newcomer taking one of them from a better question is exactly the
+           * added noise this phase is not allowed to introduce.
+           */
+          isUsable(situation.capacity.soreness),
+      },
+    ],
+  ],
+  [
+    CONCEPT.workStrain,
+    [
+      {
+        site: 'assembleCapacity',
+        what: 'raises the strain assessment when the day has taken it out of him',
+        /*
+         * Only once there is a day to report on, and only where the answer
+         * could still move the assessment.
+         *
+         * *"How hard has work been pulling today?"* has no answer at half past
+         * six in the morning, which is AUD-0005's argument about freshness
+         * applied to a question instead of a reading. And the assessment it
+         * feeds is already led by sleep shortfall: where that has settled
+         * strain at moderate or severe, one scale about work cannot move it —
+         * the rule in `assessStrain` is that a single tap never raises the
+         * level past `none`, deliberately, so there is nothing left for the
+         * answer to do.
+         */
+        applies: (situation, standing) => {
+          if (situation.block === 'early-morning' || situation.block === 'morning') return false
+          if (!asksSomethingOfHim(standing)) return false
+          const strain = situation.capacity.strain
+          return !isUsable(strain) || strain.value === 'none'
+        },
+      },
+    ],
+  ],
+])
 
 export function consumersFor(definition: ConceptDefinition): readonly ConceptConsumer[] {
   const named = SITUATIONAL.get(definition.id)
@@ -85,6 +191,11 @@ export function consumersFor(definition: ConceptDefinition): readonly ConceptCon
   return [
     { site: 'the decision path', what: 'read wherever the decision is made', applies: ALWAYS },
   ]
+}
+
+/** Concepts whose askability this file narrows. Everything else is untouched. */
+export function situationallyGated(): ReadonlySet<ConceptId> {
+  return new Set([...SITUATIONAL.keys()] as ConceptId[])
 }
 
 /**
@@ -95,8 +206,12 @@ export function consumersFor(definition: ConceptDefinition): readonly ConceptCon
  * always probed — so turning the filter off can only ever add work, never
  * change an answer.
  */
-export function couldMatterNow(definition: ConceptDefinition, situation: Situation): boolean {
-  return consumersFor(definition).some((consumer) => consumer.applies(situation))
+export function couldMatterNow(
+  definition: ConceptDefinition,
+  situation: Situation,
+  standing: ActionVerb | undefined,
+): boolean {
+  return consumersFor(definition).some((consumer) => consumer.applies(situation, standing))
 }
 
 /**

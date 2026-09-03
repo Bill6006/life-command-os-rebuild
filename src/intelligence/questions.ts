@@ -144,6 +144,83 @@ export const QUESTIONS: readonly QuestionSpec[] = [
       { id: 'yes', label: 'Yes', value: scale(4) },
     ],
   },
+  /*
+   * Two of D-166's six dimensions, and only two — §13B.
+   *
+   * The vocabulary is approved for six and the rule is that a concept ships
+   * askable **only with its consumer**. Mental load has one — the capacity
+   * limiter, which is what Now renders as "What is in the way" — and it is the
+   * one dimension routing 92 asks about.
+   *
+   * Wanting company has a consumer too, and still has no question, and the
+   * reason is worth writing down rather than discovering later. Its consumer is
+   * AUD-0013's social-demand path, which is live **only while social energy is
+   * unknown** — and in exactly that situation the guide already holds *"up for
+   * people tonight?"*, which is the more direct question about the same
+   * evening. A second question there is a tap that buys nothing, and the app is
+   * not allowed to ask one. So the reading is given on the Emotional page like
+   * a learning topic is given on Career, and what it does is hold a reach-out
+   * back rather than create one.
+   *
+   * Mood, stress, motivation and confidence have no consumer here at all, so
+   * they are readable, correctable and never asked. Each says so on its own
+   * definition in the registry.
+   *
+   * Neither question is asked because the reading is stale. Both go through the
+   * same probe as everything else: the guide re-runs the decision under each
+   * answer and asks only where the answers land somewhere different.
+   */
+  {
+    concept: CONCEPT.overwhelm,
+    /*
+     * What is on his mind, not what is wrong with him. "How overwhelmed are
+     * you?" invites him to accept a word about himself before he has said
+     * anything; this asks about the load, which is the thing he can actually
+     * report and the thing the limiter is about.
+     */
+    prompt: () => 'How much have you got on your mind?',
+    /*
+     * Three answers, two of which reach the limiter, and that is deliberate
+     * rather than convenient.
+     *
+     * The consumer has one threshold — `LOADED_ENOUGH_TO_LIMIT` — so an option
+     * set with only one answer above it produces a question D-036's share rule
+     * can never let through: one answer in three is exactly the shape it
+     * refuses, and a concept that is material and permanently unaskable is the
+     * `emotionalState` failure arriving from the other side. The honest fix is
+     * not an exception; it is a scale whose middle means what the limiter
+     * treats it as. "Quite a bit" is a lot on somebody's mind, and the app's
+     * response to it — preferring something restorative — is mild and
+     * reversible.
+     */
+    options: () => [
+      { id: 'clear', label: 'Not much', value: scale(1) },
+      { id: 'some', label: 'Quite a bit', value: scale(4) },
+      { id: 'lots', label: 'More than I can hold', value: scale(5) },
+    ],
+  },
+  {
+    concept: CONCEPT.workStrain,
+    // One scale, once a day — §5.2's Tier 2 entry, and the largest unmodelled
+    // driver of an evening. It reads into `capacity.strain`, beside the sleep
+    // shortfall and the energy reading that are already there.
+    prompt: () => 'How hard has work been pulling today?',
+    /*
+     * Three, and the third is why — §13B's *"keep new answer sets to the
+     * smallest semantically honest size"*.
+     *
+     * The first draft had four, with "Heavy" and "It took everything" beside
+     * each other. `assessStrain` has one threshold, so both did exactly the same
+     * thing: the app would have collected a distinction it throws away one line
+     * later, which is a tap spent on nothing. An option set finer than its
+     * consumer can use is not a richer question, it is a longer one.
+     */
+    options: () => [
+      { id: 'easy', label: 'Nothing much', value: scale(1) },
+      { id: 'normal', label: 'Ordinary day', value: scale(3) },
+      { id: 'heavy', label: 'It took everything', value: scale(5) },
+    ],
+  },
 ]
 
 export function questionFor(concept: ConceptId): QuestionSpec | undefined {

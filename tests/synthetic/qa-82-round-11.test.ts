@@ -48,6 +48,8 @@ interface Run {
   readonly coverage: readonly DomainCoverage[]
   readonly asking: LifeDomainId | undefined
   readonly askingAbout: ConceptId | undefined
+  /** Areas with a finished episode whose result window is still open, here. */
+  readonly awaiting: ReadonlySet<LifeDomainId>
 }
 
 function load(wire: SnapshotWire) {
@@ -67,10 +69,26 @@ function runAt(wire: SnapshotWire, now: Instant, zone: string): Run {
   const coverage = assembleSituation(view, moment).coverage.domains
   const step = nextGuideStep(view, moment)
   const concept = step.question?.spec.concept
+
+  /*
+   * Which areas genuinely have an answer on its way, worked out here from the
+   * episodes rather than from the route being tested.
+   */
+  const awaiting = new Set<LifeDomainId>()
+  for (const episode of collectEpisodes(view, zone as never)) {
+    if (episode.state !== 'completed') continue
+    const window = outcomeWindowFor(episode, zone as never)
+    if (window === undefined) continue
+    // The same window test the route uses: the moment for asking has not passed.
+    if (now > window.latest) continue
+    awaiting.add(episode.semantics.domain)
+  }
+
   return {
     coverage,
     asking: concept === undefined ? undefined : domainOfConcept(coverage, concept),
     askingAbout: concept,
+    awaiting,
   }
 }
 
@@ -375,14 +393,29 @@ describe('QA-82-016 — starting something is not an answer arriving', () => {
   it('says it only where a finished episode is actually waiting', () => {
     /*
      * The invariant, over the corpus and over the constructed episode together.
-     * The unmodified fixtures reach `normal-life` zero times — which is exactly
-     * why the started and completed cases above carry this finding — so the
-     * count is asserted rather than left as an assumption a reader has to make.
+     *
+     * **This asserted a count, and the count moved.** It read *"the unmodified
+     * fixtures reach `normal-life` zero times"*, which was true of the library
+     * as it stood and was never the claim worth making: routing 92 added a
+     * history with a finished walk in it (`friendship-gone-quiet`, where the
+     * point is that the app has no business proposing a second one), and a
+     * finished episode inside its result window is exactly the case this route
+     * is *for*. A zero that a new fixture can break is a fact about the library
+     * rather than a property of the route.
+     *
+     * So the property is asserted instead: wherever the route says an answer is
+     * on its way, a finished episode really is waiting — worked out from the
+     * episodes, not from the route.
      */
-    const natural = CORPUS.flatMap((run) =>
-      run.coverage.filter((entry) => entry.refresh === 'normal-life'),
+    const claims = CORPUS.flatMap((run) =>
+      run.coverage
+        .filter((entry) => entry.refresh === 'normal-life')
+        .map((entry) => ({ domain: entry.domain, earned: run.awaiting.has(entry.domain) })),
     )
-    expect(natural).toEqual([])
+    expect(
+      claims.filter((claim) => !claim.earned),
+      'an area says an answer is on its way with no finished episode waiting',
+    ).toEqual([])
 
     for (const [action, expected] of [
       ['start', false],

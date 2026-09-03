@@ -15,7 +15,7 @@ import { goalIsBehind, type ActiveGoal } from './direction'
 import { growthStandingFor, maintenanceProbeDue, practiceEvidenceHasAged } from './growth'
 import { profileFor } from './moves'
 import { refreshingMoveFor } from './refreshing'
-import { SORE_ENOUGH_TO_EASE_OFF, type Situation } from './situation'
+import { SORE_ENOUGH_TO_EASE_OFF, type ContactRecency, type Situation } from './situation'
 import { entityValue } from './values'
 
 /**
@@ -610,7 +610,24 @@ const homeCandidates: Generator = (situation) => {
  */
 const socialCandidates: Generator = (situation) => {
   const energy = situation.socialEnergy
-  if (!isUsable(energy) || energy.value < 0.6) return []
+  /*
+   * Three states, not two — AUD-0013.
+   *
+   * This returned nothing unless social energy read 0.6 or better, and social
+   * energy is only ever set by *"Up for people tonight?"* — so the domain could
+   * confirm an appetite the owner had already reported and could never notice
+   * one he had not. That is section 10's protection of solitude implemented as
+   * **unknown means no**, which is G-009's error living inside a generator, and
+   * it is why "reconnect with someone" — a thing nobody feels like until
+   * afterwards — was unreachable.
+   *
+   * - **Known low:** propose nothing. Solitude is the right call and the app
+   *   does not argue with it. Unchanged.
+   * - **Known high:** as before, and every line below is the old behaviour.
+   * - **Unknown:** the low-cost branch below, and only that.
+   */
+  if (isUsable(energy) && energy.value < 0.6) return []
+  if (!isUsable(energy)) return quietSocialCandidates(situation)
 
   const evidence = basisOf(energy)
   const out: Candidate[] = []
@@ -661,6 +678,113 @@ const socialCandidates: Generator = (situation) => {
 }
 
 /**
+ * How long a friendship has to have been quiet before the app says anything.
+ *
+ * Two months. Short enough that "we have not spoken since October" is still a
+ * useful thing to notice in November, and long enough that it is never about a
+ * week. The audit's own example is a sister nobody has spoken to since October.
+ */
+const QUIET_FOR_LONG_ENOUGH_DAYS = 60
+
+/**
+ * The one thing the social domain could notice that the owner does not already
+ * know — AUD-0013's unknown state, over AUD-0047's graph.
+ *
+ * ## Why this is reach rather than capture
+ *
+ * `memory/projections.ts` folds every `relationship-event` into a graph with an
+ * entity, a nature, a timestamp and a quality, and **the only consumer in the
+ * whole product is the QA laboratory**. Everything this branch needs already
+ * exists in the record; nothing new is asked and nothing new is stored.
+ *
+ * ## The three rules it is bound by, and each is a risk the audit names
+ *
+ * **A real person with a real event behind them, never an inference.** The
+ * relationship must have an actual contact record; an entity with none is not
+ * named, because a recommendation naming a real person on stale or invented
+ * data is embarrassing in a way most defects are not.
+ *
+ * **Quality suppresses and never ranks — AUD-0047, and D-166's own condition.**
+ * A relationship whose last recorded contact went badly is passed over silently.
+ * It is not ordered below the others, not labelled, not explained, and nothing
+ * about how an interaction went reaches an owner-visible sentence about a named
+ * person. Recency alone would have the app nudge him toward somebody he has
+ * deliberately stepped back from, which is exactly what the field prevents; and
+ * **one strained interaction is not a strained relationship**, so what is read
+ * is the most recent contact rather than any summary over the history of it.
+ *
+ * **One, and the most overdue.** Not a list of people ranked by anything.
+ */
+function quietSocialCandidates(situation: Situation): readonly Candidate[] {
+  /*
+   * And D-166's need-for-company reading can hold it back — never create it.
+   *
+   * The audit's recommendation is that **unknown** social energy allows a
+   * low-cost candidate with the not-knowing carried as uncertainty, and that is
+   * what fires this: a person the record has not heard about in months. A
+   * standing reading that company would not help is the one thing that should
+   * stop it, because pushing people at a man who has just said he does not want
+   * them is worse than saying nothing.
+   *
+   * **Suppress-only, exactly as AUD-0047's quality signal is.** It cannot make
+   * a reach-out happen, cannot order anybody, and does not reach a sentence.
+   * That is also why there is no question for it in routing 92 and the reading
+   * is given on the Emotional page instead: wherever this branch is live,
+   * social energy is unknown and *"up for people tonight?"* is the more direct
+   * question the guide already holds, so a second question about the same
+   * evening would be a tap that buys nothing.
+   */
+  const wanted = situation.needForCompany
+  if (isUsable(wanted) && wanted.value < 0.4) return []
+
+  let quietest: ContactRecency | undefined
+  for (const contact of situation.peoplePresent) {
+    if (contact.entity.kind !== 'person') continue
+    if (contact.daysSince < QUIET_FOR_LONG_ENOUGH_DAYS) continue
+    // Suppression, in one line, and it is the only thing quality ever does.
+    if (contact.lastWasStrained) continue
+    if (quietest === undefined || contact.daysSince > quietest.daysSince) quietest = contact
+  }
+  if (quietest === undefined) return []
+
+  return [
+    candidate(
+      {
+        generator: 'social',
+        subject: quietest.entity,
+        domain: DOMAIN.social,
+        verb: 'reach-out',
+        object: quietest.entity,
+        /*
+         * Not `good-conditions`: the conditions are not known to be good, which
+         * is the state this branch exists for. What is true is that the record
+         * has gone quiet about somebody, and `stale-evidence` is the trigger
+         * that says so.
+         */
+        trigger: 'stale-evidence',
+        evidence: [quietest.source, ...basisOf(wanted)],
+        /*
+         * The contact and the not-knowing, and **not** the need-for-company
+         * reading. That one is consulted before this move exists — it can only
+         * hold the branch back — so listing it here would have `uncertainty`
+         * mark the move down for a silence that did not produce it, which is
+         * the exact defect `resolves` was added to fix.
+         */
+        leansOn: [CONCEPT.socialEnergy],
+        /*
+         * The not-knowing may not also count against it. Whether he feels like
+         * people is the thing this move would settle, so `uncertainty` abstains
+         * rather than marking the move down for the silence that produced it.
+         */
+        resolves: [CONCEPT.socialEnergy],
+        proposedBecause: 'the record has not heard about this one in a long time',
+      },
+      situation,
+    ),
+  ]
+}
+
+/**
  * Movement. Only when the body has something to spend.
  *
  * "There is capacity for it" is a claim about how the owner feels, and three
@@ -674,6 +798,21 @@ const healthCandidates: Generator = (situation) => {
   const strain = situation.capacity.strain
   if (!isUsable(strain) || strain.value !== 'none') return []
   if (!isUsable(situation.capacity.energy) && !isUsable(situation.capacity.soreness)) return []
+  /*
+   * And not a second time on a day the app watched him do it — S2 Tier 2's
+   * `health.trained-today`, and its consumer.
+   *
+   * The reading is **derived**: a completed movement episode today is the
+   * answer, so nothing is asked and nothing new is stored. What it buys is the
+   * app not proposing a walk to a man who has already been for one, which is
+   * the most ordinary way a suggestion reads as not paying attention.
+   *
+   * **Unknown is unknown.** An owner who cycled to work and never told the app
+   * has still moved; the honest reading is that the record does not know, and
+   * only a reading that says movement *did* happen suppresses this.
+   */
+  const trained = situation.trainedToday
+  if (isUsable(trained) && trained.value) return []
 
   const out: Candidate[] = [
     candidate(
