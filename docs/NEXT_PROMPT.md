@@ -1,5 +1,7 @@
 # Next dispatch — routing 92, Reach: what the brain can see
 
+**Phase:** 92 — **Reach: what the brain can see**
+
 **Written by the Claude builder conversation that finished routing 91.**
 Independent QA is **off** for this run by owner instruction, so this file
 dispatches the next build phase and starts no QA round.
