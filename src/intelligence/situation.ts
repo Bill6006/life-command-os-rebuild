@@ -513,6 +513,27 @@ export interface Situation {
    */
   readonly childElsewhere: Obligation | undefined
   /**
+   * An evening she is away when she is usually here — AUD-0019.
+   *
+   * The finding is two failures with one cause, and this is the second: when
+   * `childPresent` reads false the fatherhood generator returns nothing and
+   * **no other generator is told that anything has changed**. So the three
+   * evenings a month a full-custody father has to himself — the highest-value
+   * free time he gets — read *"Nothing to suggest just yet."*
+   *
+   * True only where the record makes it unusual: a **durable** arrangement in
+   * force saying she is with him, and a reading right now saying she is not. An
+   * arrangement the app has never been told about produces nothing here, because
+   * an evening cannot be unusual against a pattern nobody has recorded (G-009).
+   *
+   * **It is an opening, and it is never a relief.** Section 4.4 forbids framing
+   * parenting time as lost productivity, and the inverse framing is the same
+   * mistake facing the other way. What this changes is the urgency of things he
+   * has said he is working towards, and what the app is allowed to say about it
+   * is one clause naming the evening rather than the absence.
+   */
+  readonly awayUnusually: boolean
+  /**
    * Courses of action under way, and the ones that have stopped — AUD-0020.
    *
    * Every thread in the record, not only the live ones: Life lists what has
@@ -1773,6 +1794,38 @@ function collectContacts(
   return out.sort((a, b) => b.lastAt - a.lastAt)
 }
 
+/**
+ * Whether tonight is one of the few she is not here — AUD-0019.
+ *
+ * Read off the **durable** context rather than off the resolved value, and the
+ * distinction is the whole reading. `childHere` already says she is not here;
+ * what makes tonight *unusual* is that a standing arrangement says she normally
+ * is, and the fact layer resolves a narrower situational record over that
+ * durable one — so asking the resolved value would only ever get the answer
+ * back.
+ *
+ * A durable record still in force, and nothing else. No inference from a run of
+ * evenings: a fortnight where she happened to be here is not an arrangement, and
+ * treating it as one would be the app deciding what his custody looks like.
+ */
+function unusuallyAway(
+  view: MemoryView,
+  childHere: Knowledge<boolean>,
+  moment: SituationMoment,
+): boolean {
+  if (!isUsable(childHere) || childHere.value) return false
+  for (const record of view.history.effective) {
+    if (record.kind !== 'context') continue
+    if (record.durability !== 'durable') continue
+    if (record.concept !== CONCEPT.childPresent) continue
+    if (record.occurredAt > moment.now) continue
+    if (record.validFrom > moment.now) continue
+    if (record.validUntil !== undefined && moment.now >= record.validUntil) continue
+    if (booleanValue(record.value) === true) return true
+  }
+  return false
+}
+
 function collectConstraints(view: MemoryView, now: Instant): readonly ActiveConstraint[] {
   const constraints: ActiveConstraint[] = []
   for (const record of view.history.effective) {
@@ -2071,6 +2124,7 @@ export function assembleSituation(view: MemoryView, moment: SituationMoment): Si
     childPresent,
     childHere,
     childElsewhere: elsewhere.because,
+    awayUnusually: unusuallyAway(view, childHere, moment),
     socialEnergy,
     needForCompany,
     mustStay,

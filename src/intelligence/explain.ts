@@ -1,4 +1,4 @@
-import type { EntityIndex } from '../domain/entities'
+import type { EntityIndex, EntityRef } from '../domain/entities'
 import { isUsable, type Confidence } from '../domain/knowledge'
 import { discreetly, type OutcomeRecord } from '../domain/records'
 import {
@@ -23,6 +23,8 @@ import {
 import { CLOSE_ENOUGH_TO_MENTION } from './arbitrate'
 import { describeGoalTrajectory } from './direction'
 import { daysSincePractice, growthStandingFor } from './growth'
+import { alongsideOf } from './alongside'
+import { WORTH_DOING } from './arbitrate'
 import { describeThreadPosition, threadFor } from './threads'
 import type { DimensionName, Evaluation } from './evaluate'
 import { beliefKey } from './learning'
@@ -662,11 +664,54 @@ function whyNow(evaluation: Evaluation, situation: Situation, entities: EntityIn
     }
 
     case 'opportunity-window': {
+      /*
+       * And an evening she is unusually away is a different sentence entirely —
+       * AUD-0019.
+       *
+       * **It names the evening and never the absence.** *"She's away tonight"*
+       * is the wording the audit itself flags as one that can land badly, and
+       * section 4.4 forbids framing parenting time as lost productivity — so the
+       * inverse framing, an empty house read as a productivity window, is the
+       * same mistake facing the other way. What is said is that the hours are
+       * his, which is a fact about the evening.
+       */
+      if (situation.awayUnusually) {
+        /*
+         * Named from the block rather than typed — AUD-0002. The audit's own
+         * example of this sentence is an evening one, and the trip that makes it
+         * true covers whole days: *"the evening is yours"* at two in the
+         * afternoon is the 113-occurrence defect arriving in a sentence written
+         * to repair a different one.
+         *
+         * No pronoun, either. *"…and it does not come round often"* reads well
+         * and G-001 is right about it: on a card read on its own, "it" is a noun
+         * the reader has to supply.
+         */
+        return `${capitalise(blockNoun(situation.block))} is yours.`
+      }
+
       const usable = situation.usableMinutes
       const time = isUsable(usable)
         ? ` and there are about ${Math.round(usable.value)} minutes`
         : ''
-      return `${capitalise(subject)} is here${time}. That window closes on its own.`
+      /*
+       * And what they last did, where the record holds it — AUD-0019(b).
+       *
+       * The finding's first half is *"the app says the same sentence every
+       * single evening, with no memory of yesterday, no reference to what they
+       * did"*. This is that reference, and it is the owner's own words about his
+       * own evening — a `relationship-event` he wrote, rendered discreetly
+       * because it is about a child (section 11).
+       *
+       * **Nothing is varied for the sake of variety.** Where the record holds no
+       * such evening the sentence is exactly what it was, because inventing one
+       * would be worse than repeating a true one. That is a real bound on what
+       * this finding could be closed to, and it is stated in D-276 rather than
+       * left as a gap somebody discovers.
+       */
+      const last = lastTimeTogether(situation, semantics.subject)
+      const memory = last === undefined ? '' : ` Last time: ${lowerFirst(finished(last))}`
+      return `${capitalise(subject)} is here${time}. That window closes on its own.${memory}`
     }
 
     case 'constraint-active': {
@@ -961,6 +1006,21 @@ export interface Explanation {
    * them.
    */
   readonly partOf: string | undefined
+  /**
+   * One thing that is part of the same occasion — AUD-0022, F42.
+   *
+   * A clause rather than a second card, and at most one. *"Spend the next 30
+   * minutes with Adaya, phone away"* and *"give Adaya a chance at ordering her
+   * own food"* are one outing, and the app ranked them 0.218 and 0.140 and
+   * presented the loser as a thing that had been beaten.
+   *
+   * **Advisory, and it creates nothing.** No second episode, no second outcome
+   * question, no second lifecycle. If he goes out and she does not order for
+   * herself, the primary move is still completable and nothing records a
+   * failure. Section 6's *"Now must not become a feed of cards"* holds because
+   * nothing new is rendered.
+   */
+  readonly alongside: string | undefined
 }
 
 /** The dimension the winner most out-scored the runner-up on, as a phrase. */
@@ -995,6 +1055,51 @@ function aheadBecause(
   return AHEAD_BECAUSE[best.name](block)
 }
 
+/**
+ * What they last did together, in the owner's own words — AUD-0019(b).
+ *
+ * The most recent `relationship-event` naming this subject, rendered through
+ * `discreetly` because the entity is child-family-sensitive and the sentence
+ * reaches Now. Nothing is composed here: the owner typed *"read two chapters
+ * before bed"* and that is what comes back.
+ *
+ * Bounded to the last fortnight. *"Last time"* about something from March is not
+ * a memory of the last time; it is the app reaching for a sentence.
+ */
+const A_RECENT_EVENING_DAYS = 14
+
+/**
+ * A sentence the owner wrote, ended so the app's own does not run on.
+ *
+ * Section 61 asks for finished sentences, and what goes in here is whatever he
+ * typed — *"Read two chapters before bed"* has no full stop, because nobody
+ * punctuates a note to themselves. Adding one where he did not is the smallest
+ * possible edit and it is not a paraphrase: the words are his, and a stop is not
+ * a word.
+ */
+function finished(text: string): string {
+  return /[.?!]$/.test(text.trim()) ? text.trim() : `${text.trim()}.`
+}
+
+function lastTimeTogether(situation: Situation, subject: EntityRef): string | undefined {
+  const since = addLocalDays(situation.at, -A_RECENT_EVENING_DAYS, situation.zone)
+  let latest: { at: number; nature: string } | undefined
+  for (const record of situation.view.history.effective) {
+    if (record.kind !== 'relationship-event') continue
+    if (record.withEntity.id !== subject.id) continue
+    if (record.occurredAt > situation.at || record.occurredAt < since) continue
+    if (latest === undefined || record.occurredAt > latest.at) {
+      latest = { at: record.occurredAt, nature: record.nature }
+    }
+  }
+  if (latest === undefined) return undefined
+  return discreetly(
+    situation.entities.resolve(subject)?.privacy ?? 'child-family-sensitive',
+    { type: 'text', value: latest.nature },
+    (ref) => situation.entities.labelFor(ref),
+  )
+}
+
 /** The course a move belongs to, as one line, or nothing — AUD-0020. */
 function partOfThread(
   situation: Situation,
@@ -1014,6 +1119,16 @@ export function explain(
   runnerUp: Evaluation | undefined,
   situation: Situation,
   margin?: number,
+  /**
+   * Everything that survived, so a compatible runner-up can be found — AUD-0022.
+   *
+   * The whole ranking rather than the runner-up alone, because the move that
+   * shares the occasion is not always the one that came second: on the audit's
+   * own evening a walk could sit between them. Optional, so every existing
+   * caller and every test that composes an explanation by hand behaves exactly
+   * as it did.
+   */
+  ranked: readonly Evaluation[] = [],
 ): ExplanationResult {
   const entities = situation.entities
   const base = chosen.candidate.semantics
@@ -1099,6 +1214,35 @@ export function explain(
         learned.summary === undefined ? undefined : beliefKey('effect', semantics.target.verb),
       restsOnNamed: learned.summary === undefined ? undefined : learned.named,
       partOf: partOfThread(situation, semantics),
+      alongside: alongsideClause(chosen, ranked, situation),
     },
   }
+}
+
+/**
+ * The one thing that is part of the same occasion, as a clause — AUD-0022.
+ *
+ * The runner-up's **own rendered sentence** goes into it, so the owner reads the
+ * words the app would have used had that move won on its own. Composing a
+ * paraphrase here would be D-018's failure on the half of a sentence nobody
+ * would otherwise check.
+ *
+ * Nothing at all where the move cannot be said. A clause naming a subject that
+ * no longer resolves is exactly the vague language section 3 forbids, and the
+ * honest answer is one sentence rather than one and a half.
+ */
+function alongsideClause(
+  chosen: Evaluation,
+  ranked: readonly Evaluation[],
+  situation: Situation,
+): string | undefined {
+  const found = alongsideOf(chosen, ranked, WORTH_DOING, situation.entities)
+  if (found === undefined) return undefined
+  const rendered = renderRecommendation(
+    found.evaluation.candidate.semantics,
+    situation.entities,
+    situation.block,
+  )
+  if (!rendered.ok) return undefined
+  return found.pair.clause(rendered.rendered.sentence)
 }

@@ -435,6 +435,40 @@ const RECOVERY_OBJECT: Partial<Record<ActionVerb, EntityRef>> = {
 }
 
 /** Career and learning. Needs a topic the owner is actually on. */
+/**
+ * The trigger an evening she is unusually away earns — AUD-0019.
+ *
+ * The audit: *"when `childPresent` is known-false and the record shows it is
+ * unusual, raise `urgency` on the effortful moves in the domains his direction
+ * and goals point at, and say why."*
+ *
+ * Three conditions, and each is a way the raise could be unearned.
+ *
+ * **The evening has to be unusual.** A Tuesday she is at her mother's every week
+ * is not an opening; it is a Tuesday.
+ *
+ * **The area has to be one he is pointed at.** A stated weekly direction or an
+ * active goal — his own words either way. Without one, raising the urgency of
+ * whatever happened to be in the ranking would be the app filling his evening
+ * because it noticed a gap, which is the opposite of the finding.
+ *
+ * **The move has to ask something of him.** *"This is the evening for the lab"*
+ * is a sentence about a lab. Raising a restorative move for the same reason
+ * would be reading an empty house as a productivity window, which section 4.4
+ * forbids from the other direction.
+ *
+ * It changes a trigger rather than adding a dimension or moving a weight:
+ * `opportunity-window` is worth 0.5 where `nothing-better` is worth 0, and both
+ * were already in the table.
+ */
+function anOpeningFor(situation: Situation, domain: LifeDomainId, verb: ActionVerb): boolean {
+  if (!situation.awayUnusually) return false
+  if (profileFor(verb).demand !== 'effortful') return false
+  const weekly = situation.direction.weekly
+  if (weekly?.state === 'set' && weekly.category === domain) return true
+  return situation.direction.goals.some((goal) => goal.domain === domain)
+}
+
 const careerCandidates: Generator = (situation) => {
   const topic = resolvedEntity(situation.learningTopic, situation)
   if (topic === undefined) return []
@@ -510,7 +544,16 @@ const careerCandidates: Generator = (situation) => {
       {
         ...base,
         verb: 'hands-on-lab',
-        trigger: behind ? 'goal-behind' : 'good-conditions',
+        /*
+         * And an evening she is unusually away is an opening — AUD-0019. A lab
+         * is the longest thing the app can propose and the one a quiet house
+         * actually makes room for.
+         */
+        trigger: anOpeningFor(situation, DOMAIN.career, 'hands-on-lab')
+          ? 'opportunity-window'
+          : behind
+            ? 'goal-behind'
+            : 'good-conditions',
         proposedBecause: 'building something is the proof a topic is actually held',
       },
       situation,

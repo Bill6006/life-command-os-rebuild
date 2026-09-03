@@ -1208,6 +1208,18 @@ function DetailPanel({
       one and where in it, every time one applies.
     */
     explanation.partOf === undefined ? undefined : { label: 'Part of', value: explanation.partOf },
+    /*
+      One thing that is part of the same occasion — AUD-0022, F42.
+
+      A row rather than a second card, and directly under the move it belongs
+      to, because that is what it is about. Section 6's "Now must not become a
+      feed of cards" holds: nothing new is rendered, and the clause is advisory —
+      there is no control on it, no episode behind it and no follow-up question
+      about it.
+    */
+    explanation.alongside === undefined
+      ? undefined
+      : { label: 'And while you are there', value: explanation.alongside },
     explanation.limiter === undefined
       ? undefined
       : { label: explanation.limiter.label, value: explanation.limiter.summary },

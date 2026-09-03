@@ -1217,7 +1217,18 @@ export function decide(
       : base
     noAction = { reason, ...noActionCopy(reason, situation, rejected) }
   } else {
-    const result = explain(selection.chosen, selection.ranked[1], situation, selection.margin)
+    /*
+     * The whole ranking, so a move that shares the occasion can be found —
+     * AUD-0022. The runner-up alone is not enough: the move that is part of the
+     * same half hour is not always the one that came second.
+     */
+    const result = explain(
+      selection.chosen,
+      selection.ranked[1],
+      situation,
+      selection.margin,
+      selection.ranked,
+    )
     if (result.ok) {
       explanation = result.explanation
       state = stateOfChosen(selection.chosen, situation)

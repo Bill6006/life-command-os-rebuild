@@ -1,5 +1,85 @@
 # Decision log
 
+## D-276 — Two moves that are one outing, and the half of the nine identical evenings that could not be closed
+
+**Phase:** 93 · **Status:** Active
+
+AUD-0022 / F42 and AUD-0019, together because the audit puts them together:
+_"vary the `time-with` move by what the record holds — the growth opportunity as
+**part of** the time rather than instead of it — see AUD-0022."_
+
+### The clause
+
+`arbitrate()` returned `ranked[0]` and there was no notion of two candidates
+being **the same activity**. So _"spend the next 30 minutes with Adaya, phone
+away"_ and _"give Adaya a chance at ordering her own food"_ were ranked 0.218 and
+0.140 and the loser was shown as a thing that had been beaten. They are one
+outing. The audit's own reading: _"section 17.2's 'one arbitration path decides'
+was implemented as 'one arbitration path returns one candidate'. The constraint
+is real and right; the cardinality was an implementation choice."_
+
+**One primary move, one appended clause, and nothing else.** The arbiter still
+chooses one, through the same function. The clause is advisory: no second
+episode, no second outcome question, no second lifecycle — so if he goes out and
+she does not order for herself, the primary is still completable and nothing
+records a failure. It renders the runner-up's **own** sentence rather than a
+paraphrase, which is D-018 applied to the half of a sentence nobody would
+otherwise check.
+
+**The table has one entry and it is empty by default.** A pairing is a claim that
+two activities are one occasion, and it needs a written reason, an hour the two
+could share, and a declared relation between their subjects — `about-person` for
+this one, because a growth opportunity's subject is the _skill_ and matching on
+the subject alone would have found nothing while dropping the check would have
+paired unhurried time with Adaya to somebody else's child's skill.
+
+### The absence
+
+`childPresent = false` made the fatherhood generator return nothing and **told no
+other generator anything had changed**, so the three evenings a month a
+full-custody father has to himself read _"Nothing to suggest just yet."_
+
+`Situation.awayUnusually` is the reading, off a **durable** arrangement in force
+plus a current reading that says otherwise — never off a run of evenings, because
+a fortnight where she happened to be here is not an arrangement and treating it
+as one would be the app deciding what his custody looks like.
+
+Where an area is one his direction or an active goal points at, an **effortful**
+move in it takes the `opportunity-window` trigger instead of its default. That is
+a trigger already in the table, worth 0.5 where `nothing-better` is worth 0 — **no
+dimension added and no weight moved.** Nothing restorative is raised for the same
+reason: an empty house read as a productivity window is section 4.4's mistake
+facing the other way.
+
+**The copy names the hour, never the absence.** _"The afternoon is yours."_ The
+audit flags _"She's away tonight"_ as a sentence that can land badly, and the
+twelve-evening sweep is guarded against every phrasing of it rather than against
+the one branch that writes it. It is composed from `blockNoun` so it cannot say
+_evening_ at two in the afternoon, and it carries no pronoun.
+
+### And the half that could not be closed, said plainly
+
+The finding is nine evenings with _"no reference to what they did"_. Two
+variations now exist and **both are read off the record**: the growth opportunity
+as part of the time, and what they last did together in his own words, from a
+`relationship-event` inside the last fortnight.
+
+**On a history that holds neither, the same evening still produces the same
+sentence, and that is correct.** Varying it would mean inventing variety, which
+is worse than repeating something true. `durable-custody` holds an arrangement
+and one evening together and nothing else, so its nine present evenings differ
+only by the memory clause — and its three absent ones still say there is nothing,
+because it holds no direction, no goal and no topic, and raising the urgency of
+whatever happened to be in the ranking would be the app filling his evening
+because it noticed a gap.
+
+That is the bound on how far AUD-0019 is closed. It is recorded here rather than
+left for QA to find, and the acceptance case for the half that _is_ closed is a
+purpose-built afternoon in `tests/synthetic/one-occasion.test.ts` — the third
+built history this phase needed for exactly this reason.
+
+---
+
 ## D-274 — C21's enforcement half: the app's own blocker records are enforced, and free text still is not
 
 **Phase:** 93 · **Status:** Active
