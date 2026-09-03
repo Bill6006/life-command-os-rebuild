@@ -60,7 +60,8 @@ repair is a narrower `applies` predicate on `emotional.overwhelm` in
 
 | Fact                    | Value                                                                       |
 | ----------------------- | --------------------------------------------------------------------------- |
-| Product checkpoint      | `b850dfc` — the commit every gate below was run on (D-147)                  |
+| Product checkpoint      | `b850dfc` — the commit every product gate was run on (D-147)                |
+| Documentation head      | `e3ae91d` — what Preview serves; four docs files apart, bundle-equivalent   |
 | Preview                 | https://bill6006.github.io/life-command-os-rebuild/preview/                 |
 | Owner-visible behaviour | **changed** — Now, the Emotional, Health, Career, Money and Direction pages |
 | Owner phone check       | **required before GREEN**                                                   |
@@ -72,8 +73,19 @@ Confirm the deployed SHA against the checkpoint before testing:
 node scripts/checkpoint-equivalence.mjs b850dfc --deployed https://bill6006.github.io/life-command-os-rebuild/preview/build-info.json
 ```
 
+It will report four changed files — three documents and the phone-gate script —
+and that none is bundle-relevant. That is the expected answer, not a reason to
+refuse to test: D-097 asks for equivalence rather than literal SHA equality, and
+DEF-0061 is what happens when a handoff demands the second.
+
 `node scripts/release-integrity.mjs` verifies the served bytes against the
-manifest (D-211, QA-84-064). Run it against the deployed Preview.
+manifest (D-211, QA-84-064). Run it against the deployed Preview with the
+manifest artifact from CI rather than from the tree:
+
+```bash
+gh run download 33760741329 --dir /tmp/lco
+node scripts/release-integrity.mjs https://bill6006.github.io/life-command-os-rebuild/preview/ --manifest /tmp/lco/preview-manifest/release-manifest.json
+```
 
 ---
 

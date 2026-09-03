@@ -223,8 +223,15 @@ run at the time of writing and is not a claim.
 | Android-style deployed gate                                    | PASS — 234 checks, against the deployed Preview        |
 | Independent QA (required from Phase 5 on, D-077)               | **Outstanding — this phase is YELLOW until it passes** |
 
-**Checkpoint:** `b850dfc`. The Android gate found one thing on its first run and
-it is DEF-0164 below.
+**Checkpoint:** `b850dfc` — the commit every product gate was run on.
+**Documentation head:** `e3ae91d`, which is what Preview serves. Four files
+changed between them and none is bundle-relevant, so the deployed build serves
+the same bytes as the checkpoint: `checkpoint-equivalence.mjs` says so, and
+release integrity was re-run against the later deploy and came back clean at
+`e3ae91d`. D-097 asks for equivalence rather than literal SHA equality, and
+DEF-0061 is what happens when a handoff demands the second.
+
+The Android gate found one thing on its first run and it is DEF-0164 below.
 
 **The first matrix run of this phase failed nine of 849**, three tests across
 three widths, and all three are recorded as DEF-0161, DEF-0162 and DEF-0163
