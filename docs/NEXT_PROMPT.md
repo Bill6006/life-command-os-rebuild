@@ -1,98 +1,141 @@
-# Next dispatch — routing 93, Validity: what it concludes from what it sees
+# Next dispatch — routing 94, cycle 94.1: Fatherhood
 
-**Phase:** 93 — **Validity: what it concludes from what it sees**
+**Phase:** 94 — **the rest of the life: domains and progression**, cycle **94.1**
 
-**Written by the Claude builder conversation that finished the phase before
-this one.**
-Independent QA is **off** for this run by owner instruction, so this file
-dispatches the next build phase, is addressed to the **Claude builder**, and
+**Written by the Claude builder conversation that finished the phase before this
+one.** Independent QA is **off** for this run by owner instruction, so this file
+dispatches the next build cycle, is addressed to the **Claude builder**, and
 starts no QA round.
 
 ---
 
-## Read this part first: what you are inheriting
+## Read this part first: what you are inheriting, and the mistake not to repeat
 
-**Two phases are BUILT / QA DEFERRED. Neither is GREEN, and neither has been
-read by anyone outside the conversation that wrote it.**
+**Three phases are unapproved. None is GREEN, and none has been read by anyone
+outside the conversation that wrote it.**
 
-- **The phase immediately before this** — **zero rounds.** No independent eye
-  has seen it at all.
-- **The one before that** — nine rounds of independent Codex QA read it, a
-  tenth was written and has not run.
+| Phase      | State                             | Rounds run                                 |
+| ---------- | --------------------------------- | ------------------------------------------ |
+| Routing 91 | BUILT / QA DEFERRED               | 9, with Round 10's brief written and unrun |
+| Routing 92 | BUILT / QA DEFERRED               | **0**                                      |
+| Routing 93 | YELLOW — READY FOR INDEPENDENT QA | **0**                                      |
 
-D-077 is unchanged: **only independent QA may pass a phase.** Nothing about
-either has been approved by anything but its own mechanical gates. D-268 records
-that deferral and why it is the riskiest one so far.
+D-077 is unchanged: **only independent QA may pass a phase.** Nothing about any
+of the three has been approved by anything but its own mechanical gates.
 
-Three things to hold while you build 93:
+### The phase before this went over its own split rule, and that is the lesson
 
-1. **Do not treat either phase's behaviour as settled.** The one immediately
-   before this touched the layer every decision reads: `assembleSituation` walks the concept registry,
-   five registry declarations were corrected, the fact layer resolves a renamed
-   concept through an alias, the registry grew by ten concepts, and five shipped
-   assertions were inverted. **Four of its ten defects were found by a gate
-   rather than by the builder.** If something in 93 makes you doubt a reading
-   either phase produces, the doubt is probably right — say so in your record
-   rather than building on top of it quietly.
-2. **Both deferred QA handoffs in `docs/qa/` must survive unedited.** They are the briefs two deferred rounds start from.
-   Do not append to them, correct them, or tidy them — including the second
-   one's header, which still says YELLOW because that is what it said when it
-   was written.
-   Anything you need to record about either phase goes in `PHASE_STATUS.md` or
-   the decision log.
-3. **One gate item is open and unchecked.** The audit's no-added-noise rule came
-   out at **218 against 216** across the histories that predate it — two
-   questions, both
-   `emotional.overwhelm`, on `three-days-since` and `observed-evenings`. The
-   builder judged them worth keeping (D-267) and deferring QA means nobody has
-   checked that judgement. **If you disagree while building 93, that is a
-   finding, not a nuisance**, and the repair is a narrower `applies` predicate in
-   `src/intelligence/reach.ts`.
+§11 gave routing 93 a split rule: **more than five work packages and it becomes
+two phases.** Fourteen landed. The rule was not invoked. **D-283 records it as a
+judgement to be checked rather than a decision that settles anything**, and its
+conclusion is that the phase should have been dispatched as two.
 
-**What is actually true about it**, so you are not guessing: every mechanical
-gate passed at its checkpoint — `npm run verify`, 2,150 unit, contract,
-synthetic and adversarial tests, the whole 360/430/1280 browser matrix at one
-worker, the privacy and copy scans, checkpoint equivalence, CI, release
-integrity from CI's own manifest artifact, and the Android-style deployed gate.
+**This dispatch is that lesson applied.** §11B already sizes routing 94 into
+**three internal cycles** and says the slice boundaries belong in the handoff
+before the builder starts. **This dispatch is cycle 94.1 only.** Do not build
+94.2 or 94.3. If you finish 94.1 early, stop and say so — starting the next
+cycle because there is room is exactly how fourteen packages happened.
+
+### Three more things to hold while you build
+
+1. **Do not treat routing 92's or 93's behaviour as settled.** Routing 92 touched
+   the layer every decision reads and has had zero independent rounds; routing 93
+   is built on top of it and adds two scoring dimensions, four new readings and
+   C21's enforcement. **If something in 94 makes you doubt a reading either
+   produces, the doubt is probably right** — say so in your record rather than
+   building on top of it quietly.
+2. **All three QA handoffs in `docs/qa/` must survive unedited** —
+   `PHASE_91_QA_HANDOFF.md`, `PHASE_92_QA_HANDOFF.md` and
+   `PHASE_93_QA_HANDOFF.md`. They are the briefs three deferred rounds start
+   from. Do not append to them, correct them, or tidy them. Anything you need to
+   record about those phases goes in `PHASE_STATUS.md` or the decision log.
+3. **Two gate items are open and unchecked.** Routing 92's no-added-noise rule
+   came out at **218 against 216** (D-267). Routing 93's own addition is pinned
+   separately at **15** and enumerated by name in `reach-gate.test.ts` so the two
+   cannot hide inside each other. Cycle 94.1 will add owner-facing Fatherhood
+   readings; **measure your own delta separately again** rather than re-baselining
+   either number.
+
+**What is actually true about routing 93**, so you are not guessing: every
+mechanical gate passed at its checkpoint — `npm run verify`, 2,341 unit,
+contract, synthetic and adversarial tests across 110 files, the whole 360/430/1280
+browser matrix at one worker, the privacy, copy and adaptation scans, checkpoint
+equivalence, CI, release integrity from CI's own manifest artifact, and the
+Android-style deployed gate.
 
 ---
 
-## The phase
+## The cycle
 
-**Routing 93 — Validity: what it concludes from what it sees.**
+**Routing 94, cycle 94.1 — Fatherhood, alone.**
 
 The scope is fixed by the plan and the adjudication and is not yours to widen:
 
 - plan section 43A for the routing map;
-- `PRODUCT_ADJUDICATION_2.md` **§6.5** is the phase contract — builder scope, the
+- `PRODUCT_ADJUDICATION_2.md` **§6.6** is the phase contract — builder scope, the
   ordinary-owner QA contract, the synthetic QA contract, the completion condition
   and the explicit _not in this phase_ list. Read it in full before you plan.
-- `PRODUCT_ADJUDICATION_2.md` **§11** gives this phase an explicit split rule.
-  **Read it before you plan, not after you are behind.**
+- `PRODUCT_ADJUDICATION_2.md` **§11B** sizes the phase and defines the three
+  cycles. **94.1 is Fatherhood alone**, and §11B says in terms why: it is _"the
+  heaviest slice by an order of magnitude, and the one carrying every
+  owner-decision addition"_, roughly **nine times the weight** of the Home slice
+  by deliverable count, and _"84-shaped work inside a phase otherwise estimated
+  at 83-shaped per domain."_
+- **§13D** (owner decision 1, C19 — RESOLVED, Choice A), **§13E** (owner decision
+  4, C16 — RESOLVED, B-owner + C), **§13G** (Q1, age and normative reference —
+  1.1/1.2 yes, 1.3–1.5 no). All three are settled; none is yours to reopen.
 
-**Purpose, in one sentence.** The app cannot widen what it learns over a concept
-it cannot read — the phase before this made it readable, and this is what it may
-honestly conclude.
+**Purpose, in one sentence.** Fatherhood gets a destination that can reach Now,
+and everything the owner-decision sequence added about teaching a four-year-old
+lands with it — under a prohibition that has not moved.
 
-### Two things the phase before this left pointing directly at you
+### The nine deliverables, all of them Fatherhood-specific
 
-**The widened outcome horizon has no consumer yet, and AUD-0009 is it.**
-`multi-day` and `weekly` exist, are readable by every consumer, and no profile
-declares one — deliberately, because judging recovery over several nights is a
-conclusion drawn from evidence rather than a horizon to draw it over. §5.1 names
-C8 as the horizon's acceptance case. **The pinned digest in
-`tests/synthetic/reach-horizon.test.ts` will fail when you land it, and that is
-correct** — read what moved and say so, rather than updating the number.
+§11B enumerates them and §6.6 states each one's bound:
 
-**`sleep.quality-last-night` is declared non-decisional** because nothing reads
-it (DEF-0156). AUD-0009's recovery work is where its reader belongs, and the
-measurement in `tests/synthetic/reach-material.test.ts` will require the flag to
-move back the moment one exists.
+1. the `development-skill` **ordinary-use authoring route**, with its behavioural
+   acceptance test;
+2. the `about-person` **relationship-correctness repair**;
+3. the **near-duplicate guard** through `AuthoringProposal.problems`;
+4. **C's scaffolding guidance**;
+5. the **help-ladder reader — form (b), the "closer" register**;
+6. the **two-class growth-opportunity cap**, with its after-evaluation placement
+   and trace-integrity requirement;
+7. the **trace-integrity changes the cap forces**;
+8. **Adaya's birthdate** as one durable question;
+9. the **generation-time normative suppression filter** — which **may never
+   render a norm statement anywhere** and **must be a `continue`** rather than a
+   dimension or a rejection.
 
-### This phase is the largest in the roadmap and the most likely to run long
+Plus Fatherhood's own destination: a `PROVING_DOMAINS` row, a `MILESTONE_ENTITY`
+row, and progress evidence that is **domain-appropriate rather than a generic
+template**.
 
-§11's split rule exists for it. Reaching for the minimum-release path is an
-owner decision rather than a consequence of a phase running long (D-214).
+### The prohibition, which is the whole risk of this cycle
+
+**C19 is settled as PRESERVE (Choice A) and is independently load-bearing.** No
+rate, share, percentage, grade, rank or numeric summary about Adaya — anywhere,
+on any surface, in any export, at any privacy setting. D-070, D-112, D-117, D-135
+and D-136 stand. **The #6/#7 subject rule does not protect this boundary**, so do
+not lean on it.
+
+**§6.6's synthetic contract requires the child guard proved by reintroduction in
+every one of the five test files that carry it** — put a rate, share, rank or
+grade about her back in and watch the build fail, in each of the five. Routing
+93's own experience is that reintroduction is the only proof that survives
+reading: it caught a narrowing that a passing suite had not.
+
+**Two of the nine deliverables speak about a child** — the "closer" register and
+scaffolding guidance — under C19, D-136 and the pull-only delivery rule. §11B
+names them as the residual risk of the whole phase. Build them last, gate them
+hardest, and if either cannot be built inside the prohibition, **say so and
+deliver the other eight** rather than softening the bound.
+
+### And the audit's protected item
+
+**Time with Adaya must remain a first-class move, separate from working on
+something with her.** §6.6 names a teaching feature as _"the likeliest thing to
+erode"_ it. Prove the separation, do not assert it.
 
 ---
 
@@ -104,46 +147,55 @@ owner decision rather than a consequence of a phase running long (D-214).
 that is now closed to you.
 
 ```text
-Build routing Phase 93 of the Life Command OS rebuild — Validity: what it
-concludes from what it sees. Keep the Phase field exactly 93.
+Build routing Phase 94, cycle 94.1, of the Life Command OS rebuild — Fatherhood.
+Keep the Phase field exactly 94.
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Read docs/NEXT_PROMPT.md in full, then PRODUCT_ADJUDICATION_2.md §6.5 as the
-phase contract and §11 for the split rule this phase is most likely to need.
-Read docs/PHASE_STATUS.md for what is GREEN and what is not.
+Read docs/NEXT_PROMPT.md in full, then PRODUCT_ADJUDICATION_2.md §6.6 as the
+phase contract and §11B for the three-cycle sizing. Read §13D, §13E and §13G for
+the settled owner decisions this cycle depends on, and docs/PHASE_STATUS.md for
+what is GREEN and what is not.
 
-The two phases before this are BUILT / QA DEFERRED. Neither is GREEN and
-neither has passed independent QA; the most recent has had zero rounds. Do not
-treat their readings as settled, and do not edit docs/qa/PHASE_91_QA_HANDOFF.md or
-docs/qa/PHASE_92_QA_HANDOFF.md for any reason: both are briefs deferred QA
+Build cycle 94.1 ONLY — Fatherhood alone, plus its nine deliverables: the
+development-skill ordinary-use authoring route with its behavioural acceptance
+test, the about-person relationship-correctness repair, the near-duplicate guard
+through AuthoringProposal.problems, C's scaffolding guidance, the help-ladder
+reader in form (b)'s "closer" register, the two-class growth-opportunity cap with
+its after-evaluation placement and trace-integrity requirement, Adaya's birthdate
+as one durable question, and the generation-time normative suppression filter
+which may never render a norm statement anywhere and must be a continue rather
+than a dimension or a rejection. Plus Fatherhood's own destination — a
+PROVING_DOMAINS row, a MILESTONE_ENTITY row, and progress evidence that is
+domain-appropriate rather than a generic template rendered twelve times.
+
+Do NOT build cycle 94.2 or 94.3. If you finish early, stop and say so. The phase
+before this went over its own split rule at fourteen packages against a rule
+written for five (D-283), and this dispatch is that lesson applied.
+
+C19 is settled as PRESERVE and is independently load-bearing: no rate, share,
+percentage, grade, rank or numeric summary about Adaya anywhere, at any privacy
+setting. Prove the child guard by reintroduction in every one of the five test
+files that carry it. Keep time with Adaya a first-class move, separate from
+working on something with her, and prove the separation rather than asserting it.
+
+Three phases are unapproved — routing 91 and 92 are BUILT / QA DEFERRED and
+routing 93 is YELLOW. None is GREEN. Do not treat their readings as settled, and
+do not edit docs/qa/PHASE_91_QA_HANDOFF.md, docs/qa/PHASE_92_QA_HANDOFF.md or
+docs/qa/PHASE_93_QA_HANDOFF.md for any reason: all three are briefs deferred QA
 rounds start from and must survive unedited.
 
-Build §6.5's scope: AUD-0042, AUD-0029, AUD-0007, AUD-0009 (C8, and the
-acceptance case for the widened outcome horizon), AUD-0010, AUD-0022,
-AUD-0025's durable ledger, AUD-0030(a), AUD-0038(c), AUD-0019, AUD-0051, and
-owner-use F03, F08, F09, F18, F31, F34 bounded, F42 and F44's measurable half.
-Plus §13E.1's five-arm maintenance-probe regression — regression coverage only,
-no scoring package, no new dimension, no urgency change. Plus C21's enforcement
-half, reversing the shown-never-enforced rule for registered blocker concepts
-only, and C14's bands with histories built to land at each one.
+Measure your own addition to how often the app speaks separately, and do not
+re-baseline routing 92's 216/218 or routing 93's pinned 15.
 
-The phase before this left two things pointing at you. The multi-day and weekly
-horizons have no profile yet and AUD-0009 is their consumer; the pinned digest
-in tests/synthetic/reach-horizon.test.ts will fail when you land it, which is
-correct — read what moved and say so rather than updating the number. And
-sleep.quality-last-night is declared non-decisional because nothing reads it;
-its reader belongs with AUD-0009 and the measurement will require the flag to
-move back once one exists.
+Meet §6.6's gates — the ordinary-owner contract and the synthetic contract — and
+its completion condition: every domain either has a destination that can reach
+Now or is explicitly and truthfully declared as inspect-and-record with a reason
+on the page. For this cycle that condition applies to Fatherhood.
 
-Meet both gates in §6.5 — the ordinary-owner contract across three simulated
-weeks and the synthetic Validity gate — and the completion condition: C21's
-enforcement proved by reintroduction, no scoring dimension added and no weight
-moved without an explicit decision.
-
-Nothing in this phase adds a domain, forecasts, sets an expectation, revises a
-strategy, or composites the emotional dimensions. Those come later.
+Nothing in this cycle adds a revision loop, an inference, or a forecast, and
+nothing about the child changes beyond what owner decision 1 already settled.
 
 Write class tests and biting reintroduction proofs for the structural
 properties, not fixtures that memorise phrases. Run npm run verify, one full
@@ -153,7 +205,9 @@ and release integrity from that CI run's own manifest artifact. Commit, push,
 deploy and prove the deployed checkpoint is what Preview serves.
 
 Update docs/DECISION_LOG.md, docs/DEFECT_LEDGER.md and docs/PHASE_STATUS.md, and
-write docs/qa/PHASE_93_QA_HANDOFF.md as the brief for independent QA.
+write docs/qa/PHASE_94_QA_HANDOFF.md as the brief for independent QA, with
+94.1's own acceptance list in it — §11B says to gate 94.1 separately rather than
+letting it share a list with 94.2 and 94.3.
 
 You may not approve your own phase (D-077). Reach YELLOW — READY FOR
 INDEPENDENT QA and stop there. Do not mark anything GREEN, and do not start a
@@ -166,33 +220,37 @@ QA round yourself.
 **Conversation:** NEW.
 
 ```text
-Build routing Phase 93 of the Life Command OS rebuild.
+Build routing Phase 94, cycle 94.1, of the Life Command OS rebuild.
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Read docs/NEXT_PROMPT.md in full and execute the routing 93 dispatch at the end
-exactly as written. Keep the Phase field exactly 93, leave
-docs/qa/PHASE_91_QA_HANDOFF.md and docs/qa/PHASE_92_QA_HANDOFF.md unedited,
-reach YELLOW rather than GREEN, and do not ask me to paste the file contents.
+Read docs/NEXT_PROMPT.md in full and execute the routing 94 dispatch at the end
+exactly as written. Keep the Phase field exactly 94, build cycle 94.1 only,
+leave the three QA handoffs in docs/qa/ unedited, reach YELLOW rather than
+GREEN, and do not ask me to paste the file contents.
 ```
 
 ---
 
-## Three debts this dispatch is carrying, so they are not lost
+## Four debts this dispatch is carrying, so they are not lost
 
 **Routing 91's independent QA.** Round 10's brief is written and waiting in
 `docs/qa/PHASE_91_QA_HANDOFF.md`. It has not run.
 
-**The most recent phase's independent QA.** Round 0 is written in
+**Routing 92's independent QA.** Round 0 is written in
 `docs/qa/PHASE_92_QA_HANDOFF.md` and opens with the one gate item that did not
-come out even. **Zero rounds have run.** Whenever independent QA is turned back
-on, these two are the first things owed — and that one has the widest blast
-radius with the least scrutiny.
+come out even. **Zero rounds have run**, and it has the widest blast radius with
+the least scrutiny.
+
+**Routing 93's independent QA.** Round 0 is written in
+`docs/qa/PHASE_93_QA_HANDOFF.md` and opens with D-283 — fourteen packages
+carrying one phase's worth of scrutiny. **Zero rounds have run.** Whenever
+independent QA is turned back on, these three are what is owed, and 92 is first.
 
 **The nineteen D-210 instrument-hardening findings.** Still open, still
 untouched, backlog blob `58d5af071355d252c4a254fc685fcc9e8e88f417`, and not part
-of this phase's scope. They have now been deferred across six phases; that is
+of this cycle's scope. They have now been deferred across seven phases; that is
 worth the owner knowing rather than discovering.
 
 <!-- LCO_COMPLETE -->

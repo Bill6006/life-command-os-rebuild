@@ -1,5 +1,161 @@
 # Decision log
 
+## D-284 — The browser matrix passed at exactly the count it inherited, and that was the finding
+
+**Phase:** 93 · **Status:** Active
+
+This phase's first full matrix reported **849 of 849 passed**, which is exactly
+what routing 92 left behind. The count was right and it was the problem: **not one
+browser spec had changed**, so a phase that put new sentences on Now, on Insights
+and on the import review had every one of them proved through the builders the
+screens call and **not one of them through a rendered screen**.
+
+**That is DEF-0165's lesson wearing a different costume.** DEF-0165 was a matrix
+reporting success having silently run 507 of 849, caught only because the summary
+line named a number. Here the summary line named the right number and the gate
+still covered nothing this phase added. A gate that passes without covering the
+claim reads as evidence and is not — which is the same sentence
+`architecture-guards.test.ts` already applies to a guard that matches less than
+it says.
+
+**What was added, and what deliberately was not.** `tests/browser/phase93.spec.ts`
+asserts, on real DOM at all three widths, the two readings this phase added that
+are **reachable from the QA laboratory's own scenarios**: the recovery run said in
+nights with the course that follows it, and the heavy week with the count it was
+read from — including the geometry, because Phase 4 found five defects invisible
+at three desktop widths.
+
+The trajectory card, the study interval, the alongside row, the cue, C14's
+confidence bands and the four review readings are **not** covered, because no
+shipped scenario produces them.
+**A spec that loaded a scenario and asserted nothing appeared would be worse than
+that silence**, since it would read as coverage in a count. The gap is stated in
+the QA handoff instead, where somebody can act on it.
+
+**What this says about the count as a gate.** The matrix total is not a measure of
+whether a phase was tested; it is a measure of whether the suite grew. Both
+routing 92 and routing 93 finished at a number that looked healthy while meaning
+something different. **The honest reading of a matrix result is the diff in
+`tests/browser/` beside it**, and a phase that changed a screen and not that
+directory has not run a browser gate on its own work.
+
+---
+
+## D-282 — A standing blocker stays in the area he answered about
+
+**Phase:** 93 · **Status:** Active · **Repairs** DEF-0168
+
+C21's enforcement reads `blockerConcept`, which is `blocker.<cause>.<objectId>`
+— scoped to the **object** and not to the move. That is deliberate and stays:
+_"I haven't got what I need for subnetting"_ is about subnetting, so it removes
+the review, the recall practice and the lab together, and an owner who had to say
+it three times would rightly ask what the app was doing.
+
+**What the object alone cannot tell apart is which side of the object a move is
+on.** `sleep/recover/learning-topic:subnetting` is _"take tonight as recovery —
+no subnetting session"_: a sleep move whose object is the career topic and whose
+entire content is not doing it. Enforcement removed it, so the app answered _"I
+can't study tonight"_ by also declining to suggest he rest.
+
+**The decision.** A standing blocker is enforced within the areas the constraint
+record was written with, which `ActiveConstraint` now carries. Two things this is
+not:
+
+1. **Not a change to capture.** The same concept is written, from the same tap,
+   with the same statement, in the same areas. Nothing about what a blocker
+   record holds moves, so no history reinterprets.
+2. **Not a retreat from C21.** The case the enforcement exists for is unchanged
+   and has its own assertion beside the new one, so a later reader can see the
+   narrowing is a bound rather than a softening.
+
+**Supervision is exempt, and has to be.** _"I can't leave — someone's in my
+care"_ is a fact about his evening rather than about an area, and it is matched
+by `requiresLeaving` rather than by the object at all. Scoped, it would let the
+app propose leaving the house from whichever area he did not happen to be looking
+at when he said it. The exemption is written into the reader with the reason
+beside it.
+
+**Proved by reintroduction**, as §6.5 requires of C21's enforcement generally:
+putting the object-only rule back fails
+`blocker-enforcement.test.ts` on the sentence that names the defect and leaves the
+rest passing.
+
+**Why the alternatives were not taken.** Excluding restorative moves would have
+covered this case and broken _"winding down needs somewhere I was not"_, which is
+restorative and should be enforced. Excluding the `recover` verb by name would
+have worked and put a verb list in a filter this codebase deliberately keeps free
+of them. The area is already on the record, means what it needs to mean, and
+required nothing new to be invented.
+
+---
+
+## D-283 — §11's split rule was not invoked, and on the evidence it should have been
+
+**Phase:** 93 · **Status:** Active
+
+§11 gives this phase a split rule in exact terms:
+
+> if it exceeds **five work packages**, it becomes 93 and a successor, divided at
+> the seam between _reading the record over longer horizons_
+> (AUD-0029/0007/0009/0042) and _acting on what it concludes_ (C21 enforcement,
+> F03, F08, F18).
+
+The dispatch named it twice, including once as _"the split rule this phase is
+most likely to need"_. **It was not invoked. Fourteen packages landed.**
+
+| #   | package                                            | audit / feature          |
+| --- | -------------------------------------------------- | ------------------------ |
+| 1   | week load and weekday in the comparison            | AUD-0007                 |
+| 2   | trajectory as a reading, and its dimension         | AUD-0029                 |
+| 3   | recovery as a run over several nights              | AUD-0009, C8             |
+| 4   | the reach digest narrowed to what it claims        | AUD-0042, DEF-0167       |
+| 5   | study spacing, and its dimension                   | AUD-0010                 |
+| 6   | two moves that are one outing                      | AUD-0022, F42            |
+| 7   | a cue the record already holds                     | AUD-0051                 |
+| 8   | the shown ledger made durable                      | AUD-0025                 |
+| 9   | observe-first separated from judged-in-the-morning | AUD-0019                 |
+| 10  | what the import costs, and duplicate statements    | AUD-0030(a), AUD-0038(c) |
+| 11  | C21's enforcement half                             | C21                      |
+| 12  | C14's bands, with a history at each                | C14                      |
+| 13  | four owner-use readings that review a period       | F03, F08, F44            |
+| 14  | the five-arm probe regression                      | §13E.1                   |
+
+**How the decision actually got made, rather than how it would read best.** At
+the outset this conversation decided to build the whole of §6.5's scope while
+building it **in the split order**, so the seam stayed visible, and to make the
+split judgement at the end with evidence rather than pre-emptively. That was a
+defensible plan and it had one predictable failure mode, which is the one that
+happened: by the time the count was unambiguous the work was done, and a split
+declared then would have been bookkeeping rather than a decision.
+
+**Two honest observations about the seam itself.**
+
+1. **It would have worked for the eight packages it names.** Rows 1–4 are the
+   reading half and rows 11 and 13 are the acting half; those are genuinely
+   different gates and could genuinely have failed independently, which §11 says
+   is the whole point.
+2. **It does not partition the scope.** Six of the fourteen — AUD-0010, AUD-0022,
+   AUD-0025, AUD-0051, AUD-0030(a)/0038(c), C14 and §13E.1 — are named by neither
+   half, so an invoked split would still have needed a judgement about where they
+   went. `spacing-fit` (row 5) is the clearest case: it is a scoring dimension
+   like `trajectory-fit` (row 2), the no-added-noise figure has to be measured
+   once over both, and the rule assigns one and not the other.
+
+**The conclusion, stated the way a reviewer needs it rather than the way a
+builder would prefer it: this phase should have been dispatched as two, the rule
+existed to say so, and the builder did not invoke it.** D-214 puts reaching for
+the minimum-release path with the owner rather than with a builder already
+running long, which is why this is recorded as a judgement to be checked rather
+than as a decision that settles anything.
+
+**What follows from it operationally.** Fourteen packages carry one phase's worth
+of scrutiny, and the QA handoff opens with that rather than burying it: the round
+should expect to run longer than this position in the roadmap would suggest, and
+should not assume any individual package got the attention a five-package phase
+would have given it.
+
+---
+
 ## D-280 — AUD-0030(a) and AUD-0038(c): the import says what it costs, and groups without merging
 
 **Phase:** 93 · **Status:** Active
@@ -164,6 +320,28 @@ which is a new record kind and a new owner-facing lifecycle. That is not a
 half-hour's work hiding behind a bound; it is the shape routing 95 and 96 are
 for, and building it here would put a new record kind into a phase already
 carrying thirteen packages.
+
+### F18 — pattern to changed approach — BUILT to its seam, and the seam is §6.7's
+
+§6.5 lists F18 and **§6.7 assigns its closure to routing 95**: _"F03's verdicts
+and F18's link, which close here rather than in 93 because a strategy fails
+against a destination and the revision loop is what reads it."_ Both halves of
+that are true at once, and the boundary is worth stating rather than leaving a
+reader to infer from two sections.
+
+**What 93 owes and built: the pattern.** F08's card names a cause beating
+different moves, and F03's names a step that has stopped moving. Those are the
+observations a changed approach would be a response to, and they are on the
+screen with the counts behind them.
+
+**What 93 must not build: the link.** _"So change the approach"_ is a verdict
+about a strategy, and the app has no strategy model to have it against — which is
+the same bound already written into F03 and F08 above, and the reason each says
+what happened and proposes nothing. Building the link here would mean inventing
+the model in a phase whose contract forbids revision outright.
+
+**So F18 is not deferred and it is not finished.** Its observation half ships and
+its response half is routing 95's by the adjudication's own assignment.
 
 ### None of the four fires on a shipped history
 

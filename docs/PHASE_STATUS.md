@@ -135,6 +135,190 @@ superseded rather than reused.
 
 ---
 
+# Routing Phase 93 — Validity: what it concludes from what it sees
+
+**Status: YELLOW — READY FOR INDEPENDENT QA.**
+
+Not GREEN. D-077 is unchanged and no round has run. The brief is
+[`qa/PHASE_93_QA_HANDOFF.md`](qa/PHASE_93_QA_HANDOFF.md).
+
+**The first thing a reader should know is that this phase came in over its own
+split rule.** `PRODUCT_ADJUDICATION_2.md` §11 gives routing 93 an explicit split
+rule and the dispatch named it twice; it was not invoked, and the phase landed
+**fourteen packages against a rule written for five**. D-283 records the count,
+how the decision actually got made, and the conclusion: **this phase should have
+been dispatched as two, the rule existed to say so, and the builder did not
+invoke it.** A reviewer should treat it as two phases' worth of change carrying
+one phase's worth of scrutiny.
+
+How the decision actually got made, rather than a tidier version of it: the
+conversation chose to build the whole of §6.5's scope **in the split order** and
+to judge the split at the end with evidence rather than pre-emptively. That plan
+had one predictable failure mode and it is the one that happened — by the time
+the count was unambiguous the work was done, and a split declared then would have
+been bookkeeping. The seam §11 names **would** have worked for the eight packages
+it names, and it does **not** partition the scope: six of the fourteen belong to
+neither half. D-214 puts reaching for the minimum-release path with the owner
+rather than with a builder already running long, which is why this is recorded as
+a judgement to be checked rather than as a decision that settles anything.
+
+## The question this phase answers, in one sentence
+
+The phase before it made concepts **readable**; this is what the app may honestly
+**conclude** from reading them — and every conclusion it added has to name the
+record it came from rather than the rule it followed.
+
+## What it built
+
+**93.1 — a Tuesday is not a Saturday, and a heavy week is heavy (AUD-0007).**
+The weekday and the week's load join the similarity comparison at half weight
+each, and `describeWeekLoad` speaks **only** for the heavy week — a light week
+says nothing, because "you have room this week" is a claim about a future the
+record does not hold. D-269.
+
+**93.2 — a six-week reading reaches a decision (AUD-0029).** `readTrajectories`
+turns a run of readings over one concept into a direction, gated on
+`mayReasonFrom` and carrying `mayRaise` separately so the engine can know
+something it may not bring up. `trajectory-fit` is the twentieth dimension, added
+with the explicit decision §6.5 requires. D-270.
+
+**93.3 — recovery is a run of nights, and how the night went decides its length
+(AUD-0009, C8).** The length comes from the owner's own shortfall and his own
+reported quality, never from a research prior — §13C's line held by deriving the
+span from his record and keeping the reading in the comments. This is where
+routing 92's `multi-day` horizon gets its consumer and where
+`sleep.quality-last-night` moves back to decisional. D-271, DEF-0166.
+
+**93.4 — observe-first stops meaning judged-in-the-morning (AUD-0019).** The two
+were one flag; they are now separate, and the separation reaches three more verbs
+rather than the four a looser reading would have taken. D-272, DEF-0167.
+
+**93.5 — study gets a schedule (AUD-0010).** An interval derived from the
+owner's own last session and how it went, widening on a good run. `spacing-fit`
+is the twenty-first dimension and abstains entirely where a live thread covers
+the same object, because the app's timing never out-argues his plan. D-273.
+
+**93.6 — C21's enforcement half, proved by reintroduction.** The app's own
+blocker records — closed cause, structured object, written by his tap — are
+enforced. **Free text still is not**, and that half of the old rule stands.
+D-274.
+
+**93.7 — the shown ledger survives the session (AUD-0025).** One owner-local
+day, in IndexedDB, dropping other days on read and never throwing. The rule about
+not saying the same thing four times before lunch now survives closing the app.
+
+**93.8 — two moves that are one outing, and the evening she is away (AUD-0022,
+F42).** One compatible pair, declared rather than inferred, and the half of the
+nine identical evenings that could not be closed is recorded as not closed.
+D-276.
+
+**93.9 — when, and how sure (AUD-0051, C14).** A cue names a moment the record
+already holds or there is no cue; C14's bands are built and proved with a history
+landing at each one, and calibration stays deferred. D-277, D-278.
+
+**93.10 — what the record says about how it is going (F03, F08, F44).** A
+stalled milestone said to be stalled, a recurring blocker named, and the
+measurable half of the burden reading. Each says what it found and promises
+nothing about what it will do. D-279.
+
+**93.11 — what the import costs, and goals that say the same thing (AUD-0030(a),
+AUD-0038(c)).** The archive is named and its consequence stated in one sentence;
+duplicate statements are **grouped and never merged**, and declining writes byte
+for byte what today's import writes. D-280. Plus §13E.1's five-arm
+maintenance-probe regression, regression coverage only, with no product change
+behind it. D-281.
+
+**93.12 — a standing blocker stays in the area he answered about.** Found by
+walking §6.5's ordinary-owner contract in the last hour of the phase: enforcement
+inherited `blockerConcept`'s object scoping, so _"I haven't got what I need"_
+about reviewing subnetting also removed the sleep move that says **not** to study
+it. D-282, DEF-0168.
+
+## Gates at submission
+
+Filled in from results rather than in advance. A row that says PENDING has not
+run at the time of writing and is not a claim.
+
+| Gate                                                           | Result                        |
+| -------------------------------------------------------------- | ----------------------------- |
+| `npm run verify` — format, lint, typecheck, tests, build, copy | PASS                          |
+| Unit, contract, synthetic and adversarial tests                | PASS — 2,341 across 110 files |
+| Privacy scan                                                   | PASS — 343 tracked files      |
+| Rendered copy scan                                             | PASS — 9,040 shipped strings  |
+| Adaptation-claim scan                                          | PASS                          |
+| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PENDING                       |
+| CI, including its own matrix run                               | PENDING                       |
+| Checkpoint equivalence                                         | PENDING                       |
+| Release integrity, from CI's own manifest artifact             | PENDING                       |
+| Android-style deployed gate                                    | PENDING                       |
+| Independent QA (required from Phase 5 on, D-077)               | **NOT RUN — zero rounds**     |
+
+**The first full matrix passed at exactly the count it inherited, and that was a
+finding rather than a result — D-284.** It reported **849 of 849**, which is what
+routing 92 left behind, because **not one browser spec had changed**: a phase that
+put new sentences on Now, on Insights and on the import review had proved every
+one of them through the builders the screens call and **none through a rendered
+screen**. That is DEF-0165's lesson in a different costume — there the summary
+line named the wrong number, here it named the right one and the gate still
+covered nothing the phase added.
+
+`tests/browser/phase93.spec.ts` now asserts, on real DOM at all three widths, the
+two readings reachable from the QA laboratory's own scenarios: the recovery run
+said in nights with the course that follows it, and the heavy week with the count
+it was read from. **The rest of the phase's readings still have no rendered
+test** — the trajectory card, the study interval, the alongside row, the cue,
+C14's confidence bands and the four review readings — because no shipped scenario
+produces them. That gap is
+named in the QA handoff rather than covered by a spec that would assert nothing
+and read as coverage.
+
+**Checkpoint:** `b23e672` — the commit every product gate was run on, and the
+last one to change anything the browser downloads. `d9d4aac` adds
+`tests/browser/phase93.spec.ts` and changes no bundled byte.
+
+## The three defects this phase found
+
+**DEF-0166** — a recovery run could not advance past the object of its first
+evening, stalling at 2 of 3.
+
+**DEF-0167** — the S1a pinned digest's derivation half had been hashing an
+**empty list** since routing 92: no shipped history reaches a completed
+`next-morning` sleep episode with a morning reading inside its window, so an
+acceptance claim was verified against zero rows. Not a product defect; a guard
+covering less than it claimed.
+
+**DEF-0168** — object-scoped blocker enforcement removed the move whose whole
+content is _not_ doing the object, so the app answered _"I can't study tonight"_
+by declining to suggest he rest. Found by walking the ordinary-owner contract.
+
+## What independent QA is walking into
+
+**Almost nothing this phase added is reachable from the shipped histories.**
+Every new reading needed a purpose-built history to fire, and each of those tests
+also asserts the twenty-seven shipped histories stay silent. That is honest
+construction and it is also the weakest available evidence about real use: the
+builder chose the conditions under which his own code speaks. **Driving the
+deployed app until one of these readings appears uninvited is the most valuable
+thing Round 1 can do.**
+
+**Two scoring dimensions were added and no weight moved.** `trajectory-fit` and
+`spacing-fit`, each with the explicit decision §6.5's completion condition
+requires, each abstaining at zero weight in the common case. A dimension that
+abstains everywhere is a dimension doing nothing, and
+`instrument-recut.test.ts`'s allowed list is where to check.
+
+**Routing 93's addition to how often the app speaks is pinned at 15 and
+enumerated by name** — the week-load card on three histories at five hours each.
+**Routing 92's 216/218 was not re-baselined and was not disturbed**, so the two
+cannot hide inside each other. That open item is still open and still routing
+92's.
+
+**Routing 91 and routing 92 are both still BUILT / QA DEFERRED.** Their handoffs
+were not edited by this phase, and nothing here approves any part of either.
+Routing 93 is built on top of routing 92, which has had zero independent rounds.
+
+---
+
 # Routing Phase 92 — Reach: what the brain can see
 
 **Status: BUILT / QA DEFERRED.**

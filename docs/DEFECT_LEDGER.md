@@ -1,5 +1,49 @@
 # Defect ledger
 
+## DEF-0168 — a blocker about studying stopped him being told to rest
+
+**Phase:** 93 · **Found by:** walking §6.5's ordinary-owner contract · **Status:** REPAIRED
+
+C21's enforcement landed this phase, and `blockerConcept` is
+`blocker.<cause>.<objectId>` — scoped to the **object** and not to the move. That
+scoping is right and is not what was wrong: _"I haven't got what I need for
+subnetting"_ is about subnetting rather than about the one move he happened to be
+looking at, so it should remove the review, the recall practice and the lab
+together.
+
+What the object alone cannot tell apart is **which side of the object a move is
+on**. `sleep/recover/learning-topic:subnetting` is _"take tonight as recovery —
+no subnetting session"_: a sleep move whose object is the career topic, and whose
+entire content is **not** doing it. Object-scoped enforcement removed it. The app
+answered _"I can't study tonight"_ by declining to suggest he rest — on the
+grounds that he could not study.
+
+**What it cost.** Three days after the blocker, on `rested-and-behind`, the
+rejection list read four rows where it should have read three, and the fourth was
+the only restorative move on the table.
+
+**The repair.** `ActiveConstraint` now carries the `domains` the constraint record
+was written with, and `standingBlockerFor` requires the candidate's area to be one
+of them. Nothing about **capture** changes: the same concept is written, from the
+same tap, with the same statement. Supervision is exempt and has to be —
+_"I can't leave, someone's in my care"_ is a fact about his evening rather than
+about an area, and it is matched by `requiresLeaving` rather than by a noun, so
+scoping it would let the app propose leaving the house from a different domain.
+
+**Proved by reintroduction**, the way §6.5 asks C21's enforcement to be: put the
+object-only rule back and
+`blocker-enforcement.test.ts` fails on the sentence that names the defect, while
+the case C21 exists for keeps passing. The owner-level walk is in
+`owner-contract.test.ts`.
+
+**Why the contract walk found it and 2,300 tests did not.** Every enforcement test
+built the constraint and the candidate in the same area, because that is the
+natural way to write one. It takes a fixture where a study topic is also the
+object of a sleep move — and an owner's actual sequence across three days — for
+the two areas to come apart.
+
+---
+
 ## DEF-0167 — the S1a digest was hashing an empty derivation
 
 **Phase:** 93 · **Found by:** AUD-0042, while narrowing the pin · **Status:** REPAIRED
