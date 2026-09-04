@@ -74,6 +74,18 @@ that suits it, forecast where he is heading, and deliberately test alternatives.
 D-077 is unchanged. **All three QA handoffs in `docs/qa/` must survive unedited.**
 Do not append to them, correct them, or tidy them.
 
+**One narrow exception, and it exists because the omission already happened
+once.** Each brief opens with a machine-read routing block — `**Phase:**`,
+`**Actor:**`, `**Model:**`, `**Conversation:**`, `**Reasoning level:**`. The
+orchestrator reads it to record that a phase owes QA. `PHASE_93_QA_HANDOFF.md`
+shipped without it, so the orchestrator could not defer routing 93 and blocked
+instead, and the phase went unrecorded in the debt ledger. **Repairing a missing
+or malformed routing header is allowed and expected. Everything below it — the
+rounds, the findings, the judgements — is not yours.**
+
+**Your own handoff must carry that block.** Copy its shape from
+`PHASE_92_QA_HANDOFF.md`, which is the one that parses.
+
 ---
 
 ## The phase

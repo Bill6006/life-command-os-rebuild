@@ -2,7 +2,20 @@
 
 ## Round 0 — the builder's submission and the QA brief
 
-**Status: YELLOW — READY FOR INDEPENDENT QA.**
+**Phase:** 93 — Validity: what it concludes from what it sees
+
+**Round:** 0 — written by the Claude builder conversation. **Everything below
+this section belongs to independent QA**, which owns every update to this file
+from Round 1 on (D-077, `README.md`). The builder does not edit QA's rounds.
+
+**Actor:** Codex / **independent QA**.
+**Conversation:** **NEW** — not the routing 93 builder, and not any routing 91
+or 92 conversation.
+**Model:** Codex.
+**Reasoning level:** **High** — never Max, which is Claude's level.
+
+**Overall result:** **YELLOW — READY FOR INDEPENDENT QA.** A builder
+conversation may not approve its own phase.
 
 Written by the Claude builder conversation that built routing 93. It approves
 nothing. D-077 is unchanged: **only independent QA may pass a phase**, and no
