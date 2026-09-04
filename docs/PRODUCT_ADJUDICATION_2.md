@@ -786,7 +786,8 @@ own precondition for AUD-0040 is met.
   (wrong in four of fifteen cases).
 - **AUD-0011 including D-166's six emotional dimensions** — mood, stress,
   motivation, confidence, loneliness / social connection need, mental overload.
-  Distinct, independently unknown, **never composited into a wellness score**
+  **Eight since D-293** (irritation and focus added 2026-09-04). Distinct,
+  independently unknown, **never composited into a wellness score**
   (**D-287** approves a separate 0–100 **state reading** with learned weights —
   a thermometer, not a verdict, and it acquires no quality adjective), not all
   asked on any day, free

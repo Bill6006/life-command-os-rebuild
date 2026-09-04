@@ -9,19 +9,14 @@ starts no QA round.
 
 ---
 
-## STOP — routing 94 is under a machine-enforced hold
+## The hold on this phase is released — check it anyway
 
-`docs/CAMPAIGN_HOLDS.md` carries
-`<!-- lco:decision id=D-285 status=open blocks_phase=94 -->`.
+`docs/CAMPAIGN_HOLDS.md` carried `id=D-285 blocks_phase=94` until the owner named
+the shipped default. **He did, on 2026-09-04 — D-293 — and the declaration now
+reads `status=closed`.** Confirm that before you start; if it says `open`, stop.
 
-**The owner must name the shipped default depth and frequency of the check-in
-before this phase starts.** D-285 records why it is a hold rather than a note: the
-default is the real decision, because most people never open settings and the
-owner will live with whatever ships on exactly the days he is too tired to change
-it. **A builder who picks it to be safe re-creates the starvation this phase
-exists to end.**
-
-If the hold is still `status=open`, stop and say so.
+**The other hold is not yours.** `id=D-172 blocks_phase=98` is open and governs
+longitudinal inference. It does not gate this phase.
 
 ---
 
@@ -80,9 +75,17 @@ Do not append to them, correct them, or tidy them.
 
 1. **A check-in ritual** at scheduled times, with a notification bringing him to
    it. Fixed set, bounded, skippable, and the same shape every time.
-2. **The readings.** Feeling (mood, irritation, stress, overwhelm), drive
-   (motivation, confidence, focus), connection (loneliness, social energy), and
-   energy. **Plus a morning-only reading:** sleep hours and sleep quality.
+2. **The readings, at the default D-293 sets.** **Morning (~14):** mood,
+   irritation, stress, overwhelm, motivation, confidence, focus, loneliness,
+   social energy, energy, hunger, plus sleep hours and sleep quality. **Midday and
+   evening (5):** mood, irritation, energy, hunger, stress. Roughly **24 a day**
+   against the **one** a new store is asked now.
+
+   **Three of them are new concepts** — `emotional.irritation`, `emotional.focus`
+   and `health.hunger`. D-293 amends D-166's six to eight and adds hunger outside
+   that list. **Irritation is not a variant of stress and must not be mapped onto
+   it.**
+
 3. **Stored as ordinary observation records.** No schema invention — the record
    layer already does this.
 4. **A 0–100 state score.** 100 is every dimension at its best — a fixed ceiling.
@@ -111,17 +114,16 @@ a seventh, stop and say so** rather than absorbing it.
 
 ---
 
-## Two things that are genuinely unresolved, and are yours to raise not to decide
+## One thing worth knowing about the eight dimensions
 
-**1. Two of the readings do not exist as concepts.** D-166's six emotional
-dimensions are mood, stress, motivation, confidence, loneliness/social-connection
-and overwhelm. The owner's check-in also names **irritation** and **focus**, and
-neither is in that list — D-166 is explicit that its six are owner-stated and that
-energy and tiredness are deliberately not among them. **Adding two dimensions is an
-amendment to D-166 and is the owner's to make.** Raise it before you build the
-check-in; do not silently map irritation onto stress, and do not silently add them.
+**Focus was not the owner's word.** It arrived through the previous conversation's
+own grouping, which he then selected as a block, and he asked for it knowing that.
+D-293 records why it matters: **focus is the dimension most likely to prove an
+effect of energy and mood rather than a cause.** Build it, and when D-287's learned
+weights arrive in a later phase, do not treat all eight as peers without checking.
 
-**2. The default depth and frequency** are the hold above. They are not yours.
+**Irritation and hunger were his own words**, named unprompted in his first
+description of the loop.
 
 ---
 
@@ -158,30 +160,31 @@ readings and the score. Keep the Phase field exactly 94.
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-FIRST: check docs/CAMPAIGN_HOLDS.md. Routing 94 is blocked by
-lco:decision id=D-285 until the owner names the shipped default depth and
-frequency of the check-in. If it still says status=open, stop and say so.
+FIRST: check docs/CAMPAIGN_HOLDS.md. The D-285 hold on routing 94 was released
+on 2026-09-04 and should read status=closed. If it says open, stop and say so.
+The D-172 hold on phase 98 is open and does not gate this phase.
 
 Read docs/NEXT_PROMPT.md in full, then docs/STATE_ENGINE_OWNER_DECISION.md in
 full, then D-285 through D-292 in docs/DECISION_LOG.md. The roadmap changed on
 2026-09-04 and those documents are the change.
 
 Build six things and no more: a scheduled check-in ritual with a notification;
-the readings (mood, irritation, stress, overwhelm, motivation, confidence,
-focus, loneliness, social energy, energy, plus morning-only sleep hours and
-quality); storage as ordinary observation records; a 0-100 state score at equal
-weights stated as equal weights; a settings control for depth and frequency
-separately; and a second question budget for the ritual, exempt from the swing
-rule and counted separately from decision-relevant asks.
+the readings at D-293's default (morning ~14 — mood, irritation, stress,
+overwhelm, motivation, confidence, focus, loneliness, social energy, energy,
+hunger, sleep hours, sleep quality; midday and evening 5 — mood, irritation,
+energy, hunger, stress); storage as ordinary observation records; a 0-100 state
+score at equal weights stated as equal weights; a settings control for depth and
+frequency separately; and a second question budget for the ritual, exempt from
+the swing rule and counted separately from decision-relevant asks.
+
+Three concepts are new: emotional.irritation, emotional.focus and health.hunger.
+D-293 amends D-166's six emotional dimensions to eight and adds hunger outside
+that list. Irritation is not a variant of stress and must not be mapped onto it.
 
 Not in this phase: the move catalogue, effect measurement, the forecast,
 exploration, causal chains, learned weights, or Fatherhood. Routing 93 went to
 fourteen packages against a five-package rule (D-283). Six items are listed. If
 you find a seventh, stop and say so.
-
-Raise before building: irritation and focus are not among D-166's six emotional
-dimensions. Adding them amends D-166 and is the owner's decision, not yours. Do
-not silently map irritation onto stress and do not silently add concepts.
 
 Every reading stays bound by G-009 — unknown stays unknown, a skipped check-in
 infers nothing, nothing is back-filled. The score is a reading and never

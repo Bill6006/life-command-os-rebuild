@@ -8,14 +8,15 @@ A hold is released by editing its `status` here, after the decision has actually
 been made. Deleting a line does not release a hold - the orchestrator will report
 the declaration as missing and refuse to start the phase.
 
-<!-- lco:decision id=D-285 status=open blocks_phase=94 -->
+<!-- lco:decision id=D-285 status=closed blocks_phase=94 -->
 
-**D-285 … D-292 — the state engine. The default depth and frequency are not
-chosen.**
+**D-285 … D-292 — the state engine. RELEASED 2026-09-04 by D-293.**
 
 Routing 94 is the state engine's first slice — the check-in, the readings stored,
-and the score — and it **must not start** until the owner has chosen the shipped
-**default depth and frequency** of the check-in.
+and the score. It was held until the owner chose the shipped **default depth and
+frequency** of the check-in. **He has: D-293 sets it at roughly 14 readings in the
+morning and 5 at midday and evening, and adds three concepts.** The phase may
+start.
 
 **Why this is a hold and not a note.** D-285 turns `QUESTIONS_PER_DAY = 3` from a
 ceiling into a preference, and D-285 itself records why the default is the real
@@ -24,9 +25,9 @@ shipped default on exactly the days he is too tired to change it."_ A builder wh
 picks it to be safe re-creates the starvation the decision exists to end —
 **measured 2026-09-03 at one question a day on a new store**.
 
-**What releases it.** The owner names the default depth (readings per check-in)
-and frequency (check-ins per day), and the `status` above is edited to `closed`.
-Nothing else in D-285 … D-292 is blocked by this line.
+**Released.** The owner named the default on 2026-09-04 and the `status` above is
+`closed`. **D-285's control still governs** — the default is where the app starts,
+not where it stays.
 
 **Everything else about the state engine is decided.** D-285 (depth and frequency
 are the owner's), D-286 (two budgets, two rules), D-287 (the 0–100 state reading

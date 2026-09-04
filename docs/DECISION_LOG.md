@@ -1,5 +1,65 @@
 # Decision log
 
+## D-293 — What the check-in is: the readings, the default, and three new concepts
+
+**Phase:** 94 · **Status:** Active · **Amends** D-166 · **Releases** D-285's hold ·
+**Owner-decided 2026-09-04**
+
+### The shipped default
+
+| Check-in                | Readings                                                                                                                                              |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Morning** (~14)       | mood, irritation, stress, overwhelm, motivation, confidence, focus, loneliness, social energy, energy, hunger, **plus** sleep hours and sleep quality |
+| **Midday, evening** (5) | mood, irritation, energy, hunger, stress                                                                                                              |
+
+**Roughly 24 readings a day**, against the **one** a new store is asked today.
+
+**Why the two are different sizes, and it is a data-quality argument rather than a
+kindness.** Some dimensions move within a day — mood, irritation, energy, hunger,
+stress. Some barely move between lunch and dinner — loneliness, confidence,
+motivation. **Asking a slow dimension three times a day does not produce three
+readings; it produces one reading and two taps the owner stopped thinking about**,
+and that is noise entering the series the whole forecast rests on. It is also what
+the owner asked for in his own words: _"the app should know what it needs."_
+
+**The default is not a ceiling.** D-285's control — depth and frequency, separately
+— sits over it, and the owner reminded the record that it exists: the default is
+where the app starts, not where it stays.
+
+### Three new concepts
+
+**`emotional.irritation` and `emotional.focus` amend D-166's six to eight.** D-166's
+list was owner-stated and this changes it, so it is recorded rather than assumed.
+
+- **Irritation was named first and unprompted** — the owner's opening description of
+  the loop was _"sleep? 6 hours, mood? 5 out of 10, irritated? 9/10, hungry? 5/10."_
+  It is not a variant of stress and must not be silently mapped onto it.
+- **Focus was not his word.** It arrived through the builder's own grouping of the
+  dimensions, which he then selected as a block. He asked for it anyway, knowing
+  that. **It is the dimension most likely to prove an effect of energy and mood
+  rather than a cause**, and the weights work under D-287 should be read with that
+  in mind rather than treating all eight as peers.
+
+**`health.hunger` is new and is not an emotional dimension.** It was one of the
+owner's original four and the builder lost it inside a grouping that sent it to the
+morning only. It swings within a day more than almost anything else on the list, so
+it is in both sets.
+
+### What this does not do
+
+**It adds no consumer.** §13B's rule that _"a concept may ship as askable only when
+an actual consumer exists"_ is satisfied differently here and the difference is
+worth stating: the consumer of every check-in reading is **the state score and the
+history the forecast will be built on**, not a branch in today's recommendation.
+That is exactly the second budget D-286 creates, and it is why these concepts do
+not have to justify themselves to `probeSwings`.
+
+**Energy and tiredness stay where D-166 put them.** `energy.current`,
+`sleep.hours-last-night` and `sleep.quality-last-night` are existing concepts and
+are read as they always were. Nothing is duplicated into an emotional reading.
+
+---
+
 ## D-285 — The daily question ceiling becomes an owner preference
 
 **Phase:** — · **Status:** Active · **Amends** §13B (owner decision #3) ·

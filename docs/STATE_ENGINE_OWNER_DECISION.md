@@ -1,7 +1,17 @@
 # The state engine — what the owner actually asked for, and the six decisions it needs
 
-**Status: DECISION REQUEST. Nothing is built, nothing is approved, and nothing in
-this document authorises a line of code.**
+**Status: DECIDED 2026-09-04. Recorded as D-285 … D-293, amended at source, and
+routing 94 is dispatched.** This document is the reasoning; the decision log is
+the register. Nothing is built yet.
+
+> **What changed since this was written as a request.** The owner approved all six
+> decisions, the C19 redraft (D-291) and the routing shift (D-292), then set the
+> check-in's shipped default and added three concepts (D-293). Two things surfaced
+> in the writing and are now part of the record: **C11's rejection of steering on a
+> forecast is correct**, so D-288's forecast is a **no-intervention baseline scored
+> only where nothing was done**; and **irritation, focus and hunger did not exist
+> as concepts**, so D-293 amends D-166's six emotional dimensions to eight and adds
+> hunger outside that list.
 
 **Written 2026-09-04**, from a structured interview with the owner during the
 routing 93 closeout. Every answer below is his, recorded as given. Every
@@ -507,11 +517,15 @@ starts accumulating.
 
 ## What is not decided here
 
-- Nothing in this document is approved. All six decisions are the owner's.
-- No amendment to §13B, §13C, D-166, C19 or §6.5 has been written; this states the
-  case for each.
-- The check-in's exact readings, the ladder for each, and the default depth are
-  unspecified.
+- **The six decisions are approved** — D-285 … D-290 — and §13B, §13C, D-166, C19,
+  §6.5, the C10/C11/C19 capability rows, §13D, §13G and section 43A are amended at
+  the exact lines that said otherwise.
+- **The check-in's readings and default are set** by D-293. The **ladder for each
+  reading** — what the scale is and what its ends mean — is not, and belongs to
+  routing 94.
+- **Routings 97 and 98 have no contract.** "Expectation and reconciliation" and
+  "longitudinal inference" are D-288 and D-290 under older names and may not be
+  dispatched against their existing §6.x text.
 - What the 20 years of legacy records could honestly contribute is **unknown** and
   the owner asked to be told before deciding. They contain no state readings, so
   they cannot feed the forecast directly; what else is recoverable from them has
