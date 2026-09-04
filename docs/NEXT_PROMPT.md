@@ -310,6 +310,25 @@ GREEN, and do not ask me to paste the file contents.
 
 ---
 
+## What happens immediately after this phase — D-296
+
+**The catalogue research is not part of routing 95 and does not start until this
+phase ships.** It is a separate exercise on the adjudication precedent — _"not a
+build phase; it produced a decision, not a diff"_ — producing
+`docs/MOVE_CATALOGUE.md`, carrying no routing integer, and meeting no build gate.
+Routing 95 imports that document; nothing else does.
+
+**Do not start it, scope it, or draft any part of it in this phase.** If you find
+yourself writing candidate moves, stop — that is the seventh item.
+
+**One thing this phase owes it.** The research has to supply `MoveProfile`'s `now`,
+`tomorrow` and `friction` as **0–1 priors with citations**, and those are the
+numbers the owner's measured effects will later move. **If anything you build here
+changes what those fields mean, say so in your record**, because a research
+exercise is about to be briefed against them.
+
+---
+
 ## Four debts this dispatch is carrying, so they are not lost
 
 **Routing 91's independent QA.** Round 10's brief is written and waiting. Unrun.

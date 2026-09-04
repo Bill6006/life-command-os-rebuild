@@ -1,5 +1,72 @@
 # Decision log
 
+## D-296 — The catalogue research is its own exercise, and it runs between 94 and 95
+
+**Phase:** — · **Status:** Active · **Bounds** D-289 · **Owner-decided 2026-09-04**
+
+D-289 approved a research-built move catalogue and never said **who builds it or
+when**. It is a research task, not a coding task, and left inside routing 95 it
+would make that phase _research plus build plus coherence-check plus effect
+measurement_ — which is D-283's fourteen-package mistake with a different subject.
+
+### It follows the adjudication precedent
+
+`PRODUCT_ADJUDICATION.md` and `PRODUCT_ADJUDICATION_2.md` are recorded as _"not a
+build phase; it produced a decision, not a diff."_ **The catalogue research is the
+same shape**: a separate exercise that produces a **reviewable document** rather
+than a commit, carries **no routing integer**, and meets no build gate.
+
+**Output: `docs/MOVE_CATALOGUE.md`.** Routing 95 imports it. Nothing else does.
+
+### When
+
+**After routing 94 ships, before routing 95 starts.** That window is not idle time
+being filled — it is the window routing 95's effect-measurement half has to wait
+through anyway while state history accumulates, so the research costs nothing on
+the critical path.
+
+**Running it in parallel with routing 94 would be faster and is not recommended.**
+Two live dispatches both editing `docs/` is a known hazard in this campaign — the
+completion marker can end up in two files, and each conversation may write its own
+and must not clear the other's. The saving is not worth reintroducing that.
+
+### What every entry must carry, because the code already dictates it
+
+`MoveProfile` is not free text. Each catalogue entry needs:
+
+| Field      | What the research must supply                                              |
+| ---------- | -------------------------------------------------------------------------- |
+| `demand`   | what kind of effort it asks for                                            |
+| `now`      | expected value in the block it happens in, **0–1**                         |
+| `tomorrow` | expected value the following day, **0–1**                                  |
+| `friction` | how hard it is to start, **0–1**, higher is harder                         |
+| `size`     | minutes where the move has a natural length, **omitted where it does not** |
+
+**`now`, `tomorrow` and `friction` are research priors in the exact sense §13C
+means**, and the code comment on them already says _"Learning moves this."_ So the
+research **seeds** them and the owner's measured effects move them, which is
+D-289's _"research proposes, his data ranks"_ arriving as three numbers rather than
+as a slogan. **Every prior carries its citation**, the way Wood/Bruner/Ross and
+Gollwitzer & Sheeran already do in this codebase.
+
+### Three bounds on the research itself
+
+1. **It must fit this owner's actual life, not a generic wellness library.** A
+   catalogue of moves for someone with unlimited evenings is worse than no
+   catalogue: every entry he cannot do is a candidate the arbiter has to reject,
+   and D-286's whole point is that offering him things is how the app learns.
+2. **D-290 is checked on the document, before any code depends on it.** No two
+   entries saying the same thing; no two that contradict. A generatively-built
+   catalogue contains both by construction, and the document is the only place the
+   whole set is visible at once.
+3. **The owner reviews it before routing 95 builds against it.** He said _"I don't
+   trust myself if I am the one coming up with the moves"_ — and he is still the
+   only person who can say _"I would never do that."_ **Not trusting himself to
+   generate is not the same as declining to veto**, and a catalogue he has not read
+   is a catalogue that will propose something absurd on a bad evening.
+
+---
+
 ## D-295 — The move catalogue takes routing 95, and Fatherhood takes 96
 
 **Phase:** — · **Status:** Active · **Amends** D-292 and D-294 ·
