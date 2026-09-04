@@ -10,7 +10,7 @@ the declaration as missing and refuse to start the phase.
 
 <!-- lco:decision id=D-285 status=closed blocks_phase=94 -->
 
-**D-285 … D-292 — the state engine. RELEASED 2026-09-04 by D-293.**
+**D-285 … D-294 — the state engine. RELEASED 2026-09-04 by D-293.**
 
 Routing 94 is the state engine's first slice — the check-in, the readings stored,
 and the score. It was held until the owner chose the shipped **default depth and

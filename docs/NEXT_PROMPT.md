@@ -23,11 +23,12 @@ longitudinal inference. It does not gate this phase.
 ## Read this part first: the plan changed on 2026-09-04
 
 **The roadmap you may have seen before this is superseded.** An owner interview
-during the routing 93 closeout produced eight decisions, a routing shift, and one
-redrawn prohibition.
+during the routing 93 closeout produced **ten decisions** — D-285 … D-294 — a routing shift, and one redrawn
+prohibition.
 
 **Read [`STATE_ENGINE_OWNER_DECISION.md`](STATE_ENGINE_OWNER_DECISION.md) in full
-before you plan.** Then **D-285 … D-292**. Nothing else in this file makes sense
+before you plan.** Then **D-285 … D-294** — and **D-293 and D-294 are the two
+this phase acts on**. Nothing else in this file makes sense
 without them.
 
 ### The finding that caused it
@@ -75,11 +76,11 @@ Do not append to them, correct them, or tidy them.
 
 1. **A check-in ritual** at scheduled times, with a notification bringing him to
    it. Fixed set, bounded, skippable, and the same shape every time.
-2. **The readings, at the default D-293 sets.** **Morning (~14):** mood,
+2. **The readings, at the default D-293 sets.** **Morning (13):** mood,
    irritation, stress, overwhelm, motivation, confidence, focus, loneliness,
    social energy, energy, hunger, plus sleep hours and sleep quality. **Midday and
-   evening (5):** mood, irritation, energy, hunger, stress. Roughly **24 a day**
-   against the **one** a new store is asked now.
+   evening (5 each):** mood, irritation, energy, hunger, stress. **23 a day** against
+   the **one** a new store is asked now.
 
    **Three of them are new concepts** — `emotional.irritation`, `emotional.focus`
    and `health.hunger`. D-293 amends D-166's six to eight and adds hunger outside
@@ -125,6 +126,22 @@ weights arrive in a later phase, do not treat all eight as peers without checkin
 **Irritation and hunger were his own words**, named unprompted in his first
 description of the loop.
 
+### One thing the owner has not decided, and you must not decide silently
+
+**What scale each reading uses.** `FactValue`'s `scale` type carries its own
+`of: number`, so anything is representable and there is no schema question. There
+is a **convention** question and it has two honest answers:
+
+- **0–10**, which is how the owner already thinks — his own first description was
+  _"mood? 5 out of 10, irritated? 9/10"_ — and which gives the state score finer
+  resolution to move over;
+- **0–5**, which is what every existing reading in the app uses, and which is
+  faster to tap when the ritual is thirteen readings long.
+
+**Mixing them across dimensions would make the score's arithmetic incoherent**, so
+this is one decision for all of them. **Raise it with the owner before you build
+the check-in.** Do not pick one because the neighbouring code does.
+
 ---
 
 ## The bounds that did not move
@@ -165,17 +182,23 @@ on 2026-09-04 and should read status=closed. If it says open, stop and say so.
 The D-172 hold on phase 98 is open and does not gate this phase.
 
 Read docs/NEXT_PROMPT.md in full, then docs/STATE_ENGINE_OWNER_DECISION.md in
-full, then D-285 through D-292 in docs/DECISION_LOG.md. The roadmap changed on
+full, then D-285 through D-294 in docs/DECISION_LOG.md. The roadmap changed on
 2026-09-04 and those documents are the change.
 
 Build six things and no more: a scheduled check-in ritual with a notification;
-the readings at D-293's default (morning ~14 — mood, irritation, stress,
+the readings at D-293's default (morning 13 — mood, irritation, stress,
 overwhelm, motivation, confidence, focus, loneliness, social energy, energy,
 hunger, sleep hours, sleep quality; midday and evening 5 — mood, irritation,
 energy, hunger, stress); storage as ordinary observation records; a 0-100 state
 score at equal weights stated as equal weights; a settings control for depth and
 frequency separately; and a second question budget for the ritual, exempt from
 the swing rule and counted separately from decision-relevant asks.
+
+Raise before building: what scale the readings use. FactValue's scale type
+carries its own `of`, so both work. 0-10 is how the owner already thinks
+("mood? 5 out of 10"); 0-5 is what every existing reading uses and is faster to
+tap thirteen times. Mixing them across dimensions makes the score incoherent, so
+it is one decision for all of them and it is the owner's, not yours.
 
 Three concepts are new: emotional.irritation, emotional.focus and health.hunger.
 D-293 amends D-166's six emotional dimensions to eight and adds hunger outside

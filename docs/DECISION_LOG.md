@@ -60,10 +60,11 @@ after 94, and it is why the dispatch requires the check-in to visibly earn itsel
 
 | Check-in                | Readings                                                                                                                                              |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Morning** (~14)       | mood, irritation, stress, overwhelm, motivation, confidence, focus, loneliness, social energy, energy, hunger, **plus** sleep hours and sleep quality |
+| **Morning** (13)        | mood, irritation, stress, overwhelm, motivation, confidence, focus, loneliness, social energy, energy, hunger, **plus** sleep hours and sleep quality |
 | **Midday, evening** (5) | mood, irritation, energy, hunger, stress                                                                                                              |
 
-**Roughly 24 readings a day**, against the **one** a new store is asked today.
+**23 readings a day** — 13 in the morning and 5 at each of midday and evening —
+against the **one** a new store is asked today.
 
 **Why the two are different sizes, and it is a data-quality argument rather than a
 kindness.** Some dimensions move within a day — mood, irritation, energy, hunger,
