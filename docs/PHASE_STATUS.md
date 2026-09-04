@@ -239,19 +239,19 @@ it. D-282, DEF-0168.
 Filled in from results rather than in advance. A row that says PENDING has not
 run at the time of writing and is not a claim.
 
-| Gate                                                           | Result                        |
-| -------------------------------------------------------------- | ----------------------------- |
-| `npm run verify` — format, lint, typecheck, tests, build, copy | PASS                          |
-| Unit, contract, synthetic and adversarial tests                | PASS — 2,341 across 110 files |
-| Privacy scan                                                   | PASS — 343 tracked files      |
-| Rendered copy scan                                             | PASS — 9,040 shipped strings  |
-| Adaptation-claim scan                                          | PASS                          |
-| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PENDING                       |
-| CI, including its own matrix run                               | PENDING                       |
-| Checkpoint equivalence                                         | PENDING                       |
-| Release integrity, from CI's own manifest artifact             | PENDING                       |
-| Android-style deployed gate                                    | PENDING                       |
-| Independent QA (required from Phase 5 on, D-077)               | **NOT RUN — zero rounds**     |
+| Gate                                                           | Result                                          |
+| -------------------------------------------------------------- | ----------------------------------------------- |
+| `npm run verify` — format, lint, typecheck, tests, build, copy | PASS                                            |
+| Unit, contract, synthetic and adversarial tests                | PASS — 2,341 across 110 files                   |
+| Privacy scan                                                   | PASS — 343 tracked files                        |
+| Rendered copy scan                                             | PASS — 9,040 shipped strings                    |
+| Adaptation-claim scan                                          | PASS                                            |
+| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PASS — 876 of 876; see the note below           |
+| CI, including its own matrix run                               | PASS — run 33819695944, 876 on a clean runner   |
+| Checkpoint equivalence                                         | PASS — read live; see _Checkpoint_ below        |
+| Release integrity, from CI's own manifest artifact             | PASS — 8 files byte for byte at `ed2a398`       |
+| Android-style deployed gate                                    | PASS — 234 checks, against the deployed Preview |
+| Independent QA (required from Phase 5 on, D-077)               | **NOT RUN — zero rounds**                       |
 
 **The first full matrix passed at exactly the count it inherited, and that was a
 finding rather than a result — D-284.** It reported **849 of 849**, which is what
@@ -272,9 +272,37 @@ produces them. That gap is
 named in the QA handoff rather than covered by a spec that would assert nothing
 and read as coverage.
 
+**The matrix was run three times, and only the third is the result.** The first
+passed 849 of 849 before `phase93.spec.ts` existed. The second, run while
+`npm run lint` and `npm run format:check` were on the same machine, reported
+**874 passed and 2 failed** — both `page.goto: net::ERR_ABORTED` before any
+assertion ran, desktop only; in isolation those two specs passed 52 of 52. The
+third, clean, passed **876 of 876**, which is 849 + 27 exactly and therefore the
+whole matrix.
+
+**That second run also reported `[exited with code 0]` with two failures in it**,
+and the cause was the builder's own command: `npx playwright test | tail -8` exits
+with `tail`'s status rather than Playwright's. A gate piped into a pager has had
+its pass/fail signal discarded. It is recorded because it is DEF-0165's class
+arriving somewhere new — read the summary line, never a pipeline's exit code.
+
 **Checkpoint:** `b23e672` — the commit every product gate was run on, and the
 last one to change anything the browser downloads. `d9d4aac` adds
 `tests/browser/phase93.spec.ts` and changes no bundled byte.
+
+**Documentation head:** `ed2a398`, which is what Preview serves.
+`checkpoint-equivalence.mjs` read the deployed `build-info.json` live and reports
+**six changed files between the checkpoint and the deploy, none of them
+bundle-relevant** — four documents, the QA handoff, and the browser spec — so the
+deployed build serves the same bytes as `b23e672`. Release integrity was run
+against the live Preview using **CI run 33819695944's own manifest artifact**
+rather than the tree's, and came back clean at 8 files byte for byte. D-097 asks
+for equivalence rather than literal SHA equality, and DEF-0061 is what happens
+when a handoff demands the second.
+
+**A later documents-only commit moves the deployed SHA again without moving a
+byte the browser downloads**, so the property to check is that the diff from
+`b23e672` is documents — not that the deployed SHA equals any particular value.
 
 ## The three defects this phase found
 

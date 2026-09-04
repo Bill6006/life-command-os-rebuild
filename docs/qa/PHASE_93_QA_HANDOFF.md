@@ -73,7 +73,7 @@ addition is measured separately and pinned at **15**, enumerated by name in
 | Fact | Value |
 | ---- | ----- |
 | Product checkpoint | `b23e672` — the commit every product gate was run on (D-147) |
-| Documentation head | see _Checkpoint_ in `PHASE_STATUS.md`; documents only, bundle-equivalent |
+| Documentation head | `ed2a398` — what Preview serves; six files apart, none bundle-relevant |
 | Preview | https://bill6006.github.io/life-command-os-rebuild/preview/ |
 | Owner-visible behaviour | **changed** — Now, the Health, Career, Sleep and Direction pages, the import review, and the exported document |
 | Owner phone check | **required before GREEN** |
@@ -94,8 +94,16 @@ Release integrity is verified against the served bytes using **CI's own manifest
 artifact** rather than the tree's (D-211, QA-84-064):
 
 ```bash
-node scripts/release-integrity.mjs https://bill6006.github.io/life-command-os-rebuild/preview/ --manifest <artifact>/release-manifest.json
+gh run download 33819695944 --name preview-manifest --dir /tmp/lco
 ```
+
+```bash
+node scripts/release-integrity.mjs https://bill6006.github.io/life-command-os-rebuild/preview/ --manifest /tmp/lco/release-manifest.json
+```
+
+At submission both came back clean: six changed files between the checkpoint and
+the deploy — four documents, this handoff, and `tests/browser/phase93.spec.ts` —
+none bundle-relevant, and 8 files served byte for byte.
 
 ---
 

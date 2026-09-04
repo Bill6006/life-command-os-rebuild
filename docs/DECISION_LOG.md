@@ -32,6 +32,23 @@ shipped scenario produces them.
 that silence**, since it would read as coverage in a count. The gap is stated in
 the QA handoff instead, where somebody can act on it.
 
+**And a second way the same gate was read wrong, in the same hour.** The run that
+found the two failures reported them under **`[exited with code 0]`**. The cause
+was not Playwright and not the harness: the command was
+`npx playwright test 2>&1 | tail -8`, and **a pipeline exits with the status of
+its last stage**, which is `tail` and is always zero. A gate piped into a pager
+has had its pass/fail signal thrown away — by the builder, while running the gate
+that exists to catch exactly that. **Read the summary line; never the exit code of
+a pipeline.**
+
+Those two failures were `page.goto: net::ERR_ABORTED` before any assertion ran,
+on desktop only, while `npm run lint` and `npm run format:check` were running on
+the same machine. In isolation the two specs passed 52 of 52, and a clean full
+run with nothing else on the machine passed **876 of 876** — the count 849 + 27
+exactly, so the whole matrix ran. That is the third time in this campaign that
+loopback contention on the build machine has produced a failure indistinguishable
+at a glance from a product one, and section 60 records what those cost.
+
 **What this says about the count as a gate.** The matrix total is not a measure of
 whether a phase was tested; it is a measure of whether the suite grew. Both
 routing 92 and routing 93 finished at a number that looked healthy while meaning
