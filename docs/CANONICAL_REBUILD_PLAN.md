@@ -2433,7 +2433,7 @@ Approved by the owner on 2026-08-31 (**D-212**), after the second product adjudi
 > re-derived once routing 94 has produced data to design against.
 >
 > Read [`STATE_ENGINE_OWNER_DECISION.md`](STATE_ENGINE_OWNER_DECISION.md) and
-> D-285 … D-294 before planning any phase from 94 on.
+> **every decision from D-285 onward** before planning any phase from 94 on.
 
 **Eleven routed phases remain.** 83, 84 and 90 are GREEN; 98–100 carry no work.
 

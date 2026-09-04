@@ -1,7 +1,8 @@
 # The state engine — what the owner actually asked for, and the six decisions it needs
 
-**Status: DECIDED 2026-09-04. Recorded as D-285 … D-293, amended at source, and
-routing 94 is dispatched.** This document is the reasoning; the decision log is
+**Status: DECIDED 2026-09-04. Recorded as D-285 onward — the decisions are
+contiguous to the end of the log — amended at source, and routing 94 is
+dispatched.** This document is the reasoning; the decision log is
 the register. Nothing is built yet.
 
 > **What changed since this was written as a request.** The owner approved all six

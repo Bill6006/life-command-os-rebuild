@@ -23,13 +23,14 @@ longitudinal inference. It does not gate this phase.
 ## Read this part first: the plan changed on 2026-09-04
 
 **The roadmap you may have seen before this is superseded.** An owner interview
-during the routing 93 closeout produced **ten decisions** — D-285 … D-294 — a routing shift, and one redrawn
-prohibition.
+during the routing 93 closeout produced **every decision from D-285 onward** — a
+routing shift, a redrawn prohibition, and the check-in this phase builds.
 
 **Read [`STATE_ENGINE_OWNER_DECISION.md`](STATE_ENGINE_OWNER_DECISION.md) in full
-before you plan.** Then **D-285 … D-294** — and **D-293 and D-294 are the two
-this phase acts on**. Nothing else in this file makes sense
-without them.
+before you plan.** Then **every decision from D-285 to the end of the log** —
+they are contiguous and there is nothing else after them. **D-293 specifies the
+check-in you are building and D-296 says what happens straight after this phase.**
+Nothing else in this file makes sense without them.
 
 ### The finding that caused it
 
@@ -224,7 +225,8 @@ on 2026-09-04 and should read status=closed. If it says open, stop and say so.
 The D-172 hold on phase 98 is open and does not gate this phase.
 
 Read docs/NEXT_PROMPT.md in full, then docs/STATE_ENGINE_OWNER_DECISION.md in
-full, then D-285 through D-294 in docs/DECISION_LOG.md. The roadmap changed on
+full, then every decision from D-285 to the end of docs/DECISION_LOG.md -- they
+are contiguous and nothing follows them. The roadmap changed on
 2026-09-04 and those documents are the change.
 
 Build six things and no more: a scheduled check-in ritual with a notification;

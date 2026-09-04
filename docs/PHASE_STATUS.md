@@ -137,7 +137,8 @@ superseded rather than reused.
 
 # The roadmap changed on 2026-09-04 — read this before any phase record below
 
-An owner interview during the routing 93 closeout produced **D-285 … D-294** and a
+An owner interview during the routing 93 closeout produced **every decision from
+D-285 onward** and a
 different app: a state engine that samples the owner several times a day, measures
 what a move did, and forecasts where he is heading.
 [`STATE_ENGINE_OWNER_DECISION.md`](STATE_ENGINE_OWNER_DECISION.md) is the

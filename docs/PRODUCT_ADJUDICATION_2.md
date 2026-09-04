@@ -587,7 +587,8 @@ use a number as a proxy for personal worth"_, remains the reason to be slow.
 >
 > ¹ **No §6.x contract exists for routing 94 or 95.** Their scope is
 > [`STATE_ENGINE_OWNER_DECISION.md`](STATE_ENGINE_OWNER_DECISION.md) and
-> **D-285 … D-294**, and for routing 94 also `NEXT_PROMPT.md`. Do not look for
+> **every decision from D-285 onward**, and for routing 94 also `NEXT_PROMPT.md`.
+> Do not look for
 > one here and do not build from a neighbouring section.
 >
 > ² **§6.8 and §6.9 may not be dispatched as written.** "Expectation and
