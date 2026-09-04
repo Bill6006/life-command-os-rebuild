@@ -2410,12 +2410,27 @@ Approved by the owner on 2026-08-31 (**D-212**), after the second product adjudi
 | Semantic capture and clarification                       | **91**          | `qa/PHASE_91_QA_HANDOFF.md`  |
 | Reach — what the brain can see                           | **92**          | `qa/PHASE_92_QA_HANDOFF.md`  |
 | Validity — what it concludes from what it sees           | **93**          | `qa/PHASE_93_QA_HANDOFF.md`  |
-| Domains and progression                                  | **94**          | `qa/PHASE_94_QA_HANDOFF.md`  |
-| Advancement and revision                                 | **95**          | `qa/PHASE_95_QA_HANDOFF.md`  |
-| Expectation and reconciliation                           | **96**          | `qa/PHASE_96_QA_HANDOFF.md`  |
-| Longitudinal inference — D-172's mechanism               | **97**          | `qa/PHASE_97_QA_HANDOFF.md`  |
-| _(98–100 reserved headroom)_                             | —               | —                            |
+| **State — the readings, the score and what they are for** | **94**          | `qa/PHASE_94_QA_HANDOFF.md`  |
+| Domains and progression                                  | **95**          | `qa/PHASE_95_QA_HANDOFF.md`  |
+| Advancement and revision                                 | **96**          | `qa/PHASE_96_QA_HANDOFF.md`  |
+| Expectation and reconciliation — **re-derive as the forecast** | **97**    | `qa/PHASE_97_QA_HANDOFF.md`  |
+| Longitudinal inference — D-172's mechanism               | **98**          | `qa/PHASE_98_QA_HANDOFF.md`  |
+| _(99–100 reserved headroom)_                             | —               | —                            |
 | **Canonical Phase 10** — performance, PWA, reliability    | **101**         | `qa/PHASE_101_QA_HANDOFF.md` |
+> **The map shifted by one on 2026-09-04 — D-292.** Routing 94 is now the **state
+> engine's first slice**: the check-in, the readings stored, and the score.
+> Everything from _domains and progression_ down moved one integer up, into the
+> headroom this section reserved. **D-172's hold retargets 97 → 98** in
+> `CAMPAIGN_HOLDS.md` and follows the work it governs.
+>
+> **97 and 98 may not be dispatched against their current §6.x contracts.**
+> "Expectation and reconciliation" is D-288's forecast and "longitudinal inference"
+> is D-290's causal-chain bar — the same work under older names — and both are
+> re-derived once routing 94 has produced data to design against.
+>
+> Read [`STATE_ENGINE_OWNER_DECISION.md`](STATE_ENGINE_OWNER_DECISION.md) and
+> D-285 … D-292 before planning any phase from 94 on.
+
 | **Canonical Phase 11** — adversarial hardening            | **102**         | `qa/PHASE_102_QA_HANDOFF.md` |
 | **Canonical Phase 12** — release                          | **103**         | `qa/PHASE_103_QA_HANDOFF.md` |
 

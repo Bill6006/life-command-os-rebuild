@@ -1,5 +1,309 @@
 # Decision log
 
+## D-285 — The daily question ceiling becomes an owner preference
+
+**Phase:** — · **Status:** Active · **Amends** §13B (owner decision #3) ·
+**Owner-decided 2026-09-04**
+
+§13B locked `QUESTIONS_PER_DAY = 3` as _"a hard ceiling [that] is not raised"_.
+**It is now a default, not a ceiling.** The owner sets depth (how many readings
+per check-in) and frequency (how many check-ins a day) as two separate controls,
+with the trade stated on the control itself: fewer readings will not produce the
+best results.
+
+**Why the ceiling was the wrong instrument.** §13B caps _questions_, treating
+every ask as equally expensive. A fixed four-tap check-in at three known moments
+is not twelve interruptions — it is a ritual, bounded and anticipated. Three
+scattered unpredictable questions can cost more, because they cannot be planned
+around. **The budget was measured on the wrong axis.**
+
+**What §13B was protecting is still real** and is not repealed: an app that
+interrogates its owner daily is a failure, and section 47 still fails a phase on
+it. What changes is who decides where the line sits.
+
+**The default is the real decision.** Most people never open settings, and the
+owner will live with the shipped default on exactly the days he is too tired to
+change it. It is to be chosen deliberately and recorded, not left at the
+safest-looking low value.
+
+**Evidence this was binding in the wrong direction.** Measured 2026-09-03: a new
+store is asked **one question a day**, three days running. The ceiling was never
+reached. See D-286 for what actually starved it.
+
+---
+
+## D-286 — Two question budgets, with two different rules
+
+**Phase:** — · **Status:** Active · **Amends** §13B's
+_"information-value gating remains intact"_ · **Owner-decided 2026-09-04**
+
+`probeSwings` asks only what would change **today's** recommendation. The owner
+asked for a fixed ritual _"plus additional questions that the app feels is worth
+asking and that can make the data strong."_
+
+**Those are two different justifications and the app has only one.** A state
+reading can never qualify under the existing gate: its value is that it makes
+**tomorrow's** pattern match possible, and the swing rule does not measure that.
+
+**The measured consequence.** On an empty store the guide reported _"4 question(s)
+could be asked and none of them would change the answer"_ — and it was correct.
+All four landed every answer on the same move, because there was one move to land
+on. **One candidate cannot be re-ranked, so nothing is worth asking, so the store
+stays empty.**
+
+**The decision.** Two budgets, two rules, counted separately:
+
+1. **the ritual** — fixed, scheduled, exempt from the swing rule, sized by D-285's
+   control;
+2. **decision-relevant asks** — the existing information-value gate, unchanged, on
+   top.
+
+**Never one pooled count**, or the ritual eats the useful questions or the reverse.
+
+**D-285 alone would have changed nothing.** Raising a ceiling that is never
+reached does not add a question. The two decisions only work together.
+
+---
+
+## D-287 — An overall state score, shown, with learned weights
+
+**Phase:** — · **Status:** Active · **Amends** D-166 and plan section 22 ·
+**Owner-decided 2026-09-04**
+
+A single figure, 0–100, where **100 is every dimension at its best** — a fixed
+ceiling, not a personal best and not a target the owner sets. Per-dimension
+readings remain visible always. **The app learns the weights**, which dimensions
+actually drive his good days.
+
+**What D-166 was protecting, and why this is not it.** D-166 forbade a composite
+**wellness score** — a number that grades a life — and named `emotional.score` as
+_"the wellness score arriving through the back door"_. What is approved here is a
+**state reading**: how he is right now, recomputed each check-in, closer to a
+thermometer than a report card.
+
+**The line, and it is thin.** The distinction survives only while the number is a
+**reading**. _"You are at 62%"_ is permitted. **If it ever acquires a quality
+adjective — good day, bad week, falling behind — it has become the thing D-166
+refused**, and D-288's forecast is where that pressure will come from.
+
+**Retained without change, at the owner's explicit choice:** nothing grades him as
+a person. Section 4.4 is untouched.
+
+**Learned weights need a bar.** Nine dimensions over a few weeks will overfit and
+will discover that Thursdays matter. Until the bar D-290 sets for chains is met,
+the honest default is equal weighting, **stated on screen as equal weighting**.
+
+---
+
+## D-288 — The forecast
+
+**Phase:** — · **Status:** Active · **Amends** §6.5's _not in this phase_ list and
+supersedes the scope of routing "expectation and reconciliation" ·
+**Owner-decided 2026-09-04**
+
+Today, and roughly seven days out: where his state is heading and how it is likely
+to fluctuate, from his own patterns. **Shown from day one with its confidence
+attached**, including when that confidence is poor.
+
+**The rule that keeps it honest is the owner's own**, and it is the cleanest line
+anyone has drawn in this campaign:
+
+> **Questions are for facts. The forecast is the only place the app may assume.**
+
+Everything the architecture protects — G-009, unknown stays unknown, no invented
+precision — remains true of every **reading**. The forecast is a second and
+clearly-labelled class of statement, and the distinction must be visible on the
+screen rather than only in the code.
+
+**A forecast that is not scored is decoration.** Every prediction is logged and
+checked against what happened, and the accuracy record — **misses included** — is
+shown. The owner named _"its forecasts come true"_ as one of four proofs that the
+app is learning; that proof does not exist unless the app keeps score against
+itself.
+
+**And C11's rejection is right, so the forecast is a no-intervention baseline.**
+C11 refused steering on a forecast for a reason that no amount of data fixes:
+_"steering away from a predicted bad day makes the prediction unobservable… a
+system built to revise its model of him must not contain a component immune to
+revision."_ The owner asked for a forecast he can bend, which is exactly that loop.
+
+**The resolution: the forecast predicts what happens if he does nothing.** Acting
+on it is then a deliberate departure rather than a contamination, and **the
+accuracy record is kept only over the occasions where nothing was done.** That
+costs sample size and buys falsifiability, and **a forecast that cannot be scored
+is not approved by this decision.**
+
+---
+
+## D-289 — A research-built move catalogue: research proposes, his data ranks
+
+**Phase:** — · **Status:** Active · **Bounds** §13C (owner decision #2) ·
+**Owner-decided 2026-09-04**
+
+Moves come from a catalogue built by research into what works, with metadata
+sufficient for the engine to connect them. The owner's reason, recorded because it
+is the whole argument: _"I don't trust myself if I am the one coming up with the
+moves."_
+
+**Reach: the catalogue supplies candidates; only his own measured effects rank
+them.** He was offered the stronger form and declined it.
+
+**This is narrower than it appears and may not overturn §13C at all.** §13C forbids
+a prior _determining a recommendation_ and _influencing ranking because personal
+evidence is sparse_. A catalogue that only widens the candidate pool does neither.
+**The one place it bites is day one**, when nothing is measured and the choice
+among plausible moves is necessarily the prior's. That case needs an explicit rule
+and it is the honest residue of this decision.
+
+**§13C's own reasoning has changed underneath it, and this is recorded so a later
+reader does not have to rediscover it.** Option C was declined because _"it gets
+less safe as evidence gets sparser… with a hard three-question daily ceiling,
+evidence accumulates slowly and permanently."_ **D-285 removes that ceiling.** At
+12–30 readings a day the condition C's safety depended on does arrive, and the
+stated reason for declining it dissolves. The owner chose the conservative option
+anyway; the stronger one is now available on its own terms should day-one quality
+prove unacceptable.
+
+**Also unchanged: the owner may still author his own moves.** `AUTHORABLE_KINDS`
+stays. The catalogue is added to what he names, never instead of it.
+
+---
+
+## D-290 — The catalogue must not contradict or repeat itself, and chains need a bar
+
+**Phase:** — · **Status:** Active · **New** · **Owner-decided 2026-09-04**
+
+Two requirements the current architecture cannot express, recorded together
+because both are about the catalogue as a **set** rather than about one move.
+
+**Coherence.** In the owner's words: not _"drink some water"_ followed by _"drink
+some water then jump up and down"_; not _"go outside for a walk today"_ beside
+_"stay indoors today"_. `recent-duplication`, `ACTION_FAMILIES` and routing 93's
+shown ledger all act on **one move at a time** and none can see that two catalogue
+entries say the same thing or the opposite thing. **A generatively-built catalogue
+will contain both by construction**, so they must be caught when the catalogue is
+built, not at ranking time.
+
+**Second-order value, and the bar it needs.** A move's worth includes its effect on
+what he does next — his own example is a move that makes him less likely to reach
+for coffee and more likely to drink water. **He asked that such chains be acted on
+only after a real statistical bar** — enough occasions, and holding up when
+conditions vary.
+
+**The bar is harder than a significance test and this is the warning.** With nine
+state dimensions and a catalogue of moves, thousands of candidate chains are under
+test at once. **A plain significance test will produce confident nonsense by
+volume.** A correction for the number of chains tested, a held-out confirmation
+window, or both. This is the single most likely place for the app to become
+untrustworthy, and no chain ships without the bar being specified first.
+
+---
+
+## D-291 — C19's numeric clause is redrawn at the owner's record, not at the number
+
+**Phase:** — · **Status:** Active · **Amends** C19 · **Leaves §13G intact** ·
+**Owner-decided 2026-09-04**
+
+### How this was found
+
+The owner produced two screenshots of the Fatherhood page of an app he built
+before this one: categories of named skills, each skill carrying a position on a
+ladder — **Not Introduced → Practicing With Daddy → Needs Support → Doing
+Sometimes → Doing Often** — and each category showing a percentage and a progress
+bar.
+
+**The ladder is this repository's own construct, arrived at independently.**
+`records.ts` cites Wood, Bruner & Ross (1976): the adult pitches help slightly
+ahead of the child's competence and transfers responsibility as she masters each
+component. Routing 94's help-ladder reader is the same object. **The owner's
+wording is better than the codebase's** — _"Practicing With Daddy"_ names a
+relationship where a developmental scale would name a deficit — and his stated use
+is the legitimate core: _"it helps me understand where I need to continue to
+support my daughter in."_
+
+### The finding
+
+**C19's numeric clause is drafted too widely and catches the wrong object.** Read
+§13G's reasoning and every word of it is about **norms** — _"a symmetric norm is a
+percentile with extra steps"_, _"the risk is not shaming the owner, it is quietly
+framing normal [as a gap]"_. A percentile against other children and a count
+against a list the owner authored are different things sharing a symbol.
+
+### The redraft
+
+> **C19's prohibition applies to any figure about Adaya measured against something
+> outside the owner's own record** — a norm, an age expectation, another child, or
+> a list whose provenance is not his. **Counts of what she did and how much help
+> she needed, against a list he authored, are permitted — rendered as counts, never
+> as a bare percentage or a progress bar.**
+
+### Three consequences, and the second is why the percentage goes
+
+1. **Delete the percentage and the bar; keep the ladder and the rows.** They are
+   the only elements carrying the norm and the only ones doing no work: nothing is
+   done differently at 64% than at 58%, and the rows already said where to help. A
+   count summary replaces it with no loss — _"2 doing often, 2 sometimes, 1 needs
+   support, 1 practising."_
+2. **The arithmetic was wrong on its own terms.** Needs Support → Doing Sometimes →
+   Doing Often are not equal-sized steps. Averaging an ordinal ladder into a
+   percentage asserts that they are, which is D-290's own standard, unmet.
+3. **The list must be sourced.** The owner said of his six skills: _"these probably
+   meets the milestones of what she should be capable of doing at her age… **I
+   don't know what the AI did to find these.**"_ If the rows are age-derived then
+   _"Communication 64%"_ silently means _"64% of what she should have by now"_ —
+   §13G's percentile, one level lower and harder to see. **The norm was never in
+   the number; it was in the choice of rows, unsourced.** §13G 1.2 already approves
+   a **cited** reference for suppression only, and that is where a sourced list
+   belongs.
+
+### What does not move
+
+No comparison to another child. No age expectation rendered anywhere, on any
+surface, in any export. No grade, no rank, no rate, no share. **§13G's
+suppression-only rule stands exactly as written**, and D-070, D-112, D-117, D-135
+and D-136 are untouched.
+
+---
+
+## D-292 — The state engine takes routing 94, and the map shifts by one
+
+**Phase:** — · **Status:** Active · **Amends** plan section 43A and D-212 ·
+**Owner-decided 2026-09-04**
+
+D-285 … D-290 describe a programme the roadmap has no home for, and the owner
+chose **state engine next, Fatherhood after**.
+
+| Name                                                     | Was    | Now    |
+| -------------------------------------------------------- | ------ | ------ |
+| **State: the readings, the score and what they are for** | —      | **94** |
+| Domains and progression                                  | 94     | **95** |
+| Advancement and revision                                 | 95     | **96** |
+| Expectation and reconciliation                           | 96     | **97** |
+| Longitudinal inference — D-172's mechanism               | 97     | **98** |
+| _(reserved headroom)_                                    | 98–100 | 99–100 |
+
+Canonical 10, 11 and 12 keep 101, 102 and 103.
+
+**D-172's hold retargets 97 → 98** in `CAMPAIGN_HOLDS.md`. It governs longitudinal
+inference and follows it; the hold itself is unchanged and remains unresolved.
+
+**Routing 94 is the smallest slice that changes what the owner sees daily** — the
+check-in, the readings stored, and the score — because everything after it needs
+data that does not exist and cannot be back-filled. **Every day without sampling is
+history the forecast will never have.** Nine of its readings are already defined
+concepts and the record layer already stores observations, so it is small.
+
+**97 and 98 are substantially D-288 and D-290 under their old names** —
+"expectation and reconciliation" is the forecast, "longitudinal inference" is the
+chain bar — and **neither may be dispatched against its current §6.x contract**.
+Both are re-derived when routing 94 lands and there is data to design against.
+
+**Routing 95 is unaffected in content.** Its nine Fatherhood deliverables, its
+cycles and its bounds stand as §6.6 and §11B write them, with D-291's single
+change: progress rollups ship as counts, never as percentages or bars.
+
+---
+
 ## D-284 — The browser matrix passed at exactly the count it inherited, and that was the finding
 
 **Phase:** 93 · **Status:** Active
