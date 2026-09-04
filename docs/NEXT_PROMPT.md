@@ -126,21 +126,36 @@ weights arrive in a later phase, do not treat all eight as peers without checkin
 **Irritation and hunger were his own words**, named unprompted in his first
 description of the loop.
 
-### One thing the owner has not decided, and you must not decide silently
+### How a reading is taken — decided, and it is not a slider
 
-**What scale each reading uses.** `FactValue`'s `scale` type carries its own
-`of: number`, so anything is representable and there is no schema question. There
-is a **convention** question and it has two honest answers:
+**Tap-to-pick labelled options, which is what the app already does.** The energy
+question ships four: _Running on empty · Low · Enough · Plenty_. The owner asked
+for exactly this and gave the shape himself — _"snappy | irritation = 2"_.
 
-- **0–10**, which is how the owner already thinks — his own first description was
-  _"mood? 5 out of 10, irritated? 9/10"_ — and which gives the state score finer
-  resolution to move over;
-- **0–5**, which is what every existing reading in the app uses, and which is
-  faster to tap when the ritual is thirteen readings long.
+**Five anchors per reading**, and the same count for every one of them so the score
+averages cleanly. Two consequences worth knowing before you start:
 
-**Mixing them across dimensions would make the score's arithmetic incoherent**, so
-this is one decision for all of them. **Raise it with the owner before you build
-the check-in.** Do not pick one because the neighbouring code does.
+1. **This settles the scale.** `FactValue`'s `scale` carries its own `of`, so
+   0–10 was representable — but **nobody can write eleven distinct meaningful words
+   for irritation, or tell 6/10 from 7/10.** A labelled anchor is also repeatable:
+   _"A bit snappy"_ means the same thing on Tuesday and Friday, where a bare 7
+   drifts with how the owner feels about the number. That drift is noise in the
+   exact series the forecast is built on.
+2. **`CONCEPT.energy` currently ships four options, not five.** Extend it, or the
+   score carries a mixed denominator. **Extending an existing owner-facing question
+   is a change to a shipped surface** — say so in your record rather than treating
+   it as tidying.
+
+**You draft the anchors; the owner reviews them.** Thirteen readings at five
+anchors is about sixty-five phrases of owner-facing copy, and every one of them is
+subject to the copy discipline this repository already enforces — G-001's orphan
+pronouns, the adaptation-claim scan, and the rendered-copy scan. **They are also
+the whole interface**: an anchor the owner cannot tell from its neighbour produces
+a reading that means nothing.
+
+The owner's own examples, as the register to match: _Fine · A bit snappy ·
+Short-tempered · Snapping at everything_ for irritation; _Not hungry · Peckish ·
+Hungry · Starving_ for hunger.
 
 ---
 
@@ -194,11 +209,13 @@ score at equal weights stated as equal weights; a settings control for depth and
 frequency separately; and a second question budget for the ritual, exempt from
 the swing rule and counted separately from decision-relevant asks.
 
-Raise before building: what scale the readings use. FactValue's scale type
-carries its own `of`, so both work. 0-10 is how the owner already thinks
-("mood? 5 out of 10"); 0-5 is what every existing reading uses and is faster to
-tap thirteen times. Mixing them across dimensions makes the score incoherent, so
-it is one decision for all of them and it is the owner's, not yours.
+A reading is taken by tapping one of five labelled options, not with a slider --
+the app already does this and the energy question ships four (Running on empty,
+Low, Enough, Plenty). Five anchors for every reading so the score averages
+cleanly, which means CONCEPT.energy has to be extended from four; that is a
+change to a shipped owner-facing question, so record it rather than tidying it.
+You draft the roughly sixty-five anchor phrases and the owner reviews them; they
+are subject to G-001 and the copy scans like any other shipped string.
 
 Three concepts are new: emotional.irritation, emotional.focus and health.hunger.
 D-293 amends D-166's six emotional dimensions to eight and adds hunger outside
