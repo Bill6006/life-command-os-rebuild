@@ -135,6 +135,30 @@ superseded rather than reused.
 
 ---
 
+# The roadmap changed on 2026-09-04 — read this before any phase record below
+
+An owner interview during the routing 93 closeout produced **D-285 … D-294** and a
+different app: a state engine that samples the owner several times a day, measures
+what a move did, and forecasts where he is heading.
+[`STATE_ENGINE_OWNER_DECISION.md`](STATE_ENGINE_OWNER_DECISION.md) is the
+reasoning; the decision log is the register.
+
+**The finding that caused it.** A new store is asked **one question a day**, three
+days running — measured, not estimated. `QUESTIONS_PER_DAY = 3` was never reached;
+the information-value gate starved it, because one candidate cannot be re-ranked so
+no question is ever worth asking.
+
+**The routing map shifted.** 94 is now the check-in and the score; Fatherhood is
+95; the move catalogue is 96; the forecast is 97; exploration and causal chains are
+98; advancement and revision is 99. **§6.8 and §6.9 may not be dispatched as
+written** — they are the forecast and the chain bar under older names.
+
+**Every phase record below this line predates the change** and is left exactly as
+it was written. Routing 91, 92 and 93 are unaffected in content: what they built
+still stands, and all three still await independent QA.
+
+---
+
 # Routing Phase 93 — Validity: what it concludes from what it sees
 
 **Status: YELLOW — READY FOR INDEPENDENT QA.**

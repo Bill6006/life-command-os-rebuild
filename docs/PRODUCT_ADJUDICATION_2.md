@@ -570,6 +570,35 @@ use a number as a proxy for personal worth"_, remains the reason to be slow.
 
 ### 6.0 · Routing map, and why canonical 10/11/12 move
 
+> ## THE INTEGERS IN THIS SECTION MOVED ON 2026-09-04 — D-292 and D-294
+>
+> **Every `§6.x` heading below still carries the routing integer it was written
+> with, and four of them are wrong.** The heading text has been corrected in
+> place; this table is the authority.
+>
+> | Contract                                             | Was | **Now**  |
+> | ---------------------------------------------------- | --- | -------- |
+> | **State — the check-in, the readings, the score**    | —   | **94** ¹ |
+> | the rest of the life: domains and progression (§6.6) | 94  | **95**   |
+> | **the move catalogue and measured effect**           | —   | **96** ¹ |
+> | expectation and reconciliation (§6.8)                | 96  | **97** ² |
+> | longitudinal inference (§6.9)                        | 97  | **98** ² |
+> | advancement and revision (§6.7)                      | 95  | **99**   |
+>
+> ¹ **No §6.x contract exists for routing 94 or 96.** Their scope is
+> [`STATE_ENGINE_OWNER_DECISION.md`](STATE_ENGINE_OWNER_DECISION.md) and
+> **D-285 … D-294**, and for routing 94 also `NEXT_PROMPT.md`. Do not look for
+> one here and do not build from a neighbouring section.
+>
+> ² **§6.8 and §6.9 may not be dispatched as written.** "Expectation and
+> reconciliation" is D-288's forecast and "longitudinal inference" is D-290's
+> causal-chain bar — the same work under older names, with different contracts —
+> and both are re-derived once routing 94 has produced data to design against.
+>
+> **Prose elsewhere in this document that names an old integer is left alone
+> deliberately.** It records what was true when it was written; only headings,
+> prerequisites and rules that a builder acts on have been corrected.
+
 Correction 3.13: routing integers must **increase monotonically in execution
 order**, because `routing_ceiling()` keeps only the maximum phase with a QA
 report. 85–89 are unusable — they sit below routing 90, which runs first. And
@@ -931,13 +960,19 @@ open-space search. No emotional composite, ever.
 
 ---
 
-### 6.6 · Routing 94 — the rest of the life: domains and progression
+### 6.6 · Routing **95** (dispatched as 94 until D-292) — the rest of the life: domains and progression
 
 **Purpose.** The predecessor's largest deliberate deferral, now due. Twelve
 domains, eleven pages, and a destination shape proved on three of them.
 
 **Prerequisites.** Routing 93. **Owner decisions 1 (C19), 4 (C16) and the domain
 ordering** must be answered before it is specified in detail.
+
+> **Two changes since this was written.** It is **routing 95**, not 94 (D-292).
+> And **D-291 redraws C19**: progress rollups about Adaya ship as **counts, never
+> as a percentage or a progress bar**, and any skill list must be sourced. Every
+> prohibition on norms, ages and comparison to other children is untouched, and
+> §13G's suppression-only rule stands exactly as written.
 
 **Builder scope, in two clearly different sizes** — correction 3.5:
 
@@ -997,7 +1032,7 @@ about the child changes** unless owner decision 1 says so.
 
 ---
 
-### 6.7 · Routing 95 — advancement and revision
+### 6.7 · Routing **99** (was 95 until D-294) — advancement and revision
 
 **Purpose.** Two things the product has never done: say when the owner is
 **genuinely becoming more capable**, and notice that a destination has stopped
@@ -1008,8 +1043,8 @@ why they are one phase.
 **This phase carries the gap the predecessor named first and nobody owned.** _A
 destination the system can only receive is a form._
 
-**Prerequisites.** Routing 94 (destinations across the life), routing 93 (longer
-horizons and honest comparison). **Owner decisions #6 and #7 are settled**, so
+**Prerequisites.** Routing **95** (destinations across the life), routing 93
+(longer horizons and honest comparison). **Owner decisions #6 and #7 are settled**, so
 nothing in this phase is blocked on the owner.
 
 **Builder scope, in package order. Package 1 is first and absolutely so.**
@@ -1073,13 +1108,14 @@ inferred milestone difficulty. No breadth or transfer claims.
 
 ---
 
-### 6.8 · Routing 96 — expectation and reconciliation
+### 6.8 · Routing **97** (was 96) — expectation and reconciliation — **SUPERSEDED, re-derive as D-288's forecast**
 
 **Purpose.** The bounded successor to forecasting (section 5.3): the app states
 what it **expects**, records it, and reconciles it against what actually happened —
 which is always scoreable, because the occurrence it is about really occurs.
 
-**Prerequisites.** Routing 95. Separated from it deliberately: this is a **new
+**Prerequisites.** Routing **99**, and routing **96** for measured effect.
+Separated deliberately: this is a **new
 claim class** and 95's is record-factual, and the split is where 95's own package
 rule bites.
 
@@ -1109,7 +1145,7 @@ changes what the app says next. No forecast about a day that has not happened.
 
 ---
 
-### 6.9 · Routing 97 — longitudinal inference: D-172's mechanism
+### 6.9 · Routing **98** (was 97) — longitudinal inference: D-172's mechanism — **re-derive with D-290's chain bar**
 
 **Purpose.** D-172's question, answered at the point where the space is worth
 searching: _"how can this system discover hypotheses, combinations, sequences and
@@ -1190,7 +1226,7 @@ apply to them as well and because 102 acquires one input.
 - **103 — canonical Phase 12.** Plan section 57, unchanged, including the release
   integrity check D-211 added.
 
-### 6.11 · What must happen to the D-172 hold, and it is the owner's to do
+### 6.11 · What must happen to the D-172 hold, and it is the owner's to do — **DONE: it now reads `blocks_phase=98`**
 
 `CAMPAIGN_HOLDS.md` declares `blocks_phase=91`, and correction 3.14 shows the match
 is exact-integer. Under this roadmap, **routing 91 becomes semantic capture, which
@@ -1538,16 +1574,17 @@ counts.**
   the record over longer horizons_ (AUD-0029/0007/0009/0042) and _acting on what it
   concludes_ (C21 enforcement, F03, F08, F18). Those two halves have different
   gates and can fail independently, which is the whole point.
-- **Routing 94 slices by domain**, not by capability. Each domain is independently
+- **Routing 95 slices by domain** (renumbered from 94 by D-292), not by capability. Each domain is independently
   buildable and independently falsifiable. A cap of **four domains per QA cycle** is
   the right shape; twelve at once is the mega-phase the campaign has already refused
   twice. **Sized with arithmetic in §11B, because the owner-decision sequence put
   nine of its twenty additions into this phase.**
-- **Routing 95 carries its own split rule**: if it exceeds **four packages**, it
+- **Routing 99 carries its own split rule** (renumbered from 95 by D-294): if it exceeds **four packages**, it
   splits at the seam between _describing advancement_ (record-factual, cheap) and
   _stating and reconciling expectations_ — which is exactly the seam that produced 96. Applying it once more is the mitigation if 95 grows again.
-- **Routing 97's kill criterion is declared in its handoff before the builder
-  starts.** A phase that can conclude "no" is a phase that can end.
+- **Routing 98's kill criterion is declared in its handoff before the builder
+  starts** (renumbered from 97 by D-292), **and D-290's multiple-comparisons bar
+  is part of it.** A phase that can conclude "no" is a phase that can end.
 
 **Where the roadmap risks not finishing, said plainly.** **Eleven routed phases remain** — 90, 91, 92, 93, 94, 95, 96, 97, 101, 102 and 103. (83 and 84 are GREEN and are not counted; 98–100 are reserved headroom and carry no work.) An earlier count of ten in this document was wrong and is corrected here. At the
 observed range of 2 to 19 rounds, that is a long road, and the predecessor's section
@@ -1583,10 +1620,10 @@ that order.
 
 ---
 
-## 11B · Routing 94, sized in the roadmap's own unit
+## 11B · Routing **95** (was 94), sized in the roadmap's own unit
 
-Routing 94 absorbed **nine of the twenty additions** from the owner-decision
-sequence. The roadmap's unit of work for this phase is the **domain slice**, capped
+Routing **95** — renumbered from 94 by D-292 — absorbed **nine of the twenty
+additions** from the owner-decision sequence. The roadmap's unit of work for this phase is the **domain slice**, capped
 at **four domains per QA cycle**.
 
 ### The domain arithmetic

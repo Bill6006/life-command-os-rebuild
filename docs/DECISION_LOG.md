@@ -32,9 +32,22 @@ predates the state engine and is the only thing here that nothing else waits on.
 | 98  | exploration and causal chains          | 97, and D-290's bar is specified |
 | 99  | advancement and revision               | —                                |
 
-**Routing 95 is the only one out of dependency order and that is deliberate** — the
-owner chose _"state engine next, Fatherhood after"_ and Fatherhood depends on
-nothing in this sequence.
+**Routing 95 is the only one out of dependency order, and it should stay there.**
+The owner chose _"state engine next, Fatherhood after"_, and the obvious objection
+— that Fatherhood sits between sampling and measuring and delays the forecast by a
+phase — **does not survive the calendar.**
+
+**Routing 96 cannot start the day routing 94 ships.** Effect measurement needs
+_weeks_ of check-in history before it can say anything, and no amount of building
+shortens that. **Fatherhood at 95 fills a gap that exists whether or not anything
+is built in it**, and it is the most build-ready phase in the roadmap — §6.6 and
+§11B specify it completely, and it depends on nothing in this sequence. Moving it
+later would not bring the forecast forward; it would idle the wait.
+
+**The one thing that would change this** is if routing 94 ships and the owner does
+not use the check-in. Then 96 has no data on any schedule, and the order stops
+mattering because the sequence has already failed. That is the signal to watch
+after 94, and it is why the dispatch requires the check-in to visibly earn itself.
 
 ---
 
