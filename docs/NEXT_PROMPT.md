@@ -226,7 +226,8 @@ Build routing Phase 94 of the Life Command OS rebuild.
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Check docs/CAMPAIGN_HOLDS.md first — routing 94 is held by D-285. Then read
+Check docs/CAMPAIGN_HOLDS.md first — the D-285 hold on routing 94 was released
+on 2026-09-04 and should read status=closed. Then read
 docs/NEXT_PROMPT.md and docs/STATE_ENGINE_OWNER_DECISION.md in full and execute
 the routing 94 dispatch exactly as written. Keep the Phase field exactly 94,
 leave the three QA handoffs in docs/qa/ unedited, reach YELLOW rather than

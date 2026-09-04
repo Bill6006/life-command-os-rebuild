@@ -1,5 +1,43 @@
 # Decision log
 
+## D-294 — The move catalogue gets routing 96, and advancement moves to 99
+
+**Phase:** — · **Status:** Active · **Amends** D-292 · **Owner-decided 2026-09-04**
+
+**D-292 left a hole and this closes it.** The map shifted every existing phase up
+by one and never gave **D-289's move catalogue and the effect measurement that
+reads it** a routing integer at all — `D-289` appeared nowhere in the plan. The
+routing 94 dispatch had already written _"they are routings 96, 97 and 98"_, so the
+dispatch was right and the map was wrong.
+
+| Name                                       | Was | Now    |
+| ------------------------------------------ | --- | ------ |
+| **The move catalogue and measured effect** | —   | **96** |
+| Advancement and revision                   | 96  | **99** |
+
+**Why the catalogue takes 96 rather than waiting.** It is on the critical path and
+nothing after it can start without it: the forecast (97) predicts a state that
+moves because of measured effects, and exploration (98) tests alternatives against
+effects it can compare. Advancement and revision is pre-existing roadmap work that
+predates the state engine and is the only thing here that nothing else waits on.
+
+**The order and what each needs from the one before:**
+
+| #   | Phase                                  | Cannot start until               |
+| --- | -------------------------------------- | -------------------------------- |
+| 94  | the check-in, the readings, the score  | —                                |
+| 95  | domains and progression (Fatherhood)   | — (owner's chosen order, D-292)  |
+| 96  | the move catalogue and measured effect | 94 has produced state history    |
+| 97  | the forecast                           | 96 can say what a move did       |
+| 98  | exploration and causal chains          | 97, and D-290's bar is specified |
+| 99  | advancement and revision               | —                                |
+
+**Routing 95 is the only one out of dependency order and that is deliberate** — the
+owner chose _"state engine next, Fatherhood after"_ and Fatherhood depends on
+nothing in this sequence.
+
+---
+
 ## D-293 — What the check-in is: the readings, the default, and three new concepts
 
 **Phase:** 94 · **Status:** Active · **Amends** D-166 · **Releases** D-285's hold ·

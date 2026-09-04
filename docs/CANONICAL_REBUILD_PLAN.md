@@ -2412,11 +2412,15 @@ Approved by the owner on 2026-08-31 (**D-212**), after the second product adjudi
 | Validity — what it concludes from what it sees           | **93**          | `qa/PHASE_93_QA_HANDOFF.md`  |
 | **State — the readings, the score and what they are for** | **94**          | `qa/PHASE_94_QA_HANDOFF.md`  |
 | Domains and progression                                  | **95**          | `qa/PHASE_95_QA_HANDOFF.md`  |
-| Advancement and revision                                 | **96**          | `qa/PHASE_96_QA_HANDOFF.md`  |
+| **The move catalogue and measured effect**                | **96**          | `qa/PHASE_96_QA_HANDOFF.md`  |
 | Expectation and reconciliation — **re-derive as the forecast** | **97**    | `qa/PHASE_97_QA_HANDOFF.md`  |
 | Longitudinal inference — D-172's mechanism               | **98**          | `qa/PHASE_98_QA_HANDOFF.md`  |
-| _(99–100 reserved headroom)_                             | —               | —                            |
+| Advancement and revision                                 | **99**          | `qa/PHASE_99_QA_HANDOFF.md`  |
+| _(100 reserved headroom)_                                | —               | —                            |
 | **Canonical Phase 10** — performance, PWA, reliability    | **101**         | `qa/PHASE_101_QA_HANDOFF.md` |
+| **Canonical Phase 11** — adversarial hardening            | **102**         | `qa/PHASE_102_QA_HANDOFF.md` |
+| **Canonical Phase 12** — release                          | **103**         | `qa/PHASE_103_QA_HANDOFF.md` |
+
 > **The map shifted by one on 2026-09-04 — D-292.** Routing 94 is now the **state
 > engine's first slice**: the check-in, the readings stored, and the score.
 > Everything from _domains and progression_ down moved one integer up, into the
@@ -2429,10 +2433,7 @@ Approved by the owner on 2026-08-31 (**D-212**), after the second product adjudi
 > re-derived once routing 94 has produced data to design against.
 >
 > Read [`STATE_ENGINE_OWNER_DECISION.md`](STATE_ENGINE_OWNER_DECISION.md) and
-> D-285 … D-292 before planning any phase from 94 on.
-
-| **Canonical Phase 11** — adversarial hardening            | **102**         | `qa/PHASE_102_QA_HANDOFF.md` |
-| **Canonical Phase 12** — release                          | **103**         | `qa/PHASE_103_QA_HANDOFF.md` |
+> D-285 … D-294 before planning any phase from 94 on.
 
 **Eleven routed phases remain.** 83, 84 and 90 are GREEN; 98–100 carry no work.
 
