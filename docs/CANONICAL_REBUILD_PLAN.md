@@ -1128,6 +1128,30 @@ Historical evidence must not be rewritten retroactively when direction changes.
 
 # 22. Scores and forecasts
 
+> **Amended at source by D-287 and D-288, 2026-09-04, and one clause below no
+> longer holds as written.** Read
+> [`STATE_ENGINE_OWNER_DECISION.md`](STATE_ENGINE_OWNER_DECISION.md) before
+> building anything that puts a figure about the owner on a screen.
+>
+> - **A 0–100 state reading about the owner is approved (D-287)**, on the
+>   check-in, where 100 is every dimension at its best. The line the owner drew
+>   is that it is a **reading** — how he is right now, recomputed each check-in —
+>   and that **it becomes the thing this section forbids the moment it acquires a
+>   quality adjective**. _"You are at 62"_ is permitted; _"a good week"_,
+>   _"falling behind"_, a band, a colour that means better, or a bar is not, at
+>   any confidence, on any surface.
+> - **A forecast is approved (D-288)** and is the only place the app may assume.
+>   It predicts what happens if he does nothing, it is scored against what
+>   happened, and its misses are shown.
+>
+> **Everything else in this section stands, and three clauses are strengthened
+> rather than relaxed.** No percentage, share, rate, rank, grade or completion
+> bar about the owner anywhere — routing 94's figure is rendered as
+> _"62 out of 100"_ for exactly that reason. Nothing composites across domains.
+> And **none of this reaches Adaya**: D-291 redraws C19 at the owner's own record
+> and deletes the percentage and the progress bar from the Fatherhood screen
+> rather than adding any.
+
 Do **not** make a giant Life Score a foundation requirement.
 
 ## First-release rule

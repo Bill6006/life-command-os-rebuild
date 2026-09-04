@@ -96,7 +96,25 @@ describe('six dimensions, and never one — D-166', () => {
     expect(free?.tracked, 'a scale was invented for the free-text reading').toBeUndefined()
   })
 
-  it('composites them nowhere, and the guard is a shape rather than a word', () => {
+  /**
+   * The one place a composite is now allowed, and it is named — D-287.
+   *
+   * D-166's rule was *nothing anywhere*, and the owner has since approved a
+   * 0–100 **state reading** and said what keeps it on the right side of the
+   * line D-166 drew: it is a reading of how he is right now, and it stops being
+   * one the moment it acquires a quality adjective.
+   *
+   * **So the guard is narrowed rather than deleted, and it costs one file.**
+   * Every other source file in the repository is held to *nowhere* exactly as
+   * before, which is what stops the approved composite becoming a licence for
+   * an accidental one somewhere nobody is looking. `state.ts` combines them in
+   * a single named function, and the test after it is the other half of the
+   * trade: the exemption buys the number, and the number may never buy an
+   * adjective.
+   */
+  const MAY_COMBINE_THEM = 'src/intelligence/state.ts'
+
+  it('composites them nowhere but the one file D-287 approved', () => {
     /*
      * The reintroduction proof, standing rather than performed once.
      *
@@ -111,6 +129,7 @@ describe('six dimensions, and never one — D-166', () => {
     const offenders: string[] = []
     const reducing = /\breduce\s*\(|\bsum\b|\baverage\b|\bmean\b|\/\s*6\b/
     for (const file of [...sourceFiles('src')]) {
+      if (repoPath(file) === MAY_COMBINE_THEM) continue
       const text = readFileSync(file, 'utf8')
       // Strip block and line comments, keeping string literals intact.
       const code = text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
@@ -125,6 +144,33 @@ describe('six dimensions, and never one — D-166', () => {
       }
     }
     expect(offenders, 'two or more dimensions were reduced to one number').toEqual([])
+  })
+
+  it('holds the exempt file to the thing the exemption was for', () => {
+    /*
+     * An exemption nobody checks is a hole. Two properties, and between them
+     * they are the whole of what D-287 approved.
+     *
+     * **One reduction, in one function.** The exemption is for a state reading,
+     * not for a file where anything at all may be added up.
+     *
+     * **And it is over readings rather than over the six.** `state.ts` walks the
+     * check-in catalogue and asks the registry which entries are scales with a
+     * direction; it holds no list of emotional dimensions to blend. That is what
+     * makes it a reading of what he answered rather than `emotional.score`
+     * arriving under a new name — the back door D-166 named.
+     */
+    const source = readFileSync(join(ROOT, MAY_COMBINE_THEM), 'utf8')
+    const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
+    expect(
+      (code.match(/\breduce\s*\(/g) ?? []).length,
+      'the approved composite has grown a second reduction',
+    ).toBe(1)
+    for (const concept of SIX) {
+      expect(code, `${concept} is named in the exempt file’s own code`).not.toContain(
+        String(concept),
+      )
+    }
   })
 
   it('is a guard with something to catch', () => {

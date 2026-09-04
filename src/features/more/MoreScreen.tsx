@@ -1,4 +1,5 @@
 import { Panel, Row, Rows, Screen } from '../../components/ui'
+import { CheckInSettingsPanel } from './CheckInSettingsPanel'
 import { formatBuildTime, REBUILD_PHASE, runningBuild } from '../../platform/buildInfo'
 import { hashForDestination, QA_AVAILABLE } from '../../platform/routing'
 import type { BuildFreshness } from '../../platform/useBuildFreshness'
@@ -22,6 +23,8 @@ export function MoreScreen({ freshness }: { freshness: BuildFreshness }) {
       title="More"
       lede="Data, exports, privacy, settings and QA live here rather than taking a primary slot."
     >
+      <CheckInSettingsPanel />
+
       {QA_AVAILABLE ? (
         <Panel title="QA laboratory">
           <p>

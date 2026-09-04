@@ -72,7 +72,7 @@ describe('primary navigation shape', () => {
   })
 
   it('keeps More, Data and QA reachable without giving any of them a slot in the bar', () => {
-    expect(SECONDARY_DESTINATIONS).toEqual(['more', 'data', 'qa'])
+    expect(SECONDARY_DESTINATIONS).toEqual(['more', 'data', 'check-in', 'qa'])
     for (const secondary of SECONDARY_DESTINATIONS) {
       expect(DESTINATIONS as readonly string[]).not.toContain(secondary)
       expect(ALL_DESTINATIONS as readonly string[]).toContain(secondary)

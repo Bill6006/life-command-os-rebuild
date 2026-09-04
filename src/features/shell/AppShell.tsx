@@ -1,4 +1,6 @@
 import { lazy, useEffect } from 'react'
+import { CheckInScreen } from '../checkin/CheckInScreen'
+import { useCheckInReminder } from '../checkin/useCheckInReminder'
 import { DataScreen } from '../data/DataScreen'
 import { DomainPage } from '../life/DomainPage'
 import { pageBySlug } from '../life/domainPages'
@@ -171,6 +173,8 @@ function screenFor(destination: Destination, freshness: BuildFreshness) {
       return <MoreScreen freshness={freshness} />
     case 'data':
       return <DataScreen />
+    case 'check-in':
+      return <CheckInScreen />
     case 'qa':
       return (
         <LazyScreen label="the QA laboratory">
@@ -183,6 +187,10 @@ function screenFor(destination: Destination, freshness: BuildFreshness) {
 export function AppShell() {
   const [destination, navigate] = useDestination()
   const freshness = useBuildFreshness()
+
+  // Above the screens, so a reminder is not a property of which tab he happens
+  // to be standing on — routing 94.
+  useCheckInReminder()
 
   useEffect(() => {
     document.title = `${DESTINATION_LABELS[destination]} · Life Command OS`

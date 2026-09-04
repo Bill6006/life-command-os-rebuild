@@ -1261,7 +1261,16 @@ async function main() {
    * page the same question a screen reader would rather than checking which
    * attribute happened to be used.
    */
-  for (const route of ['now', 'life', 'timeline', 'insights', 'more', 'data', 'life/career']) {
+  for (const route of [
+    'now',
+    'life',
+    'timeline',
+    'insights',
+    'more',
+    'data',
+    'check-in',
+    'life/career',
+  ]) {
     await page.goto(`${BASE}#/${route}`)
     await page.waitForSelector('h1')
     const nameless = await page
@@ -1652,6 +1661,149 @@ async function main() {
     (await cold.getByTestId('authoring-kinds').count()) === 1,
   )
   await coldContext.close()
+
+  // ---- The check-in, on the deployed bytes — routing 94 ---------------------
+  /*
+   * Its own context, its own timezone and its own clock, and all three are
+   * required rather than tidy.
+   *
+   * **A fresh store**, for the reason the cold block above gives: the history
+   * seeded at the top of this gate lives in IndexedDB, and the check-in's
+   * claim is about the store a new owner has.
+   *
+   * **A fixed zone and a fixed instant**, because the ritual is *scheduled*.
+   * Before 08:00 local there is deliberately nothing open, so a gate reading
+   * the wall clock would pass by finding an empty screen on any night run and
+   * would have tested nothing at all. UTC plus an installed clock puts this
+   * inside the morning window whenever the gate happens to run.
+   */
+  const checkInContext = await browser.newContext({ ...ANDROID, timezoneId: 'UTC' })
+  const checkIn = await checkInContext.newPage()
+  await checkIn.clock.install({ time: new Date('2026-03-04T08:30:00Z') })
+
+  await checkIn.goto(`${BASE}#/now`)
+  await checkIn.waitForSelector('h1:has-text("Now")')
+  const openCheckIn = checkIn.getByTestId('now-check-in')
+  check(
+    'a first run is offered the check-in on Now — DEF-0170',
+    (await openCheckIn.count()) === 1,
+    (await checkIn.locator('.screen').innerText()).replace(/\s+/g, ' ').trim().slice(0, 120),
+  )
+
+  await checkIn.goto(`${BASE}#/check-in`)
+  await checkIn.waitForSelector('h1:has-text("Check-in")')
+  const anchors = checkIn.locator('.checkin-anchor')
+  await checkIn.waitForSelector('.checkin-anchor')
+  check('the morning check-in offers five anchors', (await anchors.count()) === 5)
+  check(
+    'and says how far through it he is',
+    /0 of 13 answered/.test(await checkIn.getByTestId('checkin-progress').innerText()),
+  )
+
+  /*
+   * Every anchor, measured and read on a phone.
+   *
+   * These are the longest strings this app has ever put on a button — a state
+   * and a clause — so they are the likeliest place for a thumb target to fall
+   * short or a clause to be clipped. Both are measured on the deployed bytes at
+   * a real device pixel ratio, which is where phase 4's five defects lived.
+   */
+  for (let i = 0; i < 5; i += 1) {
+    const anchor = anchors.nth(i)
+    clearsThumb(`check-in anchor ${i + 1}`, (await anchor.boundingBox())?.height)
+    const clipped = await anchor.evaluate((node) => node.scrollWidth > node.clientWidth + 1)
+    check(
+      `check-in anchor ${i + 1} shows all of its words`,
+      clipped === false,
+      (await anchor.innerText()).trim(),
+    )
+  }
+
+  await checkIn.locator('.checkin-anchor').nth(2).tap()
+  await checkIn.waitForSelector('[data-testid="checkin-score-figure"]')
+  const figure = await checkIn.getByTestId('checkin-score-figure').innerText()
+  check(
+    'one answer produces a reading, on the same screen, straight away',
+    /out of 100/.test(figure),
+    figure.replace(/\s+/g, ' ').trim(),
+  )
+  check(
+    'and the reading says how many readings it is over',
+    /From 1 of the 10/.test(await checkIn.getByTestId('checkin-score-basis').innerText()),
+  )
+  check(
+    'and says the readings all count the same',
+    (await checkIn.getByTestId('checkin-score-weighting').innerText()).length > 20,
+  )
+
+  /*
+   * D-287's line, on the deployed screen: the figure stays a reading only
+   * while it never acquires a quality word, and the per-cent sign belongs to
+   * one shared component that is not this one.
+   */
+  const checkInText = await checkIn.locator('.screen').innerText()
+  check('the check-in prints no per-cent sign', !checkInText.includes('%'))
+  const verdicts = ['good day', 'bad day', 'falling behind', 'on track', 'wellbeing', 'well-being']
+  const said = verdicts.filter((word) => checkInText.toLowerCase().includes(word))
+  check('and puts no verdict on the figure', said.length === 0, said.join(', '))
+  check(
+    'and puts no adaptation claim on it either',
+    adaptationClaims(checkInText).length === 0,
+    adaptationClaims(checkInText).join(' | '),
+  )
+
+  const checkInOverflow = await checkIn.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  )
+  check(
+    'no horizontal overflow (the check-in)',
+    checkInOverflow <= 1,
+    `${checkInOverflow}px of overflow`,
+  )
+
+  // ---- And the control that sizes it, where the owner would look for it -----
+  await checkIn.goto(`${BASE}#/more`)
+  await checkIn.waitForSelector('h1:has-text("More")')
+  check(
+    'More carries the depth and frequency controls',
+    (await checkIn.getByTestId('checkin-settings').count()) === 1,
+  )
+  check(
+    'and states the trade on the control itself — D-285',
+    /Fewer readings will not produce the best results/.test(
+      await checkIn.getByTestId('checkin-depth-trade').innerText(),
+    ),
+  )
+  check(
+    'and says what a reminder cannot do',
+    /Nothing appears when it is closed/.test(
+      await checkIn.getByTestId('checkin-reminders').innerText(),
+    ),
+  )
+  for (const level of ['full', 'shorter', 'fewest']) {
+    clearsThumb(
+      `the ${level} depth control`,
+      (await checkIn.getByTestId(`checkin-depth-${level}`).boundingBox())?.height,
+    )
+  }
+  const settingsOverflow = await checkIn.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  )
+  check(
+    'no horizontal overflow (the check-in settings)',
+    settingsOverflow <= 1,
+    `${settingsOverflow}px of overflow`,
+  )
+
+  await checkIn.getByTestId('checkin-depth-fewest').tap()
+  await checkIn.goto(`${BASE}#/check-in`)
+  await checkIn.waitForSelector('.checkin-anchor')
+  check(
+    'and the control changes what the check-in asks',
+    /0 of 5 answered/.test(await checkIn.getByTestId('checkin-progress').innerText()),
+  )
+
+  await checkInContext.close()
 
   // ---- Timeline does not contradict itself about extent — QA-84-009 ---------
   await loadScenario('The first evening')

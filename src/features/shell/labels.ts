@@ -8,5 +8,6 @@ export const DESTINATION_LABELS: Record<Destination, string> = {
   insights: 'Insights',
   more: 'More',
   data: 'Data',
+  'check-in': 'Check-in',
   qa: 'QA',
 }

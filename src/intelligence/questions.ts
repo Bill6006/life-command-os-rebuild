@@ -5,6 +5,7 @@ import { newRecordId, type RecordId } from '../domain/ids'
 import type { FactValue, ObservationRecord, Provenance } from '../domain/records'
 import type { Instant, TimeZoneId } from '../domain/time'
 import type { ConceptId } from '../domain/windows'
+import { ENERGY_ANCHORS } from './readings'
 import type { Situation } from './situation'
 import { horizonWord, restOfWord } from './vocabulary'
 
@@ -82,12 +83,24 @@ export const QUESTIONS: readonly QuestionSpec[] = [
     // Section 3's rule about not losing the noun is not only about
     // recommendations.
     prompt: () => 'How much energy have you got left?',
-    options: () => [
-      { id: 'empty', label: 'Running on empty', value: scale(1) },
-      { id: 'low', label: 'Low', value: scale(2) },
-      { id: 'ok', label: 'Enough', value: scale(3) },
-      { id: 'good', label: 'Plenty', value: scale(4) },
-    ],
+    /*
+     * The check-in's five, not a fourth set of words for one question —
+     * routing 94.
+     *
+     * `energy.current` shipped four options here and the check-in needs five,
+     * because a score averaging over a mixed denominator is not a score. Two
+     * ways to give that were available and only one of them is honest: a
+     * separate five for the ritual would have put two different answer sets for
+     * one concept in front of the owner in one day, and the second one he met
+     * would read as the app having changed its mind about what it was asking.
+     *
+     * So there is one definition and both surfaces read it. **This is a change
+     * to a shipped owner-facing question** — a fifth answer, and a clause on two
+     * of the four — and `readings.ts` carries the note about what did and did
+     * not change, including that every value already written still means the
+     * words it was written with.
+     */
+    options: () => ENERGY_ANCHORS,
   },
   {
     concept: CONCEPT.freeNow,

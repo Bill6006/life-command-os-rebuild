@@ -135,6 +135,10 @@ const TAGS = {
    */
   'aim-reading': 'Worked out',
   'discovery-response': 'Getting to know you',
+  // What he set the check-in to. Not 'Preference' and not 'Permission': one is
+  // about what gets suggested and the other about what the app may read, and
+  // this is about how much he is asked.
+  'check-in-setting': 'Check-in',
   /*
    * "Kept" rather than "Imported", now that the origin is its own field.
    *
@@ -544,6 +548,16 @@ export function describeRecord(
     case 'coverage-update':
       return plain('Reviewed — the owner has looked at this.')
     case 'permission':
+      return plain(record.statement)
+    /*
+     * The words he was reading when he chose, rather than the level's own name.
+     *
+     * `full` and `three` mean nothing on Timeline a year later, and a row that
+     * said "Changed the check-in to full" would be the app's vocabulary
+     * appearing on the one surface that is meant to be an account of what he
+     * did. The statement is what the control actually said at the time.
+     */
+    case 'check-in-setting':
       return plain(record.statement)
     case 'discovery-response':
       /*

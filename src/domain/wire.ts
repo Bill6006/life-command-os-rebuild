@@ -713,6 +713,23 @@ function readPayload(reader: Reader, kind: RecordKind): Record<string, unknown> 
         disposition: readEnum(reader, 'disposition', DISCOVERY_DISPOSITIONS),
         produced: readOptionalRecordId(reader, 'produced'),
       }
+    /*
+     * Depth and frequency come back as the strings they went out as, and are
+     * *not* read through `readEnum` against the level lists.
+     *
+     * A level the running build does not recognise is a row written by a build
+     * that knew more, and rejecting it would drop the owner's own setting on a
+     * downgrade — section 30's rule about a round-trip that loses history. So
+     * the wire keeps the words, and `checkInSettings` is where an unrecognised
+     * level falls back to the shipped default. One layer reads, one layer
+     * decides what a value means.
+     */
+    case 'check-in-setting':
+      return {
+        depth: readString(reader, 'depth'),
+        frequency: readString(reader, 'frequency'),
+        statement: readString(reader, 'statement'),
+      }
     case 'imported-legacy-record':
       return {
         legacyFormat: readString(reader, 'legacyFormat'),
@@ -1169,6 +1186,8 @@ function payloadOut(record: CanonicalRecord): Record<string, unknown> {
         disposition: record.disposition,
         ...(record.produced === undefined ? {} : { produced: record.produced }),
       }
+    case 'check-in-setting':
+      return { depth: record.depth, frequency: record.frequency, statement: record.statement }
     case 'imported-legacy-record':
       return { legacyFormat: record.legacyFormat, raw: record.raw }
   }

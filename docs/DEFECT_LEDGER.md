@@ -1,5 +1,64 @@
 # Defect ledger
 
+## DEF-0170 — the check-in was unreachable from the one store it was built for
+
+**Phase:** 94 · **Found by:** the browser matrix, first run · **Status:** REPAIRED
+
+`NowScreen` returns `EmptyNow` when the store has no records, and that return
+happens **before** anything the phase added. So the card offering the check-in
+was on the Now screen of every history except one: **the empty one.**
+
+That is the store the whole phase exists for. It is the store measured on
+2026-09-03 at _one question a day_, and D-292's reason for building the check-in
+before anything else is that _"every day without sampling is history the forecast
+will never have."_ A new owner would have found Now saying there was nothing here,
+offering to take a sentence about his aspirations, and never mentioning the
+three-tap ritual that would have started filling the history.
+
+**What made it invisible below the browser.** Every proof of the card ran against
+`dueCheckIn`, which is happy to answer on an empty store and did — the reading is
+that a check-in is open. The screen agreed and never rendered it. Nothing in the
+unit or synthetic layers renders `NowScreen`, so nothing could see the gap between
+_a check-in is open_ and _the owner is told so_.
+
+**The repair.** `EmptyNow` takes the same `DueCheckIn` and renders the same card,
+**above** _"where to start"_ rather than below it, because three taps is the
+shorter way in than a sentence he has to compose. `tests/browser/phase94.spec.ts`
+drives it from a fresh store at all three widths.
+
+**Recorded as D-302.**
+
+---
+
+## DEF-0169 — the test suite was red on this machine before the phase started
+
+**Phase:** 94 · **Found by:** the baseline run, before any change · **Status:** REPAIRED (the symptom); the cause is open
+
+`npm run test` at `61bb033` failed **twice out of two** with
+_"Test timed out in 30000ms"_ on `block-sweep`'s guide sweep and `reach-gate`'s
+speaking count. Both passed in isolation. CI was green on the same commit.
+
+**Measured:** 5.0s and 8.0s solo; over 30s under a full parallel run on fourteen
+cores. The failure is contention rather than the product, and it is the worst
+shape a gate failure takes — green on a rerun, and telling nobody anything.
+
+**`vite.config.ts` predicted it in writing.** Its own comment records phase 82
+crossing the five-second default the same way and says the number _"is a guard
+that gets weaker every time a scenario is added."_
+
+**The repair, and what it does not claim.** The ceiling is 120 seconds — 24× the
+slowest sweep's solo cost, so a failure there is a hang again rather than a busy
+laptop. **The cause is untouched**: a dozen library-wide sweeps run concurrently
+and each is single-threaded. The honest repairs are fewer workers or fewer
+whole-library sweeps, and both are their own piece of work.
+
+**Open, and it is an instrument item rather than a product one.** It belongs
+beside the nineteen D-210 findings.
+
+**Recorded as D-303.**
+
+---
+
 ## DEF-0168 — a blocker about studying stopped him being told to rest
 
 **Phase:** 93 · **Found by:** walking §6.5's ordinary-owner contract · **Status:** REPAIRED

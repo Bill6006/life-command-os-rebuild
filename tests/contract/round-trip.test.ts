@@ -221,6 +221,11 @@ const minimal: Record<RecordKind, CanonicalRecord> = {
     { occurredAt: T },
     { prompt: 'destination.career', disposition: 'skipped' },
   ),
+  'check-in-setting': record(
+    'check-in-setting',
+    { occurredAt: T },
+    { depth: 'full', frequency: 'three', statement: 'Everything, three times a day' },
+  ),
   'imported-legacy-record': record(
     'imported-legacy-record',
     { occurredAt: T },
@@ -461,6 +466,15 @@ const full: Record<RecordKind, CanonicalRecord> = {
     { occurredAt: T, domains: [DOMAIN.career] },
     { prompt: 'destination.career', disposition: 'answered', produced: recommendationId },
   ),
+  'check-in-setting': record(
+    'check-in-setting',
+    { occurredAt: T, recordedAt: LATER, provenance: { source: 'owner', writtenBy: 'settings' } },
+    {
+      depth: 'fewest',
+      frequency: 'one',
+      statement: 'Four readings, once a day — fewer readings is less to work from',
+    },
+  ),
   'imported-legacy-record': record(
     'imported-legacy-record',
     { occurredAt: T, provenance: { source: 'legacy-import', writtenBy: 'importer' } },
@@ -476,7 +490,7 @@ function throughJson(value: unknown): unknown {
 
 describe('canonical records round-trip without loss', () => {
   it('covers every record kind the plan lists', () => {
-    expect(RECORD_KINDS).toHaveLength(26)
+    expect(RECORD_KINDS).toHaveLength(27)
     expect(Object.keys(minimal).sort()).toEqual([...RECORD_KINDS].sort())
     expect(Object.keys(full).sort()).toEqual([...RECORD_KINDS].sort())
   })

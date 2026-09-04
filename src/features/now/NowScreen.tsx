@@ -24,6 +24,7 @@ import {
 import { decide, type Decision } from '../../intelligence/engine'
 import { describePremise, type Explanation } from '../../intelligence/explain'
 import { evidenceForDecision, type DecisionEvidence } from '../../intelligence/insights'
+import { dueCheckIn, type DueCheckIn } from '../../intelligence/checkIn'
 import { nextGuideStep } from '../../intelligence/guide'
 import { growthAnswerRecords, type GrowthSuggestion } from '../../intelligence/growth'
 import {
@@ -280,7 +281,7 @@ export function ResumePanel({
  * own page is. Nothing is invented to fill the screen — these are links to
  * controls that exist, and the headline still says the app knows nothing.
  */
-function EmptyNow() {
+function EmptyNow({ checkIn }: { checkIn: DueCheckIn | undefined }) {
   return (
     <Screen title="Now">
       <PrimarySurface eyebrow="Nothing loaded" headline="There is no history here yet.">
@@ -289,6 +290,40 @@ function EmptyNow() {
           something plausible about a life it knows nothing about.
         </p>
       </PrimarySurface>
+
+      {/*
+        The check-in, on the one screen where it matters most — routing 94.
+
+        **This was a defect the browser matrix found and nothing else could.**
+        Every unit proof of the card ran against `dueCheckIn`, which is happy to
+        answer on an empty store; the screen returns this component before it
+        reaches the card, so on a history with nothing in it — the only history a
+        new owner has — the ritual was reachable from More and from a typed hash
+        and from nowhere he would look.
+
+        That is the store the whole phase is about. It was measured at **one
+        question a day**, and D-292's reason for building this before anything
+        else is that *"every day without sampling is history the forecast will
+        never have"*. Offering it below a paragraph about aspirations, on a
+        screen that says there is nothing here, would have lost exactly the days
+        the phase exists to stop losing.
+
+        It goes **above** "where to start", because it is the shorter way in:
+        three taps against a sentence he has to compose.
+      */}
+      {checkIn === undefined || checkIn.next === undefined ? null : (
+        <Panel title={checkIn.label} testId="now-check-in">
+          <p className="note" data-testid="now-check-in-note">
+            {checkIn.totalCount - checkIn.answeredCount} of {checkIn.totalCount} readings still to
+            answer. Nothing has to be answered before the rest of the app works.
+          </p>
+          <p>
+            <a className="qa-link" href={hashForDestination('check-in')}>
+              Open the check-in
+            </a>
+          </p>
+        </Panel>
+      )}
 
       <Panel title="Where to start">
         <p>
@@ -436,6 +471,10 @@ export function NowScreen() {
     [memory.view, moment, decision.situation.entities],
   )
 
+  // Whether a check-in is open and unfinished — routing 94. Cheap: it reads the
+  // record log and the schedule, and decides nothing.
+  const checkIn = useMemo(() => dueCheckIn(memory.view, moment), [memory.view, moment])
+
   const append = useCallback(
     (build: () => readonly Parameters<typeof memory.append>[0][number][]) => {
       if (inFlight.current) return
@@ -459,7 +498,7 @@ export function NowScreen() {
     )
   }
 
-  if (memory.snapshot.records.length === 0) return <EmptyNow />
+  if (memory.snapshot.records.length === 0) return <EmptyNow checkIn={checkIn} />
 
   const busy = working || memory.busy
 
@@ -985,6 +1024,35 @@ export function NowScreen() {
         disabled={busy}
         onAnswer={answerGuide}
       />
+
+      {/*
+        A check-in is open — routing 94, and the only thing this phase puts on
+        Now.
+
+        **Below the guide's question rather than above it**, and the ordering is
+        the decision. The guide asks what would change what he is told to do in
+        the next hour; the check-in feeds a score and a history the forecast is
+        built from later. When both are on the screen the one about tonight goes
+        first, or the ritual quietly outranks the decision it exists to serve.
+
+        It says nothing at all once the check-in is finished, which is the one
+        place this phase gets to spend on not speaking. A card standing all
+        evening after he has already answered is AUD-0025's repetition arriving
+        through a new door.
+      */}
+      {checkIn === undefined || checkIn.next === undefined ? null : (
+        <Panel title={checkIn.label} tone="quiet" testId="now-check-in">
+          <p className="note" data-testid="now-check-in-note">
+            {checkIn.totalCount - checkIn.answeredCount} of {checkIn.totalCount} readings still to
+            answer.
+          </p>
+          <p>
+            <a className="qa-link" href={hashForDestination('check-in')}>
+              Open the check-in
+            </a>
+          </p>
+        </Panel>
+      )}
 
       {isProduction ? null : (
         <p className="note">

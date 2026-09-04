@@ -1,228 +1,120 @@
-# Next dispatch — routing 94: the check-in, the readings and the score
+# Next dispatch — the move catalogue research (D-296)
 
-**Phase:** 94 — **State: the readings, the score and what they are for**
+**Phase:** 95 — **The move catalogue research: the document routing 95 builds against**
 
-**Next actor:** Claude Builder
-**Target system:** Claude Builder
+**Next actor:** Claude
+**Target system:** Claude
 **Model:** Claude Opus 5
 **Reasoning / Effort:** Max
 **Conversation:** NEW
-**Independent QA:** OFF — this file dispatches a build phase and starts no QA round.
+**Independent QA:** OFF — this file starts no QA round.
 
-**Written by the Claude builder conversation that finished the phase before this
-one.** Independent QA is **off** for this run by owner instruction, so this file
-dispatches the next build phase, is addressed to the **Claude builder**, and
-starts no QA round.
+**Written by the Claude builder conversation that finished routing 94.**
 
 ---
 
-## The hold on this phase is released — check it anyway
+## Read this before anything else: this is not a build phase
 
-`docs/CAMPAIGN_HOLDS.md` carried `id=D-285 blocks_phase=94` until the owner named
-the shipped default. **He did, on 2026-09-04 — D-293 — and the declaration now
-reads `status=closed`.** Confirm that before you start; if it says `open`, stop.
+**D-296 is explicit and it is owner-decided.** The catalogue research follows the
+adjudication precedent — _"not a build phase; it produced a decision, not a
+diff"_ — **carries no routing integer, and meets no build gate.**
 
-**The other hold is not yours.** `id=D-172 blocks_phase=98` is open and governs
-longitudinal inference. It does not gate this phase.
+**The `Phase: 95` above is a routing key and nothing more.** The orchestrator
+needs an integer to open a conversation with; D-296 gives this exercise none. It
+is filed under the phase that consumes its output. **This dispatch is the
+research half only.** Routing 95's build — the catalogue wired as candidates, and
+the effect measurement beside it — is a **separate, later dispatch**, and it does
+not start until the owner has read the document this one produces.
 
----
-
-## Read this part first: the plan changed on 2026-09-04
-
-**The roadmap you may have seen before this is superseded.** An owner interview
-during the routing 93 closeout produced **every decision from D-285 onward** — a
-routing shift, a redrawn prohibition, and the check-in this phase builds.
-
-**Read [`STATE_ENGINE_OWNER_DECISION.md`](STATE_ENGINE_OWNER_DECISION.md) in full
-before you plan.** Then **every decision from D-285 to the end of the log** —
-they are contiguous and there is nothing else after them. **D-293 specifies the
-check-in you are building and D-296 says what happens straight after this phase.**
-Nothing else in this file makes sense without them.
-
-### The finding that caused it
-
-Measured on a new store, three blocks a day across three days:
-
-| Day | Questions asked               | Candidates |
-| --- | ----------------------------- | ---------- |
-| 0   | **1** — _"How much energy…?"_ | 1          |
-| 1   | **1** — the same question     | 1          |
-| 2   | **1** — the same question     | 1          |
-
-The guide's own reason — _"4 question(s) could be asked and none of them would
-change the answer"_ — is **accurate**. All four landed every answer on the same
-move, because there was one move to land on. **One candidate cannot be re-ranked,
-so nothing is worth asking, so the store stays empty.** `QUESTIONS_PER_DAY = 3`
-was never reached; the information-value gate is what starved it.
-
-### What the owner is building, in one sentence
-
-A self-experimentation engine that must also make good daily decisions: sample his
-state several times a day, recommend a move, measure what it did over the window
-that suits it, forecast where he is heading, and deliberately test alternatives.
-
-**This phase is the first slice of that and nothing more.**
-
-### Three phases are still unapproved
-
-| Phase      | State                             | Rounds run                                 |
-| ---------- | --------------------------------- | ------------------------------------------ |
-| Routing 91 | BUILT / QA DEFERRED               | 9, with Round 10's brief written and unrun |
-| Routing 92 | BUILT / QA DEFERRED               | **0**                                      |
-| Routing 93 | YELLOW — READY FOR INDEPENDENT QA | **0**                                      |
-
-D-077 is unchanged. **All three QA handoffs in `docs/qa/` must survive unedited.**
-Do not append to them, correct them, or tidy them.
-
-**One narrow exception, and it exists because the omission already happened
-once.** Each brief opens with a machine-read routing block — `**Phase:**`,
-`**Actor:**`, `**Model:**`, `**Conversation:**`, `**Reasoning level:**`. The
-orchestrator reads it to record that a phase owes QA. `PHASE_93_QA_HANDOFF.md`
-shipped without it, so the orchestrator could not defer routing 93 and blocked
-instead, and the phase went unrecorded in the debt ledger. **Repairing a missing
-or malformed routing header is allowed and expected. Everything below it — the
-rounds, the findings, the judgements — is not yours.**
-
-**Your own handoff must carry that block.** Copy its shape from
-`PHASE_92_QA_HANDOFF.md`, which is the one that parses.
+**If you find yourself editing `src/`, stop.** The output is one file:
+`docs/MOVE_CATALOGUE.md`. No commit to product code, no test, no gate.
 
 ---
 
-## The phase
+## Why this exists, in one paragraph
 
-**Routing 94 — the check-in, the readings, and the score. Nothing else.**
+The owner has asked three times when he stops seeing only _"walk for 25
+minutes"_. The answer is routing 95, and routing 95 cannot start from nothing:
+D-289 approved a **research-built** move catalogue for a reason he gave himself —
+_"I don't trust myself if I am the one coming up with the moves."_ D-296 then
+found that leaving the research inside routing 95 would make that phase _research
+plus build plus coherence-check plus effect measurement_, which is D-283's
+fourteen-package mistake with a different subject.
 
-### Scope, and it is deliberately small
-
-1. **A check-in ritual** at scheduled times, with a notification bringing him to
-   it. Fixed set, bounded, skippable, and the same shape every time.
-2. **The readings, at the default D-293 sets.** **Morning (13):** mood,
-   irritation, stress, overwhelm, motivation, confidence, focus, loneliness,
-   social energy, energy, hunger, plus sleep hours and sleep quality. **Midday and
-   evening (5 each):** mood, irritation, energy, hunger, stress. **23 a day** against
-   the **one** a new store is asked now.
-
-   **Three of them are new concepts** — `emotional.irritation`, `emotional.focus`
-   and `health.hunger`. D-293 amends D-166's six to eight and adds hunger outside
-   that list. **Irritation is not a variant of stress and must not be mapped onto
-   it.**
-
-3. **Stored as ordinary observation records.** No schema invention — the record
-   layer already does this.
-4. **A 0–100 state score.** 100 is every dimension at its best — a fixed ceiling.
-   Per-dimension readings visible always; the overall figure visible too. **Equal
-   weights, stated on screen as equal weights.** D-287's learned weights are
-   **not** in this phase and need D-290's bar first.
-5. **A settings control: depth and frequency, separately** (D-285), with the trade
-   stated on the control — fewer readings will not produce the best results.
-6. **A second question budget** (D-286): the ritual is exempt from the swing rule
-   and counted separately from decision-relevant asks. **Never one pooled count.**
-
-### Explicitly not in this phase
-
-**The move catalogue (D-289). Effect measurement. The forecast (D-288). Exploration.
-Causal chains (D-290). Learned weights.** They are routings **95, 97 and 98**, and
-they all need what this phase produces.
-
-**Nor is Fatherhood.** It is routing **96** (D-295) and its scope is unchanged
-apart from D-291: progress rollups ship as counts, never as percentages or bars.
-
-### Do not repeat routing 93's mistake
-
-Routing 93 went to fourteen packages against a five-package split rule and D-283
-concludes it should have been two phases. **Six items are listed above. If you find
-a seventh, stop and say so** rather than absorbing it.
+**And the window costs nothing.** Routing 95's effect-measurement half has to wait
+for state history to accumulate anyway. Routing 94 shipped the check-in that
+produces it; this is what that wait is for.
 
 ---
 
-## One thing worth knowing about the eight dimensions
+## What the research has to produce, and the code already dictates it
 
-**Focus was not the owner's word.** It arrived through the previous conversation's
-own grouping, which he then selected as a block, and he asked for it knowing that.
-D-293 records why it matters: **focus is the dimension most likely to prove an
-effect of energy and mood rather than a cause.** Build it, and when D-287's learned
-weights arrive in a later phase, do not treat all eight as peers without checking.
+`MoveProfile` is not free text. **Every catalogue entry needs all of these**, and
+an entry missing one is not an entry:
 
-**Irritation and hunger were his own words**, named unprompted in his first
-description of the loop.
+| Field      | What the research must supply                                              |
+| ---------- | -------------------------------------------------------------------------- |
+| `demand`   | what kind of effort it asks for                                            |
+| `now`      | expected value in the block it happens in, **0–1**                         |
+| `tomorrow` | expected value the following day, **0–1**                                  |
+| `friction` | how hard it is to start, **0–1**, higher is harder                         |
+| `size`     | minutes where the move has a natural length, **omitted where it does not** |
 
-### How a reading is taken — decided, and it is not a slider
+**`now`, `tomorrow` and `friction` are research priors in the exact sense §13C
+means**, and the code comment on them already says _"Learning moves this."_ The
+research **seeds** them; the owner's measured effects move them. That is D-289's
+_"research proposes, his data ranks"_ arriving as three numbers rather than as a
+slogan.
 
-**Tap-to-pick labelled options, which is what the app already does.** The energy
-question ships four: _Running on empty · Low · Enough · Plenty_. The owner asked
-for exactly this and gave the shape himself — _"snappy | irritation = 2"_.
+**Every prior carries its citation**, the way Wood/Bruner/Ross and
+Gollwitzer & Sheeran already do in this codebase. A number without one is a
+builder's guess wearing a lab coat.
 
-**Five anchors per reading**, and the same count for every one of them so the score
-averages cleanly. Two consequences worth knowing before you start:
+### Routing 94 changed nothing about what those three fields mean
 
-1. **This settles the scale.** `FactValue`'s `scale` carries its own `of`, so
-   0–10 was representable — but **nobody can write eleven distinct meaningful words
-   for irritation, or tell 6/10 from 7/10.** A labelled anchor is also repeatable:
-   _"A bit snappy"_ means the same thing on Tuesday and Friday, where a bare 7
-   drifts with how the owner feels about the number. That drift is noise in the
-   exact series the forecast is built on.
-2. **`CONCEPT.energy` currently ships four options, not five.** Extend it, or the
-   score carries a mixed denominator. **Extending an existing owner-facing question
-   is a change to a shipped surface** — say so in your record rather than treating
-   it as tidying.
+Checked, because D-296 asks for it. The state score is **a reading of the owner at
+a moment** — it is never a move's expected value, it is never compared to one, and
+nothing in routing 94 reads or writes `MoveProfile`. Brief the research against
+`now`, `tomorrow` and `friction` exactly as D-296 writes them.
 
-**You draft the anchors; the owner reviews them.** Thirteen readings at five
-anchors is about sixty-five phrases of owner-facing copy, subject to the copy
-discipline this repository already enforces — G-001's orphan pronouns, the
-adaptation-claim scan, the rendered-copy scan.
-
-### The rule the anchors have to meet, and the owner set it
-
-> _"For mood, **good** is not helpful enough for me. I don't really know what good
-> means."_
-
-**An anchor describes a state the owner can recognise in himself. It does not name
-a point on a scale.** _"Good"_, _"Moderate"_, _"High"_ and _"4 out of 5"_ are all
-the same failure: they tell him where he is on a line without telling him what
-being there feels like, so he has to invent the meaning fresh each time — and the
-meaning he invents drifts with his mood about the number. **That drift is noise in
-the exact series the forecast is built on**, which makes this a data-quality
-requirement rather than a copy preference.
-
-**The test, and it is mechanical.** Could the owner pick between two adjacent
-anchors _without_ knowing which is higher? If the only thing separating them is
-intensity of the same vague word, they are not anchors. Rewrite them until each
-names something recognisable.
-
-|       | **Fails**                                     | **Passes**                                                                                                                                                          |
-| ----- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mood  | Low · Flat · Alright · **Good** · Really good | Heavy — everything is effort · Flat — nothing wrong, nothing good · Level — getting on with it · Lifted — things feel easier · Bright — actively enjoying it        |
-| Focus | Very low · Low · Medium · High · Very high    | Scattered — cannot hold a thought · Drifting — keep losing the thread · Patchy — fine in bursts · Working — getting there with effort · Locked in — time disappears |
-
-**The owner's own two are the register to match**, and they pass because each names
-something rather than grading it: _Fine · A bit snappy · Short-tempered · Snapping
-at everything_ for irritation, and _Not hungry · Peckish · Hungry · Starving_ for
-hunger.
-
-**Where a short word genuinely is recognisable, keep it short.** _"Starving"_ needs
-no gloss. The dash-clause form above is for the abstract dimensions — mood, focus,
-motivation, confidence — where a bare adjective says nothing. **Do not apply one
-shape to all thirteen.**
+**One thing routing 94 does give you, and it is worth using.** There are now
+thirteen readings on a five-point scale with a stated direction, and a 0–100
+reading over ten of them. When routing 95 measures what a move did, **that is what
+it will measure against.** A catalogue entry whose plausible effect is on nothing
+the check-in reads is an entry whose effect can never be measured — worth knowing
+while the entries are being written rather than after.
 
 ---
 
-## The bounds that did not move
+## Three bounds on the research itself — D-296
 
-**Every reading stays bound by G-009.** Unknown stays unknown; a skipped check-in
-produces no inferred value; nothing is back-filled. The owner's own rule governs:
-**questions are for facts, and the forecast — which is not in this phase — is the
-only place the app may assume.**
+1. **It must fit this owner's actual life, not a generic wellness library.** A
+   catalogue of moves for someone with unlimited evenings is worse than no
+   catalogue: every entry he cannot do is a candidate the arbiter has to reject,
+   and D-286's whole point is that offering him things is how the app learns. He
+   has a young daughter, a custody arrangement, a certification he is behind on,
+   and evenings that are frequently not his.
+2. **D-290 is checked on the document, before any code depends on it.** No two
+   entries saying the same thing; no two that contradict. His own words: not
+   _"drink some water"_ followed by _"drink some water then jump up and down"_;
+   not _"go outside for a walk today"_ beside _"stay indoors today"_. **A
+   generatively-built catalogue contains both by construction**, and the document
+   is the only place the whole set is visible at once.
+3. **The owner reviews it before routing 95 builds against it.** _"Not trusting
+   himself to generate is not the same as declining to veto"_ — he is still the
+   only person who can say _"I would never do that."_ A catalogue he has not read
+   is a catalogue that will propose something absurd on a bad evening.
 
-**Nothing grades him as a person.** _"You are at 62%"_ is a reading and is
-permitted. _"You are falling behind"_, _"a bad week"_, any quality adjective on the
-score — **that is the thing D-166 refused**, and D-287 says the distinction
-survives only while the number stays a reading.
+---
 
-**The check-in must visibly earn itself.** The owner's previous app _"asked but
-never learned"_ — 7–19 questions a block, data piling up, nothing coming back.
-**Dense sampling alone reproduces that failure with better typography.** This phase
-cannot deliver the learning, but it must not make the asking feel free either: what
-he can see today for what he answered today is the minimum.
+## What is not in this exercise
+
+**No code. No tests. No gates. No routing integer of its own.** And nothing from
+routing 95's build half: the candidates are not wired, `ACTION_FAMILIES` is not
+extended, no dimension is added, and effect measurement is not designed.
+
+**And nothing about Adaya.** D-291 governs anything measured about a child and
+this exercise has no business near it.
 
 ---
 
@@ -233,81 +125,41 @@ he can see today for what he answered today is the minimum.
 **Conversation:** **NEW.**
 
 ```text
-Build routing Phase 94 of the Life Command OS rebuild — the check-in, the
-readings and the score. Keep the Phase field exactly 94.
+Run the move catalogue research for the Life Command OS rebuild. This is NOT a
+build phase — it produces docs/MOVE_CATALOGUE.md and no diff to src/, no test
+and no gate. Keep the Phase field exactly 95; that is a routing key, and D-296
+gives this exercise no routing integer of its own.
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-FIRST: check docs/CAMPAIGN_HOLDS.md. The D-285 hold on routing 94 was released
-on 2026-09-04 and should read status=closed. If it says open, stop and say so.
-The D-172 hold on phase 98 is open and does not gate this phase.
+Read docs/NEXT_PROMPT.md in full, then D-296, D-290 and D-289 in
+docs/DECISION_LOG.md, then docs/STATE_ENGINE_OWNER_DECISION.md. Read
+src/intelligence/moves.ts for MoveProfile and ACTION_FAMILIES, and
+src/intelligence/readings.ts for the thirteen readings routing 94 now takes,
+because those are what a move's effect will later be measured against.
 
-Read docs/NEXT_PROMPT.md in full, then docs/STATE_ENGINE_OWNER_DECISION.md in
-full, then every decision from D-285 to the end of docs/DECISION_LOG.md -- they
-are contiguous and nothing follows them. The roadmap changed on
-2026-09-04 and those documents are the change.
+Produce docs/MOVE_CATALOGUE.md. Every entry carries demand, now, tomorrow,
+friction and size (size omitted where the move has no natural length), with
+now/tomorrow/friction as 0-1 priors and every prior carrying its citation.
+Research proposes and his data ranks (D-289), so these are seeds the owner's
+measured effects will move.
 
-Build six things and no more: a scheduled check-in ritual with a notification;
-the readings at D-293's default (morning 13 — mood, irritation, stress,
-overwhelm, motivation, confidence, focus, loneliness, social energy, energy,
-hunger, sleep hours, sleep quality; midday and evening 5 — mood, irritation,
-energy, hunger, stress); storage as ordinary observation records; a 0-100 state
-score at equal weights stated as equal weights; a settings control for depth and
-frequency separately; and a second question budget for the ritual, exempt from
-the swing rule and counted separately from decision-relevant asks.
+Three bounds. It must fit this owner's actual life — a young daughter, a custody
+arrangement, a certification he is behind on, evenings that are frequently not
+his — rather than a generic wellness library. D-290 is checked on the document
+before any code depends on it: no two entries saying the same thing, no two that
+contradict, and a generatively-built catalogue contains both by construction. And
+the owner reviews it before routing 95 builds against it.
 
-A reading is taken by tapping one of five labelled options, not with a slider --
-the app already does this and the energy question ships four (Running on empty,
-Low, Enough, Plenty). Five anchors for every reading so the score averages
-cleanly, which means CONCEPT.energy has to be extended from four; that is a
-change to a shipped owner-facing question, so record it rather than tidying it.
-You draft the roughly sixty-five anchor phrases and the owner reviews them; they
-are subject to G-001 and the copy scans like any other shipped string. Each anchor
-must describe a state he can recognise, not name a point on a scale -- his words:
-"for mood, good is not helpful enough for me, I don't really know what good means".
-The test is whether he could pick between two adjacent anchors without knowing
-which is higher. "Flat -- nothing wrong, nothing good" passes; "Good" does not.
-Keep a short word where it is already recognisable ("Starving" needs no gloss) and
-use the longer form for the abstract dimensions where a bare adjective says
-nothing.
+Do not edit src/. Do not wire candidates, extend ACTION_FAMILIES, add a
+dimension, or design effect measurement — those are routing 95's build half and a
+separate later dispatch. Nothing about Adaya; D-291 governs that and this
+exercise has no business near it.
 
-Three concepts are new: emotional.irritation, emotional.focus and health.hunger.
-D-293 amends D-166's six emotional dimensions to eight and adds hunger outside
-that list. Irritation is not a variant of stress and must not be mapped onto it.
-
-Not in this phase: the move catalogue, effect measurement, the forecast,
-exploration, causal chains, learned weights, or Fatherhood. Routing 93 went to
-fourteen packages against a five-package rule (D-283). Six items are listed. If
-you find a seventh, stop and say so.
-
-Every reading stays bound by G-009 — unknown stays unknown, a skipped check-in
-infers nothing, nothing is back-filled. The score is a reading and never
-acquires a quality adjective; nothing grades the owner as a person.
-
-Three phases are unapproved — routing 91 and 92 are BUILT / QA DEFERRED and
-routing 93 is YELLOW. Do not edit docs/qa/PHASE_91_QA_HANDOFF.md,
-docs/qa/PHASE_92_QA_HANDOFF.md or docs/qa/PHASE_93_QA_HANDOFF.md for any
-reason.
-
-Measure your own addition to how often the app speaks separately, and do not
-re-baseline routing 92's 216/218 or routing 93's pinned 15. This phase will
-raise it by design; say by how much and why.
-
-Write class tests and biting reintroduction proofs, not fixtures that memorise
-phrases. Run npm run verify, one full 360/430/1280 browser matrix at one worker
-on a clean port, the privacy, copy and adaptation scans, the Android-style
-deployed gate, checkpoint equivalence, CI and release integrity from that CI
-run's own manifest artifact. Read the summary line and its count, never a
-pipeline's exit code (D-284). Commit, push, deploy and prove the deployed
-checkpoint is what Preview serves.
-
-Update docs/DECISION_LOG.md, docs/DEFECT_LEDGER.md and docs/PHASE_STATUS.md, and
-write docs/qa/PHASE_94_QA_HANDOFF.md as the brief for independent QA.
-
-You may not approve your own phase (D-077). Reach YELLOW — READY FOR
-INDEPENDENT QA and stop there. Do not mark anything GREEN, and do not start a
-QA round yourself.
+Four phases are unapproved and none of their handoffs may be edited for any
+reason: docs/qa/PHASE_91_QA_HANDOFF.md, docs/qa/PHASE_92_QA_HANDOFF.md,
+docs/qa/PHASE_93_QA_HANDOFF.md and docs/qa/PHASE_94_QA_HANDOFF.md.
 ```
 
 ### Short launcher
@@ -316,41 +168,25 @@ QA round yourself.
 **Conversation:** NEW.
 
 ```text
-Build routing Phase 94 of the Life Command OS rebuild.
+Run the move catalogue research for the Life Command OS rebuild.
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Check docs/CAMPAIGN_HOLDS.md first — the D-285 hold on routing 94 was released
-on 2026-09-04 and should read status=closed. Then read
-docs/NEXT_PROMPT.md and docs/STATE_ENGINE_OWNER_DECISION.md in full and execute
-the routing 94 dispatch exactly as written. Keep the Phase field exactly 94,
-leave the three QA handoffs in docs/qa/ unedited, reach YELLOW rather than
-GREEN, and do not ask me to paste the file contents.
+Read docs/NEXT_PROMPT.md in full and execute it exactly as written. Keep the
+Phase field exactly 95. It is a research exercise, not a build phase: the output
+is docs/MOVE_CATALOGUE.md and nothing under src/ is touched. Leave the four QA
+handoffs in docs/qa/ unedited, and do not ask me to paste the file contents.
 ```
 
 ---
 
-## What happens immediately after this phase — D-296
+## The state of the campaign, so it is not lost
 
-**The catalogue research is not part of routing 95 and does not start until this
-phase ships.** It is a separate exercise on the adjudication precedent — _"not a
-build phase; it produced a decision, not a diff"_ — producing
-`docs/MOVE_CATALOGUE.md`, carrying no routing integer, and meeting no build gate.
-Routing 95 imports that document; nothing else does.
+**Routing 94 is YELLOW — READY FOR INDEPENDENT QA**, at the checkpoint named in
+`docs/PHASE_STATUS.md`. It is not GREEN, no round has run, and D-077 is unchanged.
 
-**Do not start it, scope it, or draft any part of it in this phase.** If you find
-yourself writing candidate moves, stop — that is the seventh item.
-
-**One thing this phase owes it.** The research has to supply `MoveProfile`'s `now`,
-`tomorrow` and `friction` as **0–1 priors with citations**, and those are the
-numbers the owner's measured effects will later move. **If anything you build here
-changes what those fields mean, say so in your record**, because a research
-exercise is about to be briefed against them.
-
----
-
-## Four debts this dispatch is carrying, so they are not lost
+### Five debts this dispatch is carrying
 
 **Routing 91's independent QA.** Round 10's brief is written and waiting. Unrun.
 
@@ -360,8 +196,31 @@ radius of anything in the campaign.
 **Routing 93's independent QA.** Round 0 written, **zero rounds**, and it opens
 with D-283 — fourteen packages carrying one phase's worth of scrutiny.
 
-**The nineteen D-210 instrument-hardening findings.** Still open, still untouched,
-backlog blob `58d5af071355d252c4a254fc685fcc9e8e88f417`. Deferred across seven
-phases now.
+**Routing 94's independent QA.** Round 0 written, **zero rounds.** It touched the
+concept registry, added a record kind, narrowed a standing guard that has held
+since D-166, and put a number about the owner on a screen for the first time in
+the campaign.
+
+**The nineteen D-210 instrument-hardening findings**, plus **DEF-0169** as a
+twentieth: the test suite is red under parallel load on a fourteen-core machine
+and the symptom is patched while the cause — a dozen concurrent single-threaded
+library sweeps — is untouched. Backlog blob
+`58d5af071355d252c4a254fc685fcc9e8e88f417`.
+
+### And the roadmap after this exercise
+
+| #              | Phase                                  | State                           |
+| -------------- | -------------------------------------- | ------------------------------- |
+| 94             | the check-in, the readings, the score  | **YELLOW — awaiting QA**        |
+| _(no integer)_ | **the move catalogue research**        | **this dispatch**               |
+| 95             | the move catalogue and measured effect | needs this document first       |
+| 96             | domains and progression (Fatherhood)   | ready; D-291 changes rollups    |
+| 97             | the forecast                           | needs 95                        |
+| 98             | exploration and causal chains          | needs 97, and **D-172 is open** |
+| 99             | advancement and revision               | —                               |
+| 100            | _(reserved headroom)_                  | —                               |
+
+**D-172 blocks phase 98 and nothing before it.** `docs/CAMPAIGN_HOLDS.md` carries
+the declaration and it is still `open`.
 
 <!-- LCO_COMPLETE -->

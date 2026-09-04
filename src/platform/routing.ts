@@ -29,8 +29,15 @@ export const DESTINATIONS = PRIMARY_DESTINATIONS
  * restore has to stay reachable when the rest of the app is struggling
  * (G-012) — a route that resolves on its own is reachable from a typed hash
  * and a bookmark, where a panel three scrolls down another screen is not.
+ *
+ * **The check-in is one for the same structural reason and one more.** A
+ * reminder has to have somewhere to send him, and a notification can only carry
+ * a URL — so the ritual needs an address, and a panel inside Now has none.
+ * Section 5's four are untouched: it stays off the bottom bar and is reached
+ * from Now when one is open, from More the rest of the time, and from the
+ * reminder itself.
  */
-export const SECONDARY_DESTINATIONS = ['more', 'data', 'qa'] as const
+export const SECONDARY_DESTINATIONS = ['more', 'data', 'check-in', 'qa'] as const
 
 export const ALL_DESTINATIONS = [...PRIMARY_DESTINATIONS, ...SECONDARY_DESTINATIONS] as const
 

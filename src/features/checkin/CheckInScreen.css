@@ -1,0 +1,127 @@
+/* The check-in (routing 94).
+ *
+ * One reading at a time, and the anchors are the only thing on the screen with
+ * any weight — the same hierarchy Now uses for the guide's question, because it
+ * is the same act. The figure below them is set large and plain: it is a
+ * reading, so it gets the size a reading gets and none of the decoration a
+ * verdict would attract.
+ *
+ * There is deliberately no bar anywhere in this file, and no colour that means
+ * better or worse. A bar is a quality adjective drawn instead of written, which
+ * is the finding D-291 reaches about a different screen and the line D-287 draws
+ * about this one.
+ */
+
+.checkin-progress {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.checkin-question {
+  margin: 0;
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+
+.checkin-anchors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.checkin-anchor {
+  /* Section 37 — a target a thumb can hit without aiming. */
+  min-height: var(--touch-target);
+  padding: var(--space-3) var(--space-4);
+  font: inherit;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  /* An anchor is a sentence rather than a word, so it wraps rather than
+     truncating — the Linux runner's wider fallback font is what a truncation
+     would show up on, and a clipped anchor is an unreadable answer. */
+  text-wrap: pretty;
+}
+
+.checkin-anchor:hover:not(:disabled) {
+  background: var(--surface-3);
+  border-color: var(--line-strong);
+}
+
+.checkin-anchor:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/* The figure.
+ *
+ * Large, because it is the thing he came back for; plain, because it is a
+ * reading. No accent colour: an accent here would be the app having an opinion
+ * about the number.
+ */
+.checkin-score {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+  margin: 0;
+}
+
+.checkin-score__figure {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkin-score__of {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.checkin-readings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.checkin-reading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.checkin-reading__name {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.checkin-reading__answer {
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+
+.checkin-reading__place {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkin-reading__unknown {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+}
+
+.checkin-reading__aside {
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}

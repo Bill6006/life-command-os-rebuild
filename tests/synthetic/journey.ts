@@ -34,6 +34,7 @@ import {
   redateEventRecord,
   withdrawEventRecord,
 } from '../../src/intelligence/corrections'
+import { checkInRecord, checkInSettingRecord } from '../../src/intelligence/checkIn'
 import { decide, type Decision } from '../../src/intelligence/engine'
 import { growthAnswerRecords, growthStageRecord } from '../../src/intelligence/growth'
 import { nextGuideStep, type GuideStep } from '../../src/intelligence/guide'
@@ -152,7 +153,7 @@ import { scenarioById } from '../../src/synthetic/scenarios'
 export interface OwnerRoute {
   readonly id: string
   /** The screen the control is on. */
-  readonly surface: 'now' | 'life' | 'domain-page' | 'insights'
+  readonly surface: 'now' | 'life' | 'domain-page' | 'insights' | 'check-in' | 'more'
   /** What the owner taps, in the words on the button. */
   readonly gesture: string
   /** The builder the surface calls, so this table can be checked against source. */
@@ -201,6 +202,31 @@ export const OWNER_ROUTES: readonly OwnerRoute[] = [
     builder: 'questions.answerRecord',
     needs: {},
     writes: ['observation'],
+  },
+  /*
+   * Routing 94's two, and they are the whole of what the check-in can write.
+   *
+   * The reading needs nothing in the store at all, which is the point of it: an
+   * empty history was being asked **one question a day** before this phase
+   * because the guide's gate correctly found nothing worth asking, and a ritual
+   * that also needed a prior record would have inherited the same problem one
+   * layer up.
+   */
+  {
+    id: 'check-in-reading',
+    surface: 'check-in',
+    gesture: 'one of a reading’s five anchors',
+    builder: 'checkIn.checkInRecord',
+    needs: {},
+    writes: ['observation'],
+  },
+  {
+    id: 'check-in-setting',
+    surface: 'more',
+    gesture: 'a depth or a frequency, on More',
+    builder: 'checkIn.checkInSettingRecord',
+    needs: {},
+    writes: ['check-in-setting'],
   },
   {
     id: 'lifecycle',
@@ -1570,6 +1596,8 @@ export async function openJourney(scenarioId: string): Promise<JourneyApp> {
  */
 export const ROUTE_BUILDERS = {
   answerRecord,
+  checkInRecord,
+  checkInSettingRecord,
   authoringRecords,
   destinationRecords,
   milestoneFor,
@@ -1660,6 +1688,13 @@ function surfaceOf(file: string): ReachedBuilder['surface'] {
   if (file.includes('/insights/')) return 'insights'
   if (file.endsWith('/DomainPage.tsx')) return 'domain-page'
   if (file.includes('/life/')) return 'life'
+  // Routing 94's two, and they are two screens rather than one feature: the
+  // ritual is its own destination, and the control that sizes it is a panel on
+  // More, where every other setting in the app lives. Filing the panel under
+  // `/checkin/` would have made this function say a control was on a screen the
+  // owner cannot reach it from.
+  if (file.includes('/checkin/')) return 'check-in'
+  if (file.includes('/more/')) return 'more'
   // `MemoryProvider` writes derived outcomes on its own; see `NOT_A_CONTROL`.
   return 'not-a-control'
 }

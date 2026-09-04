@@ -377,6 +377,44 @@ export const CONCEPT = {
   workStrain: conceptId('work.strain'),
   /** Who is around, read from the relationship graph rather than asked. */
   peoplePresent: conceptId('context.people-present'),
+
+  // -------------------------------------------------------------------------
+  // D-293's three new concepts — routing 94, the check-in
+  // -------------------------------------------------------------------------
+  /**
+   * Eight emotional dimensions, not six — D-293 amends D-166.
+   *
+   * D-166's list was owner-stated, so changing it is a decision rather than an
+   * addition, and the two below are recorded with the reason each arrived.
+   *
+   * **Irritation was his own word and he named it first**, unprompted, in his
+   * opening description of the loop: *"sleep? 6 hours, mood? 5 out of 10,
+   * irritated? 9/10, hungry? 5/10."* **It is not a variant of stress and must
+   * not be mapped onto it.** Stress is pressure arriving from outside; this is
+   * how much of it is coming back out at whoever is nearest, and a man can be
+   * under no pressure at all and still be snapping.
+   */
+  irritation: conceptId('emotional.irritation'),
+  /**
+   * How well attention is holding — and the one dimension with a warning on it.
+   *
+   * **Focus was not the owner's word.** It arrived through the previous
+   * conversation's own grouping of the dimensions, which he then selected as a
+   * block, and he asked for it knowing that. D-293 records why that matters:
+   * **it is the dimension most likely to prove an effect of energy and mood
+   * rather than a cause.** When D-287's learned weights arrive, the eight are
+   * not to be treated as peers without checking this one.
+   */
+  focus: conceptId('emotional.focus'),
+  /**
+   * How hungry he is — and **not** an emotional dimension (D-293).
+   *
+   * It was one of the owner's original four and it was lost inside a grouping
+   * that sent it to the morning only. It swings within a day more than almost
+   * anything else on the list, so it is read at every check-in, and it is filed
+   * under Health because that is what it is about.
+   */
+  hunger: conceptId('health.hunger'),
 }
 
 export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
@@ -1128,6 +1166,76 @@ export const CORE_CONCEPTS: readonly ConceptDefinition[] = [
      */
     derived: true,
     ask: { materialToDecision: false, askWhenStale: false },
+  },
+
+  // -------------------------------------------------------------------------
+  // D-293's three, and the one thing all three have in common
+  // -------------------------------------------------------------------------
+  /*
+   * **None of them is askable by the guide, and that is not an oversight.**
+   *
+   * §13B's rule is that a concept ships askable only where a consumer exists
+   * that some possible answer could move, and none of these has one: nothing in
+   * tonight's recommendation branches on how irritable he is. D-293 satisfies
+   * the rule from the other side and says so in as many words — **the consumer
+   * of every check-in reading is the state score and the history the forecast
+   * will be built on**, not a branch in today's decision.
+   *
+   * That is precisely the second budget D-286 creates, and it is why these
+   * three do not have to justify themselves to `probeSwings`. The ritual reads
+   * them; the guide never asks them; the two counts never pool.
+   */
+  {
+    id: CONCEPT.irritation,
+    purpose: 'how much is coming back out at whoever is nearest',
+    label: 'Irritation',
+    // The same window as mood and stress: it is a reading about now that stops
+    // answering for now by the end of the block after next.
+    freshness: elapsedHours(8),
+    domain: DOMAIN.emotional,
+    tracked: 'scale',
+    // Snapping at everything is not a better day than nothing getting to him.
+    sense: 'higher-is-worse',
+    privacy: 'sensitive',
+    ask: { materialToDecision: false, askWhenStale: false },
+    reliability: { owner: 1, device: 0.2, derived: 0.3, model: 0.15 },
+  },
+  {
+    id: CONCEPT.focus,
+    purpose: 'how well attention has been holding',
+    label: 'Focus',
+    freshness: elapsedHours(8),
+    domain: DOMAIN.emotional,
+    tracked: 'scale',
+    // Holding a thought is better than losing it, whatever later turns out to
+    // cause which. The sense is about the reading; D-293's warning is about the
+    // weights, and they are different questions.
+    sense: 'higher-is-better',
+    privacy: 'sensitive',
+    ask: { materialToDecision: false, askWhenStale: false },
+    reliability: { owner: 1, device: 0.3, derived: 0.3, model: 0.15 },
+  },
+  {
+    id: CONCEPT.hunger,
+    purpose: 'how hungry you are',
+    label: 'Hunger',
+    /*
+     * Six hours, which is the shortest window in the registry beside energy's.
+     *
+     * D-293's argument for reading it three times a day is that it swings
+     * within a day more than almost anything else on the list, and a freshness
+     * horizon longer than the gap between check-ins would make the midday
+     * reading answer for the evening — which is the one thing a dimension read
+     * three times a day must not do.
+     */
+    freshness: elapsedHours(6),
+    domain: DOMAIN.health,
+    tracked: 'scale',
+    // Starving is not a better state than not hungry.
+    sense: 'higher-is-worse',
+    privacy: 'normal',
+    ask: { materialToDecision: false, askWhenStale: false },
+    reliability: { owner: 1, device: 0.3, derived: 0.3, model: 0.15 },
   },
 ]
 

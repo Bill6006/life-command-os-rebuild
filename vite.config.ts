@@ -123,8 +123,33 @@ export default defineConfig(({ mode }) => {
        * a sweep over every history is the shape this repository's strongest
        * guards take, and that a timeout tuned to today's library is a guard
        * that gets weaker every time a scenario is added.
+       *
+       * ## Thirty seconds stopped being that number — DEF-0169, routing 94
+       *
+       * **The paragraph above predicted this and it happened again.** At
+       * `61bb033`, before routing 94 changed a line, `npm run test` was **red**
+       * on this machine on two runs of two: `block-sweep`'s guide sweep and
+       * `reach-gate`'s speaking count, both at *"Test timed out in 30000ms"*,
+       * both green in isolation. Measured solo they cost **5.0s** and **8.0s**;
+       * under a full parallel run on a fourteen-core box they cross thirty. CI
+       * was green on the same commit, so the failure is contention rather than
+       * the product — which is exactly the shape that teaches everybody to rerun
+       * until it passes.
+       *
+       * **A hundred and twenty is not four times more patience with slow
+       * tests.** What a timeout is for is catching a sweep that will never
+       * finish; policing how long a CPU-bound sweep takes while thirteen others
+       * share the cores is a job it cannot do, and every version of it that has
+       * tried has produced a false red. At twenty-four times the slowest sweep's
+       * solo cost, a failure here is a hang again rather than a busy laptop.
+       *
+       * **The cause is not fixed and this does not claim to fix it.** The real
+       * one is that a dozen library-wide sweeps run concurrently and each is
+       * single-threaded, so the honest repairs are fewer workers or fewer
+       * whole-library sweeps, and both are their own piece of work. DEF-0169
+       * carries that; this stops the gate lying in the meantime.
        */
-      testTimeout: 30_000,
+      testTimeout: 120_000,
     },
   }
 })

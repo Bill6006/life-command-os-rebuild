@@ -1,5 +1,285 @@
 # Decision log
 
+## D-303 — The suite's thirty-second ceiling was a false red, and it was already red
+
+**Phase:** 94 · **Status:** Active · **Amends** `vite.config.ts`'s `testTimeout` ·
+**Builder-decided 2026-09-04**
+
+**`npm run test` was red at `61bb033`, before routing 94 changed a line.** Two runs
+of two: `block-sweep`'s guide sweep and `reach-gate`'s speaking count, both
+_"Test timed out in 30000ms"_, both green in isolation, and CI green on the same
+commit. Measured solo they cost **5.0s** and **8.0s**; under a full parallel run
+on fourteen cores they cross thirty.
+
+**The config predicted this in writing.** Its own comment records phase 82 doing
+the same thing at the five-second default, and says the number _"is a guard that
+gets weaker every time a scenario is added."_ Scenarios have been added since.
+
+**Raised to 120 seconds, which is not four times more patience with slow tests.**
+What a timeout catches is a sweep that will never finish. Policing how long a
+CPU-bound sweep takes while a dozen others share the cores is a job it cannot do,
+and every version of it that has tried has produced a false red — the worst kind
+of gate failure, because the remedy that works is to run it again.
+
+**The cause is not fixed and this does not claim to fix it.** A dozen
+library-wide sweeps run concurrently and each is single-threaded; the honest
+repairs are fewer workers or fewer whole-library sweeps, and both are their own
+piece of work. **DEF-0169** carries that. This stops the gate lying in the
+meantime.
+
+---
+
+## D-302 — The check-in is a destination, and the empty Now screen has to offer it
+
+**Phase:** 94 · **Status:** Active · **New** · **Builder-decided 2026-09-04**
+
+Two decisions about where the ritual lives, and the second was a defect.
+
+**It is a secondary destination rather than a panel.** `routing.ts` fixes four
+primary destinations, and Data is already a route of its own because a restore
+has to be reachable from a typed hash. The check-in needs the same for a reason
+of its own: **a reminder can only carry a URL**, so a ritual reachable only from
+inside another screen has nowhere to send him. Section 5's four are untouched —
+it stays off the bottom bar.
+
+**And `EmptyNow` had to be given it, which the browser matrix found and nothing
+else could.** Every unit proof of the Now card ran against `dueCheckIn`, which
+answers happily on an empty store; `NowScreen` returns `EmptyNow` before it ever
+reaches the card. So on a history with nothing in it — **the only history a new
+owner has, and the one measured at one question a day** — the check-in was
+reachable from More, from a typed hash, and from nowhere he would look.
+
+That is the store the whole phase is about, and D-292's reason for building this
+before anything else is that _"every day without sampling is history the forecast
+will never have."_ **DEF-0170.**
+
+---
+
+## D-301 — A reminder is possible only while the app is open, and the control says so
+
+**Phase:** 94 · **Status:** Active · **New** · **Builder-decided 2026-09-04**
+
+The dispatch asks for _"a notification bringing him to it"_. The app registers
+**no service worker** and removes any it finds, so a page cannot be woken by the
+operating system: **a reminder can only appear while a tab or window is open.**
+
+**The control says that in those words** rather than offering a reminder and
+letting him find out on a morning he needed it. A push notification is a separate
+piece of work with its own deployment and cache hazards, and this phase has six
+things in it.
+
+**The browser's own permission is the whole of the setting.** No second flag is
+stored anywhere: the browser already holds one durable, per-device, revocable
+answer to _may this site interrupt me_, and a settings screen showing **on** while
+the browser says **blocked** is worse than no control at all. It is not a
+canonical record either — a permission given to one browser is a fact about a
+device, and a backup carrying it would arrive on his laptop claiming he had
+agreed to something there.
+
+**It is never asked for on the app's own initiative.** The request runs from a
+press and from nowhere else; a page that asks on load is the app interrupting him
+to ask whether it may interrupt him.
+
+**And the body never names a reading.** A notification appears on a lock screen,
+over whatever he is doing, in front of whoever is next to him; a body saying
+_"how lonely are you?"_ would breach the privacy class of the concept it came
+from without any code having read a record. It says the slot and a count, and a
+test walks **every registered concept** asserting the hook can name none of them.
+
+---
+
+## D-300 — What the state score is over, and the three readings it leaves out
+
+**Phase:** 94 · **Status:** Active · **Implements** D-287 ·
+**Builder-decided 2026-09-04**
+
+D-287 approves _"a single figure, 0–100, where 100 is every dimension at its
+best"_ and does not say which dimensions. The rule is mechanical rather than a
+list, so a concept added later joins or stays out without anybody editing a file:
+**every check-in reading about how he is now that the registry can read as a
+scale with a direction.** Ten of the thirteen, today.
+
+Three exclusions fall out of that sentence rather than being chosen, and each is
+stated on screen beside the reading it is about — a dimension quietly missing
+from a total is how a number stops being checkable.
+
+- **Loneliness.** `emotional.need-for-company` declares `sense: 'neither'`, and
+  the registry's own comment is the reason: _"a want rather than a state: wanting
+  company more is not a man doing worse, and it is not him doing better either."_
+  A dimension with no better end cannot contribute to a ceiling that means _every
+  dimension at its best_.
+- **Hours slept.** A quantity, not a scale. The only way to give it a ceiling is
+  to pick a target, and a target about the owner is a norm.
+- **How the night went.** A scale with a direction, and still out, because it is a
+  reading about **last night** rather than about now — and it would put one of the
+  strongest candidate _causes_ of a good day inside the number that good day is
+  measured by, which is D-290's circularity arriving a phase early.
+
+**Both sleep readings are still taken every morning and shown beside the score.**
+What they are not is terms in it.
+
+**A partial figure says so.** _"From 9 of the 10 readings it is made of."_ G-009
+forbids the alternative, and the alternative is silent: a mean over three readings
+rendered as though it were over ten is not wrong by a rounding error, it is a
+different quantity. With nothing fresh at all there is **no** figure rather than a
+figure of nought.
+
+**Equal weights, stated on screen as equal weights** — D-287's own condition,
+until D-290's bar exists.
+
+---
+
+## D-299 — D-166's composite rule is narrowed to one named file, and the exemption is paid for
+
+**Phase:** 94 · **Status:** Active · **Amends** the standing guard for D-166 ·
+**Builder-decided 2026-09-04**
+
+D-166's rule was **nothing anywhere composites the emotional dimensions**, and
+`reach-dimensions.test.ts` held it as a shape rather than as a word: any line in
+`src/` naming two or more of the six and reducing them fails the build.
+
+**D-287 approves a composite, so the guard had to change or the decision could
+not be built.** It is narrowed rather than deleted, and it costs exactly one
+file: `src/intelligence/state.ts` may combine them, and **every other source file
+in the repository is held to _nowhere_ exactly as before.** That is what stops an
+approved composite becoming a licence for an accidental one somewhere nobody is
+looking.
+
+**Two things the exemption is checked against**, because an exemption nobody
+checks is a hole:
+
+1. **One reduction, in one function.** The exemption is for a state reading, not
+   for a file where anything at all may be added up.
+2. **It is over readings rather than over the six.** `state.ts` walks the check-in
+   catalogue and asks the registry which entries are scales with a direction; it
+   holds no list of emotional dimensions to blend. That is what makes it a reading
+   of what he answered rather than `emotional.score` under a new name — the back
+   door D-166 named.
+
+**And a second guard was added that the first one never needed.** D-287 says the
+distinction survives _"only while the number stays a reading"_, so a quality word
+on any surface that renders the score now fails the build. **The exemption buys
+the number; the number may never buy an adjective.**
+
+---
+
+## D-298 — Five anchors, and what that did to a shipped question
+
+**Phase:** 94 · **Status:** Active · **Implements** D-293 ·
+**Builder-decided 2026-09-04**
+
+**Five for every reading, so the score averages over one denominator.** The
+alternative was representable — `FactValue`'s `scale` carries its own `of`, so
+0–10 was available — and is refused for a data-quality reason rather than a
+screen-space one: **nobody can write eleven distinct meaningful words for
+irritation**, a bare number on a long scale is answered by feel, and the feel
+drifts. _"A bit snappy"_ means the same thing on Tuesday and on Friday.
+
+### The change to a shipped surface, recorded rather than treated as tidying
+
+**`CONCEPT.energy` shipped four options and now has five, and three of the four
+gained a clause.**
+
+| Value | Before           | Now                                 |
+| ----- | ---------------- | ----------------------------------- |
+| 1     | Running on empty | Running on empty                    |
+| 2     | Low              | Low — pushing to keep going         |
+| 3     | Enough           | Enough — for what is in front of me |
+| 4     | Plenty           | Plenty — the day is covered         |
+| 5     | —                | Buzzing — I need to burn some off   |
+
+**Nothing a stored value already meant has changed**, and that constraint decided
+where the fifth anchor went. An `energy.current` record holding `4 of 5` was
+written when 4 meant _Plenty_; inserting a new point below it would have made
+every past reading of _Plenty_ read as something else, which is section 30 and
+D-101 — history is not rewritten. So the fifth is **above** _Plenty_, which is the
+only place a new point can go.
+
+**The same rule shaped the other two overlaps.** `emotional.overwhelm`'s guide
+question writes 1, 4 and 5, and the check-in's extra anchors took 2 and 3;
+`social.energy`'s writes 1, 3 and 4, and the extra anchors took 2 and 5. **Both
+guide questions are unchanged** — their option sets are cut to what their
+consumers can use, and an option set finer than its consumer is a longer question
+rather than a richer one.
+
+**One definition, two surfaces.** The guide's energy question and the check-in's
+energy reading are the same array. A separate five for the ritual would have put
+two different answer sets for one concept in front of the owner in one day, and
+the second one he met would read as the app having changed its mind about what it
+was asking.
+
+### The anchor rule, and how it is held
+
+> _"For mood, **good** is not helpful enough for me. I don't really know what good
+> means."_
+
+**An anchor describes a state he can recognise. It does not name a point on a
+scale.** The failure has a shape rather than a vocabulary — an anchor that says
+only **how much** and never **of what** — so the guard is a list of _degree words_
+and an anchor fails only when it is made of nothing else. _"Flat — nothing wrong,
+nothing good"_ passes with two degree words in it, because it names something;
+bare _"Flat"_ does not.
+
+**The calibration is fixed by the two sets the owner turned down**, which are
+asserted as things the guard catches. A guard tuned until the shipped copy passed
+would be tuned to pass; one that has to keep catching what he rejected cannot be.
+
+**Sixty-five phrases, drafted and not approved.** The owner reviews them.
+
+---
+
+## D-297 — Where the depth levels are drawn, and why the smallest one is a quotation
+
+**Phase:** 94 · **Status:** Active · **Implements** D-285 ·
+**Builder-decided 2026-09-04**
+
+D-285 gives the owner depth and frequency as two controls and does not say what
+the levels are.
+
+**Frequency is three, two or one**, and **the morning is the one that never
+goes** — it is the only check-in that can read the night, and the only one
+carrying the dimensions D-293 says barely move between lunch and dinner.
+
+**Depth is `full`, `shorter` or `fewest`**, and each cuts from the slow end, which
+is D-293's own argument for the two check-in sizes: _"asking a slow dimension
+three times a day does not produce three readings; it produces one reading and two
+taps the owner stopped thinking about."_
+
+| Level     | Morning | Midday and evening | A day |
+| --------- | ------- | ------------------ | ----- |
+| `full`    | 13      | 5                  | 23    |
+| `shorter` | 7       | 5                  | 17    |
+| `fewest`  | 5       | 3                  | 11    |
+
+**`shorter` keeps everything that moves within a day, plus the night.**
+
+**`fewest` is exactly the readings he named himself**, and that is why it is drawn
+there rather than somewhere that felt balanced: his first, unprompted description
+of the loop was _"sleep? 6 hours, mood? 5 out of 10, irritated? 9/10, hungry?
+5/10."_ It is a quotation from the record rather than a builder's preference, and
+it is the best available evidence about what he would still answer on a day he had
+cut the check-in to the bone.
+
+**Energy is not lost by dropping it there**, and that is what having two budgets
+buys: `energy.current` is `materialToDecision`, so the guide still asks it
+whenever the answer would change what he is told to do — under its own rule, out
+of its own count.
+
+**The default is `full` and `three`, and choosing it was the decision.** D-285's
+caution is that the owner will live with the shipped default on exactly the days
+he is too tired to change it, and a builder who ships the smallest level to be
+kind re-creates the starvation the decision exists to end.
+
+**The setting is a canonical record.** Three reasons, and the third is why it is
+not a key in a preferences store: changing it later does not falsify what came
+before; it exports, backs up and restores with the rest of his history; and
+**reading density is a covariate of every series this phase starts** — a fortnight
+with fewer readings in it is a fortnight he changed a setting, not a fortnight he
+changed, and D-288's forecast is built on those series. A store that could not
+tell those apart would hand the forecast a pattern that is about the app.
+
+---
+
 ## D-296 — The catalogue research is its own exercise, and it runs between 94 and 95
 
 **Phase:** — · **Status:** Active · **Bounds** D-289 · **Owner-decided 2026-09-04**

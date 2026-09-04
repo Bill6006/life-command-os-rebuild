@@ -133,6 +133,27 @@ export const RECORD_KINDS = [
    * the owner acting, never the app displaying.
    */
   'discovery-response',
+  /**
+   * How much the check-in asks, and how often — D-285, routing 94.
+   *
+   * A record rather than a setting, for the reason `permission` is one: it is a
+   * thing the owner said, with a date on it. Three things follow, and the third
+   * is why it is not a key in a preferences store.
+   *
+   * - **Changing it later does not falsify what came before.** A week answered
+   *   at `full` was answered at `full`, and the record says so.
+   * - **It is his, so it exports, backs up and restores** with the rest of his
+   *   history, and he can see it on Timeline like anything else he told the app.
+   * - **Reading density is a covariate of every series this phase starts.** A
+   *   fortnight with fewer readings in it is a fortnight the owner changed a
+   *   setting, not a fortnight he changed. D-288's forecast is built on those
+   *   series, and a store that could not tell those two apart would hand it a
+   *   pattern that is about the app.
+   *
+   * The latest one wins. There is no delete, and no record at all reads as
+   * {@link DEFAULT_CHECK_IN_SETTINGS} — D-293's shipped default.
+   */
+  'check-in-setting',
   'imported-legacy-record',
 ] as const
 
@@ -970,6 +991,28 @@ export type DiscoveryResponseRecord = Record_<
  * until they are explicitly mapped and approved. Nothing in this phase resolves
  * a fact from one, and `tests/contract` proves it.
  */
+/**
+ * The depth and frequency the owner set the check-in to — D-285.
+ *
+ * Two fields because they are two controls. D-285's words are *"depth (how many
+ * readings per check-in) and frequency (how many check-ins a day) as two
+ * separate controls"*, and collapsing them into one level here would make the
+ * screen's separation cosmetic.
+ *
+ * `statement` is what he was told the choice meant, kept beside the choice. It
+ * is the same discipline as `PermissionRecord.statement`: a setting the owner
+ * changed a year ago is only readable later if the words he was reading at the
+ * time are readable too.
+ */
+export type CheckInSettingRecord = Record_<
+  'check-in-setting',
+  {
+    readonly depth: string
+    readonly frequency: string
+    readonly statement: string
+  }
+>
+
 export type ImportedLegacyRecord = Record_<
   'imported-legacy-record',
   { readonly legacyFormat: string; readonly raw: unknown }
@@ -1001,6 +1044,7 @@ export type CanonicalRecord =
   | CoverageUpdateRecord
   | PermissionRecord
   | DiscoveryResponseRecord
+  | CheckInSettingRecord
   | ImportedLegacyRecord
 
 /** Records that can answer "what is the value of this concept right now?". */

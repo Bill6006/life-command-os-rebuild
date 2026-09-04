@@ -1,0 +1,81 @@
+/* Depth and frequency (routing 94, D-285).
+ *
+ * Two lists of the same shape, because they are two controls of the same kind.
+ * The selected one is marked by its border and by `aria-pressed` rather than by
+ * a colour that means better — a settings level is not a reading and must not
+ * pick up the visual language of one.
+ */
+
+.checkin-setting__heading {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+
+.checkin-setting__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.checkin-setting__option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  /* Section 37 — a target a thumb can hit without aiming. */
+  min-height: var(--touch-target);
+  padding: var(--space-3) var(--space-4);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.checkin-setting__option[aria-pressed='true'] {
+  border-color: var(--line-strong);
+  background: var(--surface-3);
+}
+
+.checkin-setting__option:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.checkin-setting__label {
+  font-size: var(--text-base);
+  color: var(--text-primary);
+}
+
+.checkin-setting__detail {
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+.checkin-setting__count {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkin-setting__ask {
+  /* Section 37 — a target a thumb can hit without aiming. */
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.checkin-setting__ask:disabled {
+  cursor: default;
+  opacity: 0.6;
+}

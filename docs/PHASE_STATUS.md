@@ -160,6 +160,183 @@ still stands, and all three still await independent QA.
 
 ---
 
+# Routing Phase 94 — State: the readings, the score and what they are for
+
+**Status: YELLOW — READY FOR INDEPENDENT QA.**
+
+Not GREEN. D-077 is unchanged and no round has run. The brief is
+[`qa/PHASE_94_QA_HANDOFF.md`](qa/PHASE_94_QA_HANDOFF.md).
+
+**The first thing a reader should know is what this phase is answering.**
+Measured on 2026-09-03, a new store was asked **one question a day**, three days
+running, and the guide's own stated reason was correct: _"4 question(s) could be
+asked and none of them would change the answer."_ One candidate cannot be
+re-ranked, so nothing was worth asking, so the store stayed empty. `QUESTIONS_PER_DAY = 3`
+was never reached; the information-value gate is what starved it.
+
+**Twenty-three readings a day now, against that one** — and the guide's gate is
+untouched. What changed is that a second budget exists beside it (D-286), counted
+separately, never pooled.
+
+## The question this phase answers, in one sentence
+
+What the app knows about how the owner actually is — sampled on a schedule he
+controls, stored as ordinary observations, and shown back to him as a reading the
+same minute he gives it.
+
+## What it built
+
+Six things, and the dispatch said to stop at six.
+
+**94.1 — the check-in ritual.** Three scheduled moments (08:00, 13:00, 20:00),
+each open until the next one opens, each skippable, each the same shape. A
+`check-in` secondary destination rather than a panel, because **a reminder can
+only carry a URL** (D-302). Reachable from Now while one is open, from More the
+rest of the time, and from the reminder itself.
+
+**94.2 — the readings, at D-293's default.** Morning 13, midday and evening 5
+each. Three new concepts: `emotional.irritation`, `emotional.focus` and
+`health.hunger` — D-293 amends D-166's six emotional dimensions to eight and adds
+hunger outside that list. **Irritation is not mapped onto stress** and a test
+proves a reading of one resolves nothing about the other.
+
+**94.3 — sixty-five anchors, and what five of them cost.** Tap-to-pick labelled
+options, five for every reading so the score averages over one denominator.
+`CONCEPT.energy` shipped four and now ships five; three of the four gained a
+clause. **Nothing a stored value already meant has changed** — the fifth anchor
+is above _Plenty_ because inserting one below it would have rewritten every past
+reading of _Plenty_ (D-298). The anchor rule is the owner's own — _"good is not
+helpful enough for me"_ — and the guard for it is calibrated against the two sets
+he rejected.
+
+**94.4 — stored as ordinary observation records.** No schema invention. Same
+builder shape as a guide answer, same fact layer, same export, same backup. The
+only difference is `provenance.writtenBy`, and that difference **is** D-286's
+separation.
+
+**94.5 — the 0–100 state reading.** Ten dimensions, equal weights, stated on
+screen as equal weights until D-290's bar exists. Three readings are taken and not
+scored, each for a property of the concept rather than a judgement about it
+(D-300). A partial figure says how many it is over; nothing fresh at all means no
+figure rather than a figure of nought. **No adjective, no band, no bar, no
+per-cent sign.**
+
+**94.6 — depth and frequency, separately** (D-285), with the trade on the control.
+Three depths and three frequencies, 23 down to 11 readings a day. `fewest` is
+drawn at a quotation from the owner rather than at a builder's preference
+(D-297). The setting is a canonical record, because reading density is a
+covariate of every series this phase starts.
+
+**94.7 — the second budget** (D-286). Two counters, two `writtenBy` values, and no
+function anywhere that adds them. Proved by driving each to its limit against the
+other rather than by reading two numbers.
+
+## What it deliberately did not build
+
+The move catalogue, effect measurement, the forecast, exploration, causal chains,
+learned weights and Fatherhood. They are routings 95, 96, 97 and 98, and every one
+of them needs what this phase produces. **No candidate move was written, scoped or
+drafted** — D-296 makes the catalogue research a separate exercise that starts
+after this ships.
+
+## What this phase owes the catalogue research — D-296
+
+`MoveProfile`'s `now`, `tomorrow` and `friction` are unchanged, and **nothing here
+changes what they mean.** The state score is not a move's expected value and is
+never compared to one; it is a reading of the owner at a moment. The research can
+be briefed against those three fields exactly as D-296 writes them.
+
+## Gates at submission
+
+Filled in from results rather than in advance. A row that says PENDING has not run
+at the time of writing and is not a claim.
+
+| Gate                                                           | Result                    |
+| -------------------------------------------------------------- | ------------------------- |
+| `npm run verify` — format, lint, typecheck, tests, build, copy | PASS                      |
+| Unit, contract, synthetic and adversarial tests                | PASS                      |
+| Privacy scan                                                   | PASS                      |
+| Rendered copy scan                                             | PASS                      |
+| Adaptation-claim scan                                          | PASS                      |
+| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PASS                      |
+| CI, including its own matrix run                               | PASS                      |
+| Checkpoint equivalence                                         | PASS                      |
+| Release integrity, from CI's own manifest artifact             | PASS                      |
+| Android-style deployed gate                                    | PASS                      |
+| Independent QA (required from Phase 5 on, D-077)               | **NOT RUN — zero rounds** |
+
+## How often the app speaks — this phase's own delta, and the other three untouched
+
+**Routing 92's 216 and 218 and routing 93's 15 were not re-baselined and did not
+move.** `reach-gate.test.ts` asserts every one of them at exactly the figure it
+shipped with, and this phase did not touch a line of it beyond narrowing an
+unrelated guard. That matters more than usual here, because **extending
+`energy.current` from four answers to five could have moved the guide's share
+rule** — `worthATap` measures overturns against the option count — and measurably
+did not.
+
+**Routing 94 adds 95, over 78 distinct check-ins.** Measured the same way, over the
+same twenty-seven pre-92 histories at five hours each: a check-in is open and
+unfinished at 95 of the 135 moments. The gap between the two figures is the honest
+reading of the number — this is roughly **one card per open check-in** rather than
+one card standing all day and being counted five times, which is how routing 93's
+fifteen is made.
+
+**And it is the worst case by construction.** No synthetic history has a check-in
+answer in it, so every check-in in the library is unanswered. A finished check-in
+shows nothing at all, so what a real store produces is bounded by how many
+check-ins go **unanswered** rather than by how many happen. D-294 names that as the
+signal to watch after this phase ships; it is now the thing this number measures.
+
+## Two defects, and where they came from
+
+**DEF-0170 — the check-in was unreachable from the one store it was built for.**
+`NowScreen` returns `EmptyNow` before it reaches anything this phase added, so the
+card was on every history's Now screen except the empty one — the store the phase
+exists for. **Found by the browser matrix on its first run**, and invisible to
+every layer below it, because nothing under `tests/` renders `NowScreen` and
+`dueCheckIn` answered correctly the whole time.
+
+**DEF-0169 — the suite was red before the phase started.** `npm run test` failed
+twice out of two at `61bb033` on 30-second timeouts in two library sweeps, both
+green in isolation, with CI green on the same commit. The symptom is repaired
+(D-303); **the cause is open and is an instrument item.**
+
+## What independent QA is walking into
+
+**The whole phase is reachable from an ordinary empty store, and that is unusual
+here.** Routing 93's record says almost nothing it added could be reached from a
+shipped history. This is the opposite: open the app inside a check-in window with
+no records at all and the ritual is on the first screen. **Drive it.** The
+browser spec does exactly that at three widths, and everything it asserts is
+reachable by hand.
+
+**The sixty-five anchors are drafted, not approved.** The owner reviews them, and
+the rule they were written against is his: could he pick between two adjacent
+anchors without knowing which is higher? Every one of them is a judgement a second
+reader should make again.
+
+**The score's dimension set is a builder decision inside an owner one.** D-287
+approved a 0–100 figure and did not say what it is over. D-300 draws it
+mechanically and excludes three readings; the exclusions are defensible and they
+are not the owner's words.
+
+**One standing guard was narrowed** — D-166's _"nothing anywhere composites the
+six"_ now says _"here and nowhere else"_, and the exemption is `state.ts`. D-299
+pays for it with two checks on the exempt file and a new guard on quality words.
+That trade is the kind D-077 exists to have somebody else look at.
+
+**And the reminder is the thinnest thing here.** It works only while a tab is
+open, it has no test that a notification actually appeared — jsdom has no
+`Notification` and the browser matrix does not grant one — and what is proved is
+that its body can name no concept, at any depth, on any slot. The gap is stated
+rather than covered.
+
+**Routing 91, 92 and 93 are all still unapproved.** Their handoffs were not edited
+by this phase. Nothing here approves any part of any of them.
+
+---
+
 # Routing Phase 93 — Validity: what it concludes from what it sees
 
 **Status: YELLOW — READY FOR INDEPENDENT QA.**

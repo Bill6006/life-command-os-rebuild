@@ -19,7 +19,8 @@ import { arbitrate, WORTH_DOING } from '../../src/intelligence/arbitrate'
 import { generateCandidates } from '../../src/intelligence/candidates'
 import { domainFromText } from '../../src/intelligence/direction'
 import { MOVE_PROFILES } from '../../src/intelligence/moves'
-import { QUESTIONS } from '../../src/intelligence/questions'
+import { QUESTIONS, questionFor } from '../../src/intelligence/questions'
+import { CHECK_IN_READINGS, ENERGY_ANCHORS } from '../../src/intelligence/readings'
 import { describePremise } from '../../src/intelligence/explain'
 import {
   assembleSituation,
@@ -304,14 +305,47 @@ describe('the questions it is allowed to ask', () => {
   const atEveryBlock = (): readonly { block: DayBlock; situation: Situation }[] =>
     DAY_BLOCKS.map((block) => ({ block, situation: situationInBlock(block) }))
 
+  /**
+   * Four, and the one question that is allowed five — routing 94.
+   *
+   * The ceiling is §13B's *"keep new answer sets to the smallest semantically
+   * honest size"*, and its reason is unchanged: this is a phone, the owner is
+   * standing up, and an option set finer than its consumer can use is a longer
+   * question rather than a richer one.
+   *
+   * **`energy.current` gained a second consumer and that is what buys the
+   * fifth.** It is now read by the state score as well as by the ranking, the
+   * score averages every reading against its own best, and four against five is
+   * a mixed denominator — so five is the smallest honest size for this question
+   * and no longer is for any other. The exception is named rather than the
+   * ceiling raised, so the next question that wants a fifth answer has to come
+   * and say why here.
+   */
+  const MAY_OFFER_FIVE = CONCEPT.energy
+
   it('offers real choices, not a free-text box', () => {
     for (const { block, situation } of atEveryBlock()) {
       for (const question of QUESTIONS) {
         const options = question.options(situation)
+        const most = question.concept === MAY_OFFER_FIVE ? 5 : 4
         expect(options.length, `${question.concept} at ${block}`).toBeGreaterThanOrEqual(2)
-        expect(options.length, `${question.concept} at ${block}`).toBeLessThanOrEqual(4)
+        expect(options.length, `${question.concept} at ${block}`).toBeLessThanOrEqual(most)
       }
     }
+  })
+
+  it('gives the one question with five answers the consumer that earned it', () => {
+    // An exception nobody checks is a ceiling nobody has. The fifth answer is
+    // there because the score reads this concept, so this asserts that it is
+    // one of the readings the score is over — and it fails if a later phase
+    // takes it out and leaves the exception behind.
+    expect(
+      CHECK_IN_READINGS.some((reading) => reading.concept === MAY_OFFER_FIVE),
+      'the extra answer has outlived the consumer that justified it',
+    ).toBe(true)
+    expect(questionFor(MAY_OFFER_FIVE)?.options(situationInBlock('evening'))).toEqual(
+      ENERGY_ANCHORS,
+    )
   })
 
   it('gives every option a distinct answer', () => {

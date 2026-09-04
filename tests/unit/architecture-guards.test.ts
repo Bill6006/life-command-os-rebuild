@@ -719,6 +719,15 @@ describe('there is exactly one arbitration path', () => {
    *   after the owner has agreed. It is on this list for the same reason
    *   `authoring` is — a form that offers to create something has to be able to
    *   say what it would create.
+   * - `checkIn`, `readings` and `state` are routing 94's three, and they are on
+   *   the open side for the same reason `questions` and `guide` are: a screen
+   *   that asks the owner something has to know what to ask and has to be able
+   *   to write down the answer. `readings` is a catalogue of words, `checkIn`
+   *   turns a tap into an observation and answers *is one open*, and `state`
+   *   averages readings the situation has already resolved. **None of them
+   *   proposes a move, ranks one, or is consulted by anything that does** — the
+   *   check-in's whole purpose is to feed a history that later phases read, and
+   *   the day one of them reaches the pipeline is the day it moves to `DECIDES`.
    *
    * Adding to this list stays an edit somebody makes deliberately, with a
    * sentence saying why. That is the guard's value, and it is why the list is
@@ -746,6 +755,10 @@ describe('there is exactly one arbitration path', () => {
     'blockers',
     'discovery',
     'interpret',
+    // Routing 94's three: the ritual, its words, and the reading they make.
+    'checkIn',
+    'readings',
+    'state',
     /*
      * What the record says about how it is going — routing 93, F03/F08/F44.
      *
