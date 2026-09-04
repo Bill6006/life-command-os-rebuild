@@ -2,6 +2,13 @@
 
 **Phase:** 94 — **State: the readings, the score and what they are for**
 
+**Next actor:** Claude Builder
+**Target system:** Claude Builder
+**Model:** Claude Opus 5
+**Reasoning / Effort:** Max
+**Conversation:** NEW
+**Independent QA:** OFF — this file dispatches a build phase and starts no QA round.
+
 **Written by the Claude builder conversation that finished the phase before this
 one.** Independent QA is **off** for this run by owner instruction, so this file
 dispatches the next build phase, is addressed to the **Claude builder**, and
