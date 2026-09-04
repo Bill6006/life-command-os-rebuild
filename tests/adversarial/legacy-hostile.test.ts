@@ -49,7 +49,12 @@ describe('the real parameters, end to end', () => {
     expect(opened.ok).toBe(true)
     if (!opened.ok) return
     expect(opened.backup.rows).toHaveLength(1)
-  }, 30_000)
+    // The `30_000` here is gone for the same reason as `block-sweep`'s —
+    // DEF-0169. It was six times the old default and is a quarter of the new
+    // one, and a real key derivation at the owner's own iteration count is
+    // exactly the shape that should inherit the longer ceiling rather than
+    // opt out of it.
+  })
 })
 
 describe('a file that will not open', () => {

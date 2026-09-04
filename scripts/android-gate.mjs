@@ -1330,10 +1330,25 @@ async function main() {
   await openNow()
   const firstEvening = await page.locator('.screen').innerText()
   const firstQuestion = page.getByTestId('now-question')
+  /*
+   * Five, and the fifth is `energy.current`'s — D-298, routing 94.
+   *
+   * **This bound lives in two places and routing 94 changed only one of them
+   * first.** `intelligence-kernel.test.ts` holds the strict form of §13B's
+   * *"smallest semantically honest size"* — four for every question, five for
+   * energy alone, with the exception named and checked against the consumer
+   * that earned it. This is the coarse form on the deployed bytes, and its
+   * subject is different: whether one question is still **a question rather
+   * than a form**. Five taps is still a question.
+   *
+   * The gate found it, which is the gate doing its job — and it is worth
+   * saying that a rule with two expressions is a rule with two chances to be
+   * half-updated. DEF-0171.
+   */
   check(
     'a near-empty store is asked one question rather than shown a form',
     (await firstQuestion.count()) === 1 &&
-      (await page.locator('.now-options .now-option').count()) <= 4,
+      (await page.locator('.now-options .now-option').count()) <= 5,
     firstEvening.replace(/\s+/g, ' ').trim().slice(0, 160),
   )
   clearsThumb(
@@ -1796,12 +1811,30 @@ async function main() {
   )
 
   await checkIn.getByTestId('checkin-depth-fewest').tap()
+  /*
+   * Wait for the setting to land before navigating.
+   *
+   * The append is a write to IndexedDB and the tap returns before it
+   * completes, so a `goto` on the next line races it — the first run of this
+   * block read the old depth and reported the control as broken. The pressed
+   * state is what the record produces, so waiting for it waits for the write.
+   */
+  await checkIn.waitForFunction(
+    () =>
+      document
+        .querySelector('[data-testid="checkin-depth-fewest"]')
+        ?.getAttribute('aria-pressed') === 'true',
+  )
   await checkIn.goto(`${BASE}#/check-in`)
   await checkIn.waitForSelector('.checkin-anchor')
-  check(
-    'and the control changes what the check-in asks',
-    /0 of 5 answered/.test(await checkIn.getByTestId('checkin-progress').innerText()),
-  )
+  /*
+   * The **total**, not the answered count. A reading was answered earlier in
+   * this block to prove the figure appears, and at the smallest depth that
+   * reading is still one of the five — so the honest claim here is that the
+   * ritual got shorter, from thirteen to five, and not that it was reset.
+   */
+  const shorter = await checkIn.getByTestId('checkin-progress').innerText()
+  check('and the control changes what the check-in asks', / of 5 answered/.test(shorter), shorter)
 
   await checkInContext.close()
 

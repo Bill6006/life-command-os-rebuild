@@ -1,5 +1,41 @@
 # Defect ledger
 
+## DEF-0171 — one rule, two expressions, and only one of them was updated
+
+**Phase:** 94 · **Found by:** the Android gate, against the deployed Preview · **Status:** REPAIRED
+
+§13B's _"keep new answer sets to the smallest semantically honest size"_ is
+enforced in **two** places, and routing 94 changed one of them.
+
+`intelligence-kernel.test.ts` holds the strict form — every guide question offers
+between two and four answers — and this phase named `energy.current` as the one
+exception, with the consumer that earned the fifth answer asserted beside it.
+**`scripts/android-gate.mjs` holds a second, coarser form** on the deployed
+bytes: a near-empty store is _"asked one question rather than shown a form"_,
+with the option count capped at four.
+
+So the unit suite, the browser matrix, `npm run verify` and CI were all green on
+a build whose Now screen offered five answers where a gate said four. **Nothing
+below the deployed gate could see it**, because nothing below the deployed gate
+holds that second copy.
+
+**The repair.** The deployed bound is five, with the reason named and a pointer
+to where the strict form lives. The two are not merged: their subjects genuinely
+differ — one asks whether an option set is finer than its consumer can use, the
+other asks whether a question has become a form — and five taps is still a
+question.
+
+**The lesson is the shape rather than the number.** A rule with two expressions
+has two chances to be half-updated, and the half that is not run by
+`npm run verify` is the half that stays wrong.
+
+**And a second, smaller finding in the same run**, recorded because it is the
+kind that reads as a product failure: the gate's own new check tapped a depth
+control and navigated on the next line, racing the IndexedDB write. It reported
+the control as broken. It now waits for the pressed state the record produces.
+
+---
+
 ## DEF-0170 — the check-in was unreachable from the one store it was built for
 
 **Phase:** 94 · **Found by:** the browser matrix, first run · **Status:** REPAIRED
@@ -51,6 +87,45 @@ slowest sweep's solo cost, so a failure there is a hang again rather than a busy
 laptop. **The cause is untouched**: a dozen library-wide sweeps run concurrently
 and each is single-threaded. The honest repairs are fewer workers or fewer
 whole-library sweeps, and both are their own piece of work.
+
+**And raising the global was not enough, which the next run proved.** Two tests
+carry their own `30_000`, and a per-test timeout **overrides** the default rather
+than raising it. `block-sweep`'s sweep failed again on the very setting that had
+been raised to stop it failing.
+
+**Both numbers were written when the default was five seconds**, where `30_000`
+meant _give this one six times longer_. At a 120-second default the identical
+number means _give this one four times less_. **A per-test override smaller than
+the default is not an override; it is a cap nobody wrote on purpose**, and it is
+invisible precisely because it looks like somebody being careful. Both are
+removed, and the reasoning each carried is restored beside its test —
+`block-sweep`'s had been collapsed by a formatter into three fragments joined by
+`//` and was unreadable.
+
+`reach-dimensions.test.ts` keeps its `120_000`: it matches the default rather than
+undercutting it, and somebody had already hit this.
+
+**A third face of the same cause, measured and deliberately not repaired.** With
+the timeouts gone, the suite still exits non-zero on some runs with **every test
+passing** — an unhandled `[vitest-worker]: Timeout calling "onTaskUpdate"`, which
+is the reporter's RPC starving rather than anything under test.
+
+| Runs | Workers | Tests            | Exit 0 |
+| ---- | ------- | ---------------- | ------ |
+| 3    | default | 2,398 of 2,398 ✓ | 1      |
+| 3    | `6`     | 2,398 of 2,398 ✓ | 2      |
+
+**Capping workers was tried and rejected on the measurement.** Six workers
+reduces the frequency, does not remove it, and costs about 40% more wall time —
+so it buys a gate that is still unreadable, more slowly. **CI does not show it at
+all** (run 33914378346, exit 0), which fits the cause: a runner with two cores
+never gets thirteen heavy sweeps competing.
+
+**So the honest position is that the test result is trustworthy on this machine
+and the exit code is not.** That is D-284's rule arriving from a second
+direction — read the summary line and its count, never the pipeline's status —
+and it is why every gate figure in `PHASE_STATUS.md` is a count rather than a
+tick. The real repair is fewer whole-library sweeps, and it is still open.
 
 **Open, and it is an instrument item rather than a product one.** It belongs
 beside the nineteen D-210 findings.

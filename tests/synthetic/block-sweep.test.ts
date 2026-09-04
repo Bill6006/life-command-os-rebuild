@@ -293,7 +293,20 @@ describe('the app never asserts the evening outside the evening', () => {
     }
 
     expect(offenders, 'an answer about the evening, offered about a morning').toEqual([])
-  }, 30_000) // half of the class no sweep over explanation text would ever have seen. // is 126 full probes. It is worth the seconds: the question labels are the // The guide re-runs the whole pipeline under every possible answer, so this
+    /*
+     * The guide re-runs the whole pipeline under every possible answer, so this
+     * is 126 full probes. It is worth the seconds: the question labels are the
+     * half of the class no sweep over explanation text would ever have seen.
+     *
+     * **The `30_000` that used to sit on this line is gone — DEF-0169.** It was
+     * written when the default was five seconds and meant *give this one six
+     * times longer*. The default is now 120 seconds, so the same number had
+     * quietly become *give this one four times less*, and this test was the one
+     * failing a suite that had been raised specifically to stop it failing. A
+     * per-test override that is smaller than the default is not an override, it
+     * is a cap nobody wrote on purpose.
+     */
+  })
 
   it('still says the evening when it is the evening', () => {
     /*

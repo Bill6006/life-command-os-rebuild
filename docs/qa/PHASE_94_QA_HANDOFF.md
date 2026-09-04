@@ -74,11 +74,25 @@ judgement.** Read all sixty-five and say which ones you would not have written.
 Two are the owner's own worked examples (mood and focus) and should be left alone;
 four more are close to his own words (irritation, hunger).
 
-**The pairs the builder is least sure of**, offered so you do not have to find
-them: energy 4 and 5 (_Plenty — the day is covered_ / _Buzzing — I need to burn
-some off_), and social energy 4 and 5 (_Happy to see people_ / _Actively want
-people around_). Both are surplus-versus-more-surplus, which is the shape the rule
-is about.
+**The four the builder is least sure of**, offered so you do not have to find
+them:
+
+- **Energy 4 and 5** — _Plenty — the day is covered_ / _Buzzing — I need to burn
+  some off_. Surplus versus more surplus, which is close to the shape the rule is
+  about.
+- **Social energy 4 and 5** — _Happy to see people_ / _Actively want people
+  around_. The same shape.
+- **Hunger 3 and 4** — _Hungry_ / _Hungry enough to be distracted_. **This is the
+  one the builder would change.** It passes the rule as written — _hungry_ is a
+  concrete word and the fourth names a consequence rather than an intensity — but
+  it is the only anchor in the sixty-five that grades by the intensity of its own
+  word, which is one step from the failure the owner named. Something like _"Hard
+  to think about anything else"_ says the same thing without repeating _hungry_.
+  It was left because changing it meant a second deploy of two phrases you were
+  going to review anyway.
+- **Overwhelm 2 against stress 2** — _A few things, none of them pressing_ /
+  _A few things on the clock_. Not duplicates, and close enough in shape that the
+  two readings might read as one question asked twice.
 
 ### 2. What the score is over is a builder decision inside an owner one
 
@@ -168,12 +182,36 @@ browser matrix on its first run. Below that layer nothing could see it: nothing
 under `tests/` renders `NowScreen`, and `dueCheckIn` answered correctly the whole
 time. **The reading was right and the owner was never told.**
 
-**DEF-0169 — the suite was red before the phase started.** `npm run test` failed
-twice out of two at `61bb033` with 30-second timeouts on two library sweeps, both
-green in isolation, CI green on the same commit. The ceiling is now 120 seconds
-(D-303) and **the cause is open**: a dozen library-wide sweeps run concurrently
-and each is single-threaded. It is an instrument item and belongs beside the
-nineteen D-210 findings.
+**DEF-0171 — one rule, two expressions, and only one was updated.** §13B's
+option-count rule is enforced in `intelligence-kernel.test.ts` **and** in
+`scripts/android-gate.mjs`. This phase named `energy.current` as the one question
+allowed five answers, updated the first, and missed the second — so
+`npm run verify`, the browser matrix and CI were **all green** on a build whose
+Now screen offered five answers where a gate said four. **Only the deployed gate
+could see it**, because only the deployed gate holds that copy. Worth a look at
+whether the two bounds should exist at all in two places; the builder's argument
+for keeping them is that their subjects genuinely differ.
+
+**DEF-0169 — the suite was red before the phase started, and it took three
+passes to stop lying.** `npm run test` failed twice out of two at `61bb033` with
+30-second timeouts on two library sweeps, both green in isolation, CI green on the
+same commit.
+
+Raising the global ceiling to 120 seconds (D-303) was **not enough**: two tests
+carry their own `30_000`, written when the default was five seconds, and a
+per-test timeout overrides the default rather than raising it — so the same sweep
+failed again on the setting raised to stop it failing. Both are removed.
+
+**What remains is measured and not repaired.** The suite still exits non-zero on
+some runs with **every test passing** — a vitest worker RPC timeout. Three of six
+runs across two worker counts; absent on CI. Capping workers was tried and
+rejected: it reduces the frequency, does not remove it, and costs 40% more wall
+time.
+
+**So read the counts and not the exit code** (D-284), and treat a red
+`npm run test` here as a timeout until the error text says otherwise. The real
+repair is fewer whole-library sweeps and it belongs beside the nineteen D-210
+findings.
 
 ---
 

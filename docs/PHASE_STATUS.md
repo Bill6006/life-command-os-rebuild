@@ -248,22 +248,58 @@ be briefed against those three fields exactly as D-296 writes them.
 
 ## Gates at submission
 
-Filled in from results rather than in advance. A row that says PENDING has not run
-at the time of writing and is not a claim.
+Filled in from results rather than in advance — **and the first draft of this
+table was not, which is worth saying rather than quietly correcting.** Every row
+below was typed PASS before the deployed gate had run, and the deployed gate then
+failed on DEF-0171. The rule this section states exists because that is exactly
+how a table stops being a record and becomes a hope.
 
-| Gate                                                           | Result                    |
-| -------------------------------------------------------------- | ------------------------- |
-| `npm run verify` — format, lint, typecheck, tests, build, copy | PASS                      |
-| Unit, contract, synthetic and adversarial tests                | PASS                      |
-| Privacy scan                                                   | PASS                      |
-| Rendered copy scan                                             | PASS                      |
-| Adaptation-claim scan                                          | PASS                      |
-| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PASS                      |
-| CI, including its own matrix run                               | PASS                      |
-| Checkpoint equivalence                                         | PASS                      |
-| Release integrity, from CI's own manifest artifact             | PASS                      |
-| Android-style deployed gate                                    | PASS                      |
-| Independent QA (required from Phase 5 on, D-077)               | **NOT RUN — zero rounds** |
+**Checkpoint: `cb429a1362e1940824eaf3a80f21f2000e4c3794`** — the product commit,
+and the one every figure below was measured against.
+
+**A second commit follows it and changes nothing the browser downloads**: the
+DEF-0171 repair is in `scripts/android-gate.mjs`, the rest of DEF-0169's is in two
+test files, and everything else is documentation. `scripts/checkpoint-equivalence.mjs`
+is what proves that rather than asking anyone to take it — run it against the
+checkpoint above and the SHA Preview reports, which is the case DEF-0061 exists
+for: a docs-only commit moving the deployed SHA past a named checkpoint is not a
+reason to distrust the deploy, and exact-string equality is the wrong check.
+
+| Gate                                                           | Result                                            |
+| -------------------------------------------------------------- | ------------------------------------------------- |
+| `npm run verify` — format, lint, typecheck, tests, build, copy | PASS — read from the counts, not the exit code    |
+| Unit, contract, synthetic and adversarial tests                | PASS — 2,398 across 112 files                     |
+| Privacy scan                                                   | PASS — 361 tracked files on CI                    |
+| Rendered copy scan                                             | PASS — 9,604 shipped strings                      |
+| Adaptation-claim scan                                          | PASS — including on the deployed check-in         |
+| Browser matrix, 360 / 430 / 1280, one worker, clean port       | PASS — 915 of 915                                 |
+| CI, including its own matrix run                               | PASS — run 33914378346, 915 on a clean runner     |
+| Checkpoint equivalence                                         | PASS — read live; deployed SHA is the checkpoint  |
+| Release integrity, from CI's own manifest artifact             | PASS — 8 files byte for byte at `cb429a1`         |
+| Android-style deployed gate                                    | PASS — 263 checks; **failed first, see DEF-0171** |
+| Independent QA (required from Phase 5 on, D-077)               | **NOT RUN — zero rounds**                         |
+
+**One row is read differently from the rest, and DEF-0169 is why.** `npm run
+verify` exits non-zero on some runs of this machine with **every test passing** —
+a vitest worker RPC timeout, measured at three runs of six across two worker
+counts, absent on CI. The row above is a pass on 112 of 112 files and 2,398 of
+2,398 tests, followed by a clean build and copy scan, which is what D-284 says to
+read. **It is not a pass on an exit code, and it is not claimed as one.**
+
+**The deployed gate is the only one that found anything, and it found two
+things.** DEF-0171 — §13B's option-count rule has a **second expression** in
+`scripts/android-gate.mjs` that this phase did not update, so `npm run verify`,
+the browser matrix and CI were all green on a build whose Now screen offered five
+answers where a gate said four. And a race in the gate's own new block, which
+reported a working control as broken. Both are repaired; the first is the one
+worth reading.
+
+**The browser matrix was run twice and both are reported.** The first full run
+came back **914 of 915** with one `net::ERR_ABORTED` on a `page.goto` in
+`data.spec.ts` — a spec this phase did not touch — and that file passed 81 of 81
+on its own immediately afterwards. It is the loopback flake this machine produces
+under Playwright load, not a product signal. The second run, on the final tree,
+was **915 of 915**, and CI's own run on a clean runner was **915 of 915**.
 
 ## How often the app speaks — this phase's own delta, and the other three untouched
 
