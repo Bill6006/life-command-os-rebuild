@@ -148,8 +148,8 @@ days running — measured, not estimated. `QUESTIONS_PER_DAY = 3` was never reac
 the information-value gate starved it, because one candidate cannot be re-ranked so
 no question is ever worth asking.
 
-**The routing map shifted.** 94 is now the check-in and the score; Fatherhood is
-95; the move catalogue is 96; the forecast is 97; exploration and causal chains are
+**The routing map shifted.** 94 is now the check-in and the score; the move catalogue
+is 95; Fatherhood is 96; the forecast is 97; exploration and causal chains are
 98; advancement and revision is 99. **§6.8 and §6.9 may not be dispatched as
 written** — they are the forecast and the chain bar under older names.
 

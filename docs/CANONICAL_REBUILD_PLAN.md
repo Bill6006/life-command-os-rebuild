@@ -2411,8 +2411,8 @@ Approved by the owner on 2026-08-31 (**D-212**), after the second product adjudi
 | Reach — what the brain can see                           | **92**          | `qa/PHASE_92_QA_HANDOFF.md`  |
 | Validity — what it concludes from what it sees           | **93**          | `qa/PHASE_93_QA_HANDOFF.md`  |
 | **State — the readings, the score and what they are for** | **94**          | `qa/PHASE_94_QA_HANDOFF.md`  |
-| Domains and progression                                  | **95**          | `qa/PHASE_95_QA_HANDOFF.md`  |
-| **The move catalogue and measured effect**                | **96**          | `qa/PHASE_96_QA_HANDOFF.md`  |
+| **The move catalogue and measured effect**               | **95**          | `qa/PHASE_95_QA_HANDOFF.md`  |
+| Domains and progression                                  | **96**          | `qa/PHASE_96_QA_HANDOFF.md`  |
 | Expectation and reconciliation — **re-derive as the forecast** | **97**    | `qa/PHASE_97_QA_HANDOFF.md`  |
 | Longitudinal inference — D-172's mechanism               | **98**          | `qa/PHASE_98_QA_HANDOFF.md`  |
 | Advancement and revision                                 | **99**          | `qa/PHASE_99_QA_HANDOFF.md`  |

@@ -579,13 +579,13 @@ use a number as a proxy for personal worth"_, remains the reason to be slow.
 > | Contract                                             | Was | **Now**  |
 > | ---------------------------------------------------- | --- | -------- |
 > | **State — the check-in, the readings, the score**    | —   | **94** ¹ |
-> | the rest of the life: domains and progression (§6.6) | 94  | **95**   |
-> | **the move catalogue and measured effect**           | —   | **96** ¹ |
+> | **the move catalogue and measured effect**           | —   | **95** ¹ |
+> | the rest of the life: domains and progression (§6.6) | 94  | **96**   |
 > | expectation and reconciliation (§6.8)                | 96  | **97** ² |
 > | longitudinal inference (§6.9)                        | 97  | **98** ² |
 > | advancement and revision (§6.7)                      | 95  | **99**   |
 >
-> ¹ **No §6.x contract exists for routing 94 or 96.** Their scope is
+> ¹ **No §6.x contract exists for routing 94 or 95.** Their scope is
 > [`STATE_ENGINE_OWNER_DECISION.md`](STATE_ENGINE_OWNER_DECISION.md) and
 > **D-285 … D-294**, and for routing 94 also `NEXT_PROMPT.md`. Do not look for
 > one here and do not build from a neighbouring section.
@@ -960,7 +960,7 @@ open-space search. No emotional composite, ever.
 
 ---
 
-### 6.6 · Routing **95** (dispatched as 94 until D-292) — the rest of the life: domains and progression
+### 6.6 · Routing **96** (94 until D-292, 95 until D-295) — the rest of the life: domains and progression
 
 **Purpose.** The predecessor's largest deliberate deferral, now due. Twelve
 domains, eleven pages, and a destination shape proved on three of them.
@@ -968,7 +968,7 @@ domains, eleven pages, and a destination shape proved on three of them.
 **Prerequisites.** Routing 93. **Owner decisions 1 (C19), 4 (C16) and the domain
 ordering** must be answered before it is specified in detail.
 
-> **Two changes since this was written.** It is **routing 95**, not 94 (D-292).
+> **Two changes since this was written.** It is **routing 96** — 95 until D-295, 94 before D-292.
 > And **D-291 redraws C19**: progress rollups about Adaya ship as **counts, never
 > as a percentage or a progress bar**, and any skill list must be sourced. Every
 > prohibition on norms, ages and comparison to other children is untouched, and
@@ -1043,7 +1043,7 @@ why they are one phase.
 **This phase carries the gap the predecessor named first and nobody owned.** _A
 destination the system can only receive is a form._
 
-**Prerequisites.** Routing **95** (destinations across the life), routing 93
+**Prerequisites.** Routing **96** (destinations across the life), routing 93
 (longer horizons and honest comparison). **Owner decisions #6 and #7 are settled**, so
 nothing in this phase is blocked on the owner.
 
@@ -1114,7 +1114,7 @@ inferred milestone difficulty. No breadth or transfer claims.
 what it **expects**, records it, and reconciles it against what actually happened —
 which is always scoreable, because the occurrence it is about really occurs.
 
-**Prerequisites.** Routing **99**, and routing **96** for measured effect.
+**Prerequisites.** Routing **99**, and routing **95** for measured effect.
 Separated deliberately: this is a **new
 claim class** and 95's is record-factual, and the split is where 95's own package
 rule bites.
@@ -1574,7 +1574,7 @@ counts.**
   the record over longer horizons_ (AUD-0029/0007/0009/0042) and _acting on what it
   concludes_ (C21 enforcement, F03, F08, F18). Those two halves have different
   gates and can fail independently, which is the whole point.
-- **Routing 95 slices by domain** (renumbered from 94 by D-292), not by capability. Each domain is independently
+- **Routing 96 slices by domain** (renumbered from 94 by D-292 and again by D-295), not by capability. Each domain is independently
   buildable and independently falsifiable. A cap of **four domains per QA cycle** is
   the right shape; twelve at once is the mega-phase the campaign has already refused
   twice. **Sized with arithmetic in §11B, because the owner-decision sequence put
@@ -1620,10 +1620,10 @@ that order.
 
 ---
 
-## 11B · Routing **95** (was 94), sized in the roadmap's own unit
+## 11B · Routing **96** (was 94, then 95), sized in the roadmap's own unit
 
-Routing **95** — renumbered from 94 by D-292 — absorbed **nine of the twenty
-additions** from the owner-decision sequence. The roadmap's unit of work for this phase is the **domain slice**, capped
+Routing **96** — renumbered from 94 by D-292 and again by D-295 — absorbed **nine
+of the twenty additions** from the owner-decision sequence. The roadmap's unit of work for this phase is the **domain slice**, capped
 at **four domains per QA cycle**.
 
 ### The domain arithmetic

@@ -1,5 +1,56 @@
 # Decision log
 
+## D-295 — The move catalogue takes routing 95, and Fatherhood takes 96
+
+**Phase:** — · **Status:** Active · **Amends** D-292 and D-294 ·
+**Owner-decided 2026-09-04**
+
+**D-294 bundled two things with different dependencies, and justified the bundle
+with the dependency only one of them has.**
+
+- **The catalogue** — research the moves, build the library, wire them as
+  candidates — depends on **nothing**. The existing twenty-one dimensions already
+  rank a candidate on fit (time, capacity, strain, context) with no measured effect
+  at all, which is D-289's _"research proposes, his data ranks"_ on day one.
+- **Effect measurement** genuinely needs weeks of check-in history.
+
+D-294 said routing 96 _"cannot start the day routing 94 ships."_ **That is true of
+effect measurement and false of the catalogue**, so the catalogue was waiting behind
+a dependency it does not have.
+
+### Two clocks, and both should start early
+
+Routing 94 starts one — state history. **The catalogue starts the other**: no varied
+action history can accumulate until there are varied moves to do. **Effect
+measurement needs both clocks to have run**, so delaying either delays everything
+after it by the same amount.
+
+| Name                                       | Was | Now    |
+| ------------------------------------------ | --- | ------ |
+| **The move catalogue and measured effect** | 96  | **95** |
+| Domains and progression (Fatherhood)       | 95  | **96** |
+
+**Nothing else moves.** The forecast stays at 97, the chain work stays at 98 with
+D-172's hold untouched, advancement stays at 99, and **100 stays reserved** — the
+campaign has needed headroom twice and this is the third renumber in one day.
+
+**Why the catalogue and effect measurement stay in one phase.** Splitting them would
+give the owner the catalogue no sooner and would consume the last spare integer. The
+measurement machinery should exist from the moment there is data to measure rather
+than arriving a phase after it, and that it has little to say at first is the same
+shape as every reading routing 93 built against a purpose-built history.
+
+**This also answers the owner's most-repeated question.** He has asked three times
+when he stops seeing only _"walk for 25 minutes"_, and the answer is now **the phase
+after next** rather than two after. It is the complaint that started this redesign
+and it should not have been third in line.
+
+**Fatherhood at 96 still fills a real gap.** Effect measurement cannot say much until
+weeks of check-ins and varied moves have accumulated, and Fatherhood depends on
+nothing in this sequence. It remains the most build-ready phase in the roadmap.
+
+---
+
 ## D-294 — The move catalogue gets routing 96, and advancement moves to 99
 
 **Phase:** — · **Status:** Active · **Amends** D-292 · **Owner-decided 2026-09-04**
@@ -26,13 +77,14 @@ predates the state engine and is the only thing here that nothing else waits on.
 | #   | Phase                                  | Cannot start until               |
 | --- | -------------------------------------- | -------------------------------- |
 | 94  | the check-in, the readings, the score  | —                                |
-| 95  | domains and progression (Fatherhood)   | — (owner's chosen order, D-292)  |
-| 96  | the move catalogue and measured effect | 94 has produced state history    |
-| 97  | the forecast                           | 96 can say what a move did       |
+| 95  | the move catalogue and measured effect | 94 has produced state history    |
+| 96  | domains and progression (Fatherhood)   | — (fills the wait, D-295)        |
+| 97  | the forecast                           | 95 can say what a move did       |
 | 98  | exploration and causal chains          | 97, and D-290's bar is specified |
 | 99  | advancement and revision               | —                                |
 
-**Routing 95 is the only one out of dependency order, and it should stay there.**
+**Routing 96 is the only one out of dependency order, and it should stay there** —
+D-295 moved it there from 95, and the reasoning below is unchanged by that.
 The owner chose _"state engine next, Fatherhood after"_, and the obvious objection
 — that Fatherhood sits between sampling and measuring and delays the forecast by a
 phase — **does not survive the calendar.**

@@ -101,10 +101,10 @@ Do not append to them, correct them, or tidy them.
 ### Explicitly not in this phase
 
 **The move catalogue (D-289). Effect measurement. The forecast (D-288). Exploration.
-Causal chains (D-290). Learned weights.** They are routings 96, 97 and 98 and they
-all need data this phase is what produces.
+Causal chains (D-290). Learned weights.** They are routings **95, 97 and 98**, and
+they all need what this phase produces.
 
-**Nor is Fatherhood.** It moved to routing 95 (D-292) and its scope is unchanged
+**Nor is Fatherhood.** It is routing **96** (D-295) and its scope is unchanged
 apart from D-291: progress rollups ship as counts, never as percentages or bars.
 
 ### Do not repeat routing 93's mistake
@@ -147,15 +147,42 @@ averages cleanly. Two consequences worth knowing before you start:
    it as tidying.
 
 **You draft the anchors; the owner reviews them.** Thirteen readings at five
-anchors is about sixty-five phrases of owner-facing copy, and every one of them is
-subject to the copy discipline this repository already enforces — G-001's orphan
-pronouns, the adaptation-claim scan, and the rendered-copy scan. **They are also
-the whole interface**: an anchor the owner cannot tell from its neighbour produces
-a reading that means nothing.
+anchors is about sixty-five phrases of owner-facing copy, subject to the copy
+discipline this repository already enforces — G-001's orphan pronouns, the
+adaptation-claim scan, the rendered-copy scan.
 
-The owner's own examples, as the register to match: _Fine · A bit snappy ·
-Short-tempered · Snapping at everything_ for irritation; _Not hungry · Peckish ·
-Hungry · Starving_ for hunger.
+### The rule the anchors have to meet, and the owner set it
+
+> _"For mood, **good** is not helpful enough for me. I don't really know what good
+> means."_
+
+**An anchor describes a state the owner can recognise in himself. It does not name
+a point on a scale.** _"Good"_, _"Moderate"_, _"High"_ and _"4 out of 5"_ are all
+the same failure: they tell him where he is on a line without telling him what
+being there feels like, so he has to invent the meaning fresh each time — and the
+meaning he invents drifts with his mood about the number. **That drift is noise in
+the exact series the forecast is built on**, which makes this a data-quality
+requirement rather than a copy preference.
+
+**The test, and it is mechanical.** Could the owner pick between two adjacent
+anchors _without_ knowing which is higher? If the only thing separating them is
+intensity of the same vague word, they are not anchors. Rewrite them until each
+names something recognisable.
+
+|       | **Fails**                                     | **Passes**                                                                                                                                                          |
+| ----- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mood  | Low · Flat · Alright · **Good** · Really good | Heavy — everything is effort · Flat — nothing wrong, nothing good · Level — getting on with it · Lifted — things feel easier · Bright — actively enjoying it        |
+| Focus | Very low · Low · Medium · High · Very high    | Scattered — cannot hold a thought · Drifting — keep losing the thread · Patchy — fine in bursts · Working — getting there with effort · Locked in — time disappears |
+
+**The owner's own two are the register to match**, and they pass because each names
+something rather than grading it: _Fine · A bit snappy · Short-tempered · Snapping
+at everything_ for irritation, and _Not hungry · Peckish · Hungry · Starving_ for
+hunger.
+
+**Where a short word genuinely is recognisable, keep it short.** _"Starving"_ needs
+no gloss. The dash-clause form above is for the abstract dimensions — mood, focus,
+motivation, confidence — where a bare adjective says nothing. **Do not apply one
+shape to all thirteen.**
 
 ---
 
@@ -215,7 +242,14 @@ Low, Enough, Plenty). Five anchors for every reading so the score averages
 cleanly, which means CONCEPT.energy has to be extended from four; that is a
 change to a shipped owner-facing question, so record it rather than tidying it.
 You draft the roughly sixty-five anchor phrases and the owner reviews them; they
-are subject to G-001 and the copy scans like any other shipped string.
+are subject to G-001 and the copy scans like any other shipped string. Each anchor
+must describe a state he can recognise, not name a point on a scale -- his words:
+"for mood, good is not helpful enough for me, I don't really know what good means".
+The test is whether he could pick between two adjacent anchors without knowing
+which is higher. "Flat -- nothing wrong, nothing good" passes; "Good" does not.
+Keep a short word where it is already recognisable ("Starving" needs no gloss) and
+use the longer form for the abstract dimensions where a bare adjective says
+nothing.
 
 Three concepts are new: emotional.irritation, emotional.focus and health.hunger.
 D-293 amends D-166's six emotional dimensions to eight and adds hunger outside
