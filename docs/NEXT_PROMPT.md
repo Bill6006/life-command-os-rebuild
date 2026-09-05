@@ -29,6 +29,30 @@ not start until the owner has read the document this one produces.
 **If you find yourself editing `src/`, stop.** The output is one file:
 `docs/MOVE_CATALOGUE.md`. No commit to product code, no test, no gate.
 
+### Two things you must NOT leave behind, and campaign habit will push you toward both
+
+Every phase in this campaign ends by writing a QA handoff and rewriting this file
+as the next dispatch. **Do neither.** With independent QA off, the orchestrator
+has two separate paths that write a phase into its ledger, and **either one would
+record phase 95 as finished when only the research half has run** — after which
+routing 95's actual build never happens and the catalogue is never wired to
+anything.
+
+1. **Do not create `docs/qa/PHASE_95_QA_HANDOFF.md`.** A sweep records _any_
+   `PHASE_N_QA_HANDOFF.md` at or above the ledger floor **on sight** — it needs no
+   routing fields, no actor, and no valid header. A brief written here would be
+   swept before anyone read it. **No such file exists today and that is the state
+   to preserve.**
+2. **Do not rewrite this file as a dispatch that routes onward.** Rewrite it as an
+   **owner-review gate**: it must name `docs/MOVE_CATALOGUE.md`, say the owner
+   reads it next, and dispatch nothing. **Routing 95's build dispatch is written
+   after he has read the catalogue, not before** — that review is the whole reason
+   D-296 separated the exercise, and a file that routes onward removes it.
+
+**Neither ledger path knows a phase can be half-done.** That is not a defect you
+can fix from here and not one you should try to; the guard is simply that this
+exercise leaves nothing for either path to find.
+
 ---
 
 ## Why this exists, in one paragraph
@@ -172,6 +196,11 @@ Run the move catalogue research for the Life Command OS rebuild.
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
+
+Write no QA handoff -- creating docs/qa/PHASE_95_QA_HANDOFF.md would have the
+orchestrator record phase 95 as finished when only the research has run, and the
+catalogue would never be wired to anything. Leave docs/NEXT_PROMPT.md as an
+owner-review gate that names docs/MOVE_CATALOGUE.md and dispatches nothing.
 
 Read docs/NEXT_PROMPT.md in full and execute it exactly as written. Keep the
 Phase field exactly 95. It is a research exercise, not a build phase: the output
