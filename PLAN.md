@@ -37,9 +37,20 @@ evidence behind it. It never grades you as a person.
 8. **Every check-in gives something back the same day.** The old app "asked but
    never learned"; that is the failure to avoid.
 9. **A reading, never a verdict.** _"You are at 62%"_ is fine. _"You are falling
-   behind"_ is never fine.
+   behind"_ is never fine. The owner's own word lists from his previous app
+   apply: **use** Protect · Stabilize · Build · Recover · Partial · Open ·
+   Catch-up · Not logged yet · Needs support · One small move. **Never** Failed ·
+   Bad · Lazy · Behind · Weak · Failure · Slipped again · You missed everything.
 10. **Nothing about Adaya is measured against anything outside your own record.**
     Counts and change over time; never a percentage, a bar, or an age norm.
+11. **Every question has to earn its place.** No two readings that measure the
+    same thing; no question the brain does not use. When two readings move
+    together for weeks, one retires. The previous app asked near-duplicates three
+    times a day and it was the first thing that made it feel clunky.
+12. **Silence is not evidence.** A reading that was not taken never raises or
+    lowers anything. The previous app's forecast got redder the less he logged —
+    _"water not logged"_, _"food not logged"_ — and that is why it felt like
+    nagging.
 
 ## The phases
 
@@ -80,7 +91,11 @@ exists to get something done, and none of the thirteen readings can see that.
 Phase 2's one-tap "did you do it?" records completion; whether you also want a
 reading the certification shows up in is yours to say, whenever you like.
 
-**Not done:** an inventory of your old data. Parked — ask for it when you want it.
+**Your old data: start clean.** The 36-day export from the previous app was read
+in full — nine readings × three blocks on 1–10, 46 moves, a rules-based forecast,
+a journal — and the owner chose not to import it. Its lessons are in this plan
+(rules 11 and 12, the word lists, the evening additions, the fatherhood
+vocabulary). Nothing from it enters the app.
 
 ---
 
@@ -98,6 +113,21 @@ reading the certification shows up in is yours to say, whenever you like.
 - **"Since last time, did you…"** — the check-in gains one-tap yes/no for moves
   that were offered. This is the action record everything after it needs.
 - **Coherence:** no two moves offered in one day that contradict or duplicate.
+- **Two evening additions, both optional and both one tap.** _"Tomorrow's minimum
+  win"_ — one line, forward-looking, no verdict; it is the only part of the
+  previous app's daily review that was an intention rather than a grade, and the
+  rest of that review is dropped. And two chips — _caffeine after midday_ and
+  _late or heavy dinner_ — because evening food and caffeine were the strongest
+  evening-to-next-morning signal in his old data. Not the twelve food chips per
+  block the old app had; that was the clutter.
+- **Instant.** The check-in must feel instant to tap through. The previous app
+  re-rendered a 1.4 MB page on every tap and he felt it.
+
+**Where the owner's previous app already measured a move, the builder may read
+it when setting a prior** — protect-sleep averaged +1.9 for him, caffeine control
++2.1, and the morning light-and-water prime **−0.4** (it did not help him). Those
+are his numbers, which beat a citation; but nothing is imported and the priors
+still learn from scratch.
 
 **Decisions this phase makes, listed by the catalogue so it starts from a list:**
 whether the six category verbs (e.g. _wind down_) retire when their instances
@@ -120,7 +150,10 @@ having authored any; every one opens into "why"; and "did you do it?" is one tap
 ## 3 — see yourself
 
 The mirror before the oracle. It needs no learning and it is what makes the
-check-in worth doing before anything is learned.
+check-in worth doing before anything is learned. **The previous app had no
+mirror at all** — 600 readings over 36 days and no screen that showed him a
+single day's shape or a week's — which is a large part of why answering felt
+like feeding a void.
 
 **Ships:**
 
@@ -170,10 +203,14 @@ is not a separate pass again.
 - **The bar is written down before anything ships.** Nine dimensions over a few
   weeks will overfit and discover that Thursdays matter.
 
-**Two kinds of effect, kept apart.** For moves that change how he feels, the
-readings are the effect. For moves that get something done — the certification
-entries — the effect is the completion tap from phase 2 and whatever downstream feeling
-follows; the app says plainly when a move's effect is not something it can see.
+- **The redundancy check (rule 11), mechanically.** Readings that have moved
+  together for weeks — stress and overwhelm, loneliness and social energy are the
+  suspects from his old data — are named on screen and one is retired with his
+  say-so. Fewer taps, same information.
+  **Two kinds of effect, kept apart.** For moves that change how he feels, the
+  readings are the effect. For moves that get something done — the certification
+  entries — the effect is the completion tap from phase 2 and whatever downstream feeling
+  follows; the app says plainly when a move's effect is not something it can see.
 
 **Done when** the app tells the owner one true thing about himself he did not
 already know, and shows the evidence.
@@ -193,6 +230,10 @@ already know, and shows the evidence.
   act. **Misses shown.** A forecast without a track record is decoration.
 - **The morning brief:** the forecast for today in three lines, at the morning
   check-in.
+
+**A forecast that reads the same three days running is a defect.** The previous
+app's never changed — same colour, same lever — because rules do not move. This
+one is read from his data and has to visibly move with it.
 
 **Done when** the forecast has a visible track record the owner can judge.
 
@@ -224,7 +265,11 @@ lost.
 support → Doing sometimes → Doing often_ — with **counts and change over time,
 never a percentage or a bar.** A skill list **with its source stated**. "Time
 with Adaya" stays a first-class move, separate from working on something with
-her.
+her. **Use his own vocabulary from the previous app**: the reps — warm
+connection · active play · read/talk · name a feeling · independence rep ·
+repair · noticed effort · tiny lesson — and the coaching modes — modeled ·
+practiced · prompted · let her try · praised · repaired. And keep the weekly
+_"best moment"_ entry, the best thing in his old data.
 
 **Done when** the owner can see where to put his attention this week without
 being shown a grade.
@@ -270,6 +315,11 @@ Kept on the record so it is not lost; not built until the owner asks.
 - Independent QA rounds for routing 91, 92, 93 and 94 — **owed, not waived.**
 - The old plan and adjudication documents — history, not instructions.
 - An inventory of the twenty years of legacy records — ask for it when wanted.
+- From the previous app, deliberately not carried: the seven-question daily
+  review (it graded him; his journal shows it landing), the twelve food chips per
+  block, the environment-chore checklist and the fourteen habit completion rates,
+  the Azure proof ladder and flashcard engine, and the 4 a.m. day rollover. Any
+  of them can come back if asked for.
 
 ## What already exists and is used
 

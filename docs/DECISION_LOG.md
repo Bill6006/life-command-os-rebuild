@@ -1,5 +1,55 @@
 # Decision log
 
+## D-299 — What the previous app taught, and the four decisions it settled
+
+**Phase:** — · **Status:** Active · **Owner-decided / owner-delegated 2026-09-04**
+
+The owner's previous app — _Tyree Life Command Center_, a 1.4 MB single-file app
+he used for three months and logged 36 days in — and its 23 MB export were read in
+full. What it got right is in `PLAN.md` (rules 9, 11, 12; the phase 2 evening
+additions; the phase 8 vocabulary). What it got wrong is why those rules exist:
+
+- **It punished silence.** Its forecast added evidence for _"water not logged"_,
+  _"food not logged"_, _"workout not logged"_, so it read redder the less he
+  entered. Rule 12.
+- **It asked near-duplicates.** Stress and overwhelm, loneliness and connection,
+  drive and motivation — three times a day. He named this as the first thing that
+  made it clunky. Rule 11, and phase 5's mechanical redundancy check.
+- **It was rules, not learning.** Every bottleneck score was a hand-typed constant;
+  its weekday layer was still _"prepared_collecting"_ after 36 days. The forecast
+  never visibly changed. Phase 6's rule that a forecast reading the same three days
+  running is a defect.
+- **It graded him against its own safety rules.** _"Did I move my life forward
+  today?"_ — answered _No_ three days running, and the journal shows it landing.
+  Rule 9, with his own approved/avoid word lists carried in.
+- **Its proof engine starved.** 46 moves in 36 days, per-move n of 1–4, evidence
+  weight 0.35. Its self-diagnosis said _"the next limiter is consistent use"_ in
+  twelve of twenty domains. That is the "asked but never learned" failure, and it
+  is the reason phase 3 (the mirror) precedes any learning.
+
+**Four decisions.**
+
+1. **Start clean.** Owner-decided. The 36 days are not imported, though they are
+   the same nine readings on the same three blocks. His numbers for three moves —
+   protect-sleep +1.9, caffeine control +2.1, morning prime −0.4 — may inform a
+   prior; nothing enters the record.
+2. **The daily review is dropped; _"tomorrow's minimum win"_ stays.** Delegated to
+   the builder. The seven questions are verdicts on a person and his own journal
+   shows them landing as shame; the minimum-win line is the one item that was an
+   intention rather than a grade, and he answered it.
+3. **Food and caffeine become two optional evening chips**, not twelve per block.
+   Delegated. Evening food and caffeine were the strongest evening-to-next-morning
+   signal in his data — protect-sleep and caffeine control were his two best
+   moves — and twelve chips three times a day was the clutter he named.
+4. **The check-in must feel instant**, measured. He named lag as a reason he
+   stopped. Phase 9 is the performance phase; the rule binds from phase 2.
+
+**And a correction to this log's own record.** D-297 and `PLAN.md` said the legacy
+data held _"no state readings"_. It holds about 600, on exactly the check-in's
+dimensions. The owner chose not to import them; the claim is corrected anyway.
+
+---
+
 ## D-297 — The plan is rewritten as `PLAN.md`, from what the owner described
 
 **Phase:** — · **Status:** Active · **Supersedes** the roadmap in

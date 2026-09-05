@@ -79,7 +79,9 @@ Refused in the research for being the entry a generic library contains first.
    that is the day the catalogue exists for. Tier 2 needs a learning topic or a
    person to exist first and must not fire before one does. Research priors seed
    `now`, `tomorrow` and `friction`; the remaining profile fields are yours under
-   the rules that already govern them.
+   the rules that already govern them. Where the owner's previous app measured
+   the same move — `PLAN.md` phase 2 lists three — you may read those numbers
+   when setting a prior; nothing is imported.
 2. **"Why this"** on every move, one tap: which readings it is expected to move,
    and how sure the app is.
 3. **"I'm testing this"** on any move with fewer than a handful of the owner's own
@@ -88,6 +90,19 @@ Refused in the research for being the entry a generic library contains first.
    that were offered. This is the action record every later phase needs.
 5. **Coherence** — no two moves offered in one day that contradict or duplicate;
    decision 3 is how.
+6. **Two evening additions, optional, one tap each** (`PLAN.md` phase 2): a
+   one-line _"tomorrow's minimum win"_, and two chips — _caffeine after midday_,
+   _late or heavy dinner_. Stored as ordinary observations. **Not** the daily
+   review the owner's previous app had; that is dropped on purpose.
+
+**Two rules from the owner's previous app, now `PLAN.md` rules 11 and 12, that
+bind everything here:** every question has to earn its place — no near-duplicate
+readings, no question the brain does not use; and **silence is not evidence** —
+a reading not taken never raises or lowers anything. If a candidate's ranking
+would change because something was _not logged_, that is a defect.
+
+**The check-in must feel instant.** Measure a tap-to-paint on a mid-range phone
+and record it.
 
 **Also yours:** the day-one rule for choosing among unmeasured moves; whether the
 ten-minute walk and the shipped twenty-five-minute one share a family — a
@@ -96,7 +111,7 @@ low-`now` entries (A1, A6, E6, F1, J1) differently, since two of them take
 something from the evening.
 
 **Not in this phase:** measuring what a move did (plan phase 5). Learned weights.
-The forecast. Anything about Adaya. **If a sixth item appears, stop and say so.**
+The forecast. Anything about Adaya. **If a seventh item appears, stop and say so.**
 
 **Every phase ships looking finished.** Plan phase 4 is the visual system;
 nothing you ship here may look unfinished.
