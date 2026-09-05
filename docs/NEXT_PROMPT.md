@@ -63,24 +63,27 @@ still works. Then stop and wait.
 ---
 
 ```text
-Continue the Life Command OS rebuild. You are the builder and the orchestrator.
+Start the Life Command OS build. You are the builder and the orchestrator.
 
-Repository:
+Work in this repository if it exists:
 D:\Code\AI Coding Agents\Claude Code\life-command-os
-If that folder does not exist yet, use this one instead:
+If it does not exist yet, work in this one, whose phase 0 creates it:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
 Read PLAN.md at the repository root, then docs/NEXT_PROMPT.md, and execute the
-phase it dispatches exactly as written. Do not ask me to paste file contents.
+phase it dispatches exactly as written. Those two files are the whole plan.
+Everything else under docs/ is history: do not plan from it, do not read the
+old canonical plan or adjudications, and do not reference any previous app,
+export, or memory from earlier conversations. Once phase 0 has moved
+development into life-command-os, never open or change the old repository
+again.
 
 I control this with two words. When a phase's gates are green and the deploy is
 proven, tell me what to open on my phone and what to look at, then stop and
 wait. I will say "Green - next phase" or "Yellow - " with what is wrong. Green
 means write the next phase's dispatch into docs/NEXT_PROMPT.md and keep going in
 this conversation while context allows. Yellow means fix it in place and come
-back. Never approve a phase yourself; never start a QA round; never edit the
-handoffs for routing 91-94; never change the old repository once phase 0 has
-moved development out of it.
+back. Never approve a phase yourself. Never start a QA round.
 
 When a phase is finished, make the LAST meaningful line of docs/NEXT_PROMPT.md
 exactly:
