@@ -73,6 +73,25 @@ Refused in the research for being the entry a generic library contains first.
 
 **Do not pad the catalogue** to make a number look better.
 
+## Step 0 — extend the catalogue, document only, then wait for Green
+
+Before any code: add three families to `docs/MOVE_CATALOGUE.md`, with the same
+fields and citation rule as the first 26 and the same coherence pass —
+
+- **presence and charisma reps**, with a ladder: eye contact with a stranger;
+  holding a conversation ten seconds past comfortable; saying the thing instead
+  of swallowing it; one low-pressure conversation with a woman. **No ranking of
+  people, no scoring of anyone** — the existing rule. Effect is read from the
+  confidence and social-energy readings in the blocks after.
+- **faith**, small and unforced: a verse; five minutes of prayer; one honest
+  sentence about what felt true today. Never a streak. Effect is read from the
+  optional evening _felt close to God today?_ reading and nothing else.
+- **finishing reps**: moves sized to be completed in one sitting, for the
+  follow-through count phase 3 will show.
+
+Commit the document, tell the owner what to read, and **stop until he says
+Green.** Then build.
+
 ## Scope — `PLAN.md` phase 2, and no more
 
 1. **The catalogue wired in as candidates.** Tier 1 offerable on an empty store —
@@ -94,6 +113,16 @@ Refused in the research for being the entry a generic library contains first.
    one-line _"tomorrow's minimum win"_, and two chips — _caffeine after midday_,
    _late or heavy dinner_. Stored as ordinary observations. **Not** the daily
    review the owner's previous app had; that is dropped on purpose.
+7. **A private log** in the evening check-in — one tap, items **named by the
+   owner in the app** (an authorable private entity; nothing hard-coded, nothing
+   named in any document). It lives under the Private area and inherits D-167's
+   default-off influence. **The engine may `mayReasonFrom` it and may never
+   `mayRaiseUnasked` it**; it appears in no export and on no shared surface
+   unless he turns that on. Its only consumer is phase 5's effect measurement.
+   Prove that boundary with a reintroduction test, not a comment.
+8. **One optional evening reading** — _felt close to God today?_ — skippable with
+   no penalty, one tap to turn off, never a streak. It is the effect reading for
+   the faith moves and feeds nothing else.
 
 **Two rules from the owner's previous app, now `PLAN.md` rules 11 and 12, that
 bind everything here:** every question has to earn its place — no near-duplicate
@@ -111,7 +140,7 @@ low-`now` entries (A1, A6, E6, F1, J1) differently, since two of them take
 something from the evening.
 
 **Not in this phase:** measuring what a move did (plan phase 5). Learned weights.
-The forecast. Anything about Adaya. **If a seventh item appears, stop and say so.**
+The forecast. Anything about Adaya. **If a ninth item appears, stop and say so.**
 
 **Every phase ships looking finished.** Plan phase 4 is the visual system;
 nothing you ship here may look unfinished.

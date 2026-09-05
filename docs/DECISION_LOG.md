@@ -1,5 +1,44 @@
 # Decision log
 
+## D-301 — Five additions from what the owner said his life actually is
+
+**Phase:** 2 onward · **Status:** Active · **Owner-decided 2026-09-04**
+
+The owner described, in his own words, what he needs the app for — the woman he
+hopes to meet and the shyness in the way; charisma as a skill he wants to master;
+wanting to feel closer to God without it being forced; a private question about
+whether certain habits are affecting his data; novelty-seeking when life feels
+like it is going nowhere; not finishing what he starts. **None of it is a new
+domain. All of it is a reading, a move family, a private log, or one line.**
+
+1. **A second and last research pass on the catalogue** — presence and charisma
+   reps with a ladder; faith moves, small and never pushed; finishing reps. Done
+   as phase 2's step 0, document only, read by the owner before wiring.
+2. **A private log** in the evening check-in. **Items are named by the owner in
+   the app, not in any document** — this log records that the mechanism exists,
+   not what it holds. Private area, D-167's default-off influence, `mayReasonFrom`
+   and never `mayRaiseUnasked`, in no export by default. Its only consumer is
+   phase 5, which answers his question from his own record. Rule 13.
+3. **The direction line** — one sentence of his, shown against the forecast in
+   phase 6.
+4. **Follow-through as counts** in phase 3's mirror; the intervention is move
+   size, not willpower.
+5. **One optional evening reading** — _felt close to God today?_ — skippable,
+   one tap to turn off, the effect reading for the faith moves only.
+
+**Two things stated so they are not softened later.** Charisma and dating produce
+**no score about him and no ranking of anyone**; they are reps and counts. And
+the faith reading is **never a streak** — his own rule from the previous app,
+_"faith supports direction, not guilt,"_ is the bound.
+
+**The reframe recorded with it.** He asked for _"a changed man at 180."_ The app
+does not deliver a 180; it makes the next right thing obvious and counts what he
+does, and the 180 is what a few hundred finished small things add up to. The
+previous app graded him on the 180 every evening and he answered _No_ three days
+running. This one counts the steps.
+
+---
+
 ## D-300 — The orchestrator is retired; the owner controls with two words
 
 **Phase:** — · **Status:** Active · **Owner-decided 2026-09-04**

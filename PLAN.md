@@ -51,6 +51,11 @@ evidence behind it. It never grades you as a person.
     lowers anything. The previous app's forecast got redder the less he logged —
     _"water not logged"_, _"food not logged"_ — and that is why it felt like
     nagging.
+13. **Private things are measured, never mentioned.** What you log privately
+    feeds the effect measurement and nothing else. The app never raises it, never
+    suggests anything about it, and never shows it on a shared surface or in an
+    export — unless you turn that on yourself. You name the items in the app, not
+    in any document.
 
 ## The phases
 
@@ -91,6 +96,13 @@ exists to get something done, and none of the thirteen readings can see that.
 Phase 2's one-tap "did you do it?" records completion; whether you also want a
 reading the certification shows up in is yours to say, whenever you like.
 
+**Extended in phase 2's first step, document only:** three more families the
+owner asked for — **presence and charisma reps** with a ladder (eye contact,
+ten seconds longer, saying the thing), **faith** (a verse, five minutes of
+prayer, one honest sentence — small, offered, never pushed), and **finishing
+reps** (moves sized to be completed in one sitting). He reads them before they
+are wired, the same as the first 26.
+
 **Your old data: start clean.** The 36-day export from the previous app was read
 in full — nine readings × three blocks on 1–10, 46 moves, a rules-based forecast,
 a journal — and the owner chose not to import it. Its lessons are in this plan
@@ -100,6 +112,10 @@ vocabulary). Nothing from it enters the app.
 ---
 
 ## 2 — new moves
+
+**Step 0, before any code — extend the catalogue.** Add the three families above
+to `docs/MOVE_CATALOGUE.md`, run the same coherence pass, and show the owner. He
+says Green; then the build. This is the second and last research pass.
 
 **Ships:**
 
@@ -120,6 +136,15 @@ vocabulary). Nothing from it enters the app.
   _late or heavy dinner_ — because evening food and caffeine were the strongest
   evening-to-next-morning signal in his old data. Not the twelve food chips per
   block the old app had; that was the clutter.
+- **A private log**, one tap in the evening check-in. The owner names the items
+  himself, in the app; they live under the Private area with its existing
+  protections — the engine may reason from them, may never raise them, and they
+  appear in no export unless he turns that on. Rule 13. Its whole purpose is
+  phase 5: he asked _"is this affecting my data?"_, and this is how the app
+  answers from his own record instead of from a rule.
+- **One optional evening reading — _felt close to God today?_** Skippable with no
+  penalty (rule 12), one tap to turn off, never a streak. It is the effect
+  measurement for the faith moves and nothing else.
 - **Instant.** The check-in must feel instant to tap through. The previous app
   re-rendered a 1.4 MB page on every tap and he felt it.
 
@@ -164,6 +189,9 @@ like feeding a void.
 - **Readings side by side:** which ones move together.
 - **"Today so far"** at the morning check-in: yesterday in two lines. Facts only —
   rule 1.
+- **Follow-through, as counts.** _This week: 9 started, 4 finished._ Never a rate,
+  never a grade. He said he does not finish what he starts; this is the mirror
+  for it, and the catalogue's one-sitting moves are the intervention.
 
 **Not in it:** any interpretation. Any "because". Any prediction.
 
@@ -207,10 +235,16 @@ is not a separate pass again.
   together for weeks — stress and overwhelm, loneliness and social energy are the
   suspects from his old data — are named on screen and one is retired with his
   say-so. Fewer taps, same information.
-  **Two kinds of effect, kept apart.** For moves that change how he feels, the
-  readings are the effect. For moves that get something done — the certification
-  entries — the effect is the completion tap from phase 2 and whatever downstream feeling
-  follows; the app says plainly when a move's effect is not something it can see.
+  **The new families measure against readings that already exist.** Presence reps
+  against confidence and social energy in the blocks after; faith moves against
+  the evening _felt close_ reading; finishing reps against the follow-through
+  count; and the private log against energy, mood, drive, focus, loneliness and
+  confidence — reported to him alone.
+
+**Two kinds of effect, kept apart.** For moves that change how he feels, the
+readings are the effect. For moves that get something done — the certification
+entries — the effect is the completion tap from phase 2 and whatever downstream feeling
+follows; the app says plainly when a move's effect is not something it can see.
 
 **Done when** the app tells the owner one true thing about himself he did not
 already know, and shows the evidence.
@@ -230,6 +264,10 @@ already know, and shows the evidence.
   act. **Misses shown.** A forecast without a track record is decoration.
 - **The morning brief:** the forecast for today in three lines, at the morning
   check-in.
+- **The direction line.** One sentence, his, about where he is trying to go —
+  written once, edited whenever. The forecast is shown against it, because he
+  said life feels like it is going nowhere, and you cannot feel movement toward
+  something you have not named.
 
 **A forecast that reads the same three days running is a defect.** The previous
 app's never changed — same colour, same lever — because rules do not move. This
@@ -244,7 +282,9 @@ one is read from his data and has to visibly move with it.
 **Ships:**
 
 - **An exploration policy:** when to repeat what works and when to test an
-  alternative. Always announced: _"you have done this five times and it helps;
+  alternative. This is the owner's novelty-seeking, fed on purpose and inside the
+  plan — he said he goes looking for newness when life feels meek, and a test is
+  newness with a reason. Always announced: _"you have done this five times and it helps;
   let's see if anything beats it."_
 - **Move chains:** _"A makes B likelier, and B is where the gain is."_ **Only after
   a bar that corrects for how many chains are being tested at once** — thousands
@@ -311,8 +351,11 @@ and says so rather than absorbing it.
 
 Kept on the record so it is not lost; not built until the owner asks.
 
-- Expanding to twelve domains (Emotional, Faith, Private, Direction, Romantic
-  generators). Add a domain when there is an aim in it.
+- Separate domain generators for Emotional, Faith, Private, Direction and
+  Romantic. **Not needed:** Emotional is the check-in; Faith and Romantic enter
+  through the catalogue families; Private enters through the private log;
+  Direction enters as the direction line. A domain gets its own generator only
+  when there is an aim in it.
 - Advancement and revision machinery.
 - The nineteen instrument-hardening findings, plus DEF-0169.
 - Independent QA rounds for routing 91, 92, 93 and 94 — **owed, not waived.**
