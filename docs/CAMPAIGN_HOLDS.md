@@ -41,28 +41,28 @@ recommends a move.
 **Routings 95 through 98 are not gated by this hold** — but 97 and 98 may not be
 dispatched against their current §6.x contracts at all, per D-292.
 
-<!-- lco:decision id=D-298 status=open blocks_phase=96 -->
+<!-- lco:decision id=D-298 status=resolved blocks_phase=96 -->
 
-**D-298 — the owner has not yet read the move catalogue.**
+**D-298 — RESOLVED 2026-09-04. The owner read the catalogue and decided.**
 
-`PLAN.md` phase 95 shipped `docs/MOVE_CATALOGUE.md` on 2026-09-04 — 27 moves,
-every prior sourced. **Phase 96 wires it into the app and must not start until
-the owner has read it** and answered the three questions in `PLAN.md` phase 95:
-which flagged entries stay, whether a feeling-only effect is acceptable for moves
-that get something done, and whether 27 is enough variety before building.
+This held the catalogue's wiring until the owner had read `docs/MOVE_CATALOGUE.md`
+and answered its questions. **He has**, and his answers are recorded at the top of
+`docs/NEXT_PROMPT.md` (the phase-2 / integer-95 dispatch): booking the exam date
+is cut, so the catalogue is 26 entries; the timed section, no-caffeine-today, the
+avoided balance and call-instead-of-text ship with the app required to say when a
+move takes something from the evening; "three good things at bedtime" stays out;
+nineteen tier-1 entries is enough variety. The one question he has not answered —
+whether a feeling-only effect is enough for moves that get something done — is
+written down in `PLAN.md` phase 1 rather than blocked on.
 
-**Why this is a hold.** _"Not trusting himself to generate is not the same as
-declining to veto"_ — he is the only person who can say _"I would never do that"_,
-and a catalogue he has not read will propose something absurd on a bad evening.
+The `blocks_phase` above was written when the plan's integers were one step
+higher; under `PLAN.md`'s table the wiring is integer 95 and it is already
+building. Nothing is blocked by this line.
 
-**What releases it.** The owner states his three answers and which moves he would
-never do; the `status` above becomes `resolved` and the answers are recorded here
-so phase 96's builder reads them.
+<!-- lco:decision id=D-172 status=open blocks_phase=100 -->
 
-<!-- lco:decision id=D-172 status=open blocks_phase=101 -->
-
-**D-172 / Q6 — unresolved.** Under `PLAN.md` (2026-09-04) this is **phase 101 —
-testing smarter**, where move chains and the exploration policy land; the hold
+**D-172 / Q6 — unresolved.** Under `PLAN.md` (2026-09-04) this is **plan phase 7 — testing smarter,
+orchestrator integer 100**, where move chains and the exploration policy land; the hold
 followed it there. Historically: routing 97 (longitudinal inference — how the system
 discovers hypotheses, combinations, sequences and potentially important variables
 that were not hardcoded in advance) must not start until this is adjudicated.

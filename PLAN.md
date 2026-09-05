@@ -47,51 +47,51 @@ Each one ships something you use that day. Each is one conversation. Small on
 purpose — if a builder finds the scope growing past what is listed, it stops and
 says so.
 
-| #       | You get                                                                                                 | Needs first                  |
-| ------- | ------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| **95**  | **The move catalogue** — a document you read. **No code. DONE 2026-09-04: 27 moves.**                   | you answer three questions   |
-| **96**  | **New moves in the app**, from the catalogue. "Why this." "I'm testing this." One-tap "did you do it?"  | you have read 95's catalogue |
-| **97**  | **See yourself.** Today's trace, the week, a heatmap, readings side by side, moves overlaid.            | —                            |
-| **98**  | **Make it beautiful.** One visual system across everything shipped so far.                              | 96, 97                       |
-| **99**  | **What worked.** "Last time you were like this, X moved irritation 4→2." Learned weights, behind a bar. | weeks of 96's data           |
-| **100** | **Where you're heading.** The 7-day forecast, scored, misses shown. The morning brief.                  | 99                           |
-| **101** | **Testing smarter.** An exploration policy. Move chains, after a real bar. Revisiting old moves.        | 100                          |
-| **102** | **Fatherhood.** The ladder screen — counts, never percentages — with a sourced skill list.              | —                            |
-| **103** | **Fast and installable.** PWA, offline, performance, release.                                           | —                            |
+| #   | You get                                                                                                 | Needs first          |
+| --- | ------------------------------------------------------------------------------------------------------- | -------------------- |
+| 1   | **The move catalogue** — a document you read. **Done: 26 moves, your decisions recorded.**              | —                    |
+| 2   | **New moves in the app**, from the catalogue. "Why this." "I'm testing this." One-tap "did you do it?"  | 1 — **building now** |
+| 3   | **See yourself.** Today's trace, the week, a heatmap, readings side by side, moves overlaid.            | —                    |
+| 4   | **Make it beautiful.** One visual system across everything shipped so far.                              | 2, 3                 |
+| 5   | **What worked.** "Last time you were like this, X moved irritation 4→2." Learned weights, behind a bar. | weeks of 2's data    |
+| 6   | **Where you're heading.** The 7-day forecast, scored, misses shown. The morning brief.                  | 5                    |
+| 7   | **Testing smarter.** An exploration policy. Move chains, after a real bar. Revisiting old moves.        | 6                    |
+| 8   | **Fatherhood.** The ladder screen — counts, never percentages — with a sourced skill list.              | —                    |
+| 9   | **Fast and installable.** PWA, offline, performance, release.                                           | —                    |
 
-**102 depends on nothing.** Pull it forward whenever you want it.
+**8 depends on nothing.** Pull it forward whenever you want it.
+
+**Phase 2 is being built right now**, by the conversation that wrote the catalogue,
+and it is also attempting the measuring machinery from phase 5 in the same go. My
+recommendation: let it finish wiring the moves and stop there — there is no data
+yet to measure against, so anything it builds for 5 is unproven until weeks of
+check-ins exist. Your call; nothing breaks either way, because phase 5 is where
+measurement gets proven on real data regardless of when its code first landed.
 
 ---
 
-## Phase 95 — the catalogue — DONE, awaiting your read
+## 1 — the catalogue — DONE
 
-**Shipped 2026-09-04 as research, no code:** `docs/MOVE_CATALOGUE.md` — **27
-moves, every prior sourced, 19 of them offerable on an empty store** against the
-one move you see today. Read the section _What the owner should look for_.
+**Done.** `docs/MOVE_CATALOGUE.md` — researched, every prior sourced, and you have
+read it. Your decisions are recorded at the top of `docs/NEXT_PROMPT.md` and they
+stand: **booking the exam date is cut** (nothing left in the catalogue costs money
+or is irreversible), so it is **26 moves, 19 of them offerable on an empty store**
+against the one you see today. The timed exam section, no-caffeine-today, the
+avoided balance and call-instead-of-text all ship, with the app required to say
+out loud when a move takes something from the evening. "Three good things at
+bedtime" stays out. Nineteen is enough variety; the catalogue is not padded.
 
-**Three things only you can settle, and 96 is held until you do:**
-
-1. **Five flagged entries, one left out.** Booking the exam date (costs money,
-   irreversible — the one most likely to be absurd on a bad evening); a timed
-   45-minute exam section; no more caffeine today; looking at the balance you
-   have been avoiding; calling instead of texting. And _three good things at
-   bedtime_ was left out — say if you want it back.
-2. **Every effect the check-in can measure is a feeling.** None of the thirteen
-   readings says whether anything got done, and half the catalogue exists to get
-   something done. Phase 96's one-tap _"did you do it?"_ is the completion
-   record; is that enough, or do you want a reading the certification shows up
-   in?
-3. **Is 27 the variety you meant, or does it need to be larger** before 96 builds?
-   A second research pass is cheap and needs no code.
-
-**Done when** you have answered those three and said which moves you would never
-do. The gate is `docs/CAMPAIGN_HOLDS.md` (D-298); resolving it releases 96.
+**One thing you still owe a decision on, and it is written down rather than
+solved:** every effect the check-in can measure is a _feeling_. Half the catalogue
+exists to get something done, and none of the thirteen readings can see that.
+Phase 2's one-tap "did you do it?" records completion; whether you also want a
+reading the certification shows up in is yours to say, whenever you like.
 
 **Not done:** an inventory of your old data. Parked — ask for it when you want it.
 
 ---
 
-## Phase 96 — new moves
+## 2 — new moves
 
 **Ships:**
 
@@ -120,10 +120,11 @@ something from the evening (e.g. _no more caffeine today_) are shown differently
 
 **Done when** the owner sees at least five different moves in a week without
 having authored any; every one opens into "why"; and "did you do it?" is one tap.
+**Being built now** under the orchestrator's integer 95.
 
 ---
 
-## Phase 97 — see yourself
+## 3 — see yourself
 
 The mirror before the oracle. It needs no learning and it is what makes the
 check-in worth doing before anything is learned.
@@ -145,7 +146,7 @@ seconds.
 
 ---
 
-## Phase 98 — make it beautiful
+## 4 — make it beautiful
 
 **Ships:** one visual system — type, colour, spacing, motion, dark by default —
 applied to every screen shipped so far. The check-in is the most-used screen and
@@ -161,7 +162,7 @@ is not a separate pass again.
 
 ---
 
-## Phase 99 — what worked
+## 5 — what worked
 
 **Ships:**
 
@@ -176,9 +177,12 @@ is not a separate pass again.
 - **The bar is written down before anything ships.** Nine dimensions over a few
   weeks will overfit and discover that Thursdays matter.
 
+**If measuring code already landed with phase 2, this is where it is proven on
+real data** — nothing about it counts until it has weeks of check-ins to read.
+
 **Two kinds of effect, kept apart.** For moves that change how he feels, the
 readings are the effect. For moves that get something done — the certification
-entries — the effect is the completion tap from 96 and whatever downstream feeling
+entries — the effect is the completion tap from phase 2 and whatever downstream feeling
 follows; the app says plainly when a move's effect is not something it can see.
 
 **Done when** the app tells the owner one true thing about himself he did not
@@ -186,7 +190,7 @@ already know, and shows the evidence.
 
 ---
 
-## Phase 100 — where you're heading
+## 6 — where you're heading
 
 **Ships:**
 
@@ -204,7 +208,7 @@ already know, and shows the evidence.
 
 ---
 
-## Phase 101 — testing smarter
+## 7 — testing smarter
 
 **Ships:**
 
@@ -217,14 +221,14 @@ already know, and shows the evidence.
 - **Revisiting old moves** when the trend has changed.
 
 **Owner gate before it ships:** the bar is specified and the owner has approved
-the mechanism. This is where `D-172` in `docs/CAMPAIGN_HOLDS.md` releases.
+the mechanism. It is the one standing hold in `docs/CAMPAIGN_HOLDS.md`.
 
 **Done when** a test is proposed, run, and its result shown — including one that
 lost.
 
 ---
 
-## Phase 102 — Fatherhood
+## 8 — Fatherhood
 
 **Ships:** the ladder screen — _Not introduced → Practicing with Daddy → Needs
 support → Doing sometimes → Doing often_ — with **counts and change over time,
@@ -237,7 +241,7 @@ being shown a grade.
 
 ---
 
-## Phase 103 — fast and installable
+## 9 — fast and installable
 
 **Ships:** PWA install, offline, performance, release to the production URL.
 
@@ -250,15 +254,15 @@ being shown a grade.
    deploy, and proves the deployed build is the one it tested.
 3. **The owner opens it on his phone.** Yes → next phase. No → a fix round in the
    same conversation.
-4. **It writes the next `docs/NEXT_PROMPT.md`** with `Phase: N` on its own line
-   near the top, and `<!-- LCO_COMPLETE -->` as the last line.
+4. **It writes the next `docs/NEXT_PROMPT.md`** — the next phase _from this file_,
+   with the orchestrator's integer from the table at the bottom on its own
+   `Phase:` line near the top, and `<!-- LCO_COMPLETE -->` as the last line.
 
 **Independent QA rounds are off** by the owner's choice. They are owed for routing
 91–94 and the orchestrator's ledger keeps that debt. They are not waived.
 
 **Owner gates** live in `docs/CAMPAIGN_HOLDS.md` and the orchestrator will not
-start a held phase. Two exist: after 95 (the owner has read the catalogue) and
-before 101 (the bar is approved).
+start a held phase. One is open: before phase 7, the bar is approved.
 
 **Small phases.** The previous plan's phase 93 shipped fourteen packages against a
 five-package rule. If the list above grows while building, stop and say so.
@@ -285,8 +289,21 @@ concept registry and record store · the check-in with 65 anchors and a 0–100
 reading · authoring your own routines, goals, people and places · legacy import ·
 deployment with release integrity.
 
-## Routing
+## The orchestrator's numbers — the only place they appear
 
-Phases carry the integers 95–103 directly. `docs/NEXT_PROMPT.md` always names the
-next one. The orchestrator's `stop_after_phase` is the owner's throttle; the holds
-are the gates.
+The orchestrator routes a phase only if its integer is higher than any it has
+seen before (94 as of today), so each plan phase carries one of these on its
+`Phase:` line and nowhere else. **The plan is numbered 1–9; this table is
+plumbing.**
+
+| Plan | Orchestrator integer  | Plan | Orchestrator integer              |
+| ---- | --------------------- | ---- | --------------------------------- |
+| 1    | — (done, no code)     | 6    | 99                                |
+| 2    | **95** — building now | 7    | 100 — the standing hold sits here |
+| 3    | 96                    | 8    | 101                               |
+| 4    | 97                    | 9    | 102                               |
+| 5    | 98                    |      |                                   |
+
+`stop_after_phase` in the orchestrator is the owner's throttle; the holds are the
+gates. Builders also keep a decision register in `docs/DECISION_LOG.md`; the owner
+never needs to read it.
