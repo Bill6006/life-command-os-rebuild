@@ -1,5 +1,93 @@
 # Decision log
 
+## D-303 — Development moves to a new repository seeded from this one; this app is left untouched
+
+**Phase:** 0 · **Status:** Active · **Owner-decided 2026-09-04**
+
+The owner: _"it doesn't need to overwrite my current app, in other words, it can
+create a new repo."_ The concern is the first half; the new repository is how it
+is guaranteed.
+
+**Seeded, not from scratch.** `life-command-os` starts as a copy of this working
+tree at its current commit, so the record store, the concept registry, the
+check-in, the deployment pipeline and 2,341 tests come along. A from-scratch
+repository was considered and parked: it would cost weeks rebuilding those before
+anything new could ship, and the builder that inherited the job would have no
+context for what to keep. Revisit only if the inherited code becomes drag a
+builder can name.
+
+**Phase 0 does the move and nothing else**, so the owner's first Green is on the
+same app at a new address. This repository gets one pointer line and is never
+touched again by the campaign.
+
+---
+
+## D-302 — What the second opinion changed, and the one thing it got wrong
+
+**Phase:** 2 onward · **Status:** Active · **Owner-decided 2026-09-04**
+
+The owner sent the plan's loop and rules, without its solution, to another AI and
+asked for a map. Its map agreed with about four fifths of `PLAN.md`. Five things
+it argued for are adopted; four things it found are added; one thing it proposed
+is refused.
+
+**Adopted.**
+
+1. **Rule 1 was too narrow.** _"The forecast is the only place the app may
+   assume"_ — but _"this move helped you"_ is inference too, and the 0–100 reading
+   is a calculation. Rule 1 now: facts, calculations and conclusions are always
+   told apart on screen, and the app never invents an observation.
+2. **The composite was too wide.** Hunger, sleep, confidence and social energy
+   have no universally better direction — not-hungry is not "best", wanting
+   company is not worse. The reading is built only from readings with a clear
+   direction; the rest are shown beside it as context. Incomplete answers say
+   _incomplete_ rather than silently changing the ingredients.
+3. **The forecast is of the owner as he usually is, scored every day.** D-288 had
+   it as a no-intervention baseline scored only on days he did not act — but he
+   always acts in some way, so those days barely exist and are unusual when they
+   do. The _"if you did nothing extra"_ line stays as a labelled what-if whose
+   causal accuracy cannot be checked, and the app never claims it predicted a
+   decline he then prevented. C11's objection is still honoured; the answer to
+   it moved.
+4. **Bounded variety, and offered recorded separately from done.** "I'm testing
+   this" on every low-n move across a 29-entry catalogue is one try each forever
+   — collecting without understanding. Instead: a few feasible alternatives per
+   state, alternated at comparable opportunities, repeated enough to learn. And
+   the record keeps _offered_ and _done_ as two facts, because comparing only
+   completed moves is confounded by the days on which he completes things.
+5. **The bar, defined.** A worthwhile change named before the comparison; an
+   interval entirely beyond it, corrected for multiplicity; and the finding
+   holding up on later data. Below that: promising, unclear, little evidence.
+   Twenty-one readings in a week are not twenty-one tests of a weekly effect.
+   Roughly ninety observations a month across every move and context means
+   months for some claims and permanent uncertainty for others — said on screen.
+
+**Added.**
+
+6. **A protected next step on a commitment he chose.** A recommender optimising
+   tonight's readings will always favour comfort over the certification; with
+   novelty-seeking that is a machine for never finishing. The next concrete step
+   of a chosen commitment stays on screen and the state ranking cannot displace
+   it. Rule 7 made structural.
+7. **Who he is becoming, as dated evidence** under a line of his own — counts
+   attached to identities he chose, never a rank, never a verdict. The honest
+   form of the 180.
+8. **The app's own scorecard.** Its forecast accuracy, whether its experiments
+   repeat, whether every check-in gave something back, how long answering takes.
+   _"Its performance belongs on the scoreboard; your personhood does not."_
+9. **Quiet hours and a low-demand mode**, with correction, deletion and export
+   from the settings surface.
+
+**Refused.** It proposed starting with four readings — mood, energy, focus,
+overwhelm. It did not have the owner's data: he answered nine readings three
+times a day for thirty-six days in his previous app, and D-293's set stands.
+What is taken from the suggestion is a sharper retirement test — a reading
+retires only if it adds neither a real distinction nor predictive value on later
+data, not merely because it moves with another; loneliness and social energy can
+genuinely differ.
+
+---
+
 ## D-301 — Five additions from what the owner said his life actually is
 
 **Phase:** 2 onward · **Status:** Active · **Owner-decided 2026-09-04**

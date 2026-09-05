@@ -1,187 +1,64 @@
-# Next dispatch — plan phase 2: new moves
+# Next dispatch — plan phase 0: a new home
 
-**Phase:** 95 — **New moves: the catalogue wired in, "why this", "I'm testing this", "did you do it?"**
+**Phase:** 0 — **A new home: the app as it is, in a new repository at a new address**
 
 **Next actor:** Claude Builder
-**Target system:** Claude Builder
 **Model:** Claude Opus 5
 **Reasoning / Effort:** Max
 **Conversation:** NEW
-**Independent QA:** OFF. **Control:** the owner says **Green** or **Yellow** (D-300). No orchestrator.
+**Independent QA:** OFF. **Control:** the owner says **Green** or **Yellow**. No orchestrator.
 
 ---
 
 ## Read `PLAN.md` at the repository root first
 
-The plan is numbered **1 to 9**. This is **plan phase 2**; the orchestrator's
-integer for it is **95** (the table at the bottom of `PLAN.md` is the only place
-that mapping lives). The older documents in `docs/` are history and are not
-planned from. **Read `PLAN.md`, then `docs/MOVE_CATALOGUE.md`, then this file.**
+The plan is numbered **0 to 9**. This is **phase 0**. `PLAN.md` is the whole
+plan; the older documents in `docs/` are history and are not planned from.
 
-**Nothing of this phase has been built.** An earlier conversation drafted a
-dispatch for it and reverted it; no code landed, no QA handoff exists for it.
+## What to do
 
-## The owner's decisions, and they are settled
+**Move house. Nothing else.** The owner wants his current app left exactly as it
+is; every phase from 2 on is built in a new repository seeded from this one.
 
-He read the catalogue and answered its questions. **Do not reopen them, do not
-re-argue them, and do not quietly widen them.**
+1. **Create the new repository.** Folder `life-command-os` beside this one (the
+   parent is `D:\Code\AI Coding Agents\Claude Code`). Seed it from this working
+   tree at the current commit — copy everything except `node_modules`, `dist`,
+   `.git`, `test-results` and `playwright-report`; `git init`; first commit
+   message names the commit it was seeded from. Create `Bill6006/life-command-os`
+   on GitHub with `gh repo create --private --source . --push`, and turn on Pages
+   the way this repository has it (see `.github/workflows/ci.yml`).
+   **Pushing needs `git -c http.sslBackend=schannel push`** on this machine.
+2. **Rename every hard-coded path and address** from `life-command-os-rebuild`
+   to `life-command-os`: the Vite base, `playwright.config.ts`'s preview URL,
+   `scripts/android-gate.mjs`, `scripts/checkpoint-equivalence.mjs`,
+   `scripts/release-integrity.mjs`, the CI workflow, the test specs' `APP`
+   constant, and anything `grep -rn "life-command-os-rebuild"` finds. **Change
+   nothing else.**
+3. **Run every gate in the new repository** — `npm ci`, `npm run verify`, the
+   full 360/430/1280 browser matrix at one worker on a clean port, the privacy,
+   copy and adaptation scans, CI, checkpoint equivalence, release integrity from
+   CI's own manifest artifact, the Android-style deployed gate — against the
+   **new** address. Read the summary line and its count, never a pipeline's exit
+   code.
+4. **Leave a pointer here.** One line at the top of this repository's `PLAN.md`
+   and `README.md`: development moved to `life-command-os` on the date, with the
+   new address. Commit and push it. Touch nothing else in this repository again.
+5. **In the new repository, write `docs/NEXT_PROMPT.md` as the phase 2
+   dispatch** from `PLAN.md` phase 2 — its step 0 (extend the catalogue with the
+   three families, document only, wait for Green) comes first, and
+   `docs/CATALOGUE_DECISIONS.md` carries the owner's six settled decisions it must
+   not reopen. `Phase: 2` on its own line near the top, completion marker last.
 
-### 1. E7 "Book the exam date" is CUT
+## Then stop and hand it to the owner
 
-His word was _"cut it"_. Remove the entry. **The catalogue is 26 entries** — 19
-tier 1, 7 tier 2. Two consequences to carry through rather than leave dangling:
-nothing left in the catalogue costs money or is irreversible, so say so where the
-admission test is recorded; and the friction range now tops out at 0.70 — the
-band above `hands-on-lab`'s 0.70 existed for E7 alone. **Do not leave a 0.85
-ceiling in the code with nothing at it.**
+Tell him the new address, that it is his app unchanged, and that the old address
+still works. Then stop and wait.
 
-### 2. E3, A6, J1 and G1 all ship — with three conditions
+- **"Green — next phase"** → start phase 2 in the new repository, in this same
+  conversation if context allows; otherwise say so and stop.
+- **"Yellow — …"** → fix in place, re-run the gates that cover it, come back.
 
-**E3** (45-minute timed section) keeps its marking as needing an evening that is
-actually his. **A6 and J1 take something from the block they happen in** — A6
-gives nothing back until tomorrow, J1 makes the evening worse — and **the app has
-to say that out loud on screen.** **G1** (call instead of texting) is a
-`reach-out` instance and must be resolved by decision 3, not left sitting beside
-its category.
-
-### 3. Category versus instance: you decide, and you justify it
-
-Six of the sixteen shipped verbs are categories rather than moves: `wind-down`,
-`recover`, `ease-off`, `lighten-the-day`, `move`, `reach-out`. Either the category
-**retires** when its instances land, or it **stays and the instances become its
-objects**. **What must not happen is that neither is chosen** — the default is a
-category and one of its own instances on the same evening, and nothing in
-`recent-duplication`, `ACTION_FAMILIES` or the shown ledger can see it, because
-all three act on one move at a time. The QA handoff carries the argument, not
-the conclusion.
-
-### 4. Effect stays on feelings. Write the gap down; do not close it
-
-**Do not extend the check-in in this phase.** Every entry whose plausible effect
-lands on none of the thirteen readings must declare that **in its own record**;
-the seven certification entries and the two training ones are the known cases.
-**The app must never claim to have learned from an entry it cannot read.**
-Register the gap as a named finding for the owner in the QA handoff, in one
-paragraph, and do not solve it here.
-
-### 5. "Three good things at bedtime" stays out
-
-Refused in the research for being the entry a generic library contains first.
-**That refusal stands.**
-
-### 6. Nineteen tier-1 entries is enough variety
-
-**Do not pad the catalogue** to make a number look better.
-
-## Step 0 — extend the catalogue, document only, then wait for Green
-
-Before any code: add three families to `docs/MOVE_CATALOGUE.md`, with the same
-fields and citation rule as the first 26 and the same coherence pass —
-
-- **presence and charisma reps**, with a ladder: eye contact with a stranger;
-  holding a conversation ten seconds past comfortable; saying the thing instead
-  of swallowing it; one low-pressure conversation with a woman. **No ranking of
-  people, no scoring of anyone** — the existing rule. Effect is read from the
-  confidence and social-energy readings in the blocks after.
-- **faith**, small and unforced: a verse; five minutes of prayer; one honest
-  sentence about what felt true today. Never a streak. Effect is read from the
-  optional evening _felt close to God today?_ reading and nothing else.
-- **finishing reps**: moves sized to be completed in one sitting, for the
-  follow-through count phase 3 will show.
-
-Commit the document, tell the owner what to read, and **stop until he says
-Green.** Then build.
-
-## Scope — `PLAN.md` phase 2, and no more
-
-1. **The catalogue wired in as candidates.** Tier 1 offerable on an empty store —
-   that is the day the catalogue exists for. Tier 2 needs a learning topic or a
-   person to exist first and must not fire before one does. Research priors seed
-   `now`, `tomorrow` and `friction`; the remaining profile fields are yours under
-   the rules that already govern them. Where the owner's previous app measured
-   the same move — `PLAN.md` phase 2 lists three — you may read those numbers
-   when setting a prior; nothing is imported.
-2. **"Why this"** on every move, one tap: which readings it is expected to move,
-   and how sure the app is.
-3. **"I'm testing this"** on any move with fewer than a handful of the owner's own
-   observations.
-4. **"Since last time, did you…"** — the check-in gains one-tap yes/no for moves
-   that were offered. This is the action record every later phase needs.
-5. **Coherence** — no two moves offered in one day that contradict or duplicate;
-   decision 3 is how.
-6. **Two evening additions, optional, one tap each** (`PLAN.md` phase 2): a
-   one-line _"tomorrow's minimum win"_, and two chips — _caffeine after midday_,
-   _late or heavy dinner_. Stored as ordinary observations. **Not** the daily
-   review the owner's previous app had; that is dropped on purpose.
-7. **A private log** in the evening check-in — one tap, items **named by the
-   owner in the app** (an authorable private entity; nothing hard-coded, nothing
-   named in any document). It lives under the Private area and inherits D-167's
-   default-off influence. **The engine may `mayReasonFrom` it and may never
-   `mayRaiseUnasked` it**; it appears in no export and on no shared surface
-   unless he turns that on. Its only consumer is phase 5's effect measurement.
-   Prove that boundary with a reintroduction test, not a comment.
-8. **One optional evening reading** — _felt close to God today?_ — skippable with
-   no penalty, one tap to turn off, never a streak. It is the effect reading for
-   the faith moves and feeds nothing else.
-
-**Two rules from the owner's previous app, now `PLAN.md` rules 11 and 12, that
-bind everything here:** every question has to earn its place — no near-duplicate
-readings, no question the brain does not use; and **silence is not evidence** —
-a reading not taken never raises or lowers anything. If a candidate's ranking
-would change because something was _not logged_, that is a defect.
-
-**The check-in must feel instant.** Measure a tap-to-paint on a mid-range phone
-and record it.
-
-**Also yours:** the day-one rule for choosing among unmeasured moves; whether the
-ten-minute walk and the shipped twenty-five-minute one share a family — a
-deliberate act with a name on it, or an explicit refusal; and showing the
-low-`now` entries (A1, A6, E6, F1, J1) differently, since two of them take
-something from the evening.
-
-**Not in this phase:** measuring what a move did (plan phase 5). Learned weights.
-The forecast. Anything about Adaya. **If a ninth item appears, stop and say so.**
-
-**Every phase ships looking finished.** Plan phase 4 is the visual system;
-nothing you ship here may look unfinished.
-
-## Bounds that do not move
-
-Unknown stays unknown; nothing is back-filled. The score is a reading and never
-acquires a quality adjective. Nothing grades the owner as a person. Moves offered
-must not contradict or duplicate within a day.
-
-## Gates, then closeout
-
-Run `npm run verify`, the full 360/430/1280 browser matrix at one worker on a
-clean port, the privacy, copy and adaptation scans, checkpoint equivalence, CI,
-release integrity from that CI run's own manifest artifact, and the Android-style
-deployed gate. **Read the summary line and its count, never a pipeline's exit
-code.** Commit in working increments. Deploy and prove the deployed checkpoint is
-what Preview serves. Then the owner opens it on his phone.
-
-Update `docs/DECISION_LOG.md`, `docs/DEFECT_LEDGER.md`, `docs/PHASE_STATUS.md`.
-Write **`docs/qa/PHASE_95_QA_HANDOFF.md`** with the routing block copied from
-`PHASE_92_QA_HANDOFF.md`'s shape — Phase, Round, Actor, Conversation, Model,
-Reasoning level — or the orchestrator cannot record its debt. Do not edit the
-handoffs for 91–94.
-
-## Then stop and hand it to the owner — this is the whole protocol (D-300)
-
-When the gates are green and the deploy is proven, **tell the owner, in a few
-lines: what to open on his phone, what to look at, and what is new.** Then stop.
-
-- **"Green — next phase"** → write this file as the dispatch for **plan phase 3
-  (see yourself)** with `Phase: 96` on its own line near the top, and **start
-  phase 3 in this same conversation** if context allows. If it does not, say so
-  and stop; the next conversation picks up from this file.
-- **"Yellow — …"** followed by what is wrong → fix it in place, re-run the gates
-  that cover the fix, re-deploy, and come back the same way.
-
-**You may not approve your own phase.** Only the owner's Green does that. Record
-the phase in `docs/PHASE_STATUS.md` as **YELLOW — awaiting the owner** until he
-says it, then as **GREEN — owner-accepted**. Independent QA is still owed and is
-not waived; the per-phase handoff is where that debt is visible.
+**You may not approve your own phase.** Only the owner's Green does that.
 
 ---
 
@@ -189,6 +66,8 @@ not waived; the per-phase handoff is where that debt is visible.
 Continue the Life Command OS rebuild. You are the builder and the orchestrator.
 
 Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os
+If that folder does not exist yet, use this one instead:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
 Read PLAN.md at the repository root, then docs/NEXT_PROMPT.md, and execute the
@@ -200,7 +79,8 @@ wait. I will say "Green - next phase" or "Yellow - " with what is wrong. Green
 means write the next phase's dispatch into docs/NEXT_PROMPT.md and keep going in
 this conversation while context allows. Yellow means fix it in place and come
 back. Never approve a phase yourself; never start a QA round; never edit the
-handoffs for routing 91-94.
+handoffs for routing 91-94; never change the old repository once phase 0 has
+moved development out of it.
 
 When a phase is finished, make the LAST meaningful line of docs/NEXT_PROMPT.md
 exactly:

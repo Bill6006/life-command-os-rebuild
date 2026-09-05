@@ -4,8 +4,11 @@
 `docs/CANONICAL_REBUILD_PLAN.md` and `docs/PRODUCT_ADJUDICATION_2.md`, which are
 kept as history and are not planned from any more.
 
-**Same codebase.** Nothing built is thrown away. The check-in, the record store, the
-tests and the deployment all stay; the phases below build on them.
+**Same code, new home.** Development moves to a **new repository seeded from this
+one** — `life-command-os`, without the `-rebuild` — so this app stays exactly as
+it is at its current address and nothing overwrites it. The check-in, the record
+store, the tests and the deployment pipeline come along; the new app gets its own
+address. That is phase 0.
 
 **To start a phase, read this file and `docs/NEXT_PROMPT.md`. Nothing else is
 required.**
@@ -19,12 +22,15 @@ you a 0–100 reading and the readings behind it. It suggests a move from a
 researched catalogue, says why, and says when it is testing something new. Over
 weeks it learns which moves actually change _your_ readings — from your record,
 never from a rule about people — and it forecasts where the next seven days are
-heading if you do nothing, so you can change that. Every claim opens into the
+heading as you usually are, so you can change that. Every claim opens into the
 evidence behind it. It never grades you as a person.
 
 ## The rules — these are the owner's
 
-1. **Questions are for facts. The forecast is the only place the app may assume.**
+1. **Facts, calculations and conclusions are always told apart on screen, and the
+   app never invents an observation.** What you answered and did is a fact. The
+   0–100 reading and every count is a calculation. _"This move helped you"_ and
+   every forecast are conclusions, labelled as such with how sure the app is.
 2. **Silence and repetition kill trust; being wrong does not.** Show it, with the
    confidence attached, rather than showing nothing.
 3. **It has to see you act to learn.** Variety early, not later.
@@ -63,19 +69,44 @@ Each one ships something you use that day. Each is one conversation. Small on
 purpose — if a builder finds the scope growing past what is listed, it stops and
 says so.
 
-| #   | You get                                                                                                 | Needs first       |
-| --- | ------------------------------------------------------------------------------------------------------- | ----------------- |
-| 1   | **The move catalogue** — a document you read. **Done: 26 moves, your decisions recorded.**              | —                 |
-| 2   | **New moves in the app**, from the catalogue. "Why this." "I'm testing this." One-tap "did you do it?"  | 1                 |
-| 3   | **See yourself.** Today's trace, the week, a heatmap, readings side by side, moves overlaid.            | —                 |
-| 4   | **Make it beautiful.** One visual system across everything shipped so far.                              | 2, 3              |
-| 5   | **What worked.** "Last time you were like this, X moved irritation 4→2." Learned weights, behind a bar. | weeks of 2's data |
-| 6   | **Where you're heading.** The 7-day forecast, scored, misses shown. The morning brief.                  | 5                 |
-| 7   | **Testing smarter.** An exploration policy. Move chains, after a real bar. Revisiting old moves.        | 6                 |
-| 8   | **Fatherhood.** The ladder screen — counts, never percentages — with a sourced skill list.              | —                 |
-| 9   | **Fast and installable.** PWA, offline, performance, release.                                           | —                 |
+| #   | You get                                                                                                | Needs first       |
+| --- | ------------------------------------------------------------------------------------------------------ | ----------------- |
+| 0   | **A new home.** The app as it is today, in a new repository at a new address. Nothing overwritten.     | —                 |
+| 1   | **The move catalogue** — a document you read. **Done: 26 moves, your decisions recorded.**             | —                 |
+| 2   | **New moves in the app**, from the catalogue. "Why this." "I'm testing this." One-tap "did you do it?" | 0, 1              |
+| 3   | **See yourself.** Today's trace, the week, a heatmap, who you are becoming, as dated counts.           | 0                 |
+| 4   | **Make it beautiful.** One visual system across everything shipped so far. Quiet hours.                | 2, 3              |
+| 5   | **What worked.** "Last time you were like this, X moved irritation 4→2." Behind a real bar.            | weeks of 2's data |
+| 6   | **Where you're heading.** The 7-day forecast, scored every day, misses shown. The app's own scorecard. | 5                 |
+| 7   | **Testing smarter.** Bounded variety. Move chains, after a real bar. Revisiting old moves.             | 6                 |
+| 8   | **Fatherhood.** The ladder screen — counts, never percentages — with a sourced skill list.             | —                 |
+| 9   | **Fast and installable.** PWA, offline, performance, release.                                          | —                 |
 
 **8 depends on nothing.** Pull it forward whenever you want it.
+
+---
+
+## 0 — a new home
+
+**Ships:** the app exactly as it is today, in a new repository seeded from this
+one, at a new address. Nothing in the current repository or at its current
+address is touched.
+
+- Create `life-command-os` beside this folder and on GitHub, seeded from this
+  repository's working tree at its current commit (no history rewrite needed;
+  the first commit names the commit it was seeded from).
+- Change every hard-coded path and address from `life-command-os-rebuild` to
+  `life-command-os` — the Vite base, the preview URL in the browser matrix, the
+  Android gate, checkpoint equivalence, release integrity, CI and Pages.
+- Run the full gates in the new repository and deploy it. Prove the new address
+  serves the same bundle the gates ran on.
+- Leave one line at the top of this repository's `PLAN.md` and `README` saying
+  development moved, with the date and the new address.
+
+**Done when** the owner opens the new address on his phone and it is his app,
+unchanged, and the old address still works.
+
+**Not in it:** anything new. This phase moves house and nothing else.
 
 ---
 
@@ -129,6 +160,25 @@ says Green; then the build. This is the second and last research pass.
 - **"Since last time, did you…"** — the check-in gains one-tap yes/no for moves
   that were offered. This is the action record everything after it needs.
 - **Coherence:** no two moves offered in one day that contradict or duplicate.
+- **Offered is recorded separately from done.** The record must be able to say
+  what the app suggested and what happened, as two facts — because comparing only
+  the moves you completed fools the learning: the days you complete something are
+  already different days.
+- **Bounded variety, from day one.** For a given state and window the app picks a
+  **few** feasible alternatives and alternates among them, announcing the test —
+  and repeats them enough to learn. Not one try each across the whole catalogue;
+  that is collecting without understanding, which the old app did.
+- **A protected next step.** For a commitment _you_ chose — the certification, a
+  person, a practice — the app keeps its next concrete step on screen, and the
+  state ranking cannot push it aside in favour of what feels better tonight.
+  Returning to it must be easier than starting something new. This is rule 7
+  made structural, and it is the real answer to not finishing what you start.
+- **The reading is built only from readings with a clear better direction** —
+  mood, energy, focus, stress, overwhelm, irritation. Hunger, sleep, confidence,
+  loneliness and social energy are shown beside it as context: not-hungry is not
+  "best", and wanting company is not worse than not wanting it. When answers are
+  incomplete the reading says _incomplete_ or shows the last full one with its
+  time; its ingredients never change silently.
 - **Two evening additions, both optional and both one tap.** _"Tomorrow's minimum
   win"_ — one line, forward-looking, no verdict; it is the only part of the
   previous app's daily review that was an intention rather than a grade, and the
@@ -192,6 +242,12 @@ like feeding a void.
 - **Follow-through, as counts.** _This week: 9 started, 4 finished._ Never a rate,
   never a grade. He said he does not finish what he starts; this is the mirror
   for it, and the catalogue's one-sitting moves are the intervention.
+- **Who you are becoming, as dated evidence.** One line of yours about where you
+  are going — written once, edited whenever — and under it, dated counts attached
+  to the identities you chose: study sessions resumed, conversations started,
+  time shared with your daughter, faith practices you chose. Counts of your
+  actions; no ranking of anyone, no declaration of your worth. A hard day does
+  not erase those facts. This is the honest form of "a changed man".
 
 **Not in it:** any interpretation. Any "because". Any prediction.
 
@@ -208,6 +264,11 @@ must feel good to tap through. The reading is the hero. One scroll per screen,
 sections, progressive disclosure: **not cluttered, not short of anything.**
 
 Start from `docs/VISUAL_DESIGN_RECORD.md`; go further than it did.
+
+**Also ships:** **quiet hours** and a **low-demand mode** — for a bad week, one
+tap makes the app ask less and suggest gentler things, with no penalty and no
+catch-up questionnaire afterwards. Correction, deletion and export of anything
+you recorded, from the settings surface.
 
 **Done when** the owner is proud to show it to someone.
 
@@ -228,8 +289,21 @@ is not a separate pass again.
 - **Learned weights:** which readings actually drive his score. **Only once a
   stated statistical bar is met**; until then equal weights, and the screen says
   so.
-- **The bar is written down before anything ships.** Nine dimensions over a few
-  weeks will overfit and discover that Thursdays matter.
+- **The bar is written down before anything ships, and here is its shape.** A claim
+  that a move reliably helps needs: the move, the alternative, the target reading
+  and the change worth having named _before_ the comparison; comparable
+  opportunities, alternated; a confidence interval entirely beyond that
+  worthwhile change, corrected for how many things are being tested at once; and
+  the finding **holding up again on later data**. Below that it says _promising_,
+  _unclear_, or _little evidence of a worthwhile difference_ — never more.
+
+**And the arithmetic, said plainly.** Three check-ins a day is at most about
+ninety observations a month, split across every move and context. Twenty-one
+readings in a week are not twenty-one independent tests of a weekly effect.
+**Expect months for some claims and permanent uncertainty for others.** The app
+says which is which rather than letting you find out.
+
+**A private-habit finding is an association**, reported to you alone as one.
 
 - **The redundancy check (rule 11), mechanically.** Readings that have moved
   together for weeks — stress and overwhelm, loneliness and social energy are the
@@ -255,13 +329,21 @@ already know, and shows the evidence.
 
 **Ships:**
 
-- **The forecast:** today's shape, and the next seven days, **if you do nothing.**
-  That baseline is what makes it checkable — acting on it is a departure, not a
-  contamination.
+- **The forecast:** today's shape, and the next seven days, **as you usually
+  are** — including that you usually act on some of what it suggests. That is
+  what makes it checkable every day. _"If you did nothing extra"_ is shown as a
+  second, labelled **what-if**, and the app never claims it predicted a decline
+  you then prevented — that future was unobservable.
 - Confidence attached. Reasoning opens: which past days it matched, what happened
   then.
-- **Scored.** Every prediction checked against what happened, on days he did not
-  act. **Misses shown.** A forecast without a track record is decoration.
+- **Scored, every day.** Every prediction saved before the outcome, never
+  rewritten, and checked against what happened — error shown separately for
+  tomorrow and for day seven, whether its stated ranges contain the truth as
+  often as promised, and whether it beats a plain personal average. **Misses
+  shown.** A forecast without a track record is decoration.
+- **The app's own scorecard.** Its forecast accuracy, whether its experiments
+  repeat, whether every answered check-in gave something back, and how long
+  answering takes. **Its performance is what gets graded. You are not.**
 - **The morning brief:** the forecast for today in three lines, at the morning
   check-in.
 - **The direction line.** One sentence, his, about where he is trying to go —
@@ -282,7 +364,8 @@ one is read from his data and has to visibly move with it.
 **Ships:**
 
 - **An exploration policy:** when to repeat what works and when to test an
-  alternative. This is the owner's novelty-seeking, fed on purpose and inside the
+  alternative — always among a **small set** of feasible alternatives, repeated
+  enough to learn, never constant novelty across the whole catalogue. This is the owner's novelty-seeking, fed on purpose and inside the
   plan — he said he goes looking for newness when life feels meek, and a test is
   newness with a reason. Always announced: _"you have done this five times and it helps;
   let's see if anything beats it."_
@@ -338,6 +421,11 @@ a short handoff per phase for whenever independent review resumes, and writes
 `docs/NEXT_PROMPT.md` for its own successor conversation, because context runs
 out and the next conversation has to pick up exactly where this one stopped.
 
+**Two repositories, for one reason.** This one is the app as it stood on
+2026-09-04 and stays untouched at its address. `life-command-os`, seeded from it
+in phase 0, is where every phase from 2 on is built. A new conversation starts in
+whichever exists: the new one if it has been created, else this one.
+
 **The orchestrator app is retired.** The integers in the table below survive only
 as file names; `docs/CAMPAIGN_HOLDS.md` is no longer read by anything.
 
@@ -361,6 +449,10 @@ Kept on the record so it is not lost; not built until the owner asks.
 - Independent QA rounds for routing 91, 92, 93 and 94 — **owed, not waived.**
 - The old plan and adjudication documents — history, not instructions.
 - An inventory of the twenty years of legacy records — ask for it when wanted.
+- A from-scratch repository with none of the existing code. Rejected for now: it
+  would cost weeks rebuilding the record store, the check-in, the deployment
+  pipeline and 2,341 tests before anything new could ship. Revisit only if the
+  inherited code becomes drag a builder can name.
 - From the previous app, deliberately not carried: the seven-question daily
   review (it graded him; his journal shows it landing), the twelve food chips per
   block, the environment-chore checklist and the fourteen habit completion rates,
