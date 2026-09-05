@@ -56,8 +56,8 @@ whether a feeling-only effect is enough for moves that get something done — is
 written down in `PLAN.md` phase 1 rather than blocked on.
 
 The `blocks_phase` above was written when the plan's integers were one step
-higher; under `PLAN.md`'s table the wiring is integer 95 and it is already
-building. Nothing is blocked by this line.
+higher; under `PLAN.md`'s table the wiring is integer 95 and it is the next
+dispatch. Nothing is blocked by this line.
 
 <!-- lco:decision id=D-172 status=open blocks_phase=100 -->
 

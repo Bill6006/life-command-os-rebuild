@@ -1,6 +1,6 @@
-# Next dispatch — phase 96: new moves
+# Next dispatch — plan phase 2: new moves
 
-**Phase:** 96 — **New moves: the catalogue wired in, "why this", "I'm testing this", "did you do it?"**
+**Phase:** 95 — **New moves: the catalogue wired in, "why this", "I'm testing this", "did you do it?"**
 
 **Next actor:** Claude Builder
 **Target system:** Claude Builder
@@ -11,54 +11,101 @@
 
 ---
 
-## This phase is held until the owner has read the catalogue
-
-`docs/CAMPAIGN_HOLDS.md` carries `id=D-298 status=open blocks_phase=96`. **It
-releases when the owner has read `docs/MOVE_CATALOGUE.md` and answered the three
-questions in `PLAN.md` phase 95.** If it still says `open`, stop and say so. His
-answers are recorded on the hold when it is resolved — **read them before you
-plan; they change what you wire.**
-
 ## Read `PLAN.md` at the repository root first
 
-The plan was rewritten on 2026-09-04 from what the owner actually described. It is
-the whole plan. The older documents in `docs/` are history and are not planned
-from. **Read `PLAN.md`, then `docs/MOVE_CATALOGUE.md`, then this file.**
+The plan is numbered **1 to 9**. This is **plan phase 2**; the orchestrator's
+integer for it is **95** (the table at the bottom of `PLAN.md` is the only place
+that mapping lives). The older documents in `docs/` are history and are not
+planned from. **Read `PLAN.md`, then `docs/MOVE_CATALOGUE.md`, then this file.**
 
-## Scope — `PLAN.md` phase 96, and no more
+**Nothing of this phase has been built.** An earlier conversation drafted a
+dispatch for it and reverted it; no code landed, no QA handoff exists for it.
 
-1. **The catalogue wired in as candidates**, ranked by the fit the app already
-   measures — time, capacity, strain, context — with the research priors seeding
-   `now`, `tomorrow` and `friction`, which learning later moves.
+## The owner's decisions, and they are settled
+
+He read the catalogue and answered its questions. **Do not reopen them, do not
+re-argue them, and do not quietly widen them.**
+
+### 1. E7 "Book the exam date" is CUT
+
+His word was _"cut it"_. Remove the entry. **The catalogue is 26 entries** — 19
+tier 1, 7 tier 2. Two consequences to carry through rather than leave dangling:
+nothing left in the catalogue costs money or is irreversible, so say so where the
+admission test is recorded; and the friction range now tops out at 0.70 — the
+band above `hands-on-lab`'s 0.70 existed for E7 alone. **Do not leave a 0.85
+ceiling in the code with nothing at it.**
+
+### 2. E3, A6, J1 and G1 all ship — with three conditions
+
+**E3** (45-minute timed section) keeps its marking as needing an evening that is
+actually his. **A6 and J1 take something from the block they happen in** — A6
+gives nothing back until tomorrow, J1 makes the evening worse — and **the app has
+to say that out loud on screen.** **G1** (call instead of texting) is a
+`reach-out` instance and must be resolved by decision 3, not left sitting beside
+its category.
+
+### 3. Category versus instance: you decide, and you justify it
+
+Six of the sixteen shipped verbs are categories rather than moves: `wind-down`,
+`recover`, `ease-off`, `lighten-the-day`, `move`, `reach-out`. Either the category
+**retires** when its instances land, or it **stays and the instances become its
+objects**. **What must not happen is that neither is chosen** — the default is a
+category and one of its own instances on the same evening, and nothing in
+`recent-duplication`, `ACTION_FAMILIES` or the shown ledger can see it, because
+all three act on one move at a time. The QA handoff carries the argument, not
+the conclusion.
+
+### 4. Effect stays on feelings. Write the gap down; do not close it
+
+**Do not extend the check-in in this phase.** Every entry whose plausible effect
+lands on none of the thirteen readings must declare that **in its own record**;
+the seven certification entries and the two training ones are the known cases.
+**The app must never claim to have learned from an entry it cannot read.**
+Register the gap as a named finding for the owner in the QA handoff, in one
+paragraph, and do not solve it here.
+
+### 5. "Three good things at bedtime" stays out
+
+Refused in the research for being the entry a generic library contains first.
+**That refusal stands.**
+
+### 6. Nineteen tier-1 entries is enough variety
+
+**Do not pad the catalogue** to make a number look better.
+
+## Scope — `PLAN.md` phase 2, and no more
+
+1. **The catalogue wired in as candidates.** Tier 1 offerable on an empty store —
+   that is the day the catalogue exists for. Tier 2 needs a learning topic or a
+   person to exist first and must not fire before one does. Research priors seed
+   `now`, `tomorrow` and `friction`; the remaining profile fields are yours under
+   the rules that already govern them.
 2. **"Why this"** on every move, one tap: which readings it is expected to move,
    and how sure the app is.
 3. **"I'm testing this"** on any move with fewer than a handful of the owner's own
-   observations. Exploration's cheapest form.
+   observations.
 4. **"Since last time, did you…"** — the check-in gains one-tap yes/no for moves
    that were offered. This is the action record every later phase needs.
-5. **Coherence** — no two moves offered in one day that contradict or duplicate.
+5. **Coherence** — no two moves offered in one day that contradict or duplicate;
+   decision 3 is how.
 
-**Six decisions the catalogue left to this phase**, each in its _What routing 95
-has to decide_ section: category verbs versus their instances — **both on screen
-is the failure**; whether the ten-minute walk and the shipped twenty-five-minute
-one share a family; the day-one rule for choosing among unmeasured moves; how the
-certification and training entries are measured when the check-in cannot see
-their effect; the eight profile fields the research did not supply; and whether
-the six entries that take something from the evening are shown differently.
-**Make each one, record each one, do not skip one silently.**
+**Also yours:** the day-one rule for choosing among unmeasured moves; whether the
+ten-minute walk and the shipped twenty-five-minute one share a family — a
+deliberate act with a name on it, or an explicit refusal; and showing the
+low-`now` entries (A1, A6, E6, F1, J1) differently, since two of them take
+something from the evening.
 
-**Not in this phase:** measuring what a move did. Learned weights. The forecast.
-Anything about Adaya. **If a sixth item appears, stop and say so.**
+**Not in this phase:** measuring what a move did (plan phase 5). Learned weights.
+The forecast. Anything about Adaya. **If a sixth item appears, stop and say so.**
 
-**Every phase ships looking finished** — `PLAN.md` phase 98 is where the visual
-system lands, but nothing you ship here may look unfinished.
+**Every phase ships looking finished.** Plan phase 4 is the visual system;
+nothing you ship here may look unfinished.
 
 ## Bounds that do not move
 
-Every reading stays bound by G-009: unknown stays unknown, nothing is back-filled.
-The score is a reading and never acquires a quality adjective. Nothing grades the
-owner as a person. Moves offered must not contradict or duplicate within a day —
-that is the owner's rule 4 and it is why coherence is in scope.
+Unknown stays unknown; nothing is back-filled. The score is a reading and never
+acquires a quality adjective. Nothing grades the owner as a person. Moves offered
+must not contradict or duplicate within a day.
 
 ## Gates, then closeout
 
@@ -66,17 +113,18 @@ Run `npm run verify`, the full 360/430/1280 browser matrix at one worker on a
 clean port, the privacy, copy and adaptation scans, checkpoint equivalence, CI,
 release integrity from that CI run's own manifest artifact, and the Android-style
 deployed gate. **Read the summary line and its count, never a pipeline's exit
-code.** Commit, push, deploy, prove the deployed checkpoint is what Preview
-serves. Then the owner opens it on his phone.
+code.** Commit in working increments. Deploy and prove the deployed checkpoint is
+what Preview serves. Then the owner opens it on his phone.
 
 Update `docs/DECISION_LOG.md`, `docs/DEFECT_LEDGER.md`, `docs/PHASE_STATUS.md`.
-Write `docs/qa/PHASE_96_QA_HANDOFF.md` **with the routing block copied from
-`PHASE_92_QA_HANDOFF.md`'s shape** — Phase, Round, Actor, Conversation, Model,
+Write **`docs/qa/PHASE_95_QA_HANDOFF.md`** with the routing block copied from
+`PHASE_92_QA_HANDOFF.md`'s shape — Phase, Round, Actor, Conversation, Model,
 Reasoning level — or the orchestrator cannot record its debt. Do not edit the
 handoffs for 91–94.
 
-Rewrite this file as the phase 97 dispatch from `PLAN.md`, `Phase: 97` on its own
-line near the top, same actor fields, completion marker last.
+Rewrite this file as the dispatch for **plan phase 3 (see yourself)** with
+**`Phase: 96`** on its own line near the top, the same actor fields, scope taken
+from `PLAN.md`, completion marker last.
 
 You may not approve your own phase. Reach **YELLOW — READY FOR INDEPENDENT QA**
 and stop.
@@ -89,15 +137,12 @@ Continue the Life Command OS rebuild.
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Check docs/CAMPAIGN_HOLDS.md first: phase 96 is held by D-298 until the owner has
-read docs/MOVE_CATALOGUE.md. If it says open, stop. If resolved, read the owner's
-answers on it.
-
 Read PLAN.md at the repository root, then docs/MOVE_CATALOGUE.md, then
-docs/NEXT_PROMPT.md, and execute phase 96 exactly as written. Keep the Phase
-field exactly 96. Write docs/qa/PHASE_96_QA_HANDOFF.md with the routing block in
-PHASE_92_QA_HANDOFF.md's shape. Leave the 91-94 handoffs unedited. Reach YELLOW,
-not GREEN. Do not ask me to paste the file contents.
+docs/NEXT_PROMPT.md, and execute plan phase 2 exactly as written. Keep the
+Phase field exactly 95. The owner's six decisions in the dispatch are settled;
+do not reopen them. Write docs/qa/PHASE_95_QA_HANDOFF.md with the routing block
+in PHASE_92_QA_HANDOFF.md's shape. Leave the 91-94 handoffs unedited. Reach
+YELLOW, not GREEN. Do not ask me to paste the file contents.
 
 When finished, make the LAST meaningful line of docs/NEXT_PROMPT.md exactly:
 <!-- LCO_COMPLETE -->

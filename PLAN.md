@@ -47,26 +47,19 @@ Each one ships something you use that day. Each is one conversation. Small on
 purpose — if a builder finds the scope growing past what is listed, it stops and
 says so.
 
-| #   | You get                                                                                                 | Needs first          |
-| --- | ------------------------------------------------------------------------------------------------------- | -------------------- |
-| 1   | **The move catalogue** — a document you read. **Done: 26 moves, your decisions recorded.**              | —                    |
-| 2   | **New moves in the app**, from the catalogue. "Why this." "I'm testing this." One-tap "did you do it?"  | 1 — **building now** |
-| 3   | **See yourself.** Today's trace, the week, a heatmap, readings side by side, moves overlaid.            | —                    |
-| 4   | **Make it beautiful.** One visual system across everything shipped so far.                              | 2, 3                 |
-| 5   | **What worked.** "Last time you were like this, X moved irritation 4→2." Learned weights, behind a bar. | weeks of 2's data    |
-| 6   | **Where you're heading.** The 7-day forecast, scored, misses shown. The morning brief.                  | 5                    |
-| 7   | **Testing smarter.** An exploration policy. Move chains, after a real bar. Revisiting old moves.        | 6                    |
-| 8   | **Fatherhood.** The ladder screen — counts, never percentages — with a sourced skill list.              | —                    |
-| 9   | **Fast and installable.** PWA, offline, performance, release.                                           | —                    |
+| #   | You get                                                                                                 | Needs first       |
+| --- | ------------------------------------------------------------------------------------------------------- | ----------------- |
+| 1   | **The move catalogue** — a document you read. **Done: 26 moves, your decisions recorded.**              | —                 |
+| 2   | **New moves in the app**, from the catalogue. "Why this." "I'm testing this." One-tap "did you do it?"  | 1                 |
+| 3   | **See yourself.** Today's trace, the week, a heatmap, readings side by side, moves overlaid.            | —                 |
+| 4   | **Make it beautiful.** One visual system across everything shipped so far.                              | 2, 3              |
+| 5   | **What worked.** "Last time you were like this, X moved irritation 4→2." Learned weights, behind a bar. | weeks of 2's data |
+| 6   | **Where you're heading.** The 7-day forecast, scored, misses shown. The morning brief.                  | 5                 |
+| 7   | **Testing smarter.** An exploration policy. Move chains, after a real bar. Revisiting old moves.        | 6                 |
+| 8   | **Fatherhood.** The ladder screen — counts, never percentages — with a sourced skill list.              | —                 |
+| 9   | **Fast and installable.** PWA, offline, performance, release.                                           | —                 |
 
 **8 depends on nothing.** Pull it forward whenever you want it.
-
-**Phase 2 is being built right now**, by the conversation that wrote the catalogue,
-and it is also attempting the measuring machinery from phase 5 in the same go. My
-recommendation: let it finish wiring the moves and stop there — there is no data
-yet to measure against, so anything it builds for 5 is unproven until weeks of
-check-ins exist. Your call; nothing breaks either way, because phase 5 is where
-measurement gets proven on real data regardless of when its code first landed.
 
 ---
 
@@ -120,7 +113,7 @@ something from the evening (e.g. _no more caffeine today_) are shown differently
 
 **Done when** the owner sees at least five different moves in a week without
 having authored any; every one opens into "why"; and "did you do it?" is one tap.
-**Being built now** under the orchestrator's integer 95.
+**Next up.** Nothing of it has been built yet.
 
 ---
 
@@ -176,9 +169,6 @@ is not a separate pass again.
   so.
 - **The bar is written down before anything ships.** Nine dimensions over a few
   weeks will overfit and discover that Thursdays matter.
-
-**If measuring code already landed with phase 2, this is where it is proven on
-real data** — nothing about it counts until it has weeks of check-ins to read.
 
 **Two kinds of effect, kept apart.** For moves that change how he feels, the
 readings are the effect. For moves that get something done — the certification
@@ -296,13 +286,13 @@ seen before (94 as of today), so each plan phase carries one of these on its
 `Phase:` line and nowhere else. **The plan is numbered 1–9; this table is
 plumbing.**
 
-| Plan | Orchestrator integer  | Plan | Orchestrator integer              |
-| ---- | --------------------- | ---- | --------------------------------- |
-| 1    | — (done, no code)     | 6    | 99                                |
-| 2    | **95** — building now | 7    | 100 — the standing hold sits here |
-| 3    | 96                    | 8    | 101                               |
-| 4    | 97                    | 9    | 102                               |
-| 5    | 98                    |      |                                   |
+| Plan | Orchestrator integer | Plan | Orchestrator integer              |
+| ---- | -------------------- | ---- | --------------------------------- |
+| 1    | — (done, no code)    | 6    | 99                                |
+| 2    | **95** — next        | 7    | 100 — the standing hold sits here |
+| 3    | 96                   | 8    | 101                               |
+| 4    | 97                   | 9    | 102                               |
+| 5    | 98                   |      |                                   |
 
 `stop_after_phase` in the orchestrator is the owner's throttle; the holds are the
 gates. Builders also keep a decision register in `docs/DECISION_LOG.md`; the owner
