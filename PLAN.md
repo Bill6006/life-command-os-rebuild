@@ -1,5 +1,7 @@
 # Life Command OS — the plan
 
+> **Development moved to `life-command` on 2026-09-04 — https://github.com/Bill6006/life-command. This repository is closed and is not planned from.**
+
 **Written 2026-09-04 from what the owner actually described.** This replaces
 `docs/CANONICAL_REBUILD_PLAN.md` and `docs/PRODUCT_ADJUDICATION_2.md`, which are
 kept as history and are not planned from any more.

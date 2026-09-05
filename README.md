@@ -1,5 +1,7 @@
 # Life Command OS — rebuild
 
+> **Development moved to `life-command` on 2026-09-04 — https://github.com/Bill6006/life-command. This repository is closed and is not planned from.**
+
 A whole-life personal intelligence system. It should build a useful model of the
 owner's life, recognise what matters now, choose the best credible next move,
 explain it in normal language, learn from the outcome, and improve.
