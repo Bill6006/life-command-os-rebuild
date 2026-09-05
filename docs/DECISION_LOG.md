@@ -1,5 +1,17 @@
 # Decision log
 
+## D-304 — Phase 4 keeps the current colour scheme
+
+**Phase:** 4 · **Status:** Active · **Owner-decided 2026-09-04**
+
+_"I at least want a similar colour scheme as my current rebuild app."_ The dark
+charcoal-navy ground, thin white hairlines, the warm orange accent and the
+three-weight surface axis from routing 90's `VISUAL_DESIGN_RECORD.md` are kept.
+Phase 4 improves on them and does not replace them. Recorded so a builder's own
+taste cannot quietly overrule the owner's.
+
+---
+
 ## D-303 — Development moves to a new repository seeded from this one; this app is left untouched
 
 **Phase:** 0 · **Status:** Active · **Owner-decided 2026-09-04**

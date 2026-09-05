@@ -265,6 +265,13 @@ sections, progressive disclosure: **not cluttered, not short of anything.**
 
 Start from `docs/VISUAL_DESIGN_RECORD.md`; go further than it did.
 
+**Keep the colour scheme — the owner's choice.** The dark charcoal-navy ground
+(`#14171f`, deeper `#0f1218`), thin white hairlines, and the **warm orange
+accent** (`#ff7d4d`) of the current app stay, as do the three surface weights —
+one _loud_ panel per screen, _plain_ for most things, _quiet_ for the unsettled.
+Improve on them; do not replace them. He said: _"I at least want a similar colour
+scheme as my current rebuild app."_
+
 **Also ships:** **quiet hours** and a **low-demand mode** — for a bad week, one
 tap makes the app ask less and suggest gentler things, with no penalty and no
 catch-up questionnaire afterwards. Correction, deletion and export of anything
