@@ -1,5 +1,12 @@
 # Second product adjudication — after routing 84 GREEN, before canonical Phase 9
 
+> ## SUPERSEDED — 2026-09-04, D-297
+>
+> **This document is history, not instructions.** The plan was rewritten from
+> what the owner actually described and lives at **`PLAN.md`** in the repository
+> root. Every routing integer, phase contract and split rule below was true when
+> written and is not planned from now. Read `PLAN.md`.
+
 **Status: NOTHING HERE IS APPROVED.** This document adjudicates; it does not
 schedule, dispatch or amend. No governing document is changed by it, no phase is
 marked approved, no completion marker is written, and no handoff exists for any

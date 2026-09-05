@@ -1,5 +1,13 @@
 # Life Command OS — Canonical Rebuild Plan v1.2
 
+> ## SUPERSEDED — 2026-09-04, D-297
+>
+> **This document is history, not instructions.** The plan was rewritten from
+> what the owner actually described and lives at **`PLAN.md`** in the repository
+> root. Every routing integer, phase contract and split rule below was true when
+> written and is not planned from now. Read `PLAN.md`.
+
+
 ## Status
 
 - **Purpose:** governing plan for the next Life Command OS rebuild.

@@ -1,5 +1,65 @@
 # Decision log
 
+## D-297 — The plan is rewritten as `PLAN.md`, from what the owner described
+
+**Phase:** — · **Status:** Active · **Supersedes** the roadmap in
+`docs/CANONICAL_REBUILD_PLAN.md` section 43A and every §6.x contract in
+`docs/PRODUCT_ADJUDICATION_2.md` · **Owner-decided 2026-09-04**
+
+The owner asked for a plan written from the beginning — everything he actually
+wants, nothing he does not, ordered so it is useful early, small enough to finish.
+**`PLAN.md` at the repository root is that plan and is the only planning document
+from this point.** The canonical plan, both adjudications and the decisions before
+this one are history: true when written, not instructions now.
+
+**Same codebase.** Nothing built is discarded; the state engine sits on the record
+store, the concept registry, the check-in and the 2,341 tests that exist.
+
+**The map**, in one place:
+
+| #   | Phase                                    | State                                      |
+| --- | ---------------------------------------- | ------------------------------------------ |
+| 95  | the move catalogue — research, no code   | **DONE** — 27 moves; owner review is D-298 |
+| 96  | new moves in the app                     | held by D-298                              |
+| 97  | see yourself                             | —                                          |
+| 98  | make it beautiful                        | needs 96, 97                               |
+| 99  | what worked                              | needs weeks of 96                          |
+| 100 | where you are heading — the forecast     | needs 99                                   |
+| 101 | testing smarter — exploration and chains | needs 100; **D-172 releases here**         |
+| 102 | Fatherhood                               | independent — pull forward at will         |
+| 103 | fast and installable                     | —                                          |
+
+**Parked, on the record so it is not lost:** the twelve-domain expansion;
+advancement and revision; the nineteen instrument-hardening findings and
+DEF-0169; the legacy-data inventory; and **independent QA for routing 91, 92, 93
+and 94 — owed, not waived.** The orchestrator's ledger keeps that debt.
+
+**Two things about the process changed with the plan.** Every phase ships looking
+finished — design stops being a separate pass after 98. And every phase is one
+conversation, small by construction; the previous plan's routing 93 shipped
+fourteen packages against a five-package rule, and `PLAN.md` says to stop and say
+so if the list grows.
+
+---
+
+## D-298 — Phase 96 is held until the owner has read the catalogue
+
+**Phase:** 96 · **Status:** Active · **Owner gate** · **Declared 2026-09-04**
+
+`docs/MOVE_CATALOGUE.md` is research the owner asked for because he did not trust
+himself to generate moves. **He is still the only person who can veto one.** Phase
+96 wires the catalogue into the app and does not start until he has read it and
+answered three questions recorded in `PLAN.md` phase 95: which of the five flagged
+entries stay and whether the one left out comes back; whether a feeling-only
+effect is acceptable for moves whose purpose is to get something done; and whether
+27 moves is the variety he meant.
+
+The hold is machine-read in `docs/CAMPAIGN_HOLDS.md`. His answers are recorded on
+it when it is resolved, and phase 96's dispatch tells the builder to read them
+before planning — because they change what gets wired, not only what gets shown.
+
+---
+
 ## D-303 — The suite's thirty-second ceiling was a false red, and it was already red
 
 **Phase:** 94 · **Status:** Active · **Amends** `vite.config.ts`'s `testTimeout` ·

@@ -1,5 +1,10 @@
 # Phase status
 
+> **The plan was rewritten on 2026-09-04 — D-297.** `PLAN.md` at the repository
+> root is the only planning document now. Phases 95–103 are defined there; the
+> records below are history for everything before it. Phase 95 (the catalogue)
+> is done; 96 is held by D-298 until the owner has read it.
+
 Report format: canonical plan section 58.
 
 **From Phase 5 onward, a builder conversation may not approve its own phase.**

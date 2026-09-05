@@ -1,132 +1,108 @@
-# Owner review gate — the move catalogue
+# Next dispatch — phase 96: new moves
 
-**Phase:** none. **This file is a gate, not a dispatch, and it routes nothing.**
-The research exercise D-296 separated out of routing 95 has run and produced a
-document. **Nobody is dispatched by this file. The owner reads next.**
+**Phase:** 96 — **New moves: the catalogue wired in, "why this", "I'm testing this", "did you do it?"**
 
-**Next actor:** the owner — a person, not a conversation.
-**Independent QA:** OFF. This file opens no QA round and closes none.
-
----
-
-## What to read
-
-> **[`docs/MOVE_CATALOGUE.md`](MOVE_CATALOGUE.md)**
-
-27 candidate moves, each carrying `demand`, `now`, `tomorrow`, `friction` and
-`size`, with every prior sourced. **Nineteen of them can be offered on a store
-with nothing in it** — against the candidate set of one measured 2026-09-03,
-which is the whole of the _"walk for 25 minutes"_ complaint.
-
-**Read the section titled _What the owner should look for_ if you read nothing
-else.** It names five entries that need a decision and one that was left out and
-may be wanted back.
+**Next actor:** Claude Builder
+**Target system:** Claude Builder
+**Model:** Claude Opus 5
+**Reasoning / Effort:** Max
+**Conversation:** NEW
+**Independent QA:** OFF — this file dispatches a build phase and starts no QA round.
 
 ---
 
-## Why nothing is dispatched here
+## This phase is held until the owner has read the catalogue
 
-**D-296 makes the owner's review the gate**, and it is the whole reason the
-research was separated from routing 95 in the first place: _"Not trusting himself
-to generate is not the same as declining to veto"_ — he is still the only person
-who can say _"I would never do that."_ **Routing 95's build dispatch is written
-after he has read the catalogue, not before.** A file that routed onward from here
-would remove the review this exercise exists to create.
+`docs/CAMPAIGN_HOLDS.md` carries `id=D-298 status=open blocks_phase=96`. **It
+releases when the owner has read `docs/MOVE_CATALOGUE.md` and answered the three
+questions in `PLAN.md` phase 95.** If it still says `open`, stop and say so. His
+answers are recorded on the hold when it is resolved — **read them before you
+plan; they change what you wire.**
 
-### What has NOT happened, and it is deliberate
+## Read `PLAN.md` at the repository root first
 
-- **No `docs/qa/PHASE_95_QA_HANDOFF.md` exists.** It must not be created before
-  routing 95's build has actually run. A sweep records any `PHASE_N_QA_HANDOFF.md`
-  at or above the ledger floor **on sight**, so a brief written now would have
-  phase 95 recorded as finished when only the research half has run — after which
-  the build never happens and the catalogue is never wired to anything.
-- **Nothing under `src/` was touched.** No commit to product code, no test, no
-  gate, no routing integer. The exercise follows the `PRODUCT_ADJUDICATION.md`
-  precedent — _"not a build phase; it produced a decision, not a diff."_
-- **Routing 95's build half is untouched.** Candidates are not wired,
-  `ACTION_FAMILIES` is not extended, no dimension is added, and effect measurement
-  is not designed.
-- **Nothing about Adaya.** D-291 governs anything measured about a child and the
-  catalogue is silent on the subject by instruction. That silence is recorded in
-  the document as its largest deliberate gap.
+The plan was rewritten on 2026-09-04 from what the owner actually described. It is
+the whole plan. The older documents in `docs/` are history and are not planned
+from. **Read `PLAN.md`, then `docs/MOVE_CATALOGUE.md`, then this file.**
+
+## Scope — `PLAN.md` phase 96, and no more
+
+1. **The catalogue wired in as candidates**, ranked by the fit the app already
+   measures — time, capacity, strain, context — with the research priors seeding
+   `now`, `tomorrow` and `friction`, which learning later moves.
+2. **"Why this"** on every move, one tap: which readings it is expected to move,
+   and how sure the app is.
+3. **"I'm testing this"** on any move with fewer than a handful of the owner's own
+   observations. Exploration's cheapest form.
+4. **"Since last time, did you…"** — the check-in gains one-tap yes/no for moves
+   that were offered. This is the action record every later phase needs.
+5. **Coherence** — no two moves offered in one day that contradict or duplicate.
+
+**Six decisions the catalogue left to this phase**, each in its _What routing 95
+has to decide_ section: category verbs versus their instances — **both on screen
+is the failure**; whether the ten-minute walk and the shipped twenty-five-minute
+one share a family; the day-one rule for choosing among unmeasured moves; how the
+certification and training entries are measured when the check-in cannot see
+their effect; the eight profile fields the research did not supply; and whether
+the six entries that take something from the evening are shown differently.
+**Make each one, record each one, do not skip one silently.**
+
+**Not in this phase:** measuring what a move did. Learned weights. The forecast.
+Anything about Adaya. **If a sixth item appears, stop and say so.**
+
+**Every phase ships looking finished** — `PLAN.md` phase 98 is where the visual
+system lands, but nothing you ship here may look unfinished.
+
+## Bounds that do not move
+
+Every reading stays bound by G-009: unknown stays unknown, nothing is back-filled.
+The score is a reading and never acquires a quality adjective. Nothing grades the
+owner as a person. Moves offered must not contradict or duplicate within a day —
+that is the owner's rule 4 and it is why coherence is in scope.
+
+## Gates, then closeout
+
+Run `npm run verify`, the full 360/430/1280 browser matrix at one worker on a
+clean port, the privacy, copy and adaptation scans, checkpoint equivalence, CI,
+release integrity from that CI run's own manifest artifact, and the Android-style
+deployed gate. **Read the summary line and its count, never a pipeline's exit
+code.** Commit, push, deploy, prove the deployed checkpoint is what Preview
+serves. Then the owner opens it on his phone.
+
+Update `docs/DECISION_LOG.md`, `docs/DEFECT_LEDGER.md`, `docs/PHASE_STATUS.md`.
+Write `docs/qa/PHASE_96_QA_HANDOFF.md` **with the routing block copied from
+`PHASE_92_QA_HANDOFF.md`'s shape** — Phase, Round, Actor, Conversation, Model,
+Reasoning level — or the orchestrator cannot record its debt. Do not edit the
+handoffs for 91–94.
+
+Rewrite this file as the phase 97 dispatch from `PLAN.md`, `Phase: 97` on its own
+line near the top, same actor fields, completion marker last.
+
+You may not approve your own phase. Reach **YELLOW — READY FOR INDEPENDENT QA**
+and stop.
 
 ---
 
-## The three things the review has to settle
+```text
+Continue the Life Command OS rebuild.
 
-Each is written up in the catalogue with the evidence behind it. They are repeated
-here because they change what routing 95 builds, not merely what it offers.
+Repository:
+D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-1. **The five flagged entries, and the one left out.** Booking the exam date is
-   the entry most likely to be absurd on a bad evening — it costs money and is the
-   only irreversible thing in the catalogue.
-2. **Every effect this catalogue can measure is a feeling.** Routing 94's thirteen
-   readings are all about how he is; none of them reads whether anything got done.
-   Half the catalogue exists to get something done. Acceptable, or does the
-   check-in need something the certification can show up in?
-3. **Six of the sixteen shipped verbs are categories, not moves**, and several
-   catalogue entries are instances of them. _"Wind down before bed"_ beside
-   _"screens down and the lights low for the last twenty minutes"_ is D-290's first
-   example exactly, and **the default outcome is both on screen**. Routing 95 must
-   choose whether the category retires or keeps the instance as its object.
+Check docs/CAMPAIGN_HOLDS.md first: phase 96 is held by D-298 until the owner has
+read docs/MOVE_CATALOGUE.md. If it says open, stop. If resolved, read the owner's
+answers on it.
 
----
+Read PLAN.md at the repository root, then docs/MOVE_CATALOGUE.md, then
+docs/NEXT_PROMPT.md, and execute phase 96 exactly as written. Keep the Phase
+field exactly 96. Write docs/qa/PHASE_96_QA_HANDOFF.md with the routing block in
+PHASE_92_QA_HANDOFF.md's shape. Leave the 91-94 handoffs unedited. Reach YELLOW,
+not GREEN. Do not ask me to paste the file contents.
 
-## After the review
+When finished, make the LAST meaningful line of docs/NEXT_PROMPT.md exactly:
+<!-- LCO_COMPLETE -->
 
-**Routing 95's build dispatch is written then, and not before.** It is the second
-half of the phase — the catalogue wired as candidates, and the effect measurement
-beside it — and it carries the routing integer 95 that this exercise deliberately
-did not.
-
----
-
-## The state of the campaign, so it is not lost
-
-**Routing 94 is YELLOW — READY FOR INDEPENDENT QA**, at the checkpoint named in
-[`PHASE_STATUS.md`](PHASE_STATUS.md). It is not GREEN, no round has run, and D-077
-is unchanged.
-
-### Five debts
-
-**Routing 91's independent QA.** Round 10's brief is written and waiting. Unrun.
-
-**Routing 92's independent QA.** Round 0 written, **zero rounds**, widest blast
-radius of anything in the campaign.
-
-**Routing 93's independent QA.** Round 0 written, **zero rounds**, and it opens
-with D-283 — fourteen packages carrying one phase's worth of scrutiny.
-
-**Routing 94's independent QA.** Round 0 written, **zero rounds.** It touched the
-concept registry, added a record kind, narrowed a standing guard that has held
-since D-166, and put a number about the owner on a screen for the first time in
-the campaign.
-
-**The nineteen D-210 instrument-hardening findings**, plus **DEF-0169** as a
-twentieth: the test suite is red under parallel load on a fourteen-core machine
-and the symptom is patched while the cause — a dozen concurrent single-threaded
-library sweeps — is untouched. Backlog blob
-`58d5af071355d252c4a254fc685fcc9e8e88f417`.
-
-### The roadmap
-
-| #              | Phase                                  | State                                |
-| -------------- | -------------------------------------- | ------------------------------------ |
-| 94             | the check-in, the readings, the score  | **YELLOW — awaiting QA**             |
-| _(no integer)_ | the move catalogue research            | **DONE — awaiting the owner's read** |
-| 95             | the move catalogue and measured effect | **blocked on the review above**      |
-| 96             | domains and progression (Fatherhood)   | ready; D-291 changes rollups         |
-| 97             | the forecast                           | needs 95                             |
-| 98             | exploration and causal chains          | needs 97, and **D-172 is open**      |
-| 99             | advancement and revision               | —                                    |
-| 100            | _(reserved headroom)_                  | —                                    |
-
-**D-172 blocks phase 98 and nothing before it.**
-[`CAMPAIGN_HOLDS.md`](CAMPAIGN_HOLDS.md) carries the declaration and it is still
-`open`.
-
-**Four phases are unapproved and none of their handoffs may be edited for any
-reason:** `docs/qa/PHASE_91_QA_HANDOFF.md`, `docs/qa/PHASE_92_QA_HANDOFF.md`,
-`docs/qa/PHASE_93_QA_HANDOFF.md` and `docs/qa/PHASE_94_QA_HANDOFF.md`.
+Do not put this completion marker in a different handoff file.
+```
 
 <!-- LCO_COMPLETE -->
