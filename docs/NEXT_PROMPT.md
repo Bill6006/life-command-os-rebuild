@@ -7,7 +7,7 @@
 **Model:** Claude Opus 5
 **Reasoning / Effort:** Max
 **Conversation:** NEW
-**Independent QA:** OFF — this file dispatches a build phase and starts no QA round.
+**Independent QA:** OFF. **Control:** the owner says **Green** or **Yellow** (D-300). No orchestrator.
 
 ---
 
@@ -137,32 +137,45 @@ Write **`docs/qa/PHASE_95_QA_HANDOFF.md`** with the routing block copied from
 Reasoning level — or the orchestrator cannot record its debt. Do not edit the
 handoffs for 91–94.
 
-Rewrite this file as the dispatch for **plan phase 3 (see yourself)** with
-**`Phase: 96`** on its own line near the top, the same actor fields, scope taken
-from `PLAN.md`, completion marker last.
+## Then stop and hand it to the owner — this is the whole protocol (D-300)
 
-You may not approve your own phase. Reach **YELLOW — READY FOR INDEPENDENT QA**
-and stop.
+When the gates are green and the deploy is proven, **tell the owner, in a few
+lines: what to open on his phone, what to look at, and what is new.** Then stop.
+
+- **"Green — next phase"** → write this file as the dispatch for **plan phase 3
+  (see yourself)** with `Phase: 96` on its own line near the top, and **start
+  phase 3 in this same conversation** if context allows. If it does not, say so
+  and stop; the next conversation picks up from this file.
+- **"Yellow — …"** followed by what is wrong → fix it in place, re-run the gates
+  that cover the fix, re-deploy, and come back the same way.
+
+**You may not approve your own phase.** Only the owner's Green does that. Record
+the phase in `docs/PHASE_STATUS.md` as **YELLOW — awaiting the owner** until he
+says it, then as **GREEN — owner-accepted**. Independent QA is still owed and is
+not waived; the per-phase handoff is where that debt is visible.
 
 ---
 
 ```text
-Continue the Life Command OS rebuild.
+Continue the Life Command OS rebuild. You are the builder and the orchestrator.
 
 Repository:
 D:\Code\AI Coding Agents\Claude Code\life-command-os-rebuild
 
-Read PLAN.md at the repository root, then docs/MOVE_CATALOGUE.md, then
-docs/NEXT_PROMPT.md, and execute plan phase 2 exactly as written. Keep the
-Phase field exactly 95. The owner's six decisions in the dispatch are settled;
-do not reopen them. Write docs/qa/PHASE_95_QA_HANDOFF.md with the routing block
-in PHASE_92_QA_HANDOFF.md's shape. Leave the 91-94 handoffs unedited. Reach
-YELLOW, not GREEN. Do not ask me to paste the file contents.
+Read PLAN.md at the repository root, then docs/NEXT_PROMPT.md, and execute the
+phase it dispatches exactly as written. Do not ask me to paste file contents.
 
-When finished, make the LAST meaningful line of docs/NEXT_PROMPT.md exactly:
+I control this with two words. When a phase's gates are green and the deploy is
+proven, tell me what to open on my phone and what to look at, then stop and
+wait. I will say "Green - next phase" or "Yellow - " with what is wrong. Green
+means write the next phase's dispatch into docs/NEXT_PROMPT.md and keep going in
+this conversation while context allows. Yellow means fix it in place and come
+back. Never approve a phase yourself; never start a QA round; never edit the
+handoffs for routing 91-94.
+
+When a phase is finished, make the LAST meaningful line of docs/NEXT_PROMPT.md
+exactly:
 <!-- LCO_COMPLETE -->
-
-Do not put this completion marker in a different handoff file.
 ```
 
 <!-- LCO_COMPLETE -->
