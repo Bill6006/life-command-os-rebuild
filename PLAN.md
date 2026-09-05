@@ -282,27 +282,30 @@ being shown a grade.
 
 ---
 
-## How a phase runs
+## How a phase runs — the owner's two words
 
-1. **One new Claude conversation.** It reads this file and `docs/NEXT_PROMPT.md`.
-2. **It builds**, then runs the mechanical gates: tests, build, browser matrix,
-   deploy, and proves the deployed build is the one it tested.
-3. **The owner opens it on his phone.** Yes → next phase. No → a fix round in the
-   same conversation.
-4. **It writes the next `docs/NEXT_PROMPT.md`** — the next phase _from this file_,
-   with the orchestrator's integer from the table at the bottom on its own
-   `Phase:` line near the top, and `<!-- LCO_COMPLETE -->` as the last line.
+**You say one of two things, and nothing else is asked of you.**
 
-**Independent QA rounds are off** by the owner's choice. They are owed for routing
-91–94 and the orchestrator's ledger keeps that debt. They are not waived.
+- **"Green — next phase."** The phase is accepted. The builder starts the next one.
+- **"Yellow — …"** followed by what is wrong, in your words. The builder fixes it in
+  place and comes back with it on your phone.
 
-**Owner gates** live in `docs/CAMPAIGN_HOLDS.md` and the orchestrator will not
-start a held phase. One is open: before phase 7, the bar is approved.
+**The builder conversation drives everything else:** reads this file and the
+phase's section, builds, runs the mechanical gates — tests, build, browser matrix,
+deploy, and proof that the deployed build is the one it tested — then tells you
+what to open on your phone and what to look at. It keeps the decision log, writes
+a short handoff per phase for whenever independent review resumes, and writes
+`docs/NEXT_PROMPT.md` for its own successor conversation, because context runs
+out and the next conversation has to pick up exactly where this one stopped.
 
-**Small phases.** The previous plan's phase 93 shipped fourteen packages against a
-five-package rule. If the list above grows while building, stop and say so.
+**The orchestrator app is retired.** The integers in the table below survive only
+as file names; `docs/CAMPAIGN_HOLDS.md` is no longer read by anything.
 
----
+**Independent QA rounds are off** by your choice. They are owed for routing 91–94
+and are not waived; the per-phase handoffs are where that debt is visible.
+
+**Small phases.** If the list for a phase grows while building, the builder stops
+and says so rather than absorbing it.
 
 ## What is parked
 

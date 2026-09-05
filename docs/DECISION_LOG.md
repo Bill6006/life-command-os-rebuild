@@ -1,5 +1,28 @@
 # Decision log
 
+## D-300 — The orchestrator is retired; the owner controls with two words
+
+**Phase:** — · **Status:** Active · **Owner-decided 2026-09-04**
+
+The owner: _"All I want to have to do this time is say 'Green — next phase' or
+'Yellow…'. I no longer want to rely on the orch app."_
+
+**So the builder conversation is the orchestrator.** It builds a phase, runs every
+mechanical gate, deploys, proves the deployment, and tells the owner what to open
+and what to look at. He answers **Green** (accepted; next phase starts) or
+**Yellow** with what is wrong (fixed in place). Nothing else is asked of him.
+
+**What stays.** The decision log; a short handoff per phase, because independent
+QA is owed for routing 91–94 and not waived; and `docs/NEXT_PROMPT.md`, now
+written for the builder's own successor conversation rather than for a dispatcher
+— context runs out, and the next conversation must pick up exactly where the last
+stopped.
+
+**What goes.** `docs/CAMPAIGN_HOLDS.md` is read by nothing. The routing integers
+survive only as file names. No phase waits on a machine.
+
+---
+
 ## D-299 — What the previous app taught, and the four decisions it settled
 
 **Phase:** — · **Status:** Active · **Owner-decided / owner-delegated 2026-09-04**
